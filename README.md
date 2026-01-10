@@ -26,6 +26,47 @@ As well, these entities may be linked to each other
 
 8. **Output Generation**: Write per-document JSONL and aggregate into a run-level JSONL for analysis or storage.
 
+## Workflow Diagram
+
+![Workflow diagram](docs/workflow.png)
+
+```mermaid
+flowchart TD
+  A["Ingest articles<br/>(XML/HTML/PDF)"] --> B["Text extraction + OCR fallback<br/>(stable offsets, sections)"]
+  B --> C["Preprocess<br/>(offset-preserving normalization,<br/>abbrev expansion + offset map)"]
+  C --> D["Extract entities + evidence spans<br/>(LangExtract, per-entity prompts)"]
+  D --> E["Evidence-required validation<br/>(ExtractedValue)"]
+  E --> F["Link entities<br/>(StudyLinks edges)"]
+  F --> G["Normalize concepts/conditions<br/>(ONVOC)"]
+  G --> H["Export per-doc JSONL"]
+  H --> I["Aggregate run JSONL + run manifest"]
+
+  D --> R["Human review<br/>(LangExtract HTML)"]
+  F --> R
+
+  subgraph Inputs
+    S["schema.py<br/>(entities + fields)"]
+    P["prompt files<br/>(per-entity JSON)"]
+    Cfg["run config<br/>(models, params)"]
+    V["ONVOC<br/>ontology"]
+  end
+
+  S --> D
+  P --> D
+  Cfg --> D
+  V --> G
+
+  subgraph Caching
+    Cache["Extraction cache<br/>(cache.sqlite per hash)"]
+  end
+  D <--> Cache
+
+  subgraph Optional
+    O["DSPy prompt optimization<br/>(on gold set)"]
+  end
+  O --> P
+```
+
 
 ## Critical Considerations
 
