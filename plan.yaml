@@ -1,0 +1,227 @@
+meta:
+  project_name: "neuroimaging article information extraction"
+  description: >
+    Workflow to convert neuroimaging articles (XML/HTML/PDF) into structured JSONL
+    with grounded evidence spans and verification support.
+  iteration: "v0.1-neuroimaging-article-information-extraction"
+  updated: "2026-01-09"
+
+purpose:
+  problem: >
+    Manual extraction of groups, tasks, modalities, and contrasts is slow and
+    inconsistent. There is no flexible, evidence-grounded system that can
+    evolve with changing schemas while still supporting human verification.
+  goals:
+    - "Produce structured, evidence-grounded data for neuroimaging articles."
+    - "Track provenance with char-offset evidence spans; use section context during prompting."
+    - "Support evolving schemas without rewriting the pipeline each time."
+    - "Enable human review of extracted answers against source text."
+    - "Normalize concepts and conditions using ONVOC."
+  non_goals:
+    - "Not a meta-analysis engine."
+    - "Not a full-text summarizer."
+    - "Not running neuroimaging analyses."
+    - "Not medical diagnosis or clinical decision support."
+  users:
+    - "Data curators building structured corpora or knowledge bases."
+    - "Neuroimaging researchers consuming curated outputs."
+
+constraints:
+  functional:
+    - "Ingest XML/HTML/PDF from local directories; OCR fallback when text is missing (docling or similar)."
+    - "Extract text while preserving stable document-level char offsets for evidence linkage."
+    - "Preprocess text with offset-preserving normalization; expand abbreviations per article using scispaCy AbbreviationDetector with an offset map."
+    - "Entity extraction via LangExtract using schemas defined in schema.py (ExtractedValue wrappers) and per-entity prompt files."
+    - "LangExtract performs extraction and evidence alignment in one step; summaries are stored in attributes while extraction_text remains verbatim with supporting evidence spans."
+    - "Require 1+ evidence spans for any non-null extracted value."
+    - "Provide section titles in prompt context and store them when available in EvidenceSpan.section."
+    - "Link entities with StudyLinks edges (group_task, task_modality, group_modality, analysis_task, analysis_group, analysis_condition) with optional per-edge evidence."
+    - "Verification is human review of answers vs evidence spans (LangExtract HTML)."
+    - "Normalize medical conditions, concepts, and domain tags with ONVOC."
+    - "Export per-document JSONL plus an aggregated run JSONL from final normalized outputs; store run metadata in a sidecar manifest."
+    - "Write outputs to new files/directories per stage (no destructive overwrites)."
+    - "Support DSPy prompt optimization for individual fields (optional stage)."
+  non_functional:
+    - "Modular pipeline that tolerates schema and ordering changes."
+    - "Traceability from output fields to source text spans."
+    - "Evidence completeness: any non-null value must include evidence."
+    - "Cost-aware extraction with smaller models when context is narrowed."
+    - "Re-runnable with deterministic non-LLM steps."
+    - "Extraction-stage caching keyed by input hash, config, schema version, prompts, and model id; cache.sqlite stored per hash."
+  assumptions:
+    - "Primary inputs are XML/HTML; PDFs are supported with OCR fallback."
+    - "Docling (or similar) yields text with stable char offsets."
+    - "Section titles can be recovered or inferred reliably."
+    - "LLM access is available for extraction and linking."
+    - "Entity IDs are injected by pipeline logic (not LLM generated)."
+    - "Summaries may be synthesized (non-verbatim) but must reference supporting evidence spans."
+    - "Inputs are local files; document IDs come from directory names (pmid-doi-pmcid) with missing IDs omitted."
+    - "Tables/figures are merged into the main text stream when possible."
+    - "Prompts/examples are stored in separate per-entity files (e.g., entity.json)."
+    - "Model/provider and extraction parameters are provided in YAML config (no default model)."
+    - "Field-level prompt overrides can be supplied in prompt files or separate override files."
+    - "Abbreviation expansion uses scispaCy AbbreviationDetector with per-article abbreviation lists."
+  risks:
+    - "Ambiguous references across multiple groups/tasks cause mis-attribution."
+    - "OCR noise or PDF layout artifacts break offsets and evidence spans."
+    - "Section titles may be missing or inconsistent across articles."
+    - "Schema evolution requires re-prompting or re-extraction."
+    - "Strict evidence requirements may increase nulls or extraction failures."
+    - "Multi-task studies can produce ambiguous analysis-to-condition mappings."
+
+mvp:
+  must_have:
+    - "Ingestion for XML/HTML/PDF with OCR fallback."
+    - "Text extraction with offset tracking."
+    - "Offset-preserving preprocessing."
+    - "Entity extraction per schema.py."
+    - "LangExtract extraction + evidence alignment with char offsets."
+    - "Entity linking per StudyLinks edges."
+    - "Evidence-required schema validation for extracted values."
+    - "Human-verifiable evidence presentation."
+    - "Normalization to ONVOC."
+    - "JSONL output with ExtractedValue wrappers, evidence, units, and missing_reason."
+    - "Aggregate JSONL output combining per-document results at end of run."
+    - "CLI with per-stage subcommands and progress bars."
+    - "SQLite-backed caching of extraction stage outputs."
+  nice_to_have:
+    - "Section-aware passage retrieval to narrow LLM context."
+    - "Confidence scoring for extractions."
+    - "Active learning loop for prompt/schema refinement."
+    - "DSPy prompt optimization per field."
+  future:
+    - "Automated QA checks and cross-document consistency."
+    - "Ontology expansion beyond ONVOC."
+    - "Review UI for evidence-based validation."
+
+domain:
+  entities:
+    - "StudyRecord (top-level container)."
+    - "StudyMetadataModel (study-wide metadata)."
+    - "GroupBase (participant groups)."
+    - "TaskBase (tasks/paradigms)."
+    - "Condition (task conditions)."
+    - "ModalityBase (imaging acquisitions)."
+    - "AnalysisBase (analyses/contrasts)."
+    - "StudyLinks (edge container)."
+    - "EvidenceSpan (provenance for extracted values)."
+  relationships:
+    - "group_task: Group -> Task"
+    - "task_modality: Task -> Modality"
+    - "group_modality: Group -> Modality (optional n_scanned)"
+    - "analysis_task: Analysis -> Task"
+    - "analysis_group: Analysis -> Group"
+    - "analysis_condition: Analysis -> Condition"
+  data_shapes:
+    - >
+      EvidenceSpan = {
+        "source": "text|table|figure_caption|supplement|other",
+        "section": "Methods/Task",
+        "quote": "...",
+        "char_start": 1234,
+        "char_end": 1290,
+        "locator": "sentence_id/table_id/figure_id"
+      }
+    - >
+      ExtractedValue = {
+        "value": "...",
+        "evidence": [EvidenceSpan, ...],
+        "unit": "s",
+        "missing_reason": "free text (e.g., not_reported, not_applicable, ambiguous)",
+        "note": "...",
+        "scope": "group|shared|task|modality|analysis|study",
+        "confidence": 0.0
+      }
+    - >
+      SummaryRule = "Summary fields may be synthesized but must reference evidence spans that support the summary."
+    - >
+      Edge = {
+        "source_id": "...",
+        "target_id": "...",
+        "evidence": [EvidenceSpan, ...]
+      }
+
+interfaces:
+  public_api:
+    - "Python pipeline modules (ingest, text, preprocess, extraction, linking, validation, normalization, review, export, optimization)"
+  cli:
+    - "pondie <stage> [options] (stages: ingest, text, preprocess, extract, link, normalize, export, review, evaluate, optimize)"
+  behavior_flows:
+    - "Ingest article -> extract text with offsets -> preprocess -> langextract extraction+evidence -> link entities -> normalize ONVOC -> export per-doc JSONL -> aggregate JSONL."
+  errors:
+    - "IngestionError"
+    - "TextExtractionError"
+    - "EvidenceAlignmentError"
+    - "NormalizationError"
+
+architecture:
+  style: "modular pipeline with schema-driven extraction"
+  components:
+    - "ingestion: load XML/HTML/PDF, OCR fallback"
+    - "text: docling (or similar) parsing and offset retention; merge tables/figures into main text"
+    - "preprocess: offset-preserving normalization; scispaCy abbreviation expansion with offset map"
+    - "extraction: langextract-driven extraction with evidence alignment (ExtractedValue + inference_policy) using per-entity prompt files"
+    - "linking: LLM-inferred StudyLinks edges with explicit textual support and optional per-edge evidence"
+    - "verification: human review using evidence spans (LangExtract HTML)"
+    - "normalization: ONVOC mapping for concepts/domain tags/medical conditions"
+    - "export: per-document JSONL plus aggregated JSONL from normalized outputs; sidecar run manifest"
+    - "prompt_optimization: DSPy-based prompt tuning per field (optional)"
+  flow:
+    - "Article -> text+sections -> langextract extraction+evidence -> StudyLinks edges -> normalized fields -> per-doc JSONL -> aggregate JSONL"
+    - "Optional: DSPy optimize prompts on gold set -> update prompt files for future runs"
+
+technology:
+  language: "Python"
+  libraries:
+    - "Pydantic (schema definitions, evidence validation)"
+    - "Docling or equivalent (text extraction)"
+    - "Langextract (evidence spans)"
+    - "LLM provider (Gemini/OpenAI for entity extraction/linking)"
+    - "scispaCy (AbbreviationDetector)"
+    - "DSPy (prompt optimization)"
+    - "SQLite (per-hash extraction cache)"
+  storage:
+    - "Local filesystem (MVP)"
+  deployment_target: "Local and CI workflows"
+
+security:
+  sensitive_data:
+    - "Possible patient demographics and clinical conditions in source articles."
+  auth: "None."
+  privacy_notes: "Review workflows should avoid exposing sensitive text outside approved environments."
+
+development:
+  testing:
+    - "Unit tests for offset-preserving preprocessing."
+    - "Golden-set evaluation for entity extraction and evidence alignment."
+    - "Schema validation tests for evidence-required ExtractedValue fields."
+    - "Edge-linking tests for StudyLinks coverage and consistency."
+    - "Integration tests for end-to-end extraction on fixture papers."
+  folder_structure:
+    - "information_extraction/"
+    - "prompts/"
+    - "configs/"
+    - "tests/"
+  conventions:
+    - "Explicit schema versioning."
+    - "Document IDs for traceability."
+    - "Output filenames include pmid-doi-pmcid from input directory names."
+
+operations:
+  logging:
+    - "Extraction decisions and evidence span provenance."
+    - "Validation warnings per document stored in a JSONL sidecar."
+  metrics:
+    - "extractions_per_doc"
+    - "evidence_coverage_ratio"
+    - "evidence_missing_rate"
+    - "field_f1_score"
+    - "linking_rate"
+    - "analysis_link_coverage"
+    - "normalization_rate"
+    - "cache_hit_rate"
+  deployment: "Local scripts / notebooks"
+  runbook_notes:
+    - "Run ingestion+extraction, review evidence spans, validate evidence requirements, re-run normalization as schema evolves."
+    - "Purge cache manually as needed; cache keys include input/config/schema/prompts/model."
+    - "Aggregate per-document JSONL into a run-level JSONL at export (from normalized outputs)."
