@@ -15,6 +15,7 @@ purpose:
     - "Produce structured, evidence-grounded data for neuroimaging articles."
     - "Track provenance with char-offset evidence spans; use section context during prompting."
     - "Support evolving schemas without rewriting the pipeline each time."
+    - "Enable schema migrations by reusing existing fields/evidence and only re-extracting missing or updated fields."
     - "Enable human review of extracted answers against source text."
     - "Normalize concepts and conditions using ONVOC."
   non_goals:
@@ -31,10 +32,17 @@ constraints:
     - "Ingest XML/HTML/PDF from local directories; OCR fallback when text is missing (docling or similar)."
     - "Extract text while preserving stable document-level char offsets for evidence linkage."
     - "Preprocess text with offset-preserving normalization; expand abbreviations per article using scispaCy AbbreviationDetector with an offset map."
+    - "Build per-document retrieval units (sentences, captions, table rows, section headings) with embeddings for context selection."
+    - "Store section headings as separate embeddings and combine section + sentence similarity with a weighted score; retrieve top-k and rerank to 5-10 before extraction prompts."
     - "Entity extraction via LangExtract using schemas defined in schema.py (ExtractedValue wrappers) and per-entity prompt files."
     - "LangExtract performs extraction and evidence alignment in one step; summaries are stored in attributes while extraction_text remains verbatim with supporting evidence spans."
     - "Require 1+ evidence spans for any non-null extracted value."
     - "Provide section titles in prompt context and store them when available in EvidenceSpan.section."
+    - "Support field-level incremental extraction: accept existing entity JSONL + evidence spans, compute a needs-update mask, and prompt only for missing/changed fields."
+    - "If an entity's overall prompt changes, re-extract all fields for that entity (skip incremental)."
+    - "Respect a flag that locks existing fields to prevent overwrites during incremental runs."
+    - "Merge incremental outputs with existing values while recording field-level provenance (schema version, prompt version, run id, source=existing|updated) in a run-level sidecar manifest keyed by entity id + field path."
+    - "Treat reused evidence spans as trusted unless the corresponding field is re-extracted."
     - "Link entities with StudyLinks edges (group_task, task_modality, group_modality, analysis_task, analysis_group, analysis_condition) with optional per-edge evidence."
     - "Verification is human review of answers vs evidence spans (LangExtract HTML)."
     - "Normalize medical conditions, concepts, and domain tags with ONVOC."
@@ -46,6 +54,7 @@ constraints:
     - "Traceability from output fields to source text spans."
     - "Evidence completeness: any non-null value must include evidence."
     - "Cost-aware extraction with smaller models when context is narrowed."
+    - "Incremental runs should minimize LLM calls by skipping unchanged fields."
     - "Re-runnable with deterministic non-LLM steps."
     - "Extraction-stage caching keyed by input hash, config, schema version, prompts, and model id; cache.sqlite stored per hash."
   assumptions:
@@ -66,6 +75,8 @@ constraints:
     - "OCR noise or PDF layout artifacts break offsets and evidence spans."
     - "Section titles may be missing or inconsistent across articles."
     - "Schema evolution requires re-prompting or re-extraction."
+    - "Partial updates can introduce inconsistencies between old and new fields."
+    - "Reused evidence spans may be stale if schema semantics change."
     - "Strict evidence requirements may increase nulls or extraction failures."
     - "Multi-task studies can produce ambiguous analysis-to-condition mappings."
 
@@ -85,10 +96,11 @@ mvp:
     - "CLI with per-stage subcommands and progress bars."
     - "SQLite-backed caching of extraction stage outputs."
   nice_to_have:
-    - "Section-aware passage retrieval to narrow LLM context."
+    - "Section-aware passage retrieval to narrow LLM context (separate section embeddings + reranker)."
     - "Confidence scoring for extractions."
     - "Active learning loop for prompt/schema refinement."
     - "DSPy prompt optimization per field."
+    - "Delta extraction support for schema migrations with field-level masks."
   future:
     - "Automated QA checks and cross-document consistency."
     - "Ontology expansion beyond ONVOC."
@@ -147,7 +159,7 @@ interfaces:
   cli:
     - "pondie <stage> [options] (stages: ingest, text, preprocess, extract, link, normalize, export, review, evaluate, optimize)"
   behavior_flows:
-    - "Ingest article -> extract text with offsets -> preprocess -> langextract extraction+evidence -> link entities -> normalize ONVOC -> export per-doc JSONL -> aggregate JSONL."
+    - "Ingest article -> extract text with offsets -> preprocess -> retrieve per-doc context -> langextract extraction+evidence -> link entities -> normalize ONVOC -> export per-doc JSONL -> aggregate JSONL."
   errors:
     - "IngestionError"
     - "TextExtractionError"
@@ -160,14 +172,17 @@ architecture:
     - "ingestion: load XML/HTML/PDF, OCR fallback"
     - "text: docling (or similar) parsing and offset retention; merge tables/figures into main text"
     - "preprocess: offset-preserving normalization; scispaCy abbreviation expansion with offset map"
+    - "retrieval: per-doc context selection using sentence + section embeddings, captions/tables, and reranking"
     - "extraction: langextract-driven extraction with evidence alignment (ExtractedValue + inference_policy) using per-entity prompt files"
+    - "migration: field-level delta extraction + merge using existing outputs and evidence spans"
     - "linking: LLM-inferred StudyLinks edges with explicit textual support and optional per-edge evidence"
     - "verification: human review using evidence spans (LangExtract HTML)"
     - "normalization: ONVOC mapping for concepts/domain tags/medical conditions"
     - "export: per-document JSONL plus aggregated JSONL from normalized outputs; sidecar run manifest"
     - "prompt_optimization: DSPy-based prompt tuning per field (optional)"
   flow:
-    - "Article -> text+sections -> langextract extraction+evidence -> StudyLinks edges -> normalized fields -> per-doc JSONL -> aggregate JSONL"
+    - "Article -> text+sections -> preprocess -> retrieve context -> langextract extraction+evidence -> StudyLinks edges -> normalized fields -> per-doc JSONL -> aggregate JSONL"
+    - "Existing outputs -> compute field mask -> delta extraction for missing/updated fields -> merge with sidecar provenance manifest"
     - "Optional: DSPy optimize prompts on gold set -> update prompt files for future runs"
 
 technology:
@@ -223,5 +238,6 @@ operations:
   deployment: "Local scripts / notebooks"
   runbook_notes:
     - "Run ingestion+extraction, review evidence spans, validate evidence requirements, re-run normalization as schema evolves."
+    - "For schema changes, run delta extraction using existing JSONL + evidence spans; re-extract only missing/updated fields and merge results."
     - "Purge cache manually as needed; cache keys include input/config/schema/prompts/model."
     - "Aggregate per-document JSONL into a run-level JSONL at export (from normalized outputs)."
