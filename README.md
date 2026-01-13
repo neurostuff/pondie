@@ -24,7 +24,7 @@ As well, these entities may be linked to each other
 
 7. **Entity Linking**: Link related entities together based on their relationships described in the text.
 
-8. **Verification**: Implement a verification step to ensure the accuracy of extracted entities and their relationships, using evidence spans and LangExtract HTML review.
+8. **Verification**: Implement a verification step to ensure the accuracy of extracted entities and their relationships, using evidence spans and an editable LangExtract HTML review that can export corrected JSONL for training.
 
 9. **Normalization**: Standardize entity names for consistency across articles (ONVOC).
 
@@ -62,11 +62,11 @@ flowchart TD
   G --> H["Export per-doc JSONL"]
   H --> I["Aggregate run JSONL + run manifest<br/>(provenance sidecar)"]
 
-  D --> R["Human review<br/>(LangExtract HTML)"]
+  D --> R["Human review<br/>(LangExtract HTML + editable export)"]
   F --> R
 
   subgraph Inputs
-    S["schema.py<br/>(entities + fields)"]
+    S["information_extraction/schema.py<br/>(entities + fields)"]
     P["prompt files<br/>(per-entity JSON)"]
     Cfg["run config<br/>(models, params)"]
     V["ONVOC<br/>ontology"]
@@ -178,7 +178,7 @@ the group being studied.
 Summaries will be stored in attributes while keeping the extraction_text verbatim, with evidence spans supporting the summary.
 
 ### Document IDs
-Document IDs are derived from directory names (pmid-doi-pmcid), with missing IDs omitted.
+Document IDs are derived from `identifiers.json` in each hash directory (pmid/doi/pmcid), omitting missing IDs and falling back to the hash when needed. Source files live under `source/<provider>` (ace/pubget/elsevier) within each hash directory.
 
 ### How to find relevant text for information extraction
 If I'm grouping the the extractions for specific entities, I do not want to pass the entire document for each extraction, so I want to find relevant text spans to pass into the model, and re-relate the evidentiary text spans back to the full document.
@@ -227,7 +227,7 @@ Abbreviation expansion will use sci-spaCy and must preserve offsets.
 
 The final output may be best represented as a knowledge graph
 about the paper, since groups, tasks, modalities can all be connected.
-Per-document outputs will be named using pmid-doi-pmcid derived from input directory names.
+Per-document outputs will be named using pmid-doi-pmcid derived from `identifiers.json` (falling back to the hash when needed).
 
 
 ### Reference/Citations graphs

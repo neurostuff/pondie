@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "information-extraction"
+version = "0.1.0"
+description = "Neuroimaging article information extraction pipeline"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "beautifulsoup4>=4.12",
+  "python-dotenv>=1.0",
+  "lxml>=5.1",
+  "langextract",
+  "tenacity>=8.2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+docling = [
+  "docling>=0.1.0",
+]
+
+[project.scripts]
+pondie = "information_extraction.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["information_extraction*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

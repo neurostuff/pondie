@@ -17,4 +17,4 @@ Assumptions:
 - Some inconsistencies will be resolved in post-processing.
 - Warnings are logged per-article for later review.
 - No consistency checks are mandatory for MVP.
-- Warning sidecar filenames follow `pmid-doi-pmcid.warnings.jsonl` (omitting missing IDs).
+- Warning sidecar filenames follow `pmid-doi-pmcid.warnings.jsonl` using identifiers.json (omitting missing IDs and falling back to the hash when needed).

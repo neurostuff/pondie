@@ -1,0 +1,35 @@
+{
+  "version": "v1",
+  "entity": "StudyLinks",
+  "extraction_class": "link",
+  "prompt_description": "Extract explicit links between entities. Output one extraction per edge and use the provided entity IDs.",
+  "fields": [
+    "edge_type",
+    "source_id",
+    "target_id",
+    "n_scanned"
+  ],
+  "examples": [
+    {
+      "text": "All participants completed the Stroop task during fMRI scanning.",
+      "extractions": [
+        {
+          "extraction_text": "completed the Stroop task",
+          "attributes": {
+            "edge_type": "group_task",
+            "source_id": "G1",
+            "target_id": "T1"
+          }
+        },
+        {
+          "extraction_text": "during fMRI scanning",
+          "attributes": {
+            "edge_type": "task_modality",
+            "source_id": "T1",
+            "target_id": "M1"
+          }
+        }
+      ]
+    }
+  ]
+}

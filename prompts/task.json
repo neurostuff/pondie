@@ -1,0 +1,32 @@
+{
+  "version": "v1",
+  "entity": "TaskBase",
+  "extraction_class": "task",
+  "prompt_description": "Extract tasks/paradigms described in the text. Produce one extraction per distinct task.",
+  "fields": [
+    "resting_state",
+    "task_name",
+    "task_description",
+    "design_details",
+    "task_design",
+    "task_duration",
+    "conditions",
+    "concepts",
+    "domain_tags"
+  ],
+  "examples": [
+    {
+      "text": "Participants performed a Stroop task with incongruent and congruent trials in a blocked design.",
+      "extractions": [
+        {
+          "extraction_text": "Stroop task",
+          "attributes": {
+            "task_name": "Stroop task",
+            "task_design": ["Blocked"],
+            "conditions": ["incongruent", "congruent"]
+          }
+        }
+      ]
+    }
+  ]
+}

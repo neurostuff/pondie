@@ -10,6 +10,7 @@ Requirements:
 - Support schema evolution without breaking downstream consumers.
 - Expose stable IDs and entity types for linking.
 - Record schema version in run metadata and output filenames (not in the `StudyRecord` payload).
+- Record field-level provenance in a run-level sidecar manifest keyed by entity id + field path.
 
 Assumptions:
 - Entity IDs are injected by pipeline logic (not LLM generated).

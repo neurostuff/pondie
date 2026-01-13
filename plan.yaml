@@ -34,7 +34,7 @@ constraints:
     - "Preprocess text with offset-preserving normalization; expand abbreviations per article using scispaCy AbbreviationDetector with an offset map."
     - "Build per-document retrieval units (sentences, captions, table rows, section headings) with embeddings for context selection."
     - "Store section headings as separate embeddings and combine section + sentence similarity with a weighted score; retrieve top-k and rerank to 5-10 before extraction prompts."
-    - "Entity extraction via LangExtract using schemas defined in schema.py (ExtractedValue wrappers) and per-entity prompt files."
+    - "Entity extraction via LangExtract using schemas in information_extraction/schema.py with per-field ExtractedValue and per-item evidence."
     - "LangExtract performs extraction and evidence alignment in one step; summaries are stored in attributes while extraction_text remains verbatim with supporting evidence spans."
     - "Require 1+ evidence spans for any non-null extracted value."
     - "Provide section titles in prompt context and store them when available in EvidenceSpan.section."
@@ -43,8 +43,9 @@ constraints:
     - "Respect a flag that locks existing fields to prevent overwrites during incremental runs."
     - "Merge incremental outputs with existing values while recording field-level provenance (schema version, prompt version, run id, source=existing|updated) in a run-level sidecar manifest keyed by entity id + field path."
     - "Treat reused evidence spans as trusted unless the corresponding field is re-extracted."
+    - "Support batching of LLM API submissions (when provider supports it) to reduce extraction cost by up to ~50%."
     - "Link entities with StudyLinks edges (group_task, task_modality, group_modality, analysis_task, analysis_group, analysis_condition) with optional per-edge evidence."
-    - "Verification is human review of answers vs evidence spans (LangExtract HTML)."
+    - "Verification is human review of answers vs evidence spans (LangExtract HTML), with editable review exports for training JSONL."
     - "Normalize medical conditions, concepts, and domain tags with ONVOC."
     - "Export per-document JSONL plus an aggregated run JSONL from final normalized outputs; store run metadata in a sidecar manifest."
     - "Write outputs to new files/directories per stage (no destructive overwrites)."
@@ -64,7 +65,7 @@ constraints:
     - "LLM access is available for extraction and linking."
     - "Entity IDs are injected by pipeline logic (not LLM generated)."
     - "Summaries may be synthesized (non-verbatim) but must reference supporting evidence spans."
-    - "Inputs are local files; document IDs come from directory names (pmid-doi-pmcid) with missing IDs omitted."
+    - "Inputs are local files; each hash directory includes identifiers.json and source files under source/<provider> (ace/pubget/elsevier). Document IDs are derived from identifiers.json (pmid/doi/pmcid), omitting missing IDs and falling back to the hash when needed."
     - "Tables/figures are merged into the main text stream when possible."
     - "Prompts/examples are stored in separate per-entity files (e.g., entity.json)."
     - "Model/provider and extraction parameters are provided in YAML config (no default model)."
@@ -85,13 +86,13 @@ mvp:
     - "Ingestion for XML/HTML/PDF with OCR fallback."
     - "Text extraction with offset tracking."
     - "Offset-preserving preprocessing."
-    - "Entity extraction per schema.py."
+    - "Entity extraction per information_extraction/schema.py."
     - "LangExtract extraction + evidence alignment with char offsets."
     - "Entity linking per StudyLinks edges."
     - "Evidence-required schema validation for extracted values."
     - "Human-verifiable evidence presentation."
     - "Normalization to ONVOC."
-    - "JSONL output with ExtractedValue wrappers, evidence, units, and missing_reason."
+    - "JSONL output with per-field ExtractedValue, evidence spans with intervals, units, and missing_reason."
     - "Aggregate JSONL output combining per-document results at end of run."
     - "CLI with per-stage subcommands and progress bars."
     - "SQLite-backed caching of extraction stage outputs."
@@ -129,9 +130,12 @@ domain:
       EvidenceSpan = {
         "source": "text|table|figure_caption|supplement|other",
         "section": "Methods/Task",
-        "quote": "...",
-        "char_start": 1234,
-        "char_end": 1290,
+        "extraction_text": "...",
+        "char_interval": {"start_pos": 1234, "end_pos": 1290},
+        "alignment_status": "match_exact|match_greater|match_lesser|match_fuzzy",
+        "extraction_index": 1,
+        "group_index": 0,
+        "document_id": "doc_abc123",
         "locator": "sentence_id/table_id/figure_id"
       }
     - >
@@ -176,7 +180,7 @@ architecture:
     - "extraction: langextract-driven extraction with evidence alignment (ExtractedValue + inference_policy) using per-entity prompt files"
     - "migration: field-level delta extraction + merge using existing outputs and evidence spans"
     - "linking: LLM-inferred StudyLinks edges with explicit textual support and optional per-edge evidence"
-    - "verification: human review using evidence spans (LangExtract HTML)"
+    - "verification: human review using evidence spans (LangExtract HTML) with editable JSONL export"
     - "normalization: ONVOC mapping for concepts/domain tags/medical conditions"
     - "export: per-document JSONL plus aggregated JSONL from normalized outputs; sidecar run manifest"
     - "prompt_optimization: DSPy-based prompt tuning per field (optional)"

@@ -17,9 +17,7 @@ from typing_extensions import Literal
 ExtractionTypeLiteral = Literal[
     "generated",
     "text",
-    "text_list",
     "enum",
-    "enum_list",
     "numeric",
     "boolean",
     "summary",
@@ -50,23 +48,17 @@ InferencePolicyLiteral = Literal[
     "post_normalize",
 ]
 
+AlignmentStatusLiteral = Literal[
+    "match_exact",
+    "match_greater",
+    "match_lesser",
+    "match_fuzzy",
+]
 
 def extraction_meta(
     extraction_type: ExtractionTypeSpec,
     prompt: str,
     scope_hint: Optional[str] = None,
-    cardinality: Optional[
-        Literal[
-            "single",
-            "list",
-            "per_group",
-            "per_task",
-            "per_modality",
-            "per_analysis",
-            "per_condition",
-            "edge_list",
-        ]
-    ] = None,
     extraction_phase: Optional[ExtractionPhaseLiteral] = None,
     allow_note: bool = False,
     inference_policy: InferencePolicyLiteral = "explicit_only",
@@ -77,8 +69,6 @@ def extraction_meta(
     }
     if scope_hint:
         meta["scope_hint"] = scope_hint
-    if cardinality:
-        meta["cardinality"] = cardinality
     if extraction_phase:
         meta["extraction_phase"] = extraction_phase
     meta["allow_note"] = allow_note
@@ -89,18 +79,36 @@ def extraction_meta(
 # -----------------------------
 # Provenance / evidence model
 # -----------------------------
+class CharInterval(BaseModel):
+    start_pos: Optional[int] = Field(
+        default=None, description="Character start offset in the normalized text."
+    )
+    end_pos: Optional[int] = Field(
+        default=None, description="Character end offset in the normalized text."
+    )
+
+
 class EvidenceSpan(BaseModel):
     source: Literal["text", "table", "figure_caption", "supplement", "other"] = "text"
     section: Optional[str] = Field(default=None, description="Section path if known.")
-    quote: Optional[str] = Field(
+    extraction_text: Optional[str] = Field(
         default=None,
-        description="Short excerpt supporting the value (<= ~1-2 sentences).",
+        description="Verbatim text span supporting the value.",
     )
-    char_start: Optional[int] = Field(
-        default=None, description="Character start offset in the normalized text."
+    char_interval: Optional[CharInterval] = Field(
+        default=None, description="Character interval for the evidence span."
     )
-    char_end: Optional[int] = Field(
-        default=None, description="Character end offset in the normalized text."
+    alignment_status: Optional[AlignmentStatusLiteral] = Field(
+        default=None, description="Alignment status reported by LangExtract."
+    )
+    extraction_index: Optional[int] = Field(
+        default=None, description="Extraction index reported by LangExtract."
+    )
+    group_index: Optional[int] = Field(
+        default=None, description="Group index reported by LangExtract."
+    )
+    document_id: Optional[str] = Field(
+        default=None, description="Source document ID for this evidence span."
     )
     locator: Optional[str] = Field(
         default=None,
@@ -173,8 +181,6 @@ class IntField(ExtractedValue[int]): ...
 class FloatField(ExtractedValue[float]): ...
 class StrField(ExtractedValue[str]): ...
 class BoolField(ExtractedValue[bool]): ...
-class StrListField(ExtractedValue[List[str]]): ...
-class FloatListField(ExtractedValue[List[float]]): ...
 
 
 # -----------------------------
@@ -188,7 +194,6 @@ class EntityBase(BaseModel):
             "generated",
             "Assigned by pipeline logic; do not extract from text.",
             extraction_phase="entity",
-            cardinality="single",
         ),
     )
 
@@ -247,7 +252,7 @@ class ModalityType(BaseModel):
 # -----------------------------
 class ModalityBase(EntityBase):
     # Controlled vocabulary
-    modality_type: Optional[ExtractedValue[ModalityType]] = Field(
+    modality_type: Optional[ModalityType] = Field(
         default=None,
         description="Modality family/subtype.",
         json_schema_extra=extraction_meta(
@@ -359,7 +364,6 @@ class Condition(EntityBase):
             "Extract the condition label as stated. Return null if not stated.",
             scope_hint="Methods/Task, Results, Captions",
             extraction_phase="condition",
-            cardinality="per_condition",
         ),
     )
 
@@ -422,11 +426,11 @@ class TaskBase(EntityBase):
         ),
     )
 
-    task_design: Optional[ExtractedValue[List[TaskDesignLiteral]]] = Field(
+    task_design: Optional[List[ExtractedValue[TaskDesignLiteral]]] = Field(
         default=None,
         description="Task design tags (only if explicitly stated).",
         json_schema_extra=extraction_meta(
-            "enum_list",
+            "enum",
             "Select design tags only when explicitly described. Return null if not stated.",
             scope_hint="Methods/Task",
             extraction_phase="task",
@@ -446,7 +450,7 @@ class TaskBase(EntityBase):
         ),
     )
 
-    conditions: Optional[ExtractedValue[List[Condition]]] = Field(
+    conditions: Optional[List[Condition]] = Field(
         default=None,
         description="Conditions for this task.",
         json_schema_extra=extraction_meta(
@@ -455,15 +459,14 @@ class TaskBase(EntityBase):
             "Return null if conditions are not stated.",
             scope_hint="Methods/Task, Results",
             extraction_phase="task",
-            cardinality="list",
         ),
     )
 
-    concepts: Optional[StrListField] = Field(
+    concepts: Optional[List[StrField]] = Field(
         default=None,
         description="Cognitive concepts explicitly associated with the task.",
         json_schema_extra=extraction_meta(
-            "text_list",
+            "text",
             "List cognitive concepts exactly as stated. Do not map to domain tags. "
             "Return null if not stated.",
             scope_hint="Methods/Task, Abstract, Introduction (if explicitly describing this study's task)",
@@ -472,11 +475,11 @@ class TaskBase(EntityBase):
     )
 
     # Separate domain tags from concept text
-    domain_tags: Optional[ExtractedValue[List[TaskDomainLiteral]]] = Field(
+    domain_tags: Optional[List[ExtractedValue[TaskDomainLiteral]]] = Field(
         default=None,
         description="Cognitive domain tags.",
         json_schema_extra=extraction_meta(
-            "enum_list",
+            "enum",
             "Select domain tags only when explicitly stated in the article. "
             "Do not copy raw concept phrases. Return null if not stated.",
             scope_hint="Methods/Task, Abstract",
@@ -503,7 +506,6 @@ class GroupBase(EntityBase):
             scope_hint="Methods/Participants, Abstract",
             extraction_phase="group",
             inference_policy="post_normalize",
-            cardinality="per_group",
         ),
     )
 
@@ -516,7 +518,6 @@ class GroupBase(EntityBase):
             "Do not restrict to diagnosis terms. Return null if not stated.",
             scope_hint="Methods/Participants, Abstract, Table 1",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
@@ -530,7 +531,6 @@ class GroupBase(EntityBase):
             "Return null if not stated.",
             scope_hint="Methods/Participants, Abstract",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
@@ -543,7 +543,6 @@ class GroupBase(EntityBase):
             "Do not use pooled totals. Return null if not stated.",
             scope_hint="Methods/Participants, Abstract, Table 1, Results",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
@@ -555,7 +554,6 @@ class GroupBase(EntityBase):
             "Extract male count as a number. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
@@ -567,7 +565,6 @@ class GroupBase(EntityBase):
             "Extract female count as a number. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
@@ -579,7 +576,6 @@ class GroupBase(EntityBase):
             "Extract mean age as a number. Return null if not stated for this group.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
@@ -591,7 +587,6 @@ class GroupBase(EntityBase):
             "Extract age SD as a number if stated. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
@@ -604,7 +599,6 @@ class GroupBase(EntityBase):
             "Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
@@ -617,7 +611,6 @@ class GroupBase(EntityBase):
             "Do not infer from age range. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
     age_maximum: Optional[IntField] = Field(
@@ -629,7 +622,6 @@ class GroupBase(EntityBase):
             "Do not infer from age range. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
@@ -641,7 +633,6 @@ class GroupBase(EntityBase):
             "Extract median age as a number. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
@@ -654,33 +645,30 @@ class GroupBase(EntityBase):
             "Set false only if explicitly stated not all are right-handed. Otherwise null.",
             scope_hint="Methods/Participants",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
     # Group-level inclusion/exclusion (optional extension)
-    inclusion_criteria: Optional[StrListField] = Field(
+    inclusion_criteria: Optional[List[StrField]] = Field(
         default=None,
         description="Group-specific inclusion criteria items.",
         json_schema_extra=extraction_meta(
-            "text_list",
+            "text",
             "List criteria only when explicitly tied to this group. "
             "Do not copy study-wide criteria. Return null if not group-specific.",
             scope_hint="Methods/Participants",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
-    exclusion_criteria: Optional[StrListField] = Field(
+    exclusion_criteria: Optional[List[StrField]] = Field(
         default=None,
         description="Group-specific exclusion criteria items.",
         json_schema_extra=extraction_meta(
-            "text_list",
+            "text",
             "List criteria only when explicitly tied to this group. "
             "Do not copy study-wide criteria. Return null if not group-specific.",
             scope_hint="Methods/Participants",
             extraction_phase="group",
-            cardinality="per_group",
         ),
     )
 
@@ -700,7 +688,6 @@ class SharedDemographics(BaseModel):
             "Do not sum group counts. Return null if not stated.",
             scope_hint="Methods/Participants, Abstract, Table 1",
             extraction_phase="demographics_shared",
-            cardinality="single",
         ),
     )
 
@@ -743,7 +730,7 @@ class SharedDemographics(BaseModel):
 
 
 class DemographicsSchema(BaseModel):
-    shared: Optional[ExtractedValue[SharedDemographics]] = Field(
+    shared: Optional[SharedDemographics] = Field(
         default=None,
         description="Pooled/shared demographics reported across groups.",
         json_schema_extra=extraction_meta(
@@ -753,7 +740,7 @@ class DemographicsSchema(BaseModel):
             extraction_phase="demographics_shared",
         ),
     )
-    groups: Optional[ExtractedValue[List[GroupBase]]] = Field(
+    groups: Optional[List[GroupBase]] = Field(
         default=None,
         description="Participant groups described in the study.",
         json_schema_extra=extraction_meta(
@@ -762,7 +749,6 @@ class DemographicsSchema(BaseModel):
             "Return null if none are stated.",
             scope_hint="Methods/Participants, Abstract, Table 1",
             extraction_phase="group",
-            cardinality="list",
         ),
     )
 
@@ -784,15 +770,14 @@ class AnalysisBase(EntityBase):
             "Select WholeBrain/ROI/Atlas/Other only if explicitly stated. Return null if not stated.",
             scope_hint="Methods/Analysis, Results",
             extraction_phase="analysis",
-            cardinality="per_analysis",
         ),
     )
 
-    study_design_tags: Optional[ExtractedValue[List[StudyDesignLiteral]]] = Field(
+    study_design_tags: Optional[List[ExtractedValue[StudyDesignLiteral]]] = Field(
         default=None,
         description="Study design tags associated with this analysis (explicit only).",
         json_schema_extra=extraction_meta(
-            "enum_list",
+            "enum",
             "Select design tags explicitly linked to this analysis. Do not infer. Return null if not stated.",
             scope_hint="Methods, Abstract",
             extraction_phase="analysis",
@@ -822,11 +807,11 @@ class AnalysisBase(EntityBase):
         ),
     )
 
-    outcome_measures: Optional[StrListField] = Field(
+    outcome_measures: Optional[List[StrField]] = Field(
         default=None,
         description="Outcome measures reported for the analysis.",
         json_schema_extra=extraction_meta(
-            "text_list",
+            "text",
             "List outcome measures exactly as stated. Return null if none are stated.",
             scope_hint="Results",
             extraction_phase="analysis",
@@ -848,32 +833,29 @@ class StudyMetadataModel(BaseModel):
             scope_hint="Abstract, Introduction",
             extraction_phase="study",
             inference_policy="synthesize",
-            cardinality="single",
         ),
     )
 
-    inclusion_criteria: Optional[StrListField] = Field(
+    inclusion_criteria: Optional[List[StrField]] = Field(
         default=None,
         description="Study-wide inclusion criteria items.",
         json_schema_extra=extraction_meta(
-            "text_list",
+            "text",
             "List each inclusion criterion as a discrete item using the wording in the article. "
             "Do not include criteria stated only for specific groups. Return null if not stated.",
             scope_hint="Methods/Participants",
             extraction_phase="study",
-            cardinality="list",
         ),
     )
-    exclusion_criteria: Optional[StrListField] = Field(
+    exclusion_criteria: Optional[List[StrField]] = Field(
         default=None,
         description="Study-wide exclusion criteria items.",
         json_schema_extra=extraction_meta(
-            "text_list",
+            "text",
             "List each exclusion criterion as a discrete item using the wording in the article. "
             "Do not include criteria stated only for specific groups. Return null if not stated.",
             scope_hint="Methods/Participants",
             extraction_phase="study",
-            cardinality="list",
         ),
     )
 
@@ -960,77 +942,71 @@ class GroupModalityEdge(BaseModel):
 
 
 class StudyLinks(BaseModel):
-    group_task: Optional[ExtractedValue[List[GroupTaskEdge]]] = Field(
+    group_task: Optional[List[GroupTaskEdge]] = Field(
         default=None,
         description="Edges linking groups to tasks they performed.",
         json_schema_extra=extraction_meta(
             "edge_list",
             "Create edges only when explicitly stated (e.g., 'all participants completed task X'). "
-            "Return null if not stated. Include list-level evidence spans; add per-edge evidence when possible.",
+            "Return null if not stated. Add per-edge evidence when possible.",
             scope_hint="Methods/Task, Methods/Participants, Results",
             extraction_phase="linking",
-            cardinality="edge_list",
         ),
     )
-    task_modality: Optional[ExtractedValue[List[TaskModalityEdge]]] = Field(
+    task_modality: Optional[List[TaskModalityEdge]] = Field(
         default=None,
         description="Edges linking tasks to modalities used (e.g., task fMRI).",
         json_schema_extra=extraction_meta(
             "edge_list",
             "Create edges only when explicitly stated. Return null if not stated. "
-            "Include list-level evidence spans; add per-edge evidence when possible.",
+            "Add per-edge evidence when possible.",
             scope_hint="Methods/Imaging, Methods/Task, Results",
             extraction_phase="linking",
-            cardinality="edge_list",
         ),
     )
-    analysis_task: Optional[ExtractedValue[List[AnalysisTaskEdge]]] = Field(
+    analysis_task: Optional[List[AnalysisTaskEdge]] = Field(
         default=None,
         description="Edges linking analyses to the tasks they test.",
         json_schema_extra=extraction_meta(
             "edge_list",
             "Create edges only when explicitly stated (e.g., contrast tied to a named task). "
-            "Return null if not stated. Include list-level evidence spans; add per-edge evidence when possible.",
+            "Return null if not stated. Add per-edge evidence when possible.",
             scope_hint="Methods/Analysis, Methods/Task, Results",
             extraction_phase="linking",
-            cardinality="edge_list",
         ),
     )
-    analysis_group: Optional[ExtractedValue[List[AnalysisGroupEdge]]] = Field(
+    analysis_group: Optional[List[AnalysisGroupEdge]] = Field(
         default=None,
         description="Edges linking analyses to groups included in the analysis.",
         json_schema_extra=extraction_meta(
             "edge_list",
             "Create edges only when explicitly stated (e.g., analysis limited to a specific group). "
-            "Return null if not stated. Include list-level evidence spans; add per-edge evidence when possible.",
+            "Return null if not stated. Add per-edge evidence when possible.",
             scope_hint="Methods/Analysis, Methods/Participants, Results",
             extraction_phase="linking",
-            cardinality="edge_list",
         ),
     )
-    analysis_condition: Optional[ExtractedValue[List[AnalysisConditionEdge]]] = Field(
+    analysis_condition: Optional[List[AnalysisConditionEdge]] = Field(
         default=None,
         description="Edges linking analyses to specific task conditions.",
         json_schema_extra=extraction_meta(
             "edge_list",
             "Create edges only when explicitly stated (e.g., contrast references named conditions). "
-            "Return null if not stated. Include list-level evidence spans; add per-edge evidence when possible.",
+            "Return null if not stated. Add per-edge evidence when possible.",
             scope_hint="Methods/Analysis, Methods/Task, Results",
             extraction_phase="linking",
-            cardinality="edge_list",
         ),
     )
-    group_modality: Optional[ExtractedValue[List[GroupModalityEdge]]] = Field(
+    group_modality: Optional[List[GroupModalityEdge]] = Field(
         default=None,
         description="Edges linking groups to modalities they underwent (supports subsets).",
         json_schema_extra=extraction_meta(
             "edge_list",
             "Create edges only when explicitly stated. If only pooled imaging is stated, "
             "consider leaving per-group edges null and note pooled in study-level notes. "
-            "Include list-level evidence spans; add per-edge evidence when possible.",
+            "Add per-edge evidence when possible.",
             scope_hint="Methods/Imaging, Methods/Participants, Results",
             extraction_phase="linking",
-            cardinality="edge_list",
         ),
     )
 
@@ -1048,7 +1024,7 @@ class StudyRecord(BaseModel):
     Pass 4: verification/consistency -> populate notes/confidence (optional)
     """
 
-    study: Optional[ExtractedValue[StudyMetadataModel]] = Field(
+    study: Optional[StudyMetadataModel] = Field(
         default=None,
         description="Study-wide metadata.",
         json_schema_extra=extraction_meta(
@@ -1059,7 +1035,7 @@ class StudyRecord(BaseModel):
         ),
     )
 
-    demographics: Optional[ExtractedValue[DemographicsSchema]] = Field(
+    demographics: Optional[DemographicsSchema] = Field(
         default=None,
         description="Groups and demographics (group + pooled).",
         json_schema_extra=extraction_meta(
@@ -1071,7 +1047,7 @@ class StudyRecord(BaseModel):
         ),
     )
 
-    tasks: Optional[ExtractedValue[List[TaskBase]]] = Field(
+    tasks: Optional[List[TaskBase]] = Field(
         default=None,
         description="Tasks/paradigms used in the study (repeatable entities).",
         json_schema_extra=extraction_meta(
@@ -1080,11 +1056,10 @@ class StudyRecord(BaseModel):
             "Exclude background/cited tasks not used here.",
             scope_hint="Abstract, Methods/Task, Results, Captions",
             extraction_phase="record",
-            cardinality="list",
         ),
     )
 
-    modalities: Optional[ExtractedValue[List[ModalityBase]]] = Field(
+    modalities: Optional[List[ModalityBase]] = Field(
         default=None,
         description="Neuroimaging modalities/acquisitions used in the study (repeatable entities).",
         json_schema_extra=extraction_meta(
@@ -1093,11 +1068,10 @@ class StudyRecord(BaseModel):
             "Exclude background mentions.",
             scope_hint="Abstract, Methods/Imaging, Results, Captions",
             extraction_phase="record",
-            cardinality="list",
         ),
     )
 
-    analyses: Optional[ExtractedValue[List[AnalysisBase]]] = Field(
+    analyses: Optional[List[AnalysisBase]] = Field(
         default=None,
         description="Analyses/contrasts reported (repeatable entities).",
         json_schema_extra=extraction_meta(
@@ -1105,11 +1079,10 @@ class StudyRecord(BaseModel):
             "Extract reported analyses/contrasts. Prefer labels/formulas as stated.",
             scope_hint="Methods/Analysis, Results, Captions",
             extraction_phase="record",
-            cardinality="list",
         ),
     )
 
-    links: Optional[ExtractedValue[StudyLinks]] = Field(
+    links: Optional[StudyLinks] = Field(
         default=None,
         description="Explicit edges linking groups, tasks, and modalities.",
         json_schema_extra=extraction_meta(
@@ -1122,11 +1095,11 @@ class StudyRecord(BaseModel):
     )
 
     # Optional global notes / quality flags
-    extraction_notes: Optional[StrListField] = Field(
+    extraction_notes: Optional[List[StrField]] = Field(
         default=None,
         description="Pipeline notes (e.g., 'demographics only in Table 1', 'subset scanned').",
         json_schema_extra=extraction_meta(
-            "text_list",
+            "text",
             "Add short notes about ambiguities or pooled reporting. Return null if none.",
             extraction_phase="record",
         ),

@@ -1,0 +1,27 @@
+{
+  "version": "v1",
+  "entity": "StudyMetadataModel",
+  "extraction_class": "study",
+  "prompt_description": "Extract study-level metadata (objective, criteria, study type). Produce one extraction for the study.",
+  "fields": [
+    "study_objective",
+    "inclusion_criteria",
+    "exclusion_criteria",
+    "study_type"
+  ],
+  "examples": [
+    {
+      "text": "We investigated conflict monitoring in schizophrenia. Inclusion criteria included DSM-IV diagnosis and right-handedness.",
+      "extractions": [
+        {
+          "extraction_text": "investigated conflict monitoring in schizophrenia",
+          "attributes": {
+            "study_objective": "Investigate conflict monitoring in schizophrenia.",
+            "inclusion_criteria": ["DSM-IV diagnosis", "right-handedness"],
+            "study_type": "OriginalResearch"
+          }
+        }
+      ]
+    }
+  ]
+}

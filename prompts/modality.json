@@ -1,0 +1,34 @@
+{
+  "version": "v1",
+  "entity": "ModalityBase",
+  "extraction_class": "modality",
+  "prompt_description": "Extract imaging modalities and acquisition parameters. Produce one extraction per distinct modality.",
+  "fields": [
+    "modality_family",
+    "modality_subtype",
+    "manufacturer",
+    "field_strength_tesla",
+    "sequence_name",
+    "voxel_size",
+    "tr_seconds",
+    "te_seconds"
+  ],
+  "examples": [
+    {
+      "text": "fMRI data were collected on a 3T Siemens Prisma scanner using an EPI sequence (TR=2 s, TE=30 ms).",
+      "extractions": [
+        {
+          "extraction_text": "fMRI data",
+          "attributes": {
+            "modality_family": "fMRI",
+            "manufacturer": "Siemens",
+            "field_strength_tesla": "3",
+            "sequence_name": "EPI",
+            "tr_seconds": "2",
+            "te_seconds": "0.03"
+          }
+        }
+      ]
+    }
+  ]
+}

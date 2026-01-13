@@ -2,7 +2,7 @@
 
 Prompt files are JSON files stored per entity type (e.g., `group.json`, `task.json`).
 They provide a group-level prompt and few-shot examples for LangExtract. Field-level prompts
-remain in `schema.py`; prompt files focus on grouped field extraction.
+remain in `information_extraction/schema.py`; prompt files focus on grouped field extraction.
 
 ## Required Fields
 
@@ -15,7 +15,7 @@ remain in `schema.py`; prompt files focus on grouped field extraction.
 
 ## Optional Fields
 
-- `field_prompt_overrides`: map of field name -> prompt string to override `schema.py`.
+- `field_prompt_overrides`: map of field name -> prompt string to override `information_extraction/schema.py`.
   Use this when DSPy optimization produces field-specific prompt improvements.
 
 ## Example Structure
@@ -69,5 +69,6 @@ remain in `schema.py`; prompt files focus on grouped field extraction.
 - `extraction_text` must be verbatim from the example `text` to enable evidence alignment.
 - For summary fields, store synthesized text in `attributes` while keeping `extraction_text` verbatim.
 - `fields` must match schema field names exactly.
-- Prompt files should not duplicate field-level prompts from `schema.py`.
- - DSPy can update `prompt_description` and `field_prompt_overrides` in new prompt file versions.
+- Prompt files should not duplicate field-level prompts from `information_extraction/schema.py`.
+- DSPy can update `prompt_description` and `field_prompt_overrides` in new prompt file versions.
+- Bump `version` whenever a prompt change should trigger a full re-extract for that entity.
