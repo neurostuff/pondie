@@ -1,37 +1,63 @@
 #!/usr/bin/env python3
+"""
+Workflow:
+1) Load the source markdown (optionally expand abbreviations and save .expanded.md).
+2) Extract entities (study/groups/tasks/modalities/analyses) with GPT-5-nano unless
+   a valid .entities.gpt5-nano.json exists and --force-reextract is not set.
+3) Normalize IDs, task conditions, and run linking unless --skip-links is set.
+4) Run a verification pass to correct missing/extra entities and fields.
+5) Expand abbreviations in the record (save .expanded.json) before evidence.
+6) Attach evidence spans via embedding retrieval + NLI (with LLM fallback), then
+   write the .entities.gpt5-nano.grounded.json output.
+"""
 from __future__ import annotations
 
 import argparse
 import difflib
 import hashlib
+import math
 import json
 import os
-import random
 import re
 import sys
-import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, Union, get_args, get_origin
+from typing import Any, get_args, get_origin
 
-try:
-    from tqdm import tqdm
-except ImportError:  # pragma: no cover - optional dependency
-    tqdm = None
+import torch
+from tqdm import tqdm
+from num2words import num2words
+import nltk
+from nltk.tokenize import sent_tokenize
 
 from dotenv import load_dotenv
 import numpy as np
-from openai import (
-    APIConnectionError,
-    APITimeoutError,
-    BadRequestError,
-    InternalServerError,
-    OpenAI,
-    OpenAIError,
-    RateLimitError,
-)
+from openai import OpenAI
 
 from information_extraction import schema as schema_mod
+from information_extraction.openai_utils import _request_with_retries
+from information_extraction.prompting import (
+    EntitySpec,
+    FieldMeta,
+    _build_entity_prompt,
+    _build_field_descriptions,
+    _build_messages,
+    _build_record_schema,
+    _build_verification_prompt,
+    _field_meta_map,
+    _link_schema,
+    _load_prompt_spec_cached,
+    _prune_model_schema,
+    _verification_schema,
+    _wrap_items_schema,
+)
+from information_extraction.schema_utils import (
+    _find_literal_values,
+    _is_extracted_value_type,
+    _is_model_type,
+    _iter_model_fields,
+    _unwrap_optional,
+)
 
 
 DEFAULT_EXAMPLE_PATH = Path(
@@ -39,22 +65,37 @@ DEFAULT_EXAMPLE_PATH = Path(
 )
 
 PROMPT_ROOT = Path("prompts")
+SCHEMA_VERIFIED_KEY = "_schema_verified"
+LINKS_CACHED_KEY = "_links_cached"
+VALUE_ONLY_FIELDS = {
+    "study_objective",
+    "inclusion_criteria",
+    "exclusion_criteria",
+    "task_description",
+    "design_details",
+    "analysis_label",
+    "contrast_formula",
+}
+NUMERIC_GROUP_FIELDS = {
+    "age_maximum",
+    "age_mean",
+    "age_median",
+    "age_minimum",
+    "age_sd",
+    "count",
+    "female_count",
+    "male_count",
+}
+COMBINED_PREMISE_TOP_N = 3
+SEMANTIC_TOP_K = 5
 
 
 @dataclass(frozen=True)
-class EntitySpec:
-    key: str
-    prompt_path: Path
-    model: type[Any]
-    max_items: int | None = None
-
-
-@dataclass(frozen=True)
-class FieldMeta:
-    prompt: str | None
-    scope_hint: str | None
-    allowed_values: list[str] | None
-    description: str | None
+class EvidencePolicy:
+    value_only: bool | None = None
+    hypothesis_template: str | None = None
+    enum_values: list[str] | None = None
+    is_enum: bool = False
 
 
 @dataclass(frozen=True)
@@ -196,184 +237,26 @@ class EvidenceProgress:
             self.bar.close()
 
 
-def _unwrap_optional(annotation: Any) -> Any:
-    origin = get_origin(annotation)
-    if origin is Union:
-        args = [arg for arg in get_args(annotation) if arg is not type(None)]
-        if len(args) == 1:
-            return args[0]
-    return annotation
-
-
-def _find_literal_values(annotation: Any) -> list[str] | None:
-    if annotation is None:
-        return None
-    annotation = _unwrap_optional(annotation)
-    origin = get_origin(annotation)
-    if origin is None:
-        return None
-    if origin is list:
-        args = get_args(annotation)
-        return _find_literal_values(args[0]) if args else None
-    if origin is schema_mod.ExtractedValue:
-        args = get_args(annotation)
-        return _find_literal_values(args[0]) if args else None
-    if origin is dict:
-        return None
-    if origin is Union:
-        values: list[str] = []
-        for arg in get_args(annotation):
-            found = _find_literal_values(arg)
-            if found:
-                values.extend(found)
-        deduped = list(dict.fromkeys(values))
-        return deduped or None
-    if origin is Literal:
-        return [str(value) for value in get_args(annotation)]
-    return None
-
-
-def _iter_model_fields(
-    model: type[Any],
-) -> list[tuple[str, Any, str | None, dict[str, Any]]]:
-    fields = getattr(model, "model_fields", None)
-    if fields:
-        return [
-            (
-                name,
-                getattr(field, "annotation", None),
-                getattr(field, "description", None),
-                getattr(field, "json_schema_extra", None) or {},
-            )
-            for name, field in fields.items()
-        ]
-    legacy_fields = getattr(model, "__fields__", None) or {}
-    out = []
-    for name, field in legacy_fields.items():
-        info = field.field_info
-        out.append(
-            (
-                name,
-                getattr(field, "outer_type_", None) or getattr(field, "type_", None),
-                getattr(info, "description", None),
-                getattr(info, "extra", None) or {},
-            )
-        )
-    return out
-
-
-def _field_meta_map(model: type[Any], fields: list[str]) -> dict[str, FieldMeta]:
-    meta: dict[str, FieldMeta] = {}
-    wanted = set(fields)
-    for name, annotation, description, extra in _iter_model_fields(model):
-        if name not in wanted:
+def _model_evidence_policies(model: type[Any]) -> dict[str, EvidencePolicy]:
+    policies: dict[str, EvidencePolicy] = {}
+    for name, annotation, _description, extra in _iter_model_fields(model):
+        value_only = extra.get("evidence_value_only")
+        template = extra.get("evidence_hypothesis_template")
+        enum_values = _find_literal_values(annotation)
+        extraction_type = extra.get("extraction_type")
+        if isinstance(extraction_type, list):
+            is_enum = "enum" in extraction_type
+        else:
+            is_enum = extraction_type == "enum"
+        if value_only is None and template is None and not enum_values and not is_enum:
             continue
-        allowed_values = _find_literal_values(annotation)
-        meta[name] = FieldMeta(
-            prompt=extra.get("extraction_prompt"),
-            scope_hint=extra.get("scope_hint"),
-            allowed_values=allowed_values,
-            description=description,
+        policies[name] = EvidencePolicy(
+            value_only=value_only if isinstance(value_only, bool) else None,
+            hypothesis_template=template if isinstance(template, str) else None,
+            enum_values=enum_values,
+            is_enum=is_enum,
         )
-    for field in fields:
-        if field not in meta:
-            raise KeyError(f"Field '{field}' not found on {model.__name__}")
-    return meta
-
-
-def _relax_id(schema: dict[str, Any]) -> None:
-    if isinstance(schema, dict):
-        if "properties" in schema and "id" in schema["properties"]:
-            id_schema = schema["properties"]["id"]
-            if isinstance(id_schema, dict):
-                existing = id_schema.get("type")
-                if isinstance(existing, list):
-                    if "null" not in existing:
-                        existing.append("null")
-                elif isinstance(existing, str):
-                    id_schema["type"] = [existing, "null"]
-                else:
-                    id_schema["type"] = ["string", "null"]
-            if "required" in schema and "id" in schema["required"]:
-                schema["required"] = [name for name in schema["required"] if name != "id"]
-        for value in schema.values():
-            if isinstance(value, dict):
-                _relax_id(value)
-            elif isinstance(value, list):
-                for item in value:
-                    if isinstance(item, dict):
-                        _relax_id(item)
-
-
-def _unwrap_extracted_value(schema: dict[str, Any]) -> dict[str, Any]:
-    if "properties" in schema and "value" in schema["properties"]:
-        title = str(schema.get("title", ""))
-        props = schema.get("properties", {})
-        if "evidence" in props or "ExtractedValue" in title:
-            value_schema = props.get("value", {})
-            if isinstance(value_schema, dict):
-                existing = value_schema.get("type")
-                if isinstance(existing, list):
-                    if "null" not in existing:
-                        existing.append("null")
-                elif isinstance(existing, str):
-                    value_schema["type"] = [existing, "null"]
-            return _unwrap_extracted_value(value_schema)
-    for key, value in list(schema.items()):
-        if isinstance(value, dict):
-            schema[key] = _unwrap_extracted_value(value)
-        elif isinstance(value, list):
-            schema[key] = [
-                _unwrap_extracted_value(item) if isinstance(item, dict) else item
-                for item in value
-            ]
-    return schema
-
-
-def _prune_model_schema(
-    model: type[Any],
-    fields: list[str],
-    *,
-    include_id: bool = False,
-) -> dict[str, Any]:
-    if hasattr(model, "model_json_schema"):
-        schema = model.model_json_schema()
-    else:
-        schema = model.schema()
-    properties = schema.get("properties", {})
-    keep = set(fields)
-    if include_id and "id" in properties:
-        keep.add("id")
-    schema["properties"] = {name: properties[name] for name in keep if name in properties}
-    schema["required"] = [name for name in schema.get("required", []) if name in schema["properties"]]
-    schema["additionalProperties"] = False
-    _relax_id(schema)
-    schema = _unwrap_extracted_value(schema)
-    return schema
-
-
-def _wrap_items_schema(schema: dict[str, Any], max_items: int | None) -> dict[str, Any]:
-    items_schema: dict[str, Any] = {"type": "array", "items": schema}
-    if max_items is not None:
-        items_schema["maxItems"] = max_items
-    return {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {"items": items_schema},
-        "required": ["items"],
-    }
-
-
-PROMPT_SPEC_CACHE: dict[Path, dict[str, Any]] = {}
-
-
-def _load_prompt_spec_cached(path: Path) -> dict[str, Any]:
-    cached = PROMPT_SPEC_CACHE.get(path)
-    if cached is not None:
-        return cached
-    data = _load_prompt_spec(path)
-    PROMPT_SPEC_CACHE[path] = data
-    return data
+    return policies
 
 
 ENTITY_SPECS = [
@@ -406,269 +289,6 @@ ENTITY_SPECS = [
 ]
 
 
-def _load_prompt_spec(path: Path) -> dict[str, Any]:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        raise ValueError(f"Prompt spec must be a JSON object: {path}")
-    return data
-
-
-def _build_prompt_description(
-    prompt_spec: dict[str, Any],
-    field_meta: dict[str, FieldMeta],
-) -> str:
-    overrides = prompt_spec.get("field_prompt_overrides") or {}
-    fields = prompt_spec.get("fields") or []
-    lines = [prompt_spec.get("prompt_description", "").strip(), "", "Fields:"]
-    for field in fields:
-        override_prompt = overrides.get(field)
-        prompt_entry = field_meta.get(field)
-        prompt_text = override_prompt or (prompt_entry.prompt if prompt_entry else None)
-        scope_hint = prompt_entry.scope_hint if prompt_entry else None
-        allowed_values = prompt_entry.allowed_values if prompt_entry else None
-        details: list[str] = []
-        if scope_hint:
-            details.append(f"Scope: {scope_hint}")
-        if allowed_values:
-            details.append(f"Allowed values: {', '.join(allowed_values)}")
-        if prompt_text:
-            if details:
-                lines.append(f"- {field}: {prompt_text} ({'; '.join(details)})")
-            else:
-                lines.append(f"- {field}: {prompt_text}")
-        elif details:
-            lines.append(f"- {field}: ({'; '.join(details)})")
-        else:
-            lines.append(f"- {field}")
-    return "\n".join(line for line in lines if line is not None).strip()
-
-
-def _build_example_output(
-    fields: list[str],
-    attributes: dict[str, Any],
-) -> dict[str, Any]:
-    item = {field: None for field in fields}
-    for key, value in (attributes or {}).items():
-        if key not in item:
-            continue
-        item[key] = value
-    return {"items": [item]}
-
-
-def _build_entity_prompt(
-    prompt_spec: dict[str, Any],
-    field_meta: dict[str, FieldMeta],
-) -> str:
-    description = _build_prompt_description(prompt_spec, field_meta)
-    fields = prompt_spec.get("fields") or []
-
-    template = {"items": [{field: None for field in fields}]}
-    lines = [
-        description,
-        "",
-        "Rules:",
-        "- Use only information explicitly stated in the document.",
-        "- Include every field listed; use null when a value is not stated.",
-        "- Return JSON only (no prose, no markdown).",
-        "- Match field types based on the schema (arrays, objects, numbers, booleans).",
-        "",
-        "Output format (items may contain multiple objects):",
-        json.dumps(template, indent=2),
-    ]
-
-    examples = prompt_spec.get("examples") or []
-    if examples:
-        lines.append("")
-        lines.append("Examples:")
-        for example in examples:
-            text = example.get("text", "").strip()
-            extractions = example.get("extractions") or []
-            items = []
-            for extraction in extractions:
-                attrs = extraction.get("attributes") or {}
-                example_obj = _build_example_output(fields, attrs)
-                items.extend(example_obj.get("items", []))
-            example_output = {"items": items}
-            lines.append("Text:")
-            lines.append(text)
-            lines.append("Output:")
-            lines.append(json.dumps(example_output, indent=2))
-    return "\n".join(lines).strip()
-
-
-def _build_messages(text: str, entity_prompt: str) -> list[dict[str, str]]:
-    system = (
-        "You extract structured JSON from scientific text. "
-        "Follow the instructions and return JSON only."
-    )
-    # Put document text in a dedicated, stable message to maximize prompt caching.
-    doc_message = f"Document text:\n{text}"
-    instructions = f"{entity_prompt}\n\nUse the document text above."
-    return [
-        {"role": "system", "content": system},
-        {"role": "user", "content": doc_message},
-        {"role": "user", "content": instructions},
-    ]
-
-
-def _build_entity_descriptions(entity_name: str, field_meta: dict[str, FieldMeta]) -> str:
-    lines = [f"{entity_name} fields:"]
-    for field_name, meta in field_meta.items():
-        details: list[str] = []
-        if meta.description:
-            details.append(meta.description)
-        if meta.allowed_values:
-            details.append(f"Allowed values: {', '.join(meta.allowed_values)}")
-        if details:
-            lines.append(f"- {field_name}: {'; '.join(details)}")
-        else:
-            lines.append(f"- {field_name}")
-    return "\n".join(lines)
-
-
-def _build_verification_prompt(
-    text: str,
-    extraction: dict[str, Any],
-    field_descriptions: dict[str, str],
-) -> list[dict[str, str]]:
-    system = (
-        "You verify extracted entities against the document. "
-        "Only keep entities and values explicitly supported by the text. "
-        "Return JSON only."
-    )
-    doc_message = f"Document text:\n{text}"
-    schema_description = "\n\n".join(
-        [
-            "Schema field descriptions:",
-            field_descriptions["study"],
-            field_descriptions["demographics"],
-            field_descriptions["tasks"],
-            field_descriptions["modalities"],
-            field_descriptions["analyses"],
-            field_descriptions["links"],
-        ]
-    )
-    instructions = (
-        f"{schema_description}\n\n"
-        "Current extraction JSON:\n"
-        f"{json.dumps(extraction, indent=2)}\n\n"
-        "Verify the entities and fields using the document text above. "
-        "Remove entities not supported by the text. Add missing entities if explicitly stated. "
-        "For each field, set it to null if not explicitly stated; fill it if explicitly stated. "
-        "Do not infer. Do not create or change IDs; leave IDs as-is and leave new IDs null "
-        "(IDs will be assigned programmatically). "
-        "Return JSON with a corrected extraction and a list of changes.\n\n"
-        "Output format:\n"
-        "{\n"
-        '  "corrected": { ... },\n'
-        '  "changes": [\n'
-        '    {"action": "remove_entity", "target": "G2", "note": "Not supported by text"}\n'
-        "  ]\n"
-        "}"
-    )
-    return [
-        {"role": "system", "content": system},
-        {"role": "user", "content": doc_message},
-        {"role": "user", "content": instructions},
-    ]
-
-
-def _response_format(schema: dict[str, Any], name: str, use_schema: bool) -> dict[str, Any]:
-    if use_schema:
-        return {"format": {"type": "json_schema", "name": name, "schema": schema}}
-    return {"format": {"type": "json_object"}}
-
-
-def _backoff_sleep(attempt: int, base: float) -> None:
-    delay = base * (2**attempt)
-    jitter = random.uniform(0, base)
-    time.sleep(delay + jitter)
-
-
-def _extract_output_text(response) -> str:
-    text = getattr(response, "output_text", None)
-    if text:
-        return text
-    output = getattr(response, "output", None) or []
-    for item in output:
-        for content in getattr(item, "content", []) or []:
-            if getattr(content, "type", None) in {"output_text", "text"}:
-                return getattr(content, "text", "")
-    return ""
-
-
-def _incomplete_reason(response) -> str | None:
-    details = getattr(response, "incomplete_details", None)
-    if details is None:
-        return None
-    if isinstance(details, dict):
-        return details.get("reason")
-    return getattr(details, "reason", None)
-
-
-def _request_with_retries(
-    client: OpenAI,
-    messages: list[dict[str, str]],
-    model: str,
-    service_tier: str | None,
-    max_output_tokens: int,
-    max_retries: int,
-    timeout_s: float,
-    schema: dict[str, Any],
-    schema_name: str,
-) -> dict[str, Any]:
-    use_schema = True
-    last_error: Exception | None = None
-    max_tokens = max_output_tokens
-    for attempt in range(max_retries):
-        response_format = _response_format(schema, schema_name, use_schema)
-        try:
-            response = client.responses.create(
-                model=model,
-                input=messages,
-                text=response_format,
-                service_tier=service_tier,
-                max_output_tokens=max_tokens,
-                reasoning={"effort": "low"},
-                timeout=timeout_s,
-            )
-            if getattr(response, "status", None) not in {None, "completed"}:
-                if _incomplete_reason(response) == "max_output_tokens":
-                    max_tokens = min(max_tokens * 2, max_output_tokens * 4)
-                    last_error = RuntimeError("Model ran out of output tokens.")
-                    continue
-            text = _extract_output_text(response)
-            if not text:
-                raise RuntimeError("Empty model response.")
-            data = json.loads(text)
-            return data
-        except BadRequestError as exc:
-            message = str(exc).lower()
-            if "json_schema" in message or "response_format" in message or "format" in message:
-                use_schema = False
-                last_error = exc
-                continue
-            if service_tier and "service_tier" in message:
-                service_tier = None
-                last_error = exc
-                continue
-            raise
-        except (RateLimitError, APITimeoutError, APIConnectionError, InternalServerError) as exc:
-            last_error = exc
-            _backoff_sleep(attempt, base=1.5)
-            continue
-        except json.JSONDecodeError as exc:
-            last_error = exc
-            _backoff_sleep(attempt, base=0.5)
-            use_schema = False
-            continue
-        except OpenAIError as exc:
-            last_error = exc
-            _backoff_sleep(attempt, base=1.0)
-            continue
-    raise RuntimeError(f"Failed after {max_retries} attempts: {last_error}")
-
-
 def _read_text(path: Path, max_chars: int) -> str:
     text = path.read_text(encoding="utf-8", errors="ignore")
     if max_chars and len(text) > max_chars:
@@ -698,6 +318,44 @@ def _normalize_with_map(text: str) -> tuple[str, list[int]]:
     return "".join(norm_chars), norm_to_orig
 
 
+def _tokenize(text: str) -> list[str]:
+    return re.findall(r"[A-Za-z0-9']+", text.lower())
+
+
+def _token_overlap_ratio(query_tokens: list[str], doc_tokens: list[str]) -> float:
+    if not query_tokens:
+        return 0.0
+    query_set = set(query_tokens)
+    doc_set = set(doc_tokens)
+    if not doc_set:
+        return 0.0
+    return len(query_set & doc_set) / max(len(query_set), 1)
+
+
+def _parse_int_literal(value_text: str) -> int | None:
+    normalized = value_text.strip()
+    if not re.fullmatch(r"[-+]?\d+", normalized):
+        return None
+    try:
+        return int(normalized)
+    except ValueError:
+        return None
+
+
+def _integer_value_for_query(value: Any, value_sentence: str) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, np.integer)):
+        return int(value)
+    if isinstance(value, float):
+        if math.isfinite(value) and value.is_integer():
+            return int(value)
+        return None
+    if isinstance(value, str):
+        parsed = _parse_int_literal(value)
+        if parsed is not None:
+            return parsed
+    return _parse_int_literal(value_sentence)
 
 
 def _is_references_title(title: str) -> bool:
@@ -706,6 +364,12 @@ def _is_references_title(title: str) -> bool:
     if not normalized:
         return False
     return normalized.startswith(("references", "bibliography", "works cited", "literature cited"))
+
+
+def _strip_heading_markers(text: str) -> str:
+    cleaned = re.sub(r"^#+\s*", "", text.lstrip())
+    cleaned = re.sub(r"\s#+\s+", " ", cleaned)
+    return cleaned.strip()
 
 
 def _section_boundaries(text: str) -> list[tuple[int, str]]:
@@ -727,19 +391,29 @@ def _split_sentences_with_spans(
     section_bounds: list[tuple[int, str]],
 ) -> list[SentenceRecord]:
     sentences: list[SentenceRecord] = []
-    pattern = re.compile(r"[^.!?]+[.!?]+(?=\s|$)|[^.!?]+$")
-    for match in pattern.finditer(normalized_text):
-        span_text = match.group(0)
-        leading = len(span_text) - len(span_text.lstrip())
-        trailing = len(span_text) - len(span_text.rstrip())
-        start_norm = match.start() + leading
-        end_norm = match.end() - trailing
-        if start_norm >= end_norm:
+    try:
+        sentence_texts = sent_tokenize(normalized_text)
+    except LookupError as exc:  # pragma: no cover - optional dependency
+        try:
+            nltk.download("punkt_tab", quiet=True)
+            sentence_texts = sent_tokenize(normalized_text)
+        except Exception:  # pragma: no cover - optional dependency
+            raise RuntimeError(
+                "NLTK punkt tokenizer not found. Run: python -m nltk.downloader punkt punkt_tab"
+            ) from exc
+
+    cursor = 0
+    for sentence in sentence_texts:
+        start_norm = normalized_text.find(sentence, cursor)
+        if start_norm == -1:
             continue
-        sentence = normalized_text[start_norm:end_norm].strip()
+        end_norm = start_norm + len(sentence)
+        cursor = end_norm
+        sentence = sentence.strip()
         if not sentence:
             continue
-        if sentence.lstrip().startswith("#"):
+        cleaned_sentence = _strip_heading_markers(sentence)
+        if not cleaned_sentence:
             continue
         if start_norm >= len(norm_to_orig):
             continue
@@ -757,7 +431,7 @@ def _split_sentences_with_spans(
             continue
         sentences.append(
             SentenceRecord(
-                text=sentence,
+                text=cleaned_sentence,
                 start=start_orig,
                 end=end_orig,
                 section_title=section_title,
@@ -915,7 +589,7 @@ class EvidenceIndex:
         self.progress = progress
         self.llm_client = llm_client
         self.llm_service_tier = llm_service_tier
-        self.llm_cache: dict[tuple[str, str], bool] = {}
+        self.llm_cache: dict[tuple[str, tuple[str, ...]], list[int]] = {}
         self.expander = expander
         self.normalized_text, self.norm_to_orig = _normalize_with_map(text)
         section_bounds = _section_boundaries(text)
@@ -941,6 +615,37 @@ class EvidenceIndex:
 
         self.sentence_embeddings = self._load_or_compute_embeddings()
         self.query_cache: dict[str, np.ndarray] = {}
+        self._build_bm25_index()
+
+    def _build_bm25_index(self) -> None:
+        self.bm25_tokens = [_tokenize(text) for text in self.sentence_texts]
+        self.bm25_doc_freq: dict[str, int] = {}
+        for tokens in self.bm25_tokens:
+            for token in set(tokens):
+                self.bm25_doc_freq[token] = self.bm25_doc_freq.get(token, 0) + 1
+        self.bm25_avgdl = (
+            sum(len(tokens) for tokens in self.bm25_tokens) / max(len(self.bm25_tokens), 1)
+        )
+
+    def _bm25_scores(self, query_tokens: list[str]) -> list[float]:
+        if not query_tokens or not self.bm25_tokens:
+            return []
+        scores = [0.0 for _ in self.bm25_tokens]
+        n_docs = len(self.bm25_tokens)
+        k1 = 1.5
+        b = 0.75
+        for token in query_tokens:
+            df = self.bm25_doc_freq.get(token, 0)
+            if df == 0:
+                continue
+            idf = math.log((n_docs - df + 0.5) / (df + 0.5) + 1)
+            for i, tokens in enumerate(self.bm25_tokens):
+                tf = tokens.count(token)
+                if tf == 0:
+                    continue
+                denom = tf + k1 * (1 - b + b * (len(tokens) / max(self.bm25_avgdl, 1)))
+                scores[i] += idf * (tf * (k1 + 1)) / denom
+        return scores
 
 
     def _load_or_compute_embeddings(self) -> np.ndarray:
@@ -1031,27 +736,87 @@ class EvidenceIndex:
         parts = re.split(r"(?<=[.!?])\s+", normalized)
         return [part.strip() for part in parts if part.strip()]
 
-    def _llm_supports(self, hypothesis: str, sentence: str) -> bool:
+    def _is_numeric_sentence(self, value_sentence: str) -> bool:
+        return bool(re.fullmatch(r"[-+]?\d+(?:\.\d+)?", value_sentence.strip()))
+
+    def _normalize_enum_value(self, value: str) -> str:
+        normalized = re.sub(r"[_/]+", " ", value)
+        normalized = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", normalized)
+        normalized = re.sub(r"\s+", " ", normalized).strip()
+        return normalized.lower()
+
+    def _enum_aliases(self, normalized_value: str) -> list[str]:
+        aliases = [normalized_value]
+        alias_map = {
+            "f mri": ["fmri", "functional mri"],
+            "structural mri": ["structural mri", "s mri"],
+            "diffusion mri": ["diffusion mri", "diffusion", "dti"],
+            "seed based connectivity": ["seed-based connectivity"],
+            "independent components analysis": ["independent component analysis", "ica"],
+            "brain behavior correlation": ["brain-behavior correlation", "behavior correlation"],
+            "atlas parcellation": ["atlas/parcellation", "parcellation"],
+            "roi": ["region of interest"],
+            "bold": ["blood oxygen level dependent"],
+            "cbf": ["cerebral blood flow"],
+            "cbv": ["cerebral blood volume"],
+            "fdg": ["fluorodeoxyglucose"],
+            "pet": ["positron emission tomography"],
+            "eeg": ["electroencephalography"],
+            "meg": ["magnetoencephalography"],
+            "15 o-water": ["15o water", "oxygen 15 water", "o-15 water"],
+        }
+        aliases.extend(alias_map.get(normalized_value, []))
+        deduped = list(dict.fromkeys(item for item in aliases if item))
+        return deduped
+
+    def _format_hypothesis(
+        self,
+        *,
+        value_sentence: str,
+        description: str,
+        context_label: str | None,
+        template: str | None,
+    ) -> str:
+        if template:
+            context_prefix = f"For {context_label}, " if context_label else ""
+            rendered = template.format(
+                value=value_sentence,
+                context_prefix=context_prefix,
+            )
+            return " ".join(rendered.split())
+        context_prefix = f"For {context_label}, " if context_label else ""
+        return f"{context_prefix}{value_sentence} is {description}"
+
+    def _llm_supports_indices(self, hypothesis: str, sentences: list[str]) -> list[int]:
         if self.llm_client is None:
-            return False
-        key = (hypothesis, sentence)
+            return []
+        if not sentences:
+            return []
+        key = (hypothesis, tuple(sentences))
         cached = self.llm_cache.get(key)
         if cached is not None:
             return cached
         schema = {
             "type": "object",
             "additionalProperties": False,
-            "properties": {"supports": {"type": "boolean"}},
-            "required": ["supports"],
+            "properties": {"supported_indices": {"type": "array", "items": {"type": "integer"}}},
+            "required": ["supported_indices"],
         }
+        numbered = "\n".join(
+            f"{idx}. {sentence}" for idx, sentence in enumerate(sentences, start=1)
+        )
         messages = [
             {
                 "role": "system",
-                "content": "Determine if the sentence supports the hypothesis. Return JSON only.",
+                "content": (
+                    "Determine which sentences support the hypothesis. "
+                    "Return JSON only in the form: {\"supported_indices\": [1,2,...]} "
+                    "using 1-based indices from the list provided."
+                ),
             },
             {
                 "role": "user",
-                "content": f"Hypothesis: {hypothesis}\\nSentence: {sentence}",
+                "content": f"Hypothesis: {hypothesis}\nSentences:\n{numbered}",
             },
         ]
         try:
@@ -1067,11 +832,21 @@ class EvidenceIndex:
                 schema_name="SupportCheck",
             )
         except Exception:
-            self.llm_cache[key] = False
-            return False
-        supports = bool(result.get("supports"))
-        self.llm_cache[key] = supports
-        return supports
+            self.llm_cache[key] = []
+            return []
+        supported: list[int] = []
+        if isinstance(result, dict):
+            raw_indices = result.get("supported_indices", [])
+            if isinstance(raw_indices, list):
+                for item in raw_indices:
+                    if isinstance(item, int):
+                        supported.append(item)
+        elif isinstance(result, list):
+            for item in result:
+                if isinstance(item, int):
+                    supported.append(item)
+        self.llm_cache[key] = supported
+        return supported
 
     def find_evidence(
         self,
@@ -1080,6 +855,7 @@ class EvidenceIndex:
         *,
         field_name: str | None = None,
         context_label: str | None = None,
+        evidence_policy: EvidencePolicy | None = None,
     ) -> list[dict[str, Any]] | None:
         if value is None:
             return None
@@ -1095,42 +871,261 @@ class EvidenceIndex:
                 return None
             evidence: list[dict[str, Any]] = []
             seen_spans: set[tuple[int, int, str]] = set()
-            context_prefix = ""
-            if context_label:
-                context_prefix = f"For {context_label}, "
+            value_only_override = (
+                evidence_policy.value_only
+                if evidence_policy and evidence_policy.value_only is not None
+                else None
+            )
+            use_value_only_default = (
+                value_only_override
+                if value_only_override is not None
+                else field_name in VALUE_ONLY_FIELDS
+            )
+            hypothesis_template = (
+                evidence_policy.hypothesis_template
+                if evidence_policy and evidence_policy.hypothesis_template
+                else None
+            )
             for value_sentence in value_sentences:
-                hypothesis = f"{context_prefix}{value_sentence} is {description}"
-                query_embedding = self._query_embedding(hypothesis)
-                similarities = self.sentence_embeddings @ query_embedding
-                top_k = min(self.config.top_k, len(similarities))
-                if top_k <= 0:
-                    continue
-                top_indices = list(similarities.argsort()[-top_k:][::-1])
-                candidate_texts = [self.sentence_texts[idx] for idx in top_indices]
-                scores_list = _batch_nli_scores(
-                    self.nli,
-                    candidate_texts,
-                    hypothesis,
-                    self.config.nli_batch_size,
+                if evidence_policy and evidence_policy.is_enum:
+                    value_sentence = self._normalize_enum_value(value_sentence)
+                use_value_only_for_field = (
+                    value_only_override
+                    if value_only_override is not None
+                    else field_name in VALUE_ONLY_FIELDS
                 )
-                normalized_value = _normalize_text(value_sentence).lower()
-                for idx, scores in zip(top_indices, scores_list):
-                    record = self.sentences[idx]
-                    candidate_text = self.sentence_texts[idx]
-                    entailment = scores["entailment"]
-                    neutral = scores["neutral"]
-                    contradiction = scores["contradiction"]
-                    supports = False
-                    if (
-                        entailment >= self.config.entailment_threshold
-                        and entailment > neutral
-                        and entailment > contradiction
+                use_value_only_for_retrieval = use_value_only_for_field or (
+                    evidence_policy is not None
+                    and evidence_policy.is_enum
+                    and evidence_policy.value_only is True
+                )
+                numeric_retrieval_only = isinstance(value, (int, float)) or self._is_numeric_sentence(
+                    value_sentence
+                )
+                skip_context_pass = (
+                    field_name in NUMERIC_GROUP_FIELDS
+                    if field_name is not None
+                    else False
+                )
+                value_only_hypothesis_retrieval = (
+                    f"For {context_label}, {value_sentence}"
+                    if context_label
+                    else value_sentence
+                )
+                if numeric_retrieval_only:
+                    value_only_hypothesis_retrieval = value_sentence
+                full_hypothesis_retrieval = self._format_hypothesis(
+                    value_sentence=value_sentence,
+                    description=description,
+                    context_label=context_label,
+                    template=hypothesis_template,
+                )
+                value_only_hypothesis_nli = value_sentence
+                context_label_nli = (
+                    context_label if skip_context_pass else None
+                )
+                full_hypothesis_nli = self._format_hypothesis(
+                    value_sentence=value_sentence,
+                    description=description,
+                    context_label=context_label_nli,
+                    template=hypothesis_template,
+                )
+                use_value_only_first = use_value_only_for_field
+                hypothesis_retrieval = (
+                    full_hypothesis_retrieval
+                    if numeric_retrieval_only
+                    else (
+                        value_only_hypothesis_retrieval
+                        if use_value_only_for_retrieval
+                        else full_hypothesis_retrieval
+                    )
+                )
+                hypothesis_nli = (
+                    value_only_hypothesis_nli if use_value_only_first else full_hypothesis_nli
+                )
+                if evidence_policy and evidence_policy.is_enum:
+                    alias_query = " ".join(self._enum_aliases(value_sentence))
+                    query_tokens = _tokenize(alias_query)
+                else:
+                    query_tokens = _tokenize(value_sentence)
+                if numeric_retrieval_only:
+                    integer_value = _integer_value_for_query(value, value_sentence)
+                    if integer_value is not None:
+                        word_tokens = _tokenize(num2words(integer_value))
+                        if word_tokens:
+                            existing = set(query_tokens)
+                            for token in word_tokens:
+                                if token not in existing:
+                                    query_tokens.append(token)
+                                    existing.add(token)
+                bm25_scores = self._bm25_scores(query_tokens)
+                bm25_indices = [
+                    idx for idx, score in enumerate(bm25_scores) if score > 0
+                ]
+                if len(bm25_indices) > 20:
+                    ranked_bm25 = sorted(
+                        bm25_indices, key=lambda idx: bm25_scores[idx], reverse=True
+                    )
+                    bm25_indices = ranked_bm25[:20]
+                strong_single = False
+                if len(bm25_indices) > 1:
+                    ranked_bm25 = sorted(
+                        bm25_indices, key=lambda idx: bm25_scores[idx], reverse=True
+                    )
+                    top_score = bm25_scores[ranked_bm25[0]]
+                    second_score = bm25_scores[ranked_bm25[1]]
+                    top_idx = ranked_bm25[0]
+                    overlap_ratio = _token_overlap_ratio(
+                        query_tokens, self.bm25_tokens[top_idx]
+                    )
+                    if overlap_ratio >= 0.6 and (
+                        second_score == 0 or top_score >= second_score * 1.5
                     ):
-                        supports = True
-                    elif entailment < 0.5 and contradiction < 0.1:
-                        supports = self._llm_supports(hypothesis, candidate_text)
-                    if not supports:
+                        strong_single = True
+                        bm25_indices = [top_idx]
+                if not bm25_indices:
+                    query_embedding = self._query_embedding(hypothesis_retrieval)
+                    similarities = self.sentence_embeddings @ query_embedding
+                    top_k = min(SEMANTIC_TOP_K, len(similarities))
+                    if top_k <= 0:
                         continue
+                    top_indices = list(similarities.argsort()[-top_k:][::-1])
+                elif len(bm25_indices) == 1 or strong_single:
+                    top_indices = bm25_indices
+                else:
+                    query_embedding = self._query_embedding(hypothesis_retrieval)
+                    similarities = self.sentence_embeddings @ query_embedding
+                    ranked = sorted(
+                        bm25_indices, key=lambda idx: similarities[idx], reverse=True
+                    )
+                    top_indices = ranked[: min(SEMANTIC_TOP_K, len(ranked))]
+
+                if context_label and not skip_context_pass:
+                    context_hypothesis = f"This sentence is about {context_label}."
+                    context_texts = [self.sentence_texts[idx] for idx in top_indices]
+                    context_scores = _batch_nli_scores(
+                        self.nli,
+                        context_texts,
+                        context_hypothesis,
+                        self.config.nli_batch_size,
+                    )
+                    ranked_pairs = sorted(
+                        zip(top_indices, context_scores),
+                        key=lambda item: item[1]["entailment"],
+                        reverse=True,
+                    )
+                    top_indices = [idx for idx, _scores in ranked_pairs]
+
+                normalized_value = _normalize_text(value_sentence).lower()
+                if (len(top_indices) == 1 and len(bm25_indices) == 1) or strong_single:
+                    chosen_indices = top_indices
+                else:
+                    candidate_texts = [self.sentence_texts[idx] for idx in top_indices]
+                    scores_list = _batch_nli_scores(
+                        self.nli,
+                        candidate_texts,
+                        hypothesis_nli,
+                        self.config.nli_batch_size,
+                    )
+                    clear_entailment_indices: list[int] = []
+                    neutral_indices: list[int] = []
+                    neutral_hypothesis = hypothesis_nli
+                    chosen_indices: list[int] | None = None
+                    for idx, scores in zip(top_indices, scores_list):
+                        entailment = scores["entailment"]
+                        neutral = scores["neutral"]
+                        contradiction = scores["contradiction"]
+                        if (
+                            entailment >= self.config.entailment_threshold
+                            and entailment > neutral
+                            and entailment > contradiction
+                        ):
+                            clear_entailment_indices.append(idx)
+                        elif neutral >= entailment and neutral >= contradiction:
+                            neutral_indices.append(idx)
+                    if clear_entailment_indices:
+                        chosen_indices = clear_entailment_indices
+                    else:
+                        fallback_value_only = (
+                            not use_value_only_first
+                            and not self._is_numeric_sentence(value_sentence)
+                        )
+                        if fallback_value_only:
+                            fallback_scores = _batch_nli_scores(
+                                self.nli,
+                                candidate_texts,
+                                value_only_hypothesis_nli,
+                                self.config.nli_batch_size,
+                            )
+                            fallback_entailment: list[int] = []
+                            fallback_neutral: list[int] = []
+                            for idx, scores in zip(top_indices, fallback_scores):
+                                entailment = scores["entailment"]
+                                neutral = scores["neutral"]
+                                contradiction = scores["contradiction"]
+                                if (
+                                    entailment >= self.config.entailment_threshold
+                                    and entailment > neutral
+                                    and entailment > contradiction
+                                ):
+                                    fallback_entailment.append(idx)
+                                elif neutral >= entailment and neutral >= contradiction:
+                                    fallback_neutral.append(idx)
+                            if fallback_entailment:
+                                chosen_indices = fallback_entailment
+                            else:
+                                neutral_indices = fallback_neutral
+                                neutral_hypothesis = value_only_hypothesis_nli
+                        if chosen_indices is None:
+                            combined_indices = top_indices[: min(COMBINED_PREMISE_TOP_N, len(top_indices))]
+                            combined_text = " ".join(
+                                self.sentence_texts[idx] for idx in combined_indices
+                            )
+                            combined_hypothesis = (
+                                value_only_hypothesis_nli
+                                if use_value_only_first
+                                else full_hypothesis_nli
+                            )
+                            combined_scores = _batch_nli_scores(
+                                self.nli,
+                                [combined_text],
+                                combined_hypothesis,
+                                self.config.nli_batch_size,
+                            )[0]
+                            if (
+                                combined_scores["entailment"] >= self.config.entailment_threshold
+                                and combined_scores["entailment"] > combined_scores["neutral"]
+                                and combined_scores["entailment"] > combined_scores["contradiction"]
+                            ):
+                                chosen_indices = combined_indices
+                        if chosen_indices is None and not self._is_numeric_sentence(value_sentence):
+                            candidate_texts = [self.sentence_texts[idx] for idx in top_indices]
+                            value_tokens = _tokenize(normalized_value)
+                            lexical_indices = [
+                                idx
+                                for idx, text in zip(top_indices, candidate_texts)
+                                if _token_overlap_ratio(value_tokens, _tokenize(text)) >= 0.6
+                            ]
+                            if lexical_indices:
+                                chosen_indices = lexical_indices
+                        if chosen_indices is None:
+                            candidates = neutral_indices if neutral_indices else top_indices
+                            candidate_texts = [self.sentence_texts[idx] for idx in candidates]
+                            supported = self._llm_supports_indices(
+                                neutral_hypothesis, candidate_texts
+                            )
+                            chosen_indices = [
+                                candidates[idx - 1]
+                                for idx in supported
+                                if 1 <= idx <= len(candidates)
+                            ]
+                        if chosen_indices is None:
+                            chosen_indices = []
+
+                if chosen_indices is None:
+                    chosen_indices = []
+                for idx in chosen_indices:
+                    record = self.sentences[idx]
                     raw_segment = self.raw_text[record.start:record.end]
                     if self.expander:
                         expanded_segment, expanded_to_raw = self.expander.expand_with_map(
@@ -1322,27 +1317,6 @@ def _assign_missing_ids_to_record(record: dict[str, Any]) -> dict[str, Any]:
     return record
 
 
-def _is_extracted_value_type(annotation: Any) -> bool:
-    annotation = _unwrap_optional(annotation)
-    if annotation is None:
-        return False
-    origin = get_origin(annotation)
-    if origin is schema_mod.ExtractedValue:
-        return True
-    if isinstance(annotation, type) and issubclass(annotation, schema_mod.ExtractedValue):
-        return True
-    return False
-
-
-def _is_model_type(annotation: Any) -> bool:
-    annotation = _unwrap_optional(annotation)
-    if annotation is None:
-        return False
-    if annotation in {schema_mod.EvidenceSpan, schema_mod.CharInterval}:
-        return False
-    return isinstance(annotation, type) and issubclass(annotation, schema_mod.BaseModel)
-
-
 def _unwrap_value(value: Any) -> Any:
     if isinstance(value, dict) and "value" in value:
         return value.get("value")
@@ -1427,6 +1401,7 @@ def _wrap_model_with_evidence(
     if not isinstance(obj, dict):
         return obj
     updated = dict(obj)
+    policies = _model_evidence_policies(model)
     for field_name, annotation, description, _extra in _iter_model_fields(model):
         if field_name not in obj:
             continue
@@ -1434,6 +1409,7 @@ def _wrap_model_with_evidence(
         effective_context = context_label
         if context_exclude and field_name in context_exclude:
             effective_context = None
+        evidence_policy = policies.get(field_name)
         updated[field_name] = _wrap_value_with_evidence(
             value,
             annotation,
@@ -1442,6 +1418,7 @@ def _wrap_model_with_evidence(
             field_name=field_name,
             context_label=effective_context,
             context_exclude=context_exclude,
+            evidence_policy=evidence_policy,
         )
     return updated
 
@@ -1455,6 +1432,7 @@ def _wrap_value_with_evidence(
     field_name: str | None = None,
     context_label: str | None = None,
     context_exclude: set[str] | None = None,
+    evidence_policy: EvidencePolicy | None = None,
 ) -> Any:
     if value is None:
         return None
@@ -1471,6 +1449,7 @@ def _wrap_value_with_evidence(
                 description,
                 field_name=field_name,
                 context_label=context_label,
+                evidence_policy=evidence_policy,
             )
             return updated
         return {
@@ -1480,6 +1459,7 @@ def _wrap_value_with_evidence(
                 description,
                 field_name=field_name,
                 context_label=context_label,
+                evidence_policy=evidence_policy,
             ),
         }
     annotation = _unwrap_optional(annotation)
@@ -1769,125 +1749,163 @@ def _build_link_prompt(
     ]
 
 
-def _link_schema() -> dict[str, Any]:
-    def edge_schema(fields: list[str]) -> dict[str, Any]:
-        props = {field: {"type": "string"} for field in fields}
-        return {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": props,
-            "required": fields,
-        }
-
-    return {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {
-            "group_task": {
-                "type": "array",
-                "items": edge_schema(["group_id", "task_id"]),
-            },
-            "task_modality": {
-                "type": "array",
-                "items": edge_schema(["task_id", "modality_id"]),
-            },
-            "analysis_task": {
-                "type": "array",
-                "items": edge_schema(["analysis_id", "task_id"]),
-            },
-            "analysis_group": {
-                "type": "array",
-                "items": edge_schema(["analysis_id", "group_id"]),
-            },
-            "analysis_condition": {
-                "type": "array",
-                "items": edge_schema(["analysis_id", "condition_id"]),
-            },
-            "group_modality": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "properties": {
-                        "group_id": {"type": "string"},
-                        "modality_id": {"type": "string"},
-                        "n_scanned": {"type": ["number", "null"]},
-                    },
-                    "required": ["group_id", "modality_id"],
-                },
-            },
-        },
-        "required": [
-            "group_task",
-            "task_modality",
-            "analysis_task",
-            "analysis_group",
-            "analysis_condition",
-            "group_modality",
-        ],
-    }
+def _load_existing_record(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        existing = json.loads(path.read_text(encoding="utf-8"))
+        if hasattr(schema_mod.StudyRecord, "model_validate"):
+            schema_mod.StudyRecord.model_validate(existing)
+        else:
+            schema_mod.StudyRecord.parse_obj(existing)
+        return existing
+    except Exception:
+        return None
 
 
-def _build_record_schema(specs: list[EntitySpec], *, include_ids: bool) -> dict[str, Any]:
-    def entity_items_schema(spec_key: str, *, include_id: bool) -> dict[str, Any]:
-        spec = next(spec for spec in specs if spec.key == spec_key)
+def _collect_field_meta(specs: list[EntitySpec]) -> dict[str, dict[str, FieldMeta]]:
+    meta_by_key: dict[str, dict[str, FieldMeta]] = {}
+    for spec in specs:
         prompt_spec = _load_prompt_spec_cached(spec.prompt_path)
         fields = prompt_spec.get("fields") or []
-        item_schema = _prune_model_schema(spec.model, fields, include_id=include_id)
-        return {"type": "array", "items": item_schema}
+        meta_by_key[spec.key] = _field_meta_map(spec.model, fields)
+    return meta_by_key
 
-    study_spec = next(spec for spec in specs if spec.key == "study")
-    study_fields = _load_prompt_spec_cached(study_spec.prompt_path).get("fields") or []
-    study_schema = _prune_model_schema(study_spec.model, study_fields, include_id=False)
-    study_schema["type"] = ["object", "null"]
 
-    demographics_schema = {
-        "type": ["object", "null"],
-        "additionalProperties": False,
-        "properties": {"groups": entity_items_schema("groups", include_id=include_ids)},
-        "required": ["groups"],
+def _extract_entities(
+    *,
+    text: str,
+    specs: list[EntitySpec],
+    client: OpenAI,
+    model: str,
+    service_tier: str | None,
+    max_output_tokens: int,
+    max_retries: int,
+    timeout_s: float,
+) -> tuple[dict[str, Any], dict[str, dict[str, FieldMeta]]]:
+    results: dict[str, Any] = {
+        "study": None,
+        "groups": [],
+        "tasks": [],
+        "modalities": [],
+        "analyses": [],
+        "links": None,
     }
+    meta_by_key: dict[str, dict[str, FieldMeta]] = {}
+    for spec in specs:
+        prompt_spec = _load_prompt_spec_cached(spec.prompt_path)
+        fields = prompt_spec.get("fields") or []
+        field_meta = _field_meta_map(spec.model, fields)
+        meta_by_key[spec.key] = field_meta
+        entity_prompt = _build_entity_prompt(prompt_spec, field_meta)
+        item_schema = _prune_model_schema(spec.model, fields, include_id=False)
+        schema = _wrap_items_schema(item_schema, spec.max_items)
+        messages = _build_messages(text, entity_prompt)
+        data = _request_with_retries(
+            client=client,
+            messages=messages,
+            model=model,
+            service_tier=service_tier,
+            max_output_tokens=max_output_tokens,
+            max_retries=max_retries,
+            timeout_s=timeout_s,
+            schema=schema,
+            schema_name=f"{spec.key}_schema",
+        )
+        items = data.get("items", []) if isinstance(data, dict) else []
+        if spec.key == "study":
+            results["study"] = items[0] if items else None
+        else:
+            results[spec.key] = items
+    return results, meta_by_key
 
-    links_schema = _link_schema()
-    links_schema["type"] = ["object", "null"]
-    return {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {
-            "study": study_schema,
-            "demographics": demographics_schema,
-            "tasks": entity_items_schema("tasks", include_id=include_ids),
-            "modalities": entity_items_schema("modalities", include_id=include_ids),
-            "analyses": entity_items_schema("analyses", include_id=include_ids),
-            "links": links_schema,
-        },
-        "required": ["study", "demographics", "tasks", "modalities", "analyses", "links"],
-    }
+
+def _apply_verification_result(
+    record: dict[str, Any],
+    verification: dict[str, Any] | None,
+) -> dict[str, Any]:
+    corrected = verification.get("corrected") if isinstance(verification, dict) else None
+    if isinstance(corrected, dict):
+        corrected["verification_changes"] = verification.get("changes", [])
+        corrected[SCHEMA_VERIFIED_KEY] = True
+        if record.get(LINKS_CACHED_KEY):
+            corrected[LINKS_CACHED_KEY] = True
+        return _assign_missing_ids_to_record(corrected)
+    return record
 
 
-def _verification_schema(entity_schema: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {
-            "corrected": entity_schema,
-            "changes": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "properties": {
-                        "action": {"type": "string"},
-                        "target": {"type": "string"},
-                        "field": {"type": ["string", "null"]},
-                        "note": {"type": "string"},
-                    },
-                    "required": ["action", "target", "note"],
-                },
-            },
-        },
-        "required": ["corrected", "changes"],
-    }
+def _verify_record(
+    *,
+    text: str,
+    record: dict[str, Any],
+    meta_by_key: dict[str, dict[str, FieldMeta]],
+    client: OpenAI,
+    model: str,
+    service_tier: str | None,
+    max_output_tokens: int,
+    max_retries: int,
+    timeout_s: float,
+) -> dict[str, Any]:
+    field_descriptions = _build_field_descriptions(meta_by_key)
+    verify_messages = _build_verification_prompt(text, record, field_descriptions)
+    entity_schema = _build_record_schema(ENTITY_SPECS, include_ids=True)
+    verify_schema = _verification_schema(entity_schema)
+    verification = _request_with_retries(
+        client=client,
+        messages=verify_messages,
+        model=model,
+        service_tier=service_tier,
+        max_output_tokens=max_output_tokens,
+        max_retries=max_retries,
+        timeout_s=timeout_s,
+        schema=verify_schema,
+        schema_name="verification",
+    )
+    return _apply_verification_result(record, verification)
+
+
+def _link_record(
+    *,
+    record: dict[str, Any],
+    text: str,
+    client: OpenAI,
+    model: str,
+    service_tier: str | None,
+    max_output_tokens: int,
+    max_retries: int,
+    timeout_s: float,
+) -> dict[str, Any]:
+    if record.get("links") is not None:
+        record[LINKS_CACHED_KEY] = True
+        return record
+    groups = (record.get("demographics") or {}).get("groups") or []
+    tasks = record.get("tasks") or []
+    modalities = record.get("modalities") or []
+    analyses = record.get("analyses") or []
+    if not (groups or tasks or modalities or analyses):
+        return record
+    link_messages = _build_link_prompt(
+        text=text,
+        groups=groups,
+        tasks=tasks,
+        modalities=modalities,
+        analyses=analyses,
+    )
+    link_schema = _link_schema()
+    links = _request_with_retries(
+        client=client,
+        messages=link_messages,
+        model=model,
+        service_tier=service_tier,
+        max_output_tokens=max_output_tokens,
+        max_retries=max_retries,
+        timeout_s=timeout_s,
+        schema=link_schema,
+        schema_name="study_links",
+    )
+    record["links"] = links
+    record[LINKS_CACHED_KEY] = True
+    return record
 
 
 def main() -> int:
@@ -1943,11 +1961,7 @@ def main() -> int:
         default=-1,
         help="Device for evidence models (-1 for CPU, 0+ for CUDA).",
     )
-    parser.add_argument(
-        "--evidence-progress",
-        action="store_true",
-        help="Show a progress bar while attaching evidence spans.",
-    )
+    parser.set_defaults(evidence_progress=True)
     parser.add_argument(
         "--cpu-threads",
         type=int,
@@ -1960,13 +1974,8 @@ def main() -> int:
         cpu_threads = max(1, args.cpu_threads)
         for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
             os.environ[key] = str(cpu_threads)
-        try:
-            import torch
-        except ImportError:
-            torch = None
-        if torch is not None:
-            torch.set_num_threads(cpu_threads)
-            torch.set_num_interop_threads(cpu_threads)
+        torch.set_num_threads(cpu_threads)
+        torch.set_num_interop_threads(cpu_threads)
 
     load_dotenv(".env")
     if not args.input_md.exists():
@@ -1990,53 +1999,22 @@ def main() -> int:
     if grounded_output_path is None:
         grounded_output_path = args.input_md.with_suffix(".entities.gpt5-nano.grounded.json")
 
-    record: dict[str, Any] | None = None
-    if raw_output_path.exists() and not args.force_reextract:
-        try:
-            existing = json.loads(raw_output_path.read_text(encoding="utf-8"))
-            if hasattr(schema_mod.StudyRecord, "model_validate"):
-                schema_mod.StudyRecord.model_validate(existing)
-            else:
-                schema_mod.StudyRecord.parse_obj(existing)
-            record = existing
-        except Exception:
-            record = None
+    record = None
+    if not args.force_reextract:
+        record = _load_existing_record(raw_output_path)
 
     meta_by_key: dict[str, dict[str, FieldMeta]] = {}
     if record is None:
-        results: dict[str, Any] = {
-            "study": None,
-            "groups": [],
-            "tasks": [],
-            "modalities": [],
-            "analyses": [],
-            "links": None,
-        }
-        for spec in ENTITY_SPECS:
-            prompt_spec = _load_prompt_spec_cached(spec.prompt_path)
-            fields = prompt_spec.get("fields") or []
-            field_meta = _field_meta_map(spec.model, fields)
-            meta_by_key[spec.key] = field_meta
-            entity_prompt = _build_entity_prompt(prompt_spec, field_meta)
-            item_schema = _prune_model_schema(spec.model, fields, include_id=False)
-            schema = _wrap_items_schema(item_schema, spec.max_items)
-            messages = _build_messages(text, entity_prompt)
-            data = _request_with_retries(
-                client=client,
-                messages=messages,
-                model=args.model,
-                service_tier=service_tier,
-                max_output_tokens=args.max_output_tokens,
-                max_retries=args.max_retries,
-                timeout_s=args.timeout,
-                schema=schema,
-                schema_name=f"{spec.key}_schema",
-            )
-            items = data.get("items", []) if isinstance(data, dict) else []
-            if spec.key == "study":
-                results["study"] = items[0] if items else None
-            else:
-                results[spec.key] = items
+        results, meta_by_key = _extract_entities(
+            text=text,
+            specs=ENTITY_SPECS,
+            client=client,
+            model=args.model,
+            service_tier=service_tier,
+            max_output_tokens=args.max_output_tokens,
+            max_retries=args.max_retries,
+            timeout_s=args.timeout,
+        )
 
         # Assign IDs and normalize conditions for linking.
         results["groups"] = _ensure_ids(results["groups"], "G", overwrite=True)
@@ -2044,28 +2022,6 @@ def main() -> int:
         results["tasks"] = _normalize_task_conditions(results["tasks"])
         results["modalities"] = _ensure_ids(results["modalities"], "M", overwrite=True)
         results["analyses"] = _ensure_ids(results["analyses"], "A", overwrite=True)
-
-        if not args.skip_links:
-            link_messages = _build_link_prompt(
-                text=text,
-                groups=results["groups"],
-                tasks=results["tasks"],
-                modalities=results["modalities"],
-                analyses=results["analyses"],
-            )
-            link_schema = _link_schema()
-            links = _request_with_retries(
-                client=client,
-                messages=link_messages,
-                model=args.model,
-                service_tier=service_tier,
-                max_output_tokens=args.max_output_tokens,
-                max_retries=args.max_retries,
-                timeout_s=args.timeout,
-                schema=link_schema,
-                schema_name="study_links",
-            )
-            results["links"] = links
 
         record = {
             "study": results["study"],
@@ -2076,63 +2032,64 @@ def main() -> int:
             "links": results["links"],
         }
 
-        # Verification pass: check entities and fields against the full text.
-        field_descriptions = {
-            "study": _build_entity_descriptions(
-                "StudyMetadataModel",
-                meta_by_key.get("study", {}),
-            ),
-            "demographics": (
-                "Demographics (groups only):\n"
-                + _build_entity_descriptions(
-                    "GroupBase",
-                    meta_by_key.get("groups", {}),
-                )
-            ),
-            "tasks": _build_entity_descriptions(
-                "TaskBase",
-                meta_by_key.get("tasks", {}),
-            ),
-            "modalities": _build_entity_descriptions(
-                "ModalityBase",
-                meta_by_key.get("modalities", {}),
-            ),
-            "analyses": _build_entity_descriptions(
-                "AnalysisBase",
-                meta_by_key.get("analyses", {}),
-            ),
-            "links": (
-                "StudyLinks fields:\n"
-                "- group_task: link groups to tasks they performed.\n"
-                "- task_modality: link tasks to modalities used.\n"
-                "- analysis_task: link analyses to tasks they test.\n"
-                "- analysis_group: link analyses to groups included.\n"
-                "- analysis_condition: link analyses to task conditions.\n"
-                "- group_modality: link groups to modalities they underwent (n_scanned if stated).\n"
-            ),
-        }
-        verify_messages = _build_verification_prompt(text, record, field_descriptions)
-        entity_schema = _build_record_schema(ENTITY_SPECS, include_ids=True)
-        verify_schema = _verification_schema(entity_schema)
-        verification = _request_with_retries(
+        if not args.skip_links:
+            record = _link_record(
+                record=record,
+                text=text,
+                client=client,
+                model=args.model,
+                service_tier=service_tier,
+                max_output_tokens=args.max_output_tokens,
+                max_retries=args.max_retries,
+                timeout_s=args.timeout,
+            )
+
+        record = _verify_record(
+            text=text,
+            record=record,
+            meta_by_key=meta_by_key,
             client=client,
-            messages=verify_messages,
             model=args.model,
             service_tier=service_tier,
             max_output_tokens=args.max_output_tokens,
             max_retries=args.max_retries,
             timeout_s=args.timeout,
-            schema=verify_schema,
-            schema_name="verification",
         )
-        corrected = verification.get("corrected") if isinstance(verification, dict) else None
-        if isinstance(corrected, dict):
-            corrected["verification_changes"] = verification.get("changes", [])
-            record = _assign_missing_ids_to_record(corrected)
 
         raw_output_path.write_text(
             json.dumps(record, indent=2, sort_keys=True), encoding="utf-8"
         )
+    else:
+        if not record.get(SCHEMA_VERIFIED_KEY):
+            meta_by_key = _collect_field_meta(ENTITY_SPECS)
+            record = _verify_record(
+                text=text,
+                record=record,
+                meta_by_key=meta_by_key,
+                client=client,
+                model=args.model,
+                service_tier=service_tier,
+                max_output_tokens=args.max_output_tokens,
+                max_retries=args.max_retries,
+                timeout_s=args.timeout,
+            )
+        if record.get("links") is not None:
+            record[LINKS_CACHED_KEY] = True
+        if not args.skip_links and not record.get(LINKS_CACHED_KEY):
+            record = _link_record(
+                record=record,
+                text=text,
+                client=client,
+                model=args.model,
+                service_tier=service_tier,
+                max_output_tokens=args.max_output_tokens,
+                max_retries=args.max_retries,
+                timeout_s=args.timeout,
+            )
+        if record.get(SCHEMA_VERIFIED_KEY) or record.get(LINKS_CACHED_KEY):
+            raw_output_path.write_text(
+                json.dumps(record, indent=2, sort_keys=True), encoding="utf-8"
+            )
 
     if expander is not None:
         expanded_record = expander.expand_record(record)

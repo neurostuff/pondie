@@ -8,11 +8,14 @@
     "task_description",
     "design_details",
     "task_design",
+    "task_design_other",
     "task_category",
+    "task_category_other",
     "task_duration",
     "conditions",
     "concepts",
-    "domain_tags"
+    "domain_tags",
+    "domain_tags_other"
   ],
   "examples": [
     {

@@ -110,6 +110,7 @@ mvp:
 domain:
   entities:
     - "StudyRecord (top-level container)."
+    - "DemographicsSchema (groups only)."
     - "StudyMetadataModel (study-wide metadata)."
     - "GroupBase (participant groups)."
     - "TaskBase (tasks/paradigms)."

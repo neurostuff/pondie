@@ -6,7 +6,9 @@
   "fields": [
     "analysis_label",
     "reporting_scope",
+    "reporting_scope_other",
     "analysis_method",
+    "analysis_method_other",
     "contrast_formula"
   ],
   "examples": [

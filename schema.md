@@ -12,12 +12,12 @@ This document summarizes the extraction schema defined in `information_extractio
   - `note`, `scope`, `confidence`: optional metadata.
 - Container fields (e.g., `StudyRecord`, `StudyLinks`, entity lists) are plain objects/lists, not `ExtractedValue`.
 - List fields that require per-item evidence use `List[ExtractedValue[T]]`.
-- Evidence is required whenever a `value` exists; evidence lists cannot be empty.
+- Evidence is optional in the schema; pipelines may enforce non-null evidence when values exist.
 - Extraction metadata is stored in `json_schema_extra` via `extraction_meta`:
   - `extraction_type`, `extraction_prompt`, `scope_hint`,
     `extraction_phase`, `allow_note`, `inference_policy`.
-- `EvidenceSpan` aligns with LangExtract: `extraction_text`, `char_interval`, `alignment_status`,
-  `extraction_index`, `group_index`, and `document_id` preserve alignment provenance.
+- `EvidenceSpan` includes `source`, `section`, `extraction_text`, `char_interval`,
+  `alignment_status`, `extraction_index`, `group_index`, `document_id`, and optional `locator`.
 - Entities are listed separately and linked with explicit edges to form a graph.
 
 ## Main Entities
@@ -106,7 +106,6 @@ This document summarizes the extraction schema defined in `information_extractio
     ]
   },
   "demographics": {
-    "shared": null,
     "groups": [
       {
         "id": "G1",

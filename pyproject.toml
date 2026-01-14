@@ -13,6 +13,7 @@ dependencies = [
   "python-dotenv>=1.0",
   "lxml>=5.1",
   "langextract",
+  "num2words>=0.5.13",
   "tenacity>=8.2",
 ]
 

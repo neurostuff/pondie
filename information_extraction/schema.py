@@ -61,6 +61,8 @@ def extraction_meta(
     extraction_phase: Optional[ExtractionPhaseLiteral] = None,
     allow_note: bool = False,
     inference_policy: InferencePolicyLiteral = "explicit_only",
+    evidence_value_only: Optional[bool] = None,
+    evidence_hypothesis_template: Optional[str] = None,
 ) -> dict:
     meta: Dict[str, Any] = {
         "extraction_type": extraction_type,
@@ -72,6 +74,10 @@ def extraction_meta(
         meta["extraction_phase"] = extraction_phase
     meta["allow_note"] = allow_note
     meta["inference_policy"] = inference_policy
+    if evidence_value_only is not None:
+        meta["evidence_value_only"] = evidence_value_only
+    if evidence_hypothesis_template:
+        meta["evidence_hypothesis_template"] = evidence_hypothesis_template
     return meta
 
 
@@ -132,15 +138,15 @@ class ExtractedValue(BaseModel, Generic[T]):
     )
     unit: Optional[str] = Field(
         default=None,
-        description="Unit for numeric values if stated (e.g., 'ms', 'years', 'Tesla').",
+        description="Unit for numeric values if stated.",
     )
     missing_reason: Optional[str] = Field(
         default=None,
-        description="Reason value is missing (e.g., 'not_reported', 'not_applicable', 'ambiguous').",
+        description="Reason value is missing.",
     )
     note: Optional[str] = Field(
         default=None,
-        description="Free-text note (e.g., 'reported across groups').",
+        description="Free-text note.",
     )
     scope: Optional[Literal["group", "shared", "task", "modality", "analysis", "study"]] = Field(
         default=None, description="Scope of the value if relevant."
@@ -232,6 +238,18 @@ class ModalityType(BaseModel):
             scope_hint="Methods/Imaging, Abstract, Results, Captions",
             extraction_phase="modality",
             inference_policy="post_normalize",
+            evidence_hypothesis_template="{context_prefix}modality family was {value}.",
+        ),
+    )
+    family_other: Optional[StrField] = Field(
+        default=None,
+        description="Free-text modality family label when family is Other.",
+        json_schema_extra=extraction_meta(
+            "text",
+            "If family is Other, capture the stated modality family label here. Otherwise null.",
+            scope_hint="Methods/Imaging, Abstract, Results, Captions",
+            extraction_phase="modality",
+            evidence_hypothesis_template="{context_prefix}modality family was {value}.",
         ),
     )
     subtype: Optional[StrField] = Field(
@@ -243,6 +261,7 @@ class ModalityType(BaseModel):
             "populate. Otherwise null.",
             scope_hint="Methods/Imaging, Abstract, Captions",
             extraction_phase="modality",
+            evidence_hypothesis_template="{context_prefix}modality subtype was {value}.",
         ),
     )
 
@@ -271,6 +290,7 @@ class ModalityBase(EntityBase):
             "Extract the manufacturer name as stated. Return null if not stated.",
             scope_hint="Methods/Imaging",
             extraction_phase="modality",
+            evidence_hypothesis_template="{context_prefix}scanner manufacturer was {value}.",
         ),
     )
 
@@ -282,29 +302,32 @@ class ModalityBase(EntityBase):
             "Extract field strength as a number in Tesla. Return null if not stated.",
             scope_hint="Methods/Imaging",
             extraction_phase="modality",
+            evidence_hypothesis_template="{context_prefix}field strength was {value} T.",
         ),
     )
 
     sequence_name: Optional[StrField] = Field(
         default=None,
-        description="Sequence name/type (e.g., 'EPI', 'MPRAGE', 'spin-echo').",
+        description="Sequence name/type.",
         json_schema_extra=extraction_meta(
             "text",
             "Extract sequence/acquisition terminology as stated. Return null if not stated.",
             scope_hint="Methods/Imaging",
             extraction_phase="modality",
+            evidence_hypothesis_template="{context_prefix}sequence was {value}.",
         ),
     )
 
     # Voxel size
     voxel_size: Optional[StrField] = Field(
         default=None,
-        description="Voxel size (e.g., '2×2×2 mm').",
+        description="Voxel size.",
         json_schema_extra=extraction_meta(
             "text",
             "Extract voxel size as stated. Return null if not stated.",
             scope_hint="Methods/Imaging",
             extraction_phase="modality",
+            evidence_hypothesis_template="{context_prefix}voxel size was {value}.",
         ),
     )
 
@@ -317,6 +340,7 @@ class ModalityBase(EntityBase):
             "Extract TR. Convert ms to seconds if needed. Return null if not stated.",
             scope_hint="Methods/Imaging",
             extraction_phase="modality",
+            evidence_hypothesis_template="{context_prefix}TR was {value} s.",
         ),
     )
     te_seconds: Optional[FloatField] = Field(
@@ -327,6 +351,7 @@ class ModalityBase(EntityBase):
             "Extract TE. Convert ms to seconds if needed. Return null if not stated.",
             scope_hint="Methods/Imaging",
             extraction_phase="modality",
+            evidence_hypothesis_template="{context_prefix}TE was {value} s.",
         ),
     )
 
@@ -345,6 +370,7 @@ TaskDomainLiteral = Literal[
     "Emotion",
     "Social function",
     "Motivation",
+    "Other",
 ]
 
 TaskDesignLiteral = Literal["Blocked", "EventRelated", "Mixed", "Other"]
@@ -371,6 +397,7 @@ class Condition(EntityBase):
             "Extract the condition label as stated. Return null if not stated.",
             scope_hint="Methods/Task, Results, Captions",
             extraction_phase="condition",
+            evidence_hypothesis_template="The condition was {value}.",
         ),
     )
 
@@ -378,7 +405,7 @@ class Condition(EntityBase):
 class TaskBase(EntityBase):
     task_name: Optional[StrField] = Field(
         default=None,
-        description="Task name used in the study (e.g., 'Stroop task').",
+        description="Task name used in the study.",
         json_schema_extra=extraction_meta(
             "text",
             "Use the exact task or intervention name if stated (e.g., 'Stroop task', "
@@ -389,6 +416,7 @@ class TaskBase(EntityBase):
             scope_hint="Methods/Task, Abstract, Results, Captions",
             extraction_phase="task",
             inference_policy="synthesize",
+            evidence_hypothesis_template="The task was {value}.",
         ),
     )
 
@@ -404,6 +432,7 @@ class TaskBase(EntityBase):
             scope_hint="Methods/Task",
             extraction_phase="task",
             inference_policy="synthesize",
+            evidence_value_only=True,
         ),
     )
 
@@ -419,32 +448,57 @@ class TaskBase(EntityBase):
             scope_hint="Methods/Task",
             extraction_phase="task",
             inference_policy="synthesize",
+            evidence_value_only=True,
         ),
     )
 
     task_design: Optional[List[ExtractedValue[TaskDesignLiteral]]] = Field(
         default=None,
-        description="Task design tags (only if explicitly stated).",
+        description="Task design type (only if explicitly stated).",
         json_schema_extra=extraction_meta(
             "enum",
-            "Select design tags only when explicitly described. Return null if not stated.",
+            "Select design type only when it can be explicitly mapped to the existing options. Return null if not stated.",
             scope_hint="Methods/Task",
             extraction_phase="task",
             inference_policy="post_normalize",
+            evidence_hypothesis_template="{context_prefix}task design was {value}.",
+        ),
+    )
+    task_design_other: Optional[StrField] = Field(
+        default=None,
+        description="Free-text task design label when task_design is Other.",
+        json_schema_extra=extraction_meta(
+            "text",
+            "If task_design includes Other, capture the stated design label here. Otherwise null.",
+            scope_hint="Methods/Task",
+            extraction_phase="task",
+            evidence_hypothesis_template="{context_prefix}task design was {value}.",
         ),
     )
 
     task_category: Optional[List[ExtractedValue[TaskCategoryLiteral]]] = Field(
         default=None,
-        description="Task category tags (explicit only).",
+        description="Task category type (explicit only).",
         json_schema_extra=extraction_meta(
             "enum",
-            "Select task category tags only when explicitly stated. "
+            "Select task category type(s) only when it can be explicitly mapped to the existing options. "
             "Use RestingState only if explicitly described as resting-state/baseline with no task. "
             "Return null if not stated.",
             scope_hint="Methods/Task, Abstract, Results, Captions",
             extraction_phase="task",
             inference_policy="post_normalize",
+            evidence_hypothesis_template="{context_prefix}task category was {value}.",
+        ),
+    )
+    task_category_other: Optional[List[StrField]] = Field(
+        default=None,
+        description="Free-text task category labels when task_category includes Other.",
+        json_schema_extra=extraction_meta(
+            "text",
+            "If task_category includes Other, list the stated category labels here. Otherwise null.",
+            scope_hint="Methods/Task, Abstract, Results, Captions",
+            extraction_phase="task",
+            evidence_hypothesis_template="{context_prefix}task category was {value}.",
         ),
     )
 
@@ -457,6 +511,7 @@ class TaskBase(EntityBase):
             "(use design_details). Return null if not stated.",
             scope_hint="Methods/Task",
             extraction_phase="task",
+            evidence_hypothesis_template="{context_prefix}total task duration was {value}.",
         ),
     )
 
@@ -487,6 +542,7 @@ class TaskBase(EntityBase):
             "Return null if not stated.",
             scope_hint="Methods/Task, Abstract, Introduction (if explicitly describing this study's task)",
             extraction_phase="task",
+            evidence_hypothesis_template="{context_prefix}the task involved {value}.",
         ),
     )
 
@@ -496,11 +552,23 @@ class TaskBase(EntityBase):
         description="Cognitive domain tags.",
         json_schema_extra=extraction_meta(
             "enum",
-            "Select domain tags only when explicitly stated in the article. "
+            "Select domain tags only when it can be explicitly mapped to the existing options. "
             "Do not copy raw concept phrases. Return null if not stated.",
             scope_hint="Methods/Task, Abstract",
             extraction_phase="task",
             inference_policy="post_normalize",
+            evidence_hypothesis_template="{context_prefix}domain tags included {value}.",
+        ),
+    )
+    domain_tags_other: Optional[List[StrField]] = Field(
+        default=None,
+        description="Free-text domain tags when domain_tags includes Other.",
+        json_schema_extra=extraction_meta(
+            "text",
+            "If domain_tags includes Other, list the stated domain tags here. Otherwise null.",
+            scope_hint="Methods/Task, Abstract",
+            extraction_phase="task",
+            evidence_hypothesis_template="{context_prefix}domain tags included {value}.",
         ),
     )
 
@@ -522,6 +590,18 @@ class GroupBase(EntityBase):
             scope_hint="Methods/Participants, Abstract",
             extraction_phase="group",
             inference_policy="post_normalize",
+            evidence_hypothesis_template="{context_prefix}participants were {value}.",
+        ),
+    )
+    population_role_other: Optional[StrField] = Field(
+        default=None,
+        description="Free-text group role label when population_role is Other.",
+        json_schema_extra=extraction_meta(
+            "text",
+            "If population_role is Other, capture the stated role label here. Otherwise null.",
+            scope_hint="Methods/Participants, Abstract",
+            extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}participants were {value}.",
         ),
     )
 
@@ -534,6 +614,7 @@ class GroupBase(EntityBase):
             "Do not restrict to diagnosis terms. Return null if not stated.",
             scope_hint="Methods/Participants, Abstract, Table 1",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}the cohort was labeled {value}.",
         ),
     )
 
@@ -547,6 +628,7 @@ class GroupBase(EntityBase):
             "Return null if not stated.",
             scope_hint="Methods/Participants, Abstract",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}participants had {value}.",
         ),
     )
 
@@ -559,6 +641,7 @@ class GroupBase(EntityBase):
             "Do not use pooled totals. Return null if not stated.",
             scope_hint="Methods/Participants, Abstract, Table 1, Results",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}there were {value} participants.",
         ),
     )
 
@@ -570,6 +653,7 @@ class GroupBase(EntityBase):
             "Extract male count as a number. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}there were {value} male participants.",
         ),
     )
 
@@ -581,6 +665,7 @@ class GroupBase(EntityBase):
             "Extract female count as a number. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}there were {value} female participants.",
         ),
     )
 
@@ -592,6 +677,7 @@ class GroupBase(EntityBase):
             "Extract mean age as a number. Return null if not stated for this group.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}mean age was {value}.",
         ),
     )
 
@@ -603,18 +689,20 @@ class GroupBase(EntityBase):
             "Extract age SD as a number if stated. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}age SD was {value}.",
         ),
     )
 
     age_range: Optional[StrField] = Field(
         default=None,
-        description="Age range (e.g., '18-35').",
+        description="Age range.",
         json_schema_extra=extraction_meta(
             "text",
             "Extract reported sample age range as stated. Do not infer from min/max eligibility. "
             "Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}age range was {value}.",
         ),
     )
 
@@ -627,6 +715,7 @@ class GroupBase(EntityBase):
             "Do not infer from age range. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}minimum age was {value}.",
         ),
     )
     age_maximum: Optional[IntField] = Field(
@@ -638,6 +727,7 @@ class GroupBase(EntityBase):
             "Do not infer from age range. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}maximum age was {value}.",
         ),
     )
 
@@ -649,6 +739,7 @@ class GroupBase(EntityBase):
             "Extract median age as a number. Return null if not stated.",
             scope_hint="Methods/Participants, Table 1",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}median age was {value}.",
         ),
     )
 
@@ -661,6 +752,7 @@ class GroupBase(EntityBase):
             "Set false only if explicitly stated not all are right-handed. Otherwise null.",
             scope_hint="Methods/Participants",
             extraction_phase="group",
+            evidence_hypothesis_template="{context_prefix}all participants were right-handed: {value}.",
         ),
     )
 
@@ -674,6 +766,7 @@ class GroupBase(EntityBase):
             "Do not copy study-wide criteria. Return null if not group-specific.",
             scope_hint="Methods/Participants",
             extraction_phase="group",
+            evidence_value_only=True,
         ),
     )
     exclusion_criteria: Optional[List[StrField]] = Field(
@@ -685,6 +778,7 @@ class GroupBase(EntityBase):
             "Do not copy study-wide criteria. Return null if not group-specific.",
             scope_hint="Methods/Participants",
             extraction_phase="group",
+            evidence_value_only=True,
         ),
     )
 
@@ -706,7 +800,7 @@ class DemographicsSchema(BaseModel):
 StudyDesignLiteral = Literal["CrossSectional", "Longitudinal", "CaseControl", "Intervention", "Other"]
 AnalysisReportingLiteral = Literal["WholeBrain", "ROI", "Atlas/Parcellation", "Other"]
 AnalysisMethodLiteral = Literal[
-    "Activation",
+    "Activation/Contrastive",
     "SeedBasedConnectivity",
     "IndependentComponentsAnalysis",
     "BrainBehaviorCorrelation",
@@ -732,6 +826,7 @@ class AnalysisBase(EntityBase):
             "Return null if not stated.",
             scope_hint="Methods/Analysis, Results, Captions",
             extraction_phase="analysis",
+            evidence_value_only=True,
         ),
     )
 
@@ -743,6 +838,19 @@ class AnalysisBase(EntityBase):
             "Select WholeBrain/ROI/Atlas/Other only if explicitly stated. Return null if not stated.",
             scope_hint="Methods/Analysis, Results",
             extraction_phase="analysis",
+            evidence_hypothesis_template="{context_prefix}reporting scope was {value}.",
+            evidence_value_only=True,
+        ),
+    )
+    reporting_scope_other: Optional[StrField] = Field(
+        default=None,
+        description="Free-text reporting scope label when reporting_scope is Other.",
+        json_schema_extra=extraction_meta(
+            "text",
+            "If reporting_scope is Other, capture the stated scope label here. Otherwise null.",
+            scope_hint="Methods/Analysis, Results",
+            extraction_phase="analysis",
+            evidence_hypothesis_template="{context_prefix}reporting scope was {value}.",
         ),
     )
 
@@ -751,22 +859,35 @@ class AnalysisBase(EntityBase):
         description="Analysis method category.",
         json_schema_extra=extraction_meta(
             "enum",
-            "Select the analysis method category only when explicitly stated. "
+            "Select the analysis method category only when it can be explicitly mapped to the existing options."
             "Return null if not stated.",
             scope_hint="Methods/Analysis, Results",
             extraction_phase="analysis",
             inference_policy="post_normalize",
+            evidence_hypothesis_template="{context_prefix}the analysis used {value}.",
+        ),
+    )
+    analysis_method_other: Optional[StrField] = Field(
+        default=None,
+        description="Free-text analysis method label when analysis_method is Other.",
+        json_schema_extra=extraction_meta(
+            "text",
+            "If analysis_method is Other, capture the stated method label here. Otherwise null.",
+            scope_hint="Methods/Analysis, Results",
+            extraction_phase="analysis",
+            evidence_hypothesis_template="{context_prefix}the analysis used {value}.",
         ),
     )
 
     contrast_formula: Optional[StrField] = Field(
         default=None,
-        description="Contrast formula (e.g., 'Incongruent > Congruent').",
+        description="Contrast formula.",
         json_schema_extra=extraction_meta(
             "text",
             "Extract the contrast formula as stated if present. Return null if not stated.",
             scope_hint="Methods/Analysis, Results",
             extraction_phase="analysis",
+            evidence_value_only=True,
         ),
     )
 
@@ -784,6 +905,7 @@ class StudyMetadataModel(BaseModel):
             scope_hint="Abstract, Introduction",
             extraction_phase="study",
             inference_policy="synthesize",
+            evidence_value_only=True,
         ),
     )
 
@@ -796,6 +918,7 @@ class StudyMetadataModel(BaseModel):
             "Do not include criteria stated only for specific groups. Return null if not stated.",
             scope_hint="Methods/Participants",
             extraction_phase="study",
+            evidence_value_only=True,
         ),
     )
     exclusion_criteria: Optional[List[StrField]] = Field(
@@ -807,10 +930,13 @@ class StudyMetadataModel(BaseModel):
             "Do not include criteria stated only for specific groups. Return null if not stated.",
             scope_hint="Methods/Participants",
             extraction_phase="study",
+            evidence_value_only=True,
         ),
     )
 
-    study_type: Optional[ExtractedValue[Literal["OriginalResearch", "MetaAnalysis", "Review"]]] = Field(
+    study_type: Optional[
+        ExtractedValue[Literal["OriginalResearch", "MetaAnalysis", "Review", "Other"]]
+    ] = Field(
         default=None,
         description="Study type classification.",
         json_schema_extra=extraction_meta(
@@ -820,6 +946,18 @@ class StudyMetadataModel(BaseModel):
             "of participant data is described. Return null if unclear.",
             scope_hint="Title, Abstract",
             extraction_phase="study",
+            evidence_hypothesis_template="The study type was {value}.",
+        ),
+    )
+    study_type_other: Optional[StrField] = Field(
+        default=None,
+        description="Free-text study type label when study_type is Other.",
+        json_schema_extra=extraction_meta(
+            "text",
+            "If study_type is Other, capture the stated study type label here. Otherwise null.",
+            scope_hint="Title, Abstract",
+            extraction_phase="study",
+            evidence_hypothesis_template="The study type was {value}.",
         ),
     )
 
@@ -906,7 +1044,7 @@ class StudyLinks(BaseModel):
     )
     task_modality: Optional[List[TaskModalityEdge]] = Field(
         default=None,
-        description="Edges linking tasks to modalities used (e.g., task fMRI).",
+        description="Edges linking tasks to modalities used.",
         json_schema_extra=extraction_meta(
             "edge_list",
             "Create edges only when explicitly stated. Return null if not stated. "
@@ -1047,7 +1185,7 @@ class StudyRecord(BaseModel):
     # Optional global notes / quality flags
     extraction_notes: Optional[List[StrField]] = Field(
         default=None,
-        description="Pipeline notes (e.g., 'demographics only in Table 1', 'subset scanned').",
+        description="Pipeline notes.",
         json_schema_extra=extraction_meta(
             "text",
             "Add short notes about ambiguities or pooled reporting. Return null if none.",

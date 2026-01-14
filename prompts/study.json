@@ -7,7 +7,8 @@
     "study_objective",
     "inclusion_criteria",
     "exclusion_criteria",
-    "study_type"
+    "study_type",
+    "study_type_other"
   ],
   "examples": [
     {

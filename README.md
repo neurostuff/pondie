@@ -155,10 +155,10 @@ like fMRI, DTI, EEG, MEG, PET, etc. that I am specifically interested in.
 ### Contrasts/Analyses
 Contrasts and analyses may be more free-form text,
 specifically relating to tasks/modalities/groups.
-I would like to know outcome measures for the contrasts/analyses as well.
+Key fields include analysis_method, contrast_formula, and reporting_scope.
 
 ### Evidence
-The document text that supports an extraction may have additional noisy formatting. LangExtract returns extractions with aligned evidence spans; summaries can be synthesized but must reference supporting spans.
+The document text that supports an extraction may have additional noisy formatting. Evidence spans store source/section/locator plus char offsets and verbatim text; summaries can be synthesized but must reference supporting spans.
 
 
 ### Individual Extraction Steps

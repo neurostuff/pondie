@@ -5,6 +5,7 @@
   "prompt_description": "Extract participant groups and their demographics. Produce one extraction per distinct participant group.",
   "fields": [
     "population_role",
+    "population_role_other",
     "cohort_label",
     "medical_condition",
     "count",
