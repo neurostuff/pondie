@@ -8,7 +8,7 @@ Purpose:
 Requirements:
 - Pydantic validation of `StudyRecord` outputs.
 - Evidence presence for any non-null `ExtractedValue`.
-- Optional consistency checks (e.g., pooled vs group counts, age range vs min/max).
+- Optional consistency checks (e.g., age range vs min/max).
 - Emit warnings per article when validation issues are detected; still write JSONL if schema-valid.
 - Persist per-article warnings to a JSONL sidecar file.
 

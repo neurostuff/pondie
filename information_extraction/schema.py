@@ -38,7 +38,6 @@ ExtractionPhaseLiteral = Literal[
     "modality",
     "analysis",
     "linking",
-    "demographics_shared",
     "record",
 ]
 
@@ -141,7 +140,7 @@ class ExtractedValue(BaseModel, Generic[T]):
     )
     note: Optional[str] = Field(
         default=None,
-        description="Free-text note (e.g., 'reported pooled across groups').",
+        description="Free-text note (e.g., 'reported across groups').",
     )
     scope: Optional[Literal["group", "shared", "task", "modality", "analysis", "study"]] = Field(
         default=None, description="Scope of the value if relevant."
@@ -212,6 +211,7 @@ ModalityFamilyLiteral = Literal[
     "PET",
     "EEG",
     "MEG",
+    "BehaviorOnly",
     "Other",
 ]
 
@@ -348,6 +348,13 @@ TaskDomainLiteral = Literal[
 ]
 
 TaskDesignLiteral = Literal["Blocked", "EventRelated", "Mixed", "Other"]
+TaskCategoryLiteral = Literal[
+    "CognitiveTask",
+    "Intervention",
+    "Exposure",
+    "RestingState",
+    "Other",
+]
 
 
 class Condition(EntityBase):
@@ -369,27 +376,16 @@ class Condition(EntityBase):
 
 
 class TaskBase(EntityBase):
-    resting_state: Optional[BoolField] = Field(
-        default=None,
-        description="Whether task is resting state.",
-        json_schema_extra=extraction_meta(
-            "boolean",
-            "Set true only if explicitly described as resting-state/baseline with no task. "
-            "Set false only if explicitly described as task-based. Otherwise null.",
-            scope_hint="Methods/Task, Abstract, Results, Captions",
-            extraction_phase="task",
-        ),
-    )
-
     task_name: Optional[StrField] = Field(
         default=None,
         description="Task name used in the study (e.g., 'Stroop task').",
         json_schema_extra=extraction_meta(
             "text",
-            "Use the exact task name if stated. If no name is stated but a task is "
+            "Use the exact task or intervention name if stated (e.g., 'Stroop task', "
+            "'TaVNS stimulation'). If no name is stated but a task/intervention is "
             "described, create a short label grounded in the text. "
             "Do not include narrative descriptions or timing details. "
-            "Return null if no task is described.",
+            "Return null if no task/intervention is described.",
             scope_hint="Methods/Task, Abstract, Results, Captions",
             extraction_phase="task",
             inference_policy="synthesize",
@@ -438,6 +434,20 @@ class TaskBase(EntityBase):
         ),
     )
 
+    task_category: Optional[List[ExtractedValue[TaskCategoryLiteral]]] = Field(
+        default=None,
+        description="Task category tags (explicit only).",
+        json_schema_extra=extraction_meta(
+            "enum",
+            "Select task category tags only when explicitly stated. "
+            "Use RestingState only if explicitly described as resting-state/baseline with no task. "
+            "Return null if not stated.",
+            scope_hint="Methods/Task, Abstract, Results, Captions",
+            extraction_phase="task",
+            inference_policy="post_normalize",
+        ),
+    )
+
     task_duration: Optional[StrField] = Field(
         default=None,
         description="Total task duration.",
@@ -455,7 +465,10 @@ class TaskBase(EntityBase):
         description="Conditions for this task.",
         json_schema_extra=extraction_meta(
             "object_list",
-            "Extract each task condition as an object with its label. "
+            "Extract each task condition/variant as an object with its label "
+            "(e.g., left/right/both ear stimulation, on/off, sham/active). "
+            "Use conditions for variants of the same task; do not create separate tasks "
+            "for variants. "
             "Return null if conditions are not stated.",
             scope_hint="Methods/Task, Results",
             extraction_phase="task",
@@ -464,10 +477,13 @@ class TaskBase(EntityBase):
 
     concepts: Optional[List[StrField]] = Field(
         default=None,
-        description="Cognitive concepts explicitly associated with the task.",
+        description="Cognitive psychological concepts explicitly associated with the task.",
         json_schema_extra=extraction_meta(
             "text",
-            "List cognitive concepts exactly as stated. Do not map to domain tags. "
+            "List cognitive psychological concepts exactly as stated (e.g., attention, "
+            "working memory, inhibition, conflict monitoring). "
+            "Do not include general neuroscience terms, modalities, diseases, or "
+            "study topics. Do not map to domain tags. "
             "Return null if not stated.",
             scope_hint="Methods/Task, Abstract, Introduction (if explicitly describing this study's task)",
             extraction_phase="task",
@@ -673,76 +689,10 @@ class GroupBase(EntityBase):
     )
 
 
-class SharedDemographics(BaseModel):
-    """
-    Demographics reported pooled across participants (shared across groups).
-    Store only when explicitly reported pooled, to avoid copying into per-group fields.
-    """
-
-    pooled_count: Optional[IntField] = Field(
-        default=None,
-        description="Total participant N pooled across groups, if stated.",
-        json_schema_extra=extraction_meta(
-            "numeric",
-            "Extract pooled total N if explicitly stated for the full sample. "
-            "Do not sum group counts. Return null if not stated.",
-            scope_hint="Methods/Participants, Abstract, Table 1",
-            extraction_phase="demographics_shared",
-        ),
-    )
-
-    pooled_age_mean: Optional[FloatField] = Field(
-        default=None,
-        description="Pooled mean age across groups, if explicitly stated.",
-        json_schema_extra=extraction_meta(
-            "numeric",
-            "Extract pooled mean age if explicitly stated for the full sample. "
-            "Do not copy per-group means. Return null if not stated.",
-            scope_hint="Methods/Participants, Table 1",
-            extraction_phase="demographics_shared",
-        ),
-    )
-
-    pooled_age_sd: Optional[FloatField] = Field(
-        default=None,
-        description="Pooled age SD across groups, if explicitly stated.",
-        json_schema_extra=extraction_meta(
-            "numeric",
-            "Extract pooled age SD if explicitly stated for the full sample. "
-            "Do not copy per-group SDs. Return null if not stated.",
-            scope_hint="Methods/Participants, Table 1",
-            extraction_phase="demographics_shared",
-        ),
-    )
-
-    pooled_all_right_handed: Optional[BoolField] = Field(
-        default=None,
-        description="Whether all participants (pooled) are right-handed, if explicitly stated.",
-        json_schema_extra=extraction_meta(
-            "boolean",
-            "Set true only if explicitly stated all participants are right-handed (pooled). "
-            "Set false only if explicitly stated not all participants are right-handed. "
-            "Do not infer from group-level values. Otherwise null.",
-            scope_hint="Methods/Participants",
-            extraction_phase="demographics_shared",
-        ),
-    )
-
-
 class DemographicsSchema(BaseModel):
-    shared: Optional[SharedDemographics] = Field(
-        default=None,
-        description="Pooled/shared demographics reported across groups.",
-        json_schema_extra=extraction_meta(
-            "object",
-            "Populate only when demographics are explicitly reported pooled/shared across groups.",
-            scope_hint="Methods/Participants, Table 1",
-            extraction_phase="demographics_shared",
-        ),
-    )
     groups: Optional[List[GroupBase]] = Field(
         default=None,
-        description="Participant groups described in the study.",
+        description="Participant groups described in the study (group-level demographics only).",
         json_schema_extra=extraction_meta(
             "object_list",
             "Extract all participant groups described in the study. "
@@ -754,13 +704,36 @@ class DemographicsSchema(BaseModel):
 
 
 StudyDesignLiteral = Literal["CrossSectional", "Longitudinal", "CaseControl", "Intervention", "Other"]
-AnalysisReportingLiteral = Literal["WholeBrain", "ROI", "Atlas", "Other"]
+AnalysisReportingLiteral = Literal["WholeBrain", "ROI", "Atlas/Parcellation", "Other"]
+AnalysisMethodLiteral = Literal[
+    "Activation",
+    "SeedBasedConnectivity",
+    "IndependentComponentsAnalysis",
+    "BrainBehaviorCorrelation",
+    "Network",
+    "Morphometry",
+    "Microstructure",
+    "Other",
+]
 
 
 class AnalysisBase(EntityBase):
     """
     One analysis/contrast (A1, A2...) reported in the study.
     """
+
+    analysis_label: Optional[StrField] = Field(
+        default=None,
+        description="Short label for the analysis/contrast.",
+        json_schema_extra=extraction_meta(
+            "text",
+            "Extract a short analysis/contrast label as stated. "
+            "Use the named analysis or contrast label if provided. "
+            "Return null if not stated.",
+            scope_hint="Methods/Analysis, Results, Captions",
+            extraction_phase="analysis",
+        ),
+    )
 
     reporting_scope: Optional[ExtractedValue[AnalysisReportingLiteral]] = Field(
         default=None,
@@ -773,26 +746,16 @@ class AnalysisBase(EntityBase):
         ),
     )
 
-    study_design_tags: Optional[List[ExtractedValue[StudyDesignLiteral]]] = Field(
+    analysis_method: Optional[ExtractedValue[AnalysisMethodLiteral]] = Field(
         default=None,
-        description="Study design tags associated with this analysis (explicit only).",
+        description="Analysis method category.",
         json_schema_extra=extraction_meta(
             "enum",
-            "Select design tags explicitly linked to this analysis. Do not infer. Return null if not stated.",
-            scope_hint="Methods, Abstract",
+            "Select the analysis method category only when explicitly stated. "
+            "Return null if not stated.",
+            scope_hint="Methods/Analysis, Results",
             extraction_phase="analysis",
             inference_policy="post_normalize",
-        ),
-    )
-
-    statistical_model: Optional[StrField] = Field(
-        default=None,
-        description="Statistical model terminology.",
-        json_schema_extra=extraction_meta(
-            "text",
-            "Extract statistical model terminology as stated. Return null if not stated.",
-            scope_hint="Methods/Analysis",
-            extraction_phase="analysis",
         ),
     )
 
@@ -806,18 +769,6 @@ class AnalysisBase(EntityBase):
             extraction_phase="analysis",
         ),
     )
-
-    outcome_measures: Optional[List[StrField]] = Field(
-        default=None,
-        description="Outcome measures reported for the analysis.",
-        json_schema_extra=extraction_meta(
-            "text",
-            "List outcome measures exactly as stated. Return null if none are stated.",
-            scope_hint="Results",
-            extraction_phase="analysis",
-        ),
-    )
-
 
 # -----------------------------
 # Study-level metadata
@@ -1037,11 +988,10 @@ class StudyRecord(BaseModel):
 
     demographics: Optional[DemographicsSchema] = Field(
         default=None,
-        description="Groups and demographics (group + pooled).",
+        description="Groups and demographics (group-level only).",
         json_schema_extra=extraction_meta(
             "object",
-            "Extract participant groups and demographics. "
-            "Store pooled demographics in demographics.shared when explicitly pooled.",
+            "Extract participant groups and demographics.",
             scope_hint="Methods/Participants, Abstract, Table 1",
             extraction_phase="record",
         ),

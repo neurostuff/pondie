@@ -47,11 +47,13 @@ This document summarizes the extraction schema defined in `information_extractio
 - `task_description` is narrative; avoid timing or total duration.
 - `design_details` is timing/run/block details; avoid narrative.
 - `task_duration` is only total duration.
+- Tasks can be interventions (e.g., stimulation/drug); variants like left/right/both or on/off belong in `conditions`.
+- `task_category` tags the task type (e.g., CognitiveTask, Intervention, Exposure, RestingState) only when explicitly stated.
 - `concepts` are raw phrases; `domain_tags` are normalized tags.
 - `cohort_label` can be descriptive; `medical_condition` is diagnosis only.
 - `population_role` is role only (patient/control/etc.).
 - `age_range` is reported sample range; `age_minimum`/`age_maximum` are explicit minimum/maximum if stated.
-- Pooled demographics go only in `demographics.shared` when explicitly pooled.
+- Demographics are captured at the group level only.
 
 ## Example JSON (one JSONL line, abbreviated)
 

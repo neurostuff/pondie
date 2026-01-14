@@ -4,22 +4,22 @@
   "extraction_class": "analysis",
   "prompt_description": "Extract analyses/contrasts reported in the study. Produce one extraction per distinct analysis.",
   "fields": [
+    "analysis_label",
     "reporting_scope",
-    "study_design_tags",
-    "statistical_model",
-    "contrast_formula",
-    "outcome_measures"
+    "analysis_method",
+    "contrast_formula"
   ],
   "examples": [
     {
-      "text": "Whole-brain analysis tested the contrast Incongruent > Congruent; outcome measures included reaction time and accuracy.",
+      "text": "Whole-brain activation analysis tested the contrast Incongruent > Congruent.",
       "extractions": [
         {
-          "extraction_text": "Whole-brain analysis",
+          "extraction_text": "Whole-brain activation analysis",
           "attributes": {
+            "analysis_label": "Whole-brain analysis",
             "reporting_scope": "WholeBrain",
-            "contrast_formula": "Incongruent > Congruent",
-            "outcome_measures": ["reaction time", "accuracy"]
+            "analysis_method": "Activation",
+            "contrast_formula": "Incongruent > Congruent"
           }
         }
       ]

@@ -32,7 +32,6 @@ from information_extraction.schema import (
     ModalityBase,
     ModalityFamilyLiteral,
     ModalityType,
-    SharedDemographics,
     StrField,
     StudyLinks,
     StudyMetadataModel,
@@ -96,15 +95,14 @@ PROMPT_FILES = {
     "modality": "modality.json",
     "analysis": "analysis.json",
     "study": "study.json",
-    "demographics_shared": "demographics_shared.json",
     "links": "links.json",
 }
 
 DISCOVERY_FIELDS: dict[str, list[str]] = {
-    "group": ["cohort_label", "population_role", "medical_condition", "count"],
-    "task": ["task_name", "resting_state", "conditions"],
-    "modality": ["modality_family", "modality_subtype"],
-    "analysis": ["contrast_formula", "reporting_scope"],
+    "group": ["cohort_label"],
+    "task": ["task_name"],
+    "modality": ["modality_family"],
+    "analysis": ["analysis_label"],
 }
 
 
@@ -296,7 +294,6 @@ def build_field_prompt_map() -> dict[str, dict[str, str]]:
         },
         "AnalysisBase": _field_prompt_map(schema.AnalysisBase),
         "StudyMetadataModel": _field_prompt_map(schema.StudyMetadataModel),
-        "SharedDemographics": _field_prompt_map(schema.SharedDemographics),
     }
 
 
@@ -506,7 +503,7 @@ def run_full_extraction(
             )
             record = StudyRecord(
                 study=None,
-                demographics=DemographicsSchema(groups=None, shared=None),
+                demographics=DemographicsSchema(groups=None),
                 tasks=None,
                 modalities=None,
                 analyses=None,
@@ -610,7 +607,7 @@ def _build_stub_record(
     analyses = _build_analyses(
         getattr(discovery_results["analysis"], "extractions", []), document_id, warnings
     )
-    demographics = DemographicsSchema(groups=groups, shared=None)
+    demographics = DemographicsSchema(groups=groups)
     return StudyRecord(
         study=None,
         demographics=demographics,
@@ -646,21 +643,6 @@ def _fill_entities(
         getattr(study_doc, "extractions", []), document_id, warnings
     )
     annotated_docs.append(study_doc)
-
-    shared_spec = prompt_specs["demographics_shared"]
-    shared_doc = run_langextract(
-        text,
-        prompt_spec=shared_spec,
-        field_prompts=field_prompt_maps[shared_spec.entity],
-        config=config,
-        document_id=document_id,
-        warnings=warnings,
-        warning_context="shared demographics fill",
-    )
-    record.demographics.shared = _build_shared_demographics(
-        getattr(shared_doc, "extractions", []), document_id, warnings
-    )
-    annotated_docs.append(shared_doc)
 
     group_spec = prompt_specs["group"]
     for group in record.demographics.groups or []:
@@ -919,12 +901,12 @@ def _build_analyses(
         extraction_group = grouped[key]
         analysis = AnalysisBase(id=f"A{idx}")
         attrs = extraction_group[0].attributes or {}
-        label = _normalize_text(attrs.get("contrast_formula")) or extraction_group[0].extraction_text
+        label = _normalize_text(attrs.get("analysis_label")) or extraction_group[0].extraction_text
         evidence = _collect_evidence(extraction_group, document_id)
         if label:
             _safe_setattr(
                 analysis,
-                "contrast_formula",
+                "analysis_label",
                 _make_str_field_with_evidence(label, evidence),
                 warnings,
                 extraction_group[0],
@@ -985,53 +967,6 @@ def _build_study_metadata(
     return study
 
 
-def _build_shared_demographics(
-    extractions: list[Any], document_id: str, warnings: list[StrField]
-) -> SharedDemographics | None:
-    if not extractions:
-        return None
-    extraction = extractions[0]
-    attrs = extraction.attributes or {}
-    shared = SharedDemographics()
-    _safe_setattr(
-        shared,
-        "pooled_count",
-        _make_int_field(attrs.get("pooled_count"), extraction, document_id),
-        warnings,
-        extraction,
-        document_id,
-        None,
-    )
-    _safe_setattr(
-        shared,
-        "pooled_age_mean",
-        _make_float_field(attrs.get("pooled_age_mean"), extraction, document_id),
-        warnings,
-        extraction,
-        document_id,
-        None,
-    )
-    _safe_setattr(
-        shared,
-        "pooled_age_sd",
-        _make_float_field(attrs.get("pooled_age_sd"), extraction, document_id),
-        warnings,
-        extraction,
-        document_id,
-        None,
-    )
-    _safe_setattr(
-        shared,
-        "pooled_all_right_handed",
-        _make_bool_field(attrs.get("pooled_all_right_handed"), extraction, document_id),
-        warnings,
-        extraction,
-        document_id,
-        None,
-    )
-    if _is_empty_model(shared):
-        return None
-    return shared
 
 
 def _apply_group_attributes(
@@ -1193,15 +1128,6 @@ def _apply_task_attributes(
     attrs = extraction.attributes or {}
     _safe_setattr(
         task,
-        "resting_state",
-        _make_bool_field(attrs.get("resting_state"), extraction, document_id),
-        warnings,
-        extraction,
-        document_id,
-        task.id,
-    )
-    _safe_setattr(
-        task,
         "task_name",
         _make_str_field(_normalize_text(attrs.get("task_name")), extraction, document_id),
         warnings,
@@ -1231,6 +1157,15 @@ def _apply_task_attributes(
         task,
         "task_design",
         _make_enum_list(attrs.get("task_design"), extraction, document_id),
+        warnings,
+        extraction,
+        document_id,
+        task.id,
+    )
+    _safe_setattr(
+        task,
+        "task_category",
+        _make_enum_list(attrs.get("task_category"), extraction, document_id),
         warnings,
         extraction,
         document_id,
@@ -1402,6 +1337,15 @@ def _apply_analysis_attributes(
     attrs = extraction.attributes or {}
     _safe_setattr(
         analysis,
+        "analysis_label",
+        _make_str_field(_normalize_text(attrs.get("analysis_label")), extraction, document_id),
+        warnings,
+        extraction,
+        document_id,
+        analysis.id,
+    )
+    _safe_setattr(
+        analysis,
         "reporting_scope",
         _make_extracted_value(_normalize_text(attrs.get("reporting_scope")), extraction, document_id),
         warnings,
@@ -1411,17 +1355,8 @@ def _apply_analysis_attributes(
     )
     _safe_setattr(
         analysis,
-        "study_design_tags",
-        _make_enum_list(attrs.get("study_design_tags"), extraction, document_id),
-        warnings,
-        extraction,
-        document_id,
-        analysis.id,
-    )
-    _safe_setattr(
-        analysis,
-        "statistical_model",
-        _make_str_field(_normalize_text(attrs.get("statistical_model")), extraction, document_id),
+        "analysis_method",
+        _make_extracted_value(_normalize_text(attrs.get("analysis_method")), extraction, document_id),
         warnings,
         extraction,
         document_id,
@@ -1431,15 +1366,6 @@ def _apply_analysis_attributes(
         analysis,
         "contrast_formula",
         _make_str_field(_normalize_text(attrs.get("contrast_formula")), extraction, document_id),
-        warnings,
-        extraction,
-        document_id,
-        analysis.id,
-    )
-    _safe_setattr(
-        analysis,
-        "outcome_measures",
-        _make_str_list(attrs.get("outcome_measures"), extraction, document_id),
         warnings,
         extraction,
         document_id,
@@ -1978,6 +1904,8 @@ def _extract_label(entity: Any) -> str:
         if entity.modality_type and entity.modality_type.family:
             return str(entity.modality_type.family.value)
     if isinstance(entity, AnalysisBase):
+        if entity.analysis_label and entity.analysis_label.value:
+            return entity.analysis_label.value
         if entity.contrast_formula and entity.contrast_formula.value:
             return entity.contrast_formula.value
     return entity.id

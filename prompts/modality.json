@@ -4,8 +4,7 @@
   "extraction_class": "modality",
   "prompt_description": "Extract imaging modalities and acquisition parameters. Produce one extraction per distinct modality.",
   "fields": [
-    "modality_family",
-    "modality_subtype",
+    "modality_type",
     "manufacturer",
     "field_strength_tesla",
     "sequence_name",
@@ -20,7 +19,10 @@
         {
           "extraction_text": "fMRI data",
           "attributes": {
-            "modality_family": "fMRI",
+            "modality_type": {
+              "family": "fMRI",
+              "subtype": null
+            },
             "manufacturer": "Siemens",
             "field_strength_tesla": "3",
             "sequence_name": "EPI",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Iterable, Optional
 import json
@@ -70,6 +71,14 @@ class TableRegistry:
             for key, entry in self.entries_by_key.items()
             if key not in self.inserted
         ]
+
+
+@dataclass(frozen=True)
+class AbbreviationEntry:
+    short: str
+    long: str
+    definition_count: int
+    count: int
 
 
 @dataclass(frozen=True)
@@ -161,6 +170,38 @@ def extract_markdown_from_path(
             blocks.extend(remaining)
 
     return "\n\n".join([block for block in blocks if block])
+
+
+def extract_abbreviations(text: str) -> list[AbbreviationEntry]:
+    text = text.strip()
+    if not text:
+        return []
+
+    nlp = _get_abbreviation_nlp()
+    doc = nlp(text)
+    counts: dict[tuple[str, str], int] = {}
+    for abrv in doc._.abbreviations:
+        short = _normalize_abbrev(str(abrv))
+        long = _normalize_abbrev(str(abrv._.long_form))
+        if not short or not long:
+            continue
+        key = (short, long)
+        counts[key] = counts.get(key, 0) + 1
+
+    entries = []
+    for (short, long), definition_count in sorted(
+        counts.items(), key=lambda item: (item[0][0].lower(), item[0][1].lower())
+    ):
+        count = _count_abbrev_mentions(text, short)
+        entries.append(
+            AbbreviationEntry(
+                short=short,
+                long=long,
+                definition_count=definition_count,
+                count=count,
+            )
+        )
+    return entries
 
 
 def build_document_id(identifiers: DocumentIdentifiers, fallback: str) -> str:
@@ -867,6 +908,34 @@ def _find_first_descendant(element, name: str):
 
 def _normalize_text(text: str) -> str:
     return re.sub(r"\s+", " ", text.replace("\xa0", " ")).strip()
+
+
+def _normalize_abbrev(text: str) -> str:
+    return _normalize_text(text)
+
+
+def _count_abbrev_mentions(text: str, short: str) -> int:
+    if not short:
+        return 0
+    pattern = re.compile(rf"(?<!\\w){re.escape(short)}(?!\\w)")
+    return len(pattern.findall(text))
+
+
+@lru_cache(maxsize=1)
+def _get_abbreviation_nlp():
+    try:
+        import spacy
+        from scispacy.abbreviation import AbbreviationDetector  # noqa: F401
+    except ImportError as exc:
+        raise ImportError(
+            "Abbreviation extraction requires scispaCy. "
+            "Install with: uv pip install '.[abbrev]'"
+        ) from exc
+
+    nlp = spacy.blank("en")
+    if "abbreviation_detector" not in nlp.pipe_names:
+        nlp.add_pipe("abbreviation_detector")
+    return nlp
 
 
 def _normalize_table_ref(ref: Optional[str]) -> str:

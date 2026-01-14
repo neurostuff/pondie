@@ -8,6 +8,7 @@ import json
 from information_extraction.text.extractor import (
     build_document_id,
     discover_documents,
+    extract_abbreviations,
     extract_markdown_from_path,
 )
 from information_extraction.extraction import ExtractionConfig, run_full_extraction
@@ -96,16 +97,17 @@ def run_text_extraction(args: argparse.Namespace) -> None:
         documents = documents[: args.limit]
 
     for doc in documents:
-        markdown = extract_markdown_from_path(
-            doc.path, doc.table_paths, backend=args.backend
-        )
         doc_id = build_document_id(doc.identifiers, doc.hash_id)
 
         output_dir = output_root / doc.hash_id / doc.provider
         output_dir.mkdir(parents=True, exist_ok=True)
         markdown_path = output_dir / f"{doc_id}.md"
+        abbreviation_path = output_dir / f"{doc_id}.abbreviations.json"
         if args.skip_existing and markdown_path.exists():
             continue
+        markdown = extract_markdown_from_path(
+            doc.path, doc.table_paths, backend=args.backend
+        )
         markdown_path.write_text(markdown, encoding="utf-8")
 
         metadata = {
@@ -118,6 +120,24 @@ def run_text_extraction(args: argparse.Namespace) -> None:
         metadata_path = output_dir / f"{doc_id}.metadata.json"
         metadata_path.write_text(
             json.dumps(metadata, indent=2, sort_keys=True), encoding="utf-8"
+        )
+
+        abbreviations = extract_abbreviations(markdown)
+        abbreviation_payload = {
+            "document_id": doc_id,
+            "abbreviations": [
+                {
+                    "short": entry.short,
+                    "long": entry.long,
+                    "definition_count": entry.definition_count,
+                    "count": entry.count,
+                }
+                for entry in abbreviations
+            ],
+        }
+        abbreviation_path.write_text(
+            json.dumps(abbreviation_payload, indent=2, sort_keys=True),
+            encoding="utf-8",
         )
 
         print(f"wrote {markdown_path}")

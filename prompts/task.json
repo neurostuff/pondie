@@ -1,14 +1,14 @@
 {
-  "version": "v1",
+  "version": "v2",
   "entity": "TaskBase",
   "extraction_class": "task",
-  "prompt_description": "Extract tasks/paradigms described in the text. Produce one extraction per distinct task.",
+  "prompt_description": "Extract tasks/paradigms or interventions described in the text. Produce one extraction per distinct task/intervention. If a single task/intervention is described with multiple variants (e.g., left/right/both ear stimulation, on/off, sham/active), create one task and list the variants as conditions instead of separate tasks.",
   "fields": [
-    "resting_state",
     "task_name",
     "task_description",
     "design_details",
     "task_design",
+    "task_category",
     "task_duration",
     "conditions",
     "concepts",
@@ -23,7 +23,28 @@
           "attributes": {
             "task_name": "Stroop task",
             "task_design": ["Blocked"],
-            "conditions": ["incongruent", "congruent"]
+            "task_category": ["CognitiveTask"],
+            "conditions": [
+              {"condition_label": "incongruent"},
+              {"condition_label": "congruent"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "Subjects underwent TaVNS in the left, right, and both ears during the MRI session.",
+      "extractions": [
+        {
+          "extraction_text": "TaVNS in the left, right, and both ears",
+          "attributes": {
+            "task_name": "TaVNS stimulation",
+            "task_category": ["Intervention"],
+            "conditions": [
+              {"condition_label": "left ear"},
+              {"condition_label": "right ear"},
+              {"condition_label": "both ears"}
+            ]
           }
         }
       ]

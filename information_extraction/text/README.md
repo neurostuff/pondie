@@ -14,10 +14,12 @@ Requirements:
 - Produce Markdown output with pipe tables and a header row.
 - Support a docling backend for PDF/HTML; XML continues to use native parsing.
 - Insert external tables at their reference points when anchors are available.
+- Abbreviation sidecar output uses scispaCy (install with `uv pip install -e ".[abbrev]"`).
 
 Outputs:
 - Markdown outputs live under `outputs/text/<run_id>/<hash>/<provider>/<document_id>.md`.
 - Per-document metadata is stored alongside the markdown as `<document_id>.metadata.json`.
+- Abbreviation sidecar JSON is stored alongside the markdown as `<document_id>.abbreviations.json`.
 
 CLI:
 - `pondie text --input-dir data --output-dir outputs/text`

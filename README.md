@@ -119,7 +119,7 @@ What is our schema going to look like?
 For the schema, we will be tracking several entities:
 - StudyRecord (paper-level container)
 - StudyMetadataModel (study-wide metadata)
-- DemographicsSchema (groups + pooled demographics)
+- DemographicsSchema (groups only)
 - GroupBase (participant groups)
 - TaskBase (tasks/paradigms)
 - Condition (task conditions)
@@ -255,3 +255,7 @@ Ensure JSON schema output:
 
 
 some promising papers: https://chatgpt.com/share/69626a3c-5f3c-800f-8806-c17ccb126575
+
+
+Take a look at GLiNER2: https://github.com/fastino-ai/GLiNER2
+(and maybe revisit NuExtract)
