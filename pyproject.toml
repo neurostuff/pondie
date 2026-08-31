@@ -1,36 +1,31 @@
-[project]
-name = "pondie"
-version = "0.1.0"
-description = "Extract a queryable record of what a neuroimaging paper reports, normalize it, and select what a meta-analysis should pool."
-requires-python = ">=3.11"
-dependencies = [
-    "pydantic>=2.7",
-    "openai>=1.40",
-    "pyyaml>=6.0",
-]
-
-[project.optional-dependencies]
-# Normalization only needs these for the two fields that link or cluster; the six
-# closed-target fields are rules and need nothing beyond the standard library.
-normalize = [
-    "scikit-learn>=1.4",
-    "sentence-transformers>=3.0",
-    "spacy>=3.7",
-    "numpy>=1.26",
-]
-# `query.to_dataset()` hands a Studyset to NiMARE; nothing else imports it.
-meta = ["nimare>=0.20"]
-dev = ["pytest>=8.0"]
-
-[project.scripts]
-pondie = "pondie.cli:main"
-
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "pondie"
+version = "0.1.0"
+description = "Extract, normalize and query neuroimaging study records from paper text and tables"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2",
+    "requests",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+# The encoders normalization falls back to when a rule does not decide a value.
+encoders = ["sentence-transformers", "scikit-learn", "numpy"]
+# Coordinate-based meta-analysis. Not needed to extract or normalize a record.
+meta = ["nimare>=0.2", "numpy", "nibabel"]
+dev = ["pytest"]
+
+[project.scripts]
+pondie = "pondie.cli:main"
+
 [tool.setuptools.packages.find]
 include = ["pondie*"]
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+[tool.setuptools.package-data]
+# `known_gaps` resolves its yaml alongside itself, and the referents are prompt input.
+pondie = ["extraction/passes/known-gaps.yaml", "extraction/passes/referents/*"]

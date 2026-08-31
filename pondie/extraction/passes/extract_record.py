@@ -50,12 +50,12 @@ import preprocess  # noqa: E402  (deterministic text transforms; see --preproces
 import parse_tables  # noqa: E402  (one parse-key numbering)
 import schema_utils  # noqa: E402
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[3]
 #: The schema is a submodule of this repository, not the parent directory this
 #: module used to sit in.
 EXTRACTION_SCHEMA = _schema.ROOT / "neuroimaging-study-extraction.yaml"
-README = REPO / "extraction-readme.md"
-MODELS = REPO / "representing-models.md"
+README = _schema.ROOT / "extraction-readme.md"
+MODELS = _schema.ROOT / "representing-models.md"
 
 #: The heading of the section of `representing-models.md` the prompt carries, and
 #: the sub-heading `test_extraction_prompt.py` asserts survives the slice.

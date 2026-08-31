@@ -38,7 +38,7 @@ import os
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from sync_texts import read_pmids  # noqa: E402
 

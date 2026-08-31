@@ -25,7 +25,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[3]
 DEFAULT_HOST = "beast-proxy"
 DEFAULT_ROOT = "/data/alejandro/projects/ns-pond/data"
 

@@ -346,7 +346,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("records", nargs="+", help="candidate extraction records (globs ok)")
-    ap.add_argument("--gold-dir", type=Path, default=ROOT / "data/gold/direction")
+    ap.add_argument("--gold-dir", type=Path, default=ROOT / "benchmarks/gold/direction")
     ap.add_argument("--reference-dir", type=Path, default=ROOT / "data/records",
                     help="the records the reviewers were shown; supplies term identity only")
     ap.add_argument("--semantic", action="store_true", help="embeddings for term same-ness")

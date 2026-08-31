@@ -21,8 +21,8 @@ reported alongside the field scores; a high field accuracy over two matched enti
 of ten is not a good extraction.
 
     python compare_extractions.py data/records/xevP8UDRAVh9.extraction.json \\
-        --gold data/gold/xevP8UDRAVh9.extraction.json
-    python compare_extractions.py data/records/*.json --gold-dir data/gold --json out.json
+        --gold benchmarks/gold/xevP8UDRAVh9.extraction.json
+    python compare_extractions.py data/records/*.json --gold-dir benchmarks/gold --json out.json
 
 Why these metrics and not others: docs/extraction-comparison-metrics.md.
 """
@@ -1630,7 +1630,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("candidate", nargs="+", type=Path,
                         help="candidate extraction JSON, one or more")
     parser.add_argument("--gold", type=Path, help="gold record for a single candidate")
-    parser.add_argument("--gold-dir", type=Path, default=ROOT / "data" / "gold",
+    parser.add_argument("--gold-dir", type=Path, default=ROOT / "benchmarks" / "gold",
                         help="directory holding <local_id>.extraction.json gold records")
     parser.add_argument("--semantic", action="store_true",
                         help="add embedding cosine to the string similarity (needs OPENAI_API_KEY)")

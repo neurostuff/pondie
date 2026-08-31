@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
-VOCAB_DIR = Path(__file__).resolve().parents[3] / "data" / "vocab"
+VOCAB_DIR = Path(__file__).resolve().parents[4] / "data" / "vocab"
 
 #: Words that carry no identity. Dropped only when comparing token sets, never when
 #: deciding whether a phrase exists -- "usual care" is made entirely of weak words.

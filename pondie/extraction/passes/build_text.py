@@ -45,7 +45,7 @@ import types
 from pathlib import Path
 from typing import Any
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import table_parse  # noqa: E402
 from sync_texts import read_pmids  # noqa: E402

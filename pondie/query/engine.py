@@ -33,10 +33,7 @@ from typing import Iterable, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-SCHEMA = Path(__file__).resolve().parents[2] / "study_schema"
-for _path in (SCHEMA, SCHEMA / "review"):
-    if str(_path) not in sys.path:
-        sys.path.insert(0, str(_path))
+from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
 from schema_utils import value_of  # noqa: E402
 
 from ..normalization import coordinate_space  # noqa: E402

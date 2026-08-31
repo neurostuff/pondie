@@ -6,3 +6,6 @@ __pycache__
 # Run artifacts: payloads and records are per-run outputs, and the encoder cache
 # is a rebuildable disk cache of embeddings.
 .cache/
+
+# Vocabularies and run inputs: large, rebuildable, and not this repository to ship.
+data/
