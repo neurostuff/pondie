@@ -43,6 +43,18 @@ class Flavour(str, Enum):
     elsevier = "elsevier"
     ace = "ace"
 
+    @property
+    def filename(self) -> str:
+        """What the text is called under `processed/<flavour>/`.
+
+        `local` is the only one that differs, and it differs because it is not a fetched
+        render but a built one: `text.tables.txt` sits beside the `text.txt` it was built
+        from so the two are never confused. Reading `text.txt` from the local directory
+        finds nothing, which reads downstream as a paper with no text at all.
+        """
+
+        return "text.tables.txt" if self is Flavour.local else "text.txt"
+
 
 class StageName(str, Enum):
     tables = "tables"
@@ -74,7 +86,13 @@ class Paper(Strict):
 
     @property
     def text(self) -> Path:
-        return self.root / self.study_id / "processed" / self.flavour.value / "text.txt"
+        return (
+            self.root
+            / self.study_id
+            / "processed"
+            / self.flavour.value
+            / self.flavour.filename
+        )
 
     @property
     def parse(self) -> Path:

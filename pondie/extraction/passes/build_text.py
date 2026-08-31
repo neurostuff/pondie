@@ -356,8 +356,117 @@ def check_equivalence(rebuilt: str, corpus: str) -> str | None:
     return first_difference(rebuilt, corpus)
 
 
-def build_one(study_dir: Path, text_module: Any, commit: str, *, allow_drift: bool) -> dict:
-    """Both variants for one study, gated on the equivalence check."""
+#: Best first. The order is `pipeline.kinds.TEXT_FLAVOURS` minus `local`, which is what this
+#: module produces rather than reads.
+FLAVOURS = ("pubget", "elsevier", "ace")
+
+
+def write_local(out_dir: Path, text: str, *, overwrite: bool) -> None:
+    """Write the built text, refusing to silently replace a different one.
+
+    `source_text_hash` and every `EvidenceSpan.start_char` in every record built from this
+    paper address *this* text. Replacing it with a different build -- a new flavour, a new
+    parser, a table that now reads where it did not -- moves those offsets without
+    invalidating anything that points at them, and nothing downstream can tell.
+
+    An identical rebuild is always allowed, because it changes nothing.
+    """
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / "text.tables.txt"
+    if path.is_file() and not overwrite:
+        existing = path.read_text(encoding="utf-8")
+        if existing != text:
+            raise BuildError(
+                f"{path} already exists and this build differs from it "
+                f"({len(existing):,} ch on disk, {len(text):,} ch built). Every offset in "
+                "every record built against the old text addresses it. Pass --rebuild if "
+                "the records are going to be rebuilt too."
+            )
+    # newline="" so Python never translates line endings, matching how the staged text
+    # is written and read.
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        handle.write(text)
+
+
+def choose_flavour(study_dir: Path) -> str | None:
+    """The best flavour this study can actually be built from, or None.
+
+    pubget needs its article XML as well as its text: the build re-runs pubget's own
+    transform, so without the article there is nothing to rebuild and the study falls
+    through to the next flavour rather than failing. A study whose only pubget artefact is
+    `text.txt` is an elsevier or ace paper as far as this module is concerned.
+    """
+
+    for flavour in FLAVOURS:
+        if not (study_dir / "processed" / flavour / "text.txt").is_file():
+            continue
+        if (
+            flavour == "pubget"
+            and not (study_dir / "source" / "pubget" / "article.xml").is_file()
+        ):
+            continue
+        return flavour
+    return None
+
+
+def build_appended_one(study_dir: Path, flavour: str, *, overwrite: bool = False) -> dict:
+    """Write the `local` variant for a flavour that is appended rather than rebuilt."""
+
+    report: dict = {"parsed": 0, "floated": []}
+    with_tables = build_appended(study_dir, flavour, report=report)
+    corpus = (study_dir / "processed" / flavour / "text.txt").read_text(encoding="utf-8")
+
+    out_dir = study_dir / "processed" / "local"
+    write_local(out_dir, with_tables, overwrite=overwrite)
+
+    def digest(value: str) -> str:
+        return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+    provenance = {
+        "flavour": flavour,
+        "tables_parsed": report["parsed"],
+        "tables_floated": report["floated"],
+        "corpus_text_sha256": digest(corpus),
+        # Nothing was rebuilt, so there is nothing that could have drifted: the prose is
+        # the corpus text unchanged and the tables are appended after it.
+        "equivalent": True,
+        "equivalence_override": False,
+        "variants": {
+            "plain": {"sha256": digest(corpus), "chars": len(corpus)},
+            "tables": {"sha256": digest(with_tables), "chars": len(with_tables)},
+        },
+    }
+    (out_dir / "build.json").write_text(
+        json.dumps(provenance, indent=1) + "\n", encoding="utf-8"
+    )
+    return provenance
+
+
+def build_one(
+    study_dir: Path,
+    text_module: Any,
+    commit: str,
+    *,
+    allow_drift: bool,
+    flavour: str | None = None,
+    overwrite: bool = False,
+) -> dict:
+    """The `local` variant for one study, built the way its flavour requires.
+
+    pubget is rebuilt from the article XML and gated on reproducing the corpus text,
+    because inlining a table at its placeholder moves every offset after it. The others
+    are appended to their corpus text, which moves nothing.
+    """
+
+    flavour = flavour or choose_flavour(study_dir)
+    if flavour is None:
+        raise BuildError(
+            f"no buildable flavour under {study_dir}: none of {FLAVOURS} has a text.txt "
+            "(and pubget also needs source/pubget/article.xml)"
+        )
+    if flavour != "pubget":
+        return build_appended_one(study_dir, flavour, overwrite=overwrite)
 
     article_dir = study_dir / "source" / "pubget"
     article_xml = article_dir / "article.xml"
@@ -392,21 +501,18 @@ def build_one(study_dir: Path, text_module: Any, commit: str, *, allow_drift: bo
             "a leftover means it did not."
         )
 
-    out_dir = study_dir / "processed" / "local"
-    out_dir.mkdir(parents=True, exist_ok=True)
     # Only the tables variant is written. Without the heading transform the plain
     # rebuild is byte-identical to the corpus copy -- which is what the equivalence
     # check above just asserted -- so saving it would store the same file twice under
     # two names and invite a downstream consumer to pick the wrong one.
-    # newline="" so Python never translates line endings, matching how the staged text
-    # is written and read.
-    with (out_dir / "text.tables.txt").open("w", encoding="utf-8", newline="") as handle:
-        handle.write(with_tables)
+    out_dir = study_dir / "processed" / "local"
+    write_local(out_dir, with_tables, overwrite=overwrite)
 
     def digest(value: str) -> str:
         return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
     provenance = {
+        "flavour": "pubget",
         "pubget_commit": commit,
         "preserve_crossrefs": PRESERVE_CROSSREFS,
         "tables_parsed": tables_report["parsed"],
@@ -437,6 +543,12 @@ def main() -> int:
         help="run the equivalence check and write nothing",
     )
     parser.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="replace an existing built text even when this build differs from it; the "
+        "records built against the old one will need rebuilding too",
+    )
+    parser.add_argument(
         "--allow-drift",
         action="store_true",
         help="build even when the plain rebuild does not reproduce the corpus text, "
@@ -444,12 +556,21 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    # Deferred, and not fatal. Only a pubget study needs the checkout -- an elsevier or ace
+    # paper is appended to its own corpus text and never runs the transform -- so a missing
+    # pubget must not stop a run that has no pubget paper in it.
+    text_module, commit = None, ""
     try:
         text_module, _utils, commit = load_pubget(args.pubget)
+        print(
+            f"pubget {commit[:9]} from {args.pubget}, "
+            f"preserve_crossrefs={PRESERVE_CROSSREFS}\n"
+        )
     except BuildError as error:
-        print(error, file=sys.stderr)
-        return 2
-    print(f"pubget {commit[:9]} from {args.pubget}, preserve_crossrefs={PRESERVE_CROSSREFS}\n")
+        print(
+            f"{error}\n\npubget papers will fail; other flavours are unaffected.\n",
+            file=sys.stderr,
+        )
 
     failures = []
     for pmid, study, _axis in read_pmids(args.pmids):
@@ -472,7 +593,19 @@ def main() -> int:
                     raise BuildError(problem)
                 print(f"  {study}  pmid {pmid}  reproduces the corpus text ({len(raw):,} ch)")
             else:
-                info = build_one(study_dir, text_module, commit, allow_drift=args.allow_drift)
+                flavour = choose_flavour(study_dir)
+                if flavour == "pubget" and text_module is None:
+                    raise BuildError(
+                        f"{study} is a pubget paper and no pubget checkout loaded; "
+                        "pass --pubget"
+                    )
+                info = build_one(
+                    study_dir,
+                    text_module,
+                    commit,
+                    allow_drift=args.allow_drift,
+                    flavour=flavour,
+                )
                 mark = "" if info["equivalent"] else "  DRIFT OVERRIDDEN"
                 floated = info["tables_floated"]
                 # Named per study, because "0 inlined" is the failure this whole
@@ -488,7 +621,7 @@ def main() -> int:
                     else ", no tables"
                 )
                 print(
-                    f"  {study}  pmid {pmid}  "
+                    f"  {study}  pmid {pmid}  {info['flavour']:8s} "
                     f"plain {info['variants']['plain']['chars']:,} ch, "
                     f"tables {info['variants']['tables']['chars']:,} ch{where}{mark}"
                 )
