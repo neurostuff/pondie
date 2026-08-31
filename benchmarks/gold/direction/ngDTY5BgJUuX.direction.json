@@ -1,0 +1,654 @@
+{
+ "paper_id": "ngDTY5BgJUuX",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis-10",
+   "term": "term-mvpa-timing",
+   "level": "asynchronous",
+   "label": "timing of visual feedback : asynchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "unflagged",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis-10",
+   "term": "term-mvpa-timing",
+   "level": "synchronous",
+   "label": "timing of visual feedback : synchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "unflagged",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis-1",
+   "term": "term-modality",
+   "level": "visuomotor",
+   "label": "modality : visuomotor",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-1",
+   "term": "term-modality",
+   "level": "visuotactile",
+   "label": "modality : visuotactile",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-1",
+   "term": "term-timing",
+   "level": "asynchronous",
+   "label": "timing of visual feedback : asynchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-1",
+   "term": "term-timing",
+   "level": "synchronous",
+   "label": "timing of visual feedback : synchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-2",
+   "term": "term-modality",
+   "level": "visuomotor",
+   "label": "modality : visuomotor",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-2",
+   "term": "term-modality",
+   "level": "visuotactile",
+   "label": "modality : visuotactile",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-2",
+   "term": "term-timing",
+   "level": "asynchronous",
+   "label": "timing of visual feedback : asynchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-2",
+   "term": "term-timing",
+   "level": "synchronous",
+   "label": "timing of visual feedback : synchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-3",
+   "term": "term-modality",
+   "level": "visuomotor",
+   "label": "modality : visuomotor",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-3",
+   "term": "term-modality",
+   "level": "visuotactile",
+   "label": "modality : visuotactile",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-3",
+   "term": "term-timing",
+   "level": "asynchronous",
+   "label": "timing of visual feedback : asynchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-3",
+   "term": "term-timing",
+   "level": "synchronous",
+   "label": "timing of visual feedback : synchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-4",
+   "term": "term-modality",
+   "level": "visuomotor",
+   "label": "modality : visuomotor",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-4",
+   "term": "term-modality",
+   "level": "visuotactile",
+   "label": "modality : visuotactile",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-4",
+   "term": "term-timing",
+   "level": "asynchronous",
+   "label": "timing of visual feedback : asynchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-4",
+   "term": "term-timing",
+   "level": "synchronous",
+   "label": "timing of visual feedback : synchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-5",
+   "term": "term-modality",
+   "level": "visuomotor",
+   "label": "modality : visuomotor",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-5",
+   "term": "term-modality",
+   "level": "visuotactile",
+   "label": "modality : visuotactile",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-5",
+   "term": "term-timing",
+   "level": "asynchronous",
+   "label": "timing of visual feedback : asynchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-5",
+   "term": "term-timing",
+   "level": "synchronous",
+   "label": "timing of visual feedback : synchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-6",
+   "term": "term-modality",
+   "level": "visuomotor",
+   "label": "modality : visuomotor",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-6",
+   "term": "term-modality",
+   "level": "visuotactile",
+   "label": "modality : visuotactile",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-6",
+   "term": "term-timing",
+   "level": "asynchronous",
+   "label": "timing of visual feedback : asynchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-6",
+   "term": "term-timing",
+   "level": "synchronous",
+   "label": "timing of visual feedback : synchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-7",
+   "term": "term-localizer-stimulus",
+   "level": "body parts",
+   "label": "localizer stimulus category : body parts",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-7",
+   "term": "term-localizer-stimulus",
+   "level": "chairs",
+   "label": "localizer stimulus category : chairs",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-8",
+   "term": "term-mvpa-timing",
+   "level": "asynchronous",
+   "label": "timing of visual feedback : asynchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "unflagged",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis-8",
+   "term": "term-mvpa-timing",
+   "level": "synchronous",
+   "label": "timing of visual feedback : synchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "unflagged",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis-9",
+   "term": "term-mvpa-timing",
+   "level": "asynchronous",
+   "label": "timing of visual feedback : asynchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "unflagged",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis-9",
+   "term": "term-mvpa-timing",
+   "level": "synchronous",
+   "label": "timing of visual feedback : synchronous",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "unflagged",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "unflagged"
+  }
+ ],
+ "analyses": {
+  "analysis-1": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-2": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-3": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-4": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-5": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-6": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-7": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-8": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "cells_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis-9": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "wrong_axis",
+      "cells_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis-10": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "wrong_axis",
+      "cells_wrong"
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,1828 @@
+{
+  "local_id": "6oTrCJA43Jcd",
+  "extraction_metadata": {
+    "extractor_model": "@psyc-aid338-ope-333f18/gpt-5.6-luna",
+    "extractor_version": "review-bootstrap-0.1.0",
+    "source_text_hash": "22a646e734604a3c1d48e89fca61c2a774fd85eb14942ed28d6837420e797d7f",
+    "extraction_date": "2026-08-28",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "1. Introduction",
+        "level": 1,
+        "start_char": 1703,
+        "end_char": 5868
+      },
+      {
+        "ordinal": 1,
+        "title": "2. Materials and methods",
+        "level": 1,
+        "start_char": 5868,
+        "end_char": 15089
+      },
+      {
+        "ordinal": 2,
+        "title": "2.1. Participants and functional MRI data acquisition",
+        "level": 2,
+        "start_char": 5900,
+        "end_char": 9146,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 3,
+        "title": "2.2. Data preprocessing",
+        "level": 2,
+        "start_char": 9146,
+        "end_char": 9949,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 4,
+        "title": "2.3. Independent component analysis",
+        "level": 2,
+        "start_char": 9949,
+        "end_char": 11685,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 5,
+        "title": "2.4. Calculation of time-varying connectivity and k-means clustering",
+        "level": 2,
+        "start_char": 11685,
+        "end_char": 13801,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 6,
+        "title": "2.5. Statistical analysis",
+        "level": 2,
+        "start_char": 13801,
+        "end_char": 14486,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 7,
+        "title": "2.6. Connectivity strength discretization",
+        "level": 2,
+        "start_char": 14486,
+        "end_char": 15089,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 8,
+        "title": "3. Results",
+        "level": 1,
+        "start_char": 15089,
+        "end_char": 27443
+      },
+      {
+        "ordinal": 9,
+        "title": "4. Discussion",
+        "level": 1,
+        "start_char": 27443,
+        "end_char": 34625
+      },
+      {
+        "ordinal": 10,
+        "title": "Author contributions",
+        "level": 1,
+        "start_char": 34625,
+        "end_char": 34919
+      },
+      {
+        "ordinal": 11,
+        "title": "Funding",
+        "level": 1,
+        "start_char": 34919,
+        "end_char": 35452
+      },
+      {
+        "ordinal": 12,
+        "title": "Conflict of interest statement",
+        "level": 2,
+        "start_char": 35241,
+        "end_char": 35452,
+        "parent_section": "Funding"
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "A resting-state fMRI study used group independent component analysis and time-varying functional connectivity analysis to investigate brain connectivity states and connectivity abnormalities in children with autism spectrum disorder compared with typically developing children.",
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "To investigate the influence of ASD on brain connectivity states, we performed group independent component analysis (GICA) and dynamic network analysis on fMRI data of ASD and TD children.",
+              "start_char": 5602,
+              "end_char": 5790
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "hypothesis": {
+    "extraction_status": "extracted",
+    "value": [
+      "ASD could influence time-varying functional connectivity states through affecting distribution of connectivity strength and influence the connectivities related to social function."
+    ],
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "We hypothesized that ASD could influence time-varying functional connectivity states through affecting distribution of connectivity strength and influence the connectivities related to social function.",
+              "start_char": 5400,
+              "end_char": 5601
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Observational, cross-sectional comparison of children with autism spectrum disorder and typically developing children using an open-access resting-state fMRI dataset; groups were matched for age, gender, handedness, FIQ score, and head motion.",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "TD children were matched with ASD children for age, gender, handedness, FIQ score, and head motion",
+                "start_char": 6508,
+                "end_char": 6606
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "non_randomized",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "parallel",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "not_applicable",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "arms": [],
+    "timepoints": [
+      {
+        "local_id": "tp_single_occasion",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "single resting-state scan",
+          "value_source": "reported",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "single_occasion",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        }
+      }
+    ]
+  },
+  "groups": [
+    {
+      "local_id": "grp_asd",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "ASD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ASD",
+                  "start_char": 542,
+                  "end_char": 545
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Children with autism spectrum disorder; participants were male, right-handed, aged 7–18 years, and had full intelligence quotient scores above 85.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The site includes 79 (7.1–39.1 years) ASD and 105 TD (6.5–31.8 years) children.",
+                  "start_char": 6163,
+                  "end_char": 6242
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 31,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "male",
+          "full intelligence quotient above 85",
+          "right-handedness",
+          "aged 7–18 years"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The criteria of included subjects are: \n  \nmale \n  \nscores of full intelligence quotient (FIQ, estimated by the fourth subtests of the Wechsler Abbreviated Scale of Intelligence, WASI-IV) above 85 \n  \nright-handedness \n  \naged 7–18 (not including 18 years old)",
+                  "start_char": 6243,
+                  "end_char": 6503
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "autism spectrum disorder"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Autism Spectrum Disorder (ASD) is a lifelong developmental disorder.",
+                  "start_char": 1726,
+                  "end_char": 1794
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 11.51,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| Age (Mean ± SD)                   | 12.46 ± 3.1    | 11.51 ± 2.64   | 0.1693  |",
+                  "start_char": 7805,
+                  "end_char": 7886
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 2.64,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| Age (Mean ± SD)                   | 12.46 ± 3.1    | 11.51 ± 2.64   | 0.1693  |",
+                  "start_char": 7805,
+                  "end_char": 7886
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "aged 7–18 (not including 18 years old)",
+                  "start_char": 6465,
+                  "end_char": 6503
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "sex_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "Male",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Male",
+                      "start_char": 7925,
+                      "end_char": 7929
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      ],
+      "handedness_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "Right",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Right",
+                      "start_char": 8007,
+                      "end_char": 8012
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "clinical_characteristics": {
+        "extraction_status": "extracted",
+        "value": "ADI-R and ADOS scores were reported for the ASD group.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "grp_td",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "TD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TD",
+                  "start_char": 5029,
+                  "end_char": 5031
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Typically developing children matched with ASD children for age, gender, handedness, FIQ score, and head motion.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TD children were matched with ASD children for age, gender, handedness, FIQ score, and head motion",
+                  "start_char": 6508,
+                  "end_char": 6606
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 44,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "male",
+          "full intelligence quotient above 85",
+          "right-handedness",
+          "aged 7–18 years"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The criteria of included subjects are: \n  \nmale \n  \nscores of full intelligence quotient (FIQ, estimated by the fourth subtests of the Wechsler Abbreviated Scale of Intelligence, WASI-IV) above 85 \n  \nright-handedness \n  \naged 7–18 (not including 18 years old)",
+                  "start_char": 6243,
+                  "end_char": 6503
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 12.46,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| Age (Mean ± SD)                   | 12.46 ± 3.1    | 11.51 ± 2.64   | 0.1693  |",
+                  "start_char": 7805,
+                  "end_char": 7886
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 3.1,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| Age (Mean ± SD)                   | 12.46 ± 3.1    | 11.51 ± 2.64   | 0.1693  |",
+                  "start_char": 7805,
+                  "end_char": 7886
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "aged 7–18 (not including 18 years old)",
+                  "start_char": 6465,
+                  "end_char": 6503
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "sex_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "Male",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Male",
+                      "start_char": 7925,
+                      "end_char": 7929
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "handedness_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "Right",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Right",
+                      "start_char": 8007,
+                      "end_char": 8012
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "local_id": "tsk_resting_state",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "resting-state fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Resting-state fMRI",
+                  "start_char": 9178,
+                  "end_char": 9196
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Participants underwent resting-state fMRI acquisition; no explicit task was performed.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BOLD fMRI data of each participant were acquired with a whole-brain echo planar imaging (EPI) sequence and interleaved slice acquisition",
+                  "start_char": 6816,
+                  "end_char": 6952
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "conditions": [
+        {
+          "local_id": "cond_rest",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "resting state",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "resting-state",
+                      "start_char": 423,
+                      "end_char": 436
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Resting-state condition with no task instructions reported.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "continuous with no modelled events",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "response_mode": {
+        "extraction_status": "extracted",
+        "value": [
+          "none"
+        ],
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "assessments": [
+    {
+      "local_id": "asm_wasi_iv",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Wechsler Abbreviated Scale of Intelligence, fourth edition",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "The estimated full intelligence quotient was used for participant characterization and matching.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "scores of full intelligence quotient (FIQ, estimated by the fourth subtests of the Wechsler Abbreviated Scale of Intelligence, WASI-IV) above 85",
+                  "start_char": 6295,
+                  "end_char": 6439
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "cognitive test",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "asm_adi_r",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Autism Diagnostic Interview-Revised",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ADI-R, Autism Diagnostic Interview-Revised",
+                  "start_char": 7309,
+                  "end_char": 7351
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "The ADI-R provided social, verbal, restricted and repetitive behavior, and onset-related clinical characteristics in the ASD group.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "diagnostic interview",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "asm_ados",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Autism Diagnostic Observation Schedule",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ADOS, Autism Diagnostic Observation Schedule",
+                  "start_char": 7353,
+                  "end_char": 7397
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "The ADOS was reported for characterization of the ASD group.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "diagnostic assessment",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_allegra",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "Siemens",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "Allegra",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Allegra",
+                  "start_char": 7053,
+                  "end_char": 7060
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acq_fmri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BOLD fMRI",
+                  "start_char": 6816,
+                  "end_char": 6825
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "device": "dev_allegra",
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 3,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "on a 3T Allegra scanner",
+                  "start_char": 7045,
+                  "end_char": 7068
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "echo planar imaging (EPI)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a whole-brain echo planar imaging (EPI) sequence",
+                  "start_char": 6870,
+                  "end_char": 6918
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 2,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TR = 2 s",
+                  "start_char": 6954,
+                  "end_char": 6962
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.015
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TE = 15 ms",
+                  "start_char": 6964,
+                  "end_char": 6974
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "number_of_volumes": {
+        "extraction_status": "extracted",
+        "value": 180,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "180 volumes",
+                  "start_char": 7032,
+                  "end_char": 7043
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "prp_dpars f",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Resting-state fMRI preprocessing with DPARSF based on SPM8.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Resting-state fMRI raw data were preprocessed by Data Processing Assistant for Resting-State fMRI (DPARSF) (Chao-Gan and Yu-Feng,  2010 ) based on Statistical Parametric Mapping (  SPM8  ).",
+                  "start_char": 9178,
+                  "end_char": 9367
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "Data Processing Assistant for Resting-State fMRI (DPARSF)",
+          "SPM8"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Data Processing Assistant for Resting-State fMRI (DPARSF) (Chao-Gan and Yu-Feng,  2010 ) based on Statistical Parametric Mapping (  SPM8  )",
+                  "start_char": 9227,
+                  "end_char": 9366
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "removal of first 10 image volumes",
+          "realignment",
+          "slice-timing correction",
+          "head motion correction",
+          "normalization to MNI standard space",
+          "spatial smoothing"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The procedure of preprocessing included removal of first 10 image volumes, realignment, time-slicing and head motion correction, normalization into Montreal Neurological Institute (MNI) standard space, and spatially smoothened by a full-width at half-maximum of 6 mm.",
+                  "start_char": 9368,
+                  "end_char": 9635
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "smoothing_fwhm_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          6
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a full-width at half-maximum of 6 mm",
+                  "start_char": 9598,
+                  "end_char": 9634
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "mod_gica_dynamic",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "not_reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "group independent component analysis and dynamic network analysis",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we performed group independent component analysis (GICA) and dynamic network analysis on fMRI data of ASD and TD children.",
+                  "start_char": 5668,
+                  "end_char": 5790
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Infomax algorithm; ICA model order 100; PCA dimension reduction; ICASSO repetition 25 times; k-means clustering with Manhattan distance, k ranging from 2 to 20 and 150 repetitions per k.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Independent component analysis was performed on the preprocessed fMRI data by   GIFT   v3.0a using Infomax algorithm (Bell and Sejnowski,  1995 ), and the order of ICA model was 100.",
+                  "start_char": 9993,
+                  "end_char": 10175
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we performed group independent component analysis (GICA) and dynamic network analysis on fMRI data of ASD and TD children.",
+                  "start_char": 5668,
+                  "end_char": 5790
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "Infomax independent component analysis and k-means clustering",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "covariance matrices of ASD and TD were clustered by k-means clustering algorithm based on Manhattan distance.",
+                  "start_char": 12904,
+                  "end_char": 13013
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "GIFT v3.0a and ICASSO",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Independent component analysis was performed on the preprocessed fMRI data by   GIFT   v3.0a using Infomax algorithm (Bell and Sejnowski,  1995 ), and the order of ICA model was 100.",
+                  "start_char": 9993,
+                  "end_char": 10175
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "roi",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prp_dpars f"
+      ],
+      "terms": [
+        {
+          "local_id": "trm_group",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "group",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "covariance matrices of ASD and TD were clustered",
+                      "start_char": 12904,
+                      "end_char": 12952
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "covariance matrices of ASD and TD were clustered",
+                      "start_char": 12904,
+                      "end_char": 12952
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "ASD",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "ASD",
+                          "start_char": 542,
+                          "end_char": 545
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp_asd"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "TD",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "not_found"
+                }
+              },
+              "groups": [
+                "grp_td"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "local_id": "trm_connectivity_state",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "connectivity state",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "connectivity states",
+                      "start_char": 3516,
+                      "end_char": 3535
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "connectivity states",
+                      "start_char": 3516,
+                      "end_char": 3535
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "state",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "same state",
+                          "start_char": 13745,
+                          "end_char": 13755
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "the average number of windows that were continuous on the time distribution and classified as the same state",
+                      "start_char": 13647,
+                      "end_char": 13755
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inf_connectivity_p001",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "connection",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "To detect the differences of connectivity in each connectivity state, subjects with effective state were included in the two-sample   t  -test for the median covariance matrices of each state.",
+                  "start_char": 13910,
+                  "end_char": 14102
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.001,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "p   < 0.001",
+                  "start_char": 14261,
+                  "end_char": 14272
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "with a threshold (  p   < 0.001) to identify connectivities with differences",
+                  "start_char": 14241,
+                  "end_char": 14317
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "not_reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "alpha_level": {
+        "extraction_status": "extracted",
+        "value": 0.05,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "p    < 0.05",
+                  "start_char": 16255,
+                  "end_char": 16266
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "mea_functional_connectivity",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "connectivity_strength",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "time-varying functional connectivity",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "Pearson correlation coefficient and covariance-matrix connectivity strength",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "By calculating Pearson's correlation coefficient (functional connectivity) of all possible ROI pairs in the same sliding window, we constructed covariance matrices (54 × 54) of each subject.",
+                  "start_char": 12410,
+                  "end_char": 12600
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "mea_mean_dwell_time",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "bold_derived_metric",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "mean dwell time",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "mean number of consecutive windows classified as the same connectivity state",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "external_datasets": [
+    {
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Autism Brain Image Data Exchange I (ABIDE I)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Autism Brain Image Data Exchange I(  ABIDE I  )",
+                  "start_char": 6086,
+                  "end_char": 6133
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "url": {
+        "extraction_status": "extracted",
+        "value": "http://fcon_1000.projects.nitrc.org/indi/abide/",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "http://fcon_1000.projects.nitrc.org/indi/abide/",
+                  "start_char": 7201,
+                  "end_char": 7248
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1 — Demographic information of the participants.",
+                  "start_char": 7503,
+                  "end_char": 7557
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Demographic information of the participants.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Demographic information of the participants.",
+                  "start_char": 7513,
+                  "end_char": 7557
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "ADI-R, Autism Diagnostic Interview-Revised; ADOS, Autism Diagnostic Observation Schedule; Subjects evaluated by ADOS module 4 were excluded when we calculated mean and SD of ADOS scores.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ADI-R, Autism Diagnostic Interview-Revised; ADOS, Autism Diagnostic Observation Schedule; Subjects evaluated by ADOS module 4 were excluded when we calculated mean and SD of ADOS scores.",
+                  "start_char": 8954,
+                  "end_char": 9140
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2 — Percentages for three types of connectivity in all clusters of different k-values with significantly different MDTs.",
+                  "start_char": 17263,
+                  "end_char": 17389
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Percentages for three types of connectivity in all clusters of different k-values with significantly different MDTs.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Percentages for three types of connectivity in all clusters of different k-values with significantly different MDTs.",
+                  "start_char": 17273,
+                  "end_char": 17389
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "Bold percentages were of weak connectivity in clusters with significantly different MDTs at different k-values.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Bold percentages were of weak connectivity in clusters with significantly different MDTs at different k-values.",
+                  "start_char": 21640,
+                  "end_char": 21751
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl3",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3 — The abnormal connectivities with ≥ 5 times recurrence in the ASD.",
+                  "start_char": 22697,
+                  "end_char": 22772
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "The abnormal connectivities with ≥ 5 times recurrence in the ASD.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The abnormal connectivities with ≥ 5 times recurrence in the ASD.",
+                  "start_char": 22707,
+                  "end_char": 22772
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "tbl4",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 4",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4 — Peak values distribution of the independent component spatial maps.",
+                  "start_char": 24399,
+                  "end_char": 24476
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Peak values distribution of the independent component spatial maps.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Peak values distribution of the independent component spatial maps.",
+                  "start_char": 24409,
+                  "end_char": 24476
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ]
+}

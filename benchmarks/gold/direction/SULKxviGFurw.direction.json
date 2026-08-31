@@ -1,0 +1,592 @@
+{
+ "paper_id": "SULKxviGFurw",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis-dcm-overestimated",
+   "term": "term-bias-condition",
+   "level": "JOL high M low (overestimated bias)",
+   "label": "metacognitive systematic bias : JOL high M low (overestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-dcm-overestimated",
+   "term": "term-bias-condition",
+   "level": "JOL low M high (underestimated bias)",
+   "label": "metacognitive systematic bias : JOL low M high (underestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-dcm-overestimated",
+   "term": "term-motion",
+   "level": "",
+   "label": "motion correction parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-dcm-underestimated",
+   "term": "term-bias-condition",
+   "level": "JOL high M low (overestimated bias)",
+   "label": "metacognitive systematic bias : JOL high M low (overestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-dcm-underestimated",
+   "term": "term-bias-condition",
+   "level": "JOL low M high (underestimated bias)",
+   "label": "metacognitive systematic bias : JOL low M high (underestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-dcm-underestimated",
+   "term": "term-motion",
+   "level": "",
+   "label": "motion correction parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-jolhigh-greater-jollow",
+   "term": "term-bias-condition",
+   "level": "JOL high M low (overestimated bias)",
+   "label": "metacognitive systematic bias : JOL high M low (overestimated bias)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-jolhigh-greater-jollow",
+   "term": "term-bias-condition",
+   "level": "JOL low M high (underestimated bias)",
+   "label": "metacognitive systematic bias : JOL low M high (underestimated bias)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-jolhigh-greater-jollow",
+   "term": "term-motion",
+   "level": "",
+   "label": "motion correction parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-jolhigh-less-jollow",
+   "term": "term-bias-condition",
+   "level": "JOL high M low (overestimated bias)",
+   "label": "metacognitive systematic bias : JOL high M low (overestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-jolhigh-less-jollow",
+   "term": "term-bias-condition",
+   "level": "JOL low M high (underestimated bias)",
+   "label": "metacognitive systematic bias : JOL low M high (underestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-jolhigh-less-jollow",
+   "term": "term-motion",
+   "level": "",
+   "label": "motion correction parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-jolhigh",
+   "term": "term-bias-condition",
+   "level": "JOL high M low (overestimated bias)",
+   "label": "metacognitive systematic bias : JOL high M low (overestimated bias)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-jolhigh",
+   "term": "term-bias-condition",
+   "level": "JOL low M high (underestimated bias)",
+   "label": "metacognitive systematic bias : JOL low M high (underestimated bias)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-jolhigh",
+   "term": "term-motion",
+   "level": "",
+   "label": "motion correction parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-jollow",
+   "term": "term-bias-condition",
+   "level": "JOL high M low (overestimated bias)",
+   "label": "metacognitive systematic bias : JOL high M low (overestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-jollow",
+   "term": "term-bias-condition",
+   "level": "JOL low M high (underestimated bias)",
+   "label": "metacognitive systematic bias : JOL low M high (underestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-jollow",
+   "term": "term-motion",
+   "level": "",
+   "label": "motion correction parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-mvpa-roi",
+   "term": "term-bias-condition",
+   "level": "JOL high M low (overestimated bias)",
+   "label": "metacognitive systematic bias : JOL high M low (overestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "silent",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-mvpa-roi",
+   "term": "term-bias-condition",
+   "level": "JOL low M high (underestimated bias)",
+   "label": "metacognitive systematic bias : JOL low M high (underestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "silent",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-mvpa-roi",
+   "term": "term-motion",
+   "level": "",
+   "label": "motion correction parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-mvpa-searchlight",
+   "term": "term-bias-condition",
+   "level": "JOL high M low (overestimated bias)",
+   "label": "metacognitive systematic bias : JOL high M low (overestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "silent",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-mvpa-searchlight",
+   "term": "term-bias-condition",
+   "level": "JOL low M high (underestimated bias)",
+   "label": "metacognitive systematic bias : JOL low M high (underestimated bias)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "silent",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-mvpa-searchlight",
+   "term": "term-motion",
+   "level": "",
+   "label": "motion correction parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  }
+ ],
+ "analyses": {
+  "analysis-jolhigh-greater-jollow": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis-jolhigh-less-jollow": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    },
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-jolhigh": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis-jollow": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    },
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-mvpa-roi": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  },
+  "analysis-mvpa-searchlight": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  },
+  "analysis-dcm-overestimated": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  },
+  "analysis-dcm-underestimated": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  }
+ }
+}

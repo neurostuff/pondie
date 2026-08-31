@@ -1,0 +1,1769 @@
+{
+ "paper_id": "QQCjAAT6SwwQ",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis_tbl2_group_effect",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl2_group_effect",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl2_group_effect",
+   "term": "term_group_x_stage",
+   "level": "",
+   "label": "group × sleep stage  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl2_group_effect",
+   "term": "term_group",
+   "level": "healthy control",
+   "label": "group : healthy control",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_effect",
+   "term": "term_group",
+   "level": "insomnia disorder",
+   "label": "group : insomnia disorder",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_effect",
+   "term": "term_sex",
+   "level": "",
+   "label": "sex  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl2_group_effect",
+   "term": "term_stage",
+   "level": "N1",
+   "label": "sleep stage : N1",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl2_group_effect",
+   "term": "term_stage",
+   "level": "N2",
+   "label": "sleep stage : N2",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl2_group_effect",
+   "term": "term_stage",
+   "level": "N3",
+   "label": "sleep stage : N3",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl2_group_effect",
+   "term": "term_stage",
+   "level": "wakefulness",
+   "label": "sleep stage : wakefulness",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n1",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n1",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n1",
+   "term": "term_group_x_stage",
+   "level": "",
+   "label": "group × sleep stage  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n1",
+   "term": "term_group",
+   "level": "healthy control",
+   "label": "group : healthy control",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n1",
+   "term": "term_group",
+   "level": "insomnia disorder",
+   "label": "group : insomnia disorder",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n1",
+   "term": "term_sex",
+   "level": "",
+   "label": "sex  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n1",
+   "term": "term_stage",
+   "level": "N1",
+   "label": "sleep stage : N1",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n1",
+   "term": "term_stage",
+   "level": "N2",
+   "label": "sleep stage : N2",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n1",
+   "term": "term_stage",
+   "level": "N3",
+   "label": "sleep stage : N3",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n1",
+   "term": "term_stage",
+   "level": "wakefulness",
+   "label": "sleep stage : wakefulness",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n2",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n2",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n2",
+   "term": "term_group_x_stage",
+   "level": "",
+   "label": "group × sleep stage  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n2",
+   "term": "term_group",
+   "level": "healthy control",
+   "label": "group : healthy control",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n2",
+   "term": "term_group",
+   "level": "insomnia disorder",
+   "label": "group : insomnia disorder",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n2",
+   "term": "term_sex",
+   "level": "",
+   "label": "sex  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n2",
+   "term": "term_stage",
+   "level": "N1",
+   "label": "sleep stage : N1",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n2",
+   "term": "term_stage",
+   "level": "N2",
+   "label": "sleep stage : N2",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n2",
+   "term": "term_stage",
+   "level": "N3",
+   "label": "sleep stage : N3",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n2",
+   "term": "term_stage",
+   "level": "wakefulness",
+   "label": "sleep stage : wakefulness",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n3",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n3",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n3",
+   "term": "term_group_x_stage",
+   "level": "",
+   "label": "group × sleep stage  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n3",
+   "term": "term_group",
+   "level": "healthy control",
+   "label": "group : healthy control",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n3",
+   "term": "term_group",
+   "level": "insomnia disorder",
+   "label": "group : insomnia disorder",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n3",
+   "term": "term_sex",
+   "level": "",
+   "label": "sex  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n3",
+   "term": "term_stage",
+   "level": "N1",
+   "label": "sleep stage : N1",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n3",
+   "term": "term_stage",
+   "level": "N2",
+   "label": "sleep stage : N2",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n3",
+   "term": "term_stage",
+   "level": "N3",
+   "label": "sleep stage : N3",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_n3",
+   "term": "term_stage",
+   "level": "wakefulness",
+   "label": "sleep stage : wakefulness",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_wake",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_wake",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_wake",
+   "term": "term_group_x_stage",
+   "level": "",
+   "label": "group × sleep stage  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_wake",
+   "term": "term_group",
+   "level": "healthy control",
+   "label": "group : healthy control",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_wake",
+   "term": "term_group",
+   "level": "insomnia disorder",
+   "label": "group : insomnia disorder",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_wake",
+   "term": "term_sex",
+   "level": "",
+   "label": "sex  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_wake",
+   "term": "term_stage",
+   "level": "N1",
+   "label": "sleep stage : N1",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_wake",
+   "term": "term_stage",
+   "level": "N2",
+   "label": "sleep stage : N2",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_wake",
+   "term": "term_stage",
+   "level": "N3",
+   "label": "sleep stage : N3",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl2_group_stage_wake",
+   "term": "term_stage",
+   "level": "wakefulness",
+   "label": "sleep stage : wakefulness",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "silent",
+     "predicted": "held"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "held"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl3_group_effect",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_effect",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_effect",
+   "term": "term_group_x_stage",
+   "level": "",
+   "label": "group × sleep stage  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_effect",
+   "term": "term_group",
+   "level": "healthy control",
+   "label": "group : healthy control",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl3_group_effect",
+   "term": "term_group",
+   "level": "insomnia disorder",
+   "label": "group : insomnia disorder",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl3_group_effect",
+   "term": "term_sex",
+   "level": "",
+   "label": "sex  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_effect",
+   "term": "term_stage",
+   "level": "N1",
+   "label": "sleep stage : N1",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_effect",
+   "term": "term_stage",
+   "level": "N2",
+   "label": "sleep stage : N2",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_effect",
+   "term": "term_stage",
+   "level": "N3",
+   "label": "sleep stage : N3",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_effect",
+   "term": "term_stage",
+   "level": "wakefulness",
+   "label": "sleep stage : wakefulness",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_stage",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_stage",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_stage",
+   "term": "term_group_x_stage",
+   "level": "",
+   "label": "group × sleep stage  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "accepted",
+     "predicted": "undirected"
+    },
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "accepted",
+     "predicted": "undirected"
+    },
+    {
+     "annotator": 1,
+     "direction": "undirected",
+     "tier": "silent",
+     "predicted": "undirected"
+    }
+   ],
+   "direction": "undirected",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_stage",
+   "term": "term_group",
+   "level": "healthy control",
+   "label": "group : healthy control",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_stage",
+   "term": "term_group",
+   "level": "insomnia disorder",
+   "label": "group : insomnia disorder",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_stage",
+   "term": "term_sex",
+   "level": "",
+   "label": "sex  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_stage",
+   "term": "term_stage",
+   "level": "N1",
+   "label": "sleep stage : N1",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_stage",
+   "term": "term_stage",
+   "level": "N2",
+   "label": "sleep stage : N2",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_stage",
+   "term": "term_stage",
+   "level": "N3",
+   "label": "sleep stage : N3",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_group_stage",
+   "term": "term_stage",
+   "level": "wakefulness",
+   "label": "sleep stage : wakefulness",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  }
+ ],
+ "analyses": {
+  "analysis_tbl2_group_stage_wake": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong",
+      "cells_wrong"
+     ]
+    },
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_tbl2_group_stage_n1": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "uncertain"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong",
+      "wrong_axis"
+     ]
+    }
+   ]
+  },
+  "analysis_tbl2_group_stage_n2": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_tbl2_group_stage_n3": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    },
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_tbl2_group_effect": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_tbl3_group_stage": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_tbl3_group_effect": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong",
+      "wrong_axis"
+     ]
+    },
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  }
+ }
+}

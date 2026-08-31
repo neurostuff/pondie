@@ -1,0 +1,5226 @@
+{
+  "local_id": "DTpwdoGbjqsq",
+  "extraction_metadata": {
+    "extractor_model": "claude-opus-5",
+    "extractor_version": "adjudicated-0.1.0",
+    "source_text_hash": "6f09ff991905bcda927cd0ed12bb77d92c5a370a5476790b474506156de61a98",
+    "extraction_date": "2026-08-12",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "Background:",
+        "level": 1,
+        "start_char": 258,
+        "end_char": 634
+      },
+      {
+        "ordinal": 1,
+        "title": "Objective:",
+        "level": 1,
+        "start_char": 634,
+        "end_char": 835
+      },
+      {
+        "ordinal": 2,
+        "title": "Methods:",
+        "level": 1,
+        "start_char": 835,
+        "end_char": 1503
+      },
+      {
+        "ordinal": 3,
+        "title": "Results:",
+        "level": 1,
+        "start_char": 1503,
+        "end_char": 1890
+      },
+      {
+        "ordinal": 4,
+        "title": "Conclusion:",
+        "level": 1,
+        "start_char": 1890,
+        "end_char": 2095
+      },
+      {
+        "ordinal": 5,
+        "title": "INTRODUCTION",
+        "level": 1,
+        "start_char": 2095,
+        "end_char": 6379
+      },
+      {
+        "ordinal": 6,
+        "title": "METHODS",
+        "level": 1,
+        "start_char": 6379,
+        "end_char": 20650
+      },
+      {
+        "ordinal": 7,
+        "title": "Participants",
+        "level": 2,
+        "start_char": 6394,
+        "end_char": 9533,
+        "parent_section": "METHODS"
+      },
+      {
+        "ordinal": 8,
+        "title": "MRI imaging",
+        "level": 2,
+        "start_char": 9533,
+        "end_char": 11315,
+        "parent_section": "METHODS"
+      },
+      {
+        "ordinal": 9,
+        "title": "PET acquisition",
+        "level": 2,
+        "start_char": 11315,
+        "end_char": 12438,
+        "parent_section": "METHODS"
+      },
+      {
+        "ordinal": 10,
+        "title": "PET image pre-processing and quantitative analysis",
+        "level": 2,
+        "start_char": 12438,
+        "end_char": 14952,
+        "parent_section": "METHODS"
+      },
+      {
+        "ordinal": 11,
+        "title": "Statistical analysis",
+        "level": 2,
+        "start_char": 14952,
+        "end_char": 20650,
+        "parent_section": "METHODS"
+      },
+      {
+        "ordinal": 12,
+        "title": "RESULTS",
+        "level": 1,
+        "start_char": 20650,
+        "end_char": 50491
+      },
+      {
+        "ordinal": 13,
+        "title": "VBM",
+        "level": 2,
+        "start_char": 22215,
+        "end_char": 28684,
+        "parent_section": "RESULTS"
+      },
+      {
+        "ordinal": 14,
+        "title": "C-PiB PET",
+        "level": 2,
+        "start_char": 28684,
+        "end_char": 29767,
+        "parent_section": "RESULTS"
+      },
+      {
+        "ordinal": 15,
+        "title": "C-PK11195 PET",
+        "level": 2,
+        "start_char": 29767,
+        "end_char": 34667,
+        "parent_section": "RESULTS"
+      },
+      {
+        "ordinal": 16,
+        "title": "BPM analysis",
+        "level": 2,
+        "start_char": 34667,
+        "end_char": 48864,
+        "parent_section": "RESULTS"
+      },
+      {
+        "ordinal": 17,
+        "title": "ROI-based analysis",
+        "level": 2,
+        "start_char": 48864,
+        "end_char": 50491,
+        "parent_section": "RESULTS"
+      },
+      {
+        "ordinal": 18,
+        "title": "DISCUSSION",
+        "level": 1,
+        "start_char": 50491,
+        "end_char": 68211
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "A cross-modal neuroimaging study investigating spatial associations among amyloid-β deposition, neuroinflammation, and grey matter volume in mild Alzheimer’s disease and healthy controls.",
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "We aimed to estimate the spatial inter-relationship between neurodegeneration, neuroinflammation and Aβ deposition in a cohort of 20 mild AD patients and 17 healthy controls (HC).",
+              "start_char": 652,
+              "end_char": 831
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Observational, cross-sectional study of mild Alzheimer’s disease patients and matched healthy controls, with MRI, 11C-PiB PET, and 11C-PK11195 PET acquired during three visits within a maximum interval of five weeks.",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "All subjects included in the study performed 3 visits to ICNAS-UC (Institute of Nuclear Sciences Applied to Health, University of Coimbra), where all imaging procedures were performed, in the first visit patients underwent MRI acquisition, while in the second and third visits, participants underwent  C-PiB PET and  C-PK11195 PET scans, respectively, with a maximum interval of 5 weeks between examinations.",
+                "start_char": 8801,
+                "end_char": 9209
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "not_applicable",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "parallel",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "not_applicable",
+      "evidence": {
+        "status": "not_found"
+      },
+      "value_source": "generated"
+    },
+    "arms": []
+  },
+  "analyses": [
+    {
+      "local_id": "analysis-1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "AD < HC reduced GM volume",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxel-based between-group comparison of GM maps superimposed on the T1-weighted template in the axial plane for the AD < HC contrast.",
+                  "start_char": 22983,
+                  "end_char": 23116
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Regions of significantly reduced GM volume in AD patients compared to HC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Regions of significantly reduced GM volume in AD patients compared to HC",
+                  "start_char": 23264,
+                  "end_char": 23336
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Results show, as expected, a significant diffuse pattern of volume loss in AD brains",
+                  "start_char": 22543,
+                  "end_char": 22627
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_gray_matter_volume",
+      "groups": [
+        {
+          "group": "grp-ad",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 20,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "A total of 20 mild stage AD patients and 17 matched HC were considered for both VBM-GM",
+                      "start_char": 14981,
+                      "end_char": 15067
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp-hc",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "A total of 20 mild stage AD patients and 17 matched HC were considered for both VBM-GM",
+                      "start_char": 14981,
+                      "end_char": 15067
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-group-vbm",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "AD group",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Results show, as expected, a significant diffuse pattern of volume loss in AD brains",
+                        "start_char": 22543,
+                        "end_char": 22627
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Results show, as expected, a significant diffuse pattern of volume loss in AD brains",
+                        "start_char": 22543,
+                        "end_char": 22627
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-group-vbm",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "HC group",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Results show, as expected, a significant diffuse pattern of volume loss in AD brains",
+                        "start_char": 22543,
+                        "end_char": 22627
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Results show, as expected, a significant diffuse pattern of volume loss in AD brains",
+                        "start_char": 22543,
+                        "end_char": 22627
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "voxel-wise statistical threshold",
+                      "start_char": 22284,
+                      "end_char": 22316
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-mri"
+      ],
+      "model_estimation": "me-vbm-group",
+      "tables": [
+        "tbl2"
+      ],
+      "inference_settings": "inference_fdr",
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "analysis-2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "AD > HC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxel-based between-group comparison of 11C-PK11195 BP maps superimposed on the T1-weighted template in the axial plane for the AD > HC contrast.",
+                  "start_char": 34382,
+                  "end_char": 34527
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Regions of significant elevated 11C-PK11195 BP in patients with AD compared to HC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Regions of significant elevated 11C-PK11195 BP in patients with AD compared to HC",
+                  "start_char": 30349,
+                  "end_char": 30430
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Microglial activation was assessed by the localization of clusters with increased  C-PK11195 BP in AD patients",
+                  "start_char": 29789,
+                  "end_char": 29899
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [
+        "reg-microglia-clusters"
+      ],
+      "measure": "measure_receptor_binding",
+      "groups": [
+        {
+          "group": "grp-ad",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 19,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "For the  C-PK11195 PET BP analysis only 19 AD and 17 HC were considered",
+                      "start_char": 15129,
+                      "end_char": 15200
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp-hc",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "For the  C-PK11195 PET BP analysis only 19 AD and 17 HC were considered",
+                      "start_char": 15129,
+                      "end_char": 15200
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-group-pk",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "AD group",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Microglial activation was assessed by the localization of clusters with increased  C-PK11195 BP in AD patients",
+                        "start_char": 29789,
+                        "end_char": 29899
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Microglial activation was assessed by the localization of clusters with increased  C-PK11195 BP in AD patients",
+                        "start_char": 29789,
+                        "end_char": 29899
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-group-pk",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "HC group",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Microglial activation was assessed by the localization of clusters with increased  C-PK11195 BP in AD patients",
+                        "start_char": 29789,
+                        "end_char": 29899
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Microglial activation was assessed by the localization of clusters with increased  C-PK11195 BP in AD patients",
+                        "start_char": 29789,
+                        "end_char": 29899
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "T value",
+                      "start_char": 23739,
+                      "end_char": 23746
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-pk11195"
+      ],
+      "model_estimation": "me-pk-group",
+      "tables": [
+        "tbl3"
+      ],
+      "inference_settings": "inference_none_uncorrected",
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "analysis-3",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "ANCOVA: VBM-GM differences not explained by 11C-PiB SUVR levels in AD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BPM ANCOVA analysis of GM maps superimposed on the T1-weighted template in the axial plane for the contrast AD < CT and controlling for 11C-PiB SUVR levels.",
+                  "start_char": 40580,
+                  "end_char": 40736
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Results from ANCOVA reflecting regions where VBM-GM differences were not explained by 11C-PiB SUVR levels in AD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Results from ANCOVA reflecting regions where VBM-GM differences were not explained by 11C-PiB SUVR levels in AD",
+                  "start_char": 35219,
+                  "end_char": 35330
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A voxel-wise statistical threshold",
+                  "start_char": 34867,
+                  "end_char": 34901
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_gray_matter_volume",
+      "groups": [
+        {
+          "group": "grp-ad",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 20,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "A total of 20 mild stage AD patients and 17 matched HC were considered for both VBM-GM",
+                      "start_char": 14981,
+                      "end_char": 15067
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp-hc",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "A total of 20 mild stage AD patients and 17 matched HC were considered for both VBM-GM",
+                      "start_char": 14981,
+                      "end_char": 15067
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-group-ancova",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "AD group",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Results revealed that apparently  C-PiB SUVR did not account for GM differences in some regions such as medial temporal lobe, thalamus, prefrontal cortex and superior parietal cortex",
+                        "start_char": 34985,
+                        "end_char": 35167
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Results revealed that apparently  C-PiB SUVR did not account for GM differences in some regions such as medial temporal lobe, thalamus, prefrontal cortex and superior parietal cortex",
+                        "start_char": 34985,
+                        "end_char": 35167
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-group-ancova",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "HC group",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Results revealed that apparently  C-PiB SUVR did not account for GM differences in some regions such as medial temporal lobe, thalamus, prefrontal cortex and superior parietal cortex",
+                        "start_char": 34985,
+                        "end_char": 35167
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Results revealed that apparently  C-PiB SUVR did not account for GM differences in some regions such as medial temporal lobe, thalamus, prefrontal cortex and superior parietal cortex",
+                        "start_char": 34985,
+                        "end_char": 35167
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "The resulting statistical T-maps and the correspondent unthresholded effect size (Cohen’s d) maps determined using CAT12 toolbox, were overlaid on the T1-weighted template in the axial plane.",
+                      "start_char": 20454,
+                      "end_char": 20645
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-mri",
+        "acq-pib"
+      ],
+      "model_estimation": "me-ancova-pib",
+      "tables": [
+        "tbl4"
+      ],
+      "inference_settings": "inference_fdr_2",
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "analysis-4",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "VBM-GM and 11C-PiB SUVR association",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Regions of significant association between VBM-GM and 11C-PiB SUVR in AD patients",
+                  "start_char": 41506,
+                  "end_char": 41587
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Regions of significant association between VBM-GM and 11C-PiB SUVR in AD patients",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Regions of significant association between VBM-GM and 11C-PiB SUVR in AD patients",
+                  "start_char": 41506,
+                  "end_char": 41587
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_gray_matter_volume",
+      "groups": [
+        {
+          "group": "grp-ad",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 20,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "For the regression between the VBM-GM and  C-PiB SUVR data, aggregating 20 AD and 17 HC, we used a voxel-wise threshold of   p   < 0.03 (FDR corrected) with an extent threshold of 60 voxels.",
+                      "start_char": 44013,
+                      "end_char": 44203
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-pib-ad",
+            "direction": {
+              "extraction_status": "not_reported",
+              "evidence": {
+                "status": "not_applicable"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "T value",
+                      "start_char": 23739,
+                      "end_char": 23746
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-mri",
+        "acq-pib"
+      ],
+      "model_estimation": "me-regression-ad",
+      "tables": [
+        "tbl5"
+      ],
+      "inference_settings": "inference_none_uncorrected_2",
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "analysis-5",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Regions of significant association between VBM-GM and 11C-PiB SUVR in AD patients and HC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Regions of significant association between VBM-GM and 11C-PiB SUVR in AD patients and HC",
+                  "start_char": 44642,
+                  "end_char": 44730
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Regions of significant association between VBM-GM and 11C-PiB SUVR in AD patients and HC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Regions of significant association between VBM-GM and 11C-PiB SUVR in AD patients and HC",
+                  "start_char": 44642,
+                  "end_char": 44730
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The results evidence stronger associations when compared to the AD group solo, surviving to a more demanding statistical threshold ( Fig. 6 ;  Table 6 ).",
+                  "start_char": 44204,
+                  "end_char": 44357
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_gray_matter_volume",
+      "groups": [
+        {
+          "group": "grp-ad",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 20,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "For the regression between the VBM-GM and  C-PiB SUVR data, aggregating 20 AD and 17 HC, we used a voxel-wise threshold of   p   < 0.03 (FDR corrected) with an extent threshold of 60 voxels.",
+                      "start_char": 44013,
+                      "end_char": 44203
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp-hc",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "For the regression between the VBM-GM and  C-PiB SUVR data, aggregating 20 AD and 17 HC, we used a voxel-wise threshold of   p   < 0.03 (FDR corrected) with an extent threshold of 60 voxels.",
+                      "start_char": 44013,
+                      "end_char": 44203
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-pib-merged",
+            "direction": {
+              "extraction_status": "not_reported",
+              "evidence": {
+                "status": "not_applicable"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "T value",
+                      "start_char": 23739,
+                      "end_char": 23746
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-mri",
+        "acq-pib"
+      ],
+      "model_estimation": "me-regression-merged",
+      "tables": [
+        "tbl6"
+      ],
+      "inference_settings": "inference_fdr_2",
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "grp-ad",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "AD group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "AD group",
+                  "start_char": 7530,
+                  "end_char": 7538
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Patients with early diagnosis of Alzheimer’s disease, at the mild stage of dementia with Clinical Dementia Rating CDR=1; all were 11C-PiB PET positive.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "20 patients with early diagnosis (less than 2 years) of AD, at the mild stage of dementia according to Clinical Dementia Rating (CDR = 1)",
+                  "start_char": 6467,
+                  "end_char": 6604
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We selected AD patients with a probable diagnosis supported by biological biomarkers (CSF and PiB-PET)",
+                  "start_char": 6653,
+                  "end_char": 6755
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 20,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "20 patients with early diagnosis (less than 2 years) of AD",
+                  "start_char": 6467,
+                  "end_char": 6525
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 20,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A total of 20 mild stage AD patients",
+                  "start_char": 14981,
+                  "end_char": 15017
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "20 patients with early diagnosis (less than 2 years) of AD",
+                  "start_char": 6467,
+                  "end_char": 6525
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "Alzheimer’s disease"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "20 patients with early diagnosis (less than 2 years) of AD",
+                  "start_char": 6467,
+                  "end_char": 6525
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "diagnostic_system": {
+        "extraction_status": "extracted",
+        "value": "DSM-IV-TR; NINCDS-ADRDA",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The AD diagnosis was made according to the Diagnostic and Statistical Manual of Mental Disorders –fourth edition (DSM-IV-TR) [ 29 ] and the National Institute of Neurological and Communicative Disorders and Stroke- Alzheimer’s Disease and Related Disorders (NINCDS-ADRDA) [ 30 ].",
+                  "start_char": 7210,
+                  "end_char": 7489
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "diagnostic_instrument": [
+        "asmt-cdr"
+      ],
+      "clinical_characteristics": {
+        "extraction_status": "extracted",
+        "value": "Mild-stage dementia, CDR=1, early diagnosis less than 2 years.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "20 patients with early diagnosis (less than 2 years) of AD, at the mild stage of dementia according to Clinical Dementia Rating (CDR = 1)",
+                  "start_char": 6467,
+                  "end_char": 6604
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| Age               | 66.25 (6.87)                | 65.24 (7.00)                | 0.66    |",
+                  "start_char": 21407,
+                  "end_char": 21498
+                }
+              ]
+            }
+          ]
+        },
+        "value": 66.25,
+        "value_source": "reported"
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| Age               | 66.25 (6.87)                | 65.24 (7.00)                | 0.66    |",
+                  "start_char": 21407,
+                  "end_char": 21498
+                }
+              ]
+            }
+          ]
+        },
+        "value": 6.87,
+        "value_source": "reported"
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "not_found"
+        },
+        "value": "years",
+        "value_source": "generated"
+      },
+      "education_summary": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| Education         | 9.30 (5.93)                 | 11.59 (5.82)                | 0.26    |",
+                  "start_char": 21591,
+                  "end_char": 21682
+                }
+              ]
+            }
+          ]
+        },
+        "value": "9.30 (5.93) years",
+        "value_source": "reported"
+      },
+      "sex_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "female",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| Female/male ratio | 10/10                       | 8/9                         | 1.00    |",
+                      "start_char": 21499,
+                      "end_char": 21590
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 10,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| Female/male ratio | 10/10                       | 8/9                         | 1.00    |",
+                      "start_char": 21499,
+                      "end_char": 21590
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "denominator": {
+            "extraction_status": "extracted",
+            "value": 20,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "AD group (n = 20)",
+                      "start_char": 21245,
+                      "end_char": 21262
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "male",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| Female/male ratio | 10/10                       | 8/9                         | 1.00    |",
+                      "start_char": 21499,
+                      "end_char": 21590
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 10,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| Female/male ratio | 10/10                       | 8/9                         | 1.00    |",
+                      "start_char": 21499,
+                      "end_char": 21590
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "denominator": {
+            "extraction_status": "extracted",
+            "value": 20,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "AD group (n = 20)",
+                      "start_char": 21245,
+                      "end_char": 21262
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "local_id": "grp-hc",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "HC group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "HC group",
+                  "start_char": 15873,
+                  "end_char": 15881
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Healthy volunteers from the community without neurological or psychiatric disorders; controls included in the analyses were 11C-PiB PET negative.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "To the control group we recruited 21 healthy volunteers from the community without neurologic or psychiatric disorders",
+                  "start_char": 7581,
+                  "end_char": 7699
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "21 healthy volunteers from the community",
+                  "start_char": 7615,
+                  "end_char": 7655
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 21,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we recruited 21 healthy volunteers",
+                  "start_char": 7602,
+                  "end_char": 7636
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 17,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "For the  C-PK11195 PET BP analysis only 19 AD and 17 HC were considered",
+                  "start_char": 15129,
+                  "end_char": 15200
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "21 healthy volunteers from the community",
+                  "start_char": 7615,
+                  "end_char": 7655
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "No significant memory complaints",
+          "Normal general cognitive function",
+          "Preserved daily living activities",
+          "No moderate or severe depressive symptoms",
+          "Eligible for MRI examination"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Thus, all HC had no significant memory complaints (Subjective Memory Complaints Questionnaire – SMC ≤3) [ 32, 33 ], had a normal general cognitive function as tested by the MoCA (mean±sd, 24.88±4.24) [ 34 ] preserved daily living activities (Lawton & Brody scale –L&B for Female = 8; for Male = 5) [ 35, 36 ], and no evidence of [ 37, 38 ] moderate or severe depressive symptoms (30-item Geriatric Depressive Scale –GDS-30, mean±SD 6.41±6.20).",
+                  "start_char": 7883,
+                  "end_char": 8326
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "exclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "Neurological or psychiatric disorders",
+          "Severe visual or auditory impairment"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "without neurologic or psychiatric disorders, no severe visual or auditory impairment, and eligible to an MRI exam",
+                  "start_char": 7656,
+                  "end_char": 7769
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| Age               | 66.25 (6.87)                | 65.24 (7.00)                | 0.66    |",
+                  "start_char": 21407,
+                  "end_char": 21498
+                }
+              ]
+            }
+          ]
+        },
+        "value": 65.24,
+        "value_source": "reported"
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| Age               | 66.25 (6.87)                | 65.24 (7.00)                | 0.66    |",
+                  "start_char": 21407,
+                  "end_char": 21498
+                }
+              ]
+            }
+          ]
+        },
+        "value": 7.0,
+        "value_source": "reported"
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "not_found"
+        },
+        "value": "years",
+        "value_source": "generated"
+      },
+      "education_summary": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| Education         | 9.30 (5.93)                 | 11.59 (5.82)                | 0.26    |",
+                  "start_char": 21591,
+                  "end_char": 21682
+                }
+              ]
+            }
+          ]
+        },
+        "value": "11.59 (5.82) years",
+        "value_source": "reported"
+      },
+      "sex_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "female",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| Female/male ratio | 10/10                       | 8/9                         | 1.00    |",
+                      "start_char": 21499,
+                      "end_char": 21590
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 8,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| Female/male ratio | 10/10                       | 8/9                         | 1.00    |",
+                      "start_char": 21499,
+                      "end_char": 21590
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "denominator": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "HC group (n = 17)",
+                      "start_char": 21275,
+                      "end_char": 21292
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "male",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| Female/male ratio | 10/10                       | 8/9                         | 1.00    |",
+                      "start_char": 21499,
+                      "end_char": 21590
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 9,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| Female/male ratio | 10/10                       | 8/9                         | 1.00    |",
+                      "start_char": 21499,
+                      "end_char": 21590
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "denominator": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "HC group (n = 17)",
+                      "start_char": 21275,
+                      "end_char": 21292
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "excluded_count": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Four participants from the control group were found positive for the  C-PiB PET exam, being excluded from the subsequent analysis",
+                  "start_char": 8393,
+                  "end_char": 8522
+                }
+              ]
+            }
+          ]
+        },
+        "value": 4,
+        "value_source": "reported"
+      }
+    }
+  ],
+  "assessments": [
+    {
+      "local_id": "asmt-mmse",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Mini-Mental State Examination (MMSE)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Cognitive instruments as the Mini-Mental State Examination (MMSE)",
+                  "start_char": 6919,
+                  "end_char": 6984
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "cognitive test",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Cognitive instruments",
+                  "start_char": 6919,
+                  "end_char": 6940
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asmt-moca",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Montreal Cognitive Assessment (MoCA)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the Montreal Cognitive Assessment (MoCA)",
+                  "start_char": 7017,
+                  "end_char": 7057
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "cognitive test",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Cognitive instruments",
+                  "start_char": 6919,
+                  "end_char": 6940
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asmt-blad",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "BLAD comprehensive neuropsychological battery",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a comprehensive neuropsychological battery with normative data for the Portuguese population (BLAD)",
+                  "start_char": 7062,
+                  "end_char": 7161
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "cognitive test",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "comprehensive neuropsychological battery",
+                  "start_char": 7064,
+                  "end_char": 7104
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asmt-cdr",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Clinical Dementia Rating (CDR)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Clinical Dementia Rating",
+                  "start_char": 6570,
+                  "end_char": 6594
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asmt-smc",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Subjective Memory Complaints Questionnaire",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Subjective Memory Complaints Questionnaire",
+                  "start_char": 7934,
+                  "end_char": 7976
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "questionnaire",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Subjective Memory Complaints Questionnaire",
+                  "start_char": 7934,
+                  "end_char": 7976
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asmt-lawton-brody",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Lawton & Brody scale",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Lawton & Brody scale",
+                  "start_char": 8125,
+                  "end_char": 8145
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Lawton & Brody scale",
+                  "start_char": 8125,
+                  "end_char": 8145
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asmt-gds",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "30-item Geriatric Depression Scale",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "30-item Geriatric Depressive Scale",
+                  "start_char": 8263,
+                  "end_char": 8297
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "regions": [
+    {
+      "local_id": "reg-aal",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "anatomically defined regions from the AAL atlas",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "anatomically defined regions from the AAL (Automated Anatomical Labeling) atlas",
+                  "start_char": 18819,
+                  "end_char": 18898
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "atlas",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "anatomically defined",
+                  "start_char": 1434,
+                  "end_char": 1454
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "atlas_parcel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ROI",
+                  "start_char": 6126,
+                  "end_char": 6129
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "atlas": {
+        "extraction_status": "extracted",
+        "value": "Automated Anatomical Labeling (AAL) atlas",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "AAL (Automated Anatomical Labeling) atlas",
+                  "start_char": 18857,
+                  "end_char": 18898
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "reg-cerebellar-gm",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "cerebellar grey matter",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "cerebellar grey matter",
+                  "start_char": 14066,
+                  "end_char": 14088
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "anatomical_a_priori",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "reference region",
+                  "start_char": 14044,
+                  "end_char": 14060
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "anatomical",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "reference region",
+                  "start_char": 14044,
+                  "end_char": 14060
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Reference region consisting essentially of the cerebellum without the cerebellar peduncles.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the cerebellar grey matter (essentially the cerebellum without the cerebellar peduncles)",
+                  "start_char": 14062,
+                  "end_char": 14150
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "reg-microglia-clusters",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "clusters that revealed higher microglia activation in AD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the clusters that revealed higher microglia activation in AD were used to define masks",
+                  "start_char": 18550,
+                  "end_char": 18636
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the clusters that revealed higher microglia activation in AD were used to define masks that were then applied to extract the regional mean values",
+                  "start_char": 18550,
+                  "end_char": 18695
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Clusters of significantly elevated 11C-PK11195 binding potential in AD versus controls, used as masks to extract regional mean 11C-PiB SUVR, VBM-GM and 11C-PK11195 BP values in the AD group.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the clusters that revealed higher microglia activation in AD were used to define masks that were then applied to extract the regional mean values of  C-PiB SUVR, VBM-GM, and  C-PK11195 BP in AD subjects",
+                  "start_char": 18550,
+                  "end_char": 18752
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acq-mri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "sMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "3D structural MR imaging scans",
+                  "start_char": 9798,
+                  "end_char": 9828
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 3,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "3 Tesla",
+                  "start_char": 9631,
+                  "end_char": 9638
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "T1-weighted MPRAGE",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a T1-weighted MPRAGE (magnetization-prepared rapid gradient echo) magnetic resonance imaging pulse sequence",
+                  "start_char": 9835,
+                  "end_char": 9942
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 2.53,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TR 2530 ms",
+                  "start_char": 9944,
+                  "end_char": 9954
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.00342
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TE 3.42 ms",
+                  "start_char": 9956,
+                  "end_char": 9966
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          1,
+          1,
+          1
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "isotropic voxel size 1×1×1 mm",
+                  "start_char": 10047,
+                  "end_char": 10076
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "device": "dev_magnetom_tim_trio"
+    },
+    {
+      "local_id": "acq-pib",
+      "acquisition_type": "PET",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "PET",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquisition_duration_seconds": {
+        "extraction_status": "extracted",
+        "value": 5400,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "total duration of 90 min",
+                  "start_char": 11781,
+                  "end_char": 11805
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "tracer_name": {
+        "extraction_status": "extracted",
+        "value": "11C-PiB",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": " C-PiB",
+                  "start_char": 999,
+                  "end_char": 1005
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mode_of_administration": {
+        "extraction_status": "extracted",
+        "value": "intravenous bolus injection",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "intravenous bolus injection",
+                  "start_char": 12065,
+                  "end_char": 12092
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "scan_type": {
+        "extraction_status": "extracted",
+        "value": "dynamic",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "dynamic  C-PiB PET image",
+                  "start_char": 11733,
+                  "end_char": 11757
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "reconstructed_voxel_size_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          2,
+          2,
+          2
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "2 mm isotropic voxel dimension",
+                  "start_char": 12304,
+                  "end_char": 12334
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "tracer_radionuclide": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the intravenous bolus injection of approximately 555 MBq of  C-PiB or 370 MBq of  C-PK11195",
+                  "start_char": 12061,
+                  "end_char": 12152
+                }
+              ]
+            }
+          ]
+        },
+        "value": "11C",
+        "value_source": "generated"
+      },
+      "device": "dev_gemini_gxl_pet_ct"
+    },
+    {
+      "local_id": "acq-pk11195",
+      "acquisition_type": "PET",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "PET",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquisition_duration_seconds": {
+        "extraction_status": "extracted",
+        "value": 3600.0,
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the dynamic  C-PK11195 image of 22 frames (total duration of 60 min",
+                  "start_char": 11863,
+                  "end_char": 11930
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "tracer_name": {
+        "extraction_status": "extracted",
+        "value": "11C-PK11195",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The radiotracer  C-PK11195 is a ligand to the Peripheral Benzodiazepine Receptor",
+                  "start_char": 4298,
+                  "end_char": 4378
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "tracer_radionuclide": {
+        "extraction_status": "extracted",
+        "value": "11C",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the intravenous bolus injection of approximately 555 MBq of  C-PiB or 370 MBq of  C-PK11195",
+                  "start_char": 12061,
+                  "end_char": 12152
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mode_of_administration": {
+        "extraction_status": "extracted",
+        "value": "intravenous bolus injection",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The  C-PiB PET or  C-PK11195 PET image acquisition sessions started immediately after the intravenous bolus injection",
+                  "start_char": 11975,
+                  "end_char": 12092
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "scan_type": {
+        "extraction_status": "extracted",
+        "value": "dynamic",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the participants performed the respective dynamic 3-dimensional PET scan of the entire brain",
+                  "start_char": 11545,
+                  "end_char": 11637
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "reconstructed_voxel_size_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          2.0,
+          2.0,
+          2.0
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The PET images were reconstructed to a 128×128×90 matrix, with 2 mm isotropic voxel dimension",
+                  "start_char": 12241,
+                  "end_char": 12334
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "device": "dev_gemini_gxl_pet_ct"
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "prep-mri-pet",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "MRI and PET images were spatially transformed to MNI space; MRI data were segmented and modulated, and PET data were coregistered to MRI space and smoothed.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The individual MRI scans were spatially normalized to the to the Montreal Neurological Institute (MNI) template using DARTEL algorithm [ 41 ] in SPM12.",
+                  "start_char": 13550,
+                  "end_char": 13701
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "SPM12 version 12",
+          "MATLAB 8.1.0 R2013a",
+          "CAT12",
+          "DARTEL",
+          "3D Slicer 4.8.1",
+          "in-house software"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "SPM12 (Version 12, Wellcome Trust Centre for Neuroimaging, London, UK), and executed in MATLAB software (version 8.1.0 R2013a, The Mathworks, MA) through its computational anatomy toolbox (CAT12)",
+                  "start_char": 10124,
+                  "end_char": 10319
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "visual inspection for artifacts",
+          "rigid PET-to-MRI registration",
+          "segmentation into grey matter, white matter, and cerebrospinal fluid",
+          "DARTEL spatial normalization to MNI space",
+          "Jacobian modulation",
+          "resampling",
+          "spatial smoothing"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Prior to pre-processing and quantitative analysis, the dynamic PET data used in this work were submitted to a frame-by-frame visual inspection to ensure that no coarse artifacts (e.g., related to radiotracer preparation, image acquisition and reconstruction, head motion) were present.",
+                  "start_char": 12681,
+                  "end_char": 12966
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "smoothing_fwhm_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          8,
+          8,
+          8
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "smoothed with an 8 × 8 × 8 mm FWHM Gaussian filter",
+                  "start_char": 14897,
+                  "end_char": 14947
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "me-vbm-group",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "glm",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "two-sample t-test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "in order to test whether GM volume,  C-PK11195 BP and  C-PiB SUVR were different between AD and HC groups we performed at voxel-level group comparisons by computing two-sample   t  -tests in SPM12",
+                  "start_char": 15777,
+                  "end_char": 15973
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Voxel-wise two-sample t-test on modulated GM maps with total intracranial volume as a covariate.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "For the VBM data, TIV (total intracranial volume) was used as a covariate",
+                  "start_char": 15975,
+                  "end_char": 16048
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "two-sample t-test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "in order to test whether GM volume,  C-PK11195 BP and  C-PiB SUVR were different between AD and HC groups we performed at voxel-level group comparisons by computing two-sample   t  -tests in SPM12",
+                  "start_char": 15777,
+                  "end_char": 15973
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "SPM12",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we performed at voxel-level group comparisons by computing two-sample   t  -tests in SPM12",
+                  "start_char": 15883,
+                  "end_char": 15973
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "term-group-vbm",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "diagnostic group",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "AD group (n = 20)",
+                      "start_char": 21245,
+                      "end_char": 21262
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "AD group",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "AD group (n = 20)",
+                          "start_char": 21245,
+                          "end_char": 21262
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp-ad"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "HC group",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "HC group (n = 17)",
+                          "start_char": 21275,
+                          "end_char": 21292
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp-hc"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "local_id": "term-tiv",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "total intracranial volume",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "For the VBM data, TIV (total intracranial volume) was used as a covariate",
+                      "start_char": 15975,
+                      "end_char": 16048
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we used a voxel-wise statistical threshold",
+                  "start_char": 22274,
+                  "end_char": 22316
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prep-mri-pet"
+      ]
+    },
+    {
+      "local_id": "me-pk-group",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "glm",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "two-sample t-test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "in order to test whether GM volume,  C-PK11195 BP and  C-PiB SUVR were different between AD and HC groups we performed at voxel-level group comparisons by computing two-sample   t  -tests in SPM12",
+                  "start_char": 15777,
+                  "end_char": 15973
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Voxel-wise two-sample t-test on 11C-PK11195 binding potential maps. No covariate is described for this contrast.",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "in order to test whether GM volume,  C-PK11195 BP and  C-PiB SUVR were different between AD and HC groups we performed at voxel-level group comparisons by computing two-sample   t  -tests in SPM12",
+                  "start_char": 15777,
+                  "end_char": 15973
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "two-sample t-test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "in order to test whether GM volume,  C-PK11195 BP and  C-PiB SUVR were different between AD and HC groups we performed at voxel-level group comparisons by computing two-sample   t  -tests in SPM12",
+                  "start_char": 15777,
+                  "end_char": 15973
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "SPM12",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "two-sample   t  -tests in SPM12",
+                  "start_char": 15942,
+                  "end_char": 15973
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "term-group-pk",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "diagnostic group",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "AD group (n = 20)",
+                      "start_char": 21245,
+                      "end_char": 21262
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "AD group",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "AD group (n = 20)",
+                          "start_char": 21245,
+                          "end_char": 21262
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp-ad"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "HC group",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "HC group (n = 17)",
+                          "start_char": 21275,
+                          "end_char": 21292
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp-hc"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel-wise",
+                  "start_char": 6071,
+                  "end_char": 6081
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prep-mri-pet"
+      ]
+    },
+    {
+      "local_id": "me-ancova-pib",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "ancova",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we have computed an ANCOVA entering the VBM-GM images as the primary modality and the corresponding  C-PiB SUVR images as the covariate image",
+                  "start_char": 16563,
+                  "end_char": 16704
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "Biological Parametric Mapping ANCOVA with an imaging covariate",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we have computed an ANCOVA entering the VBM-GM images as the primary modality and the corresponding  C-PiB SUVR images as the covariate image",
+                  "start_char": 16563,
+                  "end_char": 16704
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "VBM-GM entered as the primary modality and the participant's own 11C-PiB SUVR map as the covariate image, so the group difference is adjusted voxel by voxel for amyloid load.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we have computed an ANCOVA entering the VBM-GM images as the primary modality and the corresponding  C-PiB SUVR images as the covariate image",
+                  "start_char": 16563,
+                  "end_char": 16704
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "ANCOVA",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we have computed an ANCOVA entering the VBM-GM images as the primary modality and the corresponding  C-PiB SUVR images as the covariate image",
+                  "start_char": 16563,
+                  "end_char": 16704
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "Biological Parametric Mapping (BPM) toolbox in SPM5",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Biological Parametric Mapping (BPM) [ 49 ], a MATLAB toolbox integrated in SPM5",
+                  "start_char": 16097,
+                  "end_char": 16176
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "term-group-ancova",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "diagnostic group",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "AD group (n = 20)",
+                      "start_char": 21245,
+                      "end_char": 21262
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "AD group",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "AD group (n = 20)",
+                          "start_char": 21245,
+                          "end_char": 21262
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp-ad"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "HC group",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "HC group (n = 17)",
+                          "start_char": 21275,
+                          "end_char": 21292
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp-hc"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "local_id": "term-pib-ancova",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "11C-PiB SUVR",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "we have computed an ANCOVA entering the VBM-GM images as the primary modality and the corresponding  C-PiB SUVR images as the covariate image",
+                      "start_char": 16563,
+                      "end_char": 16704
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "source_definition": {
+            "extraction_status": "extracted",
+            "value": "Voxel-level 11C-PiB SUVR map, summed 40-70 min post-injection and divided by the mean signal of the individual's cerebellar grey matter reference region.",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "The individual  C-PiB standard uptake value ratio (SUVR) map was computed by summing voxel-level signal from 40 to 70 min post-injection, and dividing by the mean signal from the individual’s reference region, the cerebellar grey matter",
+                      "start_char": 13852,
+                      "end_char": 14088
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel-wise",
+                  "start_char": 6071,
+                  "end_char": 6081
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prep-mri-pet"
+      ]
+    },
+    {
+      "local_id": "me-regression-ad",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "robust_regression",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We performed both regressions controlling for age and the presence of outliers (bi-square robust regression)",
+                  "start_char": 17435,
+                  "end_char": 17543
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "voxel-based multiple regression between modalities",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel-based multiple regression analysis between-modalities",
+                  "start_char": 1344,
+                  "end_char": 1403
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Bi-square robust regression in the 20 AD patients, GM-VBM as the dependent variable and the 11C-PiB SUVR map as the imaging regressor, controlling for age, within a grey matter mask.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We performed both regressions controlling for age and the presence of outliers (bi-square robust regression)",
+                  "start_char": 17435,
+                  "end_char": 17543
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "bi-square robust regression",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We performed both regressions controlling for age and the presence of outliers (bi-square robust regression)",
+                  "start_char": 17435,
+                  "end_char": 17543
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "Biological Parametric Mapping (BPM) toolbox",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The BPM toolbox was used in MATLAB (version 7.12 (R2011a))",
+                  "start_char": 16267,
+                  "end_char": 16325
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "term-pib-ad",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "11C-PiB SUVR",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "entering GM-VBM as the dependent variable and the corresponding  C-PiB SUVR data as the imaging regressor",
+                      "start_char": 17072,
+                      "end_char": 17177
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "source_definition": {
+            "extraction_status": "extracted",
+            "value": "Voxel-level 11C-PiB SUVR map, summed 40-70 min post-injection and divided by the mean signal of the individual's cerebellar grey matter reference region.",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "The individual  C-PiB standard uptake value ratio (SUVR) map was computed by summing voxel-level signal from 40 to 70 min post-injection, and dividing by the mean signal from the individual’s reference region, the cerebellar grey matter",
+                      "start_char": 13852,
+                      "end_char": 14088
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "term-age-ad",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "age",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "We performed both regressions controlling for age and the presence of outliers (bi-square robust regression)",
+                      "start_char": 17435,
+                      "end_char": 17543
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "unit": {
+            "extraction_status": "extracted",
+            "value": "years",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used a voxel-wise threshold of   p   < 0.001 (uncorrected, except for the extent cluster correction threshold of 40 voxels).",
+                  "start_char": 41119,
+                  "end_char": 41246
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prep-mri-pet"
+      ]
+    },
+    {
+      "local_id": "me-regression-merged",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "robust_regression",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We performed both regressions controlling for age and the presence of outliers (bi-square robust regression)",
+                  "start_char": 17435,
+                  "end_char": 17543
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "voxel-based multiple regression between modalities, both groups pooled",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Posteriorly, we have repeated the same regression analysis but merging both groups (17 HC and 20 AD)",
+                  "start_char": 17733,
+                  "end_char": 17833
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "The same bi-square robust regression of GM-VBM on 11C-PiB SUVR, refitted over the 20 AD patients and 17 healthy controls together.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Posteriorly, we have repeated the same regression analysis but merging both groups (17 HC and 20 AD)",
+                  "start_char": 17733,
+                  "end_char": 17833
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "bi-square robust regression",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We performed both regressions controlling for age and the presence of outliers (bi-square robust regression)",
+                  "start_char": 17435,
+                  "end_char": 17543
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "Biological Parametric Mapping (BPM) toolbox",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The BPM toolbox was used in MATLAB (version 7.12 (R2011a))",
+                  "start_char": 16267,
+                  "end_char": 16325
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "term-pib-merged",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "11C-PiB SUVR",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Posteriorly, we have repeated the same regression analysis but merging both groups (17 HC and 20 AD)",
+                      "start_char": 17733,
+                      "end_char": 17833
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "source_definition": {
+            "extraction_status": "extracted",
+            "value": "Voxel-level 11C-PiB SUVR map, summed 40-70 min post-injection and divided by the mean signal of the individual's cerebellar grey matter reference region.",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "The individual  C-PiB standard uptake value ratio (SUVR) map was computed by summing voxel-level signal from 40 to 70 min post-injection, and dividing by the mean signal from the individual’s reference region, the cerebellar grey matter",
+                      "start_char": 13852,
+                      "end_char": 14088
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "term-age-merged",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "age",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "We performed both regressions controlling for age and the presence of outliers (bi-square robust regression)",
+                      "start_char": 17435,
+                      "end_char": 17543
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "unit": {
+            "extraction_status": "extracted",
+            "value": "years",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "For the regression between the VBM-GM and  C-PiB SUVR data, aggregating 20 AD and 17 HC, we used a voxel-wise threshold of   p   < 0.03 (FDR corrected) with an extent threshold of 60 voxels.",
+                  "start_char": 44013,
+                  "end_char": 44203
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prep-mri-pet"
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1",
+                  "start_char": 21170,
+                  "end_char": 21177
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Demographics features of all participants",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Demographics features of all participants",
+                  "start_char": 20868,
+                  "end_char": 20909
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "AD, patients with Alzheimer’s disease; HC, healthy controls; SD, standard deviation; MMSE, Mini-Mental State Examination; MoCA, Montreal cognitive assessment; CDR, Clinical Dementia Rating; Data are expressed as mean±SD, except for female/male ratio.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "AD, patients with Alzheimer’s disease; HC, healthy controls; SD, standard deviation; MMSE, Mini-Mental State Examination; MoCA, Montreal cognitive assessment; CDR, Clinical Dementia Rating; Data are expressed as mean±SD, except for female/male ratio.",
+                  "start_char": 20914,
+                  "end_char": 21164
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2",
+                  "start_char": 23542,
+                  "end_char": 23549
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Regions of significantly reduced GM volume in AD patients compared to HC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Regions of significantly reduced GM volume in AD patients compared to HC",
+                  "start_char": 23264,
+                  "end_char": 23336
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "BA, Broadman areas; clusters were considered significant using a voxel-wise statistical threshold of p < 0.005 (FDR corrected for multiple comparisons) with an extent threshold of 100 voxels.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BA, Broadman areas; clusters were considered significant using a voxel-wise statistical threshold of p < 0.005 (FDR corrected for multiple comparisons) with an extent threshold of 100 voxels.",
+                  "start_char": 28487,
+                  "end_char": 28678
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl3",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3",
+                  "start_char": 30608,
+                  "end_char": 30615
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Regions of significant elevated 11C-PK11195 BP in patients with AD compared to HC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Regions of significant elevated 11C-PK11195 BP in patients with AD compared to HC",
+                  "start_char": 30349,
+                  "end_char": 30430
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "BA, Broadman areas; clusters were considered significant using a voxel-wise statistical threshold of p < 0.01 (uncorrected) with an extent threshold of 100 voxels.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BA, Broadman areas; clusters were considered significant using a voxel-wise statistical threshold of p < 0.01 (uncorrected) with an extent threshold of 100 voxels.",
+                  "start_char": 34212,
+                  "end_char": 34375
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl4",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 4",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4",
+                  "start_char": 35534,
+                  "end_char": 35541
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Results from ANCOVA reflecting regions where VBM-GM differences were not explained by 11C-PiB SUVR levels in AD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Results from ANCOVA reflecting regions where VBM-GM differences were not explained by 11C-PiB SUVR levels in AD",
+                  "start_char": 35219,
+                  "end_char": 35330
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "BA, Broadman areas; clusters were considered significant using a voxel-wise statistical threshold of p < 0.03 (FDR corrected for multiple comparisons) with an extent threshold of 60 voxels.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BA, Broadman areas; clusters were considered significant using a voxel-wise statistical threshold of p < 0.03 (FDR corrected for multiple comparisons) with an extent threshold of 60 voxels.",
+                  "start_char": 40384,
+                  "end_char": 40573
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl5",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 5",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 5",
+                  "start_char": 41765,
+                  "end_char": 41772
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Regions of significant association between VBM-GM and 11C-PiB SUVR in AD patients",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Regions of significant association between VBM-GM and 11C-PiB SUVR in AD patients",
+                  "start_char": 41506,
+                  "end_char": 41587
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "BA, Broadman areas; clusters were considered significant using a voxel-wise statistical threshold of p < 0.001 (uncorrected) with an extent threshold of 40 voxels.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BA, Broadman areas; clusters were considered significant using a voxel-wise statistical threshold of p < 0.001 (uncorrected) with an extent threshold of 40 voxels.",
+                  "start_char": 43679,
+                  "end_char": 43842
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl6",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 6",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 6",
+                  "start_char": 44932,
+                  "end_char": 44939
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Regions of significant association between VBM-GM and 11C-PiB SUVR in AD patients and HC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Regions of significant association between VBM-GM and 11C-PiB SUVR in AD patients and HC",
+                  "start_char": 44642,
+                  "end_char": 44730
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "BA, Broadman areas; clusters were considered significant using voxel-wise statistical threshold of p < 0.03 (FDR corrected for multiple comparisons) with an extent threshold of 60 voxels.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BA, Broadman areas; clusters were considered significant using voxel-wise statistical threshold of p < 0.03 (FDR corrected for multiple comparisons) with an extent threshold of 60 voxels.",
+                  "start_char": 48177,
+                  "end_char": 48364
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "measure_gray_matter_volume",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "structural_morphometry",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "VBM",
+                  "start_char": 10453,
+                  "end_char": 10456
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "BPM regression analysis between VBM-GM and 11C-PiB SUVR maps for the AD group superimposed on the T1-weighted template in the axial plane.",
+                  "start_char": 41251,
+                  "end_char": 41389
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "BPM regression analysis between VBM-GM and 11C-PiB SUVR maps for 20 AD and 17 HC superimposed on the T1-weighted template in the axial plane.",
+                  "start_char": 44362,
+                  "end_char": 44503
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "gray_matter_volume",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "GM volume",
+                  "start_char": 6001,
+                  "end_char": 6010
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "BPM regression analysis between VBM-GM and 11C-PiB SUVR maps for 20 AD and 17 HC superimposed on the T1-weighted template in the axial plane.",
+                  "start_char": 44362,
+                  "end_char": 44503
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "VBM-GM",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "VBM data",
+                  "start_char": 15983,
+                  "end_char": 15991
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "VBM-GM data",
+                  "start_char": 34853,
+                  "end_char": 34864
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "VBM-GM",
+                  "start_char": 15061,
+                  "end_char": 15067
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "measure_receptor_binding",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "molecular_imaging",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "PET",
+                  "start_char": 955,
+                  "end_char": 958
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "receptor_binding",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BP",
+                  "start_char": 14207,
+                  "end_char": 14209
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "11C-PK11195 BP",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "11C-PK11195 BP",
+                  "start_char": 30381,
+                  "end_char": 30395
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inference_fdr",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel-wise",
+                  "start_char": 6071,
+                  "end_char": 6081
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.005,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "p   < 0.005",
+                  "start_char": 22322,
+                  "end_char": 22333
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "p",
+                  "start_char": 19,
+                  "end_char": 20
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "extracted",
+        "value": 100,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "an extent threshold of 100 voxels",
+                  "start_char": 23502,
+                  "end_char": 23535
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "FDR",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "FDR corrected",
+                  "start_char": 22512,
+                  "end_char": 22525
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "inference_none_uncorrected",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel-wise",
+                  "start_char": 6071,
+                  "end_char": 6081
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.01,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "p   < 0.01",
+                  "start_char": 28821,
+                  "end_char": 28831
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "p",
+                  "start_char": 19,
+                  "end_char": 20
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "extracted",
+        "value": 100,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "an extent threshold of 100 voxels",
+                  "start_char": 23502,
+                  "end_char": 23535
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "none; uncorrected",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "p   < 0.01 (uncorrected)",
+                  "start_char": 30538,
+                  "end_char": 30562
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "inference_fdr_2",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A voxel-wise statistical threshold of   p   < 0.03 (FDR corrected) and a cluster extent of 60 voxels were considered.",
+                  "start_char": 34867,
+                  "end_char": 34984
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "For the regression between the VBM-GM and  C-PiB SUVR data, aggregating 20 AD and 17 HC, we used a voxel-wise threshold of   p   < 0.03 (FDR corrected) with an extent threshold of 60 voxels.",
+                  "start_char": 44013,
+                  "end_char": 44203
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.03,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A voxel-wise statistical threshold of   p   < 0.03 (FDR corrected) and a cluster extent of 60 voxels were considered.",
+                  "start_char": 34867,
+                  "end_char": 34984
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "For the regression between the VBM-GM and  C-PiB SUVR data, aggregating 20 AD and 17 HC, we used a voxel-wise threshold of   p   < 0.03 (FDR corrected) with an extent threshold of 60 voxels.",
+                  "start_char": 44013,
+                  "end_char": 44203
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A voxel-wise statistical threshold of   p   < 0.03 (FDR corrected) and a cluster extent of 60 voxels were considered.",
+                  "start_char": 34867,
+                  "end_char": 34984
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "For the regression between the VBM-GM and  C-PiB SUVR data, aggregating 20 AD and 17 HC, we used a voxel-wise threshold of   p   < 0.03 (FDR corrected) with an extent threshold of 60 voxels.",
+                  "start_char": 44013,
+                  "end_char": 44203
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "extracted",
+        "value": 60,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A voxel-wise statistical threshold of   p   < 0.03 (FDR corrected) and a cluster extent of 60 voxels were considered.",
+                  "start_char": 34867,
+                  "end_char": 34984
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "For the regression between the VBM-GM and  C-PiB SUVR data, aggregating 20 AD and 17 HC, we used a voxel-wise threshold of   p   < 0.03 (FDR corrected) with an extent threshold of 60 voxels.",
+                  "start_char": 44013,
+                  "end_char": 44203
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "FDR",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A voxel-wise statistical threshold of   p   < 0.03 (FDR corrected) and a cluster extent of 60 voxels were considered.",
+                  "start_char": 34867,
+                  "end_char": 34984
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "For the regression between the VBM-GM and  C-PiB SUVR data, aggregating 20 AD and 17 HC, we used a voxel-wise threshold of   p   < 0.03 (FDR corrected) with an extent threshold of 60 voxels.",
+                  "start_char": 44013,
+                  "end_char": 44203
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "inference_none_uncorrected_2",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used a voxel-wise threshold of   p   < 0.001 (uncorrected, except for the extent cluster correction threshold of 40 voxels).",
+                  "start_char": 41119,
+                  "end_char": 41246
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.001,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used a voxel-wise threshold of   p   < 0.001 (uncorrected, except for the extent cluster correction threshold of 40 voxels).",
+                  "start_char": 41119,
+                  "end_char": 41246
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used a voxel-wise threshold of   p   < 0.001 (uncorrected, except for the extent cluster correction threshold of 40 voxels).",
+                  "start_char": 41119,
+                  "end_char": 41246
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "extracted",
+        "value": 40,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used a voxel-wise threshold of   p   < 0.001 (uncorrected, except for the extent cluster correction threshold of 40 voxels).",
+                  "start_char": 41119,
+                  "end_char": 41246
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "none; uncorrected",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used a voxel-wise threshold of   p   < 0.001 (uncorrected, except for the extent cluster correction threshold of 40 voxels).",
+                  "start_char": 41119,
+                  "end_char": 41246
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_magnetom_tim_trio",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "Siemens",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Siemens",
+                  "start_char": 9605,
+                  "end_char": 9612
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "Magnetom TIM Trio",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Magnetom TIM Trio",
+                  "start_char": 9613,
+                  "end_char": 9630
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "dev_gemini_gxl_pet_ct",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "Philips Medical Systems",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Philips Medical Systems",
+                  "start_char": 11430,
+                  "end_char": 11453
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "Philips Gemini GXL PET/CT scanner (Philips Medical Systems, Best, the Nether-lands)",
+                  "start_char": 11395,
+                  "end_char": 11478
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "Gemini GXL PET/CT",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Philips Gemini GXL PET/CT scanner",
+                  "start_char": 11395,
+                  "end_char": 11428
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

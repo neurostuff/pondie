@@ -1,0 +1,6166 @@
+{
+  "local_id": "ngDTY5BgJUuX",
+  "extraction_metadata": {
+    "extractor_model": "claude-opus-5",
+    "extractor_version": "adjudicated-0.1.0",
+    "source_text_hash": "efceab5a9345dd207558c1602185ca365087c94355abf5a41eaab1d8bba4687c",
+    "extraction_date": "2026-08-12",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "Significance Statement",
+        "level": 1,
+        "start_char": 2048,
+        "end_char": 3027
+      },
+      {
+        "ordinal": 1,
+        "title": "Introduction",
+        "level": 1,
+        "start_char": 3027,
+        "end_char": 7439
+      },
+      {
+        "ordinal": 2,
+        "title": "Materials and Methods",
+        "level": 1,
+        "start_char": 7439,
+        "end_char": 31922
+      },
+      {
+        "ordinal": 3,
+        "title": "Participants",
+        "level": 2,
+        "start_char": 7468,
+        "end_char": 8404,
+        "parent_section": "Materials and Methods"
+      },
+      {
+        "ordinal": 4,
+        "title": "Experimental design and statistical analysis",
+        "level": 2,
+        "start_char": 8404,
+        "end_char": 9752,
+        "parent_section": "Materials and Methods"
+      },
+      {
+        "ordinal": 5,
+        "title": "Experimental setup",
+        "level": 2,
+        "start_char": 9752,
+        "end_char": 13096,
+        "parent_section": "Materials and Methods"
+      },
+      {
+        "ordinal": 6,
+        "title": "Task procedures",
+        "level": 2,
+        "start_char": 13096,
+        "end_char": 18612,
+        "parent_section": "Materials and Methods"
+      },
+      {
+        "ordinal": 7,
+        "title": "Functional EBA localizer scan",
+        "level": 2,
+        "start_char": 18612,
+        "end_char": 19941,
+        "parent_section": "Materials and Methods"
+      },
+      {
+        "ordinal": 8,
+        "title": "MRI data acquisition",
+        "level": 2,
+        "start_char": 19941,
+        "end_char": 20811,
+        "parent_section": "Materials and Methods"
+      },
+      {
+        "ordinal": 9,
+        "title": "Processing of fMRI data",
+        "level": 2,
+        "start_char": 20811,
+        "end_char": 22413,
+        "parent_section": "Materials and Methods"
+      },
+      {
+        "ordinal": 10,
+        "title": "Definition of ROIs",
+        "level": 2,
+        "start_char": 22413,
+        "end_char": 26734,
+        "parent_section": "Materials and Methods"
+      },
+      {
+        "ordinal": 11,
+        "title": "Mass-univariate analysis",
+        "level": 2,
+        "start_char": 26734,
+        "end_char": 28379,
+        "parent_section": "Materials and Methods"
+      },
+      {
+        "ordinal": 12,
+        "title": "Multivoxel pattern analysis (MVPA)",
+        "level": 2,
+        "start_char": 28379,
+        "end_char": 31922,
+        "parent_section": "Materials and Methods"
+      },
+      {
+        "ordinal": 13,
+        "title": "Results",
+        "level": 1,
+        "start_char": 31922,
+        "end_char": 62240
+      },
+      {
+        "ordinal": 14,
+        "title": "Questionnaire subjective ratings",
+        "level": 2,
+        "start_char": 31937,
+        "end_char": 35213,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 15,
+        "title": "Mass-univariate analysis",
+        "level": 2,
+        "start_char": 35213,
+        "end_char": 52967,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 16,
+        "title": "MVPA",
+        "level": 2,
+        "start_char": 52967,
+        "end_char": 60821,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 17,
+        "title": "Correlations between cross-classification accuracy and subjective rating",
+        "level": 2,
+        "start_char": 60821,
+        "end_char": 62240,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 18,
+        "title": "Discussion",
+        "level": 1,
+        "start_char": 62240,
+        "end_char": 74677
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "An fMRI MVPA study investigating supramodal neural representations of the sense of body ownership across visuotactile and visuomotor rubber hand illusion conditions.",
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "We used functional magnetic resonance imaging (fMRI) to investigate the existence of neural correlates of the sense of body ownership independent of the sensory modalities.",
+              "start_char": 814,
+              "end_char": 986
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Two-by-two within-subject factorial experiment manipulating modality and timing of visual feedback; 26 healthy volunteers participated and 25 were included in the final analysis.",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "We employed a two-by-two within-subject factorial design.",
+                "start_char": 8457,
+                "end_char": 8514
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "not_applicable",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "within_subject",
+      "value_source": "generated",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "We employed a two-by-two within-subject factorial design.",
+                "start_char": 8457,
+                "end_char": 8514
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "not_applicable",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "arms": [],
+    "timepoints": []
+  },
+  "analyses": [
+    {
+      "local_id": "analysis-1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Visuotactile > visuomotor",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Visuotactile > visuomotor",
+                  "start_char": 36800,
+                  "end_char": 36825
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Main effect: visuotactile > visuomotor",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "First, we analyzed the main effect of modalities collapsed across timings of visual feedback, [(TS + TA) − (MS + MA)] and inversely [(MS + MA) − (TS + TA)].",
+                  "start_char": 26903,
+                  "end_char": 27059
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Activations were greater in the visuotactile condition than in the visuomotor condition."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The activations in the left inferior temporal gyrus, the bilateral postcentral gyrus, and the bilateral rolandic operculum were significantly greater in the visuotactile condition than those in the visuomotor condition.",
+                  "start_char": 35370,
+                  "end_char": 35589
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_bold_response",
+      "groups": [
+        {
+          "group": "grp-healthy",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 25,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thus, the final analysis included 25 participants.",
+                      "start_char": 8350,
+                      "end_char": 8400
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-modality",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "visuotactile",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Visuotactile > visuomotor",
+                        "start_char": 36800,
+                        "end_char": 36825
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Visuotactile > visuomotor",
+                        "start_char": 36800,
+                        "end_char": 36825
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-modality",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "visuomotor",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Visuomotor > visuotactile",
+                        "start_char": 38833,
+                        "end_char": 38858
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Visuotactile > visuomotor",
+                        "start_char": 36800,
+                        "end_char": 36825
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Contrast images were generated for each participant using a fixed-effects model and were analyzed using a random-effects model of a one-sample   t   test.",
+                      "start_char": 27521,
+                      "end_char": 27675
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 24,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "tasks": [
+        "task-rhi"
+      ],
+      "model_estimation": "model-mass-univariate",
+      "inference_settings": "inference_fwe",
+      "tables": [
+        "tbl2"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The brain region names were reported with reference to the automated anatomic labeling atlas 3 (AAL3;  Rolls et al., 2020 ).",
+                  "start_char": 28007,
+                  "end_char": 28131
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "analysis-2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Visuomotor > visuotactile",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Visuomotor > visuotactile",
+                  "start_char": 38833,
+                  "end_char": 38858
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Main effect: visuomotor > visuotactile",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "First, we analyzed the main effect of modalities collapsed across timings of visual feedback, [(TS + TA) − (MS + MA)] and inversely [(MS + MA) − (TS + TA)].",
+                  "start_char": 26903,
+                  "end_char": 27059
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Activations were greater in the visuomotor condition than in the visuotactile condition."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In contrast, the left central sulcus was more activated in the visuomotor condition than in the visuotactile condition.",
+                  "start_char": 35590,
+                  "end_char": 35709
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_bold_response",
+      "groups": [
+        {
+          "group": "grp-healthy",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 25,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thus, the final analysis included 25 participants.",
+                      "start_char": 8350,
+                      "end_char": 8400
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-modality",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "visuomotor",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Visuomotor > visuotactile",
+                        "start_char": 38833,
+                        "end_char": 38858
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Visuomotor > visuotactile",
+                        "start_char": 38833,
+                        "end_char": 38858
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-modality",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "visuotactile",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Visuotactile > visuomotor",
+                        "start_char": 36800,
+                        "end_char": 36825
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Visuomotor > visuotactile",
+                        "start_char": 38833,
+                        "end_char": 38858
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Contrast images were generated for each participant using a fixed-effects model and were analyzed using a random-effects model of a one-sample   t   test.",
+                      "start_char": 27521,
+                      "end_char": 27675
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 24,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "tasks": [
+        "task-rhi"
+      ],
+      "model_estimation": "model-mass-univariate",
+      "inference_settings": "inference_fwe",
+      "tables": [
+        "tbl2"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The brain region names were reported with reference to the automated anatomic labeling atlas 3 (AAL3;  Rolls et al., 2020 ).",
+                  "start_char": 28007,
+                  "end_char": 28131
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "analysis-3",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Synchronous > asynchronous",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Synchronous > asynchronous",
+                  "start_char": 39926,
+                  "end_char": 39952
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Main effect of synchronous versus asynchronous visual feedback",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Second, we analyzed the main effect of timings of visual feedback collapsed across modalities, [(TS + MS) − (TA + MA)] and inversely [(TA + MA) − (TS + MS)].",
+                  "start_char": 27060,
+                  "end_char": 27217
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Activations were greater in the synchronous condition than in the asynchronous condition."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We observed greater activations in the left hippocampus and the right thalamus in the synchronous condition than those in the asynchronous condition.",
+                  "start_char": 35819,
+                  "end_char": 35968
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_bold_response",
+      "groups": [
+        {
+          "group": "grp-healthy",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 25,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thus, the final analysis included 25 participants.",
+                      "start_char": 8350,
+                      "end_char": 8400
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "synchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Synchronous > asynchronous",
+                        "start_char": 39926,
+                        "end_char": 39952
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "We observed greater activations in the left hippocampus and the right thalamus in the synchronous condition than those in the asynchronous condition.",
+                        "start_char": 35819,
+                        "end_char": 35968
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "asynchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "We observed greater activations in the left hippocampus and the right thalamus in the synchronous condition than those in the asynchronous condition.",
+                        "start_char": 35819,
+                        "end_char": 35968
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "We observed greater activations in the left hippocampus and the right thalamus in the synchronous condition than those in the asynchronous condition.",
+                        "start_char": 35819,
+                        "end_char": 35968
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Anatomical regions, peak voxel coordinates, and   t   values of observed activation for the main effect of synchronous and asynchronous conditions",
+                      "start_char": 39366,
+                      "end_char": 39512
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 24,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "tasks": [
+        "task-rhi"
+      ],
+      "model_estimation": "model-mass-univariate",
+      "inference_settings": "inference_uncorrected",
+      "tables": [
+        "tbl3"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI, Montreal Neurologic Institute",
+                  "start_char": 39283,
+                  "end_char": 39317
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "analysis-4",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Asynchronous > synchronous",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Asynchronous > synchronous",
+                  "start_char": 40301,
+                  "end_char": 40327
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Main effect of asynchronous versus synchronous visual feedback",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Next, we compared the activities in the synchronous and asynchronous conditions collapsed across modalities.",
+                  "start_char": 35710,
+                  "end_char": 35818
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Activations were greater in the asynchronous condition than in the synchronous condition."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The right triangular part of the inferior frontal gyrus, the left PMv, and the right middle temporal gyrus (MTG) were more activated in the asynchronous condition than in the synchronous condition.",
+                  "start_char": 35969,
+                  "end_char": 36166
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_bold_response",
+      "groups": [
+        {
+          "group": "grp-healthy",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 25,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thus, the final analysis included 25 participants.",
+                      "start_char": 8350,
+                      "end_char": 8400
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "asynchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "The right triangular part of the inferior frontal gyrus, the left PMv, and the right middle temporal gyrus (MTG) were more activated in the asynchronous condition than in the synchronous condition.",
+                        "start_char": 35969,
+                        "end_char": 36166
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "The right triangular part of the inferior frontal gyrus, the left PMv, and the right middle temporal gyrus (MTG) were more activated in the asynchronous condition than in the synchronous condition.",
+                        "start_char": 35969,
+                        "end_char": 36166
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "synchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "The right triangular part of the inferior frontal gyrus, the left PMv, and the right middle temporal gyrus (MTG) were more activated in the asynchronous condition than in the synchronous condition.",
+                        "start_char": 35969,
+                        "end_char": 36166
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "The right triangular part of the inferior frontal gyrus, the left PMv, and the right middle temporal gyrus (MTG) were more activated in the asynchronous condition than in the synchronous condition.",
+                        "start_char": 35969,
+                        "end_char": 36166
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Anatomical regions, peak voxel coordinates, and   t   values of observed activation for the main effect of synchronous and asynchronous conditions",
+                      "start_char": 39366,
+                      "end_char": 39512
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 24,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "tasks": [
+        "task-rhi"
+      ],
+      "model_estimation": "model-mass-univariate",
+      "inference_settings": "inference_uncorrected",
+      "tables": [
+        "tbl3"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI, Montreal Neurologic Institute",
+                  "start_char": 39283,
+                  "end_char": 39317
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "analysis-5",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Visuotactile synchronous interaction",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Visuotactile synchronous interaction",
+                  "start_char": 46439,
+                  "end_char": 46475
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "The difference between synchronous and asynchronous conditions was greater in the visuotactile than in the visuomotor condition.",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In the visuotactile condition, the difference between synchronous and asynchronous conditions was significantly larger in the left precuneus, the bilateral cerebellum, and the right fusiform gyrus than that in the visuomotor condition.",
+                  "start_char": 45431,
+                  "end_char": 45666
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "The synchronous–asynchronous difference was greater for visuotactile than visuomotor stimulation."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In the visuotactile condition, the difference between synchronous and asynchronous conditions was significantly larger in the left precuneus, the bilateral cerebellum, and the right fusiform gyrus than that in the visuomotor condition.",
+                  "start_char": 45431,
+                  "end_char": 45666
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_bold_response",
+      "groups": [
+        {
+          "group": "grp-healthy",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 25,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thus, the final analysis included 25 participants.",
+                      "start_char": 8350,
+                      "end_char": 8400
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-modality",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "visuotactile",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Visuotactile synchronous interaction",
+                        "start_char": 46439,
+                        "end_char": 46475
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "In the visuotactile condition, the difference between synchronous and asynchronous conditions was significantly larger in the left precuneus, the bilateral cerebellum, and the right fusiform gyrus than that in the visuomotor condition.",
+                        "start_char": 45431,
+                        "end_char": 45666
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-modality",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "visuomotor",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Visuomotor synchronous interaction",
+                        "start_char": 47159,
+                        "end_char": 47193
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "In the visuotactile condition, the difference between synchronous and asynchronous conditions was significantly larger in the left precuneus, the bilateral cerebellum, and the right fusiform gyrus than that in the visuomotor condition.",
+                        "start_char": 45431,
+                        "end_char": 45666
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "synchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "In the visuotactile condition, the difference between synchronous and asynchronous conditions was significantly larger in the left precuneus, the bilateral cerebellum, and the right fusiform gyrus than that in the visuomotor condition.",
+                        "start_char": 45431,
+                        "end_char": 45666
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "In the visuotactile condition, the difference between synchronous and asynchronous conditions was significantly larger in the left precuneus, the bilateral cerebellum, and the right fusiform gyrus than that in the visuomotor condition.",
+                        "start_char": 45431,
+                        "end_char": 45666
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "asynchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "In the visuotactile condition, the difference between synchronous and asynchronous conditions was significantly larger in the left precuneus, the bilateral cerebellum, and the right fusiform gyrus than that in the visuomotor condition.",
+                        "start_char": 45431,
+                        "end_char": 45666
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "In the visuotactile condition, the difference between synchronous and asynchronous conditions was significantly larger in the left precuneus, the bilateral cerebellum, and the right fusiform gyrus than that in the visuomotor condition.",
+                        "start_char": 45431,
+                        "end_char": 45666
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Anatomical regions, peak voxel coordinates, and   t   values of observed activation for the interaction effects",
+                      "start_char": 45959,
+                      "end_char": 46070
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 24,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24).",
+                      "start_char": 30692,
+                      "end_char": 30886
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "tasks": [
+        "task-rhi"
+      ],
+      "model_estimation": "model-mass-univariate",
+      "inference_settings": "inference_uncorrected",
+      "tables": [
+        "tbl4"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+                  "start_char": 39283,
+                  "end_char": 39359
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "analysis-6",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Visuomotor synchronous interaction",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Visuomotor synchronous interaction",
+                  "start_char": 47159,
+                  "end_char": 47193
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "The difference between synchronous and asynchronous conditions was greater in the visuomotor than in the visuotactile condition.",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In the visuomotor condition, the difference between the synchronous and asynchronous conditions was significantly greater in the left inferior parietal lobule than that in the visuotactile condition.",
+                  "start_char": 45667,
+                  "end_char": 45866
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "The synchronous–asynchronous difference was greater for visuomotor than visuotactile stimulation."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In the visuomotor condition, the difference between the synchronous and asynchronous conditions was significantly greater in the left inferior parietal lobule than that in the visuotactile condition.",
+                  "start_char": 45667,
+                  "end_char": 45866
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_bold_response",
+      "groups": [
+        {
+          "group": "grp-healthy",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 25,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-modality",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "visuomotor",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "term-modality",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "visuotactile",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "term-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "synchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "term-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "asynchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 24,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Activation was reported with a threshold of p < 0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels.",
+                      "start_char": 43925,
+                      "end_char": 44054
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "tasks": [
+        "task-rhi"
+      ],
+      "model_estimation": "model-mass-univariate",
+      "inference_settings": "inference_uncorrected",
+      "tables": [
+        "tbl4"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+                  "start_char": 39283,
+                  "end_char": 39359
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "analysis-7",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "EBA localizer activation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Observed activation during the EBA localizer scan: body parts greater than chairs.",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "The EBA localizer activated the left middle occipital gyrus and right middle temporal gyrus during body-part compared with chair images."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [
+        "reg-left-eba",
+        "reg-right-eba"
+      ],
+      "measure": "measure_bold_response",
+      "groups": [
+        {
+          "group": "grp-healthy",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 25,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-localizer-stimulus",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "body parts",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A total of 16 blocks were performed, which consisted of 8 body blocks and 8 control blocks. A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                        "start_char": 18937,
+                        "end_char": 19193
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "The fMRI data analysis of the EBA localizer scan revealed a significant activation of the left middle occipital gyrus and the right MTG when the participants watched body parts pictures compared with the activity elicited by chair images",
+                        "start_char": 48594,
+                        "end_char": 48831
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-localizer-stimulus",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "chairs",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A total of 16 blocks were performed, which consisted of 8 body blocks and 8 control blocks. A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                        "start_char": 18937,
+                        "end_char": 19193
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "when the participants watched body parts pictures compared with the activity elicited by chair images",
+                        "start_char": 48730,
+                        "end_char": 48831
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 24,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "tasks": [
+        "task-eba-localizer"
+      ],
+      "model_estimation": "model-localizer",
+      "inference_settings": "inference_fwe",
+      "tables": [
+        "tbl5"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "analysis-8",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Visuotactile classification",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Searchlight multivoxel pattern analysis classifying synchronous versus asynchronous conditions within visuotactile sessions.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Above-chance visuotactile classification was found in the right IPS, right PMv, and right postcentral sulcus."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "searchlight",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_decoding_performance",
+      "groups": [
+        {
+          "group": "grp-healthy",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 25,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-mvpa-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "synchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "not_reported",
+              "evidence": {
+                "status": "not_applicable"
+              }
+            }
+          },
+          {
+            "term": "term-mvpa-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "asynchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "not_reported",
+              "evidence": {
+                "status": "not_applicable"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 24,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "DecodingDetails",
+        "decoded_variable": {
+          "extraction_status": "extracted",
+          "value": "timing of visual feedback",
+          "value_source": "reported",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "classes": [
+          {
+            "label": {
+              "extraction_status": "extracted",
+              "value": "synchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "condition": "cond-ts"
+          },
+          {
+            "label": {
+              "extraction_status": "extracted",
+              "value": "asynchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "condition": "cond-ta"
+          }
+        ],
+        "performance_metrics": [
+          {
+            "name": {
+              "extraction_status": "extracted",
+              "value": "classification accuracy",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "reference_value": {
+              "extraction_status": "extracted",
+              "value": 50.0,
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "relation": {
+              "extraction_status": "extracted",
+              "value": "above_reference",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "validation_scheme": {
+          "extraction_status": "extracted",
+          "value": "cross-validation",
+          "value_source": "reported",
+          "evidence": {
+            "status": "not_found"
+          }
+        }
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "tasks": [
+        "task-rhi"
+      ],
+      "model_estimation": "model-mvpa",
+      "inference_settings": "inference_fwe_2",
+      "tables": [
+        "tbl6"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "analysis-9",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Visuomotor classification",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Searchlight multivoxel pattern analysis classifying synchronous versus asynchronous conditions within visuomotor sessions.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Above-chance visuomotor classification was found in the left central sulcus."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "searchlight",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_decoding_performance",
+      "groups": [
+        {
+          "group": "grp-healthy",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 25,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-mvpa-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "synchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "not_reported",
+              "evidence": {
+                "status": "not_applicable"
+              }
+            }
+          },
+          {
+            "term": "term-mvpa-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "asynchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "not_reported",
+              "evidence": {
+                "status": "not_applicable"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 24,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "DecodingDetails",
+        "decoded_variable": {
+          "extraction_status": "extracted",
+          "value": "timing of visual feedback",
+          "value_source": "reported",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "classes": [
+          {
+            "label": {
+              "extraction_status": "extracted",
+              "value": "synchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "condition": "cond-ms"
+          },
+          {
+            "label": {
+              "extraction_status": "extracted",
+              "value": "asynchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "condition": "cond-ma"
+          }
+        ],
+        "performance_metrics": [
+          {
+            "name": {
+              "extraction_status": "extracted",
+              "value": "classification accuracy",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "reference_value": {
+              "extraction_status": "extracted",
+              "value": 50.0,
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "relation": {
+              "extraction_status": "extracted",
+              "value": "above_reference",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "validation_scheme": {
+          "extraction_status": "extracted",
+          "value": "cross-validation",
+          "value_source": "reported",
+          "evidence": {
+            "status": "not_found"
+          }
+        }
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "tasks": [
+        "task-rhi"
+      ],
+      "model_estimation": "model-mvpa",
+      "inference_settings": "inference_fwe_2",
+      "tables": [
+        "tbl6"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Montreal Neurologic Institute (MNI) coordinates of the activated foci are reported in  Table 6 .",
+                  "start_char": 60463,
+                  "end_char": 60559
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "analysis-10",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Cross-classification",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Cross-classification",
+                  "start_char": 58514,
+                  "end_char": 58534
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Searchlight multivoxel pattern analysis for cross-classification of synchronous versus asynchronous conditions between visuotactile and visuomotor sessions.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Third, the analysis revealed significant above-chance classification accuracies in the right PMv, the left EBA, and the bilateral IPS in cross-classification between visuotactile and visuomotor sessions.",
+                  "start_char": 56509,
+                  "end_char": 56712
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Above-chance cross-classification was found in the right PMv, left EBA, and bilateral IPS, demonstrating neural representations invariant to sensory modality."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Third, the analysis revealed significant above-chance classification accuracies in the right PMv, the left EBA, and the bilateral IPS in cross-classification between visuotactile and visuomotor sessions.",
+                  "start_char": 56509,
+                  "end_char": 56712
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "searchlight",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Complementary to the a priori ROI analysis, we additionally conducted a volume-based “searchlight” analysis ( Kriegeskorte et al., 2006 ).",
+                  "start_char": 31095,
+                  "end_char": 31233
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "measure_decoding_performance_2",
+      "groups": [
+        {
+          "group": "grp-healthy",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 25,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thus, the final analysis included 25 participants.",
+                      "start_char": 8350,
+                      "end_char": 8400
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-mvpa-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "synchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "not_reported",
+              "evidence": {
+                "status": "not_applicable"
+              }
+            }
+          },
+          {
+            "term": "term-mvpa-timing",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "asynchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "not_reported",
+              "evidence": {
+                "status": "not_applicable"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 24,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "DecodingDetails",
+        "decoded_variable": {
+          "extraction_status": "extracted",
+          "value": "timing of visual feedback",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "We then ran searchlight analyses to decode the timings of the visual feedback (i.e., synchronous vs asynchronous) within the same and across modalities.",
+                    "start_char": 56058,
+                    "end_char": 56210
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "classes": [
+          {
+            "label": {
+              "extraction_status": "extracted",
+              "value": "synchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "label": {
+              "extraction_status": "extracted",
+              "value": "asynchronous",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "performance_metrics": [
+          {
+            "name": {
+              "extraction_status": "extracted",
+              "value": "cross-classification accuracy",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "The average classification accuracy for each searchlight with cross-validation was assigned to the sphere’s center voxel.",
+                        "start_char": 31436,
+                        "end_char": 31557
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "reference_value": {
+              "extraction_status": "extracted",
+              "value": 50.0,
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24)",
+                        "start_char": 30692,
+                        "end_char": 30885
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "relation": {
+              "extraction_status": "extracted",
+              "value": "above_reference",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A one-sample   t   test was used to determine whether the observed decoding accuracy was significantly higher than chance (50%) with intersubject difference treated as a random factor (df = 24).",
+                        "start_char": 30692,
+                        "end_char": 30886
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "validation_scheme": {
+          "extraction_status": "extracted",
+          "value": "cross-validation between visuotactile and visuomotor sessions",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "The classification was performed using multivoxel activation patterns within a 9 mm-radius sphere (searchlight) that contained 123 voxels.",
+                    "start_char": 31234,
+                    "end_char": 31372
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "generalization": {
+          "extraction_status": "extracted",
+          "value": "trained in one sensory modality and tested in the other",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "The classifier was first trained to discriminate between the synchronous and asynchronous conditions in the visuotactile sessions. The same decoder was then tested to determine whether it could classify the representations of the synchronous and asynchronous conditions in the visuomotor sessions.",
+                    "start_char": 29872,
+                    "end_char": 30169
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "tasks": [
+        "task-rhi"
+      ],
+      "model_estimation": "model-mvpa",
+      "inference_settings": "inference_fwe_2",
+      "tables": [
+        "tbl6"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Montreal Neurologic Institute (MNI) coordinates of the activated foci are reported in  Table 6 .",
+                  "start_char": 60463,
+                  "end_char": 60559
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [
+        "asmt-ownership-questionnaire"
+      ]
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acq-fmri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "T2*-weighted echoplanar imaging (EPI) was used",
+                  "start_char": 20083,
+                  "end_char": 20129
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_duration_seconds": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 3,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All scans were performed on a Siemens 3-Tesla Prisma scanner",
+                  "start_char": 19970,
+                  "end_char": 20030
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "gradient echo EPI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "with a gradient echo EPI sequence",
+                  "start_char": 20233,
+                  "end_char": 20266
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mr_acquisition_type": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 2,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "repetition time (TR), 2000 ms",
+                  "start_char": 20381,
+                  "end_char": 20410
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.03
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "echo time (TE), 30 ms",
+                  "start_char": 20412,
+                  "end_char": 20433
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          2.043,
+          2.043,
+          3.5
+        ],
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "matrix, 94 × 94; 32 axial slices; and slice thickness, 3.5 mm",
+                  "start_char": 20492,
+                  "end_char": 20553
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "number_of_volumes": {
+        "extraction_status": "extracted",
+        "value": 229,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "T2*-weighted echoplanar imaging (EPI) was used to acquire a total of 229 and 219 scans per session for the main and localizer sessions, respectively",
+                  "start_char": 20083,
+                  "end_char": 20231
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "device": "dev_prisma"
+    }
+  ],
+  "assessments": [
+    {
+      "local_id": "asmt-ownership-questionnaire",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "sense of body ownership questionnaire",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "After every two sessions, the participants completed questionnaires to report their subjective experience in the MRI scanner",
+                  "start_char": 15818,
+                  "end_char": 15942
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Six-item questionnaire using a seven-point Likert scale to assess subjective sense of body ownership and ownership control.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The questionnaire consisted of six items with items (1)–(4) serving as indicators of the sense of body ownership (Ownership) and with items (5) and (6) serving as controls for ownership",
+                  "start_char": 16044,
+                  "end_char": 16229
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "questionnaire",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The questionnaire consisted of six items",
+                  "start_char": 16044,
+                  "end_char": 16084
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "external_datasets": [
+    {
+      "name": {
+        "extraction_status": "extracted",
+        "value": "NIfTY-format unthresholded raw t-value maps",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The unthresholded raw   t  -value maps in NIfTY format are available",
+                  "start_char": 60694,
+                  "end_char": 60762
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "url": {
+        "extraction_status": "extracted",
+        "value": "https://doi.org/10.6084/m9.figshare.19228050",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "https://doi.org/10.6084/m9.figshare.19228050",
+                  "start_char": 60768,
+                  "end_char": 60812
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "grp-healthy",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "healthy volunteers",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Twenty-six healthy volunteers",
+                  "start_char": 7489,
+                  "end_char": 7518
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Healthy volunteers participating in the fMRI experiment; all participants were right-handed.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All participants were right-handed as assessed by a modified version of the Edinburgh Handedness Inventory",
+                  "start_char": 7758,
+                  "end_char": 7864
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "approached_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "consented_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 26,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Twenty-six healthy volunteers (14 males and 12 females) with a mean age of 22.38 years (20–28 years) participated in the experiment",
+                  "start_char": 7489,
+                  "end_char": 7620
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 26,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Twenty-six healthy volunteers (14 males and 12 females) with a mean age of 22.38 years (20–28 years) participated in the experiment",
+                  "start_char": 7489,
+                  "end_char": 7620
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "excluded_count": {
+        "extraction_status": "extracted",
+        "value": 1,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "One participant with large head movements (maximum translation per session, 66.44 mm) during the scanning was excluded from the analysis",
+                  "start_char": 8212,
+                  "end_char": 8348
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "exclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "large head movements during scanning"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "One participant with large head movements (maximum translation per session, 66.44 mm) during the scanning was excluded from the analysis",
+                  "start_char": 8212,
+                  "end_char": 8348
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "recruitment_method": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "recruitment_dates": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 22.38,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "with a mean age of 22.38 years",
+                  "start_char": 7545,
+                  "end_char": 7575
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "extracted",
+        "value": 20,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "20–28 years",
+                  "start_char": 7577,
+                  "end_char": 7588
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "extracted",
+        "value": 28,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "20–28 years",
+                  "start_char": 7577,
+                  "end_char": 7588
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_median": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "years",
+                  "start_char": 7570,
+                  "end_char": 7575
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Twenty-six healthy volunteers",
+                  "start_char": 7489,
+                  "end_char": 7518
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [],
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "diagnostic_system": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "diagnostic_instrument": [],
+      "clinical_characteristics": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "medications": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "medication_status": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "education_summary": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "socioeconomic_status_summary": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "local_id": "task-rhi",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "rubber hand illusion",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Participants viewed videos of their own right hand while receiving synchronous or asynchronous visual feedback during visuotactile and visuomotor sessions.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Participants received tactile stimulation or executed finger movements while given synchronous and asynchronous visual feedback of their hand",
+                  "start_char": 987,
+                  "end_char": 1128
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "conditions": [
+        {
+          "local_id": "cond-ts",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "visuotactile synchronous",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "visuotactile synchronous (TS)",
+                      "start_char": 9076,
+                      "end_char": 9105
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "The participant's right index finger was stroked while real-time video feedback was presented.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "In the visuotactile condition, the participant’s right index finger was stroked with a paintbrush",
+                      "start_char": 8664,
+                      "end_char": 8761
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "cond-ta",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "visuotactile asynchronous",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "visuotactile asynchronous (TA)",
+                      "start_char": 9107,
+                      "end_char": 9137
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "The participant's right index finger was stroked while video feedback was presented with a 1000-ms delay.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "In the asynchronous condition, the videos were presented with a 1000-ms delay",
+                      "start_char": 8961,
+                      "end_char": 9038
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "cond-ms",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "visuomotor synchronous",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "visuomotor synchronous (MS)",
+                      "start_char": 9139,
+                      "end_char": 9166
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Participants raised and lowered their right index finger while real-time video feedback was presented.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "In the visuomotor condition, the participants raised and lowered their right index finger on their own",
+                      "start_char": 8763,
+                      "end_char": 8865
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "cond-ma",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "visuomotor asynchronous",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "visuomotor asynchronous (MA)",
+                      "start_char": 9172,
+                      "end_char": 9200
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Participants raised and lowered their right index finger while video feedback was presented with a 1000-ms delay.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "In the asynchronous condition, the videos were presented with a 1000-ms delay",
+                      "start_char": 8961,
+                      "end_char": 9038
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "block",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "presentation_software": {
+        "extraction_status": "extracted",
+        "value": "Psychtoolbox and MATLAB; PsychoPy for questionnaire and localizer presentation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "instructions": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "stimuli": {
+        "extraction_status": "extracted",
+        "value": "Videos of the participant's right hand; body-part and chair images in the EBA localizer.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                  "start_char": 19029,
+                  "end_char": 19193
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "response_mode": {
+        "extraction_status": "extracted",
+        "value": [
+          "hand_movement",
+          "none"
+        ],
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In the visuomotor sessions, the participants lifted their right index finger at one beep and lowered it at the next beep at the same rate during 18 s",
+                  "start_char": 14455,
+                  "end_char": 14604
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "performance_measures": {
+        "extraction_status": "extracted",
+        "value": [
+          "number of finger movements and brush strokes",
+          "one-back repetition detection accuracy",
+          "sense of body ownership questionnaire ratings"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The average (SD) number of brush strokes and finger movements for each participant was 16.55 (0.95)",
+                  "start_char": 15076,
+                  "end_char": 15175
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "task-eba-localizer",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "EBA functional localizer",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "An independent functional localizer scan was performed for all participants after the visuotactile and visuomotor sessions to determine a ROI of the EBA selectively activated by body parts",
+                  "start_char": 18650,
+                  "end_char": 18838
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "An independent localizer scan alternating blocks of headless human body-part images with blocks of chair images, used to define the extrastriate body area.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "An independent functional localizer scan was performed for all participants after the visuotactile and visuomotor sessions to determine a ROI of the EBA selectively activated by body parts",
+                  "start_char": 18650,
+                  "end_char": 18838
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "conditions": [
+        {
+          "local_id": "cond-body",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "body parts",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "A total of 16 blocks were performed, which consisted of 8 body blocks and 8 control blocks. A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                      "start_char": 18937,
+                      "end_char": 19193
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Blocks of 20 grayscale images of headless human body parts in different postures.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "A total of 16 blocks were performed, which consisted of 8 body blocks and 8 control blocks. A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                      "start_char": 18937,
+                      "end_char": 19193
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "cond-chairs",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "chairs",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "A total of 16 blocks were performed, which consisted of 8 body blocks and 8 control blocks. A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                      "start_char": 18937,
+                      "end_char": 19193
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Control blocks of 20 grayscale images of chairs.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "A total of 16 blocks were performed, which consisted of 8 body blocks and 8 control blocks. A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                      "start_char": 18937,
+                      "end_char": 19193
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "block",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A total of 16 blocks were performed, which consisted of 8 body blocks and 8 control blocks. A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                  "start_char": 18937,
+                  "end_char": 19193
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisitions": [
+        "acq-fmri"
+      ],
+      "stimuli": {
+        "extraction_status": "extracted",
+        "value": "Grayscale images of headless human body parts and of chairs, each presented for 300 ms followed by a 450 ms black screen.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Each image was presented for 300 ms, followed by a black screen for 450 ms",
+                  "start_char": 19222,
+                  "end_char": 19296
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "instructions": {
+        "extraction_status": "extracted",
+        "value": "Press a button with the right index finger on detecting an immediately repeated image.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The participants were asked to press a button with the right index finger when they detected the immediate repetitions",
+                  "start_char": 19572,
+                  "end_char": 19690
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "response_mode": {
+        "extraction_status": "extracted",
+        "value": [
+          "button_press"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The participants were asked to press a button with the right index finger when they detected the immediate repetitions",
+                  "start_char": 19572,
+                  "end_char": 19690
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "presentation_software": {
+        "extraction_status": "extracted",
+        "value": "PsychoPy",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The stimuli presentation was implemented by PsychoPy ( Peirce et al., 2019 )",
+                  "start_char": 19860,
+                  "end_char": 19936
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "performance_measures": {
+        "extraction_status": "extracted",
+        "value": [
+          "one-back repetition detection accuracy"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "To maintain and monitor attention, the participants performed a one-back repetition detection task during the scan",
+                  "start_char": 19379,
+                  "end_char": 19493
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "regions": [
+    {
+      "local_id": "reg-bilateral-ips",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "bilateral intraparietal sulcus",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "atlas",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "anatomical",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "atlas": {
+        "extraction_status": "extracted",
+        "value": "Anatomy toolbox 13",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Bilateral IPS regions defined using the Anatomy toolbox.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "reg-bilateral-pmv",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "bilateral ventral premotor cortex",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "atlas",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "anatomical",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "atlas": {
+        "extraction_status": "extracted",
+        "value": "Human Motor Area Template 16",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Bilateral PMv regions defined using the Human Motor Area Template.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "reg-left-eba",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "left extrastriate body area",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "left extrastriate body area",
+                  "start_char": 1622,
+                  "end_char": 1649
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "functional_localizer",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "An independent functional localizer scan was performed for all participants after the visuotactile and visuomotor sessions to determine a ROI of the EBA selectively activated by body parts",
+                  "start_char": 18650,
+                  "end_char": 18838
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "coordinate_sphere",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "determined a sphere with a radius of 5 mm",
+                  "start_char": 26420,
+                  "end_char": 26461
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "atlas": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "A 5-mm-radius sphere centered at MNI coordinates [-48, -70, 8], defined by body parts greater than chairs in an independent functional localizer.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Following the procedure used by  Olivé et al. (2015) , we measured a significant EBA activation during the presentation of body part images compared with that elicited by chair images and determined a sphere with a radius of 5 mm centered on MNI coordinates of the group-level analysis with a threshold of   p   <     0.05 corrected for family-wise error (FWE) with an extent threshold of 10 voxels (MNI coordinates: [−48, −70, 8] for the left hemisphere and [51, −58, 2] for the right hemisphere).",
+                  "start_char": 26232,
+                  "end_char": 26730
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "reg-right-eba",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "right extrastriate body area",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "R middle temporal gyrus (EBA)",
+                  "start_char": 50072,
+                  "end_char": 50101
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "functional_localizer",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we measured a significant EBA activation during the presentation of body part images compared with that elicited by chair images and determined a sphere with a radius of 5 mm centered on MNI coordinates of the group-level analysis",
+                  "start_char": 26287,
+                  "end_char": 26517
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "coordinate_sphere",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we measured a significant EBA activation during the presentation of body part images compared with that elicited by chair images and determined a sphere with a radius of 5 mm centered on MNI coordinates of the group-level analysis",
+                  "start_char": 26287,
+                  "end_char": 26517
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "A 5 mm-radius sphere centred on MNI [51, -58, 2], the right-hemisphere group-level peak for body parts against chairs at p < 0.05 FWE with an extent threshold of 10 voxels.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "(MNI coordinates: [−48, −70, 8] for the left hemisphere and [51, −58, 2] for the right hemisphere)",
+                  "start_char": 26631,
+                  "end_char": 26729
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "prep-spm12",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "SPM12 preprocessing including realignment, normalization to the MNI template, resampling, and spatial smoothing; MVPA images were not smoothed.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "SPM12",
+          "MATLAB"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Image preprocessing was performed using the SPM12 software",
+                  "start_char": 20843,
+                  "end_char": 20901
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "realignment",
+          "rigid-body motion correction",
+          "spatial normalization to the MNI template",
+          "resampling with sinc interpolation",
+          "spatial smoothing"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All functional images were initially realigned to adjust for motion-related artifacts. Volume-based realignment was performed by co-registering images using rigid-body transformation to minimize the squared differences between volumes. The realigned images were then spatially normalized with the Montreal Neurologic Institute (MNI) template based on the affine and nonlinear registration of co-registered T1-weighted anatomic images (normalization procedure of SPM). They were resampled into 3 × 3 × 3 mm voxels with sinc interpolation. Images were spatially smoothed using a Gaussian kernel of 6 × 6 × 6 mm full width at half-maximum.",
+                  "start_char": 20986,
+                  "end_char": 21622
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "smoothing_fwhm_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          6,
+          6,
+          6
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "6 × 6 × 6 mm",
+                  "start_char": 21582,
+                  "end_char": 21594
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "model-mass-univariate",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "glm",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Using the general linear model",
+                  "start_char": 21810,
+                  "end_char": 21840
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "mass-univariate general linear model and two-way within-subject ANOVA",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Statistical analyses were performed using a two-way within-subject ANOVA",
+                  "start_char": 9204,
+                  "end_char": 9276
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "hrf_model": {
+        "extraction_status": "extracted",
+        "value": "canonical hemodynamic response function",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "convolved with a canonical hemodynamic response function",
+                  "start_char": 21924,
+                  "end_char": 21980
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Sixteen block regressors per session; 128-s high-pass filter; serial correlations estimated with an autoregressive model; fixed-effects participant-level contrasts followed by random-effects one-sample t tests.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "This analysis yielded 16 independently estimated parameters (β values) per session for each individual voxel.",
+                  "start_char": 22172,
+                  "end_char": 22281
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "participant and group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Contrast images were generated for each participant using a fixed-effects model and were analyzed using a random-effects model of a one-sample   t   test.",
+                  "start_char": 27521,
+                  "end_char": 27675
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "fixed-effects and random-effects one-sample t test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Contrast images were generated for each participant using a fixed-effects model and were analyzed using a random-effects model of a one-sample   t   test.",
+                  "start_char": 27521,
+                  "end_char": 27675
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "SPM12",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Image preprocessing was performed using the SPM12 software",
+                  "start_char": 20843,
+                  "end_char": 20901
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "term-modality",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "modality",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "We manipulated the type of modalities (i.e., visuotactile vs visuomotor) and the timings of the visual feedback (i.e., synchronous vs asynchronous)",
+                      "start_char": 8515,
+                      "end_char": 8662
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "visuotactile",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "We manipulated the type of modalities (i.e., visuotactile vs visuomotor) and the timings of the visual feedback (i.e., synchronous vs asynchronous)",
+                          "start_char": 8515,
+                          "end_char": 8662
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond-ts",
+                "cond-ta"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "visuomotor",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "We manipulated the type of modalities (i.e., visuotactile vs visuomotor) and the timings of the visual feedback (i.e., synchronous vs asynchronous)",
+                          "start_char": 8515,
+                          "end_char": 8662
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond-ms",
+                "cond-ma"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "We employed a two-by-two within-subject factorial design",
+                      "start_char": 8457,
+                      "end_char": 8513
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "term-timing",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "timing of visual feedback",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "We manipulated the type of modalities (i.e., visuotactile vs visuomotor) and the timings of the visual feedback (i.e., synchronous vs asynchronous)",
+                      "start_char": 8515,
+                      "end_char": 8662
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "synchronous",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "We manipulated the type of modalities (i.e., visuotactile vs visuomotor) and the timings of the visual feedback (i.e., synchronous vs asynchronous)",
+                          "start_char": 8515,
+                          "end_char": 8662
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond-ts",
+                "cond-ms"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "asynchronous",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "We manipulated the type of modalities (i.e., visuotactile vs visuomotor) and the timings of the visual feedback (i.e., synchronous vs asynchronous)",
+                          "start_char": 8515,
+                          "end_char": 8662
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond-ta",
+                "cond-ma"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "We employed a two-by-two within-subject factorial design",
+                      "start_char": 8457,
+                      "end_char": 8513
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used the conventional mass-univariate analysis of individual voxels to reveal areas activated in each condition and its combination.",
+                  "start_char": 26767,
+                  "end_char": 26902
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prep-spm12"
+      ]
+    },
+    {
+      "local_id": "model-mvpa",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "multiclass linear support vector machine",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "multiclass classifier based on a linear support vector machine",
+                  "start_char": 28497,
+                  "end_char": 28559
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "multivoxel pattern analysis with ROI-based and searchlight classification",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We then ran searchlight analyses to decode the timings of the visual feedback (i.e., synchronous vs asynchronous) within the same and across modalities.",
+                  "start_char": 56058,
+                  "end_char": 56210
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "hrf_model": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Classifier trained and tested across sessions and across visuotactile and visuomotor modalities; fixed regularization parameter C=1; decoding accuracy tested against 50% chance.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The classifier was first trained to discriminate between the synchronous and asynchronous conditions in the visuotactile sessions. The same decoder was then tested to determine whether it could classify the representations of the synchronous and asynchronous conditions in the visuomotor sessions.",
+                  "start_char": 29872,
+                  "end_char": 30169
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "participant",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "with intersubject difference treated as a random factor",
+                  "start_char": 30820,
+                  "end_char": 30875
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "linear support vector machine",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "linear support vector machine",
+                  "start_char": 28530,
+                  "end_char": 28559
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "LIBSVM",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "implemented in LIBSVM",
+                  "start_char": 28560,
+                  "end_char": 28581
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "term-mvpa-timing",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "timing of visual feedback",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "timings of the visual feedback",
+                      "start_char": 8596,
+                      "end_char": 8626
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "synchronous",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "synchronous and asynchronous conditions",
+                          "start_char": 1188,
+                          "end_char": 1227
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "asynchronous",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "synchronous and asynchronous conditions",
+                          "start_char": 1188,
+                          "end_char": 1227
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "We performed two within-modality and one cross-modality classification analyses.",
+                      "start_char": 28939,
+                      "end_char": 29019
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "functional_form": {
+            "extraction_status": "extracted",
+            "value": "linear",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The average classification accuracy for each searchlight with cross-validation was assigned to the sphere’s center voxel.",
+                  "start_char": 31436,
+                  "end_char": 31557
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prep-spm12"
+      ]
+    },
+    {
+      "local_id": "model-localizer",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "glm",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "mass-univariate general linear model on the localizer scan",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A total of 16 blocks were performed, which consisted of 8 body blocks and 8 control blocks. A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                  "start_char": 18937,
+                  "end_char": 19193
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Sixteen alternating body-part and chair blocks; participant-level contrast images taken to a group one-sample t-test, as for the main sessions.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Contrast images were generated for each participant using a fixed-effects model and were analyzed using a random-effects model of a one-sample   t   test",
+                  "start_char": 27521,
+                  "end_char": 27674
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "one-sample t test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Contrast images were generated for each participant using a fixed-effects model and were analyzed using a random-effects model of a one-sample   t   test",
+                  "start_char": 27521,
+                  "end_char": 27674
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "SPM12",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Image preprocessing was performed using the SPM12 software",
+                  "start_char": 20843,
+                  "end_char": 20901
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "term-localizer-stimulus",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "localizer stimulus category",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "A total of 16 blocks were performed, which consisted of 8 body blocks and 8 control blocks. A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                      "start_char": 18937,
+                      "end_char": 19193
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "body parts",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "A total of 16 blocks were performed, which consisted of 8 body blocks and 8 control blocks. A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                          "start_char": 18937,
+                          "end_char": 19193
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond-body"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "chairs",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "A total of 16 blocks were performed, which consisted of 8 body blocks and 8 control blocks. A body block consisted of 20 images of headless human body parts in different postures, which were alternated with a control block consisting of 20 images of chairs",
+                          "start_char": 18937,
+                          "end_char": 19193
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond-chairs"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel",
+                  "start_char": 164,
+                  "end_char": 169
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prep-spm12"
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1",
+                  "start_char": 15945,
+                  "end_char": 15952
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Statements used in the questionnaire to quantify the subjective experience of the sense of body ownership",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Statements used in the questionnaire to quantify the subjective experience of the sense of body ownership",
+                  "start_char": 17376,
+                  "end_char": 17481
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "As the present study did not use a fake hand but presented their own hand to the participants via video feedback, the item “I felt as if my real hand was turning the hand into the video” adapted from Kalckert and Ehrsson (2014a,b) was analyzed as Ownership.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "As the present study did not use a fake hand but presented their own hand to the participants via video feedback, the item “I felt as if my real hand was turning the hand into the video” adapted from Kalckert and Ehrsson (2014a,b) was analyzed as Ownership.",
+                  "start_char": 18349,
+                  "end_char": 18606
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2",
+                  "start_char": 36427,
+                  "end_char": 36434
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Anatomical regions, peak voxel coordinates, and t values of observed activation for the main effect of the visuotactile and visuomotor conditions",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Anatomical regions, peak voxel coordinates, and   t   values of observed activation for the main effect of the visuotactile and visuomotor conditions",
+                  "start_char": 36270,
+                  "end_char": 36419
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "Activation was reported with a threshold of p < 0.05 corrected for family-wise error (FWE) with an extent threshold of 10 voxels. MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.05 corrected for family-wise error (FWE) with an extent threshold of 10 voxels. MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+                  "start_char": 39153,
+                  "end_char": 39359
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl3",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3",
+                  "start_char": 39520,
+                  "end_char": 39527
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Anatomical regions, peak voxel coordinates, and t values of observed activation for the main effect of synchronous and asynchronous conditions",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Anatomical regions, peak voxel coordinates, and   t   values of observed activation for the main effect of synchronous and asynchronous conditions",
+                  "start_char": 39366,
+                  "end_char": 39512
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "Activation was reported with a threshold of p < 0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels. MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels. MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+                  "start_char": 43925,
+                  "end_char": 44131
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl4",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 4",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4",
+                  "start_char": 45930,
+                  "end_char": 45937
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Anatomical regions, peak voxel coordinates, and t values of observed activation for the interaction effects",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Anatomical regions, peak voxel coordinates, and   t   values of observed activation for the interaction effects",
+                  "start_char": 45959,
+                  "end_char": 46070
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "Activation was reported with a threshold of p < 0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels. MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels. MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+                  "start_char": 43925,
+                  "end_char": 44131
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl5",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 5",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 5",
+                  "start_char": 48996,
+                  "end_char": 49003
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Anatomical regions, peak voxel coordinates, and t values of observed activation during the EBA localizer scan",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Anatomical regions, peak voxel coordinates, and   t   values of observed activation during the EBA localizer scan",
+                  "start_char": 49384,
+                  "end_char": 49497
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "Activation was reported with a threshold of p < 0.05 corrected for family-wise error (FWE) with an extent threshold of 10 voxels. MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.05 corrected for family-wise error (FWE) with an extent threshold of 10 voxels. MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+                  "start_char": 39153,
+                  "end_char": 39359
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl6",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 6",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 6",
+                  "start_char": 56776,
+                  "end_char": 56783
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Anatomical regions, peak voxel coordinates, and t values of observed activation of the searchlight multivoxel pattern analysis",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Anatomical regions, peak voxel coordinates, and   t   values of observed activation of the searchlight multivoxel pattern analysis",
+                  "start_char": 56806,
+                  "end_char": 56936
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "Activation was reported with an uncorrected threshold of p < 0.001 at the voxel-level and a threshold of p < 0.05 family-wise error (FWE) corrected at the cluster-level. MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with an uncorrected threshold of p < 0.001 at the voxel-level and a threshold of p < 0.05 family-wise error (FWE) corrected at the cluster-level. MNI, Montreal Neurologic Institute; L, left hemisphere; R, right hemisphere.",
+                  "start_char": 59613,
+                  "end_char": 59859
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "measure_bold_response",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "functional magnetic resonance imaging (fMRI)",
+                  "start_char": 114,
+                  "end_char": 158
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "bold_response",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The activations in the left inferior temporal gyrus, the bilateral postcentral gyrus, and the bilateral rolandic operculum were significantly greater in the visuotactile condition than those in the visuomotor condition.",
+                  "start_char": 35370,
+                  "end_char": 35589
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "In contrast, the left central sulcus was more activated in the visuomotor condition than in the visuotactile condition.",
+                  "start_char": 35590,
+                  "end_char": 35709
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "We observed greater activations in the left hippocampus and the right thalamus in the synchronous condition than those in the asynchronous condition.",
+                  "start_char": 35819,
+                  "end_char": 35968
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "activation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The activations in the left inferior temporal gyrus, the bilateral postcentral gyrus, and the bilateral rolandic operculum were significantly greater in the visuotactile condition than those in the visuomotor condition.",
+                  "start_char": 35370,
+                  "end_char": 35589
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "In contrast, the left central sulcus was more activated in the visuomotor condition than in the visuotactile condition.",
+                  "start_char": 35590,
+                  "end_char": 35709
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "We observed greater activations in the left hippocampus and the right thalamus in the synchronous condition than those in the asynchronous condition.",
+                  "start_char": 35819,
+                  "end_char": 35968
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "measure_decoding_performance",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "decoding_performance",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "classification accuracy",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "measure_decoding_performance_2",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "functional magnetic resonance imaging (fMRI)",
+                  "start_char": 114,
+                  "end_char": 158
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "decoding_performance",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The average classification accuracy for each searchlight with cross-validation was assigned to the sphere’s center voxel.",
+                  "start_char": 31436,
+                  "end_char": 31557
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "cross-classification accuracy",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The average classification accuracy for each searchlight with cross-validation was assigned to the sphere’s center voxel.",
+                  "start_char": 31436,
+                  "end_char": 31557
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inference_fwe",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.05 corrected for family-wise error (FWE) with an extent threshold of 10 voxels.",
+                  "start_char": 39153,
+                  "end_char": 39282
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "FWE",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.05 corrected for family-wise error (FWE) with an extent threshold of 10 voxels.",
+                  "start_char": 39153,
+                  "end_char": 39282
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correction_scope": {
+        "extraction_status": "extracted",
+        "value": "whole brain",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.05 corrected for family-wise error (FWE) with an extent threshold of 10 voxels.",
+                  "start_char": 39153,
+                  "end_char": 39282
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "extracted",
+        "value": 10,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.05 corrected for family-wise error (FWE) with an extent threshold of 10 voxels.",
+                  "start_char": 39153,
+                  "end_char": 39282
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_value": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of   p   <     0.05 corrected for FWE at the voxel-level with an extent threshold of 10 voxels",
+                  "start_char": 27676,
+                  "end_char": 27811
+                }
+              ]
+            }
+          ]
+        },
+        "value": 0.05,
+        "value_source": "reported"
+      },
+      "voxelwise_threshold_type": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of   p   <     0.05 corrected for FWE at the voxel-level with an extent threshold of 10 voxels",
+                  "start_char": 27676,
+                  "end_char": 27811
+                }
+              ]
+            }
+          ]
+        },
+        "value": "p",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "inference_uncorrected",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of   p   <     0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels.",
+                  "start_char": 48287,
+                  "end_char": 48424
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels.",
+                  "start_char": 43925,
+                  "end_char": 44054
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.001,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of   p   <     0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels.",
+                  "start_char": 48287,
+                  "end_char": 48424
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels.",
+                  "start_char": 43925,
+                  "end_char": 44054
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of   p   <     0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels.",
+                  "start_char": 48287,
+                  "end_char": 48424
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels.",
+                  "start_char": 43925,
+                  "end_char": 44054
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "uncorrected",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of   p   <     0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels.",
+                  "start_char": 48287,
+                  "end_char": 48424
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels.",
+                  "start_char": 43925,
+                  "end_char": 44054
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "extracted",
+        "value": 10,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of   p   <     0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels.",
+                  "start_char": 48287,
+                  "end_char": 48424
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "Activation was reported with a threshold of p < 0.001 uncorrected for multiple comparisons with an extent threshold of 10 voxels.",
+                  "start_char": 43925,
+                  "end_char": 44054
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "inference_fwe_2",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "cluster",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used an uncorrected threshold of   p   <     0.001 at the voxel-level and a threshold of   p   <     0.05 FWE corrected at the cluster-level for each type of classification analysis",
+                  "start_char": 31637,
+                  "end_char": 31821
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.001,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used an uncorrected threshold of   p   <     0.001 at the voxel-level and a threshold of   p   <     0.05 FWE corrected at the cluster-level for each type of classification analysis.",
+                  "start_char": 31637,
+                  "end_char": 31822
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used an uncorrected threshold of   p   <     0.001 at the voxel-level and a threshold of   p   <     0.05 FWE corrected at the cluster-level for each type of classification analysis.",
+                  "start_char": 31637,
+                  "end_char": 31822
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "FWE",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used an uncorrected threshold of   p   <     0.001 at the voxel-level and a threshold of   p   <     0.05 FWE corrected at the cluster-level for each type of classification analysis.",
+                  "start_char": 31637,
+                  "end_char": 31822
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correction_scope": {
+        "extraction_status": "extracted",
+        "value": "whole brain, grey matter only",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The searchlight moved over the gray matter of the whole brain",
+                  "start_char": 31373,
+                  "end_char": 31434
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "clusterwise_threshold_value": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a threshold of   p   <     0.05 FWE corrected at the cluster-level for each type of classification analysis",
+                  "start_char": 31714,
+                  "end_char": 31821
+                }
+              ]
+            }
+          ]
+        },
+        "value": 0.05,
+        "value_source": "reported"
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_prisma",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "Siemens",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All scans were performed on a Siemens 3-Tesla Prisma scanner",
+                  "start_char": 19970,
+                  "end_char": 20030
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "Prisma",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All scans were performed on a Siemens 3-Tesla Prisma scanner",
+                  "start_char": 19970,
+                  "end_char": 20030
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

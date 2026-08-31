@@ -1,48 +1,36 @@
-[build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name = "information-extraction"
+name = "pondie"
 version = "0.1.0"
-description = "Neuroimaging article information extraction pipeline"
-readme = "README.md"
-requires-python = ">=3.10"
+description = "Extract a queryable record of what a neuroimaging paper reports, normalize it, and select what a meta-analysis should pool."
+requires-python = ">=3.11"
 dependencies = [
-  "beautifulsoup4>=4.12",
-  "python-dotenv>=1.0",
-  "lxml>=5.1",
-  "langextract",
-  "num2words>=0.5.13",
-  "tenacity>=8.2",
+    "pydantic>=2.7",
+    "openai>=1.40",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
-dev = [
-  "pytest>=8.0",
+# Normalization only needs these for the two fields that link or cluster; the six
+# closed-target fields are rules and need nothing beyond the standard library.
+normalize = [
+    "scikit-learn>=1.4",
+    "sentence-transformers>=3.0",
+    "spacy>=3.7",
+    "numpy>=1.26",
 ]
-abbrev = [
-  "scispacy>=0.5.4",
-  "spacy>=3.7",
-]
-openai = [
-  "openai>=1.40.0",
-]
-semantic = [
-  "sentence-transformers>=3.0",
-  "transformers>=4.40.0",
-  "torch>=2.1",
-]
-docling = [
-  "docling>=0.1.0",
-]
+# `query.to_dataset()` hands a Studyset to NiMARE; nothing else imports it.
+meta = ["nimare>=0.20"]
+dev = ["pytest>=8.0"]
 
 [project.scripts]
-pondie = "information_extraction.cli:main"
+pondie = "pondie.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["information_extraction*"]
+include = ["pondie*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

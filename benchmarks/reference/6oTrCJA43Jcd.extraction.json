@@ -1,0 +1,4203 @@
+{
+  "local_id": "6oTrCJA43Jcd",
+  "extraction_metadata": {
+    "extractor_model": "claude-opus-5",
+    "extractor_version": "adjudicated-0.1.0",
+    "source_text_hash": "22a646e734604a3c1d48e89fca61c2a774fd85eb14942ed28d6837420e797d7f",
+    "extraction_date": "2026-08-12",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "1. Introduction",
+        "level": 1,
+        "start_char": 1703,
+        "end_char": 5868
+      },
+      {
+        "ordinal": 1,
+        "title": "2. Materials and methods",
+        "level": 1,
+        "start_char": 5868,
+        "end_char": 15089
+      },
+      {
+        "ordinal": 2,
+        "title": "2.1. Participants and functional MRI data acquisition",
+        "level": 2,
+        "start_char": 5900,
+        "end_char": 9146,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 3,
+        "title": "2.2. Data preprocessing",
+        "level": 2,
+        "start_char": 9146,
+        "end_char": 9949,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 4,
+        "title": "2.3. Independent component analysis",
+        "level": 2,
+        "start_char": 9949,
+        "end_char": 11685,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 5,
+        "title": "2.4. Calculation of time-varying connectivity and k-means clustering",
+        "level": 2,
+        "start_char": 11685,
+        "end_char": 13801,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 6,
+        "title": "2.5. Statistical analysis",
+        "level": 2,
+        "start_char": 13801,
+        "end_char": 14486,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 7,
+        "title": "2.6. Connectivity strength discretization",
+        "level": 2,
+        "start_char": 14486,
+        "end_char": 15089,
+        "parent_section": "2. Materials and methods"
+      },
+      {
+        "ordinal": 8,
+        "title": "3. Results",
+        "level": 1,
+        "start_char": 15089,
+        "end_char": 27443
+      },
+      {
+        "ordinal": 9,
+        "title": "4. Discussion",
+        "level": 1,
+        "start_char": 27443,
+        "end_char": 34625
+      },
+      {
+        "ordinal": 10,
+        "title": "Author contributions",
+        "level": 1,
+        "start_char": 34625,
+        "end_char": 34919
+      },
+      {
+        "ordinal": 11,
+        "title": "Funding",
+        "level": 1,
+        "start_char": 34919,
+        "end_char": 35452
+      },
+      {
+        "ordinal": 12,
+        "title": "Conflict of interest statement",
+        "level": 2,
+        "start_char": 35241,
+        "end_char": 35452,
+        "parent_section": "Funding"
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "Resting-state fMRI study using group independent component analysis and time-varying functional connectivity to investigate differences in brain connectivity states between children with autism spectrum disorder and typically developing children.",
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "To investigate the influence of ASD on brain connectivity states, we performed group independent component analysis (GICA) and dynamic network analysis on fMRI data of ASD and TD children.",
+              "start_char": 5602,
+              "end_char": 5790
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Observational, cross-sectional comparison of autism spectrum disorder and typically developing children using an open-access ABIDE I dataset.",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "Data of participants were obtained from open accessed dataset collected by NYU Langone Medical Center, a collection site of Autism Brain Image Data Exchange I(  ABIDE I  ) (Di Martino et al.,  2014 ).",
+                "start_char": 5962,
+                "end_char": 6162
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "not_applicable",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "parallel",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "not_applicable",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "arms": [],
+    "timepoints": []
+  },
+  "analyses": [
+    {
+      "local_id": "analysis-mdt-group",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Mean dwell time of connectivity states, ASD against TD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Two-sample   t  -test was used to compare the MDTs of ASD and TD children.",
+                  "start_char": 13835,
+                  "end_char": 13909
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Two-sample t-test comparing the mean dwell time of each k-means connectivity state between ASD and TD children, over k = 2 to 20.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Two-sample   t  -test was used to compare the MDTs of ASD and TD children.",
+                  "start_char": 13835,
+                  "end_char": 13909
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Hence, we performed time-varying connectivity analysis on resting-state fMRI data to investigate brain states mutation in ASD children.",
+                  "start_char": 548,
+                  "end_char": 683
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Mean dwell time differed between groups at k = 3, 5, 8, 13, 14 and 18, with ASD children holding the weak-connectivity states for longer than TD children."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Significant differences in the MDTs were found when the   k  -values of k-means clustering were 3, 5, 8, 13, 14, and 18. Functional connectivity of ASD children showed weak connectivity for a longer time as compared to TD children according to the   T  -values.",
+                  "start_char": 15107,
+                  "end_char": 15368
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ASD showed an imbalance of connectivity state and aberrant ratio of connectivity with different strengths in the whole brain network",
+                  "start_char": 684,
+                  "end_char": 816
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "measure": "measure_connectivity_strength",
+      "groups": [
+        {
+          "group": "grp-asd",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 31,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| N                                 | 44             | 31             | -       |",
+                      "start_char": 7723,
+                      "end_char": 7804
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp-td",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 44,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| N                                 | 44             | 31             | -       |",
+                      "start_char": 7723,
+                      "end_char": 7804
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "ASD",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Significant differences in the MDTs were found when the   k  -values of k-means clustering were 3, 5, 8, 13, 14, and 18. Functional connectivity of ASD children showed weak connectivity for a longer time as compared to TD children according to the   T  -values.",
+                        "start_char": 15107,
+                        "end_char": 15368
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Significant differences in the MDTs were found when the   k  -values of k-means clustering were 3, 5, 8, 13, 14, and 18. Functional connectivity of ASD children showed weak connectivity for a longer time as compared to TD children according to the   T  -values.",
+                        "start_char": 15107,
+                        "end_char": 15368
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "TD",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Significant differences in the MDTs were found when the   k  -values of k-means clustering were 3, 5, 8, 13, 14, and 18. Functional connectivity of ASD children showed weak connectivity for a longer time as compared to TD children according to the   T  -values.",
+                        "start_char": 15107,
+                        "end_char": 15368
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Significant differences in the MDTs were found when the   k  -values of k-means clustering were 3, 5, 8, 13, 14, and 18. Functional connectivity of ASD children showed weak connectivity for a longer time as compared to TD children according to the   T  -values.",
+                        "start_char": 15107,
+                        "end_char": 15368
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Two-sample   t  -test was used to compare the MDTs of ASD and TD children.",
+                      "start_char": 13835,
+                      "end_char": 13909
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "time-varying sliding-window correlation between ICA components",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                    "start_char": 12201,
+                    "end_char": 12409
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "inference_target": {
+          "extraction_status": "extracted",
+          "value": "network",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Two-sample   t  -test was used to compare the MDTs of ASD and TD children.",
+                    "start_char": 13835,
+                    "end_char": 13909
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "acquisitions": [
+        "acq-rest-fmri"
+      ],
+      "tasks": [
+        "task-rest"
+      ],
+      "model_estimation": "me-state-comparison",
+      "inference_settings": "inference_none",
+      "model_representation_notes": {
+        "extraction_status": "extracted",
+        "value": "Mean dwell time is a parameter derived from the state sequence rather than a measured signal; the schema records the quantity in Measure.source_label and specific_metric and has no slot saying it is derived, which is one of the known limits in extraction-readme.md §5.",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MDT was the average number of windows that were continuous on the time distribution and classified as the same state, representing the duration of each state.",
+                  "start_char": 13639,
+                  "end_char": 13797
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "analysis-connectivity-increased",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Recurrently increased connectivity in ASD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 1   | 30, 48             | 10                         | Increase             |",
+                  "start_char": 22936,
+                  "end_char": 23016
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Connections between independent components whose strength was greater in ASD than TD in at least five of the state comparisons.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 1   | 30, 48             | 10                         | Increase             |",
+                  "start_char": 22936,
+                  "end_char": 23016
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We hypothesized that ASD could influence time-varying functional connectivity states through affecting distribution of connectivity strength and influence the connectivities related to social function.",
+                  "start_char": 5400,
+                  "end_char": 5601
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Connectivity was recurrently increased in ASD between left cuneus and right opercular inferior frontal gyrus, right superior temporal gyrus and right rolandic operculum, and left middle occipital gyrus and right insula."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 1   | 30, 48             | 10                         | Increase             |",
+                  "start_char": 22936,
+                  "end_char": 23016
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "roi",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [
+        "reg-cuneus-l",
+        "reg-ifgoperc-r",
+        "reg-stg-r",
+        "reg-rol-r",
+        "reg-mog-l",
+        "reg-ins-r"
+      ],
+      "measure": "measure_connectivity_strength_2",
+      "groups": [
+        {
+          "group": "grp-asd",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 31,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| N                                 | 44             | 31             | -       |",
+                      "start_char": 7723,
+                      "end_char": 7804
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp-td",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 44,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| N                                 | 44             | 31             | -       |",
+                      "start_char": 7723,
+                      "end_char": 7804
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "ASD",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "| 1   | 30, 48             | 10                         | Increase             |",
+                        "start_char": 22936,
+                        "end_char": 23016
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "| 1   | 30, 48             | 10                         | Increase             |",
+                        "start_char": 22936,
+                        "end_char": 23016
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "TD",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "| 1   | 30, 48             | 10                         | Increase             |",
+                        "start_char": 22936,
+                        "end_char": 23016
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "| 1   | 30, 48             | 10                         | Increase             |",
+                        "start_char": 22936,
+                        "end_char": 23016
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "In each   k  -value, median covariance matrices were identified by Manhattan distance priority and tested with the two-sample   t  -test, with a threshold (  p   < 0.001) to identify connectivities with differences. Times of different connectivity at each state for all   k  -values were aggregated. Connectivity with frequency of occurrence ≥5 times was included in the results.",
+                      "start_char": 14103,
+                      "end_char": 14482
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "time-varying sliding-window correlation between ICA components",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                    "start_char": 12201,
+                    "end_char": 12409
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "parameter_change": {
+          "extraction_status": "extracted",
+          "value": "increased",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "| 1   | 30, 48             | 10                         | Increase             |",
+                    "start_char": 22936,
+                    "end_char": 23016
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "inference_target": {
+          "extraction_status": "extracted",
+          "value": "connectivity_parameter",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "In each   k  -value, median covariance matrices were identified by Manhattan distance priority and tested with the two-sample   t  -test, with a threshold (  p   < 0.001) to identify connectivities with differences. Times of different connectivity at each state for all   k  -values were aggregated. Connectivity with frequency of occurrence ≥5 times was included in the results.",
+                    "start_char": 14103,
+                    "end_char": 14482
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "edges": [
+          {
+            "source_region": "reg-cuneus-l",
+            "target_region": "reg-ifgoperc-r",
+            "directionality": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                        "start_char": 12201,
+                        "end_char": 12409
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source_region": "reg-stg-r",
+            "target_region": "reg-rol-r",
+            "directionality": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                        "start_char": 12201,
+                        "end_char": 12409
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source_region": "reg-mog-l",
+            "target_region": "reg-ins-r",
+            "directionality": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                        "start_char": 12201,
+                        "end_char": 12409
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "acquisitions": [
+        "acq-rest-fmri"
+      ],
+      "tasks": [
+        "task-rest"
+      ],
+      "model_estimation": "me-state-comparison",
+      "inference_settings": "inference_none_a_recurrence_threshold_of_five_or_more_k_va",
+      "tables": [
+        "tbl3"
+      ]
+    },
+    {
+      "local_id": "analysis-connectivity-decreased",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Recurrently decreased connectivity in ASD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 4   | 52, 78             | 6                          | Decrease             |",
+                  "start_char": 23179,
+                  "end_char": 23259
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Connections between independent components whose strength was lower in ASD than TD in at least five of the state comparisons.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 4   | 52, 78             | 6                          | Decrease             |",
+                  "start_char": 23179,
+                  "end_char": 23259
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We hypothesized that ASD could influence time-varying functional connectivity states through affecting distribution of connectivity strength and influence the connectivities related to social function.",
+                  "start_char": 5400,
+                  "end_char": 5601
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Connectivity was recurrently decreased in ASD, including between the medial superior frontal gyrus and the precuneus/posterior cingulate gyrus -- the default-mode pair the abstract highlights."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 4   | 52, 78             | 6                          | Decrease             |",
+                  "start_char": 23179,
+                  "end_char": 23259
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "roi",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [
+        "reg-mfg-r",
+        "reg-itg-r",
+        "reg-orbinf-l",
+        "reg-cal-l",
+        "reg-sfgmed-l",
+        "reg-pcun-pcg",
+        "reg-ffg-r",
+        "reg-mfg-l"
+      ],
+      "measure": "measure_connectivity_strength_2",
+      "groups": [
+        {
+          "group": "grp-asd",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 31,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| N                                 | 44             | 31             | -       |",
+                      "start_char": 7723,
+                      "end_char": 7804
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp-td",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 44,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "| N                                 | 44             | 31             | -       |",
+                      "start_char": 7723,
+                      "end_char": 7804
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term-group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "ASD",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "| 4   | 52, 78             | 6                          | Decrease             |",
+                        "start_char": 23179,
+                        "end_char": 23259
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "| 4   | 52, 78             | 6                          | Decrease             |",
+                        "start_char": 23179,
+                        "end_char": 23259
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term-group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "TD",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "| 4   | 52, 78             | 6                          | Decrease             |",
+                        "start_char": 23179,
+                        "end_char": 23259
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "| 4   | 52, 78             | 6                          | Decrease             |",
+                        "start_char": 23179,
+                        "end_char": 23259
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "In each   k  -value, median covariance matrices were identified by Manhattan distance priority and tested with the two-sample   t  -test, with a threshold (  p   < 0.001) to identify connectivities with differences. Times of different connectivity at each state for all   k  -values were aggregated. Connectivity with frequency of occurrence ≥5 times was included in the results.",
+                      "start_char": 14103,
+                      "end_char": 14482
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "time-varying sliding-window correlation between ICA components",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                    "start_char": 12201,
+                    "end_char": 12409
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "parameter_change": {
+          "extraction_status": "extracted",
+          "value": "decreased",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "| 4   | 52, 78             | 6                          | Decrease             |",
+                    "start_char": 23179,
+                    "end_char": 23259
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "inference_target": {
+          "extraction_status": "extracted",
+          "value": "connectivity_parameter",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "In each   k  -value, median covariance matrices were identified by Manhattan distance priority and tested with the two-sample   t  -test, with a threshold (  p   < 0.001) to identify connectivities with differences. Times of different connectivity at each state for all   k  -values were aggregated. Connectivity with frequency of occurrence ≥5 times was included in the results.",
+                    "start_char": 14103,
+                    "end_char": 14482
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "edges": [
+          {
+            "source_region": "reg-mfg-r",
+            "target_region": "reg-itg-r",
+            "directionality": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                        "start_char": 12201,
+                        "end_char": 12409
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source_region": "reg-orbinf-l",
+            "target_region": "reg-cal-l",
+            "directionality": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                        "start_char": 12201,
+                        "end_char": 12409
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source_region": "reg-sfgmed-l",
+            "target_region": "reg-pcun-pcg",
+            "directionality": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                        "start_char": 12201,
+                        "end_char": 12409
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source_region": "reg-ffg-r",
+            "target_region": "reg-mfg-l",
+            "directionality": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                        "start_char": 12201,
+                        "end_char": 12409
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "acquisitions": [
+        "acq-rest-fmri"
+      ],
+      "tasks": [
+        "task-rest"
+      ],
+      "model_estimation": "me-state-comparison",
+      "inference_settings": "inference_none_a_recurrence_threshold_of_five_or_more_k_va",
+      "tables": [
+        "tbl3"
+      ]
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acq-rest-fmri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BOLD fMRI data",
+                  "start_char": 6816,
+                  "end_char": 6830
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_duration_seconds": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 3,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "on a 3T Allegra scanner",
+                  "start_char": 7045,
+                  "end_char": 7068
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "EPI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "whole-brain echo planar imaging (EPI) sequence",
+                  "start_char": 6872,
+                  "end_char": 6918
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mr_acquisition_type": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 2,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TR = 2 s",
+                  "start_char": 6954,
+                  "end_char": 6962
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.015
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TE = 15 ms",
+                  "start_char": 6964,
+                  "end_char": 6974
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "number_of_volumes": {
+        "extraction_status": "extracted",
+        "value": 180,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "180 volumes",
+                  "start_char": 7032,
+                  "end_char": 7043
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "device": "dev_allegra"
+    }
+  ],
+  "assessments": [
+    {
+      "local_id": "asmt-wasi-fiq",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Wechsler Abbreviated Scale of Intelligence, WASI-IV",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Wechsler Abbreviated Scale of Intelligence, WASI-IV",
+                  "start_char": 6378,
+                  "end_char": 6429
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Full intelligence quotient estimated from four subtests.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "scores of full intelligence quotient (FIQ, estimated by the fourth subtests of the Wechsler Abbreviated Scale of Intelligence, WASI-IV) above 85",
+                  "start_char": 6295,
+                  "end_char": 6439
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "cognitive test",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "asmt-adi-r",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Autism Diagnostic Interview-Revised",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ADI-R, Autism Diagnostic Interview-Revised",
+                  "start_char": 7309,
+                  "end_char": 7351
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Diagnostic interview providing social, verbal, restricted and repetitive behavior, and onset scores.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical diagnostic interview",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "asmt-ados",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Autism Diagnostic Observation Schedule",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ADOS, Autism Diagnostic Observation Schedule",
+                  "start_char": 7353,
+                  "end_char": 7397
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Diagnostic observation schedule; participants with ASD were evaluated using module 3.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ADOS Module                       | –              | 3              | –",
+                  "start_char": 8545,
+                  "end_char": 8616
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical diagnostic observation",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "external_datasets": [
+    {
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Autism Brain Image Data Exchange I (ABIDE I)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Autism Brain Image Data Exchange I(  ABIDE I  )",
+                  "start_char": 6086,
+                  "end_char": 6133
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "url": {
+        "extraction_status": "extracted",
+        "value": "http://fcon_1000.projects.nitrc.org/indi/abide/",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "http://fcon_1000.projects.nitrc.org/indi/abide/",
+                  "start_char": 7201,
+                  "end_char": 7248
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "grp-td",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "typical development children",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TD children",
+                  "start_char": 5778,
+                  "end_char": 5789
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "humans",
+                  "start_char": 4356,
+                  "end_char": 4362
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Typically developing children, all male and right-handed.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 44,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "N                                 | 44             | 31             | -",
+                  "start_char": 7725,
+                  "end_char": 7796
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 12.46,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Age (Mean ± SD)                   | 12.46 ± 3.1    | 11.51 ± 2.64   | 0.1693",
+                  "start_char": 7807,
+                  "end_char": 7883
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 3.1,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Age (Mean ± SD)                   | 12.46 ± 3.1    | 11.51 ± 2.64   | 0.1693",
+                  "start_char": 7807,
+                  "end_char": 7883
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "years",
+                  "start_char": 6194,
+                  "end_char": 6199
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "sex_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "Male",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Gender                            | Male           | Male           | –",
+                      "start_char": 7889,
+                      "end_char": 7960
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 44,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "handedness_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "Right",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Handedness                        | Right          | Right          | –",
+                      "start_char": 7971,
+                      "end_char": 8042
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 44,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "inclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "male",
+          "full intelligence quotient above 85",
+          "right-handedness",
+          "aged 7–18 years"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The criteria of included subjects are: \n  \nmale \n  \nscores of full intelligence quotient (FIQ, estimated by the fourth subtests of the Wechsler Abbreviated Scale of Intelligence, WASI-IV) above 85 \n  \nright-handedness \n  \naged 7–18 (not including 18 years old)",
+                  "start_char": 6243,
+                  "end_char": 6503
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| N                                 | 44             | 31             | -       |",
+                  "start_char": 7723,
+                  "end_char": 7804
+                }
+              ]
+            }
+          ]
+        },
+        "value": 44,
+        "value_source": "reported"
+      }
+    },
+    {
+      "local_id": "grp-asd",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "autism spectrum disorder children",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ASD children",
+                  "start_char": 670,
+                  "end_char": 682
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Children with autism spectrum disorder, all male and right-handed.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 31,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "N                                 | 44             | 31             | -",
+                  "start_char": 7725,
+                  "end_char": 7796
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 11.51,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Age (Mean ± SD)                   | 12.46 ± 3.1    | 11.51 ± 2.64   | 0.1693",
+                  "start_char": 7807,
+                  "end_char": 7883
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 2.64,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Age (Mean ± SD)                   | 12.46 ± 3.1    | 11.51 ± 2.64   | 0.1693",
+                  "start_char": 7807,
+                  "end_char": 7883
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "years",
+                  "start_char": 6194,
+                  "end_char": 6199
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "Autism Spectrum Disorder"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Autism Spectrum Disorder",
+                  "start_char": 516,
+                  "end_char": 540
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "diagnostic_instrument": [
+        "asmt-adi-r",
+        "asmt-ados"
+      ],
+      "sex_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "Male",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Gender                            | Male           | Male           | –",
+                      "start_char": 7889,
+                      "end_char": 7960
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 31,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "handedness_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "Right",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Handedness                        | Right          | Right          | –",
+                      "start_char": 7971,
+                      "end_char": 8042
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 31,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "inclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "male",
+          "full intelligence quotient above 85",
+          "right-handedness",
+          "aged 7–18 years"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The criteria of included subjects are: \n  \nmale \n  \nscores of full intelligence quotient (FIQ, estimated by the fourth subtests of the Wechsler Abbreviated Scale of Intelligence, WASI-IV) above 85 \n  \nright-handedness \n  \naged 7–18 (not including 18 years old)",
+                  "start_char": 6243,
+                  "end_char": 6503
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| N                                 | 44             | 31             | -       |",
+                  "start_char": 7723,
+                  "end_char": 7804
+                }
+              ]
+            }
+          ]
+        },
+        "value": 31,
+        "value_source": "reported"
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "me-gica",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "ICA",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Independent component analysis was performed on the preprocessed fMRI data by   GIFT   v3.0a using Infomax algorithm (Bell and Sejnowski,  1995 ), and the order of ICA model was 100.",
+                  "start_char": 9993,
+                  "end_char": 10175
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "group independent component analysis",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Independent component analysis was performed on the preprocessed fMRI data by   GIFT   v3.0a using Infomax algorithm (Bell and Sejnowski,  1995 ), and the order of ICA model was 100.",
+                  "start_char": 9993,
+                  "end_char": 10175
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "GIFT v3.0a, Infomax algorithm, ICA model order 100, PCA dimension reduction, reliability assessed by 25 ICASSO repetitions; 54 of the components, in seven sub-networks, were kept.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "According to spatial distribution of ICs in previous studies (Allen et al.,  2014 ), 54 ICs in seven sub-networks were kept for the following analysis.",
+                  "start_char": 10433,
+                  "end_char": 10584
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "Infomax independent component analysis",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Independent component analysis was performed on the preprocessed fMRI data by   GIFT   v3.0a using Infomax algorithm (Bell and Sejnowski,  1995 ), and the order of ICA model was 100.",
+                  "start_char": 9993,
+                  "end_char": 10175
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "GIFT v3.0a and ICASSO",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Independent component analysis was performed on the preprocessed fMRI data by   GIFT   v3.0a using Infomax algorithm (Bell and Sejnowski,  1995 ), and the order of ICA model was 100.",
+                  "start_char": 9993,
+                  "end_char": 10175
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": []
+    },
+    {
+      "local_id": "me-state-comparison",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "glm",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "two-sample t-tests on time-varying connectivity state summaries",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Two-sample   t  -test was used to compare the MDTs of ASD and TD children.",
+                  "start_char": 13835,
+                  "end_char": 13909
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Sliding-window connectivity over 148 tapered windows, covariance matrices regularized with a graphical LASSO L1 penalty, k-means clustered at k = 2 to 20 with 150 repetitions per k; mean dwell time and median covariance matrices compared between groups by two-sample t-test.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                  "start_char": 12201,
+                  "end_char": 12409
+                },
+                {
+                  "text": "To determine the connectivity states, covariance matrices of ASD and TD were clustered by k-means clustering algorithm based on Manhattan distance.",
+                  "start_char": 12866,
+                  "end_char": 13013
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "two-sample t-test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Two-sample   t  -test was used to compare the MDTs of ASD and TD children.",
+                  "start_char": 13835,
+                  "end_char": 13909
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inputs_from": [
+        "me-gica"
+      ],
+      "terms": [
+        {
+          "local_id": "term-group",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "diagnostic group",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Two-sample   t  -test was used to compare the MDTs of ASD and TD children.",
+                      "start_char": 13835,
+                      "end_char": 13909
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "ASD",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "Two-sample   t  -test was used to compare the MDTs of ASD and TD children.",
+                          "start_char": 13835,
+                          "end_char": 13909
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp-asd"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "TD",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "Two-sample   t  -test was used to compare the MDTs of ASD and TD children.",
+                          "start_char": 13835,
+                          "end_char": 13909
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp-td"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "roi",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prep-rest-fmri"
+      ]
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "prep-rest-fmri",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Resting-state fMRI preprocessing using DPARSF based on SPM8.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Resting-state fMRI raw data were preprocessed by Data Processing Assistant for Resting-State fMRI (DPARSF) (Chao-Gan and Yu-Feng,  2010 ) based on Statistical Parametric Mapping (  SPM8  ).",
+                  "start_char": 9178,
+                  "end_char": 9367
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "Data Processing Assistant for Resting-State fMRI (DPARSF)",
+          "Statistical Parametric Mapping (SPM8)"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Data Processing Assistant for Resting-State fMRI (DPARSF) (Chao-Gan and Yu-Feng,  2010 ) based on Statistical Parametric Mapping (  SPM8  )",
+                  "start_char": 9227,
+                  "end_char": 9366
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "removal of first 10 image volumes",
+          "realignment",
+          "slice-timing correction",
+          "head-motion correction",
+          "normalization to MNI space"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The procedure of preprocessing included removal of first 10 image volumes, realignment, time-slicing and head motion correction, normalization into Montreal Neurological Institute (MNI) standard space",
+                  "start_char": 9368,
+                  "end_char": 9568
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "smoothing_fwhm_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          6
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "spatially smoothened by a full-width at half-maximum of 6 mm",
+                  "start_char": 9574,
+                  "end_char": 9634
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "regions": [
+    {
+      "local_id": "reg-mog-l",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Left middle occipital gyrus (MOG.L)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Left middle occipital gyrus (MOG.L)",
+                  "start_char": 24973,
+                  "end_char": 25008
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 25                    | −27                   | −96                   | 3                     | 11.3693                  | Left middle occipital gyrus (MOG.L)                       |",
+                  "start_char": 24848,
+                  "end_char": 25032
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 25 from the group ICA, peaking at MNI [-27, -96, 3] with a spatial-map z of 11.3693.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-cuneus-l",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Left cuneus (CUN.L)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Left cuneus (CUN.L)",
+                  "start_char": 25158,
+                  "end_char": 25177
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 30                    | 0                     | −81                   | 15                    | 10.9039                  | Left cuneus (CUN.L)                                       |",
+                  "start_char": 25033,
+                  "end_char": 25217
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 30 from the group ICA, peaking at MNI [0, -81, 15] with a spatial-map z of 10.9039.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-orbinf-l",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Left inferior frontal gyrus, orbital part (ORBinf.L)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Left inferior frontal gyrus, orbital part (ORBinf.L)",
+                  "start_char": 25343,
+                  "end_char": 25395
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 35                    | −48                   | 21                    | −6                    | 11.0173                  | Left inferior frontal gyrus, orbital part (ORBinf.L)      |",
+                  "start_char": 25218,
+                  "end_char": 25402
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 35 from the group ICA, peaking at MNI [-48, 21, -6] with a spatial-map z of 11.0173.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-stg-r",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Right superior temporal gyrus (STG.R)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Right superior temporal gyrus (STG.R)",
+                  "start_char": 25528,
+                  "end_char": 25565
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 37                    | 54                    | −21                   | 3                     | 9.7456                   | Right superior temporal gyrus (STG.R)                     |",
+                  "start_char": 25403,
+                  "end_char": 25587
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 37 from the group ICA, peaking at MNI [54, -21, 3] with a spatial-map z of 9.7456.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-sfgmed-l",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Left superior frontal gyrus, medial (SFGmed.L)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Left superior frontal gyrus, medial (SFGmed.L)",
+                  "start_char": 25713,
+                  "end_char": 25759
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 40                    | −3                    | 54                    | 3                     | 11.3276                  | Left superior frontal gyrus, medial (SFGmed.L)            |",
+                  "start_char": 25588,
+                  "end_char": 25772
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 40 from the group ICA, peaking at MNI [-3, 54, 3] with a spatial-map z of 11.3276.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-ifgoperc-r",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Right inferior frontal gyrus, opercular part (IFGoperc.R)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Right inferior frontal gyrus, opercular part (IFGoperc.R)",
+                  "start_char": 25898,
+                  "end_char": 25955
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 48                    | 54                    | 21                    | 33                    | 8.7204                   | Right inferior frontal gyrus, opercular part (IFGoperc.R) |",
+                  "start_char": 25773,
+                  "end_char": 25957
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 48 from the group ICA, peaking at MNI [54, 21, 33] with a spatial-map z of 8.7204.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-cal-l",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Left calcarine fissure and surrounding cortex (CAL.L)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Left calcarine fissure and surrounding cortex (CAL.L)",
+                  "start_char": 26083,
+                  "end_char": 26136
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 50                    | 0                     | −99                   | 6                     | 10.4117                  | Left calcarine fissure and surrounding cortex (CAL.L)     |",
+                  "start_char": 25958,
+                  "end_char": 26142
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 50 from the group ICA, peaking at MNI [0, -99, 6] with a spatial-map z of 10.4117.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-mfg-r",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Right middle frontal gyrus (MFG.R)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Right middle frontal gyrus (MFG.R)",
+                  "start_char": 26268,
+                  "end_char": 26302
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 52                    | 33                    | 57                    | 3                     | 11.2562                  | Right middle frontal gyrus (MFG.R)                        |",
+                  "start_char": 26143,
+                  "end_char": 26327
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 52 from the group ICA, peaking at MNI [33, 57, 3] with a spatial-map z of 11.2562.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-ffg-r",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Right fusiform gyrus (FFG.R)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Right fusiform gyrus (FFG.R)",
+                  "start_char": 26453,
+                  "end_char": 26481
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 56                    | 18                    | −78                   | −9                    | 9.7335                   | Right fusiform gyrus (FFG.R)                              |",
+                  "start_char": 26328,
+                  "end_char": 26512
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 56 from the group ICA, peaking at MNI [18, -78, -9] with a spatial-map z of 9.7335.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-rol-r",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Right rolandic operculum (ROL.R)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Right rolandic operculum (ROL.R)",
+                  "start_char": 26638,
+                  "end_char": 26670
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 57                    | 57                    | 3                     | 3                     | 9.5117                   | Right rolandic operculum (ROL.R)                          |",
+                  "start_char": 26513,
+                  "end_char": 26697
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 57 from the group ICA, peaking at MNI [57, 3, 3] with a spatial-map z of 9.5117.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-ins-r",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Right insula (INS.R)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Right insula (INS.R)",
+                  "start_char": 26823,
+                  "end_char": 26843
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 71                    | 39                    | −6                    | 6                     | 9.1991                   | Right insula (INS.R)                                      |",
+                  "start_char": 26698,
+                  "end_char": 26882
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 71 from the group ICA, peaking at MNI [39, -6, 6] with a spatial-map z of 9.1991.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-itg-r",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Right inferior temporal gyrus (ITG.R)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Right inferior temporal gyrus (ITG.R)",
+                  "start_char": 27008,
+                  "end_char": 27045
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 78                    | 21                    | −72                   | 54                    | 7.2923                   | Right inferior temporal gyrus (ITG.R)                     |",
+                  "start_char": 26883,
+                  "end_char": 27067
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 78 from the group ICA, peaking at MNI [21, -72, 54] with a spatial-map z of 7.2923.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-mfg-l",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Left middle frontal gyrus (MFG.L)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Left middle frontal gyrus (MFG.L)",
+                  "start_char": 27193,
+                  "end_char": 27226
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 82                    | −36                   | 51                    | 9                     | 13.4001                  | Left middle frontal gyrus (MFG.L)                         |",
+                  "start_char": 27068,
+                  "end_char": 27252
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 82 from the group ICA, peaking at MNI [-36, 51, 9] with a spatial-map z of 13.4001.",
+        "value_source": "generated"
+      }
+    },
+    {
+      "local_id": "reg-pcun-pcg",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Precuneus / posterior cingulate gyrus (PCUN/PCG)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Precuneus / Posterior cingulate gyrus (PCUN/PCG)",
+                  "start_char": 27378,
+                  "end_char": 27426
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "functional_cluster",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The selected ICs were defined as regions of interest (ROIs) to construct the networks.",
+                  "start_char": 11762,
+                  "end_char": 11848
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "| 83                    | −3                    | −63                   | 15                    | 10.8304                  | Precuneus / Posterior cingulate gyrus (PCUN/PCG)          |",
+                  "start_char": 27253,
+                  "end_char": 27437
+                }
+              ]
+            }
+          ]
+        },
+        "value": "Independent component 83 from the group ICA, peaking at MNI [-3, -63, 15] with a spatial-map z of 10.8304.",
+        "value_source": "generated"
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "local_id": "task-rest",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "resting-state",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Resting-state fMRI",
+                  "start_char": 9178,
+                  "end_char": 9196
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Resting-state fMRI with no specified task condition.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The detection of brain states based on time-varying functional connectivity analysis of resting-state fMRI might be conducive for diagnosis and early intervention of ASD before obvious clinical symptoms.",
+                  "start_char": 1498,
+                  "end_char": 1701
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "conditions": [],
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "continuous with no modelled events",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquisitions": [
+        "acq-rest-fmri"
+      ],
+      "instructions": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "stimuli": {
+        "extraction_status": "extracted",
+        "value": "None; resting-state acquisition.",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BOLD fMRI data of each participant were acquired with a whole-brain echo planar imaging (EPI) sequence and interleaved slice acquisition (TR = 2 s, TE = 15 ms, flip angle = 90°, slice thickness = 4 mm, FoV = 240 mm, 180 volumes) on a 3T Allegra scanner.",
+                  "start_char": 6816,
+                  "end_char": 7069
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "response_mode": {
+        "extraction_status": "extracted",
+        "value": [
+          "none"
+        ],
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "performance_measures": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1 — Demographic information of the participants.",
+                  "start_char": 7503,
+                  "end_char": 7557
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Demographic information of the participants.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Demographic information of the participants.",
+                  "start_char": 7513,
+                  "end_char": 7557
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "ADI-R, Autism Diagnostic Interview-Revised; ADOS, Autism Diagnostic Observation Schedule; Subjects evaluated by ADOS module 4 were excluded when we calculated mean and SD of ADOS scores.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ADI-R, Autism Diagnostic Interview-Revised; ADOS, Autism Diagnostic Observation Schedule; Subjects evaluated by ADOS module 4 were excluded when we calculated mean and SD of ADOS scores.",
+                  "start_char": 8954,
+                  "end_char": 9140
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "non_analysis_content": {
+        "extraction_status": "extracted",
+        "value": "demographics",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Demographic information of the participants.",
+                  "start_char": 7513,
+                  "end_char": 7557
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2 — Percentages for three types of connectivity in all clusters of different k-values with significantly different MDTs.",
+                  "start_char": 17263,
+                  "end_char": 17389
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Percentages for three types of connectivity in all clusters of different k-values with significantly different MDTs.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Percentages for three types of connectivity in all clusters of different k-values with significantly different MDTs.",
+                  "start_char": 17273,
+                  "end_char": 17389
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "Bold percentages were of weak connectivity in clusters with significantly different MDTs at different k-values.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Bold percentages were of weak connectivity in clusters with significantly different MDTs at different k-values.",
+                  "start_char": 21640,
+                  "end_char": 21751
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "non_analysis_content": {
+        "extraction_status": "extracted",
+        "value": "descriptive_statistics",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Percentages for three types of connectivity in all clusters of different k-values with significantly different MDTs.",
+                  "start_char": 17273,
+                  "end_char": 17389
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl3",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3 — The abnormal connectivities with ≥ 5 times recurrence in the ASD.",
+                  "start_char": 22697,
+                  "end_char": 22772
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "The abnormal connectivities with ≥ 5 times recurrence in the ASD.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The abnormal connectivities with ≥ 5 times recurrence in the ASD.",
+                  "start_char": 22707,
+                  "end_char": 22772
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "tbl4",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 4",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4 — Peak values distribution of the independent component spatial maps.",
+                  "start_char": 24399,
+                  "end_char": 24476
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Peak values distribution of the independent component spatial maps.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Peak values distribution of the independent component spatial maps.",
+                  "start_char": 24409,
+                  "end_char": 24476
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "non_analysis_content": {
+        "extraction_status": "extracted",
+        "value": "component_peaks",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Peak values distribution of the independent component spatial maps.",
+                  "start_char": 24409,
+                  "end_char": 24476
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "measure_connectivity_strength",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "connectivity_strength",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "mean dwell time (MDT)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MDT was the average number of windows that were continuous on the time distribution and classified as the same state, representing the duration of each state.",
+                  "start_char": 13639,
+                  "end_char": 13797
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "average number of consecutive sliding windows assigned to the same connectivity state",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MDT was the average number of windows that were continuous on the time distribution and classified as the same state, representing the duration of each state.",
+                  "start_char": 13639,
+                  "end_char": 13797
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "measure_connectivity_strength_2",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "connectivity_strength",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "functional connectivity between independent components",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                  "start_char": 12201,
+                  "end_char": 12409
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "Pearson correlation in a 22-TR tapered sliding window, taken from the median covariance matrix of each connectivity state",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Time-varying functional connectivity was calculated based on segmented time courses in 148 windows created by a tapered window [a rectangle (width = 22 TRs) with a Gaussian (=3 TRs)] sliding in steps of 1 TR.",
+                  "start_char": 12201,
+                  "end_char": 12409
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inference_none",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "network",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Two-sample   t  -test was used to compare the MDTs of ASD and TD children.",
+                  "start_char": 13835,
+                  "end_char": 13909
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "alpha_level": {
+        "extraction_status": "extracted",
+        "value": 0.05,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MDTs of some states (marked with stars) in the figure were significantly different when values of k were 3 (  T   = 2.1733,   p   = 0.0330 < 0.05)",
+                  "start_char": 16471,
+                  "end_char": 16617
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "inference_none_a_recurrence_threshold_of_five_or_more_k_va",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "roi",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In each   k  -value, median covariance matrices were identified by Manhattan distance priority and tested with the two-sample   t  -test, with a threshold (  p   < 0.001) to identify connectivities with differences. Times of different connectivity at each state for all   k  -values were aggregated. Connectivity with frequency of occurrence ≥5 times was included in the results.",
+                  "start_char": 14103,
+                  "end_char": 14482
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.001,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In each   k  -value, median covariance matrices were identified by Manhattan distance priority and tested with the two-sample   t  -test, with a threshold (  p   < 0.001) to identify connectivities with differences. Times of different connectivity at each state for all   k  -values were aggregated. Connectivity with frequency of occurrence ≥5 times was included in the results.",
+                  "start_char": 14103,
+                  "end_char": 14482
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In each   k  -value, median covariance matrices were identified by Manhattan distance priority and tested with the two-sample   t  -test, with a threshold (  p   < 0.001) to identify connectivities with differences. Times of different connectivity at each state for all   k  -values were aggregated. Connectivity with frequency of occurrence ≥5 times was included in the results.",
+                  "start_char": 14103,
+                  "end_char": 14482
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "none; a recurrence threshold of five or more k-values was used instead",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In each   k  -value, median covariance matrices were identified by Manhattan distance priority and tested with the two-sample   t  -test, with a threshold (  p   < 0.001) to identify connectivities with differences. Times of different connectivity at each state for all   k  -values were aggregated. Connectivity with frequency of occurrence ≥5 times was included in the results.",
+                  "start_char": 14103,
+                  "end_char": 14482
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_allegra",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "Siemens",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "Allegra",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Allegra",
+                  "start_char": 7053,
+                  "end_char": 7060
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

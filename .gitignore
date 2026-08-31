@@ -1,3 +1,8 @@
 .env
 __pycache__
 *.egg-info
+.pytest_cache
+
+# Run artifacts: payloads and records are per-run outputs, and the encoder cache
+# is a rebuildable disk cache of embeddings.
+.cache/

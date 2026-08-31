@@ -1,0 +1,3913 @@
+{
+  "local_id": "rxaz3qhEmJhx",
+  "extraction_metadata": {
+    "extractor_model": "@psyc-aid338-ope-333f18/gpt-5.6-luna",
+    "extractor_version": "review-bootstrap-0.1.0",
+    "source_text_hash": "d6f760b863f55b0a2d1eafe79aef240cdccb35bd97b6acba8282ebfd8cf2de25",
+    "extraction_date": "2026-08-11",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "1. Introduction",
+        "level": 1,
+        "start_char": 1912,
+        "end_char": 6165
+      },
+      {
+        "ordinal": 1,
+        "title": "2. Methods",
+        "level": 1,
+        "start_char": 6165,
+        "end_char": 22815
+      },
+      {
+        "ordinal": 2,
+        "title": "2.1. Participants",
+        "level": 2,
+        "start_char": 6183,
+        "end_char": 7831,
+        "parent_section": "2. Methods"
+      },
+      {
+        "ordinal": 3,
+        "title": "2.2. Experimental Design",
+        "level": 2,
+        "start_char": 7831,
+        "end_char": 9612,
+        "parent_section": "2. Methods"
+      },
+      {
+        "ordinal": 4,
+        "title": "2.3. Image Acquisition",
+        "level": 2,
+        "start_char": 9612,
+        "end_char": 10169,
+        "parent_section": "2. Methods"
+      },
+      {
+        "ordinal": 5,
+        "title": "2.4. fMRI Task",
+        "level": 2,
+        "start_char": 10169,
+        "end_char": 11017,
+        "parent_section": "2. Methods"
+      },
+      {
+        "ordinal": 6,
+        "title": "2.5. Genotyping and Methylation Assay",
+        "level": 2,
+        "start_char": 11017,
+        "end_char": 14070,
+        "parent_section": "2. Methods"
+      },
+      {
+        "ordinal": 7,
+        "title": "2.6. Image Analysis",
+        "level": 2,
+        "start_char": 14070,
+        "end_char": 22815,
+        "parent_section": "2. Methods"
+      },
+      {
+        "ordinal": 8,
+        "title": "3. Results",
+        "level": 1,
+        "start_char": 22815,
+        "end_char": 29569
+      },
+      {
+        "ordinal": 9,
+        "title": "3.1. Participants",
+        "level": 2,
+        "start_char": 22834,
+        "end_char": 24161,
+        "parent_section": "3. Results"
+      },
+      {
+        "ordinal": 10,
+        "title": "3.2. Symptomatic and Behavioural Response to THC",
+        "level": 2,
+        "start_char": 24161,
+        "end_char": 25767,
+        "parent_section": "3. Results"
+      },
+      {
+        "ordinal": 11,
+        "title": "3.3. Regional Brain Response to THC during Fear Processing",
+        "level": 2,
+        "start_char": 25767,
+        "end_char": 26328,
+        "parent_section": "3. Results"
+      },
+      {
+        "ordinal": 12,
+        "title": "3.4. Relationship between AKT1 Genotype (rs1130233) and the Effect of THC on Regional Brain Activation during Fear Processing",
+        "level": 2,
+        "start_char": 26328,
+        "end_char": 27071,
+        "parent_section": "3. Results"
+      },
+      {
+        "ordinal": 13,
+        "title": "3.5. Relationship between Methylation at CpG Site around AKT1 SNP (rs1130233) and the Effect of THC on Regional Brain Activation during Fear Processing",
+        "level": 2,
+        "start_char": 27071,
+        "end_char": 27823,
+        "parent_section": "3. Results"
+      },
+      {
+        "ordinal": 14,
+        "title": "3.6. Relationship between Methylation at CpG Site around AKT1 SNP (rs1130233) and the Number of A Alleles at AKT1 SNP (rs1130233)",
+        "level": 2,
+        "start_char": 27823,
+        "end_char": 28229,
+        "parent_section": "3. Results"
+      },
+      {
+        "ordinal": 15,
+        "title": "3.7. Relationship between AKT1 Genotype (rs1130233) and the Effect of THC on Regional Brain Activation during Fear Processing after Covarying for Methylation at CpG Site",
+        "level": 2,
+        "start_char": 28229,
+        "end_char": 29569,
+        "parent_section": "3. Results"
+      },
+      {
+        "ordinal": 16,
+        "title": "4. Discussion",
+        "level": 1,
+        "start_char": 29569,
+        "end_char": 37959
+      },
+      {
+        "ordinal": 17,
+        "title": "5. Conclusions",
+        "level": 1,
+        "start_char": 37959,
+        "end_char": 38737
+      },
+      {
+        "ordinal": 18,
+        "title": "Tables (floated, no position in the body)",
+        "level": 1,
+        "start_char": 38737,
+        "end_char": 52731
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "A double-blind, randomized, placebo-controlled, within-subject crossover fMRI study investigating whether AKT1 rs1130233 genotype and methylation around CpG sites modulate the acute effect of THC on fear-processing brain activation in 36 healthy males.",
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "We investigated the genetic (  AKT1   rs1130233) and epigenetic modulation of brain function during fear processing in a 2-session, double-blind, cross-over, randomized placebo-controlled THC administration, in 36 healthy males.",
+              "start_char": 717,
+              "end_char": 945
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Double-blind, within-subject, crossover, randomized placebo-controlled design with two sessions at least one month apart; participants received 10 mg THC or matched placebo in pseudo-randomized order and were scanned one hour after administration.",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "each participant was tested on two separate occasions at least one month apart employing a double-blind, within-subject, crossover design.",
+                "start_char": 7900,
+                "end_char": 8038
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "randomized",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "the order of drug administration was pseudo-randomised.",
+                "start_char": 8304,
+                "end_char": 8359
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "crossover",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "within-subject, crossover design",
+                "start_char": 8005,
+                "end_char": 8037
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "double_blind",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "double-blind",
+                "start_char": 849,
+                "end_char": 861
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "arms": [
+      {
+        "local_id": "arm_thc",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "THC",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "10 mg of THC",
+                    "start_char": 8091,
+                    "end_char": 8103
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "description": {
+          "extraction_status": "extracted",
+          "value": "10 mg delta-9-tetrahydrocannabinol, approximately 99.6% pure.",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "10 mg of THC (approximately 99.6% pure, THC-pharm, Frankfurt, Germany)",
+                    "start_char": 8091,
+                    "end_char": 8161
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "arm_kind": {
+          "extraction_status": "extracted",
+          "value": "pharmacological",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "agent": {
+          "extraction_status": "extracted",
+          "value": "delta-9-tetrahydrocannabinol (THC)",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "delta-9-tetrahydrocannabinol (THC)",
+                    "start_char": 197,
+                    "end_char": 231
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "arm_placebo",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "Placebo",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "a placebo",
+                    "start_char": 8165,
+                    "end_char": 8174
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "description": {
+          "extraction_status": "extracted",
+          "value": "Matched gelatin capsule placebo.",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "a placebo (a matched gelatine capsule)",
+                    "start_char": 8165,
+                    "end_char": 8203
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "arm_kind": {
+          "extraction_status": "extracted",
+          "value": "placebo",
+          "value_source": "reported",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "agent": {
+          "extraction_status": "not_reported",
+          "evidence": {
+            "status": "not_applicable"
+          }
+        }
+      }
+    ],
+    "timepoints": [
+      {
+        "local_id": "timepoint_baseline",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "Baseline",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "baseline",
+                    "start_char": 8599,
+                    "end_char": 8607
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "pre_intervention",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "A blood sample for genotyping and methylation analysis was obtained at baseline.",
+                    "start_char": 8664,
+                    "end_char": 8744
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "timepoint_scan",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "fMRI scan one hour post-administration",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Subjects were scanned one hour after administration of THC or placebo.",
+                    "start_char": 9196,
+                    "end_char": 9266
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "post_intervention",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Subjects were scanned one hour after administration of THC or placebo.",
+                    "start_char": 9196,
+                    "end_char": 9266
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 1,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "one hour after administration",
+                    "start_char": 9218,
+                    "end_char": 9247
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "time_from_intervention": {
+          "extraction_status": "extracted",
+          "value": "1 hour",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "one hour after administration",
+                    "start_char": 9218,
+                    "end_char": 9247
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "analyses": [
+    {
+      "local_id": "analysis_tbl3",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Regions of brain activation (Talairach coordinates) showing significantly greater correlation with the number of A alleles of the AKT1 rs1130233 polymorphism un",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Regions of brain activation (Talairach coordinates) showing significantly greater correlation with the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces.",
+                  "start_char": 41905,
+                  "end_char": 42140
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "THC > placebo correlation with AKT1 rs1130233 A-allele count while viewing fearful faces",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3 — Regions of brain activation (Talairach coordinates) showing significantly greater correlation with the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces.",
+                  "start_char": 41895,
+                  "end_char": 42140
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "The higher the number of risk alleles (A) the greater was the effect of THC on fear-related brain activation across a network of brain regions including parahippocampal, fusiform and cingulate gyri.",
+          "Following acute THC exposure allele A was associated with greater activation in the parahipocampal and cingulate gyri during fear processing."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "There was a statistically significant association between the effect of THC on regional brain activation while processing fear and   AKT1   genotype (rs1130233), such that the higher the number of risk alleles (A) the greater was the effect of THC on fear-related brain activation across a network of brain regions ( Figure 2 A and  Table 3 ) that included parahippocampal, fusiform and cingulate gyri.",
+                  "start_char": 26463,
+                  "end_char": 26865
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We then employed a non-parametric repeated measures analysis of variance (ANOVA) whole-brain analysis approach to identify brain regions that were activated by THC relative to the placebo condition.",
+                  "start_char": 19038,
+                  "end_char": 19236
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "measure": "measure_bold_response",
+      "groups": [
+        {
+          "group": "group_healthy_males",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 34,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thus, correlational analyses between genotype and THC effect on brain activation maps both with and without covarying for CpG methylation was performed in the 34 participants with completed neuroimaging and genotyping data.",
+                      "start_char": 7603,
+                      "end_char": 7826
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term_drug_condition",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "THC",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "THC enhanced left parahippocampal gyrus/amydgala engagement while viewing fearful faces compared to neutral faces",
+                        "start_char": 26065,
+                        "end_char": 26178
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "THC enhanced left parahippocampal gyrus/amydgala engagement while viewing fearful faces compared to neutral faces",
+                        "start_char": 26065,
+                        "end_char": 26178
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term_drug_condition",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "placebo",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "there was an attenuation of engagement in these regions under placebo while viewing fearful faces relative to neutral faces",
+                        "start_char": 26186,
+                        "end_char": 26309
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "there was an attenuation of engagement in these regions under placebo while viewing fearful faces relative to neutral faces",
+                        "start_char": 26186,
+                        "end_char": 26309
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term_akt1_a_alleles",
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "correlation",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "We estimated the Pearson’s product moment correlation coefficient at each voxel, in each subject’s standard space, yielding one correlation coefficient (  r  ) per intracerebral voxel.",
+                      "start_char": 21287,
+                      "end_char": 21471
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acquisition_fmri"
+      ],
+      "tasks": [
+        "task_emotional_processing"
+      ],
+      "model_estimation": "model_fmri_group",
+      "inference_settings": "inference_permutation_based_cluster_wise_correction",
+      "tables": [
+        "tbl3"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "Talairach",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The BOLD effect size and SSQ ratio maps were transformed into Talairach space using these transformation methods.",
+                  "start_char": 17291,
+                  "end_char": 17404
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "analysis_tbl4",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Regions of brain activation (Talairach coordinates) showing significantly greater correlation with methylation percentage at CpG island 11–12 around rs1130233 p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4 — Regions of brain activation (Talairach coordinates) showing significantly greater correlation with methylation percentage at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene under THC condition than under placebo condition while viewing fearful faces.",
+                  "start_char": 44479,
+                  "end_char": 44755
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "THC > placebo correlation with methylation percentage at CpG sites 11–12 around AKT1 rs1130233 while viewing fearful faces",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4 — Regions of brain activation (Talairach coordinates) showing significantly greater correlation with methylation percentage at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene under THC condition than under placebo condition while viewing fearful faces.",
+                  "start_char": 44479,
+                  "end_char": 44755
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "The higher the percentage of methylation at this site, the greater was the effect of THC on fear-related brain activation across a network of brain regions including parahippocampal and cingulate gyri.",
+          "Following acute THC exposure, increased methylation percentage around the SNP locus was associated with greater activation in the same brain regions whilst fear processing."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "There was a significant association between the effect of THC on regional brain activation while processing fear, and methylation at CpG  site, such that the higher the percentage of methylation at this site, the greater was the effect of THC on fear-related brain activation across a network of brain regions ( Figure 2 B and  Table 4 ) that included parahippocampal and cingulate gyri.",
+                  "start_char": 27232,
+                  "end_char": 27619
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We then employed a non-parametric repeated measures analysis of variance (ANOVA) whole-brain analysis approach to identify brain regions that were activated by THC relative to the placebo condition.",
+                  "start_char": 19038,
+                  "end_char": 19236
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "measure": "measure_bold_response",
+      "groups": [
+        {
+          "group": "group_healthy_males",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 35,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Additionally, as another participant was unable to complete the fMRI scan under the THC condition, the effect of THC on activation compared to placebo and its correlation with percentage CpG methylation at site 11–12 were investigated in the 35 subjects.",
+                      "start_char": 7348,
+                      "end_char": 7602
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term_drug_condition",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "THC",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "THC enhanced left parahippocampal gyrus/amydgala engagement while viewing fearful faces compared to neutral faces",
+                        "start_char": 26065,
+                        "end_char": 26178
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "THC enhanced left parahippocampal gyrus/amydgala engagement while viewing fearful faces compared to neutral faces",
+                        "start_char": 26065,
+                        "end_char": 26178
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term_drug_condition",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "placebo",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "there was an attenuation of engagement in these regions under placebo while viewing fearful faces relative to neutral faces",
+                        "start_char": 26186,
+                        "end_char": 26309
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "there was an attenuation of engagement in these regions under placebo while viewing fearful faces relative to neutral faces",
+                        "start_char": 26186,
+                        "end_char": 26309
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term_methylation",
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "correlation",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "We estimated the Pearson’s product moment correlation coefficient at each voxel, in each subject’s standard space, yielding one correlation coefficient (  r  ) per intracerebral voxel.",
+                      "start_char": 21287,
+                      "end_char": 21471
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acquisition_fmri"
+      ],
+      "tasks": [
+        "task_emotional_processing"
+      ],
+      "model_estimation": "model_fmri_group",
+      "inference_settings": "inference_permutation_based_cluster_wise_correction",
+      "tables": [
+        "tbl4"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "Talairach",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The BOLD effect size and SSQ ratio maps were transformed into Talairach space using these transformation methods.",
+                  "start_char": 17291,
+                  "end_char": 17404
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "analysis_tbl5",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Regions of brain activation (Talairach coordinates) showing significantly greater correlation with the number of A alleles of the AKT1 rs1130233 polymorphism un",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 5 — Regions of brain activation (Talairach coordinates) showing significantly greater correlation with the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces after controlling for percentage methylation at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene.",
+                  "start_char": 48284,
+                  "end_char": 48641
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "THC > placebo correlation with AKT1 rs1130233 A-allele dosage while viewing fearful faces, after controlling for methylation percentage",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 5 — Regions of brain activation (Talairach coordinates) showing significantly greater correlation with the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces after controlling for percentage methylation at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene.",
+                  "start_char": 48284,
+                  "end_char": 48641
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Some of the association between AKT1 rs1130233 polymorphism and effect of THC on fear-related brain activation was no longer present after covarying for percentage methylation at the CpG site.",
+          "This suggested that methylation percentage at the CpG site partly mediated some of the association between AKT1 rs1130233 polymorphism and the effect of THC on fear-related brain activation."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "This suggested that methylation percentage at the CpG  site partly mediated some of the association between   AKT1   rs1130233 polymorphism and the effect of THC on fear-related brain activation.",
+                  "start_char": 28904,
+                  "end_char": 29099
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We then employed a non-parametric repeated measures analysis of variance (ANOVA) whole-brain analysis approach to identify brain regions that were activated by THC relative to the placebo condition.",
+                  "start_char": 19038,
+                  "end_char": 19236
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "measure": "measure_bold_response",
+      "groups": [
+        {
+          "group": "group_healthy_males",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 34,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thus, correlational analyses between genotype and THC effect on brain activation maps both with and without covarying for CpG methylation was performed in the 34 participants with completed neuroimaging and genotyping data.",
+                      "start_char": 7603,
+                      "end_char": 7826
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term_drug_condition",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "THC",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "THC enhanced left parahippocampal gyrus/amydgala engagement while viewing fearful faces compared to neutral faces",
+                        "start_char": 26065,
+                        "end_char": 26178
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "THC enhanced left parahippocampal gyrus/amydgala engagement while viewing fearful faces compared to neutral faces",
+                        "start_char": 26065,
+                        "end_char": 26178
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term_drug_condition",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "placebo",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "there was an attenuation of engagement in these regions under placebo while viewing fearful faces relative to neutral faces",
+                        "start_char": 26186,
+                        "end_char": 26309
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "there was an attenuation of engagement in these regions under placebo while viewing fearful faces relative to neutral faces",
+                        "start_char": 26186,
+                        "end_char": 26309
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term_akt1_a_alleles",
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "correlation",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "We estimated the Pearson’s product moment correlation coefficient at each voxel, in each subject’s standard space, yielding one correlation coefficient (  r  ) per intracerebral voxel.",
+                      "start_char": 21287,
+                      "end_char": 21471
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acquisition_fmri"
+      ],
+      "tasks": [
+        "task_emotional_processing"
+      ],
+      "model_estimation": "model_fmri_group",
+      "inference_settings": "inference_permutation_based_cluster_wise_correction",
+      "tables": [
+        "tbl5"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "Talairach",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The BOLD effect size and SSQ ratio maps were transformed into Talairach space using these transformation methods.",
+                  "start_char": 17291,
+                  "end_char": 17404
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "extracted",
+        "value": "Percentage methylation at CpG sites 11–12 was included as a covariate.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Finally, to investigate the extent to which the association between genotype and THC effect on fear-related brain activation was mediated by methylation at the CpG 11–12 site, we carried out a final correlational analysis between genotype (  AKT1   rs130233) and the effect of THC on brain activation during fear processing, while covarying for methylation percentage at the CpG site 11–12.",
+                  "start_char": 20187,
+                  "end_char": 20577
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "analysis_tbl6",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Clusters of brain activation where the significantly greater correlation between the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition ",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 6 — Clusters of brain activation where the significantly greater correlation between the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces may be mediated by correlation with methylation percentage at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene.",
+                  "start_char": 51860,
+                  "end_char": 52213
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Greater correlation under THC than placebo while viewing fearful faces, mediated by correlation with AKT1 methylation percentage",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 6 — Clusters of brain activation where the significantly greater correlation between the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces may be mediated by correlation with methylation percentage at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene.",
+                  "start_char": 51860,
+                  "end_char": 52213
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Methylation around the rs1130233 SNP partially mediated the effect of AKT1 genotype on fear processing in the parahippocampal gyrus and hippocampus, extending to the STG and insula."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Finally, the most novel finding from this study is that, following acute THC exposure, methylation around the rs1130233 SNP partially mediated the effect of   AKT1   genotype on fear processing in the parahippocampal gyrus and hippocampus, extending to the STG and insula.",
+                  "start_char": 30595,
+                  "end_char": 30867
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The probability for each cluster was chosen to set the level of expected Type I error clusters to less than 1 error cluster per whole brain under the null hypothesis.",
+                  "start_char": 22643,
+                  "end_char": 22809
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "measure": "measure_bold_response",
+      "groups": [
+        {
+          "group": "group_healthy_males",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 34,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thus, correlational analyses between genotype and THC effect on brain activation maps both with and without covarying for CpG methylation was performed in the 34 participants with completed neuroimaging and genotyping data.",
+                      "start_char": 7603,
+                      "end_char": 7826
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term_drug_condition",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "THC",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "under THC condition",
+                        "start_char": 42063,
+                        "end_char": 42082
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "significantly greater correlation",
+                        "start_char": 41965,
+                        "end_char": 41998
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "term_drug_condition",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "placebo",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "under placebo condition",
+                        "start_char": 42088,
+                        "end_char": 42111
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "term_akt1_a_alleles",
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "mediation": {
+          "path": {
+            "extraction_status": "extracted",
+            "value": "indirect",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "methylation around the rs1130233 SNP partially mediated the effect of   AKT1   genotype on fear processing",
+                      "start_char": 30682,
+                      "end_char": 30788
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "mediator": "term_methylation"
+        },
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "correlation",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "the significantly greater correlation between the number of A alleles",
+                      "start_char": 51905,
+                      "end_char": 51974
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acquisition_fmri"
+      ],
+      "tasks": [
+        "task_emotional_processing"
+      ],
+      "model_estimation": "model_fmri_group",
+      "inference_settings": "inference_permutation_based_cluster_wise_correction",
+      "tables": [
+        "tbl6"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "Talairach",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Tal(x)",
+                  "start_char": 52265,
+                  "end_char": 52271
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "group_healthy_males",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Healthy males",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Thirty-six right-handed healthy males",
+                  "start_char": 6209,
+                  "end_char": 6246
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Thirty-six right-handed healthy male participants; all had used cannabis at least once but no more than 25 times in their lifetime, with no personal or first-degree family history of psychiatric illness.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Thirty-six right-handed healthy males, mean age 25.97 ± 5.8 years and IQ of 97.7 ± 6 took part in the study.",
+                  "start_char": 6209,
+                  "end_char": 6317
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "healthy males",
+                  "start_char": 931,
+                  "end_char": 944
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "approached_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "consented_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 36,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Thirty-six right-handed healthy males",
+                  "start_char": 6209,
+                  "end_char": 6246
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 35,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Genotyped for the   AKT1   G>A rs1130233 SNP by KBioscience (Herts, UK;  , accessed on 28 July 2021) successfully for 35 out of the 36 subjects",
+                  "start_char": 11161,
+                  "end_char": 11304
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "excluded_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "Healthy male participants",
+          "Right-handed",
+          "Lifetime cannabis use at least once and no more than 25 times"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Thirty-six right-handed healthy males",
+                  "start_char": 6209,
+                  "end_char": 6246
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "exclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "Personal or first-degree family history of psychiatric illness",
+          "Regular illicit drug use",
+          "More than 21 units of alcohol per week",
+          "Cannabis or illicit drug use during the 30 days before the study or between sessions"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "None had a personal or family (first-degree relative) history of psychiatric illness.",
+                  "start_char": 6318,
+                  "end_char": 6403
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "recruitment_method": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "recruitment_dates": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 25.97,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "mean age 25.97 ± 5.8 years",
+                  "start_char": 6248,
+                  "end_char": 6274
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 5.8,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "mean age 25.97 ± 5.8 years",
+                  "start_char": 6248,
+                  "end_char": 6274
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "years",
+                  "start_char": 6269,
+                  "end_char": 6274
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "healthy males",
+                  "start_char": 931,
+                  "end_char": 944
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [],
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "medications": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "medication_status": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "sex_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "male",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "males",
+                      "start_char": 939,
+                      "end_char": 944
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 36,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thirty-six right-handed healthy males",
+                      "start_char": 6209,
+                      "end_char": 6246
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "local_id": "task_emotional_processing",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Emotional fear-processing task",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the emotional (fear) processing task",
+                  "start_char": 10235,
+                  "end_char": 10271
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Participants viewed neutral, mildly fearful, or intensely fearful faces and indicated the gender of each face using a button box; fixation crosses were presented during inter-stimulus intervals.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The blood oxygen level-dependant (BOLD) haemodynamic response was measured in subjects while they viewed faces that are neutral, mild or intensively fearful, or a crosshair.",
+                  "start_char": 10331,
+                  "end_char": 10504
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "conditions": [
+        {
+          "local_id": "condition_intense_fear",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "Intensely fearful faces",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "‘intensely fearful faces’",
+                      "start_char": 17467,
+                      "end_char": 17492
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Viewing intensely fearful facial stimuli.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "‘intensely fearful faces’",
+                      "start_char": 17467,
+                      "end_char": 17492
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "condition_mild_fear",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "Mildly fearful faces",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "‘mildly fearful faces’",
+                      "start_char": 17494,
+                      "end_char": 17516
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Viewing mildly fearful facial stimuli.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "‘mildly fearful faces’",
+                      "start_char": 17494,
+                      "end_char": 17516
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "condition_neutral",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "Neutral faces",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "‘neutral faces’",
+                      "start_char": 17518,
+                      "end_char": 17533
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Viewing neutral facial stimuli; used as the baseline condition for fear contrasts.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "‘neutral faces’",
+                      "start_char": 17518,
+                      "end_char": 17533
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "condition_fixation",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "Fixation cross",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "a fixation cross",
+                      "start_char": 10824,
+                      "end_char": 10840
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Fixation cross shown during 3–8 second inter-stimulus intervals.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "During the inter-stimulus interval, subjects were shown a fixation cross for 3–8 s according to a Poisson distribution.",
+                      "start_char": 10768,
+                      "end_char": 10887
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "event-related",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquisitions": [
+        "acquisition_fmri"
+      ],
+      "presentation_software": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "instructions": {
+        "extraction_status": "extracted",
+        "value": "Indicate the gender of each face using one of two buttons.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The subjects were asked to indicate the gender of the faces shown on the screen using a button-box.",
+                  "start_char": 10505,
+                  "end_char": 10604
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stimuli": {
+        "extraction_status": "extracted",
+        "value": "Neutral, mildly fearful, and intensely fearful faces; fixation cross during inter-stimulus intervals.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "faces that are neutral, mild or intensively fearful, or a crosshair",
+                  "start_char": 10436,
+                  "end_char": 10503
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "response_mode": {
+        "extraction_status": "extracted",
+        "value": [
+          "button_press"
+        ],
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "using a button-box",
+                  "start_char": 10585,
+                  "end_char": 10603
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "performance_measures": {
+        "extraction_status": "extracted",
+        "value": [
+          "Reaction time",
+          "Accuracy"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Performance data were collected in the form of reaction time and accuracy while indicating the gender of the facial stimuli.",
+                  "start_char": 10888,
+                  "end_char": 11012
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "assessments": [
+    {
+      "local_id": "assessment_stai",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Spielberger State-Trait Anxiety Inventory—state subscale (STAI-state)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Spielberger state-trait anxiety inventory- state subscale (STAI-state)",
+                  "start_char": 8856,
+                  "end_char": 8926
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Measure of self-rated state anxiety.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Spielberger state-trait anxiety inventory- state subscale (STAI-state)",
+                  "start_char": 8856,
+                  "end_char": 8926
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "assessment_panss",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Positive and Negative Syndrome Scale (PANSS)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Psychotomimetic effects were assessed by a clinician using the positive negative symptom scale (PANSS) [ 36 ].",
+                  "start_char": 8745,
+                  "end_char": 8855
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Clinician-assessed psychotomimetic symptoms.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Psychotomimetic effects were assessed by a clinician using the positive negative symptom scale (PANSS) [ 36 ].",
+                  "start_char": 8745,
+                  "end_char": 8855
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Psychotomimetic effects were assessed by a clinician using the positive negative symptom scale (PANSS) [ 36 ].",
+                  "start_char": 8745,
+                  "end_char": 8855
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "assessment_ais",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Analogue Intoxication Scale (AIS)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The analogue intoxication scale (AIS) was used to measure self-rated intoxication sedation [ 38 ],",
+                  "start_char": 8974,
+                  "end_char": 9072
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Self-rated intoxication and sedation.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The analogue intoxication scale (AIS) was used to measure self-rated intoxication sedation [ 38 ],",
+                  "start_char": 8974,
+                  "end_char": 9072
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The analogue intoxication scale (AIS) was used to measure self-rated intoxication sedation [ 38 ],",
+                  "start_char": 8974,
+                  "end_char": 9072
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "assessment_vams",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Visual Analogue Mood Scale (VAMS), mental sedation subscale",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the visual analogue mood scale was used to measure self-reported sedation (VAMS; the mental sedation subscale) [ 39 ].",
+                  "start_char": 9077,
+                  "end_char": 9195
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Self-reported sedation measure.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the visual analogue mood scale was used to measure self-reported sedation (VAMS; the mental sedation subscale) [ 39 ].",
+                  "start_char": 9077,
+                  "end_char": 9195
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the visual analogue mood scale was used to measure self-reported sedation (VAMS; the mental sedation subscale) [ 39 ].",
+                  "start_char": 9077,
+                  "end_char": 9195
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acquisition_fmri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "functional magnetic resonance imaging (fMRI)",
+                  "start_char": 1026,
+                  "end_char": 1070
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_duration_seconds": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 1.5,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Images were acquired on a 1.5 Tesla Signa System (GE) at the Institute of Psychiatry, Psychology & Neuroscience, London.",
+                  "start_char": 9643,
+                  "end_char": 9763
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "T2*-weighted",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "T2*—weighted images were taken using TR of 2000 ms; with 40 ms echo time; a flip angle of 90° in 16 axial planes 7 mm thick, parallel to anterior commissure posterior commissure line.",
+                  "start_char": 9764,
+                  "end_char": 9947
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 2,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "T2*—weighted images were taken using TR of 2000 ms;",
+                  "start_char": 9764,
+                  "end_char": 9815
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.04
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "with 40 ms echo time;",
+                  "start_char": 9816,
+                  "end_char": 9837
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          3,
+          3,
+          7
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a 3 mm contiguous slices and an in-plane resolution of 3 mm",
+                  "start_char": 10072,
+                  "end_char": 10131
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "number_of_volumes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "device": "dev_signa_system"
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "preprocessing_fmri",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Functional images were realigned to a study-specific template, spatially smoothed, modeled with gamma-variate haemodynamic functions, and transformed to Talairach standard space.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "XBAM_v4.1"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The images were analysed using a non-parametric software package, XBAM_v4.1,",
+                  "start_char": 14098,
+                  "end_char": 14174
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "Realignment/motion correction",
+          "Spatial smoothing",
+          "BOLD response modeling",
+          "Permutation testing",
+          "Transformation to Talairach space"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Firstly, correction for head motion was completed by realigning the images,",
+                  "start_char": 14766,
+                  "end_char": 14841
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "smoothing_fwhm_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          7.2
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a 7.2 mm full-width-at-half-maximum Gaussian filter",
+                  "start_char": 15321,
+                  "end_char": 15372
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "model_fmri_group",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "mixed_effects",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "that uses a mixed effect-approach and robust permutation-based method.",
+                  "start_char": 14692,
+                  "end_char": 14762
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "Non-parametric repeated-measures ANOVA and robust permutation-based mixed-effects voxelwise analysis",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We could then directly compare group activation at each condition using non-parametric repeated-measure analysis of variance (ANOVA) [ 44 ].",
+                  "start_char": 17927,
+                  "end_char": 18067
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "hrf_model": {
+        "extraction_status": "extracted",
+        "value": "Two gamma-variate functions peaking at 4 and 8 seconds",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Individual activation maps were created by modelling the BOLD signal using 2 gamma-variate functions for each experimental condition, peaking at 4 and 8 s to allow for variability in haemodynamic delay.",
+                  "start_char": 15445,
+                  "end_char": 15647
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Constrained BOLD effects model; SSQ ratio statistic; wavelet-based permutation testing; cluster-wise Type I error control with fewer than one false-positive cluster per brain.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The test statistic is calculated by standardizing for individual differences in residual noise before beginning second-level, multi-subject testing, that uses a mixed effect-approach and robust permutation-based method.",
+                  "start_char": 14543,
+                  "end_char": 14762
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "before beginning second-level, multi-subject testing",
+                  "start_char": 14638,
+                  "end_char": 14690
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "Robust permutation-based estimation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "robust permutation-based method",
+                  "start_char": 14730,
+                  "end_char": 14761
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "XBAM_v4.1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The images were analysed using a non-parametric software package, XBAM_v4.1,",
+                  "start_char": 14098,
+                  "end_char": 14174
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "term_drug_condition",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "drug condition",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "each drug condition (THC, placebo)",
+                      "start_char": 17544,
+                      "end_char": 17578
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "for each drug condition (THC, placebo)",
+                      "start_char": 17540,
+                      "end_char": 17578
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "THC",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "THC",
+                          "start_char": 137,
+                          "end_char": 140
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "arms": [
+                "arm_thc"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "placebo",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "placebo",
+                          "start_char": 886,
+                          "end_char": 893
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "arms": [
+                "arm_placebo"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "each participant was tested on two separate occasions at least one month apart employing a double-blind, within-subject, crossover design.",
+                      "start_char": 7900,
+                      "end_char": 8038
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "functional_form": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        },
+        {
+          "local_id": "term_fear_condition",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "fear-processing condition",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "intensely fearful faces",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "‘intensely fearful faces’",
+                          "start_char": 17467,
+                          "end_char": 17492
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "condition_intense_fear"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "mildly fearful faces",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "‘mildly fearful faces’",
+                          "start_char": 17494,
+                          "end_char": 17516
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "condition_mild_fear"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "neutral faces",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "‘neutral faces’",
+                          "start_char": 17518,
+                          "end_char": 17533
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "condition_neutral"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "for each participant",
+                      "start_char": 19016,
+                      "end_char": 19036
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "functional_form": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        },
+        {
+          "local_id": "term_akt1_a_alleles",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "number of A alleles at AKT1 rs1130233",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "genotype (“number of A alleles +1”, at the   AKT1   rs1130233 locus, coded as G/G = 1 G/A = 2 and A/A = 3)",
+                      "start_char": 20726,
+                      "end_char": 20832
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "genotype (“number of A alleles +1”, at the   AKT1   rs1130233 locus, coded as G/G = 1 G/A = 2 and A/A = 3)",
+                      "start_char": 20726,
+                      "end_char": 20832
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "randomly permuting subjects and their associated genotype or methylation levels between the groups (without replacement)",
+                      "start_char": 21708,
+                      "end_char": 21828
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "functional_form": {
+            "extraction_status": "extracted",
+            "value": "linear",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "the higher the number of risk alleles (A) the greater was the effect of THC on fear-related brain activation",
+                      "start_char": 26635,
+                      "end_char": 26743
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "unit": {
+            "extraction_status": "extracted",
+            "value": "number of A alleles",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "number of A alleles",
+                      "start_char": 20737,
+                      "end_char": 20756
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "source_definition": {
+            "extraction_status": "extracted",
+            "value": "AKT1 rs1130233 genotype coded G/G = 1, G/A = 2, A/A = 3.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "coded as G/G = 1 G/A = 2 and A/A = 3",
+                      "start_char": 20795,
+                      "end_char": 20831
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "term_methylation",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "percentage methylation at CpG sites 11–12 around AKT1 rs1130233",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "methylation percentage at CpG site 11–12",
+                      "start_char": 20859,
+                      "end_char": 20899
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "methylation percentage at CpG site 11–12",
+                      "start_char": 20859,
+                      "end_char": 20899
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "between the groups",
+                      "start_char": 21788,
+                      "end_char": 21806
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "functional_form": {
+            "extraction_status": "extracted",
+            "value": "linear",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "As expected, there was a linear relationship (  r   = 0.869,   p   ≤ 0.001) between the number of A alleles at   AKT1   rs1130233 and methylation percentage at CpG sites 11–12, (therefore the higher the number of A alleles the higher the methylation percentage).",
+                      "start_char": 27962,
+                      "end_char": 28224
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "unit": {
+            "extraction_status": "extracted",
+            "value": "percentage",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "As expected, there was a linear relationship (  r   = 0.869,   p   ≤ 0.001) between the number of A alleles at   AKT1   rs1130233 and methylation percentage at CpG sites 11–12, (therefore the higher the number of A alleles the higher the methylation percentage).",
+                      "start_char": 27962,
+                      "end_char": 28224
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "source_definition": {
+            "extraction_status": "extracted",
+            "value": "Percentage methylation at CpG sites 11–12 around the AKT1 rs1130233 locus, measured using the Sequenom EpiTYPER platform.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "A total of 19 CpG sites were analysed in 14 CpG island blocks. This was such that CpG sites 6 and 7, 9 and 10, 11 and 12, 17 and 18, were analysed as a single site, due to their close proximity and high numbers of C and G nucleotides in between them, making them difficult to distinguish individually. Reactions were performed in duplicate and methylation analysis was carried out following established [ 43 ] using the Sequenom EpiTYPER platform (Sequenom Inc., San Diego, CA, USA), a reliable way of finding the density of methylated cytosines at specific genomic loci.",
+                      "start_char": 12286,
+                      "end_char": 12857
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "inputs_from": [],
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The test statistic is calculated by standardizing for individual differences in residual noise before beginning second-level, multi-subject testing, that uses a mixed effect-approach and robust permutation-based method.",
+                  "start_char": 14543,
+                  "end_char": 14762
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "preprocessing_fmri"
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1",
+                  "start_char": 6505,
+                  "end_char": 6512
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Previous use of psychoactive substances by participants (amended from our previous publication [8]).",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1 — Previous use of psychoactive substances by participants (amended from our previous publication [8]).",
+                  "start_char": 38783,
+                  "end_char": 38893
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2",
+                  "start_char": 11428,
+                  "end_char": 11435
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Participants by genotype, average age, NART IQ and education.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2 — Participants by genotype, average age, NART IQ and education.",
+                  "start_char": 41206,
+                  "end_char": 41277
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "tbl3",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3",
+                  "start_char": 26796,
+                  "end_char": 26803
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Regions of brain activation (Talairach coordinates) showing significantly greater correlation with the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces. L and R indicate the left and right hemisphere.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3 — Regions of brain activation (Talairach coordinates) showing significantly greater correlation with the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces. L and R indicate the left and right hemisphere.",
+                  "start_char": 41895,
+                  "end_char": 42188
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "tbl4",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 4",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4",
+                  "start_char": 27560,
+                  "end_char": 27567
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Regions of brain activation (Talairach coordinates) showing significantly greater correlation with methylation percentage at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene under THC condition than under placebo condition while viewing fearful faces. L and R indicate the left and right hemisphere.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4 — Regions of brain activation (Talairach coordinates) showing significantly greater correlation with methylation percentage at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene under THC condition than under placebo condition while viewing fearful faces. L and R indicate the left and right hemisphere.",
+                  "start_char": 44479,
+                  "end_char": 44803
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "tbl5",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 5",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 5",
+                  "start_char": 28833,
+                  "end_char": 28840
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Regions of brain activation (Talairach coordinates) showing significantly greater correlation with the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces after controlling for percentage methylation at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene. L and R indicate the left and right hemisphere.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 5 — Regions of brain activation (Talairach coordinates) showing significantly greater correlation with the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces after controlling for percentage methylation at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene. L and R indicate the left and right hemisphere.",
+                  "start_char": 48284,
+                  "end_char": 48689
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "tbl6",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 6",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 6",
+                  "start_char": 29554,
+                  "end_char": 29561
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Clusters of brain activation where the significantly greater correlation between the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces may be mediated by correlation with methylation percentage at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene. L and R indicate the left and right hemisphere.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 6 — Clusters of brain activation where the significantly greater correlation between the number of A alleles of the AKT1 rs1130233 polymorphism under THC condition than under placebo condition while viewing fearful faces may be mediated by correlation with methylation percentage at CpG island 11–12 around rs1130233 polymorphism in the AKT1 gene. L and R indicate the left and right hemisphere.",
+                  "start_char": 51860,
+                  "end_char": 52261
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "measure_bold_response",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The blood oxygen level-dependant (BOLD) haemodynamic response was measured in subjects while they viewed faces that are neutral, mild or intensively fearful, or a crosshair.",
+                  "start_char": 10331,
+                  "end_char": 10504
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "bold_response",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The blood oxygen level-dependant (BOLD) haemodynamic response was measured in subjects while they viewed faces that are neutral, mild or intensively fearful, or a crosshair.",
+                  "start_char": 10331,
+                  "end_char": 10504
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "BOLD effect size",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The BOLD effect size and SSQ ratio maps were transformed into Talairach space using these transformation methods.",
+                  "start_char": 17291,
+                  "end_char": 17404
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inference_permutation_based_cluster_wise_correction",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "cluster",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The statistical analysis was then extended to the 3D cluster level, previously described [ 51 ].",
+                  "start_char": 22546,
+                  "end_char": 22642
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "Table 6 — Clusters of brain activation",
+                  "start_char": 51860,
+                  "end_char": 51898
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.05,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A voxel-wise statistical threshold of   p   = 0.05 was used",
+                  "start_char": 18234,
+                  "end_char": 18293
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "voxelwise_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A voxel-wise statistical threshold of   p   = 0.05 was used",
+                  "start_char": 18234,
+                  "end_char": 18293
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "permutation-based cluster-wise correction",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A null distribution was then appropriately generated by randomly permuting subjects and their associated genotype or methylation levels between the groups (without replacement), therefore scrambling any group differences.",
+                  "start_char": 21652,
+                  "end_char": 21873
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "The probability for each cluster was chosen to set the level of expected Type I error clusters to less than 1 error cluster per whole brain under the null hypothesis.",
+                  "start_char": 22643,
+                  "end_char": 22809
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correction_scope": {
+        "extraction_status": "extracted",
+        "value": "whole brain",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The probability for each cluster was chosen to set the level of expected Type I error clusters to less than 1 error cluster per whole brain under the null hypothesis.",
+                  "start_char": 22643,
+                  "end_char": 22809
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "tfce_used": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "permutation_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "alpha_level": {
+        "extraction_status": "extracted",
+        "value": 0.05,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A voxel-wise statistical threshold of   p   = 0.05 was used",
+                  "start_char": 18234,
+                  "end_char": 18293
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "number_of_tests": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_signa_system",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "GE",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Images were acquired on a 1.5 Tesla Signa System (GE) at the Institute of Psychiatry, Psychology & Neuroscience, London.",
+                  "start_char": 9643,
+                  "end_char": 9763
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "Signa System",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Images were acquired on a 1.5 Tesla Signa System (GE) at the Institute of Psychiatry, Psychology & Neuroscience, London.",
+                  "start_char": 9643,
+                  "end_char": 9763
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

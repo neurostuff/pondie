@@ -1,0 +1,988 @@
+{
+ "paper_id": "eaEGQiVtDp9e",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis_ccd_7d_gt_28d",
+   "term": "term_group",
+   "level": "CCD",
+   "label": "group : CCD",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "held",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_ccd_7d_gt_28d",
+   "term": "term_group",
+   "level": "Sham",
+   "label": "group : Sham",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_ccd_7d_gt_28d",
+   "term": "term_group",
+   "level": "Tuina",
+   "label": "group : Tuina",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_ccd_7d_gt_28d",
+   "term": "term_timepoint",
+   "level": "D28",
+   "label": "timepoint : D28",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_ccd_7d_gt_28d",
+   "term": "term_timepoint",
+   "level": "D7",
+   "label": "timepoint : D7",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_ccd_7d_gt_28d",
+   "term": "term_timepoint",
+   "level": "baseline",
+   "label": "timepoint : baseline",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_ccd_7d_lt_28d",
+   "term": "term_group",
+   "level": "CCD",
+   "label": "group : CCD",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "held",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_ccd_7d_lt_28d",
+   "term": "term_group",
+   "level": "Sham",
+   "label": "group : Sham",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_ccd_7d_lt_28d",
+   "term": "term_group",
+   "level": "Tuina",
+   "label": "group : Tuina",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_ccd_7d_lt_28d",
+   "term": "term_timepoint",
+   "level": "D28",
+   "label": "timepoint : D28",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_ccd_7d_lt_28d",
+   "term": "term_timepoint",
+   "level": "D7",
+   "label": "timepoint : D7",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_ccd_7d_lt_28d",
+   "term": "term_timepoint",
+   "level": "baseline",
+   "label": "timepoint : baseline",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_ccd",
+   "term": "term_group",
+   "level": "CCD",
+   "label": "group : CCD",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_ccd",
+   "term": "term_group",
+   "level": "Sham",
+   "label": "group : Sham",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_ccd",
+   "term": "term_group",
+   "level": "Tuina",
+   "label": "group : Tuina",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_ccd",
+   "term": "term_timepoint",
+   "level": "D28",
+   "label": "timepoint : D28",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_ccd",
+   "term": "term_timepoint",
+   "level": "D7",
+   "label": "timepoint : D7",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_ccd",
+   "term": "term_timepoint",
+   "level": "baseline",
+   "label": "timepoint : baseline",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_tuina",
+   "term": "term_group",
+   "level": "CCD",
+   "label": "group : CCD",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_tuina",
+   "term": "term_group",
+   "level": "Sham",
+   "label": "group : Sham",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_tuina",
+   "term": "term_group",
+   "level": "Tuina",
+   "label": "group : Tuina",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_tuina",
+   "term": "term_timepoint",
+   "level": "D28",
+   "label": "timepoint : D28",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_tuina",
+   "term": "term_timepoint",
+   "level": "D7",
+   "label": "timepoint : D7",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_sham_gt_tuina",
+   "term": "term_timepoint",
+   "level": "baseline",
+   "label": "timepoint : baseline",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tuina_7d_gt_28d",
+   "term": "term_group",
+   "level": "CCD",
+   "label": "group : CCD",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tuina_7d_gt_28d",
+   "term": "term_group",
+   "level": "Sham",
+   "label": "group : Sham",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tuina_7d_gt_28d",
+   "term": "term_group",
+   "level": "Tuina",
+   "label": "group : Tuina",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "held",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tuina_7d_gt_28d",
+   "term": "term_timepoint",
+   "level": "D28",
+   "label": "timepoint : D28",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tuina_7d_gt_28d",
+   "term": "term_timepoint",
+   "level": "D7",
+   "label": "timepoint : D7",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tuina_7d_gt_28d",
+   "term": "term_timepoint",
+   "level": "baseline",
+   "label": "timepoint : baseline",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tuina_7d_lt_28d",
+   "term": "term_group",
+   "level": "CCD",
+   "label": "group : CCD",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tuina_7d_lt_28d",
+   "term": "term_group",
+   "level": "Sham",
+   "label": "group : Sham",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tuina_7d_lt_28d",
+   "term": "term_group",
+   "level": "Tuina",
+   "label": "group : Tuina",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "held",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tuina_7d_lt_28d",
+   "term": "term_timepoint",
+   "level": "D28",
+   "label": "timepoint : D28",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tuina_7d_lt_28d",
+   "term": "term_timepoint",
+   "level": "D7",
+   "label": "timepoint : D7",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tuina_7d_lt_28d",
+   "term": "term_timepoint",
+   "level": "baseline",
+   "label": "timepoint : baseline",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tuina_gt_ccd",
+   "term": "term_group",
+   "level": "CCD",
+   "label": "group : CCD",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tuina_gt_ccd",
+   "term": "term_group",
+   "level": "Sham",
+   "label": "group : Sham",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tuina_gt_ccd",
+   "term": "term_group",
+   "level": "Tuina",
+   "label": "group : Tuina",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tuina_gt_ccd",
+   "term": "term_timepoint",
+   "level": "D28",
+   "label": "timepoint : D28",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tuina_gt_ccd",
+   "term": "term_timepoint",
+   "level": "D7",
+   "label": "timepoint : D7",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tuina_gt_ccd",
+   "term": "term_timepoint",
+   "level": "baseline",
+   "label": "timepoint : baseline",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tuina_gt_sham",
+   "term": "term_group",
+   "level": "CCD",
+   "label": "group : CCD",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tuina_gt_sham",
+   "term": "term_group",
+   "level": "Sham",
+   "label": "group : Sham",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tuina_gt_sham",
+   "term": "term_group",
+   "level": "Tuina",
+   "label": "group : Tuina",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tuina_gt_sham",
+   "term": "term_timepoint",
+   "level": "D28",
+   "label": "timepoint : D28",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tuina_gt_sham",
+   "term": "term_timepoint",
+   "level": "D7",
+   "label": "timepoint : D7",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tuina_gt_sham",
+   "term": "term_timepoint",
+   "level": "baseline",
+   "label": "timepoint : baseline",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  }
+ ],
+ "analyses": {
+  "analysis_tuina_gt_ccd": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_sham_gt_ccd": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_tuina_gt_sham": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_sham_gt_tuina": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_tuina_7d_gt_28d": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_tuina_7d_lt_28d": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_ccd_7d_gt_28d": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_ccd_7d_lt_28d": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  }
+ }
+}

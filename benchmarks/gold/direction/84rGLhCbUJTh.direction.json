@@ -1,0 +1,742 @@
+{
+ "paper_id": "84rGLhCbUJTh",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis-ad-baseline",
+   "term": "term-group-baseline",
+   "level": "OCD patients",
+   "label": "diagnostic group : OCD patients",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-ad-baseline",
+   "term": "term-group-baseline",
+   "level": "healthy controls",
+   "label": "diagnostic group : healthy controls",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-fa-baseline",
+   "term": "term-group-baseline",
+   "level": "OCD patients",
+   "label": "diagnostic group : OCD patients",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-fa-baseline",
+   "term": "term-group-baseline",
+   "level": "healthy controls",
+   "label": "diagnostic group : healthy controls",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-md-baseline",
+   "term": "term-group-baseline",
+   "level": "OCD patients",
+   "label": "diagnostic group : OCD patients",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-md-baseline",
+   "term": "term-group-baseline",
+   "level": "healthy controls",
+   "label": "diagnostic group : healthy controls",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-md-region-interaction",
+   "term": "term-region",
+   "level": "abnormal MD regions",
+   "label": "brain regions with abnormal DTI-derived parameters : abnormal MD regions",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-md-region-interaction",
+   "term": "term-region",
+   "level": "abnormal RD regions",
+   "label": "brain regions with abnormal DTI-derived parameters : abnormal RD regions",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-md-region-interaction",
+   "term": "term-time-x-region",
+   "level": "",
+   "label": "pre/post treatment × brain region  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "undirected",
+     "tier": "silent",
+     "predicted": "undirected"
+    }
+   ],
+   "direction": "undirected",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-md-region-interaction",
+   "term": "term-time",
+   "level": "after 12-week SSRI treatment",
+   "label": "treatment timepoint : after 12-week SSRI treatment",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-md-region-interaction",
+   "term": "term-time",
+   "level": "before 12-week SSRI treatment",
+   "label": "treatment timepoint : before 12-week SSRI treatment",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-md-treatment",
+   "term": "term-region",
+   "level": "abnormal MD regions",
+   "label": "brain regions with abnormal DTI-derived parameters : abnormal MD regions",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-md-treatment",
+   "term": "term-region",
+   "level": "abnormal RD regions",
+   "label": "brain regions with abnormal DTI-derived parameters : abnormal RD regions",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-md-treatment",
+   "term": "term-time-x-region",
+   "level": "",
+   "label": "pre/post treatment × brain region  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-md-treatment",
+   "term": "term-time",
+   "level": "after 12-week SSRI treatment",
+   "label": "treatment timepoint : after 12-week SSRI treatment",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-md-treatment",
+   "term": "term-time",
+   "level": "before 12-week SSRI treatment",
+   "label": "treatment timepoint : before 12-week SSRI treatment",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-medication-history",
+   "term": "term-medication-history",
+   "level": "drug-naive",
+   "label": "medication history : drug-naive",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "not_reported"
+    },
+    {
+     "annotator": 1,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-medication-history",
+   "term": "term-medication-history",
+   "level": "previously medicated",
+   "label": "medication history : previously medicated",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "not_reported"
+    },
+    {
+     "annotator": 1,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-rd-baseline",
+   "term": "term-group-baseline",
+   "level": "OCD patients",
+   "label": "diagnostic group : OCD patients",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-rd-baseline",
+   "term": "term-group-baseline",
+   "level": "healthy controls",
+   "label": "diagnostic group : healthy controls",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-rd-region-interaction",
+   "term": "term-region",
+   "level": "abnormal MD regions",
+   "label": "brain regions with abnormal DTI-derived parameters : abnormal MD regions",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-rd-region-interaction",
+   "term": "term-region",
+   "level": "abnormal RD regions",
+   "label": "brain regions with abnormal DTI-derived parameters : abnormal RD regions",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-rd-region-interaction",
+   "term": "term-time-x-region",
+   "level": "",
+   "label": "pre/post treatment × brain region  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "undirected",
+     "tier": "silent",
+     "predicted": "undirected"
+    }
+   ],
+   "direction": "undirected",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-rd-region-interaction",
+   "term": "term-time",
+   "level": "after 12-week SSRI treatment",
+   "label": "treatment timepoint : after 12-week SSRI treatment",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-rd-region-interaction",
+   "term": "term-time",
+   "level": "before 12-week SSRI treatment",
+   "label": "treatment timepoint : before 12-week SSRI treatment",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-rd-treatment",
+   "term": "term-region",
+   "level": "abnormal MD regions",
+   "label": "brain regions with abnormal DTI-derived parameters : abnormal MD regions",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-rd-treatment",
+   "term": "term-region",
+   "level": "abnormal RD regions",
+   "label": "brain regions with abnormal DTI-derived parameters : abnormal RD regions",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-rd-treatment",
+   "term": "term-time-x-region",
+   "level": "",
+   "label": "pre/post treatment × brain region  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-rd-treatment",
+   "term": "term-time",
+   "level": "after 12-week SSRI treatment",
+   "label": "treatment timepoint : after 12-week SSRI treatment",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-rd-treatment",
+   "term": "term-time",
+   "level": "before 12-week SSRI treatment",
+   "label": "treatment timepoint : before 12-week SSRI treatment",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-ybocs-fa-striatum",
+   "term": "term-age-covariate",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis-ybocs-fa-striatum",
+   "term": "term-ybocs",
+   "level": "",
+   "label": "Y-BOCS total score  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  }
+ ],
+ "analyses": {
+  "analysis-fa-baseline": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis-rd-baseline": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis-ad-baseline": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-md-baseline": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-rd-treatment": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  },
+  "analysis-rd-region-interaction": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  },
+  "analysis-md-treatment": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  },
+  "analysis-md-region-interaction": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  },
+  "analysis-medication-history": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "uncertain"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  },
+  "analysis-ybocs-fa-striatum": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  }
+ }
+}

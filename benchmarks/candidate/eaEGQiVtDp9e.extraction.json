@@ -1,0 +1,4902 @@
+{
+  "local_id": "eaEGQiVtDp9e",
+  "extraction_metadata": {
+    "extractor_model": "@psyc-aid338-ope-333f18/gpt-5.6-luna",
+    "extractor_version": "review-bootstrap-0.1.0",
+    "source_text_hash": "403f9bb80bc97e7935457eeb8e4eda25919d1f3e7f0c05bc8820f78061cf95ab",
+    "extraction_date": "2026-08-28",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "Introduction",
+        "level": 1,
+        "start_char": 2317,
+        "end_char": 9215
+      },
+      {
+        "ordinal": 1,
+        "title": "Materials and methods",
+        "level": 1,
+        "start_char": 9215,
+        "end_char": 19498
+      },
+      {
+        "ordinal": 2,
+        "title": "Animals",
+        "level": 2,
+        "start_char": 9244,
+        "end_char": 10207,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 3,
+        "title": "Groups and CCD surgery",
+        "level": 2,
+        "start_char": 10207,
+        "end_char": 11462,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 4,
+        "title": "Tuina intervention",
+        "level": 2,
+        "start_char": 11462,
+        "end_char": 12573,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 5,
+        "title": "Behavioral tests",
+        "level": 2,
+        "start_char": 12573,
+        "end_char": 14274,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 6,
+        "title": "fMRI image acquisition",
+        "level": 2,
+        "start_char": 14274,
+        "end_char": 15393,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 7,
+        "title": "fMRI data preprocessing",
+        "level": 2,
+        "start_char": 15393,
+        "end_char": 16795,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 8,
+        "title": "Amplitude of low frequency fluctuation analysis",
+        "level": 2,
+        "start_char": 16795,
+        "end_char": 17879,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 9,
+        "title": "Statistical analysis",
+        "level": 2,
+        "start_char": 17879,
+        "end_char": 19498,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 10,
+        "title": "Results",
+        "level": 1,
+        "start_char": 19498,
+        "end_char": 45042
+      },
+      {
+        "ordinal": 11,
+        "title": "Tuina ameliorates both mechanical and thermal allodynia induced by CCD",
+        "level": 2,
+        "start_char": 19513,
+        "end_char": 22614,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 12,
+        "title": "ALFF maps between the three groups on day 28 following surgery",
+        "level": 2,
+        "start_char": 22614,
+        "end_char": 32967,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 13,
+        "title": "ALFF maps of the Tuina group between days 7 and 28 following surgery",
+        "level": 2,
+        "start_char": 32967,
+        "end_char": 36704,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 14,
+        "title": "ALFF maps of the CCD group between days 7 and 28 following surgery",
+        "level": 2,
+        "start_char": 36704,
+        "end_char": 42086,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 15,
+        "title": "Positive association between ALFF values and behavioral tests of the right hindlimb",
+        "level": 2,
+        "start_char": 42086,
+        "end_char": 45042,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 16,
+        "title": "Discussion",
+        "level": 1,
+        "start_char": 45042,
+        "end_char": 54086
+      },
+      {
+        "ordinal": 17,
+        "title": "Data availability statement",
+        "level": 1,
+        "start_char": 54086,
+        "end_char": 54289
+      },
+      {
+        "ordinal": 18,
+        "title": "Ethics statement",
+        "level": 1,
+        "start_char": 54289,
+        "end_char": 54554
+      },
+      {
+        "ordinal": 19,
+        "title": "Author contributions",
+        "level": 1,
+        "start_char": 54554,
+        "end_char": 54947
+      },
+      {
+        "ordinal": 20,
+        "title": "Funding",
+        "level": 1,
+        "start_char": 54947,
+        "end_char": 55327
+      },
+      {
+        "ordinal": 21,
+        "title": "Conflict of interest",
+        "level": 1,
+        "start_char": 55327,
+        "end_char": 55531
+      },
+      {
+        "ordinal": 22,
+        "title": "Publisher’s note",
+        "level": 1,
+        "start_char": 55531,
+        "end_char": 55901
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "An animal study examining changes in resting-state ALFF after Tuina therapy in a rat model of neuropathic pain induced by chronic compression of the dorsal root ganglion.",
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "In this study, we used resting-state functional magnetic resonance imaging (R-fMRI) to explore the analgesic mechanism of Tuina in an NP rat model",
+              "start_char": 413,
+              "end_char": 559
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "hypothesis": {
+    "extraction_status": "not_reported",
+    "evidence": {
+      "status": "not_applicable"
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Three groups of rats were randomly assigned to sham surgery, CCD surgery, or CCD surgery followed by Tuina. Tuina was administered daily for 25 days. Behavioral testing occurred at baseline and after surgery, and resting-state fMRI was acquired at baseline and 7 and 28 days after surgery.",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "Rats were randomly separated into three groups. The sham operation group (Sham) underwent skin incision and muscle separation but no further insertion. Animals in the chronic compression of the dorsal root ganglion group (CCD) only had the CCD surgery; while Animals in the Tuina group (Tuina) underwent CCD surgery followed by Tuina intervention",
+                "start_char": 10238,
+                "end_char": 10584
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "randomized",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "Rats were randomly separated into three groups",
+                "start_char": 10238,
+                "end_char": 10284
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "parallel",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "assessor_blind",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "Behavioral analyses were conducted by researchers blinded to the groups",
+                "start_char": 18139,
+                "end_char": 18210
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "arms": [],
+    "timepoints": [
+      {
+        "local_id": "tp_7days",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "7 days",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "at D7",
+                    "start_char": 14500,
+                    "end_char": 14505
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "post_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 1,
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "time_from_intervention": {
+          "extraction_status": "extracted",
+          "value": "7 days following surgery",
+          "value_source": "reported",
+          "evidence": {
+            "status": "not_found"
+          }
+        }
+      },
+      {
+        "local_id": "tp_28days",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "28 days",
+          "value_source": "reported",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "post_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 2,
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "time_from_intervention": {
+          "extraction_status": "extracted",
+          "value": "28 days following surgery",
+          "value_source": "reported",
+          "evidence": {
+            "status": "not_found"
+          }
+        }
+      }
+    ]
+  },
+  "analyses": [
+    {
+      "local_id": "a_tab1_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Tuina > CCD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Tuina>CCD",
+                  "start_char": 24710,
+                  "end_char": 24719
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "ALFF differences between the Tuina group and the CCD group 28 days after surgery; Tuina > CCD.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences between the Tuina group and the CCD group 28 days after surgery.",
+                  "start_char": 23673,
+                  "end_char": 23776
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Compared to those of the CCD group, the ALFF values of the Tuina group were significantly elevated 28 days after CCD surgery."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_alff",
+      "groups": [
+        {
+          "group": "grp_tuina",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 10,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "n   = 10 in the Tuina group",
+                      "start_char": 22158,
+                      "end_char": 22185
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_ccd",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 9,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "n = 9 in the Sham and CCD group",
+                      "start_char": 22120,
+                      "end_char": 22151
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Tuina",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Tuina>CCD",
+                        "start_char": 24710,
+                        "end_char": 24719
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "CCD",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Tuina>CCD",
+                        "start_char": 24710,
+                        "end_char": 24719
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Peak t-value",
+                      "start_char": 24441,
+                      "end_char": 24453
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_rest"
+      ],
+      "model_estimation": "mod_group",
+      "inference_settings": "inf_alff",
+      "tables": [
+        "tbl1"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab1#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1 — Brain regions showing ALFF differences between the Tuina group and the CCD group 28 days after surgery.",
+                  "start_char": 24239,
+                  "end_char": 24352
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI",
+                  "start_char": 24115,
+                  "end_char": 24118
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_tab2_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Sham > CCD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Sham>CCD",
+                  "start_char": 28148,
+                  "end_char": 28156
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "ALFF differences between the CCD group and the Sham group 28 days after surgery; Sham > CCD.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences between the CCD group and the Sham group 28 days after surgery.",
+                  "start_char": 27115,
+                  "end_char": 27217
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Compared with those of the sham group, the ALFF values of the CCD group were significantly decreased at 28 days following surgery."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Compared with those of the sham group, the ALFF values of the CCD group were significantly decreased in the left amygdalohyppocampic area, left amygdalopiriform cortex, left subiculum, left descending corticofugal pathways and globus pallidum, and bilateral dentate gyrus",
+                  "start_char": 26338,
+                  "end_char": 26609
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_alff",
+      "groups": [
+        {
+          "group": "grp_sham",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 9,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "n = 9 in the Sham and CCD group",
+                      "start_char": 22120,
+                      "end_char": 22151
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_ccd",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 9,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "n = 9 in the Sham and CCD group",
+                      "start_char": 22120,
+                      "end_char": 22151
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Sham",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Sham>CCD",
+                        "start_char": 28148,
+                        "end_char": 28156
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Compared with those of the sham group, the ALFF values of the CCD group were significantly decreased",
+                        "start_char": 26338,
+                        "end_char": 26438
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "CCD",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Sham>CCD",
+                        "start_char": 28148,
+                        "end_char": 28156
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Compared with those of the sham group, the ALFF values of the CCD group were significantly decreased",
+                        "start_char": 26338,
+                        "end_char": 26438
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Peak t-value",
+                      "start_char": 24441,
+                      "end_char": 24453
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_rest"
+      ],
+      "model_estimation": "mod_group",
+      "inference_settings": "inf_alff",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab2#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2 — Brain regions showing ALFF differences between the CCD group and the Sham group 28 days after surgery.",
+                  "start_char": 27680,
+                  "end_char": 27792
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI",
+                  "start_char": 24115,
+                  "end_char": 24118
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_tab3_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Tuina > Sham",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Tuina>Sham",
+                  "start_char": 31638,
+                  "end_char": 31648
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "ALFF differences between the Tuina group and the Sham group 28 days after surgery; Tuina > Sham.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences between the Tuina group and the Sham group 28 days after surgery.",
+                  "start_char": 30653,
+                  "end_char": 30757
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "ALFF values in the Tuina group were significantly increased compared with the Sham group in the left striatum."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ALFF values in the left striatum was significantly increased",
+                  "start_char": 29995,
+                  "end_char": 30055
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_alff",
+      "groups": [
+        {
+          "group": "grp_tuina",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 10,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "n   = 10 in the Tuina group",
+                      "start_char": 22158,
+                      "end_char": 22185
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_sham",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 9,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "n = 9 in the Sham and CCD group",
+                      "start_char": 22120,
+                      "end_char": 22151
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Tuina",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Tuina>Sham",
+                        "start_char": 31638,
+                        "end_char": 31648
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "ALFF values in the left striatum was significantly increased",
+                        "start_char": 29995,
+                        "end_char": 30055
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Sham",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Tuina>Sham",
+                        "start_char": 31638,
+                        "end_char": 31648
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "ALFF values in the left striatum was significantly increased",
+                        "start_char": 29995,
+                        "end_char": 30055
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Peak t-value",
+                      "start_char": 24441,
+                      "end_char": 24453
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_rest"
+      ],
+      "model_estimation": "mod_group",
+      "inference_settings": "inf_alff",
+      "tables": [
+        "tbl3"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab3#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3 — Brain regions showing ALFF differences between the Tuina group and the Sham group 28 days after surgery.",
+                  "start_char": 31220,
+                  "end_char": 31334
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI",
+                  "start_char": 24115,
+                  "end_char": 24118
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_tab3_2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Sham > Tuina",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Sham>Tuina",
+                  "start_char": 31788,
+                  "end_char": 31798
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "ALFF differences between the Tuina group and the Sham group 28 days after surgery; Sham > Tuina.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences between the Tuina group and the Sham group 28 days after surgery.",
+                  "start_char": 30653,
+                  "end_char": 30757
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "ALFF values in the Tuina group were significantly decreased compared with the Sham group in the reported regions."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Compared with those of the sham group, the ALFF values of Tuina group were significantly decreased in the left amygdalohyppocampic area, left amygdalopiriform cortex, left subiculum, and bilateral dentate gyrus.",
+                  "start_char": 29771,
+                  "end_char": 29982
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_alff",
+      "groups": [
+        {
+          "group": "grp_tuina",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 10,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "n   = 10 in the Tuina group",
+                      "start_char": 22158,
+                      "end_char": 22185
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_sham",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 9,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "n = 9 in the Sham and CCD group",
+                      "start_char": 22120,
+                      "end_char": 22151
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Sham",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Sham>Tuina",
+                        "start_char": 31788,
+                        "end_char": 31798
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Tuina>Sham",
+                        "start_char": 31638,
+                        "end_char": 31648
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Tuina",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Sham",
+                        "start_char": 10312,
+                        "end_char": 10316
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Sham>Tuina",
+                        "start_char": 31788,
+                        "end_char": 31798
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Peak t-value",
+                      "start_char": 24441,
+                      "end_char": 24453
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_rest"
+      ],
+      "model_estimation": "mod_group",
+      "inference_settings": "inf_alff",
+      "tables": [
+        "tbl3"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab3#2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3 — Brain regions showing ALFF differences between the Tuina group and the Sham group 28 days after surgery.",
+                  "start_char": 31220,
+                  "end_char": 31334
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI",
+                  "start_char": 24115,
+                  "end_char": 24118
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_tab4_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "7d > 28d",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "7d > 28d",
+                  "start_char": 35043,
+                  "end_char": 35051
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "ALFF differences in the Tuina group between 7 days and 28 days after surgery; 7d > 28d.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences of Tuina group between 7 days and 28 days after surgery.",
+                  "start_char": 34068,
+                  "end_char": 34163
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "ALFF signals in the reported regions were significantly higher on day 7 than on day 28 in the Tuina group."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "On the 28th day, the ALFF signals of the left dentate gyrus, left secondary somatosensory cortex, left striatum, and bilateral primary cingulate cortex were significantly elevated contrasted to those on day 7, while signals of the right dentate gyrus and bilateral periaqueductal gray were significantly decreased compared to those on the 7th day",
+                  "start_char": 33161,
+                  "end_char": 33507
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_alff",
+      "groups": [
+        {
+          "group": "grp_tuina",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 10,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "n   = 10 in the Tuina group",
+                      "start_char": 22158,
+                      "end_char": 22185
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_time",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "7 days",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "7d > 28d",
+                        "start_char": 35043,
+                        "end_char": 35051
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "7d > 28d",
+                        "start_char": 35043,
+                        "end_char": 35051
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_time",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "28 days",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "28d",
+                        "start_char": 35048,
+                        "end_char": 35051
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "7d > 28d",
+                        "start_char": 35043,
+                        "end_char": 35051
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Peak t-value",
+                      "start_char": 24441,
+                      "end_char": 24453
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_rest"
+      ],
+      "model_estimation": "mod_time",
+      "inference_settings": "inf_alff",
+      "tables": [
+        "tbl4"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab4#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4 — Brain regions showing ALFF differences of Tuina group between 7 days and 28 days after surgery.",
+                  "start_char": 34626,
+                  "end_char": 34731
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI",
+                  "start_char": 24115,
+                  "end_char": 24118
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_tab4_2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "7d < 28d",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "7d < 28d",
+                  "start_char": 35505,
+                  "end_char": 35513
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "ALFF differences in the Tuina group between 7 days and 28 days after surgery; 7d < 28d.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences of Tuina group between 7 days and 28 days after surgery.",
+                  "start_char": 34068,
+                  "end_char": 34163
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "ALFF signals in the reported regions were significantly higher on day 28 than on day 7 in the Tuina group."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "On the 28th day, the ALFF signals of the left dentate gyrus, left secondary somatosensory cortex, left striatum, and bilateral primary cingulate cortex were significantly elevated contrasted to those on day 7, while signals of the right dentate gyrus and bilateral periaqueductal gray were significantly decreased compared to those on the 7th day",
+                  "start_char": 33161,
+                  "end_char": 33507
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_alff",
+      "groups": [
+        {
+          "group": "grp_tuina",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 10,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "n   = 10 in the Tuina group",
+                      "start_char": 22158,
+                      "end_char": 22185
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_time",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "28 days",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "28d",
+                        "start_char": 35048,
+                        "end_char": 35051
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "7d < 28d",
+                        "start_char": 35505,
+                        "end_char": 35513
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_time",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "7 days",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "7d",
+                        "start_char": 35043,
+                        "end_char": 35045
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "7d < 28d",
+                        "start_char": 35505,
+                        "end_char": 35513
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Peak t-value",
+                      "start_char": 24441,
+                      "end_char": 24453
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_rest"
+      ],
+      "model_estimation": "mod_time",
+      "inference_settings": "inf_alff",
+      "tables": [
+        "tbl4"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab4#2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4 — Brain regions showing ALFF differences of Tuina group between 7 days and 28 days after surgery.",
+                  "start_char": 34626,
+                  "end_char": 34731
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI",
+                  "start_char": 24115,
+                  "end_char": 24118
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_tab5_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "7d > 28d",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "7d > 28d",
+                  "start_char": 35043,
+                  "end_char": 35051
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "ALFF differences in the CCD group between 7 days and 28 days after surgery; 7d > 28d.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences of CCD group between 7 days and 28 days after surgery.",
+                  "start_char": 38002,
+                  "end_char": 38095
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "ALFF signals in the reported regions were significantly higher on day 7 than on day 28 in the CCD group."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_alff",
+      "groups": [
+        {
+          "group": "grp_ccd",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 9,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_time",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "7 days",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "7d > 28d",
+                        "start_char": 35043,
+                        "end_char": 35051
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "7d > 28d",
+                        "start_char": 35043,
+                        "end_char": 35051
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_time",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "28 days",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "28d",
+                        "start_char": 35048,
+                        "end_char": 35051
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "7d > 28d",
+                        "start_char": 35043,
+                        "end_char": 35051
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Peak t-value",
+                      "start_char": 24441,
+                      "end_char": 24453
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_rest"
+      ],
+      "model_estimation": "mod_time",
+      "inference_settings": "inf_alff",
+      "tables": [
+        "tbl5"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab5#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 5 — Brain regions showing ALFF differences of CCD group between 7 days and 28 days after surgery.",
+                  "start_char": 38558,
+                  "end_char": 38661
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI",
+                  "start_char": 24115,
+                  "end_char": 24118
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_tab5_2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "7d < 28d",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "ALFF differences in the CCD group between 7 days and 28 days after surgery; 7d < 28d.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "ALFF signals in the reported regions were significantly higher on day 28 than on day 7 in the CCD group."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_alff",
+      "groups": [
+        {
+          "group": "grp_ccd",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 9,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "All data are expressed as mean ± SEM (n = 9 in the Sham and CCD group and   n   = 10 in the Tuina group).",
+                      "start_char": 22082,
+                      "end_char": 22187
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_time",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "28 days",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "On the 28th day",
+                        "start_char": 33161,
+                        "end_char": 33176
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "On the 28th day, the ALFF signals of the left parasubiculum, right secondary somatosensory cortex, right descending corticofugal pathways, and globus pallidum, bilateral basal forebrain region, bilateral cingulate cortex, and bilateral striatum were significantly elevated contrasted to those on day 7",
+                        "start_char": 36892,
+                        "end_char": 37193
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_time",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "7 days",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "day 7",
+                        "start_char": 33364,
+                        "end_char": 33369
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "signals of the left CA1, left CA2, left CA3, left dentate gyrus, left periaqueductal gray, and left primary somatosensory cortex barrel field were significantly decreased compared to those on day 7",
+                        "start_char": 37201,
+                        "end_char": 37398
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "a two-sample t test analysis",
+                      "start_char": 33062,
+                      "end_char": 33090
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_rest"
+      ],
+      "model_estimation": "mod_time",
+      "inference_settings": "inf_alff",
+      "tables": [
+        "tbl5"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab5#2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 5 — Brain regions showing ALFF differences of CCD group between 7 days and 28 days after surgery.",
+                  "start_char": 38558,
+                  "end_char": 38661
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI space",
+                  "start_char": 24115,
+                  "end_char": 24124
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acq_fmri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain fMRI scans were conducted",
+                  "start_char": 14305,
+                  "end_char": 14336
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_duration_seconds": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "device": "dev_bruker",
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 11.7,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Bruker 11.7 T MRI system",
+                  "start_char": 14344,
+                  "end_char": 14368
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "single echo planar imaging",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "An interleaved single echo planar imaging sequence",
+                  "start_char": 15156,
+                  "end_char": 15206
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mr_acquisition_type": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 2,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "repetition time: 2000 ms",
+                  "start_char": 15286,
+                  "end_char": 15310
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.0128
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "echo time: 12.8 ms",
+                  "start_char": 15312,
+                  "end_char": 15330
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "number_of_volumes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_bruker",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "Bruker",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Bruker",
+                  "start_char": 14344,
+                  "end_char": 14350
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "BioSpec117/16 USR-TT",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BioSpec117/16 USR-TT",
+                  "start_char": 14370,
+                  "end_char": 14390
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "grp_tuina",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Tuina group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Tuina group",
+                  "start_char": 1037,
+                  "end_char": 1048
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Rats that underwent chronic compression of the dorsal root ganglion followed by Tuina intervention at the ipsilateral BL40 acupoint once daily for 25 days.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Animals in the Tuina group (Tuina) underwent CCD surgery followed by Tuina intervention.",
+                  "start_char": 10497,
+                  "end_char": 10585
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "rat",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A total of 30 male Sprague–Dawley rats",
+                  "start_char": 9778,
+                  "end_char": 9816
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "approached_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "consented_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 10,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "n   = 10 in the Tuina group",
+                  "start_char": 22158,
+                  "end_char": 22185
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 10,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "n   = 10 in the Tuina group",
+                  "start_char": 22158,
+                  "end_char": 22185
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "excluded_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "exclusion_criteria": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "recruitment_method": {
+        "extraction_status": "extracted",
+        "value": "Purchased from Shanghai Jihui Experimental Animal Breeding Co., Ltd.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "were purchased from Shanghai Jihui Experimental Animal Breeding Co., Ltd.",
+                  "start_char": 9879,
+                  "end_char": 9952
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "recruitment_dates": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_mean": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "extracted",
+        "value": 7,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "aged between 7 to 8 weeks",
+                  "start_char": 9818,
+                  "end_char": 9843
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "extracted",
+        "value": 8,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "aged between 7 to 8 weeks",
+                  "start_char": 9818,
+                  "end_char": 9843
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_median": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "weeks",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "7 to 8 weeks",
+                  "start_char": 9831,
+                  "end_char": 9843
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "neuropathic pain",
+          "chronic compression of the dorsal root ganglion"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In the present study, the rats of Tuina group underwent CCD surgery and Tuina at the ipsilateral BL40",
+                  "start_char": 45679,
+                  "end_char": 45780
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "diagnostic_system": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "clinical_characteristics": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "medications": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "medication_status": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "education_summary": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "socioeconomic_status_summary": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "grp_ccd",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "CCD group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "CCD group",
+                  "start_char": 12219,
+                  "end_char": 12228
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Rats that underwent chronic compression of the dorsal root ganglion surgery without Tuina intervention.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Animals in the chronic compression of the dorsal root ganglion group (CCD) only had the CCD surgery",
+                  "start_char": 10390,
+                  "end_char": 10489
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "rat",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "n = 9 in the Sham and CCD group",
+                  "start_char": 22120,
+                  "end_char": 22151
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "approached_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "consented_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 10,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 9,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "n = 9 in the Sham and CCD group",
+                  "start_char": 22120,
+                  "end_char": 22151
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "excluded_count": {
+        "extraction_status": "extracted",
+        "value": 1,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "exclusion_criteria": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "recruitment_method": {
+        "extraction_status": "extracted",
+        "value": "Purchased from Shanghai Jihui Experimental Animal Breeding Co., Ltd.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "were purchased from Shanghai Jihui Experimental Animal Breeding Co., Ltd.",
+                  "start_char": 9879,
+                  "end_char": 9952
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "recruitment_dates": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_mean": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "extracted",
+        "value": 7,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "aged between 7 to 8 weeks",
+                  "start_char": 9818,
+                  "end_char": 9843
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "extracted",
+        "value": 8,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "aged between 7 to 8 weeks",
+                  "start_char": 9818,
+                  "end_char": 9843
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_median": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "weeks",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "7 to 8 weeks",
+                  "start_char": 9831,
+                  "end_char": 9843
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "neuropathic pain",
+          "chronic compression of the dorsal root ganglion"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Animals in the chronic compression of the dorsal root ganglion group (CCD) only had the CCD surgery",
+                  "start_char": 10390,
+                  "end_char": 10489
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "diagnostic_system": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "clinical_characteristics": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "medications": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "medication_status": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "education_summary": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "socioeconomic_status_summary": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "grp_sham",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Sham group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "sham operation group (Sham)",
+                  "start_char": 10290,
+                  "end_char": 10317
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Rats that underwent sham surgery consisting of skin incision and muscle separation without rod insertion.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The sham operation group (Sham) underwent skin incision and muscle separation but no further insertion.",
+                  "start_char": 10286,
+                  "end_char": 10389
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "rat",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "n = 9 in the Sham and CCD group",
+                  "start_char": 22120,
+                  "end_char": 22151
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "approached_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "consented_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 10,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 9,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "n = 9 in the Sham and CCD group",
+                  "start_char": 22120,
+                  "end_char": 22151
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "excluded_count": {
+        "extraction_status": "extracted",
+        "value": 1,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "exclusion_criteria": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "recruitment_method": {
+        "extraction_status": "extracted",
+        "value": "Purchased from Shanghai Jihui Experimental Animal Breeding Co., Ltd.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "were purchased from Shanghai Jihui Experimental Animal Breeding Co., Ltd.",
+                  "start_char": 9879,
+                  "end_char": 9952
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "recruitment_dates": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_mean": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "extracted",
+        "value": 7,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "aged between 7 to 8 weeks",
+                  "start_char": 9818,
+                  "end_char": 9843
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "extracted",
+        "value": 8,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "aged between 7 to 8 weeks",
+                  "start_char": 9818,
+                  "end_char": 9843
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_median": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "weeks",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "7 to 8 weeks",
+                  "start_char": 9831,
+                  "end_char": 9843
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "diagnostic_system": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "clinical_characteristics": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "medications": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "medication_status": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "education_summary": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "socioeconomic_status_summary": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inf_alff",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel-p",
+                  "start_char": 19067,
+                  "end_char": 19074
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.001,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxel-  p   < 0.001",
+                  "start_char": 23541,
+                  "end_char": 23560
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxel-  p   < 0.001",
+                  "start_char": 23541,
+                  "end_char": 23560
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "clusterwise_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.05,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Cluster-  p   < 0.05",
+                  "start_char": 23562,
+                  "end_char": 23582
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "Bonferroni correction",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Bonferroni correction",
+                  "start_char": 22725,
+                  "end_char": 22746
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correction_scope": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "search_volume": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "neighborhood_definition": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "tfce_used": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The one-way ANOVA was performed with Bonferroni correction",
+                  "start_char": 23481,
+                  "end_char": 23539
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "tfce_parameters": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "permutation_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "alpha_level": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "number_of_tests": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "mea_alff",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "blood-oxygen-level-dependent (BOLD) fMRI signal",
+                  "start_char": 48972,
+                  "end_char": 49019
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "bold_derived_metric",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ALFF values are associated with the spontaneous activity of a particular region of the brain.",
+                  "start_char": 49337,
+                  "end_char": 49430
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "amplitude of low frequency fluctuation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "amplitude of low frequency fluctuation (ALFF)",
+                  "start_char": 7416,
+                  "end_char": 7461
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "ALFF",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "amplitude of low frequency fluctuation (ALFF)",
+                  "start_char": 7416,
+                  "end_char": 7461
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "unit": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "mod_group",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "anova",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used one-way ANOVA to examine the differences in ALFF",
+                  "start_char": 19159,
+                  "end_char": 19215
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "one-way ANOVA",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "one-way ANOVA",
+                  "start_char": 19167,
+                  "end_char": 19180
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "hrf_model": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "model_settings": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "ALFF maps between the three groups on day 28 following surgery",
+                  "start_char": 22618,
+                  "end_char": 22680
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "DPABI statistical toolbox from SPM12 in MATLAB 2017a",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Analysis of ALFF was performed by the DPABI statistical toolbox from the SPM12 software provided in MATLAB 2017a",
+                  "start_char": 18743,
+                  "end_char": 18855
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "significant voxels",
+                  "start_char": 23846,
+                  "end_char": 23864
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "trm_group",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "group",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "groups",
+                      "start_char": 10278,
+                      "end_char": 10284
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Rats were randomly separated into three groups",
+                      "start_char": 10238,
+                      "end_char": 10284
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "Tuina",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "the Tuina group (Tuina)",
+                          "start_char": 10508,
+                          "end_char": 10531
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp_tuina"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "CCD",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "the chronic compression of the dorsal root ganglion group (CCD)",
+                          "start_char": 10401,
+                          "end_char": 10464
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp_ccd"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "Sham",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "not_found"
+                }
+              },
+              "groups": [
+                "grp_sham"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Compared to those of the CCD group, the ALFF values of the Tuina group were significantly elevated",
+                      "start_char": 22823,
+                      "end_char": 22921
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "functional_form": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "unit": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "source_definition": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      ],
+      "preprocessing": [
+        "prp_fmri"
+      ]
+    },
+    {
+      "local_id": "mod_time",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "anova",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "two-sample t test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "two-sample t test",
+                  "start_char": 33064,
+                  "end_char": 33081
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "hrf_model": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "model_settings": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "within-group longitudinal",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the Tuina group ALFF maps between days 7 and 28 following surgery",
+                  "start_char": 33094,
+                  "end_char": 33159
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "two-sample t test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "two-sample t test",
+                  "start_char": 33064,
+                  "end_char": 33081
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "DPABI statistical toolbox from SPM12 in MATLAB 2017a",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Analysis of ALFF was performed by the DPABI statistical toolbox from the SPM12 software provided in MATLAB 2017a",
+                  "start_char": 18743,
+                  "end_char": 18855
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "significant voxels",
+                  "start_char": 23846,
+                  "end_char": 23864
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "trm_time",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "scan occasion",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "different times",
+                      "start_char": 18974,
+                      "end_char": 18989
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "between days 7 and 28 following surgery",
+                      "start_char": 33000,
+                      "end_char": 33039
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "7 days",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "7 days",
+                          "start_char": 962,
+                          "end_char": 968
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "timepoints": [
+                "tp_7days"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "28 days",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "28 days",
+                          "start_char": 973,
+                          "end_char": 980
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "timepoints": [
+                "tp_28days"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "between days 7 and 28 following surgery",
+                      "start_char": 33000,
+                      "end_char": 33039
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "functional_form": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "unit": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "source_definition": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      ],
+      "preprocessing": [
+        "prp_fmri"
+      ]
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "prp_fmri",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "fMRI data were converted, denoised, stripped of non-brain tissue, slice-time corrected, realigned, normalized to Montreal Neurological Institute space, resampled to 3 × 3 × 3 mm, and spatially smoothed with a 6 mm kernel.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Raw data were converted from Digital Imaging and Communications in Medicine format to Neuroimaging Informatics Technology Initiative format and the images underwent up to 10 × 10 × 10 times augmentation to meet human brain size without requiring interpolation, enhancing the processing algorithms originally developed for human data. Non-brain tissue was eliminated through a semi-manual process prior to additional preprocessing. The fMRI images underwent slice timing procedures to prevent timing bias arising from slice acquisition. A transformation of the rigid body type was utilized to achieve spatial realignment of the images, hence rectifying voxel misalignment that had arisen from head motion. Finally, a two-step registration method was employed to achieve standard spatial normalization after head movement to the Montreal Neurology Institute space, and the data were resampled to be adjusted to a voxel size of 3 × 3 × 3 mm. We selected 27 voxel smoothing kernels (6 mm) for spatial smoothing",
+                  "start_char": 15668,
+                  "end_char": 16674
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "SPM 12",
+          "MATLAB 2017a"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The fMRI data was preprocessed   via   the Statistical Parametric Mapping 12 (SPM 12) toolbox,  which relies on the MATLAB 2017a platform",
+                  "start_char": 15425,
+                  "end_char": 15562
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "format conversion",
+          "noise processing",
+          "non-brain tissue removal",
+          "slice timing correction",
+          "rigid-body realignment",
+          "spatial normalization to Montreal Neurological Institute space",
+          "resampling"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "format conversion, and noise processing",
+                  "start_char": 15612,
+                  "end_char": 15651
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "smoothing_fwhm_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          6
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "spatial smoothing",
+                  "start_char": 16657,
+                  "end_char": 16674
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "local_id": "tsk_rest",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "resting-state protocol",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "resting-state fMRI",
+                  "start_char": 6795,
+                  "end_char": 6813
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Resting-state functional MRI was acquired in rats at baseline and 7 and 28 days following surgery.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain fMRI scans were conducted with a Bruker 11.7 T MRI system (BioSpec117/16 USR-TT, Bruker, Karlsruhe, Germany) with a 16.0 cm aperture and a 12 cm gradient coil before surgery (baseline) and at D7 and D28 following CCD surgery",
+                  "start_char": 14305,
+                  "end_char": 14535
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "conditions": [],
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "continuous with no modelled events (resting state)",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "presentation_software": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "instructions": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "stimuli": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "response_mode": {
+        "extraction_status": "extracted",
+        "value": [
+          "none"
+        ],
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "performance_measures": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1",
+                  "start_char": 23180,
+                  "end_char": 23187
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Brain regions showing ALFF differences between the Tuina group and the CCD group 28 days after surgery.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences between the Tuina group and the CCD group 28 days after surgery.",
+                  "start_char": 23673,
+                  "end_char": 23776
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "An one-way ANOVA with Bonferroni correction was used to identify significant voxels. The Voxel-p value was set at 0.001, and the Cluster-p was set at 0.05. All tests were two-tailed. The corresponding t-value was then determined by the p values. x, y, z: coordinates of the position of the primary peak in MNI space; ALFF, the amplitude of low frequency fluctuations; MNI, Montreal Neurological Institute; L, Left; R, Right.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "An one-way ANOVA with Bonferroni correction was used to identify significant voxels. The Voxel-p value was set at 0.001, and the Cluster-p was set at 0.05. All tests were two-tailed. The corresponding t-value was then determined by the p values. x, y, z: coordinates of the position of the primary peak in MNI space; ALFF, the amplitude of low frequency fluctuations; MNI, Montreal Neurological Institute; L, Left; R, Right.",
+                  "start_char": 25771,
+                  "end_char": 26195
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2",
+                  "start_char": 26624,
+                  "end_char": 26631
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Brain regions showing ALFF differences between the CCD group and the Sham group 28 days after surgery.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences between the CCD group and the Sham group 28 days after surgery.",
+                  "start_char": 27115,
+                  "end_char": 27217
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "An one-way ANOVA with Bonferroni correction was used to identify significant voxels. The Voxel-p value was set at 0.001, and the Cluster-p was set at 0.05. All tests were two-tailed. The corresponding t-value was then determined by the p values. x, y, z: coordinates of the position of the primary peak in MNI space; ALFF, the amplitude of low frequency fluctuations; MNI, Montreal Neurological Institute; L, Left; R, Right.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "An one-way ANOVA with Bonferroni correction was used to identify significant voxels. The Voxel-p value was set at 0.001, and the Cluster-p was set at 0.05. All tests were two-tailed. The corresponding t-value was then determined by the p values. x, y, z: coordinates of the position of the primary peak in MNI space; ALFF, the amplitude of low frequency fluctuations; MNI, Montreal Neurological Institute; L, Left; R, Right.",
+                  "start_char": 25771,
+                  "end_char": 26195
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl3",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3",
+                  "start_char": 30070,
+                  "end_char": 30077
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Brain regions showing ALFF differences between the Tuina group and the Sham group 28 days after surgery.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences between the Tuina group and the Sham group 28 days after surgery.",
+                  "start_char": 30653,
+                  "end_char": 30757
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "An one-way ANOVA with Bonferroni correction was used to identify significant voxels. The Voxel-p value was set at 0.001, and the Cluster-p was set at 0.05. All tests were two-tailed. The corresponding t-value was then determined by the p values. x, y, z: coordinates of the position of the primary peak in MNI space; ALFF, the amplitude of low frequency fluctuations; MNI, Montreal Neurological Institute; L, Left; R, Right.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "An one-way ANOVA with Bonferroni correction was used to identify significant voxels. The Voxel-p value was set at 0.001, and the Cluster-p was set at 0.05. All tests were two-tailed. The corresponding t-value was then determined by the p values. x, y, z: coordinates of the position of the primary peak in MNI space; ALFF, the amplitude of low frequency fluctuations; MNI, Montreal Neurological Institute; L, Left; R, Right.",
+                  "start_char": 25771,
+                  "end_char": 26195
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl4",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 4",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4",
+                  "start_char": 33522,
+                  "end_char": 33529
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Brain regions showing ALFF differences of Tuina group between 7 days and 28 days after surgery.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences of Tuina group between 7 days and 28 days after surgery.",
+                  "start_char": 34068,
+                  "end_char": 34163
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "An one-way ANOVA with Bonferroni correction was used to identify significant voxels. The Voxel-p value was set at 0.001, and the Cluster-p was set at 0.05. All tests were two-tailed. The corresponding t-value was then determined by the p values. x, y, z: coordinates of the position of the primary peak in MNI space; ALFF, the amplitude of low frequency fluctuations; MNI, Montreal Neurological Institute; L, Left; R, Right.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "An one-way ANOVA with Bonferroni correction was used to identify significant voxels. The Voxel-p value was set at 0.001, and the Cluster-p was set at 0.05. All tests were two-tailed. The corresponding t-value was then determined by the p values. x, y, z: coordinates of the position of the primary peak in MNI space; ALFF, the amplitude of low frequency fluctuations; MNI, Montreal Neurological Institute; L, Left; R, Right.",
+                  "start_char": 25771,
+                  "end_char": 26195
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl5",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 5",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 5",
+                  "start_char": 37413,
+                  "end_char": 37420
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Brain regions showing ALFF differences of CCD group between 7 days and 28 days after surgery.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Brain regions showing ALFF differences of CCD group between 7 days and 28 days after surgery.",
+                  "start_char": 38002,
+                  "end_char": 38095
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "An one-way ANOVA with Bonferroni correction was used to identify significant voxels. The Voxel-p value was set at 0.001, and the Cluster-p was set at 0.05. All tests were two-tailed. The corresponding t-value was then determined by the p values. x, y, z: coordinates of the position of the primary peak in MNI space; ALFF, the amplitude of low frequency fluctuations; MNI, Montreal Neurological Institute; L, Left; R, Right.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "An one-way ANOVA with Bonferroni correction was used to identify significant voxels. The Voxel-p value was set at 0.001, and the Cluster-p was set at 0.05. All tests were two-tailed. The corresponding t-value was then determined by the p values. x, y, z: coordinates of the position of the primary peak in MNI space; ALFF, the amplitude of low frequency fluctuations; MNI, Montreal Neurological Institute; L, Left; R, Right.",
+                  "start_char": 25771,
+                  "end_char": 26195
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

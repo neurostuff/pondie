@@ -1,0 +1,3371 @@
+{
+  "local_id": "84rGLhCbUJTh",
+  "extraction_metadata": {
+    "extractor_model": "@psyc-aid338-ope-333f18/gpt-5.6-luna",
+    "extractor_version": "review-bootstrap-0.1.0",
+    "source_text_hash": "c3d4d0d22c7bac0f641f9e6d8fb36174a21b41152d3cd8d1a505acb21b50b985",
+    "extraction_date": "2026-08-28",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "Background",
+        "level": 1,
+        "start_char": 120,
+        "end_char": 408
+      },
+      {
+        "ordinal": 1,
+        "title": "Objective",
+        "level": 1,
+        "start_char": 408,
+        "end_char": 585
+      },
+      {
+        "ordinal": 2,
+        "title": "Methodology and Principal Findings",
+        "level": 1,
+        "start_char": 585,
+        "end_char": 1735
+      },
+      {
+        "ordinal": 3,
+        "title": "Conclusion",
+        "level": 1,
+        "start_char": 1735,
+        "end_char": 2041
+      },
+      {
+        "ordinal": 4,
+        "title": "Introduction",
+        "level": 1,
+        "start_char": 2041,
+        "end_char": 7035
+      },
+      {
+        "ordinal": 5,
+        "title": "Methods",
+        "level": 1,
+        "start_char": 7035,
+        "end_char": 19671
+      },
+      {
+        "ordinal": 6,
+        "title": "Ethics statement",
+        "level": 2,
+        "start_char": 7050,
+        "end_char": 7407,
+        "parent_section": "Methods"
+      },
+      {
+        "ordinal": 7,
+        "title": "Participants",
+        "level": 2,
+        "start_char": 7407,
+        "end_char": 12089,
+        "parent_section": "Methods"
+      },
+      {
+        "ordinal": 8,
+        "title": "Pharmacotherapy",
+        "level": 2,
+        "start_char": 12089,
+        "end_char": 13331,
+        "parent_section": "Methods"
+      },
+      {
+        "ordinal": 9,
+        "title": "MRI acquisition setting",
+        "level": 2,
+        "start_char": 13331,
+        "end_char": 14279,
+        "parent_section": "Methods"
+      },
+      {
+        "ordinal": 10,
+        "title": "Image processing",
+        "level": 2,
+        "start_char": 14279,
+        "end_char": 17562,
+        "parent_section": "Methods"
+      },
+      {
+        "ordinal": 11,
+        "title": "Statistics",
+        "level": 2,
+        "start_char": 17562,
+        "end_char": 19671,
+        "parent_section": "Methods"
+      },
+      {
+        "ordinal": 12,
+        "title": "Results",
+        "level": 1,
+        "start_char": 19671,
+        "end_char": 33002
+      },
+      {
+        "ordinal": 13,
+        "title": "DTI-derived parameters at baseline",
+        "level": 2,
+        "start_char": 19686,
+        "end_char": 29501,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 14,
+        "title": "Posttreatment changes in DTI-derived parameters",
+        "level": 2,
+        "start_char": 29501,
+        "end_char": 33002,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 15,
+        "title": "Discussion",
+        "level": 1,
+        "start_char": 33002,
+        "end_char": 43502
+      },
+      {
+        "ordinal": 16,
+        "title": "Supporting Information",
+        "level": 1,
+        "start_char": 43502,
+        "end_char": 43527
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "A diffusion tensor imaging study investigating white matter microstructural abnormalities in unmedicated patients with obsessive-compulsive disorder compared with healthy controls, and changes after 12-week SSRI treatment.",
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "Parameter maps of DTI, including fractional anisotropy (FA), axial diffusivity (AD), radial diffusivity (RD) and mean diffusivity (MD), were acquired from 27 unmedicated OCD patients (including 13 drug-naïve individuals) and 23 healthy controls.",
+              "start_char": 627,
+              "end_char": 872
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "hypothesis": {
+    "extraction_status": "extracted",
+    "value": [
+      "abnormalities of white matter microstructure including myelin integrity would be found in OCD patients",
+      "sufficient medication would normalize the changes in white matter microstructure"
+    ],
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "We hypothesized that abnormalities of white matter microstructure including myelin integrity would be found in OCD patients. We also predicted that sufficient medication would normalize the changes in white matter microstructure.",
+              "start_char": 6802,
+              "end_char": 7031
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "The study had a baseline comparison of unmedicated OCD patients and healthy controls, with a 12-week SSRI treatment and follow-up DTI assessment in a subgroup of OCD patients.",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "In the current study, we employed the DTI technique to study white matter abnormality in OCD patients using multiple parameters including FA, AD, RD and MD. These parameters were compared for patients before and after 12-week Selective Serotonin Reuptake Inhibitor (SSRI) pharmacotherapy.",
+                "start_char": 6513,
+                "end_char": 6801
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "non_randomized",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "parallel",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "open_label",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "timepoints": [
+      {
+        "local_id": "tp_baseline",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "baseline",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "at baseline",
+                    "start_char": 9881,
+                    "end_char": 9892
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "pre_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "After receiving clinical feature measurements and DTI scans at baseline, 15 of the 27 OCD patients agreed to accept SSRI treatment only",
+                    "start_char": 12113,
+                    "end_char": 12248
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 1,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Initially, a participant-specific B0 template was built with the data from the 23 controls.",
+                    "start_char": 15362,
+                    "end_char": 15453
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "tp_followup",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "after 12-week SSRI treatment",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "after 12-week SSRI treatment",
+                    "start_char": 13411,
+                    "end_char": 13439
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "post_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "after 12-week SSRI treatments",
+                    "start_char": 13411,
+                    "end_char": 13440
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 2,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Secondly, all original B0 volumes were again normalized to this B0 template",
+                    "start_char": 15820,
+                    "end_char": 15895
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "time_from_intervention": {
+          "extraction_status": "extracted",
+          "value": "12 weeks",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "12-week SSRI treatment",
+                    "start_char": 13417,
+                    "end_char": 13439
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "analyses": [
+    {
+      "local_id": "a_pone_0035889_t002_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "FA",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Voxel-based analysis comparing fractional anisotropy between 27 patients with obsessive-compulsive disorder and 23 healthy controls before medication; patients showed decreased FA.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Significantly decreased FA in patients compared with healthy controls in the left medial superior frontal gyrus, temporo-parietal lobe and middle occipital gyrus and around the left striatum white matter."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_fa",
+      "groups": [
+        {
+          "group": "grp_ocd",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 27,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "group": "grp_controls",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 23,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "healthy controls",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "OCD patients",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 48,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_dti"
+      ],
+      "tasks": [],
+      "model_estimation": "m_vba",
+      "inference_settings": "inf_vba",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "pone-0035889-t002#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_pone_0035889_t002_2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "RD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Voxel-based analysis comparing radial diffusivity between 27 patients with obsessive-compulsive disorder and 23 healthy controls before medication; patients showed increased RD.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Significantly higher RD in patients compared with healthy controls in multiple white matter regions."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_rd",
+      "groups": [
+        {
+          "group": "grp_ocd",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 27,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "group": "grp_controls",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 23,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "OCD patients",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "healthy controls",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 48,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_dti"
+      ],
+      "tasks": [],
+      "model_estimation": "m_vba",
+      "inference_settings": "inf_vba",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "pone-0035889-t002#2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_pone_0035889_t002_3",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "AD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Voxel-based analysis comparing axial diffusivity between 27 patients with obsessive-compulsive disorder and 23 healthy controls before medication; patients showed increased AD.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Significantly higher AD in patients compared with healthy controls in the right frontal lobe."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_ad",
+      "groups": [
+        {
+          "group": "grp_ocd",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 27,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "group": "grp_controls",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 23,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "OCD patients",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "healthy controls",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 48,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_dti"
+      ],
+      "tasks": [],
+      "model_estimation": "m_vba",
+      "inference_settings": "inf_vba",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "pone-0035889-t002#3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_pone_0035889_t002_4",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "MD",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Voxel-based analysis comparing mean diffusivity between 27 patients with obsessive-compulsive disorder and 23 healthy controls before medication; patients showed increased MD.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Significantly increased MD in OCD patients compared with healthy controls in multiple white matter regions."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_md",
+      "groups": [
+        {
+          "group": "grp_ocd",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 27,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "27 patients",
+                      "start_char": 9089,
+                      "end_char": 9100
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_controls",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 23,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "23 healthy controls",
+                      "start_char": 852,
+                      "end_char": 871
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "OCD patients",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "patients",
+                        "start_char": 801,
+                        "end_char": 809
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Significantly higher RD in patients",
+                        "start_char": 19955,
+                        "end_char": 19990
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "healthy controls",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "healthy controls",
+                        "start_char": 855,
+                        "end_char": 871
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "healthy controls",
+                        "start_char": 855,
+                        "end_char": 871
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "2-sample group t-test",
+                      "start_char": 17692,
+                      "end_char": 17713
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "extracted",
+            "value": 48,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "df = 48",
+                      "start_char": 9140,
+                      "end_char": 9147
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_dti"
+      ],
+      "tasks": [],
+      "model_estimation": "m_vba",
+      "inference_settings": "inf_vba",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "pone-0035889-t002#4",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2 — Areas of abnormal DTI-derived parameters in 27 patients with obsessive-compulsive disorder and 23 healthy controls before medication.",
+                  "start_char": 21620,
+                  "end_char": 21763
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "standard Montreal Neurological Institute (MNI) space",
+                  "start_char": 25459,
+                  "end_char": 25511
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "grp_ocd",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "OCD patients",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Twenty-seven patients with OCD",
+                  "start_char": 7428,
+                  "end_char": 7458
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Twenty-seven patients with obsessive-compulsive disorder participated at baseline; 13 were drug-naïve and patients were free of pharmacotherapy for at least 8 weeks before baseline. Fifteen patients subsequently accepted SSRI treatment and were assessed again after 12 weeks.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Twenty-seven patients with OCD and 23 healthy controls participated in the study.",
+                  "start_char": 7428,
+                  "end_char": 7509
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 27,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Twenty-seven patients with OCD",
+                  "start_char": 7428,
+                  "end_char": 7458
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "age between 18 and 54",
+          "no less than 9 years in education",
+          "a DSM-IV diagnosis of OCD",
+          "being free of pharmacotherapy for at least 8 weeks before baseline"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age between 18 and 54; no less than 9 years in education; a DSM-IV diagnosis of OCD; and being free of pharmacotherapy for at least 8 weeks before baseline",
+                  "start_char": 7780,
+                  "end_char": 7935
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "exclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "comorbid Axis I psychiatric disorders",
+          "history of neurologic disorders"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Patients who presented with comorbid Axis I psychiatric disorders and a history of neurologic disorders were excluded.",
+                  "start_char": 7981,
+                  "end_char": 8099
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "recruitment_method": {
+        "extraction_status": "extracted",
+        "value": "recruited from an outpatient clinic at Shanghai Mental Health Center, Shanghai, China",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The OCD patients were recruited from an outpatient clinic at Shanghai Mental Health Center, Shanghai, China.",
+                  "start_char": 7613,
+                  "end_char": 7721
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 25.5,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "25.5±7.0",
+                  "start_char": 10449,
+                  "end_char": 10457
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 7.0,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "25.5±7.0",
+                  "start_char": 10449,
+                  "end_char": 10457
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "extracted",
+        "value": 18,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age between 18 and 54",
+                  "start_char": 7780,
+                  "end_char": 7801
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "extracted",
+        "value": 54,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age between 18 and 54",
+                  "start_char": 7780,
+                  "end_char": 7801
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Age, mean± SD, y",
+                  "start_char": 10416,
+                  "end_char": 10432
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "sex_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "male",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Sex, No. M/F",
+                      "start_char": 10583,
+                      "end_char": 10595
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "17/10",
+                      "start_char": 10616,
+                      "end_char": 10621
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "female",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Sex, No. M/F",
+                      "start_char": 10583,
+                      "end_char": 10595
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 10,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "17/10",
+                      "start_char": 10616,
+                      "end_char": 10621
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "OCD patients showed higher mean HAMA scores",
+                  "start_char": 9242,
+                  "end_char": 9285
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "obsessive-compulsive disorder"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "diagnostic_system": {
+        "extraction_status": "extracted",
+        "value": "DSM-IV",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a DSM-IV diagnosis of OCD",
+                  "start_char": 7838,
+                  "end_char": 7863
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "clinical_characteristics": {
+        "extraction_status": "extracted",
+        "value": "13 of 27 patients were drug-naïve; the group had mean Y-BOCS score 22.0 ± 4.9 at baseline.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "13 of the 27 OCD patients were drug-naive",
+                  "start_char": 7937,
+                  "end_char": 7978
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medications": {
+        "extraction_status": "extracted",
+        "value": [
+          "fluvoxamine",
+          "fluoxetine",
+          "sertraline",
+          "paroxetine"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "SSRI medication included fluvoxamine, 6 patients; fluoxetine 4; sertraline 3; and paroxetine, 2.",
+                  "start_char": 12431,
+                  "end_char": 12527
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medication_status": {
+        "extraction_status": "extracted",
+        "value": "unmedicated at baseline; 15 patients received SSRI treatment during follow-up",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "being free of pharmacotherapy for at least 8 weeks before baseline (13 of the 27 OCD patients were drug-naive)",
+                  "start_char": 7869,
+                  "end_char": 7979
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "grp_controls",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "healthy controls",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "23 healthy controls",
+                  "start_char": 852,
+                  "end_char": 871
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Twenty-three healthy control participants were recruited through local print advertising and scanned at baseline according to the same time frame as the patients.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Control participants were recruited through local print advertising.",
+                  "start_char": 8251,
+                  "end_char": 8319
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 23,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "23 healthy controls",
+                  "start_char": 852,
+                  "end_char": 871
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "age between 18 and 54",
+          "no less than 9 years in education",
+          "no DSM-IV Axis I diagnosis",
+          "absence of a history of neurologic disorders"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age between 18 and 54; no less than 9 years in education; no DSM-IV Axis I diagnosis; and absence of a history of neurologic disorders",
+                  "start_char": 8370,
+                  "end_char": 8504
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "recruitment_method": {
+        "extraction_status": "extracted",
+        "value": "recruited through local print advertising",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Control participants were recruited through local print advertising.",
+                  "start_char": 8251,
+                  "end_char": 8319
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 28.8,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "28.8±7.6",
+                  "start_char": 10556,
+                  "end_char": 10564
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 7.6,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "28.8±7.6",
+                  "start_char": 10556,
+                  "end_char": 10564
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "extracted",
+        "value": 18,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age between 18 and 54",
+                  "start_char": 7780,
+                  "end_char": 7801
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "extracted",
+        "value": 54,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age between 18 and 54",
+                  "start_char": 7780,
+                  "end_char": 7801
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Age, mean± SD, y",
+                  "start_char": 10416,
+                  "end_char": 10432
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "sex_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "male",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Sex, No. M/F",
+                      "start_char": 10583,
+                      "end_char": 10595
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 15,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "15/8",
+                      "start_char": 10723,
+                      "end_char": 10727
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "female",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Sex, No. M/F",
+                      "start_char": 10583,
+                      "end_char": 10595
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 8,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "15/8",
+                      "start_char": 10723,
+                      "end_char": 10727
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Control participants were recruited through local print advertising.",
+                  "start_char": 8251,
+                  "end_char": 8319
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "assessments": [
+    {
+      "local_id": "asm_mini",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Mini-International Neuropsychiatric Interview (M.I.N.I.)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A trained psychiatrist interviewed all participants with the Mini-International Neuropsychiatric Interview (M.I.N.I.) for DSM-IV (Diagnostic and Statistical Manual of Mental Disorders, 1994) Axis I mental disorders.",
+                  "start_char": 8508,
+                  "end_char": 8723
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "A trained psychiatrist used the interview to assess DSM-IV Axis I mental disorders in all participants.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A trained psychiatrist interviewed all participants with the Mini-International Neuropsychiatric Interview (M.I.N.I.) for DSM-IV (Diagnostic and Statistical Manual of Mental Disorders, 1994) Axis I mental disorders.",
+                  "start_char": 8508,
+                  "end_char": 8723
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "diagnostic interview",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A trained psychiatrist interviewed all participants with the Mini-International Neuropsychiatric Interview (M.I.N.I.) for DSM-IV (Diagnostic and Statistical Manual of Mental Disorders, 1994) Axis I mental disorders.",
+                  "start_char": 8508,
+                  "end_char": 8723
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asm_ybocs",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Yale-Brown Obsessive Compulsive Scale (Y-BOCS)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The obsessive-compulsive symptoms of each participant were assessed using the Yale-Brown Obsessive Compulsive Scale (Y-BOCS).",
+                  "start_char": 8724,
+                  "end_char": 8849
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Assessment of obsessive-compulsive symptoms in each participant.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The obsessive-compulsive symptoms of each participant were assessed using the Yale-Brown Obsessive Compulsive Scale (Y-BOCS).",
+                  "start_char": 8724,
+                  "end_char": 8849
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The obsessive-compulsive symptoms of each participant were assessed using the Yale-Brown Obsessive Compulsive Scale (Y-BOCS).",
+                  "start_char": 8724,
+                  "end_char": 8849
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asm_hama",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Hamilton Anxiety Rating Scale (HAMA)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We applied the Hamilton Anxiety Rating Scale (HAMA, 14 items) and Hamilton Depression Rating Scale (HAMD, 24 items) to measure participants' anxiety and depression symptoms respectively.",
+                  "start_char": 8850,
+                  "end_char": 9036
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "A 14-item scale used to measure anxiety symptoms.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We applied the Hamilton Anxiety Rating Scale (HAMA, 14 items) and Hamilton Depression Rating Scale (HAMD, 24 items) to measure participants' anxiety and depression symptoms respectively.",
+                  "start_char": 8850,
+                  "end_char": 9036
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We applied the Hamilton Anxiety Rating Scale (HAMA, 14 items) and Hamilton Depression Rating Scale (HAMD, 24 items) to measure participants' anxiety and depression symptoms respectively.",
+                  "start_char": 8850,
+                  "end_char": 9036
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asm_hamd",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Hamilton Depression Rating Scale (HAMD)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We applied the Hamilton Anxiety Rating Scale (HAMA, 14 items) and Hamilton Depression Rating Scale (HAMD, 24 items) to measure participants' anxiety and depression symptoms respectively.",
+                  "start_char": 8850,
+                  "end_char": 9036
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "A 24-item scale used to measure depression symptoms.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We applied the Hamilton Anxiety Rating Scale (HAMA, 14 items) and Hamilton Depression Rating Scale (HAMD, 24 items) to measure participants' anxiety and depression symptoms respectively.",
+                  "start_char": 8850,
+                  "end_char": 9036
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We applied the Hamilton Anxiety Rating Scale (HAMA, 14 items) and Hamilton Depression Rating Scale (HAMD, 24 items) to measure participants' anxiety and depression symptoms respectively.",
+                  "start_char": 8850,
+                  "end_char": 9036
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asm_sers",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Asberg Rating Scale for Side Effects (SERS)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used the Asberg Rating Scale for Side Effects (SERS) to assess the side effects every 4 weeks.",
+                  "start_char": 13139,
+                  "end_char": 13236
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Used to assess medication side effects every 4 weeks during SSRI treatment.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used the Asberg Rating Scale for Side Effects (SERS) to assess the side effects every 4 weeks.",
+                  "start_char": 13139,
+                  "end_char": 13236
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used the Asberg Rating Scale for Side Effects (SERS) to assess the side effects every 4 weeks.",
+                  "start_char": 13139,
+                  "end_char": 13236
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_mr_15t",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "General Electric Medical Systems",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All data were acquired using a 1.5T magnetic resonance (MR) scanner (General Electric Medical Systems, Milwaukee, WI, USA).",
+                  "start_char": 13534,
+                  "end_char": 13657
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acq_dti",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "dMRI",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We scanned OCD patients for DTI data before and after 12-week SSRI treatments.",
+                  "start_char": 13363,
+                  "end_char": 13441
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_duration_seconds": {
+        "extraction_status": "extracted",
+        "value": 252,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The acquisition time was 4 min 12 sec for each participant.",
+                  "start_char": 14216,
+                  "end_char": 14275
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "device": "dev_mr_15t",
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 1.5,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All data were acquired using a 1.5T magnetic resonance (MR) scanner (General Electric Medical Systems, Milwaukee, WI, USA).",
+                  "start_char": 13534,
+                  "end_char": 13657
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "DTI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We scanned OCD patients for DTI data before and after 12-week SSRI treatments.",
+                  "start_char": 13363,
+                  "end_char": 13441
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 9,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "repetition time (TR) = 9000 ms",
+                  "start_char": 14135,
+                  "end_char": 14165
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.1055
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "echo time (TE) = 105.5 ms",
+                  "start_char": 14167,
+                  "end_char": 14192
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "number_of_volumes": {
+        "extraction_status": "extracted",
+        "value": 26,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A total of 26 DTI volumes were acquired",
+                  "start_char": 13785,
+                  "end_char": 13824
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "prp_dti",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "DTI volumes were corrected for eddy-current distortion, brain masked, tensor fitted, parameter maps normalized to a B0 template, and smoothed before statistical testing.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The eddy current distortion was first corrected for each participant's DTI volume using the “eddycorrect” toolbox in FSL. Then, a brain mask, which separated brain and non-brain regions, was calculated from the B0 volume using the BET toolbox (FSL). Restricted within this mask, a diffusion tensor was fitted for each voxel in the brain image space using FSL's DTIFit. FA, AD, RD and MD maps were subsequently calculated.",
+                  "start_char": 14573,
+                  "end_char": 14994
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "FSL",
+          "SPM8",
+          "xjview"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All data were processed using SPM8 (  http://www.fil.ion.ucl.ac.uk/spm/  ), and FSL (  http://www.fmrib.ox.ac.uk/fsl/  ) on a Linux based platform.",
+                  "start_char": 14425,
+                  "end_char": 14572
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "eddy-current distortion correction",
+          "brain masking",
+          "diffusion tensor fitting",
+          "normalization to B0 template",
+          "spatial smoothing"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The eddy current distortion was first corrected for each participant's DTI volume using the “eddycorrect” toolbox in FSL. Then, a brain mask, which separated brain and non-brain regions, was calculated from the B0 volume using the BET toolbox (FSL). Restricted within this mask, a diffusion tensor was fitted for each voxel in the brain image space using FSL's DTIFit.",
+                  "start_char": 14573,
+                  "end_char": 14941
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "smoothing_fwhm_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          6
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Finally, following a popularly used schema - described in a previous study with OCD patients  [9]  - we smoothed all the transformed parameter maps with a 6-mm FWHM Gaussian kernel, ready for further statistical testing.",
+                  "start_char": 15996,
+                  "end_char": 16216
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "m_vba",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "glm",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A General Linear Model repeated-measure analysis of covariance (ANOVA) was used in the analysis of each DTI-derived parameter before and after treatment.",
+                  "start_char": 18806,
+                  "end_char": 18959
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "whole-brain voxel-based analysis",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We performed a whole-brain voxel-based analysis using the normalized and smoothed FA, AD, RD and MD maps for a 2-sample group t-test, comparing the 23 control participants and 27 patients before medication.",
+                  "start_char": 17581,
+                  "end_char": 17787
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "2-sample group t-test; two-tailed",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We performed a whole-brain voxel-based analysis using the normalized and smoothed FA, AD, RD and MD maps for a 2-sample group t-test, comparing the 23 control participants and 27 patients before medication.",
+                  "start_char": 17581,
+                  "end_char": 17787
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "2-sample group t-test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We performed a whole-brain voxel-based analysis using the normalized and smoothed FA, AD, RD and MD maps for a 2-sample group t-test, comparing the 23 control participants and 27 patients before medication.",
+                  "start_char": 17581,
+                  "end_char": 17787
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "SPM8 and FSL on a Linux-based platform",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All data were processed using SPM8 (  http://www.fil.ion.ucl.ac.uk/spm/  ), and FSL (  http://www.fmrib.ox.ac.uk/fsl/  ) on a Linux based platform.",
+                  "start_char": 14425,
+                  "end_char": 14572
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We performed a whole-brain voxel-based analysis using the normalized and smoothed FA, AD, RD and MD maps for a 2-sample group t-test",
+                  "start_char": 17581,
+                  "end_char": 17713
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prp_dti"
+      ],
+      "terms": [
+        {
+          "local_id": "trm_group",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "group",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "comparing the 23 control participants and 27 patients before medication",
+                      "start_char": 17715,
+                      "end_char": 17786
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "comparing the 23 control participants and 27 patients before medication",
+                      "start_char": 17715,
+                      "end_char": 17786
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "OCD patients",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "comparing the 23 control participants and 27 patients before medication",
+                          "start_char": 17715,
+                          "end_char": 17786
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp_ocd"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "healthy controls",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "comparing the 23 control participants and 27 patients before medication",
+                          "start_char": 17715,
+                          "end_char": 17786
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp_controls"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "comparing the 23 control participants and 27 patients before medication",
+                      "start_char": 17715,
+                      "end_char": 17786
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inf_vba",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxels of T>2.674 (p<0.001, uncorrected, cluster size>10 voxels; 2-tailed) were considered as indicating significant difference between the patient and control groups.",
+                  "start_char": 17788,
+                  "end_char": 17955
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.001,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxels of T>2.674 (p<0.001, uncorrected, cluster size>10 voxels; 2-tailed) were considered as indicating significant difference between the patient and control groups.",
+                  "start_char": 17788,
+                  "end_char": 17955
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxels of T>2.674 (p<0.001, uncorrected, cluster size>10 voxels; 2-tailed) were considered as indicating significant difference between the patient and control groups.",
+                  "start_char": 17788,
+                  "end_char": 17955
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "extracted",
+        "value": 10,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxels of T>2.674 (p<0.001, uncorrected, cluster size>10 voxels; 2-tailed) were considered as indicating significant difference between the patient and control groups.",
+                  "start_char": 17788,
+                  "end_char": 17955
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "none; uncorrected",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxels of T>2.674 (p<0.001, uncorrected, cluster size>10 voxels; 2-tailed) were considered as indicating significant difference between the patient and control groups.",
+                  "start_char": 17788,
+                  "end_char": 17955
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correction_scope": {
+        "extraction_status": "extracted",
+        "value": "white matter mask",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The white matter mask was used to confine the statistic only in the white matter region.",
+                  "start_char": 18041,
+                  "end_char": 18129
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "alpha_level": {
+        "extraction_status": "extracted",
+        "value": 0.001,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxels of T>2.674 (p<0.001, uncorrected, cluster size>10 voxels; 2-tailed) were considered as indicating significant difference between the patient and control groups.",
+                  "start_char": 17788,
+                  "end_char": 17955
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "mea_fa",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "diffusion",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Parameter maps of DTI, including fractional anisotropy (FA), axial diffusivity (AD), radial diffusivity (RD) and mean diffusivity (MD), were acquired",
+                  "start_char": 627,
+                  "end_char": 776
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "diffusion_metric",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Parameter maps of DTI, including fractional anisotropy (FA), axial diffusivity (AD), radial diffusivity (RD) and mean diffusivity (MD), were acquired",
+                  "start_char": 627,
+                  "end_char": 776
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "fractional anisotropy (FA)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Fractional anisotropy (FA)",
+                  "start_char": 3570,
+                  "end_char": 3596
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "fractional anisotropy",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Fractional anisotropy (FA)",
+                  "start_char": 3570,
+                  "end_char": 3596
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "mea_rd",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "diffusion",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Diffusion tensor imaging (DTI)",
+                  "start_char": 3163,
+                  "end_char": 3193
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "diffusion_metric",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "radial diffusivity, RD",
+                  "start_char": 3472,
+                  "end_char": 3494
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "radial diffusivity (RD)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "radial diffusivity, RD",
+                  "start_char": 3472,
+                  "end_char": 3494
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "radial diffusivity",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "radial diffusivity",
+                  "start_char": 712,
+                  "end_char": 730
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "unit": {
+        "extraction_status": "extracted",
+        "value": "10^-3 mm^2/s",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The units of radial diffusivity (RD), axial diffusivity (AD) and mean diffusivity (MD) is 10−3 mm2/s.",
+                  "start_char": 29105,
+                  "end_char": 29206
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "mea_ad",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "diffusion",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Diffusion tensor imaging (DTI)",
+                  "start_char": 3163,
+                  "end_char": 3193
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "diffusion_metric",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "axial diffusivity, AD",
+                  "start_char": 3546,
+                  "end_char": 3567
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "axial diffusivity (AD)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "axial diffusivity, AD",
+                  "start_char": 3546,
+                  "end_char": 3567
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "axial diffusivity",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "axial diffusivity",
+                  "start_char": 688,
+                  "end_char": 705
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "unit": {
+        "extraction_status": "extracted",
+        "value": "10^-3 mm^2/s",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The units of radial diffusivity (RD), axial diffusivity (AD) and mean diffusivity (MD) is 10−3 mm2/s.",
+                  "start_char": 29105,
+                  "end_char": 29206
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "mea_md",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "diffusion",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Diffusion tensor imaging (DTI)",
+                  "start_char": 3163,
+                  "end_char": 3193
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "diffusion_metric",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "mean diffusivity (MD)",
+                  "start_char": 740,
+                  "end_char": 761
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "mean diffusivity (MD)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "mean diffusivity (MD)",
+                  "start_char": 740,
+                  "end_char": 761
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "mean diffusivity",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "mean diffusivity",
+                  "start_char": 740,
+                  "end_char": 756
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "unit": {
+        "extraction_status": "extracted",
+        "value": "10^-3 mm^2/s",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The units of radial diffusivity (RD), axial diffusivity (AD) and mean diffusivity (MD) is 10−3 mm2/s.",
+                  "start_char": 29105,
+                  "end_char": 29206
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1",
+                  "start_char": 9398,
+                  "end_char": 9405
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "The Demographics and Clinical Characteristics of the Baseline Participants.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The Demographics and Clinical Characteristics of the Baseline Participants.",
+                  "start_char": 9910,
+                  "end_char": 9985
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2",
+                  "start_char": 20815,
+                  "end_char": 20822
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Areas of abnormal DTI-derived parameters in 27 patients with obsessive-compulsive disorder and 23 healthy controls before medication.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Areas of abnormal DTI-derived parameters in 27 patients with obsessive-compulsive disorder and 23 healthy controls before medication.",
+                  "start_char": 21477,
+                  "end_char": 21610
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "*peak coordinateds represent the location of the maximum pixel values in standard Montreal Neurological Institute (MNI) space.df = 48; p<0.001 (uncorrected).",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "*peak coordinateds represent the location of the maximum pixel values in standard Montreal Neurological Institute (MNI) space.df = 48; p<0.001 (uncorrected).",
+                  "start_char": 25386,
+                  "end_char": 25543
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl3",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3",
+                  "start_char": 25873,
+                  "end_char": 25880
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Mean FA, RD, AD and MD values between drug-naive and previously medicated OCD patients.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Mean FA, RD, AD and MD values between drug-naive and previously medicated OCD patients.",
+                  "start_char": 25888,
+                  "end_char": 25975
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "The units of radial diffusivity (RD), axial diffusivity (AD) and mean diffusivity (MD) is 10−3 mm2/s.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The units of radial diffusivity (RD), axial diffusivity (AD) and mean diffusivity (MD) is 10−3 mm2/s.",
+                  "start_char": 29105,
+                  "end_char": 29206
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

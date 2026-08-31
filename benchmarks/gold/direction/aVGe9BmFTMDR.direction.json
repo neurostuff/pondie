@@ -1,0 +1,234 @@
+{
+ "paper_id": "aVGe9BmFTMDR",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis_tbl3_nonresponder_gt_responder",
+   "term": "term_seed",
+   "level": "active nonresponder Rlocation",
+   "label": "seed location : active nonresponder Rlocation",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl3_nonresponder_gt_responder",
+   "term": "term_seed",
+   "level": "active responder Rlocation",
+   "label": "seed location : active responder Rlocation",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl3_nonresponder_gt_responder",
+   "term": "term_stimulation_location_group",
+   "level": "active nonresponder Rlocation",
+   "label": "stimulation location group : active nonresponder Rlocation",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl3_nonresponder_gt_responder",
+   "term": "term_stimulation_location_group",
+   "level": "active responder Rlocation",
+   "label": "stimulation location group : active responder Rlocation",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl3_nonresponder_gt_responder",
+   "term": "term_subgenual_cingulate_roi",
+   "level": "subgenual cingulate",
+   "label": "subgenual cingulate ROI : subgenual cingulate",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_tbl3_responder_gt_nonresponder",
+   "term": "term_seed",
+   "level": "active nonresponder Rlocation",
+   "label": "seed location : active nonresponder Rlocation",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl3_responder_gt_nonresponder",
+   "term": "term_seed",
+   "level": "active responder Rlocation",
+   "label": "seed location : active responder Rlocation",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl3_responder_gt_nonresponder",
+   "term": "term_stimulation_location_group",
+   "level": "active nonresponder Rlocation",
+   "label": "stimulation location group : active nonresponder Rlocation",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl3_responder_gt_nonresponder",
+   "term": "term_stimulation_location_group",
+   "level": "active responder Rlocation",
+   "label": "stimulation location group : active responder Rlocation",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl3_responder_gt_nonresponder",
+   "term": "term_subgenual_cingulate_roi",
+   "level": "subgenual cingulate",
+   "label": "subgenual cingulate ROI : subgenual cingulate",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  }
+ ],
+ "analyses": {
+  "analysis_tbl3_responder_gt_nonresponder": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_tbl3_nonresponder_gt_responder": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  }
+ }
+}

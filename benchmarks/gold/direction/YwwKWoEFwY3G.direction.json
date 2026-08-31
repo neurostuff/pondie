@@ -1,0 +1,144 @@
+{
+ "paper_id": "YwwKWoEFwY3G",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis-alpha-encoding-age",
+   "term": "term-age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-maintenance-age",
+   "term": "term-age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-retrieval-alpha-age",
+   "term": "term-age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-retrieval-beta-age",
+   "term": "term-age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "unflagged",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis-theta-encoding-age",
+   "term": "term-age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  }
+ ],
+ "analyses": {
+  "analysis-theta-encoding-age": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-alpha-encoding-age": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong",
+      "upstream_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis-maintenance-age": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-retrieval-alpha-age": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-retrieval-beta-age": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "upstream_wrong"
+     ]
+    }
+   ]
+  }
+ }
+}

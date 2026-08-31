@@ -1,0 +1,2532 @@
+{
+  "local_id": "SULKxviGFurw",
+  "extraction_metadata": {
+    "extractor_model": "@psyc-aid338-ope-333f18/gpt-5.6-luna",
+    "extractor_version": "review-bootstrap-0.1.0",
+    "source_text_hash": "db862384dd75053df0fe48e553933d34f004f52f9e2c8981f81e415b4820fd7c",
+    "extraction_date": "2026-08-28",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "Introduction",
+        "level": 1,
+        "start_char": 1699,
+        "end_char": 8463
+      },
+      {
+        "ordinal": 1,
+        "title": "Experiment",
+        "level": 1,
+        "start_char": 8463,
+        "end_char": 23475
+      },
+      {
+        "ordinal": 2,
+        "title": "Methods",
+        "level": 2,
+        "start_char": 8481,
+        "end_char": 13653,
+        "parent_section": "Experiment"
+      },
+      {
+        "ordinal": 3,
+        "title": "Participants",
+        "level": 3,
+        "start_char": 8497,
+        "end_char": 9340,
+        "parent_section": "Methods"
+      },
+      {
+        "ordinal": 4,
+        "title": "Stimuli",
+        "level": 3,
+        "start_char": 9340,
+        "end_char": 9651,
+        "parent_section": "Methods"
+      },
+      {
+        "ordinal": 5,
+        "title": "Procedure",
+        "level": 3,
+        "start_char": 9651,
+        "end_char": 11819,
+        "parent_section": "Methods"
+      },
+      {
+        "ordinal": 6,
+        "title": "fMRI data acquisition",
+        "level": 3,
+        "start_char": 11819,
+        "end_char": 12899,
+        "parent_section": "Methods"
+      },
+      {
+        "ordinal": 7,
+        "title": "fMRI data preprocessing",
+        "level": 3,
+        "start_char": 12899,
+        "end_char": 13653,
+        "parent_section": "Methods"
+      },
+      {
+        "ordinal": 8,
+        "title": "Behavioral data analysis",
+        "level": 2,
+        "start_char": 13653,
+        "end_char": 16665,
+        "parent_section": "Experiment"
+      },
+      {
+        "ordinal": 9,
+        "title": "Univariate analysis",
+        "level": 2,
+        "start_char": 16665,
+        "end_char": 18635,
+        "parent_section": "Experiment"
+      },
+      {
+        "ordinal": 10,
+        "title": "Regions of interest (ROI) analysis",
+        "level": 2,
+        "start_char": 18635,
+        "end_char": 19224,
+        "parent_section": "Experiment"
+      },
+      {
+        "ordinal": 11,
+        "title": "Multivariate pattern analysis",
+        "level": 2,
+        "start_char": 19224,
+        "end_char": 21400,
+        "parent_section": "Experiment"
+      },
+      {
+        "ordinal": 12,
+        "title": "Effective connectivity analysis",
+        "level": 2,
+        "start_char": 21400,
+        "end_char": 23475,
+        "parent_section": "Experiment"
+      },
+      {
+        "ordinal": 13,
+        "title": "Results",
+        "level": 1,
+        "start_char": 23475,
+        "end_char": 34379
+      },
+      {
+        "ordinal": 14,
+        "title": "Behavioral results",
+        "level": 2,
+        "start_char": 23490,
+        "end_char": 24683,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 15,
+        "title": "Univariate analysis results",
+        "level": 2,
+        "start_char": 24683,
+        "end_char": 29015,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 16,
+        "title": "Multivariate pattern analysis (MVPA) results",
+        "level": 2,
+        "start_char": 29015,
+        "end_char": 29346,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 17,
+        "title": "ROI MVPA analysis results",
+        "level": 2,
+        "start_char": 29346,
+        "end_char": 31717,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 18,
+        "title": "Searchlight analysis results",
+        "level": 2,
+        "start_char": 31717,
+        "end_char": 33352,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 19,
+        "title": "Effective connectivity results",
+        "level": 2,
+        "start_char": 33352,
+        "end_char": 34379,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 20,
+        "title": "Discussion",
+        "level": 1,
+        "start_char": 34379,
+        "end_char": 44795
+      },
+      {
+        "ordinal": 21,
+        "title": "Neural correlates of metacognitive systematic bias",
+        "level": 2,
+        "start_char": 35203,
+        "end_char": 40942,
+        "parent_section": "Discussion"
+      },
+      {
+        "ordinal": 22,
+        "title": "The different cognitive mechanisms between overestimated bias and underestimated bias",
+        "level": 2,
+        "start_char": 40942,
+        "end_char": 42891,
+        "parent_section": "Discussion"
+      },
+      {
+        "ordinal": 23,
+        "title": "Dissociable neural networks supporting metacognitive systematic bias",
+        "level": 2,
+        "start_char": 42891,
+        "end_char": 44795,
+        "parent_section": "Discussion"
+      },
+      {
+        "ordinal": 24,
+        "title": "Conclusion",
+        "level": 1,
+        "start_char": 44795,
+        "end_char": 45601
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "The study used event-related fMRI, univariate GLM, multivariate pattern analysis, and effective connectivity analyses to investigate neural mechanisms of overestimated and underestimated metacognitive systematic bias during encoding and immediate judgments of learning for word pairs.",
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "This study utilized the fMRI technique, combining univariate analysis methods with multivariate pattern analysis, to observe the neural patterns of systematic bias and clarify the mechanisms of overestimated bias or underestimated bias.",
+              "start_char": 5178,
+              "end_char": 5414
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "hypothesis": {
+    "extraction_status": "extracted",
+    "value": [
+      "The monitoring dual-memories hypothesis and memory strength hypothesis offer partial explanations for systematic biases in metacognitive monitoring.",
+      "The study hypothesized that working memory and metacognitive monitoring regions would contribute to the formation of overestimated and underestimated metacognitive biases."
+    ],
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "The monitoring dual-memories hypothesis and memory strength hypothesis offer partial explanations for systematic biases in metacognitive monitoring.",
+              "start_char": 3688,
+              "end_char": 3836
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Twenty participants completed four fMRI encoding and immediate judgment-of-learning runs in an event-related design, followed by an out-of-scanner recognition test. Participants gave immediate judgments of learning on a four-point scale after encoding word pairs.",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "In this study, we used an event-related design (Fig.  1 ).",
+                "start_char": 9670,
+                "end_char": 9728
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "single_arm",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "single_group",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "not_applicable",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "arms": [],
+    "timepoints": []
+  },
+  "analyses": [
+    {
+      "local_id": "a_tab1_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "JOLhighMlow > JOLlowMhigh",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "JOLhighMlow > JOLlowMhigh",
+                  "start_char": 26536,
+                  "end_char": 26561
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "JOLhighMlow > JOLlowMhigh",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "JOLhighMlow > JOLlowMhigh",
+                  "start_char": 26536,
+                  "end_char": 26561
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Comparing metacognitive systematic bias BOLD activation between JOL M and JOL M showed left inferior parietal lobule and left middle cingulate cortex activation in the JOL M > JOL M contrast."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Furthermore, comparing metacognitive systematic bias BOLD activation between JOL M  and JOL M  showed other regions activated included left inferior parietal lobule (IPL) and left middle cingulate cortex (MCC) in JOL M  > JOL M  contrast",
+                  "start_char": 25218,
+                  "end_char": 25455
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Metacognitive systematic bias whole-brain responses were first analyzed using the conventional GLM method.",
+                  "start_char": 24719,
+                  "end_char": 24825
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_bold_activation",
+      "groups": [
+        {
+          "group": "grp_all_participants",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 20,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "20 subjects participated in the experiments conducted in the current study.",
+                      "start_char": 8639,
+                      "end_char": 8714
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_jol_bias",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "JOLhighMlow",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOLhighMlow > JOLlowMhigh",
+                        "start_char": 26536,
+                        "end_char": 26561
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOL M  > JOL M ",
+                        "start_char": 25431,
+                        "end_char": 25446
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_jol_bias",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "JOLlowMhigh",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOLhighMlow > JOLlowMhigh",
+                        "start_char": 26536,
+                        "end_char": 26561
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOL M  > JOL M ",
+                        "start_char": 25431,
+                        "end_char": 25446
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "z",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Z score",
+                      "start_char": 26052,
+                      "end_char": 26059
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_encoding_jols"
+      ],
+      "model_estimation": "mod_group_jol_glm",
+      "inference_settings": "inf_fdr",
+      "tables": [
+        "tbl1"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab1#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI coordinates",
+                  "start_char": 26018,
+                  "end_char": 26033
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_tab1_2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "JOLhighMlow < JOLlowMhigh",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "JOLhighMlow < JOLlowMhigh",
+                  "start_char": 26822,
+                  "end_char": 26847
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "JOLhighMlow < JOLlowMhigh",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "JOLhighMlow < JOLlowMhigh",
+                  "start_char": 26822,
+                  "end_char": 26847
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Comparing metacognitive systematic bias BOLD activation between JOL M and JOL M showed left parahippocampal activation in the JOL M < JOL M contrast."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Furthermore, comparing metacognitive systematic bias BOLD activation between JOL M  and JOL M  showed other regions activated included left inferior parietal lobule (IPL) and left middle cingulate cortex (MCC) in JOL M  > JOL M  contrast, left parahippocampal in JOL M  < JOL M  contrast",
+                  "start_char": 25218,
+                  "end_char": 25505
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Metacognitive systematic bias whole-brain responses were first analyzed using the conventional GLM method.",
+                  "start_char": 24719,
+                  "end_char": 24825
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_bold_activation",
+      "groups": [
+        {
+          "group": "grp_all_participants",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 20,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "20 subjects participated in the experiments conducted in the current study.",
+                      "start_char": 8639,
+                      "end_char": 8714
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_jol_bias",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "JOLhighMlow",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOLhighMlow < JOLlowMhigh",
+                        "start_char": 26822,
+                        "end_char": 26847
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOL M  < JOL M ",
+                        "start_char": 25481,
+                        "end_char": 25496
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_jol_bias",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "JOLlowMhigh",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOLhighMlow < JOLlowMhigh",
+                        "start_char": 26822,
+                        "end_char": 26847
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOL M  < JOL M ",
+                        "start_char": 25481,
+                        "end_char": 25496
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "z",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Z score",
+                      "start_char": 26052,
+                      "end_char": 26059
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_encoding_jols"
+      ],
+      "model_estimation": "mod_group_jol_glm",
+      "inference_settings": "inf_fdr",
+      "tables": [
+        "tbl1"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab1#2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI coordinates",
+                  "start_char": 26018,
+                  "end_char": 26033
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_tab1_3",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "JOLhighMlow",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "JOLhighMlow",
+                  "start_char": 26207,
+                  "end_char": 26218
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "JOLhighMlow",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "JOLhighMlow",
+                  "start_char": 26207,
+                  "end_char": 26218
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "JOL M activated left dlPFC, left dmPFC, left supramarginal gyrus, right precuneus, right superior frontal gyrus, left middle temporal gyrus, and right superior temporal gyrus."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "JOL M , and JOL M  all activated left dlPFC and left dmPFC. Other regions activated included left supramarginal, right precuneus, right superior frontal gyrus (SFG), left middle temporal gyrus (MTG), and right superior temporal gyrus (STG) under JOL M  condition.",
+                  "start_char": 24851,
+                  "end_char": 25114
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Metacognitive systematic bias whole-brain responses were first analyzed using the conventional GLM method.",
+                  "start_char": 24719,
+                  "end_char": 24825
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_bold_activation",
+      "groups": [
+        {
+          "group": "grp_all_participants",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 20,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "20 subjects participated in the experiments conducted in the current study.",
+                      "start_char": 8639,
+                      "end_char": 8714
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_jol_bias",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "JOLhighMlow",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOLhighMlow",
+                        "start_char": 26207,
+                        "end_char": 26218
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOL M  condition",
+                        "start_char": 15663,
+                        "end_char": 15679
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "z",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Z score",
+                      "start_char": 26052,
+                      "end_char": 26059
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_encoding_jols"
+      ],
+      "model_estimation": "mod_group_jol_glm",
+      "inference_settings": "inf_fdr",
+      "tables": [
+        "tbl1"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab1#3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI coordinates",
+                  "start_char": 26018,
+                  "end_char": 26033
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_tab1_4",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "JOLlowMhigh",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "JOLlowMhigh",
+                  "start_char": 26550,
+                  "end_char": 26561
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "JOLlowMhigh",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "JOLlowMhigh",
+                  "start_char": 26550,
+                  "end_char": 26561
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "JOL M activated left dlPFC, left dmPFC, anterior cingulate cortex, and left insula."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We found elevated activity in ACC and left insula under JOL M  condition",
+                  "start_char": 25115,
+                  "end_char": 25187
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Metacognitive systematic bias whole-brain responses were first analyzed using the conventional GLM method.",
+                  "start_char": 24719,
+                  "end_char": 24825
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_bold_activation",
+      "groups": [
+        {
+          "group": "grp_all_participants",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 20,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "20 subjects participated in the experiments conducted in the current study.",
+                      "start_char": 8639,
+                      "end_char": 8714
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_jol_bias",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "JOLlowMhigh",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOLlowMhigh",
+                        "start_char": 26550,
+                        "end_char": 26561
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "JOL M  condition",
+                        "start_char": 15663,
+                        "end_char": 15679
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "z",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Z score",
+                      "start_char": 26052,
+                      "end_char": 26059
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "tasks": [
+        "tsk_encoding_jols"
+      ],
+      "model_estimation": "mod_group_jol_glm",
+      "inference_settings": "inf_fdr",
+      "tables": [
+        "tbl1"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "tab1#4",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI coordinates",
+                  "start_char": 26018,
+                  "end_char": 26033
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acq_fmri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Neuroimaging data were acquired on a UIH Prisma 3.0 T MRI scanner with a 64-channel head-neck coil.",
+                  "start_char": 11850,
+                  "end_char": 11949
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_duration_seconds": {
+        "extraction_status": "extracted",
+        "value": 1800,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The task took approximately 30 min to complete inside the scanner.",
+                  "start_char": 9883,
+                  "end_char": 9949
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "device": "dev_uih_prisma",
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 3.0,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Neuroimaging data were acquired on a UIH Prisma 3.0 T MRI scanner with a 64-channel head-neck coil.",
+                  "start_char": 11850,
+                  "end_char": 11949
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "T1-weighted echo-planar imaging (EPI) sequence",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The functional image was a 32-slice axial image, measured by a T1 -weighted echo-planar images (EPI) sequence, covering the entire cerebral cortex",
+                  "start_char": 12133,
+                  "end_char": 12279
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 2,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TR = 2000 ms",
+                  "start_char": 12308,
+                  "end_char": 12320
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.03
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TE = 30 ms",
+                  "start_char": 12322,
+                  "end_char": 12332
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          3.5,
+          3.5,
+          4.2
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel size = 3.5 × 3.5 × 4.2 mm",
+                  "start_char": 12466,
+                  "end_char": 12497
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "number_of_volumes": {
+        "extraction_status": "extracted",
+        "value": 828,
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_uih_prisma",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "UIH",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Neuroimaging data were acquired on a UIH Prisma 3.0 T MRI scanner with a 64-channel head-neck coil.",
+                  "start_char": 11850,
+                  "end_char": 11949
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "Prisma 3.0 T MRI scanner",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "UIH Prisma 3.0 T MRI scanner",
+                  "start_char": 11887,
+                  "end_char": 11915
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "grp_all_participants",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "all participants",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Twenty human participants; all were right-handed, had normal or corrected-to-normal visual acuity, and reported no personal or family history of neurological or psychiatric disorders.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All participants were right-handed, had normal visual acuity or corrected visual acuity, and had no personal or family history of neurological or psychiatric disorders based on their self-report.",
+                  "start_char": 8715,
+                  "end_char": 8910
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "20 subjects participated in the experiments conducted in the current study.",
+                  "start_char": 8639,
+                  "end_char": 8714
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 20,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "20 subjects participated in the experiments conducted in the current study.",
+                  "start_char": 8639,
+                  "end_char": 8714
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "handedness_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "right-handed",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "All participants were right-handed",
+                      "start_char": 8715,
+                      "end_char": 8749
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "had no personal or family history of neurological or psychiatric disorders based on their self-report.",
+                  "start_char": 8808,
+                  "end_char": 8910
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [],
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inf_fdr",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "height_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.05,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All reported clusters survived a threshold with   p   < 0.05 after correcting for multiple comparisons using the false discovery rate (FDR) method and consisted of ten or more significant voxels.",
+                  "start_char": 18436,
+                  "end_char": 18631
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All reported clusters survived a threshold with   p   < 0.05 after correcting for multiple comparisons using the false discovery rate (FDR) method and consisted of ten or more significant voxels.",
+                  "start_char": 18436,
+                  "end_char": 18631
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "extracted",
+        "value": 10,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All reported clusters survived a threshold with   p   < 0.05 after correcting for multiple comparisons using the false discovery rate (FDR) method and consisted of ten or more significant voxels.",
+                  "start_char": 18436,
+                  "end_char": 18631
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "false discovery rate (FDR)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "false discovery rate (FDR) method",
+                  "start_char": 18549,
+                  "end_char": 18582
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correction_scope": {
+        "extraction_status": "extracted",
+        "value": "whole brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "alpha_level": {
+        "extraction_status": "extracted",
+        "value": 0.05,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "p   < 0.05",
+                  "start_char": 18486,
+                  "end_char": 18496
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "mea_bold_activation",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "bold_response",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "BOLD activation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We found elevated activity in ACC and left insula under JOL M  condition",
+                  "start_char": 25115,
+                  "end_char": 25187
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "mod_group_jol_glm",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "glm",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The GLM method, as implemented in the SPM toolbox, was used to analyze the BOLD responses to metacognitive systematic bias.",
+                  "start_char": 16693,
+                  "end_char": 16816
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "group-level JOL GLM",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The GLM model was based on the JOLs task.",
+                  "start_char": 17266,
+                  "end_char": 17307
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "hrf_model": {
+        "extraction_status": "extracted",
+        "value": "canonical hemodynamic response function using a double-gamma function",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "convolved with the canonical hemodynamic response function (HRF) using a double-gamma function.",
+                  "start_char": 16893,
+                  "end_char": 16988
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Motion correction parameters were entered as covariates of no interest; a constant term was included per run; low-frequency drifts were excluded with a 1/128 Hz high-pass filter; missed trials were not modeled. Individual contrast images were entered into a second-level random-effects group analysis.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Contrasts constructed at the single participant level were then input into a second-level group analysis using a random-effects model",
+                  "start_char": 18013,
+                  "end_char": 18146
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "random-effects model with one-sample and paired-sample t-tests",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "then a paired sample   t-test   was used to compare the activation between different metacognitive systematic bias",
+                  "start_char": 18281,
+                  "end_char": 18395
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "SPM12",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The GLM method, as implemented in the SPM toolbox",
+                  "start_char": 16693,
+                  "end_char": 16742
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "all voxels were resampled to 3 × 3 × 3 mm",
+                  "start_char": 13514,
+                  "end_char": 13555
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prp_fmri_spm12"
+      ],
+      "terms": [
+        {
+          "local_id": "trm_jol_bias",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "JOL bias condition",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "we separated two task-related events",
+                      "start_char": 17346,
+                      "end_char": 17382
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "we separated two task-related events",
+                      "start_char": 17346,
+                      "end_char": 17382
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "JOLhighMlow",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "JOL M",
+                          "start_char": 14857,
+                          "end_char": 14862
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond_jolhighmlow"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "JOLlowMhigh",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "JOL M",
+                          "start_char": 14857,
+                          "end_char": 14862
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond_jollowmhigh"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "The GLM model was based on the JOLs task.",
+                      "start_char": 17266,
+                      "end_char": 17307
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "trm_motion",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "motion correction parameters",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Motion correction parameters",
+                      "start_char": 17647,
+                      "end_char": 17675
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Motion correction parameters were entered as covariates of no interest",
+                      "start_char": 17647,
+                      "end_char": 17717
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Motion correction parameters were entered as covariates of no interest",
+                      "start_char": 17647,
+                      "end_char": 17717
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "source_definition": {
+            "extraction_status": "extracted",
+            "value": "Motion correction parameters entered as covariates of no interest.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Motion correction parameters were entered as covariates of no interest",
+                      "start_char": 17647,
+                      "end_char": 17717
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "prp_fmri_spm12",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "fMRI preprocessing included DICOM-to-NIfTI conversion, discarding the first three images of each run, slice-timing correction, realignment for head motion, coregistration to structural images, normalization to the Montreal Neurological Institute template, resampling to 3 × 3 × 3 mm voxels, and spatial smoothing.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "First, all the EPI DICOM data were converted to NIFTI format. The first three images from each run were automatically discarded by the scanner to allow scanner equilibrium. Second, all volume slice scan times were corrected to the middle time slice and realigned to the first scan to correct for head motion. Third, the structural images of each subject were coregistered with the mean functional images, and then the images were normalized to the Montreal Neurological Institute template. Fourth, all voxels were resampled to 3 × 3 × 3 mm. Last, all functional volumes were smoothed by using an 8-mm FWHM isotropic Gaussian kernel.",
+                  "start_char": 13016,
+                  "end_char": 13648
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "SPM12"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Imaging analysis was performed using spm12",
+                  "start_char": 12932,
+                  "end_char": 12974
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "DICOM-to-NIfTI conversion",
+          "discarding the first three images from each run",
+          "slice-timing correction",
+          "motion correction and realignment",
+          "coregistration",
+          "normalization to the Montreal Neurological Institute template",
+          "resampling"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "First, all the EPI DICOM data were converted to NIFTI format. The first three images from each run were automatically discarded by the scanner to allow scanner equilibrium. Second, all volume slice scan times were corrected to the middle time slice and realigned to the first scan to correct for head motion. Third, the structural images of each subject were coregistered with the mean functional images, and then the images were normalized to the Montreal Neurological Institute template. Fourth, all voxels were resampled to 3 × 3 × 3 mm.",
+                  "start_char": 13016,
+                  "end_char": 13556
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "smoothing_fwhm_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          8
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Last, all functional volumes were smoothed by using an 8-mm FWHM isotropic Gaussian kernel.",
+                  "start_char": 13557,
+                  "end_char": 13648
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "local_id": "tsk_encoding_jols",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "encoding and immediate judgments of learning task",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In the scanner and each run, participants performed an encoding and immediate judgment of learning (JOLs) task.",
+                  "start_char": 9950,
+                  "end_char": 10061
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Participants encoded abstract word pairs and immediately judged how likely they were to remember the unseen target in a later recognition test. During the encoding-JOL phase, participants viewed a cue word and predicted subsequent memory performance using a four-point scale.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "After encoding each pair, participants saw one word from the pair (the cue) on the screen and were asked to predict how likely they would remember the unseen target in the post-scan recognition task on a four-point scale",
+                  "start_char": 10363,
+                  "end_char": 10583
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "conditions": [
+        {
+          "local_id": "cond_jolhighmlow",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "JOLhighMlow",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "JOLs magnitude was high (\"will remember\" prediction) but was later failed to recognize in the post-scan recognition test (JOL M ), which is overestimated bias.",
+                      "start_char": 14735,
+                      "end_char": 14894
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "High judgment of learning prediction followed by failed recognition, representing overestimated bias.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "JOLs magnitude was high (\"will remember\" prediction) but was later failed to recognize in the post-scan recognition test (JOL M ), which is overestimated bias.",
+                      "start_char": 14735,
+                      "end_char": 14894
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "cond_jollowmhigh",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "JOLlowMhigh",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "JOLs magnitude was low (\"will forget\" prediction) but was later correctly recognized in the post-scan recognition test (JOL M ), which is underestimated bias.",
+                      "start_char": 14899,
+                      "end_char": 15057
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Low judgment of learning prediction followed by correct recognition, representing underestimated bias.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "JOLs magnitude was low (\"will forget\" prediction) but was later correctly recognized in the post-scan recognition test (JOL M ), which is underestimated bias.",
+                      "start_char": 14899,
+                      "end_char": 15057
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "event-related",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In this study, we used an event-related design",
+                  "start_char": 9670,
+                  "end_char": 9716
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "instructions": {
+        "extraction_status": "extracted",
+        "value": "Participants were asked to learn each word pair and predict how likely they would remember the unseen target in the post-scan recognition task.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "After encoding each pair, participants saw one word from the pair (the cue) on the screen and were asked to predict how likely they would remember the unseen target in the post-scan recognition task",
+                  "start_char": 10363,
+                  "end_char": 10561
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stimuli": {
+        "extraction_status": "extracted",
+        "value": "Abstract word pairs, including a cue word and an unseen target word.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the presentation of an abstract word pair (e.g., “合格-风景”, written in Latin characters “qualified—scenery”)",
+                  "start_char": 10207,
+                  "end_char": 10313
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "response_mode": {
+        "extraction_status": "extracted",
+        "value": [
+          "button_press"
+        ],
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Participants had 4000 ms to press a button to indicate their estimated performance",
+                  "start_char": 10684,
+                  "end_char": 10766
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "performance_measures": {
+        "extraction_status": "extracted",
+        "value": [
+          "judgment of learning magnitude",
+          "recognition accuracy",
+          "reaction time"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "we calculated response time (RT) and proportion between the JOL M  and JOL M  conditions",
+                  "start_char": 15592,
+                  "end_char": 15680
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1",
+                  "start_char": 26125,
+                  "end_char": 26132
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "MNI coordinates and corresponding Z scores for brain areas activated by JOLhighMlow and JOLhighMlow conditions.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI coordinates and corresponding Z scores for brain areas activated by JOLhighMlow and JOLhighMlow conditions.",
+                  "start_char": 26135,
+                  "end_char": 26246
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ]
+}

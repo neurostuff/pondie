@@ -1,0 +1,4752 @@
+{
+  "local_id": "QQCjAAT6SwwQ",
+  "extraction_metadata": {
+    "extractor_model": "@psyc-aid338-ope-333f18/gpt-5.6-luna",
+    "extractor_version": "review-bootstrap-0.1.0",
+    "source_text_hash": "42504c786c9d0b8b52a0a882a02a86a1035894036da0a5efff8261694cbe07c1",
+    "extraction_date": "2026-08-28",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "Background",
+        "level": 1,
+        "start_char": 640,
+        "end_char": 1143
+      },
+      {
+        "ordinal": 1,
+        "title": "Methods",
+        "level": 1,
+        "start_char": 1143,
+        "end_char": 1716
+      },
+      {
+        "ordinal": 2,
+        "title": "Results",
+        "level": 1,
+        "start_char": 1716,
+        "end_char": 2348
+      },
+      {
+        "ordinal": 3,
+        "title": "Conclusion",
+        "level": 1,
+        "start_char": 2348,
+        "end_char": 2605
+      },
+      {
+        "ordinal": 4,
+        "title": "Introduction",
+        "level": 1,
+        "start_char": 2605,
+        "end_char": 8638
+      },
+      {
+        "ordinal": 5,
+        "title": "Material and methods",
+        "level": 1,
+        "start_char": 8638,
+        "end_char": 22830
+      },
+      {
+        "ordinal": 6,
+        "title": "Participants",
+        "level": 2,
+        "start_char": 8666,
+        "end_char": 10514,
+        "parent_section": "Material and methods"
+      },
+      {
+        "ordinal": 7,
+        "title": "Procedures",
+        "level": 2,
+        "start_char": 10514,
+        "end_char": 11617,
+        "parent_section": "Material and methods"
+      },
+      {
+        "ordinal": 8,
+        "title": "Clinical interview",
+        "level": 2,
+        "start_char": 11617,
+        "end_char": 12561,
+        "parent_section": "Material and methods"
+      },
+      {
+        "ordinal": 9,
+        "title": "Sleep measurements",
+        "level": 2,
+        "start_char": 12561,
+        "end_char": 15514,
+        "parent_section": "Material and methods"
+      },
+      {
+        "ordinal": 10,
+        "title": "Questionnaire",
+        "level": 3,
+        "start_char": 12588,
+        "end_char": 13163,
+        "parent_section": "Sleep measurements"
+      },
+      {
+        "ordinal": 11,
+        "title": "Polysomnography",
+        "level": 3,
+        "start_char": 13163,
+        "end_char": 14046,
+        "parent_section": "Sleep measurements"
+      },
+      {
+        "ordinal": 12,
+        "title": "Sleep discrepancy between self-report and PSG",
+        "level": 3,
+        "start_char": 14046,
+        "end_char": 15514,
+        "parent_section": "Sleep measurements"
+      },
+      {
+        "ordinal": 13,
+        "title": "Simultaneous EEG-fMRI protocol",
+        "level": 2,
+        "start_char": 15514,
+        "end_char": 17686,
+        "parent_section": "Material and methods"
+      },
+      {
+        "ordinal": 14,
+        "title": "Data analysis",
+        "level": 2,
+        "start_char": 17686,
+        "end_char": 22830,
+        "parent_section": "Material and methods"
+      },
+      {
+        "ordinal": 15,
+        "title": "EEG data preprocessing",
+        "level": 3,
+        "start_char": 17708,
+        "end_char": 18437,
+        "parent_section": "Data analysis"
+      },
+      {
+        "ordinal": 16,
+        "title": "fMRI data processing",
+        "level": 3,
+        "start_char": 18437,
+        "end_char": 21031,
+        "parent_section": "Data analysis"
+      },
+      {
+        "ordinal": 17,
+        "title": "Statistical analysis",
+        "level": 3,
+        "start_char": 21031,
+        "end_char": 22830,
+        "parent_section": "Data analysis"
+      },
+      {
+        "ordinal": 18,
+        "title": "Results",
+        "level": 1,
+        "start_char": 22830,
+        "end_char": 37065
+      },
+      {
+        "ordinal": 19,
+        "title": "Demographic and clinical characteristics",
+        "level": 2,
+        "start_char": 22845,
+        "end_char": 27272,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 20,
+        "title": "Functional connectivity of the aINS",
+        "level": 2,
+        "start_char": 27272,
+        "end_char": 33843,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 21,
+        "title": "Exploratory correlation analysis between functional connectivity and sleep discrepancy",
+        "level": 2,
+        "start_char": 33843,
+        "end_char": 37065,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 22,
+        "title": "Discussion",
+        "level": 1,
+        "start_char": 37065,
+        "end_char": 48953
+      },
+      {
+        "ordinal": 23,
+        "title": "Conclusion",
+        "level": 1,
+        "start_char": 48953,
+        "end_char": 49773
+      },
+      {
+        "ordinal": 24,
+        "title": "Declaration of Competing Interest",
+        "level": 1,
+        "start_char": 49773,
+        "end_char": 49984
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "A simultaneous EEG-fMRI study examining anterior-insula-based functional connectivity across wakefulness and NREM sleep stages in patients with insomnia disorder and healthy controls, including associations with sleep discrepancy measured by the misperception index.",
+    "value_source": "generated",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "Patients with insomnia disorder (n = 33) and healthy controls (n = 31) underwent simultaneous electroencephalography and functional magnetic resonance imaging (EEG-fMRI) during nighttime sleep, and aINS-based connectivity was calculated across wake and NREM sleep.",
+              "start_char": 1158,
+              "end_char": 1422
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "hypothesis": {
+    "extraction_status": "extracted",
+    "value": [
+      "The functional connectivity of the anterior insula in patients with insomnia disorder would be altered during the progression from wakefulness to NREM sleep.",
+      "The altered connectivity of the anterior insula would be associated with sleep discrepancy."
+    ],
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "We hypothesize that the functional connectivity of the aINS in patients with insomnia disorder would be altered during the progression from wakefulness to NREM sleep and that the altered connectivity of the aINS would be associated with sleep discrepancy.",
+              "start_char": 8379,
+              "end_char": 8634
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Observational, cross-sectional comparison of insomnia disorder patients and healthy controls, with simultaneous overnight EEG-fMRI recording across wakefulness and NREM sleep stages.",
+      "value_source": "generated",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "Patients with insomnia disorder (n = 33) and healthy controls (n = 31) underwent simultaneous electroencephalography and functional magnetic resonance imaging (EEG-fMRI) during nighttime sleep, and aINS-based connectivity was calculated across wake and NREM sleep.",
+                "start_char": 1158,
+                "end_char": 1422
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "single_arm",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "parallel",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "not_applicable",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "arms": [],
+    "timepoints": [
+      {
+        "local_id": "tp_wakefulness",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "wakefulness",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "wakefulness",
+                    "start_char": 478,
+                    "end_char": 489
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "not_applicable",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        }
+      },
+      {
+        "local_id": "tp_n1",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "N1",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "N1",
+                    "start_char": 6843,
+                    "end_char": 6845
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "not_applicable",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 2,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "wakefulness, N1, N2, N3",
+                    "start_char": 21541,
+                    "end_char": 21564
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "tp_n2",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "N2",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "N2",
+                    "start_char": 18694,
+                    "end_char": 18696
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "not_applicable",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 3,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "wakefulness, N1, N2, N3",
+                    "start_char": 21541,
+                    "end_char": 21564
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "tp_n3",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "N3",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "N3",
+                    "start_char": 18701,
+                    "end_char": 18703
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "not_applicable",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 4,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "wakefulness, N1, N2, N3",
+                    "start_char": 21541,
+                    "end_char": 21564
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "analyses": [
+    {
+      "local_id": "a_t0010_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Group-by-stage interaction — Wake",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A group (insomnia vs. control)-by-stage (wakefulness, N1, N2, N3) interaction of functional connectivity with the left aINS",
+                  "start_char": 27316,
+                  "end_char": 27439
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Group-by-stage interaction; post-hoc comparison at Wake stage.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A group (insomnia vs. control)-by-stage (wakefulness, N1, N2, N3) interaction of functional connectivity with the left aINS",
+                  "start_char": 27316,
+                  "end_char": 27439
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "The connectivity of the aINS with the bilateral superior frontal gyrus, bilateral middle occipital gyrus, right inferior temporal gyrus and right postcentral gyrus was significantly lower in the patients than in the controls during wakefulness."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The connectivity of the aINS with the bilateral superior frontal gyrus, bilateral middle occipital gyrus, right inferior temporal gyrus and right postcentral gyrus was significantly lower in the patients than in the controls during wakefulness.",
+                  "start_char": 30781,
+                  "end_char": 31025
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_ains_connectivity",
+      "groups": [
+        {
+          "group": "grp_insomnia",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "N=17 for the patients",
+                      "start_char": 34969,
+                      "end_char": 34990
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_control",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 10,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "N=10 for the controls",
+                      "start_char": 34992,
+                      "end_char": 35013
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "insomnia",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "the patients",
+                        "start_char": 1048,
+                        "end_char": 1060
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "significantly lower in the patients than in the controls",
+                        "start_char": 30949,
+                        "end_char": 31005
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "control",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "the controls",
+                        "start_char": 12544,
+                        "end_char": 12556
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "significantly lower in the patients than in the controls",
+                        "start_char": 30949,
+                        "end_char": 31005
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_stage",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "wakefulness",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Wake",
+                        "start_char": 29055,
+                        "end_char": 29059
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "held",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "chi_square",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "χ2",
+                      "start_char": 24525,
+                      "end_char": 24527
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "seed-based functional connectivity",
+                    "start_char": 21602,
+                    "end_char": 21636
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_left_ains"
+        ],
+        "target_regions": [],
+        "edges": []
+      },
+      "acquisitions": [
+        "acq_eeg_fmri"
+      ],
+      "tasks": [
+        "tsk_sleep_wake"
+      ],
+      "model_estimation": "mod_group_stage",
+      "inference_settings": "inf_corrected",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t0010#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Montreal Neurological Institute (MNI) coordinates",
+                  "start_char": 20567,
+                  "end_char": 20616
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "a_t0010_2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Group-by-stage interaction — N1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A group (insomnia vs. control)-by-stage (wakefulness, N1, N2, N3) interaction of functional connectivity with the left aINS",
+                  "start_char": 27316,
+                  "end_char": 27439
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Group-by-stage interaction; post-hoc comparison at N1 stage.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A group (insomnia vs. control)-by-stage (wakefulness, N1, N2, N3) interaction of functional connectivity with the left aINS",
+                  "start_char": 27316,
+                  "end_char": 27439
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_ains_connectivity",
+      "groups": [
+        {
+          "group": "grp_insomnia",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 13,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "27 N1 epochs (13 subjects)",
+                      "start_char": 18781,
+                      "end_char": 18807
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_control",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 11,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "16 N1 epochs (11 subjects)",
+                      "start_char": 18939,
+                      "end_char": 18965
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "insomnia",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "the patient group",
+                        "start_char": 2279,
+                        "end_char": 2296
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "control",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "controls",
+                        "start_char": 1211,
+                        "end_char": 1219
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_stage",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "N1",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "N1",
+                        "start_char": 6843,
+                        "end_char": 6845
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "held",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "chi_square",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "χ2",
+                      "start_char": 24525,
+                      "end_char": 24527
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "seed-based functional connectivity",
+                    "start_char": 21602,
+                    "end_char": 21636
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_left_ains"
+        ],
+        "target_regions": [],
+        "edges": []
+      },
+      "acquisitions": [
+        "acq_eeg_fmri"
+      ],
+      "tasks": [
+        "tsk_sleep_wake"
+      ],
+      "model_estimation": "mod_group_stage",
+      "inference_settings": "inf_corrected",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t0010#2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Montreal Neurological Institute (MNI) coordinates",
+                  "start_char": 20567,
+                  "end_char": 20616
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "a_t0010_3",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Group-by-stage interaction — N2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A group (insomnia vs. control)-by-stage (wakefulness, N1, N2, N3) interaction of functional connectivity with the left aINS",
+                  "start_char": 27316,
+                  "end_char": 27439
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Group-by-stage interaction; post-hoc comparison at N2 stage.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A group (insomnia vs. control)-by-stage (wakefulness, N1, N2, N3) interaction of functional connectivity with the left aINS",
+                  "start_char": 27316,
+                  "end_char": 27439
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_ains_connectivity",
+      "groups": [
+        {
+          "group": "grp_insomnia",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 20,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "67 N2 epochs (20 subjects)",
+                      "start_char": 18809,
+                      "end_char": 18835
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_control",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 21,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "75 N2 epochs (21 subjects)",
+                      "start_char": 18967,
+                      "end_char": 18993
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "insomnia",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "the patient group",
+                        "start_char": 2279,
+                        "end_char": 2296
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "control",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "controls",
+                        "start_char": 1211,
+                        "end_char": 1219
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_stage",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "N2",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "N2",
+                        "start_char": 18694,
+                        "end_char": 18696
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "held",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "chi_square",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "χ2",
+                      "start_char": 24525,
+                      "end_char": 24527
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "seed-based functional connectivity",
+                    "start_char": 21602,
+                    "end_char": 21636
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_left_ains"
+        ],
+        "target_regions": [],
+        "edges": []
+      },
+      "acquisitions": [
+        "acq_eeg_fmri"
+      ],
+      "tasks": [
+        "tsk_sleep_wake"
+      ],
+      "model_estimation": "mod_group_stage",
+      "inference_settings": "inf_corrected",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t0010#3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Montreal Neurological Institute (MNI) coordinates",
+                  "start_char": 20567,
+                  "end_char": 20616
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "a_t0010_4",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Group-by-stage interaction — N3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A group (insomnia vs. control)-by-stage (wakefulness, N1, N2, N3) interaction of functional connectivity with the left aINS",
+                  "start_char": 27316,
+                  "end_char": 27439
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Group-by-stage interaction; post-hoc comparison at N3 stage.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Group-by-stage interaction",
+                  "start_char": 27718,
+                  "end_char": 27744
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_ains_connectivity",
+      "groups": [
+        {
+          "group": "grp_insomnia",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 7,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "The insomnia group had 104 wakefulness epochs (17 subjects), 27 N1 epochs (13 subjects), 67 N2 epochs (20 subjects), and 20 N3 epochs (seven subjects);",
+                      "start_char": 18720,
+                      "end_char": 18871
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_control",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "the healthy control group had 40 wakefulness epochs (13 subjects), 16 N1 epochs (11 subjects), 75 N2 epochs (21 subjects), and 91 N3 epochs (17 subjects).",
+                      "start_char": 18872,
+                      "end_char": 19026
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "insomnia",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "control",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_stage",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "N3",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "held",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "chi_square",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "seed-based functional connectivity",
+                    "start_char": 21602,
+                    "end_char": 21636
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_left_ains"
+        ],
+        "target_regions": [],
+        "edges": []
+      },
+      "acquisitions": [
+        "acq_eeg_fmri"
+      ],
+      "tasks": [
+        "tsk_sleep_wake"
+      ],
+      "model_estimation": "mod_group_stage",
+      "inference_settings": "inf_corrected",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t0010#4",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Montreal Neurological Institute (MNI) coordinates",
+                  "start_char": 20567,
+                  "end_char": 20616
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "a_t0010_5",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Group effect",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Group effect block; no coordinate rows were reported.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "There was no significant main effect of group."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "There was no significant main effect of group.",
+                  "start_char": 2298,
+                  "end_char": 2344
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_ains_connectivity",
+      "groups": [
+        {
+          "group": "grp_insomnia",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 33,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thirty-three patients with chronic insomnia disorder and thirty-one healthy controls participated in this study.",
+                      "start_char": 22894,
+                      "end_char": 23006
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_control",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 31,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Thirty-three patients with chronic insomnia disorder and thirty-one healthy controls participated in this study.",
+                      "start_char": 22894,
+                      "end_char": 23006
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "insomnia",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "control",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "chi_square",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "seed-based functional connectivity",
+                    "start_char": 21602,
+                    "end_char": 21636
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_left_ains"
+        ],
+        "target_regions": [],
+        "edges": []
+      },
+      "acquisitions": [
+        "acq_eeg_fmri"
+      ],
+      "tasks": [
+        "tsk_sleep_wake"
+      ],
+      "model_estimation": "mod_group_stage",
+      "inference_settings": "inf_corrected",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t0010#5",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Montreal Neurological Institute (MNI) coordinates",
+                  "start_char": 20567,
+                  "end_char": 20616
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "a_t0015_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Group-by-stage interaction",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Group-by-stage interaction; post-hoc p values are reported for Wake, N1, N2, and N3.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Group-by-stage interaction",
+                  "start_char": 27718,
+                  "end_char": 27744
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Compared with controls, the functional connectivity between right aINS and left middle occipital and superior medial frontal regions in the patient group was significantly altered across wake and NREM sleep."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Post hoc analysis showed that compared with controls, the functional connectivity between right aINS and left middle occipital and superior medial frontal regions in the patient group was significantly altered across wake and NREM sleep.",
+                  "start_char": 31429,
+                  "end_char": 31666
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_ains_connectivity",
+      "groups": [
+        {
+          "group": "grp_insomnia",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 33,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "N=33 for the patients, N=31 for the controls.",
+                      "start_char": 27791,
+                      "end_char": 27836
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_control",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 31,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "N=33 for the patients, N=31 for the controls.",
+                      "start_char": 27791,
+                      "end_char": 27836
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group_stage_interaction",
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "chi_square",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "seed-based functional connectivity",
+                    "start_char": 21602,
+                    "end_char": 21636
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_right_ains"
+        ],
+        "target_regions": [],
+        "edges": []
+      },
+      "acquisitions": [
+        "acq_eeg_fmri"
+      ],
+      "tasks": [
+        "tsk_sleep_wake"
+      ],
+      "model_estimation": "mod_group_stage",
+      "inference_settings": "inf_corrected",
+      "tables": [
+        "tbl3"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t0015#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Montreal Neurological Institute (MNI) coordinates",
+                  "start_char": 20567,
+                  "end_char": 20616
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    },
+    {
+      "local_id": "a_t0015_2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Group effect",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Group effect block contains no coordinate rows.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "There was no significant main effect of group."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "There was no significant main effect of group.",
+                  "start_char": 2298,
+                  "end_char": 2344
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_ains_connectivity",
+      "groups": [
+        {
+          "group": "grp_insomnia",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 33,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "group": "grp_control",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 31,
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "insomnia",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "A significant interaction effect on connectivity between aINS and the putamen/thalamus was observed during wakefulness, as shown in  Fig. 3  and  Table 4 .",
+                        "start_char": 34114,
+                        "end_char": 34269
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "control",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "In healthy controls, the correlation between MI and left aINS–left putamen/thalamus connectivity was significantly positive during wakefulness, i.e., as the subjects attempted to fall asleep (r = 0.90,   p   < 0.001), but patients with insomnia disorder showed no significant correlation.",
+                        "start_char": 34270,
+                        "end_char": 34558
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "undirected",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "chi_square",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "χ2",
+                      "start_char": 24525,
+                      "end_char": 24527
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "To assess the potential correlation between seed-based functional connectivity and the sleep misperception index (MI, (sleep diary TST – PSG TST)/PSG TST), similar mixed-effects models were used.",
+                    "start_char": 22402,
+                    "end_char": 22597
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_right_ains"
+        ],
+        "target_regions": [],
+        "edges": []
+      },
+      "acquisitions": [
+        "acq_eeg_fmri"
+      ],
+      "tasks": [
+        "tsk_sleep_wake"
+      ],
+      "model_estimation": "mod_group_stage",
+      "inference_settings": "inf_corrected",
+      "tables": [
+        "tbl3"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t0015#2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4 — MI-by-group interaction effect on aINS connectivity during wakefulness.",
+                  "start_char": 35261,
+                  "end_char": 35342
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI ordinates (x, y, z)",
+                  "start_char": 35369,
+                  "end_char": 35392
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": []
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acq_eeg_fmri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Sleep blood oxygenation level–dependent fMRI data sets were collected",
+                  "start_char": 17229,
+                  "end_char": 17298
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 3,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "fMRI (3T Prisma Scanner",
+                  "start_char": 11220,
+                  "end_char": 11243
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "gradient-echo echo-planar imaging",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Sleep blood oxygenation level–dependent fMRI data sets were collected using a gradient-echo echo-planar imaging sequence",
+                  "start_char": 17229,
+                  "end_char": 17349
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 2,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TR = 2000 ms",
+                  "start_char": 17351,
+                  "end_char": 17363
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.03
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TE = 30 ms",
+                  "start_char": 17365,
+                  "end_char": 17375
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          3.5,
+          3.5,
+          4.2
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "number_of_volumes": {
+        "extraction_status": "extracted",
+        "value": 4096,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The “sleep” session ended when all 4096 volumes had been acquired",
+                  "start_char": 17506,
+                  "end_char": 17571
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "device": "dev_prisma"
+    }
+  ],
+  "assessments": [
+    {
+      "local_id": "asm_mini",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Mini-International Neuropsychiatric Interview (MINI) version 5.0",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Mini-International Neuropsychiatric Interview (MINI) version 5.0",
+                  "start_char": 11790,
+                  "end_char": 11854
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "A structured clinical interview administered by a physician to assess current and past psychiatric disorders and to diagnose insomnia disorder according to DSM-5 criteria.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "current and past psychiatric disorders were assessed by a physician according to the criteria of the Mini-International Neuropsychiatric Interview (MINI) version 5.0",
+                  "start_char": 11689,
+                  "end_char": 11854
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "diagnostic interview",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "clinical interview",
+                  "start_char": 9054,
+                  "end_char": 9072
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asm_psqi",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Pittsburgh Sleep Quality Index (PSQI)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Pittsburgh Sleep Quality Index (PSQI)",
+                  "start_char": 9438,
+                  "end_char": 9475
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "A self-rated scale used to measure sleep quality.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Sleep quality was measured with the PSQI, which is a well-validated self-rated scale with good psychometric properties.",
+                  "start_char": 12611,
+                  "end_char": 12730
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "questionnaire",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Questionnaire",
+                  "start_char": 12593,
+                  "end_char": 12606
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "asm_mi",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "misperception index",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "misperception index (MI)",
+                  "start_char": 1687,
+                  "end_char": 1711
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Sleep discrepancy quantified as ((sleep diary total sleep time − polysomnography total sleep time) / polysomnography total sleep time).",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used the total sleep time MI ((sleep diary TST – PSG TST)/PSG TST) to quantify sleep discrepancy.",
+                  "start_char": 14486,
+                  "end_char": 14586
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "sleep measure",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Sleep measurements",
+                  "start_char": 12565,
+                  "end_char": 12583
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_prisma",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "Siemens Healthineers",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Siemens Healthineers",
+                  "start_char": 11245,
+                  "end_char": 11265
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "3T Prisma Scanner",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "3T Prisma Scanner",
+                  "start_char": 11226,
+                  "end_char": 11243
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "grp_insomnia",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "insomnia disorder patients",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "patients with insomnia disorder",
+                  "start_char": 76,
+                  "end_char": 107
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Patients with chronic insomnia disorder enrolled from the outpatient sleep center or local community.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Patients with insomnia disorder were diagnosed using a structured clinical interview according to the criteria of Diagnostic and Statistical Manual of Mental Disorders, 5th Edition (DSM-5)",
+                  "start_char": 8988,
+                  "end_char": 9176
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "they were all Chinese Han population",
+                  "start_char": 8933,
+                  "end_char": 8969
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 33,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "33 patients with insomnia disorder",
+                  "start_char": 8725,
+                  "end_char": 8759
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "Age 18–60 years",
+          "Mini-Mental State Examination score ≥26",
+          "At least 8 years of education",
+          "Insomnia disorder diagnosed using a structured clinical interview according to DSM-5 criteria",
+          "Insomnia symptoms persisted for more than 3 months"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "(1) age 18–60 years, (2) Mini-Mental State Examination (MMSE) score ≥ 26, (3) length of education ≥ 8 years",
+                  "start_char": 9839,
+                  "end_char": 9946
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "exclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "Major past or present medical or psychiatric conditions other than insomnia",
+          "Past or present drug or alcohol use disorder",
+          "Left-handedness",
+          "Medicines that might affect sleep within the preceding 2 weeks",
+          "Ineligibility for MRI scanning",
+          "Periodic limb movement index ≥20/h",
+          "Apnea-hypopnea index ≥5",
+          "Shift work"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "recruitment_method": {
+        "extraction_status": "extracted",
+        "value": "Recruited from outpatients at the sleep center in Peking University Sixth Hospital or from the local community.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All participants were recruited from outpatients at the sleep center in Peking University Sixth Hospital, or in the local community.",
+                  "start_char": 8800,
+                  "end_char": 8932
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 39.18,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "39.18 (9.42)",
+                  "start_char": 24355,
+                  "end_char": 24367
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 9.42,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "39.18 (9.42)",
+                  "start_char": 24355,
+                  "end_char": 24367
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "extracted",
+        "value": 18,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age 18–60 years",
+                  "start_char": 9843,
+                  "end_char": 9858
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "extracted",
+        "value": 60,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age 18–60 years",
+                  "start_char": 9843,
+                  "end_char": 9858
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age 18–60 years",
+                  "start_char": 9843,
+                  "end_char": 9858
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "patients with insomnia disorder",
+                  "start_char": 76,
+                  "end_char": 107
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "insomnia disorder"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "insomnia disorder",
+                  "start_char": 90,
+                  "end_char": 107
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "diagnostic_system": {
+        "extraction_status": "extracted",
+        "value": "Diagnostic and Statistical Manual of Mental Disorders, 5th Edition (DSM-5)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Diagnostic and Statistical Manual of Mental Disorders, 5th Edition (DSM-5)",
+                  "start_char": 9102,
+                  "end_char": 9176
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "diagnostic_instrument": [
+        "asm_mini"
+      ],
+      "clinical_characteristics": {
+        "extraction_status": "extracted",
+        "value": "Insomnia symptoms persisted for more than 3 months; two patients had mild depressive and anxiety symptoms based on cutoff scores.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "insomnia symptoms persisted for more than 3 months.",
+                  "start_char": 9225,
+                  "end_char": 9276
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "grp_control",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "healthy controls",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "healthy controls",
+                  "start_char": 1203,
+                  "end_char": 1219
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Healthy control participants recruited from the sleep center outpatient population or local community, with no insomnia and normal sleep criteria.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "healthy controls completed the same interview to ensure that they had no insomnia and fit the inclusion criteria of normal sleep",
+                  "start_char": 9278,
+                  "end_char": 9406
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "they were all Chinese Han population",
+                  "start_char": 8933,
+                  "end_char": 8969
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 31,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "31 healthy controls",
+                  "start_char": 8764,
+                  "end_char": 8783
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "Age 18–60 years",
+          "Mini-Mental State Examination score ≥26",
+          "At least 8 years of education",
+          "No insomnia and normal sleep",
+          "Pittsburgh Sleep Quality Index score <7"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "(1) age 18–60 years, (2) Mini-Mental State Examination (MMSE) score ≥ 26, (3) length of education ≥ 8 years",
+                  "start_char": 9839,
+                  "end_char": 9946
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "exclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "Major past or present medical or psychiatric conditions",
+          "Past or present drug or alcohol use disorder",
+          "Left-handedness",
+          "Medicines that might affect sleep within the preceding 2 weeks",
+          "Ineligibility for MRI scanning",
+          "Periodic limb movement index ≥20/h",
+          "Apnea-hypopnea index ≥5",
+          "Shift work"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "recruitment_method": {
+        "extraction_status": "extracted",
+        "value": "Recruited from outpatients at the sleep center in Peking University Sixth Hospital or from the local community.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All participants were recruited from outpatients at the sleep center in Peking University Sixth Hospital, or in the local community.",
+                  "start_char": 8800,
+                  "end_char": 8932
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 35.06,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "35.06 (8.55)",
+                  "start_char": 24384,
+                  "end_char": 24396
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 8.55,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "35.06 (8.55)",
+                  "start_char": 24384,
+                  "end_char": 24396
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "extracted",
+        "value": 18,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age 18–60 years",
+                  "start_char": 9843,
+                  "end_char": 9858
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "extracted",
+        "value": 60,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age 18–60 years",
+                  "start_char": 9843,
+                  "end_char": 9858
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "age 18–60 years",
+                  "start_char": 9843,
+                  "end_char": 9858
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "healthy controls",
+                  "start_char": 1203,
+                  "end_char": 1219
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "absence of insomnia disorder and psychiatric disorders"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "had no insomnia and fit the inclusion criteria of normal sleep",
+                  "start_char": 9344,
+                  "end_char": 9406
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "diagnostic_instrument": [
+        "asm_mini"
+      ],
+      "clinical_characteristics": {
+        "extraction_status": "extracted",
+        "value": "Participants had no insomnia or psychiatric disorders and fit the inclusion criteria for normal sleep.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inf_corrected",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxelwise threshold",
+                  "start_char": 21789,
+                  "end_char": 21808
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.001,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Correspondingly, a corrected significance level of   p   < 0.05 for the resulting statistical maps was obtained using clusters with a minimum number of 247 voxels at an uncorrected individual voxel height threshold of   p   < 0.001.",
+                  "start_char": 22167,
+                  "end_char": 22399
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Correspondingly, a corrected significance level of   p   < 0.05 for the resulting statistical maps was obtained using clusters with a minimum number of 247 voxels at an uncorrected individual voxel height threshold of   p   < 0.001.",
+                  "start_char": 22167,
+                  "end_char": 22399
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "extracted",
+        "value": 247,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Correspondingly, a corrected significance level of   p   < 0.05 for the resulting statistical maps was obtained using clusters with a minimum number of 247 voxels at an uncorrected individual voxel height threshold of   p   < 0.001.",
+                  "start_char": 22167,
+                  "end_char": 22399
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "clusterwise_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.05,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used the autocorrelation function (ACF) modeling approach combined with a voxelwise threshold of   p   < 0.001 to correct for multiple comparisons ( Cox, 1996 ,  Eklund et al., 2016 ).",
+                  "start_char": 21712,
+                  "end_char": 21899
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "ACF and clusterwise correction",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We used the autocorrelation function (ACF) modeling approach combined with a voxelwise threshold of   p   < 0.001 to correct for multiple comparisons ( Cox, 1996 ,  Eklund et al., 2016 ).",
+                  "start_char": 21712,
+                  "end_char": 21899
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correction_scope": {
+        "extraction_status": "extracted",
+        "value": "whole brain",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "alpha_level": {
+        "extraction_status": "extracted",
+        "value": 0.05,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Correspondingly, a corrected significance level of   p   < 0.05 for the resulting statistical maps was obtained using clusters with a minimum number of 247 voxels at an uncorrected individual voxel height threshold of   p   < 0.001.",
+                  "start_char": 22167,
+                  "end_char": 22399
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "mea_ains_connectivity",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Sleep blood oxygenation level–dependent fMRI data sets were collected using a gradient-echo echo-planar imaging sequence",
+                  "start_char": 17229,
+                  "end_char": 17349
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "connectivity_strength",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "aINS-based connectivity was calculated across wake and NREM sleep.",
+                  "start_char": 1356,
+                  "end_char": 1422
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "anterior insula-based functional connectivity",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "aINS-based connectivity was calculated across wake and NREM sleep.",
+                  "start_char": 1356,
+                  "end_char": 1422
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "Pearson correlation coefficient transformed using Fisher's r-to-z transformation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We calculated the value of Pearson’s correlation coefficient between the seed time series and every other voxel in the brain and transformed the correlation coefficient values into z values using Fisher’s r-to-z transformation.",
+                  "start_char": 20695,
+                  "end_char": 20922
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "mod_group_stage",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "mixed_effects",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A linear mixed-effects model was used to assess the main effect of group and group-by-stage (wake, NREM stages 1–3) interaction effect on aINS connectivity.",
+                  "start_char": 1423,
+                  "end_char": 1579
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "linear mixed-effects model of group and sleep stage",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "For fMRI data, a linear mixed-effects model was used to assess the interaction effect of group (insomnia vs. control) and stage (wakefulness, N1, N2, N3) and the main effect of group on the seed-based functional connectivity.",
+                  "start_char": 21412,
+                  "end_char": 21637
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Age, sex, and years of education were included as covariates of no interest.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Age, sex, and years of education were added as covariates of no interest.",
+                  "start_char": 21638,
+                  "end_char": 21711
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "For fMRI data, a linear mixed-effects model was used to assess the interaction effect of group (insomnia vs. control) and stage (wakefulness, N1, N2, N3) and the main effect of group on the seed-based functional connectivity.",
+                  "start_char": 21412,
+                  "end_char": 21637
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "linear mixed-effects model",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "For fMRI data, a linear mixed-effects model was used to assess the interaction effect of group (insomnia vs. control) and stage (wakefulness, N1, N2, N3) and the main effect of group on the seed-based functional connectivity.",
+                  "start_char": 21412,
+                  "end_char": 21637
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "not_reported",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The ACF was developed and implemented into the 3dClustSim tool to determine the cluster-size threshold to use for a given voxelwise threshold.",
+                  "start_char": 21900,
+                  "end_char": 22042
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "trm_group",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "group",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "the interaction effect of group (insomnia vs. control)",
+                      "start_char": 21475,
+                      "end_char": 21529
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "group (insomnia vs. control)",
+                      "start_char": 21501,
+                      "end_char": 21529
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "insomnia",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "group (insomnia vs. control)",
+                          "start_char": 21501,
+                          "end_char": 21529
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp_insomnia"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "control",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "group (insomnia vs. control)",
+                          "start_char": 21501,
+                          "end_char": 21529
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp_control"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "local_id": "trm_stage",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "sleep stage",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "stage (wakefulness, N1, N2, N3)",
+                      "start_char": 21534,
+                      "end_char": 21565
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "stage (wakefulness, N1, N2, N3)",
+                      "start_char": 21534,
+                      "end_char": 21565
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "wakefulness",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "stage (wakefulness, N1, N2, N3)",
+                          "start_char": 21534,
+                          "end_char": 21565
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond_wakefulness"
+              ],
+              "timepoints": [
+                "tp_wakefulness"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "N1",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "stage (wakefulness, N1, N2, N3)",
+                          "start_char": 21534,
+                          "end_char": 21565
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond_n1"
+              ],
+              "timepoints": [
+                "tp_n1"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "N2",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "stage (wakefulness, N1, N2, N3)",
+                          "start_char": 21534,
+                          "end_char": 21565
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond_n2"
+              ],
+              "timepoints": [
+                "tp_n2"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "N3",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "stage (wakefulness, N1, N2, N3)",
+                          "start_char": 21534,
+                          "end_char": 21565
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "conditions": [
+                "cond_n3"
+              ],
+              "timepoints": [
+                "tp_n3"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "local_id": "trm_group_stage_interaction",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "group-by-stage interaction",
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "interaction_with": [
+            "trm_group",
+            "trm_stage"
+          ],
+          "source_definition": {
+            "extraction_status": "extracted",
+            "value": "Interaction coefficient for group-by-stage effects across wakefulness and NREM stages 1–3.",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "prp_fmri",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "fMRI preprocessing before functional connectivity calculation.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The fMRI data were preprocessed using the FMRIB Software Library (FSL,   https://fsl.fmrib.ox.ac.uk/fsl/fslwiki  , version 5.0.9) tools, the Analysis of Functional NeuroImages software package ( Cox, 1996 ) and MATLAB (MathWorks).",
+                  "start_char": 19697,
+                  "end_char": 19927
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "FMRIB Software Library (FSL) version 5.0.9",
+          "Analysis of Functional NeuroImages",
+          "MATLAB"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The fMRI data were preprocessed using the FMRIB Software Library (FSL,   https://fsl.fmrib.ox.ac.uk/fsl/fslwiki  , version 5.0.9) tools, the Analysis of Functional NeuroImages software package ( Cox, 1996 ) and MATLAB (MathWorks).",
+                  "start_char": 19697,
+                  "end_char": 19927
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "slice timing",
+          "motion correction",
+          "spatial normalization",
+          "nuisance signal regression",
+          "linear detrending",
+          "temporal filtering"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The preprocessing steps included slice timing, motion correction, spatial normalization (voxel size, 2×2×2 mm ), nuisance signal regression, linear detrending, temporal filtering (0.01–0.08 Hz) and spatial smoothing with a 6 mm Gaussian kernel.",
+                  "start_char": 19928,
+                  "end_char": 20172
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "smoothing_fwhm_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          6
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "spatial smoothing with a 6 mm Gaussian kernel",
+                  "start_char": 20126,
+                  "end_char": 20171
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "regions": [
+    {
+      "local_id": "reg_left_ains",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "left anterior insula",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The seeds for the bilateral aINS were selected based on Montreal Neurological Institute (MNI) coordinates ( Seeley et al., 2007 ), as shown in the supplemental material ( Fig. S1 ).",
+                  "start_char": 20511,
+                  "end_char": 20692
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "prior_literature",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The seeds for the bilateral aINS were selected based on Montreal Neurological Institute (MNI) coordinates ( Seeley et al., 2007 ), as shown in the supplemental material ( Fig. S1 ).",
+                  "start_char": 20511,
+                  "end_char": 20692
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "coordinate_sphere",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Seed selected using Montreal Neurological Institute coordinates based on Seeley et al. (2007), as shown in the supplementary material.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The seeds for the bilateral aINS were selected based on Montreal Neurological Institute (MNI) coordinates ( Seeley et al., 2007 ), as shown in the supplemental material ( Fig. S1 ).",
+                  "start_char": 20511,
+                  "end_char": 20692
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "reg_right_ains",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "right anterior insula",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The seeds for the bilateral aINS were selected based on Montreal Neurological Institute (MNI) coordinates ( Seeley et al., 2007 ), as shown in the supplemental material ( Fig. S1 ).",
+                  "start_char": 20511,
+                  "end_char": 20692
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "prior_literature",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The seeds for the bilateral aINS were selected based on Montreal Neurological Institute (MNI) coordinates ( Seeley et al., 2007 ), as shown in the supplemental material ( Fig. S1 ).",
+                  "start_char": 20511,
+                  "end_char": 20692
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "coordinate_sphere",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Seed selected using Montreal Neurological Institute coordinates based on Seeley et al. (2007), as shown in the supplementary material.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The seeds for the bilateral aINS were selected based on Montreal Neurological Institute (MNI) coordinates ( Seeley et al., 2007 ), as shown in the supplemental material ( Fig. S1 ).",
+                  "start_char": 20511,
+                  "end_char": 20692
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "local_id": "tsk_sleep_wake",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "sleep-wake resting protocol",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Using synchronous EEG-fMRI recording during wakefulness and sleep, this study aimed to investigate the brain functional connectivity of the aINS related to sleep discrepancy between self-report and PSG in patients with insomnia disorder.",
+                  "start_char": 8141,
+                  "end_char": 8378
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Participants lay in the MRI scanner at their usual bedtime, wearing an MR-compatible EEG cap, closed their eyes, relaxed, and tried to sleep while simultaneous EEG-fMRI data were recorded across wakefulness and NREM sleep stages.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "At their usual bedtime, participants were instructed to lie in the MRI scanner wearing an MR-compatible EEG cap, close their eyes, relax and try to sleep in the scanner.",
+                  "start_char": 15623,
+                  "end_char": 15792
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "conditions": [
+        {
+          "local_id": "cond_wakefulness",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "wakefulness",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "wakefulness",
+                      "start_char": 478,
+                      "end_char": 489
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Wakeful periods with eyes closed while participants attempted to fall asleep.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "the wakefulness was the state with eyes closed and trying to sleep at night.",
+                      "start_char": 44295,
+                      "end_char": 44371
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "cond_n1",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "N1",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "N1",
+                      "start_char": 6843,
+                      "end_char": 6845
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "NREM sleep stage N1.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "NREM stages 1–3",
+                      "start_char": 1522,
+                      "end_char": 1537
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "cond_n2",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "N2",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "N2",
+                      "start_char": 18694,
+                      "end_char": 18696
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "NREM sleep stage N2.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "NREM stages 1–3",
+                      "start_char": 1522,
+                      "end_char": 1537
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "cond_n3",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "N3",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "N3",
+                      "start_char": 18701,
+                      "end_char": 18703
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "NREM sleep stage N3.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "NREM stages 1–3",
+                      "start_char": 1522,
+                      "end_char": 1537
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "continuous with stage-defined epochs",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "fMRI data from continuous 5-min epochs of wakefulness and sleep stages N1, N2 and N3 were extracted.",
+                  "start_char": 18619,
+                  "end_char": 18719
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisitions": [
+        "acq_eeg_fmri"
+      ],
+      "instructions": {
+        "extraction_status": "extracted",
+        "value": "Close the eyes, relax, and try to sleep in the scanner at the usual bedtime.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "At their usual bedtime, participants were instructed to lie in the MRI scanner wearing an MR-compatible EEG cap, close their eyes, relax and try to sleep in the scanner.",
+                  "start_char": 15623,
+                  "end_char": 15792
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stimuli": {
+        "extraction_status": "extracted",
+        "value": "none",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "response_mode": {
+        "extraction_status": "extracted",
+        "value": [
+          "none"
+        ],
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1",
+                  "start_char": 23093,
+                  "end_char": 23100
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Demographic and clinical characteristics of the participants.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Demographic and clinical characteristics of the participants.",
+                  "start_char": 23953,
+                  "end_char": 24014
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "Notes: Mean (SD) values of variables are reported, along with t-statistics and p values. Significant main effects are in bold. *p < 0.05, **p < 0.01, ***p < 0.001. Misperception index: (Sleep diary TST – PSG TST)/PSG TST.Abbreviations: PSQI, Pittsburgh Sleep Quality Index; TST, total sleep time; TIB, time in bed; SOL, sleep onset latency; SE, sleep efficiency (PSG TST/TIB); WASO, wakefulness after sleep onset; REM, rapid eye movement; AHI, apnea–hypopnea index; PLMI, periodic limb movement index; SDS, Self-Rating Depression Scale; SAS, Self-Rating Anxiety Scale.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Notes: Mean (SD) values of variables are reported, along with t-statistics and p values. Significant main effects are in bold. *p < 0.05, **p < 0.01, ***p < 0.001. Misperception index: (Sleep diary TST – PSG TST)/PSG TST.Abbreviations: PSQI, Pittsburgh Sleep Quality Index; TST, total sleep time; TIB",
+                  "start_char": 26697,
+                  "end_char": 26997
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2",
+                  "start_char": 27704,
+                  "end_char": 27711
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Altered connectivity with the left aINS in patients with insomnia disorder compared with healthy controls.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Altered connectivity with the left aINS in patients with insomnia disorder compared with healthy controls.",
+                  "start_char": 28294,
+                  "end_char": 28400
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "1N = 33 for the patients, N = 31 for the controls; Abbreviations: Mid, middle; L, left; Inf, inferior; R, right; Sup, superior; B, bilateral; MNI, Montreal Neurological Institute. p values are corrected by Bonferroni correction.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "1N = 33 for the patients, N = 31 for the controls; Abbreviations: Mid, middle; L, left; Inf, inferior; R, right; Sup, superior; B, bilateral; MNI, Montreal Neurological Institute. p values are corrected by Bonferroni correction.",
+                  "start_char": 30372,
+                  "end_char": 30600
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl3",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3",
+                  "start_char": 31418,
+                  "end_char": 31425
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Altered connectivity with the right aINS in patients with insomnia disorder compared with healthy controls.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Altered connectivity with the right aINS in patients with insomnia disorder compared with healthy controls.",
+                  "start_char": 32097,
+                  "end_char": 32204
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "1N = 33 for the patients, N = 31 for the controls; Abbreviations: Mid, middle; L, left; Sup, superior; Med, medial; MNI, Montreal Neurological Institute. p values are corrected by Bonferroni correction.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "1N = 33 for the patients, N = 31 for the controls; Abbreviations: Mid, middle; L, left; Sup, superior; Med, medial; MNI, Montreal Neurological Institute. p values are corrected by Bonferroni correction.",
+                  "start_char": 33538,
+                  "end_char": 33740
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl4",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 4",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4",
+                  "start_char": 34260,
+                  "end_char": 34267
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "MI-by-group interaction effect on aINS connectivity during wakefulness.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MI-by-group interaction effect on aINS connectivity during wakefulness.",
+                  "start_char": 35182,
+                  "end_char": 35253
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "1N = 17 for the patients, N = 10 for the controls; Abbreviations: Put, putamen; L, left; Tha, thalamus; R, right; MNI, Montreal Neurological Institute.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "1N = 17 for the patients, N = 10 for the controls; Abbreviations: Put, putamen; L, left; Tha, thalamus; R, right; MNI, Montreal Neurological Institute.",
+                  "start_char": 36214,
+                  "end_char": 36365
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

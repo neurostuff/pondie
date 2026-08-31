@@ -1,0 +1,3017 @@
+{
+ "paper_id": "JzsUUQbDr2bm",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis_01",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_01",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_01",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_01",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_01",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_01",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_01",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_02",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_02",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_02",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_02",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_02",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_02",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_02",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_03",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_03",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_03",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_03",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_03",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_03",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_03",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_04",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_04",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_04",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_04",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_04",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_04",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_04",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_05",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_05",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_05",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_05",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_05",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_05",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_05",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_06",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_06",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_06",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_06",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_06",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_06",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_06",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_07",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_07",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_07",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_07",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_07",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_07",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_07",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_08",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_08",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_08",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_08",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_08",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_08",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_08",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_09",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_09",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_09",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_09",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_09",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_09",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_09",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_10",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_10",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_10",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_10",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_10",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_10",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_10",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_11",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_11",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_11",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_11",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_11",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_11",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_11",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_12",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_12",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_12",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_12",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_12",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_12",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_12",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_13",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_13",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_13",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_13",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_13",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_13",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_13",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_14",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_14",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_14",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_14",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_14",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_14",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_14",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_15",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_15",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_15",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_15",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_15",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_15",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_15",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_16",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_16",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_16",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_16",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_16",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_16",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_16",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_17",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_17",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_17",
+   "term": "term_gender",
+   "level": "",
+   "label": "gender  (categorical)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_17",
+   "term": "term_group",
+   "level": "CSZ",
+   "label": "group : CSZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_17",
+   "term": "term_group",
+   "level": "FESZ",
+   "label": "group : FESZ",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_17",
+   "term": "term_group",
+   "level": "NC",
+   "label": "group : NC",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_17",
+   "term": "term_tbv",
+   "level": "",
+   "label": "total brain volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  }
+ ],
+ "analyses": {
+  "analysis_01": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_02": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_03": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_04": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_05": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_06": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_07": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_08": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_09": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_10": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_11": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_12": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_13": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_14": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_15": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_16": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_17": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  }
+ }
+}

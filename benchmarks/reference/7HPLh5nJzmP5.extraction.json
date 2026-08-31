@@ -1,0 +1,3665 @@
+{
+  "local_id": "7HPLh5nJzmP5",
+  "extraction_metadata": {
+    "extractor_model": "claude-opus-5",
+    "extractor_version": "adjudicated-0.1.0",
+    "source_text_hash": "49a461012ac1a42f7be8b42eafa67535e0b4b6b855e1fe68920a83bd8e56ae97",
+    "extraction_date": "2026-08-11",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "Background",
+        "level": 1,
+        "start_char": 736,
+        "end_char": 1187
+      },
+      {
+        "ordinal": 1,
+        "title": "Objective",
+        "level": 1,
+        "start_char": 1187,
+        "end_char": 1445
+      },
+      {
+        "ordinal": 2,
+        "title": "Methods",
+        "level": 1,
+        "start_char": 1445,
+        "end_char": 2180
+      },
+      {
+        "ordinal": 3,
+        "title": "Results",
+        "level": 1,
+        "start_char": 2180,
+        "end_char": 2746
+      },
+      {
+        "ordinal": 4,
+        "title": "Conclusion",
+        "level": 1,
+        "start_char": 2746,
+        "end_char": 2954
+      },
+      {
+        "ordinal": 5,
+        "title": "Introduction",
+        "level": 1,
+        "start_char": 2954,
+        "end_char": 7355
+      },
+      {
+        "ordinal": 6,
+        "title": "Materials and methods",
+        "level": 1,
+        "start_char": 7355,
+        "end_char": 20682
+      },
+      {
+        "ordinal": 7,
+        "title": "Participants",
+        "level": 2,
+        "start_char": 7384,
+        "end_char": 8953,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 8,
+        "title": "Procedures",
+        "level": 2,
+        "start_char": 8953,
+        "end_char": 9862,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 9,
+        "title": "Intermittent theta-burst stimulation",
+        "level": 2,
+        "start_char": 9862,
+        "end_char": 11568,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 10,
+        "title": "fNIRS acquisition",
+        "level": 2,
+        "start_char": 11568,
+        "end_char": 12706,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 11,
+        "title": "fNIRS data analyses",
+        "level": 2,
+        "start_char": 12706,
+        "end_char": 14217,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 12,
+        "title": "MRI acquisition",
+        "level": 2,
+        "start_char": 14217,
+        "end_char": 15046,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 13,
+        "title": "MRI data analyses and statistical procedures",
+        "level": 2,
+        "start_char": 15046,
+        "end_char": 20682,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 14,
+        "title": "Results",
+        "level": 1,
+        "start_char": 20682,
+        "end_char": 33775
+      },
+      {
+        "ordinal": 15,
+        "title": "Baseline functional connectivity",
+        "level": 2,
+        "start_char": 24904,
+        "end_char": 30600,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 16,
+        "title": "fNIRS changes",
+        "level": 2,
+        "start_char": 30600,
+        "end_char": 31482,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 17,
+        "title": "Functional connectivity changes after iTBS",
+        "level": 2,
+        "start_char": 31482,
+        "end_char": 32434,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 18,
+        "title": "fNIRS signal-related connectivity changes",
+        "level": 2,
+        "start_char": 32434,
+        "end_char": 33178,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 19,
+        "title": "fNIRS signal predictive of connectivity change after active iTBS",
+        "level": 2,
+        "start_char": 33178,
+        "end_char": 33775,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 20,
+        "title": "Discussion",
+        "level": 1,
+        "start_char": 33775,
+        "end_char": 40168
+      },
+      {
+        "ordinal": 21,
+        "title": "Data and code availability statement",
+        "level": 1,
+        "start_char": 40168,
+        "end_char": 40776
+      },
+      {
+        "ordinal": 22,
+        "title": "CRediT authorship contribution statement",
+        "level": 2,
+        "start_char": 40293,
+        "end_char": 40776,
+        "parent_section": "Data and code availability statement"
+      },
+      {
+        "ordinal": 23,
+        "title": "Declaration of Competing Interest",
+        "level": 1,
+        "start_char": 40776,
+        "end_char": 40987
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "Randomized sham-controlled clinical intervention study examining delayed resting-state fMRI functional-connectivity changes after intermittent theta-burst stimulation in patients with depression, and linking those changes to concurrent fNIRS oxy-Hb responses during treatment.",
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "To understand the network effects behind such a prefrontal fNIRS response during rTMS, and to test whether the fNIRS signal may be predictive of treatment response, we linked data from fNIRS and fMRI within a clinical intervention study.",
+              "start_char": 1204,
+              "end_char": 1441
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Randomized, parallel-group, sham-controlled intervention study in patients with depression. Participants received active or sham intermittent theta-burst stimulation twice daily for ten treatment days. fNIRS was recorded during treatment, while clinical assessments and resting-state fMRI were obtained at baseline and follow-up.",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "The patients were randomized to receive active or sham treatment in a blind treatment phase, with the iTBS protocol described below (  2.3 Intermittent theta-burst stimulation  ).",
+                "start_char": 8972,
+                "end_char": 9151
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "randomized",
+      "value_source": "generated",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "The patients were randomized to receive active or sham treatment in a blind treatment phase, with the iTBS protocol described below (  2.3 Intermittent theta-burst stimulation  ).",
+                "start_char": 8972,
+                "end_char": 9151
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "parallel",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "participant_blind",
+      "value_source": "generated",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "The patients were randomized to receive active or sham treatment in a blind treatment phase, with the iTBS protocol described below (  2.3 Intermittent theta-burst stimulation  ).",
+                "start_char": 8972,
+                "end_char": 9151
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "arms": [
+      {
+        "local_id": "arm_active_itbs",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "active iTBS",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "The patients were randomized to receive active or sham treatment",
+                    "start_char": 8972,
+                    "end_char": 9036
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "description": {
+          "extraction_status": "extracted",
+          "value": "Active intermittent theta-burst stimulation over the dorsomedial prefrontal cortex for ten treatment days, twice daily, at 90% of individual resting foot motor threshold.",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "The treatment was given for ten days of target intensity, defined as 90% of the patient’s individual resting foot motor threshold, with two sessions per day separated by a fifteen-minute intersession interval ( Tse et al., 2018 ).",
+                    "start_char": 10685,
+                    "end_char": 10915
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "arm_kind": {
+          "extraction_status": "extracted",
+          "value": "stimulation",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "active treatment group",
+                    "start_char": 11330,
+                    "end_char": 11352
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "agent": {
+          "extraction_status": "extracted",
+          "value": "intermittent theta-burst stimulation over the dmPFC",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "neuronavigated iTBS was delivered over the dmPFC",
+                    "start_char": 10464,
+                    "end_char": 10512
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "arm_sham_itbs",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "sham iTBS",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "The patients were randomized to receive active or sham treatment",
+                    "start_char": 8972,
+                    "end_char": 9036
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "description": {
+          "extraction_status": "extracted",
+          "value": "Sham intermittent theta-burst stimulation over the dorsomedial prefrontal cortex for ten treatment days, twice daily, with mild synchronized TENS to mimic the active treatment sensation.",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "In the sham group, a mild TENS was delivered synchronously to the magnetic pulses and in proportion to iTBS stimulation intensity, with a maximum current of 4 mA, to mimic the sensation of the active treatment.",
+                    "start_char": 11354,
+                    "end_char": 11564
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "arm_kind": {
+          "extraction_status": "extracted",
+          "value": "sham",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "sham group",
+                    "start_char": 11361,
+                    "end_char": 11371
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "agent": {
+          "extraction_status": "extracted",
+          "value": "sham intermittent theta-burst stimulation over the dmPFC",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "In the sham group, a mild TENS was delivered synchronously to the magnetic pulses",
+                    "start_char": 11354,
+                    "end_char": 11435
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "timepoints": [
+      {
+        "local_id": "timepoint_baseline",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "baseline",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "baseline",
+                    "start_char": 3245,
+                    "end_char": 3253
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "pre_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "one work day before treatment start (baseline)",
+                    "start_char": 9551,
+                    "end_char": 9597
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 1,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "one work day before treatment start (baseline)",
+                    "start_char": 9551,
+                    "end_char": 9597
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "timepoint_followup",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "follow-up",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "follow-up",
+                    "start_char": 9632,
+                    "end_char": 9641
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "post_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "once again four weeks later (follow-up)",
+                    "start_char": 9603,
+                    "end_char": 9642
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 2,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "once again four weeks later (follow-up)",
+                    "start_char": 9603,
+                    "end_char": 9642
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "time_from_intervention": {
+          "extraction_status": "extracted",
+          "value": "four weeks after treatment start, approximately two weeks after the final iTBS session",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Thus, the follow-up did not take place immediately after the last iTBS session, but rather two weeks later to assess potential delayed effects.",
+                    "start_char": 9644,
+                    "end_char": 9787
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "timepoint_first_treatment_day",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "first treatment day",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "first",
+                    "start_char": 1731,
+                    "end_char": 1736
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "during_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "during the first, fifth, and final day of iTBS treatment",
+                    "start_char": 9171,
+                    "end_char": 9227
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 1,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "first",
+                    "start_char": 1731,
+                    "end_char": 1736
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "timepoint_fifth_treatment_day",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "fifth treatment day",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "fifth",
+                    "start_char": 1738,
+                    "end_char": 1743
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "during_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "during the first, fifth, and final day of iTBS treatment",
+                    "start_char": 9171,
+                    "end_char": 9227
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 2,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "fifth",
+                    "start_char": 1738,
+                    "end_char": 1743
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "timepoint_final_treatment_day",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "final treatment day",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "final",
+                    "start_char": 1749,
+                    "end_char": 1754
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "during_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "during the first, fifth, and final day of iTBS treatment",
+                    "start_char": 9171,
+                    "end_char": 9227
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 3,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "final",
+                    "start_char": 1749,
+                    "end_char": 1754
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "analyses": [
+    {
+      "local_id": "analysis_tbl2_left_positive_fc",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Left dlPFC parcel — Positive FC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Left dlPFC parcel",
+                  "start_char": 27223,
+                  "end_char": 27240
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Positive functional connectivity from the left dlPFC parcel.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The seeds showed a positive relationship to a large cluster spanning the left and right dlPFC, operculum, and insula, the posterior parietal cortex (PPC), the caudate nucleus, and a cluster spanning the middle and inferior temporal gyrus.",
+                  "start_char": 25037,
+                  "end_char": 25275
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Given the novel approach of linking findings from the two neuroimaging modalities, i.e., fNIRS and fMRI, all analyses were explorative and there were no a-priori hypotheses.",
+                  "start_char": 7178,
+                  "end_char": 7351
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "interpretations": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "measure": "measure_connectivity_strength",
+      "groups": [
+        {
+          "group": "group_depression_active",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                      "start_char": 20974,
+                      "end_char": 21093
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "group_depression_sham",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                      "start_char": 20974,
+                      "end_char": 21093
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term_left_dlpfc_seed",
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "The seeds showed a positive relationship to a large cluster spanning the left and right dlPFC, operculum, and insula, the posterior parietal cortex (PPC), the caudate nucleus, and a cluster spanning the middle and inferior temporal gyrus.",
+                      "start_char": 25037,
+                      "end_char": 25275
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "For first-level analyses, seed-to-voxel functional connectivity analysis was performed for each patient’s baseline and follow-up scan in CONN, and the resulting connectivity correlation values were transformed using Fisher’s r-to-z transformation.",
+                    "start_char": 15829,
+                    "end_char": 16076
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "region_left_dlpfc_parcel"
+        ],
+        "target_regions": [],
+        "parameter_sign": {
+          "extraction_status": "extracted",
+          "value": "positive",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "The seeds showed a positive relationship to a large cluster spanning the left and right dlPFC, operculum, and insula, the posterior parietal cortex (PPC), the caudate nucleus, and a cluster spanning the middle and inferior temporal gyrus.",
+                    "start_char": 25037,
+                    "end_char": 25275
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "parameter_change": {
+          "extraction_status": "extracted",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          },
+          "value": "not_applicable"
+        },
+        "inference_target": {
+          "extraction_status": "extracted",
+          "value": "connectivity_parameter",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        }
+      },
+      "acquisitions": [
+        "acquisition_fmri"
+      ],
+      "tasks": [
+        "task_resting_state_fmri"
+      ],
+      "model_estimation": "model_fmri_second_level",
+      "tables": [
+        "tbl2"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI space",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The respective coordinates were then transformed into MNI space, using the deformations obtained from the segmentation step.",
+                  "start_char": 16658,
+                  "end_char": 16782
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inference_settings": "inference_fwe"
+    },
+    {
+      "local_id": "analysis_tbl2_left_negative_fc",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Left dlPFC parcel — Negative FC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Left dlPFC parcel",
+                  "start_char": 27223,
+                  "end_char": 27240
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Negative functional connectivity from the left dlPFC parcel.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In contrast, both seeds showed a negative relationship to the medial PFC, precentral gyrus, hippocampus, amygdala, and middle temporal gyrus.",
+                  "start_char": 25276,
+                  "end_char": 25417
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Given the novel approach of linking findings from the two neuroimaging modalities, i.e., fNIRS and fMRI, all analyses were explorative and there were no a-priori hypotheses.",
+                  "start_char": 7178,
+                  "end_char": 7351
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "interpretations": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "measure": "measure_connectivity_strength",
+      "groups": [
+        {
+          "group": "group_depression_active",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                      "start_char": 20974,
+                      "end_char": 21093
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "group_depression_sham",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                      "start_char": 20974,
+                      "end_char": 21093
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term_left_dlpfc_seed",
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "In contrast, both seeds showed a negative relationship to the medial PFC, precentral gyrus, hippocampus, amygdala, and middle temporal gyrus.",
+                      "start_char": 25276,
+                      "end_char": 25417
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "For first-level analyses, seed-to-voxel functional connectivity analysis was performed for each patient’s baseline and follow-up scan in CONN, and the resulting connectivity correlation values were transformed using Fisher’s r-to-z transformation.",
+                    "start_char": 15829,
+                    "end_char": 16076
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "region_left_dlpfc_parcel"
+        ],
+        "target_regions": [],
+        "parameter_sign": {
+          "extraction_status": "extracted",
+          "value": "negative",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "In contrast, both seeds showed a negative relationship to the medial PFC, precentral gyrus, hippocampus, amygdala, and middle temporal gyrus.",
+                    "start_char": 25276,
+                    "end_char": 25417
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "parameter_change": {
+          "extraction_status": "extracted",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          },
+          "value": "not_applicable"
+        },
+        "inference_target": {
+          "extraction_status": "extracted",
+          "value": "connectivity_parameter",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        }
+      },
+      "acquisitions": [
+        "acquisition_fmri"
+      ],
+      "tasks": [
+        "task_resting_state_fmri"
+      ],
+      "model_estimation": "model_fmri_second_level",
+      "tables": [
+        "tbl2"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI space",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The respective coordinates were then transformed into MNI space, using the deformations obtained from the segmentation step.",
+                  "start_char": 16658,
+                  "end_char": 16782
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inference_settings": "inference_fwe"
+    },
+    {
+      "local_id": "analysis_tbl2_right_positive_fc",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Right dlPFC parcel — Positive FC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Right dlPFC parcel",
+                  "start_char": 29049,
+                  "end_char": 29067
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Positive functional connectivity from the right dlPFC parcel.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The seeds showed a positive relationship to a large cluster spanning the left and right dlPFC, operculum, and insula, the posterior parietal cortex (PPC), the caudate nucleus, and a cluster spanning the middle and inferior temporal gyrus.",
+                  "start_char": 25037,
+                  "end_char": 25275
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Given the novel approach of linking findings from the two neuroimaging modalities, i.e., fNIRS and fMRI, all analyses were explorative and there were no a-priori hypotheses.",
+                  "start_char": 7178,
+                  "end_char": 7351
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "interpretations": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "measure": "measure_connectivity_strength",
+      "groups": [
+        {
+          "group": "group_depression_active",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                      "start_char": 20974,
+                      "end_char": 21093
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "group_depression_sham",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                      "start_char": 20974,
+                      "end_char": 21093
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term_right_dlpfc_seed",
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Positive FC",
+                        "start_char": 27369,
+                        "end_char": 27380
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "peak-levelT",
+                      "start_char": 27027,
+                      "end_char": 27038
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "For first-level analyses, seed-to-voxel functional connectivity analysis was performed",
+                    "start_char": 15829,
+                    "end_char": 15915
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "region_right_dlpfc_parcel"
+        ],
+        "target_regions": [],
+        "parameter_sign": {
+          "extraction_status": "extracted",
+          "value": "positive",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Positive FC",
+                    "start_char": 27369,
+                    "end_char": 27380
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "parameter_change": {
+          "extraction_status": "extracted",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          },
+          "value": "not_applicable"
+        },
+        "inference_target": {
+          "extraction_status": "extracted",
+          "value": "connectivity_parameter",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "seed-to-voxel functional connectivity analysis",
+                    "start_char": 15855,
+                    "end_char": 15901
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "acquisitions": [
+        "acquisition_fmri"
+      ],
+      "tasks": [
+        "task_resting_state_fmri"
+      ],
+      "model_estimation": "model_fmri_second_level",
+      "tables": [
+        "tbl2"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI space",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI space",
+                  "start_char": 15222,
+                  "end_char": 15231
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inference_settings": "inference_fwe"
+    },
+    {
+      "local_id": "analysis_tbl2_right_negative_fc",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Right dlPFC parcel — Negative FC",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Right dlPFC parcel",
+                  "start_char": 29049,
+                  "end_char": 29067
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Negative functional connectivity from the right dlPFC parcel.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Negative FC",
+                  "start_char": 28349,
+                  "end_char": 28360
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "all analyses were explorative",
+                  "start_char": 7283,
+                  "end_char": 7312
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "interpretations": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "measure": "measure_connectivity_strength",
+      "groups": [
+        {
+          "group": "group_depression_active",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                      "start_char": 20974,
+                      "end_char": 21093
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "group_depression_sham",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 17,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                      "start_char": 20974,
+                      "end_char": 21093
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "term_right_dlpfc_seed",
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Negative FC",
+                        "start_char": 28349,
+                        "end_char": 28360
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "peak-levelT",
+                      "start_char": 27027,
+                      "end_char": 27038
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "For first-level analyses, seed-to-voxel functional connectivity analysis was performed",
+                    "start_char": 15829,
+                    "end_char": 15915
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "region_right_dlpfc_parcel"
+        ],
+        "target_regions": [],
+        "parameter_sign": {
+          "extraction_status": "extracted",
+          "value": "negative",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Negative FC",
+                    "start_char": 28349,
+                    "end_char": 28360
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "parameter_change": {
+          "extraction_status": "extracted",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          },
+          "value": "not_applicable"
+        },
+        "inference_target": {
+          "extraction_status": "extracted",
+          "value": "connectivity_parameter",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "seed-to-voxel functional connectivity analysis",
+                    "start_char": 15855,
+                    "end_char": 15901
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "acquisitions": [
+        "acquisition_fmri"
+      ],
+      "tasks": [
+        "task_resting_state_fmri"
+      ],
+      "model_estimation": "model_fmri_second_level",
+      "tables": [
+        "tbl2"
+      ],
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI space",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI space",
+                  "start_char": 15222,
+                  "end_char": 15231
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inference_settings": "inference_fwe"
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "group_depression_active",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "patients with depression allocated to active iTBS",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "patients in the active iTBS group",
+                  "start_char": 20994,
+                  "end_char": 21027
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Patients with an ongoing depressive episode who were randomized to active iTBS; 17 were included in the final analysis.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                  "start_char": 20974,
+                  "end_char": 21093
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "arm": "arm_active_itbs",
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 21,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Forty-two patients participated in the study and were allocated to active (n = 21) or sham (n = 21) iTBS treatment.",
+                  "start_char": 20697,
+                  "end_char": 20812
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 17,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                  "start_char": 20974,
+                  "end_char": 21093
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "excluded_count": {
+        "extraction_status": "extracted",
+        "value": 4,
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "42 patients with ongoing depression were recruited",
+                  "start_char": 1460,
+                  "end_char": 1510
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "depressive episode",
+          "recurrent depression",
+          "bipolar disorder",
+          "anxiety disorders",
+          "ADHD/ADD",
+          "autism spectrum disorders",
+          "personality disorders"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "diagnostic_instrument": [
+        "assessment_mini"
+      ],
+      "medications": {
+        "extraction_status": "extracted",
+        "value": [
+          "antidepressants",
+          "mood stabilizers",
+          "antipsychotics"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "medication_status": {
+        "extraction_status": "extracted",
+        "value": "Medication was unchanged for one month before treatment and kept constant throughout the study.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Medication was kept constant throughout the study.",
+                  "start_char": 8527,
+                  "end_char": 8577
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "group_depression_sham",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "patients with depression allocated to sham iTBS",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "patients in the sham iTBS group",
+                  "start_char": 21036,
+                  "end_char": 21067
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Patients with an ongoing depressive episode who were randomized to sham iTBS; 17 were included in the final analysis.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                  "start_char": 20974,
+                  "end_char": 21093
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "arm": "arm_sham_itbs",
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 21,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Forty-two patients participated in the study and were allocated to active (n = 21) or sham (n = 21) iTBS treatment.",
+                  "start_char": 20697,
+                  "end_char": 20812
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 17,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "This resulted in 17 patients in the active iTBS group, and 17 patients in the sham iTBS group included in the analysis.",
+                  "start_char": 20974,
+                  "end_char": 21093
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "excluded_count": {
+        "extraction_status": "extracted",
+        "value": 4,
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "42 patients with ongoing depression were recruited",
+                  "start_char": 1460,
+                  "end_char": 1510
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "depressive episode",
+          "recurrent depression",
+          "bipolar disorder",
+          "anxiety disorders",
+          "ADHD/ADD",
+          "autism spectrum disorders",
+          "personality disorders"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "diagnostic_instrument": [
+        "assessment_mini"
+      ],
+      "medications": {
+        "extraction_status": "extracted",
+        "value": [
+          "antidepressants",
+          "mood stabilizers",
+          "antipsychotics"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "medication_status": {
+        "extraction_status": "extracted",
+        "value": "Medication was unchanged for one month before treatment and kept constant throughout the study.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "local_id": "task_resting_state_fmri",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "resting-state fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Resting-state fMRI scanning was performed before and after the whole iTBS treatment course.",
+                  "start_char": 1914,
+                  "end_char": 2005
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Participants rested in the scanner while directing their gaze toward a white fixation cross on a black screen. Seed-to-voxel resting-state functional connectivity was measured before and after the iTBS treatment course.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "conditions": [
+        {
+          "local_id": "condition_rest_fixation",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "rest/fixation",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "patients were instructed to direct their gaze towards a white fixation cross on a black screen",
+                      "start_char": 14873,
+                      "end_char": 14967
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Resting-state acquisition with fixation on a white cross.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "continuous with no modelled events",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquisitions": [
+        "acquisition_fmri"
+      ]
+    },
+    {
+      "local_id": "task_itbs_fnirs",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "iTBS treatment with fNIRS recording",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "FNIRS was recorded during the first, fifth, and final day of iTBS treatment",
+                  "start_char": 9152,
+                  "end_char": 9227
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "fNIRS oxy-Hb was recorded during active or sham iTBS treatment sessions on the first, fifth, and final treatment days while participants sat calmly and rested.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "FNIRS was recorded during the first, fifth, and final day of iTBS treatment",
+                  "start_char": 9152,
+                  "end_char": 9227
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "continuous with no modelled events",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquisitions": [
+        "acquisition_fnirs"
+      ],
+      "response_mode": {
+        "extraction_status": "extracted",
+        "value": [
+          "none"
+        ],
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acquisition_fmri",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "For FC analysis, a BOLD T2*-weighted image sequence was acquired",
+                  "start_char": 14609,
+                  "end_char": 14673
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_type": "MRI",
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MRI was performed using a 3 T scanner (Philips Achieva, Philips Medical Systems, Best, The Netherlands) with a 32-channel head coil.",
+                  "start_char": 14241,
+                  "end_char": 14373
+                }
+              ]
+            }
+          ]
+        },
+        "value": 3,
+        "value_source": "reported"
+      },
+      "device": "dev_achieva"
+    },
+    {
+      "local_id": "acquisition_fnirs",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fNIRS",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "blood oxygenation was measured with fNIRS",
+                  "start_char": 11649,
+                  "end_char": 11690
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_duration_seconds": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "acquisition_type": "FNIRS",
+      "device": "dev_niro_200x"
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "preprocessing_fnirs",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "fNIRS data were band-stop filtered to remove respiration- and heartbeat-related noise.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "MATLAB12"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Preprocessing and data analyses were performed in MATLAB12.",
+                  "start_char": 12809,
+                  "end_char": 12868
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "band-stop filtering at 0.12–0.35 Hz",
+          "band-stop filtering at 0.70–1.5 Hz"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "preprocessing_fmri",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Functional and anatomical fMRI data were preprocessed and denoised before seed-to-voxel connectivity analysis.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The fMRI data were preprocessed in the CONN toolbox, using its default preprocessing pipeline for volume-based analyses in MNI space",
+                  "start_char": 15099,
+                  "end_char": 15231
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "CONN toolbox",
+          "SPM12"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The fMRI data were preprocessed in the CONN toolbox",
+                  "start_char": 15099,
+                  "end_char": 15150
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "realignment",
+          "slice-timing correction",
+          "normalization",
+          "ART-based outlier detection",
+          "spatial smoothing",
+          "anatomical segmentation and normalization",
+          "linear regression denoising of white-matter, CSF, realignment and scrubbing confounders",
+          "temporal band-pass filtering at 0.008–0.09 Hz"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "including realignment, slice-timing correction, normalization, ART-based outlier detection, smoothing of the functional data, and segmentation and normalization of the anatomical data",
+                  "start_char": 15233,
+                  "end_char": 15416
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "model_fnirs_lme",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "mixed_effects",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "An LME model",
+                  "start_char": 21330,
+                  "end_char": 21342
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "linear mixed effect model",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a linear mixed effect (LME) model",
+                  "start_char": 13509,
+                  "end_char": 13542
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "subject",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "individual data segments were taken",
+                  "start_char": 13065,
+                  "end_char": 13100
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "term_fnirs_group",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "group",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "with the factor group (active vs. sham) as fixed effect",
+                      "start_char": 13583,
+                      "end_char": 13638
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "with the factor group (active vs. sham)",
+                      "start_char": 13583,
+                      "end_char": 13622
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "active iTBS",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "active",
+                          "start_char": 1537,
+                          "end_char": 1543
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "group_depression_active"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "sham iTBS",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "sham",
+                          "start_char": 1547,
+                          "end_char": 1551
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "group_depression_sham"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "individual means for each treatment day (first, fifth, and final) were subsequently entered in a linear mixed effect (LME) model",
+                      "start_char": 13414,
+                      "end_char": 13542
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "term_fnirs_day",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "treatment day",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "treatment day",
+                      "start_char": 2642,
+                      "end_char": 2655
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "day",
+                      "start_char": 1663,
+                      "end_char": 1666
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "first treatment day",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "first",
+                          "start_char": 1731,
+                          "end_char": 1736
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "order": {
+                "extraction_status": "extracted",
+                "value": 1,
+                "value_source": "generated",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "first, fifth, and final",
+                          "start_char": 1731,
+                          "end_char": 1754
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "timepoints": [
+                "timepoint_first_treatment_day"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "fifth treatment day",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "fifth",
+                          "start_char": 1738,
+                          "end_char": 1743
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "order": {
+                "extraction_status": "extracted",
+                "value": 2,
+                "value_source": "generated",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "first, fifth, and final",
+                          "start_char": 1731,
+                          "end_char": 1754
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "timepoints": [
+                "timepoint_fifth_treatment_day"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "final treatment day",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "not_found"
+                }
+              },
+              "order": {
+                "extraction_status": "extracted",
+                "value": 3,
+                "value_source": "generated",
+                "evidence": {
+                  "status": "not_found"
+                }
+              },
+              "timepoints": [
+                "timepoint_final_treatment_day"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "local_id": "term_fnirs_day_group_interaction",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "day × group",
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "interaction_with": [
+            "term_fnirs_day",
+            "term_fnirs_group"
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "mixed",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "estimator": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "MATLAB12",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MATLAB12",
+                  "start_char": 12859,
+                  "end_char": 12867
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "model_fmri_second_level",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "glm",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "multiple regression",
+                  "start_char": 18670,
+                  "end_char": 18689
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "second-level one-sample t-test, two-sample t-test, and multiple regression models on connectivity difference maps",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a one-sample t-test with the baseline correlation maps",
+                  "start_char": 18493,
+                  "end_char": 18547
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Second-level analyses were performed in SPM12.",
+                  "start_char": 18380,
+                  "end_char": 18426
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [],
+      "software": {
+        "extraction_status": "extracted",
+        "value": "SPM12",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Second-level analyses were performed in SPM12.",
+                  "start_char": 18380,
+                  "end_char": 18426
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inputs_from": [
+        "model_fmri_first_level"
+      ],
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "seed-to-voxel",
+                  "start_char": 15855,
+                  "end_char": 15868
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "preprocessing_fmri"
+      ]
+    },
+    {
+      "local_id": "model_fmri_first_level",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "glm",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "seed-to-voxel functional connectivity analysis",
+                  "start_char": 15855,
+                  "end_char": 15901
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "seed-to-voxel functional connectivity analysis",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "seed-to-voxel functional connectivity analysis was performed for each patient’s baseline and follow-up scan in CONN",
+                  "start_char": 15855,
+                  "end_char": 15970
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "subject",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "for each patient’s baseline and follow-up scan",
+                  "start_char": 15916,
+                  "end_char": 15962
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "term_left_dlpfc_seed",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "left dlPFC seed timecourse",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "For first-level analyses, seed-to-voxel functional connectivity analysis was performed for each patient’s baseline and follow-up scan in CONN",
+                      "start_char": 15829,
+                      "end_char": 15970
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "source_definition": {
+            "extraction_status": "extracted",
+            "value": "Mean timecourse of the left dorsolateral prefrontal cortex parcel, used as the seed regressor in the first-level seed-to-voxel model.",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "local_id": "term_right_dlpfc_seed",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "right dlPFC seed timecourse",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "For first-level analyses, seed-to-voxel functional connectivity analysis was performed for each patient’s baseline and follow-up scan in CONN",
+                      "start_char": 15829,
+                      "end_char": 15970
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "source_definition": {
+            "extraction_status": "extracted",
+            "value": "Mean timecourse of the right dorsolateral prefrontal cortex parcel, used as the seed regressor in the first-level seed-to-voxel model.",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        }
+      ],
+      "software": {
+        "extraction_status": "extracted",
+        "value": "CONN toolbox",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The fMRI data were preprocessed in the CONN toolbox",
+                  "start_char": 15099,
+                  "end_char": 15150
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "assessments": [
+    {
+      "local_id": "assessment_cains",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Clinical Assessment Interview for Negative Symptoms",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Clinical Assessment Interview for Negative Symptoms",
+                  "start_char": 9318,
+                  "end_char": 9369
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Clinical assessment of negative symptoms administered at baseline and follow-up.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Clinical assessments of depression symptoms, such as the Clinical Assessment Interview for Negative Symptoms (CAINS) ( Kring et al., 2013 ) or the Montgomery Åsberg Depression Rating Scale (MADRS) ( Svanborg & Åsberg, 1994 ), and functional magnetic resonance imaging (fMRI) were conducted one work day before treatment start (baseline), and once again four weeks later (follow-up).",
+                  "start_char": 9261,
+                  "end_char": 9643
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "assessment_madrs",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Montgomery Åsberg Depression Rating Scale",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Montgomery Åsberg Depression Rating Scale",
+                  "start_char": 21672,
+                  "end_char": 21713
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Depression symptom assessment administered at baseline and follow-up.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Clinical assessments of depression symptoms, such as the Clinical Assessment Interview for Negative Symptoms (CAINS) ( Kring et al., 2013 ) or the Montgomery Åsberg Depression Rating Scale (MADRS) ( Svanborg & Åsberg, 1994 ), and functional magnetic resonance imaging (fMRI) were conducted one work day before treatment start (baseline), and once again four weeks later (follow-up).",
+                  "start_char": 9261,
+                  "end_char": 9643
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "assessment_mini",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Mini International Neuropsychiatric Interview, version 6.0.0",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All patients included in this study met criteria for an ongoing depressive episode as verified through a Mini International Neuropsychiatric Interview (M.I.N.I.) version 6.0.0 ( Sheehan et al., 1998 ).",
+                  "start_char": 8198,
+                  "end_char": 8399
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "diagnostic interview",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "All patients included in this study met criteria for an ongoing depressive episode as verified through a Mini International Neuropsychiatric Interview (M.I.N.I.) version 6.0.0 ( Sheehan et al., 1998 ).",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All patients included in this study met criteria for an ongoing depressive episode as verified through a Mini International Neuropsychiatric Interview (M.I.N.I.) version 6.0.0 ( Sheehan et al., 1998 ).",
+                  "start_char": 8198,
+                  "end_char": 8399
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1",
+                  "start_char": 21177,
+                  "end_char": 21184
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Sociodemographic and clinical characteristics at baseline for patients allocated to active or sham intermittent theta-burst stimulation. CAINS: Clinical Assessment Interview for Negative Symptoms; MADRS-S: Montgomery Åsberg Depression Rating Scale; BPRS: Brief Psychiatric Rating Scale; MSM: Maudsley Staging Method for treatment resistant depression; EQ-5D VAS: self-rated health from EQ-5D, Visual Analogue Scale; ADHD: attention deficit hyperactivity disorder; ADD: attention deficit disorder.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1 — Sociodemographic and clinical characteristics at baseline for patients allocated to active or sham intermittent theta-burst stimulation. CAINS: Clinical Assessment Interview for Negative Symptoms; MADRS-S: Montgomery Åsberg Depression Rating Scale; BPRS: Brief Psychiatric Rating Scale; MSM: Maudsley Staging Method for treatment resistant depression; EQ-5D VAS: self-rated health from EQ-5D, Visual Analogue Scale; ADHD: attention deficit hyperactivity disorder; ADD: attention deficit disorder.",
+                  "start_char": 21988,
+                  "end_char": 22494
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2",
+                  "start_char": 25419,
+                  "end_char": 25426
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Baseline resting-state functional connectivity of the dorsolateral prefrontal cortex seeds. FC: functional connectivity; dlPFC: dorsolateral prefrontal cortex; PPC: posterior parietal cortex; MTG: middle temporal gyrus; PCC: posterior cingulate cortex; ITG: inferior temporal gyrus; SFG: superior frontal gyrus; MCG: middle cingulate cortex; mPFC: middle prefrontal cortex; MFG: middle frontal gyrus.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "measure_connectivity_strength",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "For FC analysis, a BOLD T2*-weighted image sequence was acquired using a single-shot EPI sequence",
+                  "start_char": 14609,
+                  "end_char": 14706
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "connectivity_strength",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The magnitude of FC within and between brain networks is altered in depression",
+                  "start_char": 3141,
+                  "end_char": 3219
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "functional connectivity",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Resting-state functional connectivity (FC) is an MRI-based method that analyzes temporal correlations of spontaneous signals between spatially distinct brain regions.",
+                  "start_char": 2974,
+                  "end_char": 3140
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "text": "functional connectivity",
+                  "start_char": 45,
+                  "end_char": 68
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inference_fwe",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxels surviving a cluster-level corrected threshold of p <.05 were considered significant",
+                  "start_char": 20201,
+                  "end_char": 20291
+                }
+              ]
+            }
+          ]
+        },
+        "value": "cluster",
+        "value_source": "reported"
+      },
+      "cluster_forming_threshold_value": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "using an initial cluster-forming threshold of p <.001 to correct for multiple compari",
+                  "start_char": 20293,
+                  "end_char": 20378
+                }
+              ]
+            }
+          ]
+        },
+        "value": 0.001,
+        "value_source": "reported"
+      },
+      "clusterwise_threshold_value": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Voxels surviving a cluster-level corrected threshold of p <.05 were considered significant",
+                  "start_char": 20201,
+                  "end_char": 20291
+                }
+              ]
+            }
+          ]
+        },
+        "value": 0.05,
+        "value_source": "reported"
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "cluster-levelpFWE-corr",
+                  "start_char": 27041,
+                  "end_char": 27063
+                }
+              ]
+            }
+          ]
+        },
+        "value": "FWE",
+        "value_source": "reported"
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_achieva",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "Philips Medical Systems",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Philips Achieva, Philips Medical Systems, Best, The Netherlands",
+                  "start_char": 14280,
+                  "end_char": 14343
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "Achieva",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Philips Achieva, Philips Medical Systems",
+                  "start_char": 14280,
+                  "end_char": 14320
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "dev_niro_200x",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "Hamamatsu",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "NIRO 200X, Hamamatsu, Japan",
+                  "start_char": 11905,
+                  "end_char": 11932
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "NIRO 200X",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "NIRO 200X, Hamamatsu, Japan",
+                  "start_char": 11905,
+                  "end_char": 11932
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "regions": [
+    {
+      "local_id": "region_left_dlpfc_parcel",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "left dlPFC parcel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The dlPFC parcel containing the largest optode center load per hemisphere was used as seed ROIs.",
+                  "start_char": 17592,
+                  "end_char": 17688
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "region_right_dlpfc_parcel",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "right dlPFC parcel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Right dlPFC parcel",
+                  "start_char": 29049,
+                  "end_char": 29067
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ]
+}

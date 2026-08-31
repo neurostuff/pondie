@@ -1,0 +1,2557 @@
+{
+  "local_id": "krv8mTKTUHSp",
+  "extraction_metadata": {
+    "extractor_model": "@psyc-aid338-ope-333f18/gpt-5.6-luna",
+    "extractor_version": "review-bootstrap-0.1.0",
+    "source_text_hash": "85d795a0be9883be47b01aaa58ef02eb39e3fb8b551e5e4da656967f9e8d178c",
+    "extraction_date": "2026-08-28",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "Introduction",
+        "level": 1,
+        "start_char": 2196,
+        "end_char": 9539
+      },
+      {
+        "ordinal": 1,
+        "title": "Materials and methods",
+        "level": 1,
+        "start_char": 9539,
+        "end_char": 18271
+      },
+      {
+        "ordinal": 2,
+        "title": "Dataset",
+        "level": 2,
+        "start_char": 9568,
+        "end_char": 10587,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 3,
+        "title": "Behavioral, task for FMRI",
+        "level": 2,
+        "start_char": 10587,
+        "end_char": 11972,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 4,
+        "title": "Imaging protocol and data preprocessing",
+        "level": 2,
+        "start_char": 11972,
+        "end_char": 13572,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 5,
+        "title": "Imaging data modeling",
+        "level": 2,
+        "start_char": 13572,
+        "end_char": 16583,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 6,
+        "title": "Mediation analysis",
+        "level": 2,
+        "start_char": 16583,
+        "end_char": 18271,
+        "parent_section": "Materials and methods"
+      },
+      {
+        "ordinal": 7,
+        "title": "Results",
+        "level": 1,
+        "start_char": 18271,
+        "end_char": 28394
+      },
+      {
+        "ordinal": 8,
+        "title": "Behavioral results and emotion traits",
+        "level": 2,
+        "start_char": 18286,
+        "end_char": 20576,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 9,
+        "title": "Brain activations to face vs. shape stimuli",
+        "level": 2,
+        "start_char": 20576,
+        "end_char": 23378,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 10,
+        "title": "Brain activations to face vs. shape stimuli in correlation with affect traits",
+        "level": 2,
+        "start_char": 23378,
+        "end_char": 26846,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 11,
+        "title": "Mediation analyses",
+        "level": 2,
+        "start_char": 26846,
+        "end_char": 28394,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 12,
+        "title": "Discussion",
+        "level": 1,
+        "start_char": 28394,
+        "end_char": 39633
+      },
+      {
+        "ordinal": 13,
+        "title": "Retrosplenial cortex, precuneus and emotion processing",
+        "level": 2,
+        "start_char": 29960,
+        "end_char": 34513,
+        "parent_section": "Discussion"
+      },
+      {
+        "ordinal": 14,
+        "title": "Sex differences in emotion processing and the neural markers of emotion traits",
+        "level": 2,
+        "start_char": 34513,
+        "end_char": 36528,
+        "parent_section": "Discussion"
+      },
+      {
+        "ordinal": 15,
+        "title": "RSC response underlies difficulty in emotion target identification in fear-prone individuals",
+        "level": 2,
+        "start_char": 36528,
+        "end_char": 37854,
+        "parent_section": "Discussion"
+      },
+      {
+        "ordinal": 16,
+        "title": "Limitations and conclusions of the study",
+        "level": 2,
+        "start_char": 37854,
+        "end_char": 39633,
+        "parent_section": "Discussion"
+      },
+      {
+        "ordinal": 17,
+        "title": "Supplementary Material",
+        "level": 1,
+        "start_char": 39633,
+        "end_char": 39660
+      },
+      {
+        "ordinal": 18,
+        "title": "Tables (floated, no position in the body)",
+        "level": 1,
+        "start_char": 39660,
+        "end_char": 44723
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "A Human Connectome Project study of sex differences in regional brain responses and affective-trait correlates during identification of negative facial emotions versus neutral shapes.",
+    "value_source": "generated",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "We examined sex differences in regional brain responses during identification of negative emotional face versus neutral shape stimuli.",
+              "start_char": 28412,
+              "end_char": 28546
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "hypothesis": {
+    "extraction_status": "extracted",
+    "value": [
+      "men and women would demonstrate significant differences in regional responses to emotion target identification and in regional correlates of anger and fear traits during emotion target identification",
+      "men and women may each show more significant modulation in neural activities during emotion target identification in relation to individual differences in anger and fear traits"
+    ],
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "This study aimed to be exploratory and we broadly hypothesized that men and women would demonstrate significant differences in regional responses to emotion target identification and in regional correlates of anger and fear traits during emotion target identification.",
+              "start_char": 8707,
+              "end_char": 8975
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Observational, cross-sectional study of healthy adults using Human Connectome Project data; participants completed fMRI and emotion assessments.",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "not_applicable",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "single_group",
+      "value_source": "generated",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "All subjects were physically healthy with no severe neurodevelopmental, neuropsychiatric or neurologic disorders.",
+                "start_char": 9818,
+                "end_char": 9931
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "not_applicable",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "arms": [],
+    "timepoints": []
+  },
+  "analyses": [
+    {
+      "local_id": "a_t2_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Men > Women",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Men > Women",
+                  "start_char": 40686,
+                  "end_char": 40697
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Men > women in regional brain responses to negative face versus neutral shape identification.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Identifying negative emotional faces as compared with neutral shape pictures engaged higher activation of cortical and subcortical structures in men than women.",
+                  "start_char": 20978,
+                  "end_char": 21138
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "This study aimed to be exploratory",
+                  "start_char": 8707,
+                  "end_char": 8741
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Men as compared with women engaged the occipital-temporal visual cortex, retrosplenial cortex, and both anterior and posterior cingulate cortex to a greater extent during face versus shape identification."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Men as compared with women engaged the occipital-temporal visual cortex, retrosplenial cortex (RSC), and both anterior and posterior cingulate cortex to a greater extent during face versus shape identification.",
+                  "start_char": 831,
+                  "end_char": 1041
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We next conducted a whole brain linear regression",
+                  "start_char": 23782,
+                  "end_char": 23831
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "measure": "mea_bold_activation",
+      "groups": [
+        {
+          "group": "grp_men",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 462,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Men (n = 462)",
+                      "start_char": 39791,
+                      "end_char": 39804
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_women",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 508,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Women (n = 508)",
+                      "start_char": 39807,
+                      "end_char": 39822
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_sex",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Men",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "men",
+                        "start_char": 432,
+                        "end_char": 435
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "higher activation",
+                        "start_char": 1072,
+                        "end_char": 1089
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_sex",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Women",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "women",
+                        "start_char": 430,
+                        "end_char": 435
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "two-sample   t   test",
+                      "start_char": 20887,
+                      "end_char": 20908
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "model_estimation": "mod_group_sex",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t2#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2 — Regional activations in two-sample T-test of men vs. women.",
+                  "start_char": 40319,
+                  "end_char": 40388
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "a_t2_2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Women > Men",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Women > Men",
+                  "start_char": 42156,
+                  "end_char": 42167
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Women relative to men in regional brain responses to negative face versus neutral shape identification.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "This study aimed to be exploratory",
+                  "start_char": 8707,
+                  "end_char": 8741
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Women relative to men engaged higher activation in the middle temporal cortex and middle frontal cortex."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Conversely, women engaged higher activation in the middle temporal cortex and middle frontal cortex",
+                  "start_char": 21392,
+                  "end_char": 21491
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "We next conducted a whole brain linear regression",
+                  "start_char": 23782,
+                  "end_char": 23831
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "measure": "mea_bold_activation",
+      "groups": [
+        {
+          "group": "grp_men",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 462,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Men (n = 462)",
+                      "start_char": 39791,
+                      "end_char": 39804
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_women",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 508,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Women (n = 508)",
+                      "start_char": 39807,
+                      "end_char": 39822
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_sex",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Men",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "men",
+                        "start_char": 432,
+                        "end_char": 435
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "reported",
+              "evidence": {
+                "status": "not_found"
+              }
+            }
+          },
+          {
+            "term": "trm_sex",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Women",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "women",
+                        "start_char": 430,
+                        "end_char": 435
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "higher activation",
+                        "start_char": 1072,
+                        "end_char": 1089
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "two-sample   t   test",
+                      "start_char": 20887,
+                      "end_char": 20908
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "MassUnivariateDetails"
+      },
+      "model_estimation": "mod_group_sex",
+      "tables": [
+        "tbl2"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t2#2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2 — Regional activations in two-sample T-test of men vs. women.",
+                  "start_char": 40319,
+                  "end_char": 40388
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acq_fmri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "FMRI data were collected using gradient-echo echo-planar imaging (EPI)",
+                  "start_char": 12454,
+                  "end_char": 12524
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_duration_seconds": {
+        "extraction_status": "extracted",
+        "value": 255,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "device": "dev_siemens_connectome_skyra",
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 3,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "3 T Siemens Connectome Skyra",
+                  "start_char": 12052,
+                  "end_char": 12080
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "gradient-echo echo-planar imaging (EPI)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "gradient-echo echo-planar imaging (EPI)",
+                  "start_char": 12485,
+                  "end_char": 12524
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mr_acquisition_type": {
+        "extraction_status": "extracted",
+        "value": "2D",
+        "value_source": "not_reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 0.72,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TR = 720 ms",
+                  "start_char": 12609,
+                  "end_char": 12620
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.0331
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TE = 33.1 ms",
+                  "start_char": 12622,
+                  "end_char": 12634
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          2,
+          2,
+          2
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "2.0 mm isotropic resolution",
+                  "start_char": 12530,
+                  "end_char": 12557
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "number_of_volumes": {
+        "extraction_status": "extracted",
+        "value": 176,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "176 frames",
+                  "start_char": 12669,
+                  "end_char": 12679
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "acq_smri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "sMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "T1-weighted high-resolution structural images",
+                  "start_char": 12165,
+                  "end_char": 12210
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "device": "dev_siemens_connectome_skyra",
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 3,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "3 T Siemens Connectome Skyra",
+                  "start_char": 12052,
+                  "end_char": 12080
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "3D MPRAGE",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "3D MPRAGE sequence",
+                  "start_char": 12233,
+                  "end_char": 12251
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mr_acquisition_type": {
+        "extraction_status": "extracted",
+        "value": "3D",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "3D MPRAGE sequence",
+                  "start_char": 12233,
+                  "end_char": 12251
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 2.4,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TR = 2400 ms",
+                  "start_char": 12335,
+                  "end_char": 12347
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.00214
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TE = 2.14 ms",
+                  "start_char": 12349,
+                  "end_char": 12361
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          0.7,
+          0.7,
+          0.7
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "0.7 mm isotropic resolution",
+                  "start_char": 12257,
+                  "end_char": 12284
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "assessments": [
+    {
+      "local_id": "asm_nih_toolbox_emotion",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "NIH Toolbox Emotion Measures – 18+",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "NIH-Toolbox Emotion Measures – 18+",
+                  "start_char": 10150,
+                  "end_char": 10184
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Computer-adaptive emotion battery comprising the PROMIS Anger Item Bank and Fear Item Bank, used to measure anger-affect and fear-affect traits.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The battery is a computer-adaptive test comprised of items from the PROMIS Anger Item Bank (22 items) and Fear Item Bank (29 items).",
+                  "start_char": 10290,
+                  "end_char": 10422
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "questionnaire",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_siemens_connectome_skyra",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "Siemens",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Siemens",
+                  "start_char": 12056,
+                  "end_char": 12063
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "Connectome Skyra",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Connectome Skyra",
+                  "start_char": 12064,
+                  "end_char": 12080
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "external_datasets": [
+    {
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Human Connectome Project (HCP)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Human Connectome Project (HCP)",
+                  "start_char": 8547,
+                  "end_char": 8577
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "url": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "grp_men",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "men",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Men",
+                  "start_char": 752,
+                  "end_char": 755
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "subjects",
+                  "start_char": 416,
+                  "end_char": 424
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 462,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Men (n = 462)",
+                  "start_char": 39791,
+                  "end_char": 39804
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 27.8,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "27.8 ± 3.6",
+                  "start_char": 39927,
+                  "end_char": 39937
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 3.6,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "27.8 ± 3.6",
+                  "start_char": 39927,
+                  "end_char": 39937
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Age, Years",
+                  "start_char": 39908,
+                  "end_char": 39918
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All subjects were physically healthy",
+                  "start_char": 9818,
+                  "end_char": 9854
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "physically healthy adults without severe neurodevelopmental, neuropsychiatric, or neurologic disorders"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All subjects were physically healthy with no severe neurodevelopmental, neuropsychiatric or neurologic disorders.",
+                  "start_char": 9818,
+                  "end_char": 9931
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "grp_women",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "women",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Women",
+                  "start_char": 1042,
+                  "end_char": 1047
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "subjects",
+                  "start_char": 416,
+                  "end_char": 424
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 508,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Women (n = 508)",
+                  "start_char": 39807,
+                  "end_char": 39822
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 29.5,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "29.5 ± 3.6",
+                  "start_char": 39943,
+                  "end_char": 39953
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 3.6,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "29.5 ± 3.6",
+                  "start_char": 39943,
+                  "end_char": 39953
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Age, Years",
+                  "start_char": 39908,
+                  "end_char": 39918
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All subjects were physically healthy",
+                  "start_char": 9818,
+                  "end_char": 9854
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "physically healthy adults without severe neurodevelopmental, neuropsychiatric, or neurologic disorders"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All subjects were physically healthy with no severe neurodevelopmental, neuropsychiatric or neurologic disorders.",
+                  "start_char": 9818,
+                  "end_char": 9931
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inf_voxel_cluster_fwe",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel and cluster",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel   p   < 0.001, uncorrected, in combination with a cluster   p   < 0.05",
+                  "start_char": 15204,
+                  "end_char": 15280
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.001,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel   p   < 0.001",
+                  "start_char": 15204,
+                  "end_char": 15223
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel   p",
+                  "start_char": 15204,
+                  "end_char": 15213
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "clusterwise_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.05,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "cluster   p   < 0.05",
+                  "start_char": 15260,
+                  "end_char": 15280
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "family-wise error (FWE)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "family-wise error (FWE)",
+                  "start_char": 15296,
+                  "end_char": 15319
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correction_scope": {
+        "extraction_status": "extracted",
+        "value": "cluster-level",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "cluster-level",
+                  "start_char": 21196,
+                  "end_char": 21209
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "alpha_level": {
+        "extraction_status": "extracted",
+        "value": 0.05,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "cluster   p   < 0.05",
+                  "start_char": 15260,
+                  "end_char": 15280
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "mea_bold_activation",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BOLD signals",
+                  "start_char": 13617,
+                  "end_char": 13629
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "bold_response",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "BOLD signals",
+                  "start_char": 13617,
+                  "end_char": 13629
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "regional brain activation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "regional brain responses",
+                  "start_char": 1129,
+                  "end_char": 1153
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "BOLD beta contrast of negative face versus neutral shape",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The contrast images (difference in   β  ) of the first-level analysis were then used for the second-level group statistics.",
+                  "start_char": 14359,
+                  "end_char": 14482
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "mod_group_sex",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "robust_regression",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "two-sample t-test of men versus women",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a two-sample t-test of the contrast (negative face minus neutral shape) to evaluate the difference between males and females with age and years of education as covariates.",
+                  "start_char": 14627,
+                  "end_char": 14798
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Age and years of education entered as covariates.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "with age and years of education as covariates",
+                  "start_char": 14752,
+                  "end_char": 14797
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the second-level group statistics",
+                  "start_char": 14448,
+                  "end_char": 14481
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "two-sample t-test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a two-sample t-test",
+                  "start_char": 14627,
+                  "end_char": 14646
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "SPM8",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "SPM8, Welcome Department of Imaging Neuroscience, University College London, U.K.",
+                  "start_char": 12830,
+                  "end_char": 12911
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel",
+                  "start_char": 15204,
+                  "end_char": 15209
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "preprocessing": [
+        "prp_fmri"
+      ],
+      "terms": [
+        {
+          "local_id": "trm_sex",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "sex",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "sex",
+                      "start_char": 196,
+                      "end_char": 199
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "Men",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "men",
+                          "start_char": 432,
+                          "end_char": 435
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp_men"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "Women",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "not_found"
+                }
+              },
+              "groups": [
+                "grp_women"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "local_id": "trm_age",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "age",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "age",
+                      "start_char": 861,
+                      "end_char": 864
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "unit": {
+            "extraction_status": "extracted",
+            "value": "years",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "years",
+                      "start_char": 7654,
+                      "end_char": 7659
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "trm_education",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "years of education",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "years of education",
+                      "start_char": 14765,
+                      "end_char": 14783
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "continuous",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "unit": {
+            "extraction_status": "extracted",
+            "value": "years",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "years",
+                      "start_char": 7654,
+                      "end_char": 7659
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "prp_fmri",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Standard fMRI preprocessing in SPM8, including realignment, mean-image construction, co-registration to structural MPRAGE, segmentation, affine and nonlinear normalization, and Gaussian smoothing.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Standard image preprocessing was performed. Images of each individual subject were first realigned (motion corrected). A mean functional image volume was constructed for each subject per run from the realigned image volumes. These mean images were co-registered with the high-resolution structural MPRAGE image and then segmented for normalization with affine registration followed by nonlinear transformation. The normalization parameters determined for the structural volume were then applied to the corresponding functional image volumes for each subject. Finally, the images were smoothed with a Gaussian kernel of 4 mm at Full Width at Half Maximum.",
+                  "start_char": 12914,
+                  "end_char": 13568
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "SPM8"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "SPM8, Welcome Department of Imaging Neuroscience, University College London, U.K.",
+                  "start_char": 12830,
+                  "end_char": 12911
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "realignment (motion correction)",
+          "mean functional image construction",
+          "co-registration",
+          "segmentation",
+          "affine normalization",
+          "nonlinear normalization",
+          "spatial smoothing"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "smoothing_fwhm_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          4
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "4 mm",
+                  "start_char": 12294,
+                  "end_char": 12298
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "local_id": "tsk_emotion_identification",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "emotion processing task",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "an emotion processing task",
+                  "start_char": 10660,
+                  "end_char": 10686
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Participants identified negative facial emotion targets and neutral shape targets in alternating blocks.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Each participant completed two runs of an emotion processing task each with 6 blocks – 3 of negative face and 3 of neutral shape pictures – in a fixed order: neutral – negative – neutral – negative – neutral – negative.",
+                  "start_char": 10621,
+                  "end_char": 10840
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "conditions": [
+        {
+          "local_id": "cond_negative_face",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "negative face",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "negative face",
+                      "start_char": 10713,
+                      "end_char": 10726
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Participants selected one of two faces matching the emotion of the target; faces showed angry or fearful expressions.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "not_found"
+            }
+          }
+        },
+        {
+          "local_id": "cond_neutral_shape",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "neutral shape",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "neutral shape",
+                      "start_char": 600,
+                      "end_char": 613
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "description": {
+            "extraction_status": "extracted",
+            "value": "Participants selected one of two ellipses matching the orientation of the target ellipse.",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "During the neutral blocks, a target ellipse was presented at the top and subjects were to select one of two ellipses at the bottom with matching orientation.",
+                      "start_char": 11046,
+                      "end_char": 11203
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "block",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Each participant completed two runs of an emotion processing task each with 6 blocks",
+                  "start_char": 10621,
+                  "end_char": 10705
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisitions": [
+        "acq_fmri"
+      ],
+      "instructions": {
+        "extraction_status": "extracted",
+        "value": "Select the face matching the emotion of the target face, or the ellipse matching the orientation of the target ellipse.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "During the emotion blocks, a target face was presented at the top of the screen and subjects were instructed to select one of two faces presented at the bottom that matched the emotion of the target face. During the neutral blocks, a target ellipse was presented at the top and subjects were to select one of two ellipses at the bottom with matching orientation.",
+                  "start_char": 10841,
+                  "end_char": 11203
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stimuli": {
+        "extraction_status": "extracted",
+        "value": "Negative facial expressions and neutral shape pictures.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "3 of negative face and 3 of neutral shape pictures",
+                  "start_char": 10708,
+                  "end_char": 10758
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "response_mode": {
+        "extraction_status": "extracted",
+        "value": [
+          "button_press"
+        ],
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "performance_measures": {
+        "extraction_status": "extracted",
+        "value": [
+          "accuracy rate",
+          "reaction time"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Fig. 1  shows the accuracy rate (AR) and reaction time (RT) across conditions.",
+                  "start_char": 18332,
+                  "end_char": 18410
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1",
+                  "start_char": 9807,
+                  "end_char": 9814
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Demographics and emotional measures of participants.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1 — Demographics and emotional measures of participants.",
+                  "start_char": 39706,
+                  "end_char": 39768
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "*Two-sample t test for age and education; two-sample t test with age and years of education as covariates for Anger and Fear Affect score.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "*Two-sample t test for age and education; two-sample t test with age and years of education as covariates for Anger and Fear Affect score.",
+                  "start_char": 40179,
+                  "end_char": 40317
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2",
+                  "start_char": 21538,
+                  "end_char": 21545
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Regional activations in two-sample T-test of men vs. women.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2 — Regional activations in two-sample T-test of men vs. women.",
+                  "start_char": 40319,
+                  "end_char": 40388
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "Note: Brain regions were identified by reference to the Automated Anatomic Labeling or AAL Atlas (Tzourio-Mazoyer et al., 2002). We referred to (Duvernoy, 2009) for coordinates (*) that were not identified by the AAL. R: right; L: left; C: cortex.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Note: Brain regions were identified by reference to the Automated Anatomic Labeling or AAL Atlas (Tzourio-Mazoyer et al., 2002). We referred to (Duvernoy, 2009) for coordinates (*) that were not identified by the AAL. R: right; L: left; C: cortex.",
+                  "start_char": 42890,
+                  "end_char": 43137
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl3",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3",
+                  "start_char": 28116,
+                  "end_char": 28123
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Mediation analysis: fear-affect, right RSC activity, and accuracy rate.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3 — Mediation analysis: fear-affect, right RSC activity, and accuracy rate.",
+                  "start_char": 43139,
+                  "end_char": 43220
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "*Significant mediation.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "*Significant mediation.",
+                  "start_char": 44700,
+                  "end_char": 44723
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

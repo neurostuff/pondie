@@ -1,0 +1,1994 @@
+{
+  "local_id": "aVGe9BmFTMDR",
+  "extraction_metadata": {
+    "extractor_model": "@psyc-aid338-ope-333f18/gpt-5.6-luna",
+    "extractor_version": "review-bootstrap-0.1.0",
+    "source_text_hash": "c6e513c184da739d84422d448f3a8b15c8bc81b68e7c64dcdcca8d42c0223aff",
+    "extraction_date": "2026-08-28",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "Background:",
+        "level": 1,
+        "start_char": 196,
+        "end_char": 411
+      },
+      {
+        "ordinal": 1,
+        "title": "Objective:",
+        "level": 1,
+        "start_char": 411,
+        "end_char": 691
+      },
+      {
+        "ordinal": 2,
+        "title": "Methods:",
+        "level": 1,
+        "start_char": 691,
+        "end_char": 1082
+      },
+      {
+        "ordinal": 3,
+        "title": "Results:",
+        "level": 1,
+        "start_char": 1082,
+        "end_char": 1735
+      },
+      {
+        "ordinal": 4,
+        "title": "Conclusion:",
+        "level": 1,
+        "start_char": 1735,
+        "end_char": 2069
+      },
+      {
+        "ordinal": 5,
+        "title": "Introduction",
+        "level": 1,
+        "start_char": 2069,
+        "end_char": 5519
+      },
+      {
+        "ordinal": 6,
+        "title": "Methods and materials",
+        "level": 1,
+        "start_char": 5519,
+        "end_char": 12022
+      },
+      {
+        "ordinal": 7,
+        "title": "Participants",
+        "level": 2,
+        "start_char": 5548,
+        "end_char": 6350,
+        "parent_section": "Methods and materials"
+      },
+      {
+        "ordinal": 8,
+        "title": "Procedures",
+        "level": 2,
+        "start_char": 6350,
+        "end_char": 12022,
+        "parent_section": "Methods and materials"
+      },
+      {
+        "ordinal": 9,
+        "title": "Sham and active transcranial magnetic stimulation therapy",
+        "level": 3,
+        "start_char": 6369,
+        "end_char": 7782,
+        "parent_section": "Procedures"
+      },
+      {
+        "ordinal": 10,
+        "title": "Clinical depression outcome measure",
+        "level": 3,
+        "start_char": 7782,
+        "end_char": 8103,
+        "parent_section": "Procedures"
+      },
+      {
+        "ordinal": 11,
+        "title": "MRI acquisition",
+        "level": 3,
+        "start_char": 8103,
+        "end_char": 8673,
+        "parent_section": "Procedures"
+      },
+      {
+        "ordinal": 12,
+        "title": "MRI analysis",
+        "level": 3,
+        "start_char": 8673,
+        "end_char": 9942,
+        "parent_section": "Procedures"
+      },
+      {
+        "ordinal": 13,
+        "title": "Identifying the Representative Brain Stimulation Locations (Rlocations) for Each Condition.",
+        "level": 4,
+        "start_char": 8695,
+        "end_char": 9942,
+        "parent_section": "MRI analysis"
+      },
+      {
+        "ordinal": 14,
+        "title": "Hypothesis 1.",
+        "level": 3,
+        "start_char": 9942,
+        "end_char": 10776,
+        "parent_section": "Procedures"
+      },
+      {
+        "ordinal": 15,
+        "title": "Responder and Nonresponder Rlocations are different",
+        "level": 4,
+        "start_char": 9965,
+        "end_char": 10776,
+        "parent_section": "Hypothesis 1."
+      },
+      {
+        "ordinal": 16,
+        "title": "Resting State fMRI Connectivity Analysis.",
+        "level": 5,
+        "start_char": 10596,
+        "end_char": 10776,
+        "parent_section": "Responder and Nonresponder Rlocations are different"
+      },
+      {
+        "ordinal": 17,
+        "title": "Hypothesis 2.",
+        "level": 3,
+        "start_char": 10776,
+        "end_char": 11593,
+        "parent_section": "Procedures"
+      },
+      {
+        "ordinal": 18,
+        "title": "Responder Rlocation is anticorrelated with Subgenual Cingulate, Nonresponder Rlocation is not. ( eMethods for details).",
+        "level": 4,
+        "start_char": 10799,
+        "end_char": 11593,
+        "parent_section": "Hypothesis 2."
+      },
+      {
+        "ordinal": 19,
+        "title": "Hypothesis 3.",
+        "level": 3,
+        "start_char": 11593,
+        "end_char": 12022,
+        "parent_section": "Procedures"
+      },
+      {
+        "ordinal": 20,
+        "title": "Responder and Nonresponder Rlocations evoke distinct functional networks ( eMethods for details).",
+        "level": 4,
+        "start_char": 11616,
+        "end_char": 12022,
+        "parent_section": "Hypothesis 3."
+      },
+      {
+        "ordinal": 21,
+        "title": "Results",
+        "level": 1,
+        "start_char": 12022,
+        "end_char": 16303
+      },
+      {
+        "ordinal": 22,
+        "title": "Clinical response",
+        "level": 2,
+        "start_char": 12037,
+        "end_char": 12966,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 23,
+        "title": "Imaging results",
+        "level": 2,
+        "start_char": 12966,
+        "end_char": 16303,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 24,
+        "title": "Representative Brain Stimulation Locations (Rlocations)",
+        "level": 3,
+        "start_char": 12990,
+        "end_char": 13718,
+        "parent_section": "Imaging results"
+      },
+      {
+        "ordinal": 25,
+        "title": "Hypothesis 1: Responder and Nonresponder Rlocations are different",
+        "level": 3,
+        "start_char": 13718,
+        "end_char": 14186,
+        "parent_section": "Imaging results"
+      },
+      {
+        "ordinal": 26,
+        "title": "Atlas labeling at rlocations",
+        "level": 3,
+        "start_char": 14186,
+        "end_char": 14722,
+        "parent_section": "Imaging results"
+      },
+      {
+        "ordinal": 27,
+        "title": "Hypothesis 2: Responder Rlocation is anticorrelated with subgenual cingulate, Nonresponder Rlocation is not",
+        "level": 3,
+        "start_char": 14722,
+        "end_char": 15469,
+        "parent_section": "Imaging results"
+      },
+      {
+        "ordinal": 28,
+        "title": "Hypothesis 3: Responder and Nonresponder Rlocations evoke distinct functional networks",
+        "level": 3,
+        "start_char": 15469,
+        "end_char": 16303,
+        "parent_section": "Imaging results"
+      },
+      {
+        "ordinal": 29,
+        "title": "Discussion",
+        "level": 1,
+        "start_char": 16303,
+        "end_char": 26002
+      },
+      {
+        "ordinal": 30,
+        "title": "Supplementary Material",
+        "level": 1,
+        "start_char": 26002,
+        "end_char": 26029
+      },
+      {
+        "ordinal": 31,
+        "title": "Tables (floated, no position in the body)",
+        "level": 1,
+        "start_char": 26029,
+        "end_char": 31633
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "An imaging substudy of Veterans from a randomized, sham-controlled, double-blinded rTMS trial examining whether stimulation location and resting-state functional connectivity were associated with treatment response.",
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "An imaging substudy of 49 Veterans (mean age, 56 years; range, 27e78 years; 39 male) from a randomized, sham-controlled, double-blinded clinical trial of rTMS treatment, grouping participants by clinical response, followed by group comparisons of treatment locations identified by individualized fiducial markers on structural MRI and resting state fMRI derived networks.",
+              "start_char": 707,
+              "end_char": 1078
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "hypothesis": {
+    "extraction_status": "extracted",
+    "value": [
+      "in the active condition only, the average stimulation location of patients who respond to therapy differed from the average stimulation location of those who failed to respond",
+      "in the active condition, the fMRI time series within a subgenual cingulate region of interest would be anticorrelated with the fMRI time series within an ROI centered at the stimulation location of the responders, and not with the ROI centered at the nonresponder stimulation location",
+      "these seeds would be functionally connected with distinct brain networks"
+    ],
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "We hypothesized that in the active condition only, the average stimulation location of patients who respond to therapy differed from the average stimulation location of those who failed to respond ( Hypothesis 1 ). Based on a mechanistic model of rTMS response [ 8 − 10 ], we further hypothesized that in the active condition, the fMRI time series within a subgenual cingulate region of interest (ROI) would be anticorrelated with the fMRI time series within an ROI centered at the stimulation location of the responders (defined as patients with > 50% change on the HAMD), and not with the ROI centered at the nonresponder stimulation location ( Hypothesis 2 ).",
+              "start_char": 4510,
+              "end_char": 5172
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Randomized, sham-controlled, double-blinded clinical trial of rTMS in Veterans, with participants grouped by clinical response and treatment condition; the imaging substudy acquired structural MRI and resting-state fMRI before therapy onset for most participants or long after treatment for the remainder.",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "Forty-nine Veterans with TRMD from the six centers with 3T MRIs were recruited and completed resting-state fMRI for this imaging sub-study.",
+                "start_char": 5756,
+                "end_char": 5895
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "randomized",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "164 were randomized",
+                "start_char": 5637,
+                "end_char": 5656
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "parallel",
+      "value_source": "reported",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "blinding": {
+      "extraction_status": "extracted",
+      "value": "double_blind",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "double blind",
+                "start_char": 3707,
+                "end_char": 3719
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "analyses": [
+    {
+      "local_id": "a_t3_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Responder > Nonresponder",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Responder (−42, 34, 38) > Nonresponder (−34, 30, 46)",
+                  "start_char": 28814,
+                  "end_char": 28866
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Responder stimulation location networks compared with nonresponder stimulation location networks; increase in average correlation with the responder seed compared to the nonresponder seed.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3 — Differences in networks functionally connected to the brain regions underlying active-responder and active-nonresponder scalp targets.",
+                  "start_char": 28021,
+                  "end_char": 28165
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "preregistered",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Multiple frontal and parietal regions in both hemispheres including the insula and the dorsal and ventral prefrontal cortex were more strongly connected to the responder Rlocation.",
+          "The responder Rlocation showed greater connectivity in multiple nodes of the salience and frontal-parietal control networks."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "whole-brain connectivity",
+                  "start_char": 17239,
+                  "end_char": 17263
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_resting_state_functional_connectivity",
+      "groups": [
+        {
+          "group": "grp_veterans",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 49,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "all subjects (N = 49)",
+                      "start_char": 22244,
+                      "end_char": 22265
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_stimulation_response",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Responder",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Responder",
+                        "start_char": 9971,
+                        "end_char": 9980
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Responder (−42, 34, 38) > Nonresponder (−34, 30, 46)",
+                        "start_char": 28814,
+                        "end_char": 28866
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_stimulation_response",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Nonresponder",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Nonresponder",
+                        "start_char": 9985,
+                        "end_char": 9997
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "a negative b denotes the cluster is more strongly correlated to the nonresponder seed.",
+                        "start_char": 28392,
+                        "end_char": 28478
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "beta",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "the increase in average correlation (z-score) with the responder seed compared to the nonresponder seed is estimated by β",
+                      "start_char": 28269,
+                      "end_char": 28390
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "voxel-wise seed-based functional connectivity maps",
+                    "start_char": 11869,
+                    "end_char": 11919
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_active_responder_rlocation",
+          "reg_active_nonresponder_rlocation"
+        ],
+        "target_regions": [],
+        "edges": []
+      },
+      "acquisitions": [
+        "acq_resting_state_fmri"
+      ],
+      "tasks": [
+        "tsk_resting_state"
+      ],
+      "model_estimation": "mod_seed_network_comparison",
+      "inference_settings": "inf_fdr_corrected",
+      "tables": [
+        "tbl3"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t3#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Responder (−42, 34, 38) > Nonresponder (−34, 30, 46)",
+                  "start_char": 28814,
+                  "end_char": 28866
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI coordinates are reported",
+                  "start_char": 28166,
+                  "end_char": 28194
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_t3_2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Nonresponder > Responder",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Nonresponder (−34, 30, 46) > Responder (−42, 34, 38)",
+                  "start_char": 30308,
+                  "end_char": 30360
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Nonresponder stimulation location networks compared with responder stimulation location networks; increase in average correlation with the nonresponder seed compared to the responder seed.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3 — Differences in networks functionally connected to the brain regions underlying active-responder and active-nonresponder scalp targets.",
+                  "start_char": 28021,
+                  "end_char": 28165
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "preregistered",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "The posterior cingulate, middle frontal gyrus, angular gyrus and ventral frontal regions were more strongly connected to the nonresponder Rlocation.",
+          "The nonresponder Rlocation had greater connectivity in regions that are part of the default mode network."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "whole-brain connectivity",
+                  "start_char": 17239,
+                  "end_char": 17263
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_resting_state_functional_connectivity",
+      "groups": [
+        {
+          "group": "grp_veterans",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 49,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "all subjects (N = 49)",
+                      "start_char": 22244,
+                      "end_char": 22265
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_stimulation_response",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Nonresponder",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Nonresponder",
+                        "start_char": 9985,
+                        "end_char": 9997
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Nonresponder (−34, 30, 46) > Responder (−42, 34, 38)",
+                        "start_char": 30308,
+                        "end_char": 30360
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_stimulation_response",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "Responder",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Responder",
+                        "start_char": 9971,
+                        "end_char": 9980
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "a negative b denotes the cluster is more strongly correlated to the nonresponder seed.",
+                        "start_char": 28392,
+                        "end_char": 28478
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "beta",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "the increase in average correlation (z-score) with the responder seed compared to the nonresponder seed is estimated by β",
+                      "start_char": 28269,
+                      "end_char": 28390
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "voxel-wise seed-based functional connectivity maps",
+                    "start_char": 11869,
+                    "end_char": 11919
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_active_responder_rlocation",
+          "reg_active_nonresponder_rlocation"
+        ],
+        "target_regions": [],
+        "edges": []
+      },
+      "acquisitions": [
+        "acq_resting_state_fmri"
+      ],
+      "tasks": [
+        "tsk_resting_state"
+      ],
+      "model_estimation": "mod_seed_network_comparison",
+      "inference_settings": "inf_fdr_corrected",
+      "tables": [
+        "tbl3"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t3#2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Nonresponder (−34, 30, 46) > Responder (−42, 34, 38)",
+                  "start_char": 30308,
+                  "end_char": 30360
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "MNI coordinates are reported",
+                  "start_char": 28166,
+                  "end_char": 28194
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "grp_veterans",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Veterans",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Forty-nine Veterans with TRMD",
+                  "start_char": 5756,
+                  "end_char": 5785
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Veterans with treatment-resistant major depression participating in the imaging substudy.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Forty-nine Veterans with TRMD from the six centers with 3T MRIs were recruited and completed resting-state fMRI for this imaging sub-study.",
+                  "start_char": 5756,
+                  "end_char": 5895
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "approached_count": {
+        "extraction_status": "extracted",
+        "value": 342,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Of the 342 patients assessed for eligibility in the original study",
+                  "start_char": 5569,
+                  "end_char": 5635
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 49,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Forty-nine Veterans with TRMD from the six centers with 3T MRIs were recruited",
+                  "start_char": 5756,
+                  "end_char": 5834
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 49,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "completed resting-state fMRI",
+                  "start_char": 5839,
+                  "end_char": 5867
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 56.0,
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "extracted",
+        "value": 27,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "range, 27e78 years",
+                  "start_char": 763,
+                  "end_char": 781
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "extracted",
+        "value": 78,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "range, 27e78 years",
+                  "start_char": 763,
+                  "end_char": 781
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "years",
+                  "start_char": 756,
+                  "end_char": 761
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "treatment-resistant major depression"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "TRMD",
+                  "start_char": 2280,
+                  "end_char": 2284
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "sex_distribution": [
+        {
+          "category": {
+            "extraction_status": "extracted",
+            "value": "male",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "Male",
+                      "start_char": 26476,
+                      "end_char": 26480
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "count": {
+            "extraction_status": "extracted",
+            "value": 39,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "39 (79.6%)",
+                      "start_char": 26515,
+                      "end_char": 26525
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "percentage": {
+            "extraction_status": "extracted",
+            "value": 79.6,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "39 (79.6%)",
+                      "start_char": 26515,
+                      "end_char": 26525
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "local_id": "tsk_resting_state",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "resting-state fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "resting-state fMRI",
+                  "start_char": 5849,
+                  "end_char": 5867
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Resting-state fMRI acquisition used to calculate seed-based functional connectivity between representative stimulation locations and other brain regions.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel-wise seed-based functional connectivity maps were generated from each of the Rlocations.",
+                  "start_char": 11869,
+                  "end_char": 11963
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "continuous with no modelled events",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquisitions": [
+        "acq_resting_state_fmri"
+      ]
+    }
+  ],
+  "regions": [
+    {
+      "local_id": "reg_active_responder_rlocation",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "active responder Rlocation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "active responder Rlocation",
+                  "start_char": 17154,
+                  "end_char": 17180
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "For each of the four groups (active stimulation responder, active stimulation nonresponder, sham stimulation responder, sham stimulation nonresponder) we computed the centroid of these stimulation locations to derive representative locations (hereafter referred to as Rlocations) in MNI coordinates",
+                  "start_char": 9433,
+                  "end_char": 9731
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "coordinate_sphere",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "large radius of the seeds used in our analyses (R = 10 mm)",
+                  "start_char": 22553,
+                  "end_char": 22611
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "atlas": {
+        "extraction_status": "extracted",
+        "value": "HCP parcellation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Rlocations were labeled using several atlases",
+                  "start_char": 9851,
+                  "end_char": 9896
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Centroid of stimulation locations for active-treatment responders, at MNI coordinates (−42, 34, 38; N = 12).",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "active-responder = (−42,34,38; N = 12)",
+                  "start_char": 13302,
+                  "end_char": 13340
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "reg_active_nonresponder_rlocation",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "active nonresponder Rlocation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "active nonresponder Rlocation",
+                  "start_char": 14471,
+                  "end_char": 14500
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "same_study_analysis",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "For each of the four groups (active stimulation responder, active stimulation nonresponder, sham stimulation responder, sham stimulation nonresponder) we computed the centroid of these stimulation locations to derive representative locations (hereafter referred to as Rlocations) in MNI coordinates",
+                  "start_char": 9433,
+                  "end_char": 9731
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "coordinate_sphere",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "large radius of the seeds used in our analyses (R = 10 mm)",
+                  "start_char": 22553,
+                  "end_char": 22611
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "atlas": {
+        "extraction_status": "extracted",
+        "value": "HCP parcellation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Rlocations were labeled using several atlases",
+                  "start_char": 9851,
+                  "end_char": 9896
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Centroid of stimulation locations for active-treatment nonresponders, at MNI coordinates (−34, 30, 46; N = 6).",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "active-nonresponder = (−34,30,46; N = 6)",
+                  "start_char": 13342,
+                  "end_char": 13382
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acq_resting_state_fmri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "resting state fMRI",
+                  "start_char": 1042,
+                  "end_char": 1060
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 3,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "3T MRIs",
+                  "start_char": 5812,
+                  "end_char": 5819
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          3.44,
+          3.44,
+          3.5
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "low resolution of the original fMRI (3.44 × 3.44 × 3.5 mm)",
+                  "start_char": 22490,
+                  "end_char": 22548
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "mod_seed_network_comparison",
+      "model_family": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "seed-based functional connectivity network comparison",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "seed-based functional connectivity maps",
+                  "start_char": 11880,
+                  "end_char": 11919
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "all subjects (N = 49) were used to estimate group connectomes",
+                  "start_char": 22244,
+                  "end_char": 22305
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "voxel-wise seed-based functional connectivity maps",
+                  "start_char": 11869,
+                  "end_char": 11919
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "terms": [
+        {
+          "local_id": "trm_stimulation_response",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "stimulation response",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "response",
+                      "start_char": 40,
+                      "end_char": 48
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "The number of responders and nonresponders failed to differ between the active and sham conditions",
+                      "start_char": 12444,
+                      "end_char": 12542
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "Responder",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "responders",
+                          "start_char": 1135,
+                          "end_char": 1145
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "regions": [
+                "reg_active_responder_rlocation"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "Nonresponder",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "not_found"
+                }
+              },
+              "regions": [
+                "reg_active_nonresponder_rlocation"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "mea_resting_state_functional_connectivity",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "connectivity_strength",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "connectivity",
+                  "start_char": 638,
+                  "end_char": 650
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "resting-state functional connectivity",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "functional connectivity",
+                  "start_char": 627,
+                  "end_char": 650
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "seed-based functional connectivity",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "seed-based functional connectivity",
+                  "start_char": 11880,
+                  "end_char": 11914
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inf_fdr_corrected",
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "FDR",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "FDR corrected clusters",
+                  "start_char": 1624,
+                  "end_char": 1646
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correction_scope": {
+        "extraction_status": "extracted",
+        "value": "whole-brain seed-based connectivity maps",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "When examining whole-brain connectivity of seed-based networks derived from the Rlocations of active responders vs. active nonresponders, the responder Rlocation showed greater connectivity in multiple nodes of the salience and frontal-parietal control networks [ 28 ].",
+                  "start_char": 17224,
+                  "end_char": 17493
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1",
+                  "start_char": 6185,
+                  "end_char": 6192
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Demographic information.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1 — Demographic information.",
+                  "start_char": 26075,
+                  "end_char": 26109
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "aThese measures were collected at the time of imaging; all others are baseline values.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "aThese measures were collected at the time of imaging; all others are baseline values.",
+                  "start_char": 27201,
+                  "end_char": 27287
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2",
+                  "start_char": 14224,
+                  "end_char": 14231
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Atlas labeling at rlocations.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2 — Atlas labeling at rlocations.",
+                  "start_char": 27289,
+                  "end_char": 27328
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "tbl3",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3",
+                  "start_char": 15862,
+                  "end_char": 15869
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Differences in networks functionally connected to the brain regions underlying active-responder and active-nonresponder scalp targets. MNI coordinates are reported for each brain region that served as the seed voxel. Within each cluster, the increase in average correlation (z-score) with the responder seed compared to the nonresponder seed is estimated by β; a negative b denotes the cluster is more strongly correlated to the nonresponder seed.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3 — Differences in networks functionally connected to the brain regions underlying active-responder and active-nonresponder scalp targets. MNI coordinates are reported for each brain region that served as the seed voxel. Within each cluster, the increase in average correlation (z-score) with the responder seed compared to the nonresponder seed is estimated by β; a negative b denotes the cluster is more strongly correlated to the nonresponder seed.",
+                  "start_char": 28021,
+                  "end_char": 28478
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ]
+}

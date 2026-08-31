@@ -1,0 +1,334 @@
+{
+ "paper_id": "krv8mTKTUHSp",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis_men_greater_women",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_men_greater_women",
+   "term": "term_anger_affect",
+   "level": "",
+   "label": "Anger-Affect score  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_men_greater_women",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_men_greater_women",
+   "term": "term_face_condition",
+   "level": "negative face",
+   "label": "stimulus condition : negative face",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_men_greater_women",
+   "term": "term_face_condition",
+   "level": "neutral shape",
+   "label": "stimulus condition : neutral shape",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_men_greater_women",
+   "term": "term_fear_affect",
+   "level": "",
+   "label": "Fear-Affect score  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_men_greater_women",
+   "term": "term_motion",
+   "level": "",
+   "label": "realignment parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_men_greater_women",
+   "term": "term_sex",
+   "level": "men",
+   "label": "sex : men",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_men_greater_women",
+   "term": "term_sex",
+   "level": "women",
+   "label": "sex : women",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_women_greater_men",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_women_greater_men",
+   "term": "term_anger_affect",
+   "level": "",
+   "label": "Anger-Affect score  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_women_greater_men",
+   "term": "term_education",
+   "level": "",
+   "label": "years of education  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_women_greater_men",
+   "term": "term_face_condition",
+   "level": "negative face",
+   "label": "stimulus condition : negative face",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_women_greater_men",
+   "term": "term_face_condition",
+   "level": "neutral shape",
+   "label": "stimulus condition : neutral shape",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_women_greater_men",
+   "term": "term_fear_affect",
+   "level": "",
+   "label": "Fear-Affect score  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_women_greater_men",
+   "term": "term_motion",
+   "level": "",
+   "label": "realignment parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_women_greater_men",
+   "term": "term_sex",
+   "level": "men",
+   "label": "sex : men",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_women_greater_men",
+   "term": "term_sex",
+   "level": "women",
+   "label": "sex : women",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  }
+ ],
+ "analyses": {
+  "analysis_men_greater_women": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_women_greater_men": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  }
+ }
+}

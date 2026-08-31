@@ -1,0 +1,3 @@
+[submodule "study_schema"]
+	path = study_schema
+	url = git@github.com:neurostuff/study_schema.git

@@ -1,0 +1,276 @@
+{
+ "paper_id": "xevP8UDRAVh9",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis_heroin_negative_correlation",
+   "term": "term_gray_matter_volume",
+   "level": "",
+   "label": "gray matter volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_heroin_negative_correlation",
+   "term": "term_perfusion_condition",
+   "level": "heroin-associated perfusion",
+   "label": "perfusion condition : heroin-associated perfusion",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "held",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_heroin_negative_correlation",
+   "term": "term_perfusion_condition",
+   "level": "placebo-associated perfusion",
+   "label": "perfusion condition : placebo-associated perfusion",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_heroin_positive_correlation",
+   "term": "term_gray_matter_volume",
+   "level": "",
+   "label": "gray matter volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_heroin_positive_correlation",
+   "term": "term_perfusion_condition",
+   "level": "heroin-associated perfusion",
+   "label": "perfusion condition : heroin-associated perfusion",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "held",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_heroin_positive_correlation",
+   "term": "term_perfusion_condition",
+   "level": "placebo-associated perfusion",
+   "label": "perfusion condition : placebo-associated perfusion",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_placebo_negative_correlation",
+   "term": "term_gray_matter_volume",
+   "level": "",
+   "label": "gray matter volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_placebo_negative_correlation",
+   "term": "term_perfusion_condition",
+   "level": "heroin-associated perfusion",
+   "label": "perfusion condition : heroin-associated perfusion",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis_placebo_negative_correlation",
+   "term": "term_perfusion_condition",
+   "level": "placebo-associated perfusion",
+   "label": "perfusion condition : placebo-associated perfusion",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_placebo_positive_correlation",
+   "term": "term_gray_matter_volume",
+   "level": "",
+   "label": "gray matter volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_placebo_positive_correlation",
+   "term": "term_perfusion_condition",
+   "level": "heroin-associated perfusion",
+   "label": "perfusion condition : heroin-associated perfusion",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_placebo_positive_correlation",
+   "term": "term_perfusion_condition",
+   "level": "placebo-associated perfusion",
+   "label": "perfusion condition : placebo-associated perfusion",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "held",
+   "disputed": false,
+   "tier": "changed"
+  }
+ ],
+ "analyses": {
+  "analysis_placebo_positive_correlation": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_placebo_negative_correlation": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    },
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis_heroin_positive_correlation": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_heroin_negative_correlation": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  }
+ }
+}

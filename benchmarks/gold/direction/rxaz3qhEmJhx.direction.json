@@ -1,0 +1,524 @@
+{
+ "paper_id": "rxaz3qhEmJhx",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis_tbl3",
+   "term": "term_akt1_a_alleles",
+   "level": "",
+   "label": "number of A alleles at AKT1 rs1130233  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl3",
+   "term": "term_drug_condition",
+   "level": "THC",
+   "label": "drug condition : THC",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl3",
+   "term": "term_drug_condition",
+   "level": "placebo",
+   "label": "drug condition : placebo",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl3",
+   "term": "term_fear_condition",
+   "level": "intensely fearful faces",
+   "label": "fear-processing condition : intensely fearful faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "held",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl3",
+   "term": "term_fear_condition",
+   "level": "mildly fearful faces",
+   "label": "fear-processing condition : mildly fearful faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl3",
+   "term": "term_fear_condition",
+   "level": "neutral faces",
+   "label": "fear-processing condition : neutral faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl3",
+   "term": "term_methylation",
+   "level": "",
+   "label": "percentage methylation at CpG sites 11–12 around AKT1 rs1130233  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl4",
+   "term": "term_akt1_a_alleles",
+   "level": "",
+   "label": "number of A alleles at AKT1 rs1130233  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl4",
+   "term": "term_drug_condition",
+   "level": "THC",
+   "label": "drug condition : THC",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl4",
+   "term": "term_drug_condition",
+   "level": "placebo",
+   "label": "drug condition : placebo",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl4",
+   "term": "term_fear_condition",
+   "level": "intensely fearful faces",
+   "label": "fear-processing condition : intensely fearful faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "held",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl4",
+   "term": "term_fear_condition",
+   "level": "mildly fearful faces",
+   "label": "fear-processing condition : mildly fearful faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl4",
+   "term": "term_fear_condition",
+   "level": "neutral faces",
+   "label": "fear-processing condition : neutral faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl4",
+   "term": "term_methylation",
+   "level": "",
+   "label": "percentage methylation at CpG sites 11–12 around AKT1 rs1130233  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl5",
+   "term": "term_akt1_a_alleles",
+   "level": "",
+   "label": "number of A alleles at AKT1 rs1130233  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl5",
+   "term": "term_drug_condition",
+   "level": "THC",
+   "label": "drug condition : THC",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl5",
+   "term": "term_drug_condition",
+   "level": "placebo",
+   "label": "drug condition : placebo",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl5",
+   "term": "term_fear_condition",
+   "level": "intensely fearful faces",
+   "label": "fear-processing condition : intensely fearful faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "held",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl5",
+   "term": "term_fear_condition",
+   "level": "mildly fearful faces",
+   "label": "fear-processing condition : mildly fearful faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl5",
+   "term": "term_fear_condition",
+   "level": "neutral faces",
+   "label": "fear-processing condition : neutral faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl5",
+   "term": "term_methylation",
+   "level": "",
+   "label": "percentage methylation at CpG sites 11–12 around AKT1 rs1130233  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl6",
+   "term": "term_akt1_a_alleles",
+   "level": "",
+   "label": "number of A alleles at AKT1 rs1130233  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl6",
+   "term": "term_drug_condition",
+   "level": "THC",
+   "label": "drug condition : THC",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "silent",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl6",
+   "term": "term_drug_condition",
+   "level": "placebo",
+   "label": "drug condition : placebo",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl6",
+   "term": "term_fear_condition",
+   "level": "intensely fearful faces",
+   "label": "fear-processing condition : intensely fearful faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "held",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_tbl6",
+   "term": "term_fear_condition",
+   "level": "mildly fearful faces",
+   "label": "fear-processing condition : mildly fearful faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl6",
+   "term": "term_fear_condition",
+   "level": "neutral faces",
+   "label": "fear-processing condition : neutral faces",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_tbl6",
+   "term": "term_methylation",
+   "level": "",
+   "label": "percentage methylation at CpG sites 11–12 around AKT1 rs1130233  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "undirected",
+   "disputed": false,
+   "tier": "changed"
+  }
+ ],
+ "analyses": {
+  "analysis_tbl3": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_tbl4": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_tbl5": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_tbl6": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  }
+ }
+}

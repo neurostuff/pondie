@@ -1,0 +1,4505 @@
+{
+  "local_id": "kzMj26hGWacQ",
+  "extraction_metadata": {
+    "extractor_model": "@psyc-aid338-ope-333f18/gpt-5.6-luna",
+    "extractor_version": "review-bootstrap-0.1.0",
+    "source_text_hash": "9337d9c445fa0331f44470a267a197f8a57074ee4675892df80c6e9325fa0c91",
+    "extraction_date": "2026-08-28",
+    "paper_sections": [
+      {
+        "ordinal": 0,
+        "title": "Objective",
+        "level": 1,
+        "start_char": 769,
+        "end_char": 944
+      },
+      {
+        "ordinal": 1,
+        "title": "Material and methods",
+        "level": 1,
+        "start_char": 944,
+        "end_char": 1654
+      },
+      {
+        "ordinal": 2,
+        "title": "Results",
+        "level": 1,
+        "start_char": 1654,
+        "end_char": 2134
+      },
+      {
+        "ordinal": 3,
+        "title": "Conclusions",
+        "level": 1,
+        "start_char": 2134,
+        "end_char": 2762
+      },
+      {
+        "ordinal": 4,
+        "title": "Introduction",
+        "level": 1,
+        "start_char": 2762,
+        "end_char": 9368
+      },
+      {
+        "ordinal": 5,
+        "title": "Material and methods",
+        "level": 1,
+        "start_char": 9368,
+        "end_char": 19375
+      },
+      {
+        "ordinal": 6,
+        "title": "Clinical variables",
+        "level": 2,
+        "start_char": 12148,
+        "end_char": 12460,
+        "parent_section": "Material and methods"
+      },
+      {
+        "ordinal": 7,
+        "title": "MRI acquisition",
+        "level": 2,
+        "start_char": 12460,
+        "end_char": 13365,
+        "parent_section": "Material and methods"
+      },
+      {
+        "ordinal": 8,
+        "title": "Functional connectivity analysis",
+        "level": 2,
+        "start_char": 13365,
+        "end_char": 19375,
+        "parent_section": "Material and methods"
+      },
+      {
+        "ordinal": 9,
+        "title": "Results",
+        "level": 1,
+        "start_char": 19375,
+        "end_char": 25029
+      },
+      {
+        "ordinal": 10,
+        "title": "Demographics and behavioral results",
+        "level": 2,
+        "start_char": 19390,
+        "end_char": 20237,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 11,
+        "title": "Imaging results",
+        "level": 2,
+        "start_char": 20237,
+        "end_char": 25029,
+        "parent_section": "Results"
+      },
+      {
+        "ordinal": 12,
+        "title": "Functional connectivity in HC and unmedicated SZ",
+        "level": 3,
+        "start_char": 20261,
+        "end_char": 22887,
+        "parent_section": "Imaging results"
+      },
+      {
+        "ordinal": 13,
+        "title": "Relationship between abnormalities in large scale networks and symptom burden",
+        "level": 3,
+        "start_char": 22887,
+        "end_char": 24231,
+        "parent_section": "Imaging results"
+      },
+      {
+        "ordinal": 14,
+        "title": "Change in functional connectivity over time with risperidone treatment",
+        "level": 3,
+        "start_char": 24231,
+        "end_char": 25029,
+        "parent_section": "Imaging results"
+      },
+      {
+        "ordinal": 15,
+        "title": "Discussion",
+        "level": 1,
+        "start_char": 25029,
+        "end_char": 37396
+      },
+      {
+        "ordinal": 16,
+        "title": "Disclosures and acknowledgments",
+        "level": 1,
+        "start_char": 37396,
+        "end_char": 37671
+      },
+      {
+        "ordinal": 17,
+        "title": "Tables (floated, no position in the body)",
+        "level": 1,
+        "start_char": 37671,
+        "end_char": 64663
+      }
+    ]
+  },
+  "description": {
+    "extraction_status": "extracted",
+    "value": "A longitudinal resting-state fMRI study describing large-scale functional-network abnormalities in unmedicated patients with schizophrenia and examining changes after six weeks of risperidone treatment.",
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "34 unmedicated patients with schizophrenia and 34 matched healthy controls were enrolled in this longitudinal study. We collected resting state functional MRI data with a 3T scanner at baseline and six weeks after they were started on risperidone. In addition, a group of 19 healthy controls were scanned twice six weeks apart.",
+              "start_char": 972,
+              "end_char": 1299
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "hypothesis": {
+    "extraction_status": "extracted",
+    "value": [
+      "large scale functional networks to be differentially affected in unmedicated patients",
+      "network integrity would be, at least partially, restored after six weeks of antipsychotic treatment"
+    ],
+    "value_source": "reported",
+    "evidence": {
+      "status": "present",
+      "sets": [
+        {
+          "spans": [
+            {
+              "text": "Based on the existing literature, we hypothesized large scale functional networks to be differentially affected in unmedicated patients and that network integrity would be, at least partially, restored after six weeks of antipsychotic treatment.",
+              "start_char": 9007,
+              "end_char": 9252
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "design": {
+    "description": {
+      "extraction_status": "extracted",
+      "value": "Longitudinal study with 34 unmedicated patients with schizophrenia and 34 matched healthy controls; patients were scanned before and after six weeks of risperidone treatment, and 19 healthy controls were scanned twice six weeks apart.",
+      "value_source": "reported",
+      "evidence": {
+        "status": "present",
+        "sets": [
+          {
+            "spans": [
+              {
+                "text": "34 unmedicated patients with schizophrenia and 34 matched healthy controls were enrolled in this longitudinal study. We collected resting state functional MRI data with a 3T scanner at baseline and six weeks after they were started on risperidone. In addition, a group of 19 healthy controls were scanned twice six weeks apart.",
+                "start_char": 972,
+                "end_char": 1299
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "allocation": {
+      "extraction_status": "extracted",
+      "value": "non_randomized",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "assignment_structure": {
+      "extraction_status": "extracted",
+      "value": "parallel",
+      "value_source": "generated",
+      "evidence": {
+        "status": "not_found"
+      }
+    },
+    "blinding": {
+      "extraction_status": "not_reported",
+      "evidence": {
+        "status": "not_applicable"
+      }
+    },
+    "arms": [
+      {
+        "local_id": "arm_risperidone",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "risperidone",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "risperidone",
+                    "start_char": 107,
+                    "end_char": 118
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "description": {
+          "extraction_status": "extracted",
+          "value": "Six-week flexible-dose risperidone treatment.",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Subjects who were either medication naïve or had been off antipsychotic medications were enrolled in a six week trial with risperidone using a flexible dosing regimen.",
+                    "start_char": 10837,
+                    "end_char": 11004
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "arm_kind": {
+          "extraction_status": "extracted",
+          "value": "pharmacological",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "agent": {
+          "extraction_status": "extracted",
+          "value": "risperidone",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "risperidone",
+                    "start_char": 107,
+                    "end_char": 118
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "arm_no_intervention",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "no intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "description": {
+          "extraction_status": "not_reported",
+          "evidence": {
+            "status": "not_applicable"
+          }
+        },
+        "arm_kind": {
+          "extraction_status": "extracted",
+          "value": "no_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "not_found"
+          }
+        },
+        "agent": {
+          "extraction_status": "not_reported",
+          "evidence": {
+            "status": "not_applicable"
+          }
+        }
+      }
+    ],
+    "timepoints": [
+      {
+        "local_id": "tp_baseline",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "baseline",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "baseline",
+                    "start_char": 1157,
+                    "end_char": 1165
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "pre_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Resting state scans were obtained prior to treatment (off medication) and after six weeks of treatment with risperidone.",
+                    "start_char": 11351,
+                    "end_char": 11471
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 1,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Resting state scans were obtained prior to treatment (off medication) and after six weeks of treatment with risperidone.",
+                    "start_char": 11351,
+                    "end_char": 11471
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "time_from_intervention": {
+          "extraction_status": "extracted",
+          "value": "before risperidone treatment",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Resting state scans were obtained prior to treatment (off medication) and after six weeks of treatment with risperidone.",
+                    "start_char": 11351,
+                    "end_char": 11471
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "local_id": "tp_week6",
+        "name": {
+          "extraction_status": "extracted",
+          "value": "week 6",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "week 6",
+                    "start_char": 11722,
+                    "end_char": 11728
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "relation_to_intervention": {
+          "extraction_status": "extracted",
+          "value": "post_intervention",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Resting state scans were obtained prior to treatment (off medication) and after six weeks of treatment with risperidone.",
+                    "start_char": 11351,
+                    "end_char": 11471
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "order": {
+          "extraction_status": "extracted",
+          "value": 2,
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Resting state scans were obtained prior to treatment (off medication) and after six weeks of treatment with risperidone.",
+                    "start_char": 11351,
+                    "end_char": 11471
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "time_from_intervention": {
+          "extraction_status": "extracted",
+          "value": "six weeks after starting risperidone",
+          "value_source": "reported",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Resting state scans were obtained prior to treatment (off medication) and after six weeks of treatment with risperidone.",
+                    "start_char": 11351,
+                    "end_char": 11471
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "analyses": [
+    {
+      "local_id": "a_t0015_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Dorsal attention network",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the dorsal attention network",
+                  "start_char": 1327,
+                  "end_char": 1355
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Increased functional connectivity in unmedicated patients with schizophrenia compared to healthy controls; dorsal attention network",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In unmedicated SZ, we found increased functional connectivity in the DAN, ECN, and salience networks, but not the DMN when compared to HC",
+                  "start_char": 20784,
+                  "end_char": 20921
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "In unmedicated patients with schizophrenia we found resting state connectivity to be increased in the dorsal attention network relative to control participants."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In unmedicated patients with schizophrenia we found resting state connectivity to be increased in the dorsal attention network, executive control network, and salience network relative to control participants, but not the default mode network.",
+                  "start_char": 1669,
+                  "end_char": 1912
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the time series of all other voxels in the brain",
+                  "start_char": 16459,
+                  "end_char": 16507
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_functional_connectivity",
+      "groups": [
+        {
+          "group": "grp_schizophrenia",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 34,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "34 unmedicated patients with schizophrenia and 34 matched healthy controls were enrolled in this longitudinal study.",
+                      "start_char": 972,
+                      "end_char": 1088
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_healthy_control",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 34,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "34 unmedicated patients with schizophrenia and 34 matched healthy controls were enrolled in this longitudinal study.",
+                      "start_char": 972,
+                      "end_char": 1088
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "unmedicated patients with schizophrenia",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "In unmedicated SZ",
+                        "start_char": 20784,
+                        "end_char": 20801
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "increased functional connectivity",
+                        "start_char": 20812,
+                        "end_char": 20845
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "healthy controls",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "HC",
+                        "start_char": 473,
+                        "end_char": 475
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "but not the DMN when compared to HC",
+                        "start_char": 20886,
+                        "end_char": 20921
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Four large scale networks, the dorsal attention network, executive control network, salience network, and default mode network were identified with seed based functional connectivity analyses.",
+                    "start_char": 1300,
+                    "end_char": 1492
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_dan"
+        ],
+        "target_regions": [],
+        "edges": [],
+        "modulatory_input": {
+          "extraction_status": "not_reported",
+          "evidence": {
+            "status": "not_applicable"
+          }
+        },
+        "inference_target": {
+          "extraction_status": "extracted",
+          "value": "connectivity_parameter",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Group differences in connectivity",
+                    "start_char": 1493,
+                    "end_char": 1526
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "acquisitions": [
+        "acq_resting_fmri"
+      ],
+      "tasks": [
+        "tsk_resting_state"
+      ],
+      "model_estimation": "mod_group_connectivity",
+      "inference_settings": "inf_fdr",
+      "tables": [
+        "tbl3"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t0015#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "normalized to 1.5 mm  Montreal Neurologic Institute (MNI) space",
+                  "start_char": 13662,
+                  "end_char": 13725
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_t0015_2",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Executive control network",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Increased functional connectivity in unmedicated patients with schizophrenia compared to healthy controls; executive control network",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In unmedicated SZ, we found increased functional connectivity in the DAN, ECN, and salience networks, but not the DMN when compared to HC",
+                  "start_char": 20784,
+                  "end_char": 20921
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "In unmedicated patients with schizophrenia we found resting state connectivity to be increased in the executive control network relative to control participants."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In unmedicated patients with schizophrenia we found resting state connectivity to be increased in the dorsal attention network, executive control network, and salience network relative to control participants, but not the default mode network.",
+                  "start_char": 1669,
+                  "end_char": 1912
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the time series of all other voxels in the brain",
+                  "start_char": 16459,
+                  "end_char": 16507
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_functional_connectivity",
+      "groups": [
+        {
+          "group": "grp_schizophrenia",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 34,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "34 unmedicated patients with schizophrenia and 34 matched healthy controls were enrolled in this longitudinal study.",
+                      "start_char": 972,
+                      "end_char": 1088
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_healthy_control",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 34,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "34 unmedicated patients with schizophrenia and 34 matched healthy controls were enrolled in this longitudinal study.",
+                      "start_char": 972,
+                      "end_char": 1088
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "unmedicated patients with schizophrenia",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "In unmedicated SZ",
+                        "start_char": 20784,
+                        "end_char": 20801
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "increased functional connectivity",
+                        "start_char": 20812,
+                        "end_char": 20845
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "healthy controls",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "HC",
+                        "start_char": 473,
+                        "end_char": 475
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "when compared to HC",
+                        "start_char": 20902,
+                        "end_char": 20921
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Four large scale networks, the dorsal attention network, executive control network, salience network, and default mode network were identified with seed based functional connectivity analyses.",
+                    "start_char": 1300,
+                    "end_char": 1492
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_ecn"
+        ],
+        "target_regions": [],
+        "edges": [],
+        "modulatory_input": {
+          "extraction_status": "not_reported",
+          "evidence": {
+            "status": "not_applicable"
+          }
+        },
+        "inference_target": {
+          "extraction_status": "extracted",
+          "value": "connectivity_parameter",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Group differences in connectivity",
+                    "start_char": 1493,
+                    "end_char": 1526
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "acquisitions": [
+        "acq_resting_fmri"
+      ],
+      "tasks": [
+        "tsk_resting_state"
+      ],
+      "model_estimation": "mod_group_connectivity",
+      "inference_settings": "inf_fdr",
+      "tables": [
+        "tbl3"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t0015#2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "normalized to 1.5 mm  Montreal Neurologic Institute (MNI) space",
+                  "start_char": 13662,
+                  "end_char": 13725
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_t0015_3",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Salience network",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the salience network",
+                  "start_char": 8972,
+                  "end_char": 8992
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Increased functional connectivity in unmedicated patients with schizophrenia compared to healthy controls; salience network",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In unmedicated SZ, we found increased functional connectivity in the DAN, ECN, and salience networks, but not the DMN when compared to HC",
+                  "start_char": 20784,
+                  "end_char": 20921
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "In unmedicated patients with schizophrenia we found resting state connectivity to be increased in the salience network relative to control participants."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In unmedicated patients with schizophrenia we found resting state connectivity to be increased in the dorsal attention network, executive control network, and salience network relative to control participants, but not the default mode network.",
+                  "start_char": 1669,
+                  "end_char": 1912
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "the time series of all other voxels in the brain",
+                  "start_char": 16459,
+                  "end_char": 16507
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_functional_connectivity",
+      "groups": [
+        {
+          "group": "grp_schizophrenia",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 34,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "34 unmedicated patients with schizophrenia and 34 matched healthy controls were enrolled in this longitudinal study.",
+                      "start_char": 972,
+                      "end_char": 1088
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_healthy_control",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 34,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "34 unmedicated patients with schizophrenia and 34 matched healthy controls were enrolled in this longitudinal study.",
+                      "start_char": 972,
+                      "end_char": 1088
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "unmedicated patients with schizophrenia",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "In unmedicated SZ",
+                        "start_char": 20784,
+                        "end_char": 20801
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "increased functional connectivity",
+                        "start_char": 20812,
+                        "end_char": 20845
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "trm_group",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "healthy controls",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "HC",
+                        "start_char": 473,
+                        "end_char": 475
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "when compared to HC",
+                        "start_char": 20902,
+                        "end_char": 20921
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "not_found"
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Four large scale networks, the dorsal attention network, executive control network, salience network, and default mode network were identified with seed based functional connectivity analyses.",
+                    "start_char": 1300,
+                    "end_char": 1492
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_salience"
+        ],
+        "target_regions": [],
+        "edges": [],
+        "modulatory_input": {
+          "extraction_status": "not_reported",
+          "evidence": {
+            "status": "not_applicable"
+          }
+        },
+        "inference_target": {
+          "extraction_status": "extracted",
+          "value": "connectivity_parameter",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Group differences in connectivity",
+                    "start_char": 1493,
+                    "end_char": 1526
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "acquisitions": [
+        "acq_resting_fmri"
+      ],
+      "tasks": [
+        "tsk_resting_state"
+      ],
+      "model_estimation": "mod_group_connectivity",
+      "inference_settings": "inf_fdr",
+      "tables": [
+        "tbl3"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t0015#3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "normalized to 1.5 mm  Montreal Neurologic Institute (MNI) space",
+                  "start_char": 13662,
+                  "end_char": 13725
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "a_t0020_1",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Baseline > week 6",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Baseline > week 6",
+                  "start_char": 63514,
+                  "end_char": 63531
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition": {
+        "extraction_status": "extracted",
+        "value": "Change in dorsal attention network functional connectivity over six weeks of treatment with risperidone.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4 — Change in dorsal attention network functional connectivity over six weeks of treatment with risperidone.",
+                  "start_char": 63082,
+                  "end_char": 63196
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "prespecification": {
+        "extraction_status": "extracted",
+        "value": "exploratory",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In an exploratory fashion, we also examined the relationships between connectivity and clinical variables.",
+                  "start_char": 18610,
+                  "end_char": 18716
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "interpretations": {
+        "extraction_status": "extracted",
+        "value": [
+          "Dysconnectivity was attenuated after six weeks of treatment only in the dorsal attention network."
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Dysconnectivity was attenuated after six weeks of treatment only in the dorsal attention network.",
+                  "start_char": 1913,
+                  "end_char": 2010
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_scope": {
+        "extraction_status": "extracted",
+        "value": "whole_brain",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "all other voxels in the brain",
+                  "start_char": 16478,
+                  "end_char": 16507
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "regions": [],
+      "defines_regions": [],
+      "measure": "mea_functional_connectivity",
+      "groups": [
+        {
+          "group": "grp_schizophrenia",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 22,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "leaving data for 34 SZ at baseline and 22 SZ at week 6 in the final analysis",
+                      "start_char": 11812,
+                      "end_char": 11888
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "group": "grp_healthy_control",
+          "n": {
+            "extraction_status": "extracted",
+            "value": 19,
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "we scanned a group of 19 HC twice six weeks apart",
+                      "start_char": 11904,
+                      "end_char": 11953
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effect": {
+        "cells": [
+          {
+            "term": "mod_time_connectivity.trm_timepoint",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "baseline",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Baseline > week 6",
+                        "start_char": 63514,
+                        "end_char": 63531
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "positive",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Baseline > week 6",
+                        "start_char": 63514,
+                        "end_char": 63531
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "term": "mod_time_connectivity.trm_timepoint",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "week 6",
+              "value_source": "reported",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Baseline > week 6",
+                        "start_char": 63514,
+                        "end_char": 63531
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "direction": {
+              "extraction_status": "extracted",
+              "value": "negative",
+              "value_source": "generated",
+              "evidence": {
+                "status": "present",
+                "sets": [
+                  {
+                    "spans": [
+                      {
+                        "text": "Baseline > week 6",
+                        "start_char": 63514,
+                        "end_char": 63531
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "statistic": {
+          "family": {
+            "extraction_status": "extracted",
+            "value": "t",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "paired-sample t-tests",
+                      "start_char": 18036,
+                      "end_char": 18057
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "degrees_of_freedom_numerator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          },
+          "degrees_of_freedom_denominator": {
+            "extraction_status": "not_reported",
+            "evidence": {
+              "status": "not_applicable"
+            }
+          }
+        }
+      },
+      "details": {
+        "details_type": "ConnectivityDetails",
+        "connectivity_method": {
+          "extraction_status": "extracted",
+          "value": "seed_based",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "seed based functional connectivity analyses",
+                    "start_char": 1448,
+                    "end_char": 1491
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "seed_regions": [
+          "reg_dan"
+        ],
+        "target_regions": [],
+        "edges": [],
+        "modulatory_input": {
+          "extraction_status": "not_reported",
+          "evidence": {
+            "status": "not_applicable"
+          }
+        },
+        "inference_target": {
+          "extraction_status": "extracted",
+          "value": "connectivity_parameter",
+          "value_source": "generated",
+          "evidence": {
+            "status": "present",
+            "sets": [
+              {
+                "spans": [
+                  {
+                    "text": "Group differences in connectivity",
+                    "start_char": 1493,
+                    "end_char": 1526
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "acquisitions": [
+        "acq_resting_fmri"
+      ],
+      "tasks": [
+        "tsk_resting_state"
+      ],
+      "model_estimation": "mod_time_connectivity",
+      "inference_settings": "inf_fdr",
+      "tables": [
+        "tbl4"
+      ],
+      "source_table_analysis": {
+        "extraction_status": "extracted",
+        "value": "t0020#1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "coordinate_space": {
+        "extraction_status": "extracted",
+        "value": "MNI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "normalized to 1.5 mm  Montreal Neurologic Institute (MNI) space",
+                  "start_char": 13662,
+                  "end_char": 13725
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessments": [],
+      "model_representation_notes": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "acquisitions": [
+    {
+      "local_id": "acq_resting_fmri",
+      "acquisition_type": "MRI",
+      "modality": {
+        "extraction_status": "extracted",
+        "value": "fMRI",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Resting state fMRI scans were acquired during a five-minute gradient recalled echo-planar imaging sequence",
+                  "start_char": 12648,
+                  "end_char": 12754
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_duration_seconds": {
+        "extraction_status": "extracted",
+        "value": 300,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Resting state fMRI scans were acquired during a five-minute gradient recalled echo-planar imaging sequence",
+                  "start_char": 12648,
+                  "end_char": 12754
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "device": "dev_magnetom_allegra",
+      "magnetic_field_strength_tesla": {
+        "extraction_status": "extracted",
+        "value": 3,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All imaging was performed on a 3T head-only scanner",
+                  "start_char": 12484,
+                  "end_char": 12535
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "pulse_sequence_type": {
+        "extraction_status": "extracted",
+        "value": "gradient recalled echo-planar imaging",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Resting state fMRI scans were acquired during a five-minute gradient recalled echo-planar imaging sequence",
+                  "start_char": 12648,
+                  "end_char": 12754
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mr_acquisition_type": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "repetition_time_seconds": {
+        "extraction_status": "extracted",
+        "value": 2,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "repetition time/echo time [TR/TE] = 2000/30 msec",
+                  "start_char": 12756,
+                  "end_char": 12804
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "echo_time_seconds": {
+        "extraction_status": "extracted",
+        "value": [
+          0.03
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "repetition time/echo time [TR/TE] = 2000/30 msec",
+                  "start_char": 12756,
+                  "end_char": 12804
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquisition_voxel_size_mm": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "number_of_volumes": {
+        "extraction_status": "extracted",
+        "value": 150,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "150 acquisitions",
+                  "start_char": 12920,
+                  "end_char": 12936
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "assessments": [
+    {
+      "local_id": "asm_rbans",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Repeatable Battery for the Assessment of Neuropsychological Status (RBANS)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The Repeatable Battery for the Assessment of Neuropsychological Status (RBANS)",
+                  "start_char": 12175,
+                  "end_char": 12253
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Used to characterize general cognitive function.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The Repeatable Battery for the Assessment of Neuropsychological Status (RBANS) was used to characterize general cognitive function",
+                  "start_char": 12175,
+                  "end_char": 12305
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "cognitive test",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "asm_bprs",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Brief Psychiatric Rating Scale (BPRS)",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The Brief Psychiatric Rating Scale (BPRS)",
+                  "start_char": 12333,
+                  "end_char": 12374
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Used for weekly assessments of symptom severity.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "The Brief Psychiatric Rating Scale (BPRS) was used for weekly assessments of symptom severity",
+                  "start_char": 12333,
+                  "end_char": 12426
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "clinical scale",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    },
+    {
+      "local_id": "asm_digs",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "Diagnostic Interview for Genetic Studies",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Diagnostic Interview for Genetic Studies",
+                  "start_char": 10129,
+                  "end_char": 10169
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Used to confirm diagnoses established by medical-record review and consensus of two clinicians.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "then confirmed with the Diagnostic Interview for Genetic Studies",
+                  "start_char": 10105,
+                  "end_char": 10169
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "assessment_type": {
+        "extraction_status": "extracted",
+        "value": "diagnostic interview",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      }
+    }
+  ],
+  "devices": [
+    {
+      "local_id": "dev_magnetom_allegra",
+      "manufacturer": {
+        "extraction_status": "extracted",
+        "value": "Siemens Medical Solutions",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Siemens Medical Solutions",
+                  "start_char": 12555,
+                  "end_char": 12580
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model": {
+        "extraction_status": "extracted",
+        "value": "Magnetom Allegra",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Magnetom Allegra",
+                  "start_char": 12537,
+                  "end_char": 12553
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "local_id": "grp_schizophrenia",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "unmedicated patients with schizophrenia",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Unmedicated patients with schizophrenia or schizoaffective disorder (SZ)",
+                  "start_char": 9396,
+                  "end_char": 9468
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Patients with schizophrenia or schizoaffective disorder recruited from outpatient clinics, an inpatient unit, and an emergency room; 34 had baseline data and 22 had week-6 data in the final analysis.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "In the SZ group 6 subjects dropped out of the study prior to the second scan. Additionally, no resting state data was available for 6 subjects at week 6 (resting state scans not obtained for 5 subjects, poor scan quality in 1 subject), leaving data for 34 SZ at baseline and 22 SZ at week 6 in the final analysis.",
+                  "start_char": 11576,
+                  "end_char": 11889
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "subjects",
+                  "start_char": 7334,
+                  "end_char": 7342
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "approached_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "consented_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 34,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Of the 68 subjects enrolled",
+                  "start_char": 11474,
+                  "end_char": 11501
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 34,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "leaving data for 34 SZ at baseline",
+                  "start_char": 11812,
+                  "end_char": 11846
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "excluded_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "exclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "major medical or neurological condition",
+          "history of head trauma with loss of consciousness",
+          "moderate or severe substance use disorder other than nicotine use disorder within six months of imaging",
+          "medications known to affect brain function",
+          "pregnancy or breastfeeding",
+          "MRI contraindications"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Subjects were excluded if they had a major medical or neurological condition, history of head trauma with loss of consciousness, met criteria for a moderate or severe substance use disorder other than nicotine use disorder within six months of imaging, were prescribed medications known to affect brain function, were pregnant or breastfeeding, or had any MRI contraindications.",
+                  "start_char": 10343,
+                  "end_char": 10721
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "recruitment_method": {
+        "extraction_status": "extracted",
+        "value": "Recruited from various outpatient clinics, the inpatient unit and emergency room at the University of Alabama at Birmingham.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Unmedicated patients with schizophrenia or schizoaffective disorder (SZ) were recruited from various outpatient clinics, the inpatient unit and emergency room at the University of Alabama at Birmingham (UAB).",
+                  "start_char": 9396,
+                  "end_char": 9604
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "recruitment_dates": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 32.38,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "32.38 (10.43)",
+                  "start_char": 54169,
+                  "end_char": 54182
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 10.43,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "32.38 (10.43)",
+                  "start_char": 54169,
+                  "end_char": 54182
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_median": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Illness duration (years)",
+                  "start_char": 54874,
+                  "end_char": 54898
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Unmedicated patients with schizophrenia or schizoaffective disorder (SZ)",
+                  "start_char": 9396,
+                  "end_char": 9468
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [
+          "schizophrenia",
+          "schizoaffective disorder"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "schizophrenia or schizoaffective disorder",
+                  "start_char": 9422,
+                  "end_char": 9463
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "diagnostic_system": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "diagnostic_instrument": [
+        "asm_digs"
+      ],
+      "clinical_characteristics": {
+        "extraction_status": "extracted",
+        "value": "34 subjects; 22 chronically ill and 12 first episode; 17 antipsychotic-naive and 17 previously exposed; all were off antipsychotic medication for at least ten days at baseline.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Of the 34 SZ subjects, 22 were chronically ill and 12 experienced their first episode. 17 SZ were antipsychotic naïve (five had not received prior treatment despite a prolonged period since illness onset), and 17 have had prior exposure to antipsychotic medication.",
+                  "start_char": 19434,
+                  "end_char": 19699
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medications": {
+        "extraction_status": "extracted",
+        "value": [
+          "risperidone",
+          "benztropine",
+          "trazodone",
+          "mirtazapine",
+          "amitriptyline",
+          "valproic acid"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Twelve subjects were concomitantly treated with benztropine, two with trazodone, one each was prescribed mirtazapine, amitriptyline, and valproic acid.",
+                  "start_char": 19762,
+                  "end_char": 19913
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medication_status": {
+        "extraction_status": "extracted",
+        "value": "Unmedicated at baseline; treated with risperidone for six weeks.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Resting state scans were obtained prior to treatment (off medication) and after six weeks of treatment with risperidone.",
+                  "start_char": 11351,
+                  "end_char": 11471
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "grp_healthy_control",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "healthy controls",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Healthy controls (HC)",
+                  "start_char": 9605,
+                  "end_char": 9626
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Age-, sex-, parental-occupation-, and smoking-status-matched healthy controls; 34 were enrolled and 19 were scanned twice six weeks apart.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Additionally, we scanned a group of 19 HC twice six weeks apart to give us the ability to assess connectivity changes over time.",
+                  "start_char": 11890,
+                  "end_char": 12018
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "species": {
+        "extraction_status": "extracted",
+        "value": "human",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "subjects",
+                  "start_char": 7334,
+                  "end_char": 7342
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "approached_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "consented_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "enrolled_count": {
+        "extraction_status": "extracted",
+        "value": 34,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "34 unmedicated patients with schizophrenia and 34 matched healthy controls were enrolled in this longitudinal study.",
+                  "start_char": 972,
+                  "end_char": 1088
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "acquired_count": {
+        "extraction_status": "extracted",
+        "value": 34,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "34 matched healthy controls were enrolled in this longitudinal study",
+                  "start_char": 1019,
+                  "end_char": 1087
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "excluded_count": {
+        "extraction_status": "extracted",
+        "value": 1,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "one HC was excluded from baseline analysis because of poor scan quality",
+                  "start_char": 11503,
+                  "end_char": 11574
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "inclusion_criteria": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "exclusion_criteria": {
+        "extraction_status": "extracted",
+        "value": [
+          "personal or family history in a first-degree relative of an Axis I disorder",
+          "major medical or neurological condition",
+          "history of head trauma with loss of consciousness",
+          "moderate or severe substance use disorder other than nicotine use disorder within six months of imaging",
+          "MRI contraindications"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "A personal or family history in a first-degree relative of an Axis I disorder was an exclusion criterion for HC.",
+                  "start_char": 10722,
+                  "end_char": 10834
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "recruitment_method": {
+        "extraction_status": "extracted",
+        "value": "Recruited by advertisements in flyers and the university's newspaper.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Healthy controls (HC) matched on age, sex, parental occupation and smoking status were recruited by advertisements in flyers and the university's newspaper.",
+                  "start_char": 9605,
+                  "end_char": 9761
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "recruitment_dates": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_mean": {
+        "extraction_status": "extracted",
+        "value": 32,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "32.00 (9.02)",
+                  "start_char": 54185,
+                  "end_char": 54197
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_standard_deviation": {
+        "extraction_status": "extracted",
+        "value": 9.02,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "32.00 (9.02)",
+                  "start_char": 54185,
+                  "end_char": 54197
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "age_minimum": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_maximum": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_median": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "age_unit": {
+        "extraction_status": "extracted",
+        "value": "years",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Age",
+                  "start_char": 54130,
+                  "end_char": 54133
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "is_healthy": {
+        "extraction_status": "extracted",
+        "value": true,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "healthy controls",
+                  "start_char": 1030,
+                  "end_char": 1046
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medical_condition": {
+        "extraction_status": "extracted",
+        "value": [],
+        "value_source": "reported",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "diagnostic_system": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "clinical_characteristics": {
+        "extraction_status": "extracted",
+        "value": "Matched on age, sex, parental occupation and smoking status.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Healthy controls (HC) matched on age, sex, parental occupation and smoking status",
+                  "start_char": 9605,
+                  "end_char": 9686
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "medications": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "medication_status": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "inference_settings": [
+    {
+      "local_id": "inf_fdr",
+      "inference_level": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Intra voxel intra-class correlation coefficients (ICC) were calculated for each subject using the contrast values of the voxels within the networks.",
+                  "start_char": 18314,
+                  "end_char": 18462
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_value": {
+        "extraction_status": "extracted",
+        "value": 0.001,
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All analyses were corrected for multiple comparisons using the false discovery rate and are reported at   P   < 0.001 for main effects within group and at   P   < 0.05 for group differences and change over time.",
+                  "start_char": 17708,
+                  "end_char": 17919
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "height_threshold_type": {
+        "extraction_status": "extracted",
+        "value": "p",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All analyses were corrected for multiple comparisons using the false discovery rate and are reported at   P   < 0.001 for main effects within group and at   P   < 0.05 for group differences and change over time.",
+                  "start_char": 17708,
+                  "end_char": 17919
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "cluster_extent_threshold": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "clusterwise_threshold_value": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "multiple_comparison_method": {
+        "extraction_status": "extracted",
+        "value": "false discovery rate",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "All analyses were corrected for multiple comparisons using the false discovery rate",
+                  "start_char": 17708,
+                  "end_char": 17791
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correction_scope": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "search_volume": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "neighborhood_definition": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "tfce_used": {
+        "extraction_status": "extracted",
+        "value": false,
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "tfce_parameters": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "permutation_count": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "alpha_level": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "number_of_tests": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "measures": [
+    {
+      "local_id": "mea_functional_connectivity",
+      "family": {
+        "extraction_status": "extracted",
+        "value": "functional_bold",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "type": {
+        "extraction_status": "extracted",
+        "value": "connectivity_strength",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "functional connectivity",
+                  "start_char": 1459,
+                  "end_char": 1482
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_label": {
+        "extraction_status": "extracted",
+        "value": "functional connectivity",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "functional connectivity maps",
+                  "start_char": 1621,
+                  "end_char": 1649
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "specific_metric": {
+        "extraction_status": "extracted",
+        "value": "Pearson's r correlation, Fisher r-to-Z transformed",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "units of Pearson's   r   correlation",
+                  "start_char": 16549,
+                  "end_char": 16585
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "unit": {
+        "extraction_status": "extracted",
+        "value": "Pearson's r correlation",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Pearson's   r   correlation",
+                  "start_char": 16558,
+                  "end_char": 16585
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "model_estimations": [
+    {
+      "local_id": "mod_group_connectivity",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "glm",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a general linear model",
+                  "start_char": 18863,
+                  "end_char": 18885
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "group-level functional connectivity model",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Group-level functional connectivity maps",
+                  "start_char": 16812,
+                  "end_char": 16852
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "hrf_model": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Group differences were assessed using two-sample t-tests on participant-level functional network connectivity maps.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Group differences in functional connectivity, as well as differences between medication-naïve and previously medicated patients, were assessed using two-sample   t  -tests on the groups' participant-level functional network connectivity maps.",
+                  "start_char": 16968,
+                  "end_char": 17210
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Group-level functional connectivity maps",
+                  "start_char": 16812,
+                  "end_char": 16852
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "two-sample t-test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "two-sample   t  -tests",
+                  "start_char": 17117,
+                  "end_char": 17139
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "SPM8",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Using the statistical parametric mapping package SPM8",
+                  "start_char": 13406,
+                  "end_char": 13459
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "preprocessing": [
+        "prp_fmri"
+      ],
+      "terms": [
+        {
+          "local_id": "trm_group",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "group",
+            "value_source": "reported",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "diagnostic groups",
+                      "start_char": 17470,
+                      "end_char": 17487
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "diagnostic groups",
+                      "start_char": 17470,
+                      "end_char": 17487
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "unmedicated patients with schizophrenia",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "unmedicated patients with schizophrenia",
+                          "start_char": 52,
+                          "end_char": 91
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp_schizophrenia"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "healthy controls",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "healthy controls",
+                          "start_char": 1030,
+                          "end_char": 1046
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "groups": [
+                "grp_healthy_control"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "between_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "between group comparisons",
+                      "start_char": 17621,
+                      "end_char": 17646
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "local_id": "mod_group_connectivity.trm_timepoint",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "scan occasion",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "time",
+                      "start_char": 1568,
+                      "end_char": 1572
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "time",
+                      "start_char": 1568,
+                      "end_char": 1572
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "baseline",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "baseline",
+                          "start_char": 1157,
+                          "end_char": 1165
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "order": {
+                "extraction_status": "extracted",
+                "value": 1,
+                "value_source": "generated",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "baseline and week six",
+                          "start_char": 20529,
+                          "end_char": 20550
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "timepoints": [
+                "tp_baseline"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "week 6",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "week six",
+                          "start_char": 20542,
+                          "end_char": 20550
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "order": {
+                "extraction_status": "extracted",
+                "value": 2,
+                "value_source": "generated",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "baseline and week six",
+                          "start_char": 20529,
+                          "end_char": 20550
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "timepoints": [
+                "tp_week6"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "comparisons across time within each large scale network",
+                      "start_char": 17651,
+                      "end_char": 17706
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "local_id": "mod_time_connectivity",
+      "model_family": {
+        "extraction_status": "extracted",
+        "value": "glm",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "paired-sample t-tests",
+                  "start_char": 18036,
+                  "end_char": 18057
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "model_type": {
+        "extraction_status": "extracted",
+        "value": "longitudinal functional connectivity model",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "To assess connectivity changes over time in healthy controls",
+                  "start_char": 17922,
+                  "end_char": 17982
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "hrf_model": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "model_settings": {
+        "extraction_status": "extracted",
+        "value": "Changes over time were assessed by comparing baseline and week-six participant-level functional network connectivity maps.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "paired-sample t-tests on the participant-level functional network connectivity maps for each network to examine change over time at the group level",
+                  "start_char": 18036,
+                  "end_char": 18183
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stage": {
+        "extraction_status": "extracted",
+        "value": "group",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "at the group level",
+                  "start_char": 18165,
+                  "end_char": 18183
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "estimator": {
+        "extraction_status": "extracted",
+        "value": "paired-sample t-test",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "paired-sample t-tests",
+                  "start_char": 18036,
+                  "end_char": 18057
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": "SPM8",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Using the statistical parametric mapping package SPM8",
+                  "start_char": 13406,
+                  "end_char": 13459
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "spatial_unit": {
+        "extraction_status": "extracted",
+        "value": "voxel",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "preprocessing": [
+        "prp_fmri"
+      ],
+      "terms": [
+        {
+          "local_id": "mod_time_connectivity.trm_timepoint",
+          "name": {
+            "extraction_status": "extracted",
+            "value": "scan occasion",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "time",
+                      "start_char": 1568,
+                      "end_char": 1572
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "type": {
+            "extraction_status": "extracted",
+            "value": "categorical",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "time",
+                      "start_char": 1568,
+                      "end_char": 1572
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "levels": [
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "baseline",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "baseline",
+                          "start_char": 1157,
+                          "end_char": 1165
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "order": {
+                "extraction_status": "extracted",
+                "value": 1,
+                "value_source": "generated",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "baseline and week six",
+                          "start_char": 20529,
+                          "end_char": 20550
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "timepoints": [
+                "tp_baseline"
+              ]
+            },
+            {
+              "level": {
+                "extraction_status": "extracted",
+                "value": "week 6",
+                "value_source": "reported",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "week six",
+                          "start_char": 20542,
+                          "end_char": 20550
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "order": {
+                "extraction_status": "extracted",
+                "value": 2,
+                "value_source": "generated",
+                "evidence": {
+                  "status": "present",
+                  "sets": [
+                    {
+                      "spans": [
+                        {
+                          "text": "baseline and week six",
+                          "start_char": 20529,
+                          "end_char": 20550
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "timepoints": [
+                "tp_week6"
+              ]
+            }
+          ],
+          "variation_level": {
+            "extraction_status": "extracted",
+            "value": "within_subject",
+            "value_source": "generated",
+            "evidence": {
+              "status": "present",
+              "sets": [
+                {
+                  "spans": [
+                    {
+                      "text": "change over time at the group level",
+                      "start_char": 18148,
+                      "end_char": 18183
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "preprocessings": [
+    {
+      "local_id": "prp_fmri",
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Resting-state fMRI preprocessing including slice-timing correction, realignment, co-registration, normalization to MNI space, spatial smoothing, nuisance regression, motion scrubbing, bandpass filtering, and white-matter/cerebrospinal-fluid component regression.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "resting state data were slice timing corrected, realigned using rigid-body motion transforms, co-registered to the high-resolution structural scan, normalized to 1.5 mm  Montreal Neurologic Institute (MNI) space, and spatially smoothed",
+                  "start_char": 13514,
+                  "end_char": 13749
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "software": {
+        "extraction_status": "extracted",
+        "value": [
+          "SPM8",
+          "DARTEL"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Using the statistical parametric mapping package SPM8",
+                  "start_char": 13406,
+                  "end_char": 13459
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": {
+        "extraction_status": "extracted",
+        "value": [
+          "slice-timing correction",
+          "realignment using rigid-body motion transforms",
+          "co-registration to high-resolution structural scan",
+          "normalization to 1.5 mm MNI space",
+          "motion-parameter nuisance regression",
+          "motion scrubbing",
+          "bandpass filtering",
+          "white-matter and cerebrospinal-fluid component regression",
+          "spatial smoothing"
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "resting state data were slice timing corrected, realigned using rigid-body motion transforms, co-registered to the high-resolution structural scan, normalized to 1.5 mm  Montreal Neurologic Institute (MNI) space, and spatially smoothed",
+                  "start_char": 13514,
+                  "end_char": 13749
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "smoothing_fwhm_mm": {
+        "extraction_status": "extracted",
+        "value": [
+          6
+        ],
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "a 6-mm at full-width half-maximum three-dimensional Gaussian kernel",
+                  "start_char": 13858,
+                  "end_char": 13925
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "regions": [
+    {
+      "local_id": "reg_dan",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "dorsal attention network",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "dorsal attention network",
+                  "start_char": 250,
+                  "end_char": 274
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "prior_literature",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "as described in previous studies",
+                  "start_char": 15827,
+                  "end_char": 15859
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "network",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "large scale networks",
+                  "start_char": 1305,
+                  "end_char": 1325
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "atlas": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Defined using 6 mm radius spherical seeds at the reported intraparietal sulcus and superior parietal lobe coordinates.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Spherical seeds with 6 mm radius were placed at the following MNI coordinates to define resting state networks as described in previous studies ( Seeley et al., 2007 ,  Woodward et al., 2011 ,  Vincent et al., 2006 ,  Achard and Bullmore, 2007 ) − 25/− 53/52 and 25/− 57/52 (intraparietal sulcus and superior parietal lobe) for the DAN",
+                  "start_char": 15716,
+                  "end_char": 16051
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "reg_ecn",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "executive control network",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "executive control network",
+                  "start_char": 394,
+                  "end_char": 419
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "prior_literature",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "as described in previous studies",
+                  "start_char": 15827,
+                  "end_char": 15859
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "network",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "network",
+                  "start_char": 40,
+                  "end_char": 47
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "atlas": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Defined using 6 mm radius spherical seeds in the left and right dorsolateral prefrontal cortex.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "( Friston and Frith, 1995 ) − 42/34/20 and 44/36/20 (left and right dorsolateral prefrontal cortex) for the ECN",
+                  "start_char": 16053,
+                  "end_char": 16164
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "reg_salience",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "salience network",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "salience network",
+                  "start_char": 1384,
+                  "end_char": 1400
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "definition_method": {
+        "extraction_status": "extracted",
+        "value": "prior_literature",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Spherical seeds with 6 mm radius were placed at the following MNI coordinates to define resting state networks as described in previous studies ( Seeley et al., 2007 ,  Woodward et al., 2011 ,  Vincent et al., 2006 ,  Achard and Bullmore, 2007 ) − 25/− 53/52 and 25/− 57/52 (intraparietal sulcus and superior parietal lobe) for the DAN, ( Friston and Frith, 1995 ) − 42/34/20 and 44/36/20 (left and right dorsolateral prefrontal cortex) for the ECN, ( Biswal et al., 1995 ) − 32/26/− 14 and 38/22/− 10 (left and right fronto-insular cortex) for the salience network, and ( Seeley et al., 2007 ) 1/− 55/17 (posterior cingulate cortex) for the DMN.",
+                  "start_char": 15716,
+                  "end_char": 16362
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "region_type": {
+        "extraction_status": "extracted",
+        "value": "network",
+        "value_source": "generated",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "network",
+                  "start_char": 40,
+                  "end_char": 47
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "atlas": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Defined using 6 mm radius spherical seeds in the left and right fronto-insular cortex.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "( Biswal et al., 1995 ) − 32/26/− 14 and 38/22/− 10 (left and right fronto-insular cortex) for the salience network",
+                  "start_char": 16166,
+                  "end_char": 16281
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "local_id": "tsk_resting_state",
+      "name": {
+        "extraction_status": "extracted",
+        "value": "resting state",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "resting state",
+                  "start_char": 1102,
+                  "end_char": 1115
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "description": {
+        "extraction_status": "extracted",
+        "value": "Participants kept their eyes open and stared passively ahead during resting-state functional MRI acquisition.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "During the scan, subjects were instructed to keep their eyes open and stare passively ahead.",
+                  "start_char": 12939,
+                  "end_char": 13031
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "conditions": [],
+      "design_type": {
+        "extraction_status": "extracted",
+        "value": "continuous with no modelled events",
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "acquisitions": [
+        "acq_resting_fmri"
+      ],
+      "presentation_software": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "instructions": {
+        "extraction_status": "extracted",
+        "value": "Keep their eyes open and stare passively ahead.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "During the scan, subjects were instructed to keep their eyes open and stare passively ahead.",
+                  "start_char": 12939,
+                  "end_char": 13031
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stimuli": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      },
+      "response_mode": {
+        "extraction_status": "extracted",
+        "value": [
+          "none"
+        ],
+        "value_source": "generated",
+        "evidence": {
+          "status": "not_found"
+        }
+      },
+      "performance_measures": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    }
+  ],
+  "tables": [
+    {
+      "local_id": "tbl1",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 1",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1",
+                  "start_char": 4699,
+                  "end_char": 4706
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Resting state fMRI studies examining abnormalities in large-scale networks in schizophrenia.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 1 — Resting state fMRI studies examining abnormalities in large-scale networks in schizophrenia.",
+                  "start_char": 37717,
+                  "end_char": 37819
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "not_reported",
+        "evidence": {
+          "status": "not_applicable"
+        }
+      }
+    },
+    {
+      "local_id": "tbl2",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 2",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2",
+                  "start_char": 20036,
+                  "end_char": 20043
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Demographics and clinical measures.a",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 2 — Demographics and clinical measures.a",
+                  "start_char": 53801,
+                  "end_char": 53847
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "SZ, schizophrenia; HC, healthy control.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "SZ, schizophrenia; HC, healthy control.",
+                  "start_char": 56919,
+                  "end_char": 56958
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl3",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 3",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3",
+                  "start_char": 21647,
+                  "end_char": 21654
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Increased functional connectivity in unmedicated patients with schizophrenia compared to healthy controls.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 3 — Increased functional connectivity in unmedicated patients with schizophrenia compared to healthy controls.",
+                  "start_char": 56960,
+                  "end_char": 57076
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "Abbreviations: Hem., hemisphere; L, left; R, right.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Abbreviations: Hem., hemisphere; L, left; R, right.",
+                  "start_char": 63029,
+                  "end_char": 63080
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "local_id": "tbl4",
+      "table_number": {
+        "extraction_status": "extracted",
+        "value": "Table 4",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4",
+                  "start_char": 24716,
+                  "end_char": 24723
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "caption": {
+        "extraction_status": "extracted",
+        "value": "Change in dorsal attention network functional connectivity over six weeks of treatment with risperidone.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Table 4 — Change in dorsal attention network functional connectivity over six weeks of treatment with risperidone.",
+                  "start_char": 63082,
+                  "end_char": 63196
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "footer": {
+        "extraction_status": "extracted",
+        "value": "Abbreviations: Hem., hemisphere; L, left; R, right.",
+        "value_source": "reported",
+        "evidence": {
+          "status": "present",
+          "sets": [
+            {
+              "spans": [
+                {
+                  "text": "Abbreviations: Hem., hemisphere; L, left; R, right.",
+                  "start_char": 63029,
+                  "end_char": 63080
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

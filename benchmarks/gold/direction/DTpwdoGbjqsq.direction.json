@@ -1,0 +1,364 @@
+{
+ "paper_id": "DTpwdoGbjqsq",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis-1",
+   "term": "term-group-vbm",
+   "level": "AD group",
+   "label": "diagnostic group : AD group",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-1",
+   "term": "term-group-vbm",
+   "level": "HC group",
+   "label": "diagnostic group : HC group",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-1",
+   "term": "term-tiv",
+   "level": "",
+   "label": "total intracranial volume  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-2",
+   "term": "term-group-pk",
+   "level": "AD group",
+   "label": "diagnostic group : AD group",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-2",
+   "term": "term-group-pk",
+   "level": "HC group",
+   "label": "diagnostic group : HC group",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-3",
+   "term": "term-group-ancova",
+   "level": "AD group",
+   "label": "diagnostic group : AD group",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "held",
+     "tier": "changed",
+     "predicted": "negative"
+    },
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "accepted",
+     "predicted": "negative"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-3",
+   "term": "term-group-ancova",
+   "level": "HC group",
+   "label": "diagnostic group : HC group",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "changed",
+     "predicted": "positive"
+    },
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "accepted",
+     "predicted": "positive"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-3",
+   "term": "term-pib-ancova",
+   "level": "",
+   "label": "11C-PiB SUVR  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "accepted",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "accepted"
+  },
+  {
+   "analysis": "analysis-4",
+   "term": "term-age-ad",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-4",
+   "term": "term-pib-ad",
+   "level": "",
+   "label": "11C-PiB SUVR  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "not_reported"
+    },
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis-5",
+   "term": "term-age-merged",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    },
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis-5",
+   "term": "term-pib-merged",
+   "level": "",
+   "label": "11C-PiB SUVR  (continuous)",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "not_reported"
+    },
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": null,
+   "disputed": true,
+   "tier": "changed"
+  }
+ ],
+ "analyses": {
+  "analysis-1": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-2": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-3": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "accept"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "accept"
+     ]
+    }
+   ]
+  },
+  "analysis-4": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "upstream_wrong"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "cells_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis-5": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "upstream_wrong"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "cells_wrong"
+     ]
+    }
+   ]
+  }
+ }
+}

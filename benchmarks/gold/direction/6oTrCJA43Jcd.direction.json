@@ -1,0 +1,118 @@
+{
+ "paper_id": "6oTrCJA43Jcd",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis-connectivity-decreased",
+   "term": "term-group",
+   "level": "ASD",
+   "label": "diagnostic group : ASD",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "unflagged",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis-connectivity-decreased",
+   "term": "term-group",
+   "level": "TD",
+   "label": "diagnostic group : TD",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "unflagged",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis-connectivity-increased",
+   "term": "term-group",
+   "level": "ASD",
+   "label": "diagnostic group : ASD",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "positive",
+     "tier": "unflagged",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis-connectivity-increased",
+   "term": "term-group",
+   "level": "TD",
+   "label": "diagnostic group : TD",
+   "answers": [
+    {
+     "annotator": 7,
+     "direction": "negative",
+     "tier": "unflagged",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "unflagged"
+  }
+ ],
+ "analyses": {
+  "analysis-mdt-group": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  },
+  "analysis-connectivity-increased": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "upstream_wrong"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  },
+  "analysis-connectivity-decreased": {
+   "verdicts": [
+    {
+     "annotator": 7,
+     "verdict": [
+      "upstream_wrong"
+     ]
+    },
+    {
+     "annotator": 1,
+     "verdict": [
+      "uncertain"
+     ]
+    }
+   ]
+  }
+ }
+}

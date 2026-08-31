@@ -1,0 +1,1532 @@
+{
+ "paper_id": "TgcHKMRfrVog",
+ "source": "ns-review-contrast reviewer answers",
+ "cells": [
+  {
+   "analysis": "analysis_1",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_1",
+   "term": "term_ascc_seed",
+   "level": "",
+   "label": "aSCC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_1",
+   "term": "term_ba25_seed",
+   "level": "",
+   "label": "BA25 seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_1",
+   "term": "term_bdi",
+   "level": "",
+   "label": "BDI  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_1",
+   "term": "term_csf",
+   "level": "",
+   "label": "cerebrospinal fluid signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_1",
+   "term": "term_intercept_baseline",
+   "level": "",
+   "label": "intercept  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_1",
+   "term": "term_motion",
+   "level": "",
+   "label": "motion parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_1",
+   "term": "term_racc_seed",
+   "level": "",
+   "label": "rACC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_1",
+   "term": "term_sex",
+   "level": "",
+   "label": "sex  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_1",
+   "term": "term_spike_confounds",
+   "level": "",
+   "label": "spike confound regressors  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_1",
+   "term": "term_white_matter",
+   "level": "",
+   "label": "white matter signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_2",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_2",
+   "term": "term_ascc_seed",
+   "level": "",
+   "label": "aSCC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_2",
+   "term": "term_ba25_seed",
+   "level": "",
+   "label": "BA25 seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_2",
+   "term": "term_bdi",
+   "level": "",
+   "label": "BDI  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "negative",
+     "tier": "silent",
+     "predicted": "negative"
+    }
+   ],
+   "direction": "negative",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_2",
+   "term": "term_csf",
+   "level": "",
+   "label": "cerebrospinal fluid signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_2",
+   "term": "term_intercept_baseline",
+   "level": "",
+   "label": "intercept  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_2",
+   "term": "term_motion",
+   "level": "",
+   "label": "motion parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_2",
+   "term": "term_racc_seed",
+   "level": "",
+   "label": "rACC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_2",
+   "term": "term_sex",
+   "level": "",
+   "label": "sex  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_2",
+   "term": "term_spike_confounds",
+   "level": "",
+   "label": "spike confound regressors  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_2",
+   "term": "term_white_matter",
+   "level": "",
+   "label": "white matter signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_3",
+   "term": "term_age",
+   "level": "",
+   "label": "age  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_3",
+   "term": "term_ascc_seed",
+   "level": "",
+   "label": "aSCC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_3",
+   "term": "term_ba25_seed",
+   "level": "",
+   "label": "BA25 seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_3",
+   "term": "term_bdi",
+   "level": "",
+   "label": "BDI  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_3",
+   "term": "term_csf",
+   "level": "",
+   "label": "cerebrospinal fluid signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_3",
+   "term": "term_intercept_baseline",
+   "level": "",
+   "label": "intercept  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_3",
+   "term": "term_motion",
+   "level": "",
+   "label": "motion parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_3",
+   "term": "term_racc_seed",
+   "level": "",
+   "label": "rACC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_3",
+   "term": "term_sex",
+   "level": "",
+   "label": "sex  (categorical)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_3",
+   "term": "term_spike_confounds",
+   "level": "",
+   "label": "spike confound regressors  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_3",
+   "term": "term_white_matter",
+   "level": "",
+   "label": "white matter signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "silent",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "silent"
+  },
+  {
+   "analysis": "analysis_4",
+   "term": "term_ascc_seed",
+   "level": "",
+   "label": "aSCC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_4",
+   "term": "term_ba25_seed",
+   "level": "",
+   "label": "BA25 seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_4",
+   "term": "term_csf",
+   "level": "",
+   "label": "cerebrospinal fluid signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_4",
+   "term": "term_motion",
+   "level": "",
+   "label": "motion parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_4",
+   "term": "term_pre_post_contrast",
+   "level": "",
+   "label": "pre > post rsFC change  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "unflagged",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_4",
+   "term": "term_racc_seed",
+   "level": "",
+   "label": "rACC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_4",
+   "term": "term_spike_confounds",
+   "level": "",
+   "label": "spike confound regressors  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_4",
+   "term": "term_white_matter",
+   "level": "",
+   "label": "white matter signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_5",
+   "term": "term_ascc_seed",
+   "level": "",
+   "label": "aSCC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_5",
+   "term": "term_ba25_seed",
+   "level": "",
+   "label": "BA25 seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_5",
+   "term": "term_bdi_percent_change",
+   "level": "",
+   "label": "percent change in BDI  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_5",
+   "term": "term_csf",
+   "level": "",
+   "label": "cerebrospinal fluid signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_5",
+   "term": "term_intercept_change",
+   "level": "",
+   "label": "intercept  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_5",
+   "term": "term_motion",
+   "level": "",
+   "label": "motion parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_5",
+   "term": "term_racc_seed",
+   "level": "",
+   "label": "rACC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_5",
+   "term": "term_spike_confounds",
+   "level": "",
+   "label": "spike confound regressors  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_5",
+   "term": "term_white_matter",
+   "level": "",
+   "label": "white matter signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_6",
+   "term": "term_ascc_seed",
+   "level": "",
+   "label": "aSCC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_6",
+   "term": "term_ba25_seed",
+   "level": "",
+   "label": "BA25 seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_6",
+   "term": "term_csf",
+   "level": "",
+   "label": "cerebrospinal fluid signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_6",
+   "term": "term_motion",
+   "level": "",
+   "label": "motion parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_6",
+   "term": "term_pre_post_contrast",
+   "level": "",
+   "label": "pre > post rsFC change  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "unflagged",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_6",
+   "term": "term_racc_seed",
+   "level": "",
+   "label": "rACC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_6",
+   "term": "term_spike_confounds",
+   "level": "",
+   "label": "spike confound regressors  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_6",
+   "term": "term_white_matter",
+   "level": "",
+   "label": "white matter signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_7",
+   "term": "term_ascc_seed",
+   "level": "",
+   "label": "aSCC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_7",
+   "term": "term_ba25_seed",
+   "level": "",
+   "label": "BA25 seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_7",
+   "term": "term_bdi_percent_change",
+   "level": "",
+   "label": "percent change in BDI  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_7",
+   "term": "term_csf",
+   "level": "",
+   "label": "cerebrospinal fluid signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_7",
+   "term": "term_intercept_change",
+   "level": "",
+   "label": "intercept  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_7",
+   "term": "term_motion",
+   "level": "",
+   "label": "motion parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_7",
+   "term": "term_racc_seed",
+   "level": "",
+   "label": "rACC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_7",
+   "term": "term_spike_confounds",
+   "level": "",
+   "label": "spike confound regressors  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_7",
+   "term": "term_white_matter",
+   "level": "",
+   "label": "white matter signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_8",
+   "term": "term_ascc_seed",
+   "level": "",
+   "label": "aSCC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_8",
+   "term": "term_ba25_seed",
+   "level": "",
+   "label": "BA25 seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_8",
+   "term": "term_csf",
+   "level": "",
+   "label": "cerebrospinal fluid signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_8",
+   "term": "term_motion",
+   "level": "",
+   "label": "motion parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_8",
+   "term": "term_pre_post_contrast",
+   "level": "",
+   "label": "pre > post rsFC change  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "positive",
+     "tier": "unflagged",
+     "predicted": "positive"
+    }
+   ],
+   "direction": "positive",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_8",
+   "term": "term_racc_seed",
+   "level": "",
+   "label": "rACC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_8",
+   "term": "term_spike_confounds",
+   "level": "",
+   "label": "spike confound regressors  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_8",
+   "term": "term_white_matter",
+   "level": "",
+   "label": "white matter signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_9",
+   "term": "term_ascc_seed",
+   "level": "",
+   "label": "aSCC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_9",
+   "term": "term_ba25_seed",
+   "level": "",
+   "label": "BA25 seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "undirected",
+     "tier": "changed",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "undirected",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_9",
+   "term": "term_bdi_percent_change",
+   "level": "",
+   "label": "percent change in BDI  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "not_reported",
+     "tier": "changed",
+     "predicted": "not_reported"
+    }
+   ],
+   "direction": "not_reported",
+   "disputed": false,
+   "tier": "changed"
+  },
+  {
+   "analysis": "analysis_9",
+   "term": "term_csf",
+   "level": "",
+   "label": "cerebrospinal fluid signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_9",
+   "term": "term_intercept_change",
+   "level": "",
+   "label": "intercept  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_9",
+   "term": "term_motion",
+   "level": "",
+   "label": "motion parameters  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_9",
+   "term": "term_racc_seed",
+   "level": "",
+   "label": "rACC seed connectivity  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_9",
+   "term": "term_spike_confounds",
+   "level": "",
+   "label": "spike confound regressors  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  },
+  {
+   "analysis": "analysis_9",
+   "term": "term_white_matter",
+   "level": "",
+   "label": "white matter signal  (continuous)",
+   "answers": [
+    {
+     "annotator": 1,
+     "direction": "absent",
+     "tier": "unflagged",
+     "predicted": "absent"
+    }
+   ],
+   "direction": "absent",
+   "disputed": false,
+   "tier": "unflagged"
+  }
+ ],
+ "analyses": {
+  "analysis_1": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_2": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_3": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "direction_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_4": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "cells_wrong",
+      "upstream_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_5": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "cells_wrong",
+      "upstream_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_6": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "wrong_axis",
+      "cells_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_7": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "wrong_axis",
+      "cells_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_8": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "wrong_axis",
+      "cells_wrong"
+     ]
+    }
+   ]
+  },
+  "analysis_9": {
+   "verdicts": [
+    {
+     "annotator": 1,
+     "verdict": [
+      "wrong_axis",
+      "cells_wrong"
+     ]
+    }
+   ]
+  }
+ }
+}
