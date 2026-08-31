@@ -9,3 +9,4 @@ __pycache__
 
 # Vocabularies and run inputs: large, rebuildable, and not this repository to ship.
 data/
+.venv/

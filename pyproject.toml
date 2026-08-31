@@ -11,6 +11,11 @@ dependencies = [
     "pydantic>=2",
     "requests",
     "pyyaml",
+    # Dependency-scoped negation. `medication_status` needs it to tell "not medicated"
+    # from "medicated": without it `_negation` falls back and the field reads UNKNOWN
+    # rather than failing, so a missing parser looks like a paper that said nothing.
+    # The model is a separate download: python -m spacy download en_core_web_sm
+    "spacy>=3.7",
 ]
 
 [project.optional-dependencies]
