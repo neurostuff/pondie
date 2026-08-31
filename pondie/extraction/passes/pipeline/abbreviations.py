@@ -113,9 +113,11 @@ def detector():
         # `mine_builtin` is a real second implementation, not a stub, so falling back is
         # right. Saying so is what stops a corpus mined two different ways from looking
         # like one corpus.
-        print(f"  abbreviations: scispacy unavailable ({type(error).__name__}); "
-              f"using the builtin miner (pip install 'pondie[abbreviations]')",
-              file=sys.stderr)
+        print(
+            f"  abbreviations: scispacy unavailable ({type(error).__name__}); "
+            f"using the builtin miner (pip install 'pondie[abbreviations]')",
+            file=sys.stderr,
+        )
         _DETECTOR = None
     return _DETECTOR
 
@@ -127,7 +129,7 @@ def mine(text: str) -> dict[str, str]:
         found = {}
         # spacy's parser is quadratic in some pathological documents; a paper is well
         # under this and a corpus dump is not.
-        for chunk in (text[i:i + 200_000] for i in range(0, len(text), 200_000)):
+        for chunk in (text[i : i + 200_000] for i in range(0, len(text), 200_000)):
             for abbreviation in nlp(chunk)._.abbreviations:
                 short = str(abbreviation).strip()
                 long = " ".join(str(abbreviation._.long_form).split())
@@ -185,12 +187,21 @@ class Abbreviations:
         path = path or STORE
         path.parent.mkdir(parents=True, exist_ok=True)
         ordered = dict(sorted(self.entries.items()))
-        path.write_text(json.dumps({
-            "about": "Abbreviation expansions used before vocabulary lookup. "
-                     "`mined` entries were defined by a paper in `long form (SF)` shape; "
-                     "`curated` entries were added by hand for abbreviations papers use "
-                     "without defining.",
-            "entries": ordered}, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        path.write_text(
+            json.dumps(
+                {
+                    "about": "Abbreviation expansions used before vocabulary lookup. "
+                    "`mined` entries were defined by a paper in `long form (SF)` shape; "
+                    "`curated` entries were added by hand for abbreviations papers use "
+                    "without defining.",
+                    "entries": ordered,
+                },
+                indent=1,
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
 
     def key(self, short: str) -> str:
         return short.lower().replace(".", "").replace("-", "").strip()
@@ -226,8 +237,9 @@ class Abbreviations:
     def add(self, short: str, expansion: str, source: str, paper: str = "") -> None:
         """Record an expansion. A curated entry is never overwritten by a mined one."""
         slot = self.entries.setdefault(
-            self.key(short), {"expansion": expansion, "source": source,
-                              "papers": [], "count": 0})
+            self.key(short),
+            {"expansion": expansion, "source": source, "papers": [], "count": 0},
+        )
         if slot["source"] == "mined" and source == "curated":
             slot["expansion"], slot["source"] = expansion, "curated"
         slot["count"] += 1
@@ -253,7 +265,7 @@ class Abbreviations:
         disorder is. Compared on content words so the first kind stops being reported and
         the second keeps being.
         """
-        from .normalize import stems  # noqa: PLC0415
+        from pondie.extraction.passes.pipeline.normalize import stems  # noqa: PLC0415
 
         out = []
         for short, slot in self.entries.items():
@@ -279,7 +291,11 @@ class Abbreviations:
         for short, long in mine(text).items():
             if self.plausible(long):
                 layered.entries[layered.key(short)] = {
-                    "expansion": long, "source": "paper", "papers": [], "count": 1}
+                    "expansion": long,
+                    "source": "paper",
+                    "papers": [],
+                    "count": 1,
+                }
         return layered
 
     def learn(self, text: str, paper: str = "") -> int:
@@ -297,7 +313,9 @@ class Abbreviations:
         return len(self.entries) - before
 
 
-def expansions_in(text: str, store: Abbreviations, paper: str = "") -> Iterator[tuple[str, str]]:
+def expansions_in(
+    text: str, store: Abbreviations, paper: str = ""
+) -> Iterator[tuple[str, str]]:
     """(short form, expansion) for every abbreviation this phrase uses."""
     for token in re.findall(r"[A-Za-z][A-Za-z0-9.-]{1,7}", str(text or "")):
         if not any(c.isupper() for c in token):

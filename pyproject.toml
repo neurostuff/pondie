@@ -22,6 +22,9 @@ dependencies = [
     "openai>=1",
     # `validate_record` reads the storage schema's class rules through it.
     "linkml-runtime",
+    # The submodule, installed rather than put on sys.path. It carries schema_utils,
+    # text_index and table_parse -- the three modules that define what a record is.
+    "study-schema",
 ]
 
 [project.optional-dependencies]
@@ -34,10 +37,15 @@ meta = ["nimare>=0.2", "numpy", "nibabel"]
 reranker = ["torch", "transformers"]
 # Schwartz-Hearst abbreviation detection. Without it a documented weaker miner runs.
 abbreviations = ["scispacy"]
-dev = ["pytest"]
+dev = ["pytest", "black", "isort", "pyflakes"]
 
 [project.scripts]
 pondie = "pondie.cli:main"
+
+[tool.uv.sources]
+# A git submodule of this repository: checked out by `git submodule update --init`,
+# installed from the checkout so its version always matches the pinned commit.
+study-schema = { path = "study_schema", editable = true }
 
 [tool.setuptools.packages.find]
 include = ["pondie*"]
@@ -45,3 +53,17 @@ include = ["pondie*"]
 [tool.setuptools.package-data]
 # `known_gaps` resolves its yaml alongside itself, and the referents are prompt input.
 pondie = ["extraction/passes/known-gaps.yaml", "extraction/passes/referents/*"]
+
+[tool.black]
+# 95 rather than the default 88: the existing code sits at p95=90, p99=94, and 88 would
+# rewrap well over a thousand lines that read fine, burying the real changes in a diff.
+line-length = 95
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 95
+known_first_party = ["pondie"]
+# The schema distribution is a dependency, not part of this package, but it ships bare
+# module names, so isort cannot tell it from a local module without being told.
+known_third_party = ["schema_utils", "text_index", "table_parse"]

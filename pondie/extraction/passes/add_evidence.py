@@ -23,17 +23,20 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import os
+import re
 import shutil
 import sys
 import time
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import evidence_retrieval  # noqa: E402
-from extract_record import DEFAULT_MODEL, load_key_file, strip_fence  # noqa: E402
+from pondie.extraction.passes import evidence_retrieval  # noqa: E402
+from pondie.extraction.passes.extract_record import (  # noqa: E402
+    DEFAULT_MODEL,
+    load_key_file,
+    strip_fence,
+)
 
 #: Paths per call. Large enough that a paper is a handful of calls, small enough
 #: that one malformed reply costs a batch rather than the paper.
@@ -86,7 +89,9 @@ def owners(node: Any, path: str = "", owner: str = "") -> dict[str, str]:
             return {path: owner}
         mine = owner
         for key in ("name", "title", "source_label", "modality"):
-            value = (node.get(key) or {}).get("value") if isinstance(node.get(key), dict) else None
+            value = (
+                (node.get(key) or {}).get("value") if isinstance(node.get(key), dict) else None
+            )
             if isinstance(value, str) and 3 < len(value) < 80:
                 mine = value
                 break
@@ -105,8 +110,9 @@ def rendered_value(field: dict) -> str:
     return "" if value in (None, "", []) else str(value)
 
 
-def union_span(reranker, units, path: str, field: dict, owner: str,
-               quote: str | None) -> str | None:
+def union_span(
+    reranker, units, path: str, field: dict, owner: str, quote: str | None
+) -> str | None:
     """A second supporting passage for this field, or None.
 
     Only fires when the retriever clears its own gate, and never when it lands on the
@@ -118,8 +124,9 @@ def union_span(reranker, units, path: str, field: dict, owner: str,
     value = rendered_value(field)
     if not value:
         return None
-    unit = evidence_retrieval.locate(reranker, units,
-                                     re.sub(r"\[\d+\]", "", path), value, owner)
+    unit = evidence_retrieval.locate(
+        reranker, units, re.sub(r"\[\d+\]", "", path), value, owner
+    )
     if unit is None:
         return None
     # `unit.text` and not `unit.rendered`: build_record resolves a quote by exact match,
@@ -140,27 +147,33 @@ def describe(path: str, field: dict) -> str:
     return f"{path} = {rendered}"
 
 
-def ask(client, model: str, text: str, batch: list[tuple[str, dict]],
-        effort: str = "") -> dict[str, str]:
+def ask(
+    client, model: str, text: str, batch: list[tuple[str, dict]], effort: str = ""
+) -> dict[str, str]:
     listing = "\n".join(describe(path, field) for path, field in batch)
-    user = (f"# Paper\n\n{text}\n\n# Facts needing a supporting quote\n\n{listing}\n\n"
-            "Return the JSON object mapping each id to its quote now.")
+    user = (
+        f"# Paper\n\n{text}\n\n# Facts needing a supporting quote\n\n{listing}\n\n"
+        "Return the JSON object mapping each id to its quote now."
+    )
     kwargs: dict[str, Any] = {
         "model": model,
-        "messages": [{"role": "system", "content": SYSTEM},
-                     {"role": "user", "content": user}],
+        "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}],
         "response_format": {"type": "json_object"},
     }
     # Without this the pass runs at the model's default, which on a reasoning model is
     # not the low setting the other three passes were measured at.
     if effort:
         kwargs["reasoning_effort"] = effort
-    import usage_log
+    from pondie.extraction.passes import usage_log
+
     response, row = usage_log.call(client, **kwargs)
     parsed = json.loads(strip_fence(response.choices[0].message.content or "{}"))
     LAST_USAGE.append(row)
-    return ({k: v for k, v in parsed.items() if isinstance(v, str) and v.strip()},
-            row["prompt_tokens"], row["completion_tokens"])
+    return (
+        {k: v for k, v in parsed.items() if isinstance(v, str) and v.strip()},
+        row["prompt_tokens"],
+        row["completion_tokens"],
+    )
 
 
 #: Rows the ask() helper produced, drained by main() once the payload directory is known.
@@ -174,12 +187,17 @@ def main() -> int:
     parser.add_argument("--payloads", required=True, type=Path)
     parser.add_argument("--key-file", type=Path)
     parser.add_argument("--model", default=DEFAULT_MODEL)
-    parser.add_argument("--effort", default="low",
-                        help="reasoning effort; empty string to send none at all")
+    parser.add_argument(
+        "--effort", default="low", help="reasoning effort; empty string to send none at all"
+    )
     parser.add_argument("--batch", type=int, default=BATCH)
     parser.add_argument("--redo", action="store_true")
-    parser.add_argument("--no-union", dest="union", action="store_false",
-                        help="skip the retriever; quote pass only")
+    parser.add_argument(
+        "--no-union",
+        dest="union",
+        action="store_false",
+        help="skip the retriever; quote pass only",
+    )
     parser.add_argument("--reranker-device", default="cpu")
     args = parser.parse_args()
 
@@ -193,16 +211,19 @@ def main() -> int:
     # evidence: the stage died loading its reranker, the backup was already on disk, and
     # every resume skipped it and built records with no evidence at all. What finished
     # looks like is evidence in the payloads.
-    wrote_evidence = any('"evidence"' in target.read_text(encoding="utf-8")
-                         for target in targets)
+    wrote_evidence = any(
+        '"evidence"' in target.read_text(encoding="utf-8") for target in targets
+    )
     if backup.is_dir() and wrote_evidence and not args.redo:
         print(f"  evidence: already done ({backup}/ exists; --redo to rerun)")
         return 0
 
     resuming = backup.is_dir() and not wrote_evidence
     if resuming:
-        print(f"  evidence: {backup}/ exists but no payload carries evidence -- an "
-              f"interrupted run; restoring the pre-evidence payloads and starting over")
+        print(
+            f"  evidence: {backup}/ exists but no payload carries evidence -- an "
+            f"interrupted run; restoring the pre-evidence payloads and starting over"
+        )
     backup.mkdir(parents=True, exist_ok=True)
     if args.redo or resuming:
         for saved in backup.glob("*.json"):
@@ -217,7 +238,9 @@ def main() -> int:
         print("no OPENAI_API_KEY; pass --key-file", file=sys.stderr)
         return 2
     from openai import OpenAI
-    import usage_log
+
+    from pondie.extraction.passes import usage_log
+
     client = usage_log.build_client(args.paper, "evidence")
 
     text = args.text.read_text(encoding="utf-8")
@@ -227,7 +250,9 @@ def main() -> int:
 
     # Optional by design: the union is an enhancement, and a missing torch must not take
     # the evidence stage down with it.
-    reranker = evidence_retrieval.load_reranker(device=args.reranker_device) if args.union else None
+    reranker = (
+        evidence_retrieval.load_reranker(device=args.reranker_device) if args.union else None
+    )
     units = evidence_retrieval.sentence_units(text) if reranker else []
     if args.union and reranker is None:
         print("  evidence: no reranker available (install torch); quote pass only")
@@ -235,17 +260,23 @@ def main() -> int:
     for target in targets:
         payload = json.loads(target.read_text(encoding="utf-8"))
         fields = list(iter_fields(payload))
-        wanted = [(path, field) for path, field in fields
-                  if field.get("extraction_status") == "extracted"]
+        wanted = [
+            (path, field)
+            for path, field in fields
+            if field.get("extraction_status") == "extracted"
+        ]
 
         quotes: dict[str, str] = {}
         for start in range(0, len(wanted), args.batch):
-            batch = wanted[start:start + args.batch]
+            batch = wanted[start : start + args.batch]
             try:
                 found, tin, tout = ask(client, args.model, text, batch, args.effort)
             except Exception as exc:
-                print(f"  {target.name} batch {start // args.batch}: "
-                      f"FAILED {type(exc).__name__}: {exc}"[:200], file=sys.stderr)
+                print(
+                    f"  {target.name} batch {start // args.batch}: "
+                    f"FAILED {type(exc).__name__}: {exc}"[:200],
+                    file=sys.stderr,
+                )
                 continue
             quotes.update(found)
             total_in += tin
@@ -264,8 +295,11 @@ def main() -> int:
 
             quote = quotes.get(path)
             sets = [{"quotes": [quote]}] if quote else []
-            second = (union_span(reranker, units, path, field, owner_of.get(path, ""), quote)
-                      if reranker else None)
+            second = (
+                union_span(reranker, units, path, field, owner_of.get(path, ""), quote)
+                if reranker
+                else None
+            )
             if second:
                 sets.append({"quotes": [second]})
                 unioned += 1
@@ -279,19 +313,23 @@ def main() -> int:
                 field["evidence"] = {"status": "not_found"}
                 unsupported += 1
 
-        target.write_text(json.dumps(payload, indent=1, ensure_ascii=False) + "\n",
-                          encoding="utf-8")
+        target.write_text(
+            json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
 
     total = filled + unsupported
     rate = f"{filled / total:.0%}" if total else "n/a"
     for _row in LAST_USAGE:
         usage_log.record(args.payloads / "usage.jsonl", args.paper, "evidence", _row)
     LAST_USAGE.clear()
-    union_note = (f", {unioned} retrieved ({recovered} otherwise unsupported)"
-                  if reranker else "")
-    print(f"  evidence: {filled}/{total} quoted ({rate}), {unsupported} unsupported, "
-          f"{not_reported} not_reported{union_note} · {total_in}->{total_out} tok "
-          f"in {time.time() - started:.0f}s")
+    union_note = (
+        f", {unioned} retrieved ({recovered} otherwise unsupported)" if reranker else ""
+    )
+    print(
+        f"  evidence: {filled}/{total} quoted ({rate}), {unsupported} unsupported, "
+        f"{not_reported} not_reported{union_note} · {total_in}->{total_out} tok "
+        f"in {time.time() - started:.0f}s"
+    )
     return 0
 
 

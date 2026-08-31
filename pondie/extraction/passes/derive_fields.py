@@ -72,14 +72,18 @@ def stage1_analyses(paper: str) -> list[dict]:
 #: `1.5 T`, `3T`, `3.0 Tesla`. The lookbehind keeps it off the `3` of `p < 0.003 T-value`,
 #: and the modal hit wins because a Methods section names its scanner's strength repeatedly
 #: while a stray match appears once.
-_TESLA = re.compile(r"(?<![\d.])(1\.5|3\.0|3|4|4\.7|7|9\.4|11\.7)\s*-?\s*(?:T\b|Tesla\b)", re.I)
+_TESLA = re.compile(
+    r"(?<![\d.])(1\.5|3\.0|3|4|4\.7|7|9\.4|11\.7)\s*-?\s*(?:T\b|Tesla\b)", re.I
+)
 
 #: Counted, not merely found. One mention of "rat" is a citation or an analogy; a rodent
 #: study says it on every other line. Three is well clear of both observed populations --
 #: the human papers here peak at 1 and the rodent one is in the dozens.
 _ANIMAL = re.compile(
     r"\b(rats?|mice|mouse|murine|rodents?|macaques?|marmosets?|rhesus|zebrafish"
-    r"|porcine|canine|felines?)\b", re.I)
+    r"|porcine|canine|felines?)\b",
+    re.I,
+)
 _ANIMAL_FLOOR = 3
 
 #: Stage 1's value kinds, which are what a table prints, mapped onto the statistic family.
@@ -88,14 +92,18 @@ _ANIMAL_FLOOR = 3
 #: a correct `f` with a wrong value, which is why a conflict here is reported and never
 #: applied.
 _KIND_TO_FAMILY = {
-    "t-statistic": "t", "z-statistic": "z", "correlation": "correlation", "beta": "beta",
+    "t-statistic": "t",
+    "z-statistic": "z",
+    "correlation": "correlation",
+    "beta": "beta",
 }
 
 #: A contrast name is often a formal expression -- `FESZ>NC`, `Baseline > week 6`. 51% of
 #: parsed names carry one of these operators, and the side a level sits on then gives its
 #: sign outright.
 _COMPARISON = re.compile(
-    r"(>=|<=|>|<|\bversus\b|\bvs\.?\b|\bgreater than\b|\bless than\b)", re.I)
+    r"(>=|<=|>|<|\bversus\b|\bvs\.?\b|\bgreater than\b|\bless than\b)", re.I
+)
 _GREATER = {">", ">=", "greater than"}
 
 #: A direction word in the name of a slope analysis -- `Left dlPFC parcel — Negative FC`.
@@ -122,8 +130,9 @@ def derive_age_unit(paper: str, **_: Any) -> str | None:
     return "years" if derive_species(paper) == "human" else None
 
 
-def derive_statistic_family(paper: str, analysis: Mapping | None = None,
-                            **_: Any) -> str | None:
+def derive_statistic_family(
+    paper: str, analysis: Mapping | None = None, **_: Any
+) -> str | None:
     if not analysis:
         return None
     name = unwrap(analysis.get("name")) or ""
@@ -141,8 +150,9 @@ def derive_statistic_family(paper: str, analysis: Mapping | None = None,
     return None
 
 
-def derive_cell_direction(paper: str, analysis: Mapping | None = None,
-                          level: str | None = None, **_: Any) -> str | None:
+def derive_cell_direction(
+    paper: str, analysis: Mapping | None = None, level: str | None = None, **_: Any
+) -> str | None:
     """A cell's sign from the contrast's name, or from the statistic's sign for a slope.
 
     Recovers 52 of 101 reviewer-gold signed cells with no model judgement and one error --
@@ -175,11 +185,14 @@ def derive_cell_direction(paper: str, analysis: Mapping | None = None,
     for parse in stage1_analyses(paper):
         if not same_level(name, parse.get("name") or ""):
             continue
-        values = [v["value"]
-                  for p in (parse.get("points") or [])
-                  for v in (p.get("values") or [])
-                  if v.get("kind") != "p-value" and isinstance(v.get("value"), (int, float))
-                  and v["value"] != 0]
+        values = [
+            v["value"]
+            for p in (parse.get("points") or [])
+            for v in (p.get("values") or [])
+            if v.get("kind") != "p-value"
+            and isinstance(v.get("value"), (int, float))
+            and v["value"] != 0
+        ]
         if values and all(v > 0 for v in values):
             return "positive"
         if values and all(v < 0 for v in values):
@@ -193,23 +206,33 @@ def derive_cell_direction(paper: str, analysis: Mapping | None = None,
 #: `double-blind` before `single-blind` for the same reason.
 KEYWORD_RULES: dict[str, list[tuple[str, str]]] = {
     "diagnostic_system": [
-        ("DSM-5", r"\bDSM[- ]?5\b|\bDSM[- ]?V\b"), ("DSM-IV", r"\bDSM[- ]?IV\b|\bDSM[- ]?4\b"),
-        ("ICD-11", r"\bICD[- ]?11\b"), ("ICD-10", r"\bICD[- ]?10\b")],
+        ("DSM-5", r"\bDSM[- ]?5\b|\bDSM[- ]?V\b"),
+        ("DSM-IV", r"\bDSM[- ]?IV\b|\bDSM[- ]?4\b"),
+        ("ICD-11", r"\bICD[- ]?11\b"),
+        ("ICD-10", r"\bICD[- ]?10\b"),
+    ],
     "mr_acquisition_type": [("3D", r"\b3D\b"), ("2D", r"\b2D\b")],
     "blinding": [
-        ("double_blind", r"\bdouble[- ]blind"), ("single_blind", r"\bsingle[- ]blind"),
-        ("open_label", r"\bopen[- ]label"), ("none", r"\bunblinded\b")],
+        ("double_blind", r"\bdouble[- ]blind"),
+        ("single_blind", r"\bsingle[- ]blind"),
+        ("open_label", r"\bopen[- ]label"),
+        ("none", r"\bunblinded\b"),
+    ],
     "assignment_structure": [
         ("crossover", r"\bcross[- ]?over\b"),
         ("parallel", r"\bparallel[- ]group|\bparallel arms?\b"),
         ("within_subject", r"\bwithin[- ]subjects?\b"),
-        ("between_subject", r"\bbetween[- ]subjects?\b")],
+        ("between_subject", r"\bbetween[- ]subjects?\b"),
+    ],
     "hrf_model": [
         ("canonical", r"\bcanonical (?:HRF|h[ae]modynamic)"),
-        ("gamma", r"\bgamma (?:function|basis|HRF)")],
+        ("gamma", r"\bgamma (?:function|basis|HRF)"),
+    ],
     "handedness_category": [
-        ("right", r"\bright[- ]handed\b"), ("left", r"\bleft[- ]handed\b"),
-        ("mixed", r"\bambidextrous\b")],
+        ("right", r"\bright[- ]handed\b"),
+        ("left", r"\bleft[- ]handed\b"),
+        ("mixed", r"\bambidextrous\b"),
+    ],
 }
 
 
@@ -217,8 +240,10 @@ def _keyword(paper: str, rule: str) -> str | None:
     text = paper_text(paper)
     if not text:
         return None
-    return next((value for value, pattern in KEYWORD_RULES[rule]
-                 if re.search(pattern, text, re.I)), None)
+    return next(
+        (value for value, pattern in KEYWORD_RULES[rule] if re.search(pattern, text, re.I)),
+        None,
+    )
 
 
 def derive_diagnostic_system(paper: str, **_: Any) -> str | None:
@@ -248,8 +273,12 @@ def derive_handedness(paper: str, **_: Any) -> str | None:
 #: (label, where the field lives, deriver). `scope` names the traversal, not a path: a
 #: field on every Group is reached differently from one on a Cell.
 DERIVERS: list[tuple[str, str, str, Callable[..., Any]]] = [
-    ("Acquisition.magnetic_field_strength_tesla", "acquisitions",
-     "magnetic_field_strength_tesla", derive_field_strength),
+    (
+        "Acquisition.magnetic_field_strength_tesla",
+        "acquisitions",
+        "magnetic_field_strength_tesla",
+        derive_field_strength,
+    ),
     ("Group.species", "groups", "species", derive_species),
     ("Group.age_unit", "groups", "age_unit", derive_age_unit),
     ("Statistic.family", "analysis.statistic", "family", derive_statistic_family),
@@ -261,11 +290,19 @@ DERIVERS: list[tuple[str, str, str, Callable[..., Any]]] = [
     # cannot avoid -- the schema warns that an edition inside an instrument's title
     # ("SCID for DSM-IV Axis II Disorders") does not establish it, and the text offers no
     # way to tell those mentions apart.
-    ("Acquisition.mr_acquisition_type", "acquisitions", "mr_acquisition_type",
-     derive_mr_acquisition_type),
+    (
+        "Acquisition.mr_acquisition_type",
+        "acquisitions",
+        "mr_acquisition_type",
+        derive_mr_acquisition_type,
+    ),
     ("StudyDesign.blinding", "design", "blinding", derive_blinding),
-    ("StudyDesign.assignment_structure", "design", "assignment_structure",
-     derive_assignment_structure),
+    (
+        "StudyDesign.assignment_structure",
+        "design",
+        "assignment_structure",
+        derive_assignment_structure,
+    ),
 ]
 
 
@@ -283,16 +320,25 @@ def _targets(record: Mapping, paper: str):
             for analysis in record.get("analyses") or []:
                 node = (analysis.get("effect") or {}).get("statistic")
                 if isinstance(node, Mapping):
-                    yield (label, node, key, deriver(paper, analysis=analysis),
-                           unwrap(node.get(key)))
+                    yield (
+                        label,
+                        node,
+                        key,
+                        deriver(paper, analysis=analysis),
+                        unwrap(node.get(key)),
+                    )
         elif scope == "analysis.cells":
             for analysis in record.get("analyses") or []:
-                for cell in ((analysis.get("effect") or {}).get("cells") or []):
+                for cell in (analysis.get("effect") or {}).get("cells") or []:
                     if not isinstance(cell, Mapping):
                         continue
-                    yield (label, cell, key,
-                           deriver(paper, analysis=analysis, level=unwrap(cell.get("level"))),
-                           unwrap(cell.get(key)))
+                    yield (
+                        label,
+                        cell,
+                        key,
+                        deriver(paper, analysis=analysis, level=unwrap(cell.get("level"))),
+                        unwrap(cell.get(key)),
+                    )
 
 
 def agrees(derived: Any, current: Any) -> bool:
@@ -323,7 +369,9 @@ def audit(paths: list[Path]) -> dict[str, collections.Counter]:
                 bucket["agree"] += 1
             else:
                 bucket["conflict"] += 1
-                conflicts.append(f"    {paper} {label}: model {current!r} vs derived {derived!r}")
+                conflicts.append(
+                    f"    {paper} {label}: model {current!r} vs derived {derived!r}"
+                )
     stats["_conflicts"] = conflicts  # type: ignore[assignment]
     return stats
 
@@ -345,24 +393,31 @@ def fill(paths: list[Path], apply: bool) -> int:
                 # read, so a reviewer can tell it from one quoted off the page.
                 node["value_source"] = "derived"
             else:
-                holder[key] = {"extraction_status": "extracted", "value": derived,
-                               "value_source": "derived"}
+                holder[key] = {
+                    "extraction_status": "extracted",
+                    "value": derived,
+                    "value_source": "derived",
+                }
             touched += 1
         if touched:
             filled += touched
             print(f"  {paper}: filled {touched} field(s)")
             if apply:
-                path.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n",
-                                encoding="utf-8")
+                path.write_text(
+                    json.dumps(record, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+                )
     print(f"\n{filled} field(s) {'written' if apply else 'fillable (dry run)'}")
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("records", nargs="+")
-    ap.add_argument("--fill", action="store_true", help="write derived values into empty fields")
+    ap.add_argument(
+        "--fill", action="store_true", help="write derived values into empty fields"
+    )
     ap.add_argument("--apply", action="store_true", help="with --fill, actually write")
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args(argv)
@@ -377,12 +432,16 @@ def main(argv: list[str] | None = None) -> int:
 
     stats = audit(paths)
     conflicts = stats.pop("_conflicts", [])
-    print(f"{'field':46s} {'agree':>6s} {'conflict':>9s} {'fillable':>9s} {'abstain':>8s}  precision")
+    print(
+        f"{'field':46s} {'agree':>6s} {'conflict':>9s} {'fillable':>9s} {'abstain':>8s}  precision"
+    )
     for label, bucket in stats.items():
         answered = bucket["agree"] + bucket["conflict"]
         precision = f"{bucket['agree'] / answered:.1%}" if answered else "   --"
-        print(f"{label:46s} {bucket['agree']:6d} {bucket['conflict']:9d} "
-              f"{bucket['fillable']:9d} {bucket['abstain']:8d}  {precision:>9s}")
+        print(
+            f"{label:46s} {bucket['agree']:6d} {bucket['conflict']:9d} "
+            f"{bucket['fillable']:9d} {bucket['abstain']:8d}  {precision:>9s}"
+        )
     if conflicts and args.verbose:
         print("\nconflicts (never applied; a reviewer decides):")
         for line in conflicts:

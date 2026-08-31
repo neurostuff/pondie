@@ -13,28 +13,29 @@ opposite, must come back unchanged rather than plausible.
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import pytest
 
 from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
 from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
-
-import derive_direction as dd  # noqa: E402
-from parse_tables import split_opposite_signs  # noqa: E402
-
+from pondie.extraction.passes import derive_direction as dd  # noqa: E402
+from pondie.extraction.passes.parse_tables import split_opposite_signs  # noqa: E402
 
 # --- reading a contrast's own name ------------------------------------------
 
-@pytest.mark.parametrize("contrast,level,expected", [
-    ("FESZ>NC", "FESZ", "positive"),
-    ("FESZ>NC", "NC", "negative"),
-    ("AD < HC reduced GM volume", "AD", "negative"),
-    ("AD < HC reduced GM volume", "HC", "positive"),
-    ("greater activation in patients than controls", "patients", "positive"),
-    ("greater activation in patients than controls", "controls", "negative"),
-])
+
+@pytest.mark.parametrize(
+    "contrast,level,expected",
+    [
+        ("FESZ>NC", "FESZ", "positive"),
+        ("FESZ>NC", "NC", "negative"),
+        ("AD < HC reduced GM volume", "AD", "negative"),
+        ("AD < HC reduced GM volume", "HC", "positive"),
+        ("greater activation in patients than controls", "patients", "positive"),
+        ("greater activation in patients than controls", "controls", "negative"),
+    ],
+)
 def test_polarity_directs_each_named_level(contrast, level, expected):
     assert dd.direction_of(level, contrast) == expected
 
@@ -65,10 +66,17 @@ def test_a_contrast_that_is_not_a_comparison_yields_nothing():
 
 # --- mirroring a withheld half ----------------------------------------------
 
+
 def test_only_the_positive_half_is_offered_for_extraction():
-    analyses = [{"name": "FESZ > NC", "points": [
-        {"values": [{"kind": "t", "value": 3.1}]},
-        {"values": [{"kind": "t", "value": -2.9}]}]}]
+    analyses = [
+        {
+            "name": "FESZ > NC",
+            "points": [
+                {"values": [{"kind": "t", "value": 3.1}]},
+                {"values": [{"kind": "t", "value": -2.9}]},
+            ],
+        }
+    ]
     out, notes = split_opposite_signs(analyses)
     described = [a for a in out if not a.get("withhold")]
     withheld = [a for a in out if a.get("withhold")]
@@ -81,10 +89,16 @@ def test_only_the_positive_half_is_offered_for_extraction():
 
 
 def test_each_half_keeps_only_its_own_rows():
-    analyses = [{"name": "A > B", "points": [
-        {"values": [{"kind": "t", "value": 3.1}]},
-        {"values": [{"kind": "t", "value": 2.2}]},
-        {"values": [{"kind": "t", "value": -2.9}]}]}]
+    analyses = [
+        {
+            "name": "A > B",
+            "points": [
+                {"values": [{"kind": "t", "value": 3.1}]},
+                {"values": [{"kind": "t", "value": 2.2}]},
+                {"values": [{"kind": "t", "value": -2.9}]},
+            ],
+        }
+    ]
     out, _ = split_opposite_signs(analyses)
     described = next(a for a in out if not a.get("withhold"))
     withheld = next(a for a in out if a.get("withhold"))
@@ -93,11 +107,21 @@ def test_each_half_keeps_only_its_own_rows():
 
 
 def test_mirroring_flips_directions_and_addresses_the_withheld_rows():
-    described = {"local_id": "analysis_01", "effect": {"cells": [
-        {"level": {"value": "FESZ"}, "direction": {"value": "positive",
-                                                   "value_source": "reported"}},
-        {"level": {"value": "NC"}, "direction": {"value": "negative",
-                                                 "value_source": "reported"}}]}}
+    described = {
+        "local_id": "analysis_01",
+        "effect": {
+            "cells": [
+                {
+                    "level": {"value": "FESZ"},
+                    "direction": {"value": "positive", "value_source": "reported"},
+                },
+                {
+                    "level": {"value": "NC"},
+                    "direction": {"value": "negative", "value_source": "reported"},
+                },
+            ]
+        },
+    }
     withheld = {"points": [{"values": [{"kind": "t", "value": -2.9}]}]}
     mirrored = dd.mirror_analysis(described, withheld, "t3#2")
     got = [c["direction"]["value"] for c in mirrored["effect"]["cells"]]
@@ -112,10 +136,13 @@ def test_mirroring_flips_directions_and_addresses_the_withheld_rows():
 
 
 def test_the_mirror_is_named_for_the_half_it_holds_not_the_half_it_came_from():
-    described = {"local_id": "a1",
-                 "name": {"extraction_status": "extracted", "value": "FESZ > NC"},
-                 "effect": {"cells": [{"level": {"value": "FESZ"},
-                                       "direction": {"value": "positive"}}]}}
+    described = {
+        "local_id": "a1",
+        "name": {"extraction_status": "extracted", "value": "FESZ > NC"},
+        "effect": {
+            "cells": [{"level": {"value": "FESZ"}, "direction": {"value": "positive"}}]
+        },
+    }
     withheld = {"name": "FESZ > NC (reversed)", "points": []}
     mirrored = dd.mirror_analysis(described, withheld, "t3#2")
     # The cells say NC > FESZ, so a name saying "FESZ > NC" would contradict them -- and
@@ -127,9 +154,11 @@ def test_the_mirror_is_named_for_the_half_it_holds_not_the_half_it_came_from():
 
 
 def test_a_mirror_with_no_parse_label_keeps_the_name_it_was_copied_from():
-    described = {"local_id": "a1",
-                 "name": {"extraction_status": "extracted", "value": "A > B"},
-                 "effect": {"cells": []}}
+    described = {
+        "local_id": "a1",
+        "name": {"extraction_status": "extracted", "value": "A > B"},
+        "effect": {"cells": []},
+    }
     # Nothing better is available, and inventing one would assert a contrast the paper
     # never wrote. The collision is reported by the validator rather than papered over.
     mirrored = dd.mirror_analysis(described, {"points": []})
@@ -137,8 +166,10 @@ def test_a_mirror_with_no_parse_label_keeps_the_name_it_was_copied_from():
 
 
 def test_mirroring_does_not_mutate_the_analysis_it_was_built_from():
-    described = {"local_id": "a", "effect": {"cells": [
-        {"level": {"value": "X"}, "direction": {"value": "positive"}}]}}
+    described = {
+        "local_id": "a",
+        "effect": {"cells": [{"level": {"value": "X"}, "direction": {"value": "positive"}}]},
+    }
     dd.mirror_analysis(described, {"points": []})
     assert described["effect"]["cells"][0]["direction"]["value"] == "positive"
 
@@ -147,9 +178,17 @@ def test_mirroring_does_not_mutate_the_analysis_it_was_built_from():
 def test_a_direction_with_no_opposite_survives_the_mirror(direction):
     # A level held constant is held from either side of the contrast, and an undirected
     # effect has no sign to flip. Reversing them would invent a claim.
-    described = {"local_id": "a", "effect": {"cells": [
-        {"level": {"value": "X"}, "direction": {"value": direction,
-                                                "value_source": "reported"}}]}}
+    described = {
+        "local_id": "a",
+        "effect": {
+            "cells": [
+                {
+                    "level": {"value": "X"},
+                    "direction": {"value": direction, "value_source": "reported"},
+                }
+            ]
+        },
+    }
     cell = dd.mirror_analysis(described, {"points": []})["effect"]["cells"][0]
     assert cell["direction"]["value"] == direction
     # It kept the warrant it was read from; only a flipped direction is generated.
@@ -157,28 +196,43 @@ def test_a_direction_with_no_opposite_survives_the_mirror(direction):
 
 
 def test_a_flipped_direction_is_marked_generated():
-    described = {"local_id": "a", "effect": {"cells": [
-        {"level": {"value": "X"}, "direction": {"value": "positive",
-                                                "value_source": "reported"}}]}}
+    described = {
+        "local_id": "a",
+        "effect": {
+            "cells": [
+                {
+                    "level": {"value": "X"},
+                    "direction": {"value": "positive", "value_source": "reported"},
+                }
+            ]
+        },
+    }
     cell = dd.mirror_analysis(described, {"points": []})["effect"]["cells"][0]
     assert cell["direction"]["value_source"] == "generated"
 
 
 # --- wired into the build ---------------------------------------------------
 
-import build_record  # noqa: E402
+from pondie.extraction.passes import build_record  # noqa: E402
 
 
 def _cell(level, direction):
-    return {"level": {"extraction_status": "extracted", "value": level},
-            "direction": {"extraction_status": "extracted", "value": direction}}
+    return {
+        "level": {"extraction_status": "extracted", "value": level},
+        "direction": {"extraction_status": "extracted", "value": direction},
+    }
 
 
 def test_the_build_fills_only_the_cells_the_model_gave_up_on():
-    body = {"analyses": [{
-        "local_id": "a1",
-        "name": {"extraction_status": "extracted", "value": "FESZ > NC"},
-        "effect": {"cells": [_cell("FESZ", "absent"), _cell("NC", "positive")]}}]}
+    body = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "name": {"extraction_status": "extracted", "value": "FESZ > NC"},
+                "effect": {"cells": [_cell("FESZ", "absent"), _cell("NC", "positive")]},
+            }
+        ]
+    }
     filled = build_record.fill_directions(body)
     cells = body["analyses"][0]["effect"]["cells"]
     assert cells[0]["direction"]["value"] == "positive"
@@ -191,29 +245,52 @@ def test_the_build_fills_only_the_cells_the_model_gave_up_on():
 
 
 def test_the_build_leaves_a_level_the_contrast_does_not_name():
-    body = {"analyses": [{
-        "local_id": "a1",
-        "name": {"extraction_status": "extracted", "value": "FESZ > NC"},
-        "effect": {"cells": [_cell("age", "absent")]}}]}
+    body = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "name": {"extraction_status": "extracted", "value": "FESZ > NC"},
+                "effect": {"cells": [_cell("age", "absent")]},
+            }
+        ]
+    }
     assert build_record.fill_directions(body) == []
     assert body["analyses"][0]["effect"]["cells"][0]["direction"]["value"] == "absent"
 
 
 def test_the_mirror_is_built_from_the_corrected_record(tmp_path):
     stage1 = tmp_path / "analyses.json"
-    stage1.write_text(json.dumps({"analyses": [
-        {"name": "A > B", "split_from": "A > B"},
-        {"name": "A > B (reversed)", "mirror_of": "A > B", "withhold": True,
-         "coordinates": [{"statistic_value": -3.4, "statistic_type": "T"}]}]}))
-    body = {"analyses": [{
-        "local_id": "a1",
-        "name": {"extraction_status": "extracted", "value": "A > B"},
-        "effect": {"cells": [_cell("A", "positive"), _cell("B", "negative")]}}]}
+    stage1.write_text(
+        json.dumps(
+            {
+                "analyses": [
+                    {"name": "A > B", "split_from": "A > B"},
+                    {
+                        "name": "A > B (reversed)",
+                        "mirror_of": "A > B",
+                        "withhold": True,
+                        "coordinates": [{"statistic_value": -3.4, "statistic_type": "T"}],
+                    },
+                ]
+            }
+        )
+    )
+    body = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "name": {"extraction_status": "extracted", "value": "A > B"},
+                "effect": {"cells": [_cell("A", "positive"), _cell("B", "negative")]},
+            }
+        ]
+    }
     made = build_record.mirror_withheld(body, stage1)
     assert len(made) == 1 and len(body["analyses"]) == 2
     mirrored = body["analyses"][1]
-    assert [c["direction"]["value"] for c in mirrored["effect"]["cells"]] == \
-        ["negative", "positive"]
+    assert [c["direction"]["value"] for c in mirrored["effect"]["cells"]] == [
+        "negative",
+        "positive",
+    ]
     assert mirrored["mirror_of"] == "a1"
     # The mirror reaches its rows by the withheld entry's parse key, like every other
     # analysis. Carrying them inline would put an attribute on Analysis that no class
@@ -224,8 +301,15 @@ def test_the_mirror_is_built_from_the_corrected_record(tmp_path):
 
 def test_a_withheld_half_whose_partner_vanished_is_reported_not_invented(tmp_path):
     stage1 = tmp_path / "analyses.json"
-    stage1.write_text(json.dumps({"analyses": [
-        {"name": "A > B (reversed)", "mirror_of": "A > B", "withhold": True}]}))
+    stage1.write_text(
+        json.dumps(
+            {
+                "analyses": [
+                    {"name": "A > B (reversed)", "mirror_of": "A > B", "withhold": True}
+                ]
+            }
+        )
+    )
     body = {"analyses": []}
     made = build_record.mirror_withheld(body, stage1)
     assert body["analyses"] == []

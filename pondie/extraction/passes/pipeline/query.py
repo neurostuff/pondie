@@ -29,8 +29,9 @@ from typing import Any, Iterator
 #: The intervention side of a trial and its comparator, from the schema's own ArmKind.
 #: `active_comparator` sits on the intervention side deliberately: it is a second active
 #: treatment, and a head-to-head trial has no inert arm at all.
-INTERVENTION = frozenset({"pharmacological", "stimulation", "behavioural_intervention",
-                          "active_comparator"})
+INTERVENTION = frozenset(
+    {"pharmacological", "stimulation", "behavioural_intervention", "active_comparator"}
+)
 COMPARATOR = frozenset({"placebo", "sham", "usual_care", "no_intervention"})
 
 
@@ -61,8 +62,26 @@ def _direction(node: Any) -> str | None:
     return seen if isinstance(seen, str) and seen else None
 
 
-_WEAK = frozenset({"the", "a", "an", "of", "in", "and", "or", "for", "with", "group",
-                   "groups", "arm", "condition", "patients", "participants", "subjects"})
+_WEAK = frozenset(
+    {
+        "the",
+        "a",
+        "an",
+        "of",
+        "in",
+        "and",
+        "or",
+        "for",
+        "with",
+        "group",
+        "groups",
+        "arm",
+        "condition",
+        "patients",
+        "participants",
+        "subjects",
+    }
+)
 
 
 def _words(text: str) -> frozenset[str]:
@@ -91,8 +110,12 @@ class Arm:
     #: the *kind* rather than the arm -- `placebo infusion group` against an arm called
     #: `normal saline placebo`. Word containment cannot bridge those two, and the kind
     #: can: an arm declared `placebo` and a level saying `placebo` are the same thing.
-    KIND_WORDS = {"placebo": "placebo", "sham": "sham",
-                  "no_intervention": "no intervention", "usual_care": "usual care"}
+    KIND_WORDS = {
+        "placebo": "placebo",
+        "sham": "sham",
+        "no_intervention": "no intervention",
+        "usual_care": "usual care",
+    }
 
     def named_by(self, level: str) -> bool:
         """Would a cell level of this text be referring to this arm?"""
@@ -167,8 +190,10 @@ class TreatmentContrast:
         on = f" on {self.measure}" if self.measure else ""
         holding = f", holding {'/'.join(self.held)}" if self.held else ""
         flag = "" if self.consistent else "   [INCONSISTENT: both cells same direction]"
-        return (f"{self.study_id}  {self.relation}{agent}{on}{holding}"
-                f" ({self.comparator.kind}){flag}")
+        return (
+            f"{self.study_id}  {self.relation}{agent}{on}{holding}"
+            f" ({self.comparator.kind}){flag}"
+        )
 
 
 def arms_of(record: dict) -> list[Arm]:
@@ -176,16 +201,20 @@ def arms_of(record: dict) -> list[Arm]:
     for arm in (record.get("design") or {}).get("arms") or []:
         if not isinstance(arm, dict):
             continue
-        found.append(Arm(local_id=str(_value(arm.get("local_id")) or ""),
-                         name=str(_value(arm.get("name")) or ""),
-                         kind=str(_value(arm.get("arm_kind")) or ""),
-                         agent=str(_value(arm.get("agent")) or "")))
+        found.append(
+            Arm(
+                local_id=str(_value(arm.get("local_id")) or ""),
+                name=str(_value(arm.get("name")) or ""),
+                kind=str(_value(arm.get("arm_kind")) or ""),
+                agent=str(_value(arm.get("agent")) or ""),
+            )
+        )
     return found
 
 
-def treatment_contrasts(record: dict,
-                        agents: dict[str, str] | None = None
-                        ) -> Iterator[TreatmentContrast]:
+def treatment_contrasts(
+    record: dict, agents: dict[str, str] | None = None
+) -> Iterator[TreatmentContrast]:
     """Every analysis in this record that contrasts intervention against comparator.
 
     The direction reported is the intervention cell's, so a positive contrast means the
@@ -200,10 +229,13 @@ def treatment_contrasts(record: dict,
     for measure in record.get("measures") or []:
         if isinstance(measure, dict) and _value(measure.get("local_id")):
             local = str(_value(measure["local_id"]))
-            measures[local] = str(_value(measure.get("source_label"))
-                                  or _value(measure.get("type")) or "")
-            kinds[local] = (str(_value(measure.get("type")) or ""),
-                            str(_value(measure.get("family")) or ""))
+            measures[local] = str(
+                _value(measure.get("source_label")) or _value(measure.get("type")) or ""
+            )
+            kinds[local] = (
+                str(_value(measure.get("type")) or ""),
+                str(_value(measure.get("family")) or ""),
+            )
     arms = arms_of(record)
     if not any(a.role == "intervention" for a in arms):
         return
@@ -226,8 +258,9 @@ def treatment_contrasts(record: dict,
                 # exists and only one kind word appears in the level, so `sham` and
                 # `placebo` arms in one trial still cannot be confused.
                 words = _words(level)
-                by_kind = [arm for arm in arms
-                           if arm.kind_word() and _words(arm.kind_word()) <= words]
+                by_kind = [
+                    arm for arm in arms if arm.kind_word() and _words(arm.kind_word()) <= words
+                ]
                 if len({arm.kind for arm in by_kind}) == 1 and len(by_kind) == 1:
                     hits = by_kind
             # One arm or none. A level naming two arms identifies neither, and guessing
@@ -241,21 +274,25 @@ def treatment_contrasts(record: dict,
             continue
         # Levels the contrast holds constant -- the condition it is within. Without them
         # a pooled row loses what the comparison was even about.
-        held = tuple(str(_value(cell.get("level")) or "") for cell in cells
-                     if _direction(cell.get("direction")) == "held"
-                     and _value(cell.get("level")))
+        held = tuple(
+            str(_value(cell.get("level")) or "")
+            for cell in cells
+            if _direction(cell.get("direction")) == "held" and _value(cell.get("level"))
+        )
         yield TreatmentContrast(
             study_id=study_id,
             analysis=str(_value(analysis.get("local_id")) or ""),
             analysis_name=str(_value(analysis.get("name")) or ""),
-            intervention=intervention[0], comparator=comparator[0],
+            intervention=intervention[0],
+            comparator=comparator[0],
             direction=_direction((intervention[1] or {}).get("direction")),
             agent_concept=agents.get(intervention[0].agent, ""),
             measure=measures.get(str(_value(analysis.get("measure")) or ""), ""),
             measure_type=kinds.get(str(_value(analysis.get("measure")) or ""), ("", ""))[0],
             measure_family=kinds.get(str(_value(analysis.get("measure")) or ""), ("", ""))[1],
             held=held,
-            comparator_direction=_direction((comparator[1] or {}).get("direction")))
+            comparator_direction=_direction((comparator[1] or {}).get("direction")),
+        )
 
 
 # --- case-control contrasts --------------------------------------------------
@@ -265,17 +302,25 @@ def treatment_contrasts(record: dict,
 #: still a control group, and a study of unaffected siblings has no patient group at all.
 #: The order matters -- `control` is tested first, because "healthy controls" and
 #: "schizophrenia" both appear in "controls matched to schizophrenia patients".
-_CONTROL = re.compile(r"\b(healthy|controls?|comparison|normal|unaffected|\bHCs?\b|"
-                      r"\bNCs?\b|\bCONs?\b)\b", re.I)
-_PATIENT = re.compile(r"\b(schizophreni\w*|schizoaffective|psychosis|psychotic|\bSZ\b|"
-                      r"\bSCZ\b|\bFESZ\b|\bFEP\b|patients?)\b", re.I)
+_CONTROL = re.compile(
+    r"\b(healthy|controls?|comparison|normal|unaffected|\bHCs?\b|" r"\bNCs?\b|\bCONs?\b)\b",
+    re.I,
+)
+_PATIENT = re.compile(
+    r"\b(schizophreni\w*|schizoaffective|psychosis|psychotic|\bSZ\b|"
+    r"\bSCZ\b|\bFESZ\b|\bFEP\b|patients?)\b",
+    re.I,
+)
 #: Cohorts that are neither: a risk group is not a patient, and pooling it into a
 #: patients-versus-controls map is the confound the corpus scan was built to separate.
 #: Plurals spelled out: `\bsibling\b` does not match "siblings", and "unaffected
 #: siblings" then reads as a control group -- which is the confound the corpus scan
 #: separated 133 studies out to avoid.
-_RISK = re.compile(r"\b(siblings?|relatives?|high[- ]risk|at[- ]risk|carriers?|prodrom\w+|"
-                   r"\bCHR\b|\bUHR\b|\bARMS\b)\b", re.I)
+_RISK = re.compile(
+    r"\b(siblings?|relatives?|high[- ]risk|at[- ]risk|carriers?|prodrom\w+|"
+    r"\bCHR\b|\bUHR\b|\bARMS\b)\b",
+    re.I,
+)
 
 
 def cohort_role(name: str) -> str | None:
@@ -330,16 +375,21 @@ def group_contrasts(record: dict) -> Iterator[GroupContrast]:
     """
 
     study_id = str(_value(record.get("local_id")) or "")
-    names = {str(_value(g.get("local_id"))): str(_value(g.get("name")) or "")
-             for g in record.get("groups") or [] if isinstance(g, dict)}
+    names = {
+        str(_value(g.get("local_id"))): str(_value(g.get("name")) or "")
+        for g in record.get("groups") or []
+        if isinstance(g, dict)
+    }
 
     levels: dict[str, list[str]] = {}
     for model in record.get("model_estimations") or []:
         for term in model.get("terms") or []:
             for level in term.get("levels") or []:
                 label = str(_value(level.get("level")) or "")
-                linked = [g if isinstance(g, str) else str(_value(g))
-                          for g in (level.get("groups") or [])]
+                linked = [
+                    g if isinstance(g, str) else str(_value(g))
+                    for g in (level.get("groups") or [])
+                ]
                 if label and linked:
                     levels.setdefault(label, []).extend(linked)
 
@@ -347,8 +397,9 @@ def group_contrasts(record: dict) -> Iterator[GroupContrast]:
     for measure in record.get("measures") or []:
         if isinstance(measure, dict) and _value(measure.get("local_id")):
             local = str(_value(measure["local_id"]))
-            measures[local] = str(_value(measure.get("source_label"))
-                                  or _value(measure.get("type")) or "")
+            measures[local] = str(
+                _value(measure.get("source_label")) or _value(measure.get("type")) or ""
+            )
             kinds[local] = str(_value(measure.get("type")) or "")
 
     for analysis in record.get("analyses") or []:
@@ -379,7 +430,10 @@ def group_contrasts(record: dict) -> Iterator[GroupContrast]:
             study_id=study_id,
             analysis=str(_value(analysis.get("local_id")) or ""),
             analysis_name=str(_value(analysis.get("name")) or ""),
-            patient=placed["patient"][0], control=placed["control"][0],
+            patient=placed["patient"][0],
+            control=placed["control"][0],
             direction=placed["patient"][1],
-            measure=measures.get(measure_ref, ""), measure_type=kinds.get(measure_ref, ""),
-            source_key=str(_value(analysis.get("source_table_analysis")) or ""))
+            measure=measures.get(measure_ref, ""),
+            measure_type=kinds.get(measure_ref, ""),
+            source_key=str(_value(analysis.get("source_table_analysis")) or ""),
+        )

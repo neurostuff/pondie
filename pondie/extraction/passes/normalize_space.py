@@ -25,16 +25,17 @@ then the spaces stage 1 read off the coordinates themselves.
 
     python normalize_space.py 'data/runs/*/records/*.extraction.json'
 """
+
 from __future__ import annotations
-import argparse, glob as globlib, json, re, sys
+
+import argparse
+import glob as globlib
+import json
+import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
-
 from schema_utils import value_of  # noqa: E402
-
 
 #: `\bmni` and not `\bmni\b`: "MNI152" is one token and a trailing boundary misses it.
 MNI = re.compile(r"\bmni|montreal\s+neurolog", re.I)
@@ -66,31 +67,54 @@ def resolve(analysis: dict, record: dict, stage1: dict | None = None) -> dict:
     """Space for one analysis, with where the answer came from."""
     space, reason = classify(value_of(analysis.get("coordinate_space")))
     if space != "UNKNOWN":
-        return {"space": space, "source": "analysis", "reason": reason,
-                "text": value_of(analysis.get("coordinate_space"))}
+        return {
+            "space": space,
+            "source": "analysis",
+            "reason": reason,
+            "text": value_of(analysis.get("coordinate_space")),
+        }
 
     wanted = {str(t) for t in (value_of(analysis.get("tables"), True) or [])}
-    seen = {classify(value_of(t.get("coordinate_space")))[0]
-            for t in (record.get("tables") or [])
-            if isinstance(t, dict) and str(value_of(t.get("local_id"))) in wanted}
+    seen = {
+        classify(value_of(t.get("coordinate_space")))[0]
+        for t in (record.get("tables") or [])
+        if isinstance(t, dict) and str(value_of(t.get("local_id"))) in wanted
+    }
     seen.discard("UNKNOWN")
     if len(seen) == 1:
         return {"space": seen.pop(), "source": "table", "reason": "tables agree", "text": None}
     if len(seen) > 1:
-        return {"space": "UNKNOWN", "source": "table", "reason": "tables disagree", "text": None}
+        return {
+            "space": "UNKNOWN",
+            "source": "table",
+            "reason": "tables disagree",
+            "text": None,
+        }
 
     key = str(value_of(analysis.get("source_table_analysis")) or "")
     points = (stage1 or {}).get(key) or []
     counts = Counter(str(p.get("space") or "").upper() for p in points)
     counts.pop("", None)
     if len(counts) == 1:
-        return {"space": classify(next(iter(counts)))[0], "source": "points",
-                "reason": "parsed coordinates", "text": None}
+        return {
+            "space": classify(next(iter(counts)))[0],
+            "source": "points",
+            "reason": "parsed coordinates",
+            "text": None,
+        }
     if len(counts) > 1:
-        return {"space": "UNKNOWN", "source": "points", "reason": "point spaces disagree",
-                "text": None}
-    return {"space": "UNKNOWN", "source": "none", "reason": reason,
-            "text": value_of(analysis.get("coordinate_space"))}
+        return {
+            "space": "UNKNOWN",
+            "source": "points",
+            "reason": "point spaces disagree",
+            "text": None,
+        }
+    return {
+        "space": "UNKNOWN",
+        "source": "none",
+        "reason": reason,
+        "text": value_of(analysis.get("coordinate_space")),
+    }
 
 
 def stage1_points(record_path: Path) -> dict:
@@ -99,16 +123,17 @@ def stage1_points(record_path: Path) -> dict:
     for root in record_path.parent.parent.glob("texts"):
         path = root / study / "stage1" / "analyses.json"
         if path.is_file():
-            import sys
-            import parse_tables
+            from pondie.extraction.passes import parse_tables
+
             parsed = json.loads(path.read_text()).get("analyses") or []
             return dict(zip(parse_tables.parse_keys(parsed), parsed))
     return {}
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("records", nargs="*", default=["data/runs/*/records/*.extraction.json"])
     ap.add_argument("--out", type=Path, default=Path("data/eval/space-normalized.json"))
     args = ap.parse_args()
@@ -116,7 +141,10 @@ def main() -> int:
     paths = sorted({p for pattern in args.records for p in globlib.glob(pattern)})
     paths = [Path(p) for p in paths if not p.endswith(".raw.json")]
 
-    space = Counter(); source = Counter(); forms = defaultdict(Counter); unmatched = Counter()
+    space = Counter()
+    source = Counter()
+    forms = defaultdict(Counter)
+    unmatched = Counter()
     out = {}
     for path in paths:
         try:
@@ -127,17 +155,21 @@ def main() -> int:
         if not isinstance(body, dict):
             continue
         keyed = stage1_points(path)
-        for analysis in (body.get("analyses") or []):
+        for analysis in body.get("analyses") or []:
             if not isinstance(analysis, dict):
                 continue
-            got = resolve(analysis, body, {k: (v.get("points") or []) for k, v in keyed.items()})
+            got = resolve(
+                analysis, body, {k: (v.get("points") or []) for k, v in keyed.items()}
+            )
             space[got["space"]] += 1
             source[f"{got['source']}: {got['reason']}"] += 1
             if got["text"]:
                 forms[got["space"]][str(got["text"])] += 1
             if got["reason"] == "unmatched":
                 unmatched[str(got["text"])] += 1
-            out[f"{path.name.split('.')[0]}|{value_of(analysis.get('local_id'))}"] = got["space"]
+            out[f"{path.name.split('.')[0]}|{value_of(analysis.get('local_id'))}"] = got[
+                "space"
+            ]
 
     total = sum(space.values())
     print(f"{len(paths)} records, {total} analyses\n")
@@ -151,8 +183,10 @@ def main() -> int:
         if forms[s]:
             print(f"     {s}: " + ", ".join(f"{k!r}×{v}" for k, v in forms[s].most_common(6)))
     if unmatched:
-        print(f"\n  {sum(unmatched.values())} value(s) no rule matched -- these need a rule, "
-              f"not a bucket:")
+        print(
+            f"\n  {sum(unmatched.values())} value(s) no rule matched -- these need a rule, "
+            f"not a bucket:"
+        )
         for k, n in unmatched.most_common(10):
             print(f"     {n:4d}  {k!r}")
     args.out.parent.mkdir(parents=True, exist_ok=True)

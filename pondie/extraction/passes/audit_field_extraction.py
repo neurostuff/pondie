@@ -25,7 +25,6 @@ import collections
 import glob as globlib
 import json
 import re
-import sys
 import unicodedata
 from pathlib import Path
 from typing import Any, Iterator, Mapping
@@ -36,8 +35,11 @@ TEXTS = ROOT / "data" / "texts"
 #: Sections are grouped rather than used verbatim: papers name them differently and the
 #: question is only whether a value lives where the methods are described.
 SECTION_GROUPS = (
-    ("methods", r"method|material|participant|procedure|acquisition|preprocess|analys|"
-                r"statistic|measure|assessment|subject|sample|design"),
+    (
+        "methods",
+        r"method|material|participant|procedure|acquisition|preprocess|analys|"
+        r"statistic|measure|assessment|subject|sample|design",
+    ),
     ("results", r"result|finding"),
     ("intro", r"introduction|background|objective"),
     ("discussion", r"discussion|conclusion|limitation"),
@@ -93,7 +95,9 @@ def find_number(value: float, text: str) -> list[int]:
     for rendering in renderings:
         if not rendering or rendering in {"0"}:
             continue
-        hits += [m.start() for m in re.finditer(rf"(?<![\w.]){re.escape(rendering)}(?![\w])", text)]
+        hits += [
+            m.start() for m in re.finditer(rf"(?<![\w.]){re.escape(rendering)}(?![\w])", text)
+        ]
     return sorted(set(hits))
 
 
@@ -113,16 +117,23 @@ def find_string(value: str, text: str, lowered: str) -> tuple[list[int], str]:
     # or an inserted qualifier without claiming a match on a single shared word.
     tokens = [t for t in folded.split() if len(t) > 2]
     if len(tokens) >= 2 and all(re.search(rf"\b{re.escape(t)}", lowered) for t in tokens):
-        first = min(m.start() for t in tokens
-                    for m in [re.search(rf"\b{re.escape(t)}", lowered)] if m)
+        first = min(
+            m.start() for t in tokens for m in [re.search(rf"\b{re.escape(t)}", lowered)] if m
+        )
         return [first], "tokens_present"
     return [], "absent"
 
 
 def audit(paths: list[Path]) -> dict[str, dict]:
     stats: dict[str, dict] = collections.defaultdict(
-        lambda: {"n": 0, "how": collections.Counter(), "cands": [],
-                 "section": collections.Counter(), "kind": collections.Counter()})
+        lambda: {
+            "n": 0,
+            "how": collections.Counter(),
+            "cands": [],
+            "section": collections.Counter(),
+            "kind": collections.Counter(),
+        }
+    )
     for path in paths:
         paper = path.name.split(".")[0]
         record = json.loads(path.read_text(encoding="utf-8"))
@@ -166,8 +177,9 @@ def audit(paths: list[Path]) -> dict[str, dict]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--records", default="data/records/*.extraction.json")
     ap.add_argument("--json", type=Path)
     ap.add_argument("--min-n", type=int, default=1)
@@ -182,28 +194,37 @@ def main(argv: list[str] | None = None) -> int:
         # `tokens_present` is a real surface match and a weak one, so it is counted as
         # locatable but reported apart: a field only reachable that way is one where the
         # value's words are scattered in a window rather than written as the value.
-        strict = sum(v for k, v in entry["how"].items()
-                     if k in {"verbatim", "normalised", "number"})
+        strict = sum(
+            v for k, v in entry["how"].items() if k in {"verbatim", "normalised", "number"}
+        )
         found = strict + entry["how"].get("tokens_present", 0)
         cands = entry["cands"]
         unique = sum(1 for c in cands if c == 1)
-        rows.append({
-            "field": field, "n": entry["n"],
-            "recoverable": found / entry["n"],
-            "recoverable_strict": strict / entry["n"],
-            "unique": unique / entry["n"],
-            "median_candidates": (sorted(cands)[len(cands) // 2] if cands else None),
-            "how": dict(entry["how"]), "section": dict(entry["section"]),
-            "kind": dict(entry["kind"]),
-        })
+        rows.append(
+            {
+                "field": field,
+                "n": entry["n"],
+                "recoverable": found / entry["n"],
+                "recoverable_strict": strict / entry["n"],
+                "unique": unique / entry["n"],
+                "median_candidates": (sorted(cands)[len(cands) // 2] if cands else None),
+                "how": dict(entry["how"]),
+                "section": dict(entry["section"]),
+                "kind": dict(entry["kind"]),
+            }
+        )
     rows.sort(key=lambda r: (-r["unique"], -r["n"]))
-    print(f"{'field':52s} {'n':>4s} {'strict':>6s} {'recov':>6s} {'uniq':>6s} {'medC':>5s}  top section")
+    print(
+        f"{'field':52s} {'n':>4s} {'strict':>6s} {'recov':>6s} {'uniq':>6s} {'medC':>5s}  top section"
+    )
     for r in rows:
         top = max(r["section"].items(), key=lambda x: x[1])[0] if r["section"] else "-"
         mc = r["median_candidates"]
-        print(f"{r['field']:52s} {r['n']:4d} {r['recoverable_strict']:6.0%} "
-              f"{r['recoverable']:6.0%} {r['unique']:6.0%} "
-              f"{(str(mc) if mc is not None else '-'):>5s}  {top}")
+        print(
+            f"{r['field']:52s} {r['n']:4d} {r['recoverable_strict']:6.0%} "
+            f"{r['recoverable']:6.0%} {r['unique']:6.0%} "
+            f"{(str(mc) if mc is not None else '-'):>5s}  {top}"
+        )
     if args.json:
         args.json.write_text(json.dumps(rows, indent=1), encoding="utf-8")
         print(f"\nwrote {args.json}")

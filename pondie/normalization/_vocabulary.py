@@ -15,6 +15,7 @@ Two things this module does that a plain string index does not:
   term used by ten papers and absent from the vocabulary is visible as a gap rather than
   silently dropped.
 """
+
 from __future__ import annotations
 
 import json
@@ -22,7 +23,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ._folding import fold
+from pondie.normalization._folding import fold
 
 MONDO = Path("data/vocab/mondo.json")
 
@@ -48,7 +49,9 @@ class Vocabulary:
             for n in frontier:
                 for p in self.parents.get(n, ()):
                     if p not in seen:
-                        seen.add(p); out.append(p); nxt.append(p)
+                        seen.add(p)
+                        out.append(p)
+                        nxt.append(p)
             frontier = nxt
         return out
 
@@ -65,23 +68,30 @@ def load_mondo(path: Path = MONDO) -> Vocabulary:
     index_of: dict[str, int] = {}
     for node in graph["nodes"]:
         meta = node.get("meta") or {}
-        if (node.get("type") != "CLASS" or not node.get("lbl") or meta.get("deprecated")
-                or "MONDO_" not in node["id"]):
+        if (
+            node.get("type") != "CLASS"
+            or not node.get("lbl")
+            or meta.get("deprecated")
+            or "MONDO_" not in node["id"]
+        ):
             continue
         i = len(vocab.labels)
         index_of[node["id"]] = i
         vocab.labels.append(node["lbl"])
         vocab.ids[i] = node["id"].rsplit("_", 1)[-1]
         vocab.surface.setdefault(fold(node["lbl"]), i)
-        for syn in (meta.get("synonyms") or []):
+        for syn in meta.get("synonyms") or []:
             if syn.get("pred") == "hasExactSynonym" and syn.get("val"):
                 vocab.surface.setdefault(fold(syn["val"]), i)
-        cui = [x["val"] for x in (meta.get("xrefs") or [])
-               if str(x.get("val", "")).startswith("UMLS:")]
+        cui = [
+            x["val"]
+            for x in (meta.get("xrefs") or [])
+            if str(x.get("val", "")).startswith("UMLS:")
+        ]
         if cui:
             vocab.umls[i] = cui[0].split(":", 1)[1]
     parents = defaultdict(list)
-    for edge in (graph.get("edges") or []):
+    for edge in graph.get("edges") or []:
         if edge.get("pred") == "is_a" and edge["sub"] in index_of and edge["obj"] in index_of:
             parents[index_of[edge["sub"]]].append(index_of[edge["obj"]])
     vocab.parents = dict(parents)

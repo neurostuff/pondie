@@ -26,10 +26,12 @@ from pathlib import Path
 from typing import Any, Mapping
 
 REVIEW = Path(__file__).resolve().parent
-sys.path.insert(0, str(REVIEW))
 
-from extract_record import (  # noqa: E402
-    DEFAULT_MODEL, extract, load_key_file, strip_fence,
+from pondie.extraction.passes.extract_record import (  # noqa: E402
+    DEFAULT_MODEL,
+    extract,
+    load_key_file,
+    strip_fence,
 )
 
 SYSTEM = """You check one thing: whether a reported contrast's `Effect.cells` name the right
@@ -78,12 +80,19 @@ def terms_block(payload: Mapping[str, Any]) -> str:
         for term in model.get("terms") or []:
             kind = (term.get("type") or {}).get("value", "?")
             name = (term.get("name") or {}).get("value", "?")
-            levels = [(level.get("level") or {}).get("value")
-                      if isinstance(level.get("level"), dict) else level.get("level")
-                      for level in (term.get("levels") or [])]
+            levels = [
+                (
+                    (level.get("level") or {}).get("value")
+                    if isinstance(level.get("level"), dict)
+                    else level.get("level")
+                )
+                for level in (term.get("levels") or [])
+            ]
             levels = [level for level in levels if level]
-            lines.append(f"  {term.get('local_id')}  \"{name}\"  {kind}"
-                         + (f"  levels: {levels}" if levels else "  (no levels: a slope)"))
+            lines.append(
+                f"  {term.get('local_id')}  \"{name}\"  {kind}"
+                + (f"  levels: {levels}" if levels else "  (no levels: a slope)")
+            )
     return "\n".join(lines)
 
 
@@ -91,12 +100,17 @@ def cells_of(analysis: Mapping[str, Any]) -> list[dict]:
     out = []
     for cell in (analysis.get("effect") or {}).get("cells") or []:
         level = cell.get("level")
-        out.append({
-            "term": cell.get("term"),
-            "level": level.get("value") if isinstance(level, dict) else level,
-            "direction": (cell.get("direction") or {}).get("value")
-            if isinstance(cell.get("direction"), dict) else cell.get("direction"),
-        })
+        out.append(
+            {
+                "term": cell.get("term"),
+                "level": level.get("value") if isinstance(level, dict) else level,
+                "direction": (
+                    (cell.get("direction") or {}).get("value")
+                    if isinstance(cell.get("direction"), dict)
+                    else cell.get("direction")
+                ),
+            }
+        )
     return out
 
 
@@ -121,8 +135,11 @@ def main() -> int:
         print("no analyses payload to recheck", file=sys.stderr)
         return 0
     analyses_payload = json.loads(analyses_path.read_text(encoding="utf-8"))
-    entities = (json.loads(entities_path.read_text(encoding="utf-8"))
-                if entities_path.is_file() else {})
+    entities = (
+        json.loads(entities_path.read_text(encoding="utf-8"))
+        if entities_path.is_file()
+        else {}
+    )
     analyses = analyses_payload.get("analyses") or []
     if not analyses:
         return 0
@@ -133,14 +150,18 @@ def main() -> int:
         print("no OPENAI_API_KEY; pass --key-file", file=sys.stderr)
         return 2
     from openai import OpenAI
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"],
-                    base_url=os.environ.get("OPENAI_API_GATEWAY"))
+
+    client = OpenAI(
+        api_key=os.environ["OPENAI_API_KEY"], base_url=os.environ.get("OPENAI_API_GATEWAY")
+    )
 
     text = args.text.read_text(encoding="utf-8")[:200_000]
     terms = terms_block(entities)
-    valid = {term.get("local_id")
-             for model in entities.get("model_estimations") or []
-             for term in model.get("terms") or []}
+    valid = {
+        term.get("local_id")
+        for model in entities.get("model_estimations") or []
+        for term in model.get("terms") or []
+    }
 
     changed = 0
     started = time.time()
@@ -151,15 +172,20 @@ def main() -> int:
     for analysis in analyses:
         name = (analysis.get("name") or {}).get("value", analysis.get("local_id"))
         definition = (analysis.get("definition") or {}).get("value", "")
-        user = (f"{terms}\n\nAnalysis: {name}\nDefinition: {definition}\n"
-                f"Cells currently emitted: {json.dumps(cells_of(analysis))}\n\n"
-                f"# Paper\n\n{text}\n\nReturn the JSON now.")
+        user = (
+            f"{terms}\n\nAnalysis: {name}\nDefinition: {definition}\n"
+            f"Cells currently emitted: {json.dumps(cells_of(analysis))}\n\n"
+            f"# Paper\n\n{text}\n\nReturn the JSON now."
+        )
         try:
-            payload, usage = extract(client, args.model, SYSTEM, user,
-                                     args.effort, args.max_out)
+            payload, usage = extract(
+                client, args.model, SYSTEM, user, args.effort, args.max_out
+            )
         except Exception as error:  # noqa: BLE001 -- a recheck must never lose the record
-            print(f"  recheck failed for {name}: {type(error).__name__}: {error}",
-                  file=sys.stderr)
+            print(
+                f"  recheck failed for {name}: {type(error).__name__}: {error}",
+                file=sys.stderr,
+            )
             continue
         calls += 1
         # `extract` returns usage_log's row, which is a mapping, not the SDK object.
@@ -176,27 +202,38 @@ def main() -> int:
         # A recheck that names a term the model never declared would break the record;
         # keeping the original is the safe failure, and the sweep sees it as no change.
         if any(cell.get("term") not in valid for cell in cells):
-            print(f"  recheck for {name} named an unknown term; kept the original",
-                  file=sys.stderr)
+            print(
+                f"  recheck for {name} named an unknown term; kept the original",
+                file=sys.stderr,
+            )
             continue
-        if cells_of(analysis) == [{"term": c.get("term"), "level": c.get("level"),
-                                   "direction": c.get("direction")} for c in cells]:
+        if cells_of(analysis) == [
+            {"term": c.get("term"), "level": c.get("level"), "direction": c.get("direction")}
+            for c in cells
+        ]:
             continue
         analysis.setdefault("effect", {})["cells"] = [
-            {"term": cell["term"],
-             **({"level": wrap(cell["level"])} if cell.get("level") else {}),
-             "direction": wrap(cell.get("direction"))}
+            {
+                "term": cell["term"],
+                **({"level": wrap(cell["level"])} if cell.get("level") else {}),
+                "direction": wrap(cell.get("direction")),
+            }
             for cell in cells
         ]
         changed += 1
 
-    analyses_path.write_text(json.dumps(analyses_payload, indent=1, ensure_ascii=False) + "\n",
-                             encoding="utf-8")
+    analyses_path.write_text(
+        json.dumps(analyses_payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     # The same shape every other stage prints, so one parser reads them all.
-    print(f"{args.paper}/recheck: {total_in}->{total_out} tok in "
-          f"{time.time() - started:.0f}s [{calls} call(s)]")
-    print(f"{args.paper}/recheck_cells: {changed} of {len(analyses)} analyses rewritten "
-          f"in {time.time() - started:.0f}s")
+    print(
+        f"{args.paper}/recheck: {total_in}->{total_out} tok in "
+        f"{time.time() - started:.0f}s [{calls} call(s)]"
+    )
+    print(
+        f"{args.paper}/recheck_cells: {changed} of {len(analyses)} analyses rewritten "
+        f"in {time.time() - started:.0f}s"
+    )
     return 0
 
 

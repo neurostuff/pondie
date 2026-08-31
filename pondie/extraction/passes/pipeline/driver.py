@@ -14,15 +14,18 @@ is worth reporting as an object rather than as the text a stage happened to prin
 from __future__ import annotations
 
 import argparse
-import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from pipeline.kinds import (FAILED, NOT_REQUESTED, Paper, PaperOutcome,  # noqa: E402
-                            RunReport, StageOutcome)
-from pipeline.stages import BASELINE, Settings, Stage  # noqa: E402
+from pondie.extraction.passes.pipeline.kinds import (
+    FAILED,
+    NOT_REQUESTED,
+    Paper,
+    PaperOutcome,
+    RunReport,
+    StageOutcome,
+)
+from pondie.extraction.passes.pipeline.stages import BASELINE, Settings, Stage
 
 
 def read_pmids(path: Path) -> list[str]:
@@ -35,8 +38,9 @@ def read_pmids(path: Path) -> list[str]:
     return studies
 
 
-def run_paper(paper: Paper, settings: Settings,
-              stages: tuple[Stage, ...] = BASELINE) -> PaperOutcome:
+def run_paper(
+    paper: Paper, settings: Settings, stages: tuple[Stage, ...] = BASELINE
+) -> PaperOutcome:
     """One paper through every stage, stopping at the first that fails.
 
     Stopping matters: `satisfy` reads what `demands` wrote, and running it against a
@@ -55,8 +59,13 @@ def run_paper(paper: Paper, settings: Settings,
     for stage in stages:
         if stopped:
             outcome.stages.append(
-                StageOutcome(stage.name, paper.study_id, NOT_REQUESTED,
-                             notes=["an earlier stage failed"]))
+                StageOutcome(
+                    stage.name,
+                    paper.study_id,
+                    NOT_REQUESTED,
+                    notes=["an earlier stage failed"],
+                )
+            )
             continue
         result = stage.run(paper, settings)
         outcome.stages.append(result)
@@ -66,8 +75,7 @@ def run_paper(paper: Paper, settings: Settings,
     return outcome
 
 
-def plan(papers: list[Paper], settings: Settings,
-         stages: tuple[Stage, ...] = BASELINE) -> str:
+def plan(papers: list[Paper], settings: Settings, stages: tuple[Stage, ...] = BASELINE) -> str:
     """What would run and what would be skipped, without spending anything.
 
     The question this answers -- "why did that stage not run" -- previously required
@@ -88,8 +96,12 @@ def plan(papers: list[Paper], settings: Settings,
     return "\n".join(lines)
 
 
-def run(papers: list[Paper], settings: Settings,
-        stages: tuple[Stage, ...] = BASELINE, workers: int = 1) -> RunReport:
+def run(
+    papers: list[Paper],
+    settings: Settings,
+    stages: tuple[Stage, ...] = BASELINE,
+    workers: int = 1,
+) -> RunReport:
     """Every paper, optionally several at once.
 
     Papers are independent -- each writes only under its own payload directory -- so the
@@ -107,8 +119,9 @@ def run(papers: list[Paper], settings: Settings,
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--pmids", required=True, type=Path)
     parser.add_argument("--texts", required=True, type=Path)
     parser.add_argument("--payloads", required=True, type=Path)
@@ -117,22 +130,35 @@ def main() -> int:
     parser.add_argument("--model", default="@psyc-aid338-ope-333f18/gpt-5.6-luna")
     parser.add_argument("--effort", default="low")
     parser.add_argument("--max-attempts", type=int, default=3)
-    parser.add_argument("--reranker-device", default="cpu",
-                        help="comma-separated devices, cycled per paper: cuda:0,cuda:1")
+    parser.add_argument(
+        "--reranker-device",
+        default="cpu",
+        help="comma-separated devices, cycled per paper: cuda:0,cuda:1",
+    )
     parser.add_argument("--no-union", dest="union", action="store_false")
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--redo", action="store_true")
-    parser.add_argument("--explain", action="store_true",
-                        help="print what would run and why, and make no calls")
+    parser.add_argument(
+        "--explain",
+        action="store_true",
+        help="print what would run and why, and make no calls",
+    )
     args = parser.parse_args()
 
-    settings = Settings(payloads=args.payloads, records=args.records,
-                        key_file=args.key_file, model=args.model, effort=args.effort,
-                        max_attempts=args.max_attempts,
-                        reranker_device=args.reranker_device.split(",")[0],
-                        reranker_devices=tuple(d.strip() for d in
-                                               args.reranker_device.split(",") if d.strip()),
-                        union=args.union, redo=args.redo)
+    settings = Settings(
+        payloads=args.payloads,
+        records=args.records,
+        key_file=args.key_file,
+        model=args.model,
+        effort=args.effort,
+        max_attempts=args.max_attempts,
+        reranker_device=args.reranker_device.split(",")[0],
+        reranker_devices=tuple(
+            d.strip() for d in args.reranker_device.split(",") if d.strip()
+        ),
+        union=args.union,
+        redo=args.redo,
+    )
     papers = [Paper(study, args.texts) for study in read_pmids(args.pmids)]
 
     if args.explain:

@@ -11,7 +11,9 @@ records) that can complete it.
 
     python audit_queryability.py 'data/runs/schiz/final2/*.extraction.json'
 """
+
 from __future__ import annotations
+
 import argparse
 import glob as globlib
 import json
@@ -25,8 +27,11 @@ def val(node):
 
 def ids(body, key, holder=None):
     source = (body.get(holder) or {}) if holder else body
-    return {val(e.get("local_id")) for e in (source.get(key) or [])
-            if isinstance(e, dict) and val(e.get("local_id"))}
+    return {
+        val(e.get("local_id"))
+        for e in (source.get(key) or [])
+        if isinstance(e, dict) and val(e.get("local_id"))
+    }
 
 
 def main() -> int:
@@ -52,12 +57,19 @@ def main() -> int:
         # Conditions are nested under the Task that defines them, not a top-level list, so
         # a pool built from the record's own top level silently omits them -- and a level
         # naming a task condition then looks unresolvable when it is not.
-        conditions = {val(cnd.get("local_id"))
-                      for t in (body.get("tasks") or []) if isinstance(t, dict)
-                      for cnd in (t.get("conditions") or []) if isinstance(cnd, dict)
-                      if val(cnd.get("local_id"))}
-        models = {val(m.get("local_id")): m for m in (body.get("model_estimations") or [])
-                  if isinstance(m, dict)}
+        conditions = {
+            val(cnd.get("local_id"))
+            for t in (body.get("tasks") or [])
+            if isinstance(t, dict)
+            for cnd in (t.get("conditions") or [])
+            if isinstance(cnd, dict)
+            if val(cnd.get("local_id"))
+        }
+        models = {
+            val(m.get("local_id")): m
+            for m in (body.get("model_estimations") or [])
+            if isinstance(m, dict)
+        }
         terms = {}
         # term local_id -> (owning model, {folded level string: the FactorLevel node}).
         # A Cell holds a term reference and a bare level STRING; the references that make
@@ -65,17 +77,20 @@ def main() -> int:
         # the term, reached by matching that string.
         levels_of = {}
         for m in models.values():
-            for t in (m.get("terms") or []):
+            for t in m.get("terms") or []:
                 if not (isinstance(t, dict) and val(t.get("local_id"))):
                     continue
                 tid = val(t.get("local_id"))
                 terms[tid] = val(m.get("local_id"))
                 levels_of[tid] = {
                     str(val(fl.get("level")) or "").strip().lower(): fl
-                    for fl in (t.get("levels") or []) if isinstance(fl, dict)}
+                    for fl in (t.get("levels") or [])
+                    if isinstance(fl, dict)
+                }
 
-        if any(val(g.get("species")) for g in (body.get("groups") or [])
-               if isinstance(g, dict)):
+        if any(
+            val(g.get("species")) for g in (body.get("groups") or []) if isinstance(g, dict)
+        ):
             c["records that state a species"] += 1
 
         for a in body.get("analyses") or []:
@@ -101,19 +116,28 @@ def main() -> int:
                 c["  every cell carries a direction"] += 1
             if all(val(x.get("term")) in terms for x in cells):
                 c["  every cell's term reaches a ModelTerm"] += 1
-            if all(terms.get(val(x.get("term"))) == val(a.get("model_estimation"))
-                   for x in cells):
+            if all(
+                terms.get(val(x.get("term"))) == val(a.get("model_estimation")) for x in cells
+            ):
                 c["  every cell's term is in THIS analysis's model"] += 1
 
             # a level that names a cohort or an arm is what a cross-paper query selects on
             reached = 0
             for x in cells:
-                node = levels_of.get(val(x.get("term")), {}).get(
-                    str(val(x.get("level")) or "").strip().lower()) or {}
+                node = (
+                    levels_of.get(val(x.get("term")), {}).get(
+                        str(val(x.get("level")) or "").strip().lower()
+                    )
+                    or {}
+                )
                 refs = []
-                for key, pool in (("groups", groups), ("arms", arms),
-                                  ("timepoints", timepoints),
-                                  ("conditions", conditions), ("regions", regions)):
+                for key, pool in (
+                    ("groups", groups),
+                    ("arms", arms),
+                    ("timepoints", timepoints),
+                    ("conditions", conditions),
+                    ("regions", regions),
+                ):
                     refs += [r for r in (val(node.get(key)) or []) if r in pool]
                 reached += bool(refs)
             if reached == len(cells):
@@ -123,16 +147,24 @@ def main() -> int:
 
     an, cellsn, rec = c["analyses"], c["analyses with cells"], c["records"]
     print(f"{rec} records, {an} analyses, {cellsn} of them with cells\n")
-    print(f"  {c['records that state a species']:5d}/{rec:<5d} "
-          f"{c['records that state a species']/rec:6.1%}  records that state a species")
-    for label in ("  reach their coordinates (parse key)", "  reach every Table they cite",
-                  "  reach a Measure", "  state a coordinate space"):
+    print(
+        f"  {c['records that state a species']:5d}/{rec:<5d} "
+        f"{c['records that state a species']/rec:6.1%}  records that state a species"
+    )
+    for label in (
+        "  reach their coordinates (parse key)",
+        "  reach every Table they cite",
+        "  reach a Measure",
+        "  state a coordinate space",
+    ):
         print(f"  {c[label]:5d}/{an:<5d} {c[label]/an:6.1%}  analyses{label}")
-    for label in ("  every cell carries a direction",
-                  "  every cell's term reaches a ModelTerm",
-                  "  every cell's term is in THIS analysis's model",
-                  "  every cell's level resolves to a named entity",
-                  "  SOME cells' levels resolve"):
+    for label in (
+        "  every cell carries a direction",
+        "  every cell's term reaches a ModelTerm",
+        "  every cell's term is in THIS analysis's model",
+        "  every cell's level resolves to a named entity",
+        "  SOME cells' levels resolve",
+    ):
         print(f"  {c[label]:5d}/{cellsn:<5d} {c[label]/cellsn:6.1%}  analyses where{label}")
     return 0
 

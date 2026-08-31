@@ -18,6 +18,7 @@ disappearing into OTHER.
 
 Modules with a leading underscore are shared machinery and are not part of the interface.
 """
+
 from __future__ import annotations
 
 UNKNOWN = "UNKNOWN"

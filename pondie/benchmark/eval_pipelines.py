@@ -16,14 +16,15 @@ from __future__ import annotations
 import glob
 import json
 import re
-import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
-from derive_fields import derive_cell_direction, same_level, unwrap  # noqa: E402
+from pondie.extraction.passes.derive_fields import (  # noqa: E402
+    derive_cell_direction,
+    same_level,
+    unwrap,
+)
 
 SIGNED = {"positive", "negative"}
 
@@ -45,7 +46,7 @@ def record_cell(rec: dict, analysis_id: str, term: str, level: str | None):
     for analysis in rec.get("analyses") or []:
         if analysis.get("local_id") != analysis_id:
             continue
-        for cell in ((analysis.get("effect") or {}).get("cells") or []):
+        for cell in (analysis.get("effect") or {}).get("cells") or []:
             if cell.get("term") != term:
                 continue
             if level and not same_level(str(unwrap(cell.get("level")) or ""), level):
@@ -78,8 +79,11 @@ def evaluate() -> dict[str, Counter]:
                 res["P0 luna (deployed)"]["no_cell"] += 1
 
             # P1: derive from the contrast name / statistic sign, abstain otherwise.
-            derived = (derive_cell_direction(paper, analysis=analysis, level=gc.get("level"))
-                       if analysis is not None else None)
+            derived = (
+                derive_cell_direction(paper, analysis=analysis, level=gc.get("level"))
+                if analysis is not None
+                else None
+            )
             if derived is None:
                 res["P1 deterministic-first"]["abstain"] += 1
             else:
@@ -99,25 +103,44 @@ def evaluate() -> dict[str, Counter]:
 def token_cost() -> dict[str, int]:
     """Characters of record JSON each pipeline still asks a model to emit."""
     DETERMINISTIC = {
-        "acquisitions.magnetic_field_strength_tesla", "groups.species", "groups.age_unit",
-        "acquisitions.mr_acquisition_type", "design.blinding", "design.assignment_structure",
+        "acquisitions.magnetic_field_strength_tesla",
+        "groups.species",
+        "groups.age_unit",
+        "acquisitions.mr_acquisition_type",
+        "design.blinding",
+        "design.assignment_structure",
         "analyses.effect.statistic.family",
     }
     NUEXTRACT = {
-        "groups.enrolled_count", "groups.acquired_count", "groups.excluded_count",
-        "groups.age_mean", "groups.age_standard_deviation", "groups.recruitment_method",
-        "groups.diagnostic_system", "preprocessings.smoothing_fwhm_mm",
-        "preprocessings.software", "model_estimations.software",
-        "acquisitions.repetition_time_seconds", "acquisitions.echo_time_seconds",
-        "acquisitions.number_of_volumes", "inference_settings.cluster_extent_threshold",
+        "groups.enrolled_count",
+        "groups.acquired_count",
+        "groups.excluded_count",
+        "groups.age_mean",
+        "groups.age_standard_deviation",
+        "groups.recruitment_method",
+        "groups.diagnostic_system",
+        "preprocessings.smoothing_fwhm_mm",
+        "preprocessings.software",
+        "model_estimations.software",
+        "acquisitions.repetition_time_seconds",
+        "acquisitions.echo_time_seconds",
+        "acquisitions.number_of_volumes",
+        "inference_settings.cluster_extent_threshold",
         "inference_settings.permutation_count",
-        "inference_settings.multiple_comparison_method", "measures.unit",
-        "model_estimations.hrf_model", "tables.table_number", "tables.caption",
-        "tables.footer", "model_estimations.terms.type",
-        "model_estimations.terms.variation_level", "model_estimations.spatial_unit",
+        "inference_settings.multiple_comparison_method",
+        "measures.unit",
+        "model_estimations.hrf_model",
+        "tables.table_number",
+        "tables.caption",
+        "tables.footer",
+        "model_estimations.terms.type",
+        "model_estimations.terms.variation_level",
+        "model_estimations.spatial_unit",
         "analyses.spatial_scope",
         "analyses.effect.statistic.degrees_of_freedom_denominator",
-        "analyses.coordinate_space", "devices.model", "devices.manufacturer",
+        "analyses.coordinate_space",
+        "devices.model",
+        "devices.manufacturer",
     }
     CELLS = {"analyses.effect.cells.direction", "analyses.effect.cells.level"}
 
@@ -171,7 +194,9 @@ def main() -> int:
         ("P6 cells-only", t.get("cells", 0)),
     ]
     for name, size in rows:
-        print(f"  {name:26s} {size:9d}  {size / base:5.0%} of baseline  ~{size // 4 // 16:6d} tok/paper")
+        print(
+            f"  {name:26s} {size:9d}  {size / base:5.0%} of baseline  ~{size // 4 // 16:6d} tok/paper"
+        )
     return 0
 
 

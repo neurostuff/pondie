@@ -75,17 +75,30 @@ def call(client, **kwargs) -> tuple[Any, dict[str, Any]]:
     return response, row
 
 
-def record(path: Path, paper: str, stage: str, row: Mapping[str, Any],
-           extra: Mapping[str, Any] | None = None) -> None:
+def record(
+    path: Path,
+    paper: str,
+    stage: str,
+    row: Mapping[str, Any],
+    extra: Mapping[str, Any] | None = None,
+) -> None:
     """Append one usage row. Never fatal: accounting must not sink an extraction."""
     try:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(
-                {"paper": paper, "stage": stage, "at": time.strftime("%Y-%m-%dT%H:%M:%SZ",
-                                                                    time.gmtime()),
-                 **dict(row), **(dict(extra) if extra else {})},
-                ensure_ascii=False) + "\n")
-    except Exception as error:                       # noqa: BLE001
+            handle.write(
+                json.dumps(
+                    {
+                        "paper": paper,
+                        "stage": stage,
+                        "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                        **dict(row),
+                        **(dict(extra) if extra else {}),
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
+    except Exception as error:  # noqa: BLE001
         print(f"  usage not recorded ({type(error).__name__})", flush=True)

@@ -18,11 +18,11 @@ import re
 import sys
 from pathlib import Path
 
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
-
-from pipeline.abbreviations import Abbreviations, detector  # noqa: E402
-from pipeline.kinds import TEXT_FLAVOURS  # noqa: E402
+from pondie.extraction.passes.pipeline.abbreviations import (  # noqa: E402
+    Abbreviations,
+    detector,
+)
+from pondie.extraction.passes.pipeline.kinds import TEXT_FLAVOURS  # noqa: E402
 
 #: Abbreviations papers use without ever defining, usually because they are assumed. Each
 #: is a claim about the field rather than about a paper, which is why they are separated
@@ -72,9 +72,14 @@ NUMERAL = frozenset("i ii iii iv v vi vii viii ix x".split())
 
 
 def usable(short: str, expansion: str) -> bool:
-    return (len(short) >= 2 and short.lower() not in NUMERAL and bool(expansion)
-            and not MALFORMED.search(expansion) and len(expansion.split()) <= 7
-            and short.lower() != expansion.lower())
+    return (
+        len(short) >= 2
+        and short.lower() not in NUMERAL
+        and bool(expansion)
+        and not MALFORMED.search(expansion)
+        and len(expansion.split()) <= 7
+        and short.lower() != expansion.lower()
+    )
 
 
 def strings_in(node, out: list) -> None:
@@ -101,19 +106,30 @@ def texts_under(root: Path):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--texts", type=Path, action="append", default=[],
-                        help="a corpus root; may be repeated")
-    parser.add_argument("--records", action="append", default=[],
-                        help="a glob of extraction records, mined when the papers they were "
-                             "extracted from are no longer on disk. A record carries the "
-                             "paper's own `long form (SF)` phrasings in its string fields")
-    parser.add_argument("--out", type=Path,
-                        default=Path("data/vocab/abbreviations.json"))
+    parser.add_argument(
+        "--texts",
+        type=Path,
+        action="append",
+        default=[],
+        help="a corpus root; may be repeated",
+    )
+    parser.add_argument(
+        "--records",
+        action="append",
+        default=[],
+        help="a glob of extraction records, mined when the papers they were "
+        "extracted from are no longer on disk. A record carries the "
+        "paper's own `long form (SF)` phrasings in its string fields",
+    )
+    parser.add_argument("--out", type=Path, default=Path("data/vocab/abbreviations.json"))
     args = parser.parse_args()
 
     if detector() is None:
-        print("scispacy is not installed; falling back to the built-in miner, which is "
-              "known to miss definitions it should find", file=sys.stderr)
+        print(
+            "scispacy is not installed; falling back to the built-in miner, which is "
+            "known to miss definitions it should find",
+            file=sys.stderr,
+        )
 
     store = Abbreviations.load(args.out)
     papers = 0
@@ -148,13 +164,19 @@ def main() -> int:
     curated = len(store.entries) - mined
     print(f"{papers} paper(s) read")
     if dropped:
-        print(f"{len(dropped)} mis-parsed expansion(s) refused, e.g. "
-              + "; ".join(f"{k!r} -> {v['expansion'][:34]!r}" for k, v in list(dropped.items())[:3]))
+        print(
+            f"{len(dropped)} mis-parsed expansion(s) refused, e.g. "
+            + "; ".join(
+                f"{k!r} -> {v['expansion'][:34]!r}" for k, v in list(dropped.items())[:3]
+            )
+        )
     print(f"{len(store.entries)} abbreviations: {mined} mined, {curated} curated")
     clashes = store.disagreements()
     if clashes:
-        print(f"\n{len(clashes)} short form(s) expanded more than one way -- these cannot "
-              f"be pooled across papers without a decision:")
+        print(
+            f"\n{len(clashes)} short form(s) expanded more than one way -- these cannot "
+            f"be pooled across papers without a decision:"
+        )
         for short, variants in clashes[:12]:
             print(f"   {short:10s} {variants}")
     print(f"wrote {args.out}")

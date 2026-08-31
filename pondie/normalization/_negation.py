@@ -14,12 +14,13 @@ Scope follows the standard clinical-NLP treatment (Chapman et al., NegEx, 2001):
 governs its syntactic subtree, so a mention is negated when the negation attaches to it or to
 any of its ancestors.
 """
+
 from __future__ import annotations
 
 import functools
 import re
 
-from .._deps import MissingDependency, require
+from pondie._deps import MissingDependency, require
 
 #: Negation expressed as a modifier rather than a `neg` dependency: "drug-free", "off
 #: medication", "absence of treatment". Closed and short by design.
@@ -45,7 +46,8 @@ def _parser():
     except OSError as error:
         raise MissingDependency(
             "spaCy is installed but the en_core_web_sm model is not. "
-            "Install it with: python -m spacy download en_core_web_sm") from error
+            "Install it with: python -m spacy download en_core_web_sm"
+        ) from error
 
 
 def available() -> bool:

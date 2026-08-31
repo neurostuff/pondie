@@ -42,136 +42,397 @@ AXES: dict[str, tuple[str, str, list[str]]] = {
     "clinical": (
         "patients vs controls, with a named diagnosis",
         "Group.is_healthy / medical_condition / diagnostic_system / diagnostic_instrument",
-        ["patients", "patient", "diagnosis", "diagnostic", "disorder", "disease",
-         "syndrome", "dsm", "icd", "schizophrenia", "psychosis", "depression",
-         "depressive", "mdd", "bipolar", "adhd", "autism", "asd", "ptsd",
-         "obsessive", "ocd", "anxiety", "addiction", "dependence", "epilepsy",
-         "parkinson", "alzheimer", "dementia", "mci", "stroke", "aphasia",
-         "traumatic brain injury", "multiple sclerosis", "healthy controls",
-         "comorbid", "symptom severity", "clinical"],
+        [
+            "patients",
+            "patient",
+            "diagnosis",
+            "diagnostic",
+            "disorder",
+            "disease",
+            "syndrome",
+            "dsm",
+            "icd",
+            "schizophrenia",
+            "psychosis",
+            "depression",
+            "depressive",
+            "mdd",
+            "bipolar",
+            "adhd",
+            "autism",
+            "asd",
+            "ptsd",
+            "obsessive",
+            "ocd",
+            "anxiety",
+            "addiction",
+            "dependence",
+            "epilepsy",
+            "parkinson",
+            "alzheimer",
+            "dementia",
+            "mci",
+            "stroke",
+            "aphasia",
+            "traumatic brain injury",
+            "multiple sclerosis",
+            "healthy controls",
+            "comorbid",
+            "symptom severity",
+            "clinical",
+        ],
     ),
     "medication": (
         "drug status of the cohort is stated",
         "Group.medications / medication_status",
-        ["medication", "medicated", "unmedicated", "drug-naive", "drug naive",
-         "antipsychotic", "antidepressant", "ssri", "lithium", "methylphenidate",
-         "benzodiazepine", "stimulant", "pharmacological", "pharmacotherapy",
-         "dose", "dosage", "administration", "washout", "wash-out", "placebo",
-         "agonist", "antagonist", "infusion", "ketamine", "levodopa", "oxytocin"],
+        [
+            "medication",
+            "medicated",
+            "unmedicated",
+            "drug-naive",
+            "drug naive",
+            "antipsychotic",
+            "antidepressant",
+            "ssri",
+            "lithium",
+            "methylphenidate",
+            "benzodiazepine",
+            "stimulant",
+            "pharmacological",
+            "pharmacotherapy",
+            "dose",
+            "dosage",
+            "administration",
+            "washout",
+            "wash-out",
+            "placebo",
+            "agonist",
+            "antagonist",
+            "infusion",
+            "ketamine",
+            "levodopa",
+            "oxytocin",
+        ],
     ),
     "intervention": (
         "something was done to the participants",
         "StudyDesign.allocation / Arm.arm_kind / Blinding",
-        ["randomized", "randomised", "randomly assigned", "rct", "clinical trial",
-         "intervention", "treatment", "training", "tdcs", "tms", "rtms", "tacs",
-         "stimulation", "neurofeedback", "therapy", "psychotherapy", "cbt",
-         "sham", "double-blind", "single-blind", "placebo-controlled",
-         "crossover", "cross-over", "parallel-group", "waitlist"],
+        [
+            "randomized",
+            "randomised",
+            "randomly assigned",
+            "rct",
+            "clinical trial",
+            "intervention",
+            "treatment",
+            "training",
+            "tdcs",
+            "tms",
+            "rtms",
+            "tacs",
+            "stimulation",
+            "neurofeedback",
+            "therapy",
+            "psychotherapy",
+            "cbt",
+            "sham",
+            "double-blind",
+            "single-blind",
+            "placebo-controlled",
+            "crossover",
+            "cross-over",
+            "parallel-group",
+            "waitlist",
+        ],
     ),
     "longitudinal": (
         "the same people scanned more than once",
         "Timepoint.relation_to_intervention / order / time_from_intervention",
-        ["longitudinal", "follow-up", "followup", "baseline", "pre-treatment",
-         "post-treatment", "pre-intervention", "post-intervention", "prospective",
-         "repeated measures", "time point", "timepoint", "before and after",
-         "weeks later", "months later", "retest", "test-retest", "session 1",
-         "two sessions", "sessions"],
+        [
+            "longitudinal",
+            "follow-up",
+            "followup",
+            "baseline",
+            "pre-treatment",
+            "post-treatment",
+            "pre-intervention",
+            "post-intervention",
+            "prospective",
+            "repeated measures",
+            "time point",
+            "timepoint",
+            "before and after",
+            "weeks later",
+            "months later",
+            "retest",
+            "test-retest",
+            "session 1",
+            "two sessions",
+            "sessions",
+        ],
     ),
     "factorial": (
         "a crossed design with an interaction term",
         "ModelTerm.interaction_with / FactorLevel / Cell.direction",
-        ["factorial", "2x2", "2 x 2", "2 × 2", "two-way", "three-way",
-         "interaction effect", "interaction between", "main effect",
-         "main effects", "anova", "ancova", "repeated-measures anova",
-         "mixed-effects model", "full factorial"],
+        [
+            "factorial",
+            "2x2",
+            "2 x 2",
+            "2 × 2",
+            "two-way",
+            "three-way",
+            "interaction effect",
+            "interaction between",
+            "main effect",
+            "main effects",
+            "anova",
+            "ancova",
+            "repeated-measures anova",
+            "mixed-effects model",
+            "full factorial",
+        ],
     ),
     "resting": (
         "resting state and/or a connectivity method",
         "Task.design_type / ConnectivityDetails / ConnectivityMethod",
-        ["resting-state", "resting state", "rest-fmri", "functional connectivity",
-         "seed-based", "seed based", "seed region", "default mode", "dmn",
-         "alff", "falff", "reho", "regional homogeneity", "graph theory",
-         "psychophysiological interaction", "ppi", "gppi", "dynamic causal",
-         "dcm", "granger", "effective connectivity", "coherence",
-         "connectivity matrix", "network"],
+        [
+            "resting-state",
+            "resting state",
+            "rest-fmri",
+            "functional connectivity",
+            "seed-based",
+            "seed based",
+            "seed region",
+            "default mode",
+            "dmn",
+            "alff",
+            "falff",
+            "reho",
+            "regional homogeneity",
+            "graph theory",
+            "psychophysiological interaction",
+            "ppi",
+            "gppi",
+            "dynamic causal",
+            "dcm",
+            "granger",
+            "effective connectivity",
+            "coherence",
+            "connectivity matrix",
+            "network",
+        ],
     ),
     "multimodal": (
         "more than one acquisition on the same people",
         "two or more Acquisition subclasses (MRI / EEG / FNIRS / PET)",
-        ["multimodal", "multi-modal", "simultaneous eeg", "eeg-fmri", "eeg/fmri",
-         "meg", "fnirs", "nirs", "pet/mri", "pet-mri", "concurrent",
-         "structural and functional", "combined", "multi-echo",
-         "in the same participants", "same subjects underwent"],
+        [
+            "multimodal",
+            "multi-modal",
+            "simultaneous eeg",
+            "eeg-fmri",
+            "eeg/fmri",
+            "meg",
+            "fnirs",
+            "nirs",
+            "pet/mri",
+            "pet-mri",
+            "concurrent",
+            "structural and functional",
+            "combined",
+            "multi-echo",
+            "in the same participants",
+            "same subjects underwent",
+        ],
     ),
     "nonbold": (
         "the measure is not a BOLD contrast",
         "MeasureFamily / MeasureType",
-        ["voxel-based morphometry", "vbm", "gray matter volume", "grey matter volume",
-         "gray matter density", "cortical thickness", "surface area",
-         "morphometry", "diffusion tensor", "dti", "fractional anisotropy",
-         "mean diffusivity", "tractography", "white matter integrity", "tbss",
-         "arterial spin labeling", "arterial spin labelling", "asl", "perfusion",
-         "cerebral blood flow", "pet", "tracer", "binding potential",
-         "receptor availability", "radioligand", "fdg", "amyloid", "tau"],
+        [
+            "voxel-based morphometry",
+            "vbm",
+            "gray matter volume",
+            "grey matter volume",
+            "gray matter density",
+            "cortical thickness",
+            "surface area",
+            "morphometry",
+            "diffusion tensor",
+            "dti",
+            "fractional anisotropy",
+            "mean diffusivity",
+            "tractography",
+            "white matter integrity",
+            "tbss",
+            "arterial spin labeling",
+            "arterial spin labelling",
+            "asl",
+            "perfusion",
+            "cerebral blood flow",
+            "pet",
+            "tracer",
+            "binding potential",
+            "receptor availability",
+            "radioligand",
+            "fdg",
+            "amyloid",
+            "tau",
+        ],
     ),
     "multivariate": (
         "not a mass-univariate GLM",
         "AnalysisType multivariate_decoding / representational_similarity / "
         "latent_decomposition / conjunction",
-        ["mvpa", "multivariate pattern", "multi-voxel pattern", "decoding",
-         "classifier", "classification accuracy", "support vector",
-         "searchlight", "representational similarity", "rsa",
-         "independent component analysis", "ica", "partial least squares",
-         "pls", "canonical correlation", "dictionary learning",
-         "conjunction analysis", "conjunction"],
+        [
+            "mvpa",
+            "multivariate pattern",
+            "multi-voxel pattern",
+            "decoding",
+            "classifier",
+            "classification accuracy",
+            "support vector",
+            "searchlight",
+            "representational similarity",
+            "rsa",
+            "independent component analysis",
+            "ica",
+            "partial least squares",
+            "pls",
+            "canonical correlation",
+            "dictionary learning",
+            "conjunction analysis",
+            "conjunction",
+        ],
     ),
     "roi": (
         "an ROI whose provenance can be judged for independence",
         "SpatialScope / Region.definition_method",
-        ["region of interest", "regions of interest", "roi", "rois",
-         "anatomical mask", "atlas", "aal", "harvard-oxford", "freesurfer",
-         "functional localizer", "localiser", "small volume correction", "svc",
-         "a priori", "predefined region", "parcellation", "parcel"],
+        [
+            "region of interest",
+            "regions of interest",
+            "roi",
+            "rois",
+            "anatomical mask",
+            "atlas",
+            "aal",
+            "harvard-oxford",
+            "freesurfer",
+            "functional localizer",
+            "localiser",
+            "small volume correction",
+            "svc",
+            "a priori",
+            "predefined region",
+            "parcellation",
+            "parcel",
+        ],
     ),
     "continuous": (
         "an individual-difference measure entered as a regressor",
         "ModelTerm.type=continuous / ModelTerm.assessment / FunctionalForm",
-        ["individual differences", "correlated with", "correlation between",
-         "regression analysis", "covariate", "covariates", "predictor",
-         "questionnaire", "self-report", "scale score", "trait", "severity score",
-         "iq", "age-related", "associated with", "parametric modulation",
-         "parametric modulator"],
+        [
+            "individual differences",
+            "correlated with",
+            "correlation between",
+            "regression analysis",
+            "covariate",
+            "covariates",
+            "predictor",
+            "questionnaire",
+            "self-report",
+            "scale score",
+            "trait",
+            "severity score",
+            "iq",
+            "age-related",
+            "associated with",
+            "parametric modulation",
+            "parametric modulator",
+        ],
     ),
     "inference": (
         "the thresholding is elaborate enough to be worth recording",
         "InferenceSettings",
-        ["tfce", "threshold-free", "permutation", "nonparametric", "non-parametric",
-         "randomise", "randomize", "family-wise", "fwe", "false discovery",
-         "fdr", "cluster-level", "cluster-forming", "cluster extent",
-         "monte carlo", "3dclustsim", "bonferroni"],
+        [
+            "tfce",
+            "threshold-free",
+            "permutation",
+            "nonparametric",
+            "non-parametric",
+            "randomise",
+            "randomize",
+            "family-wise",
+            "fwe",
+            "false discovery",
+            "fdr",
+            "cluster-level",
+            "cluster-forming",
+            "cluster extent",
+            "monte carlo",
+            "3dclustsim",
+            "bonferroni",
+        ],
     ),
     "mediation": (
         "a mediation or path model",
         "Mediation.path / EffectPath",
-        ["mediation", "mediator", "mediates", "mediated", "indirect effect",
-         "path analysis", "structural equation", "sem", "moderated mediation",
-         "bootstrapped indirect"],
+        [
+            "mediation",
+            "mediator",
+            "mediates",
+            "mediated",
+            "indirect effect",
+            "path analysis",
+            "structural equation",
+            "sem",
+            "moderated mediation",
+            "bootstrapped indirect",
+        ],
     ),
     "external": (
         "the data came from a public cohort",
         "Study.external_datasets",
-        ["human connectome project", "hcp", "abcd study", "abcd", "uk biobank",
-         "biobank", "adni", "openneuro", "openfmri", "imagen", "enigma",
-         "publicly available dataset", "public dataset", "open dataset",
-         "data sharing", "1000 functional connectomes", "nki", "camcan",
-         "cam-can", "ukb"],
+        [
+            "human connectome project",
+            "hcp",
+            "abcd study",
+            "abcd",
+            "uk biobank",
+            "biobank",
+            "adni",
+            "openneuro",
+            "openfmri",
+            "imagen",
+            "enigma",
+            "publicly available dataset",
+            "public dataset",
+            "open dataset",
+            "data sharing",
+            "1000 functional connectomes",
+            "nki",
+            "camcan",
+            "cam-can",
+            "ukb",
+        ],
     ),
     "species": (
         "not humans",
         "Group.species",
-        ["macaque", "macaques", "monkey", "monkeys", "marmoset", "baboon",
-         "rhesus", "rat", "rats", "mouse", "mice", "rodent", "non-human primate",
-         "nonhuman primate"],
+        [
+            "macaque",
+            "macaques",
+            "monkey",
+            "monkeys",
+            "marmoset",
+            "baboon",
+            "rhesus",
+            "rat",
+            "rats",
+            "mouse",
+            "mice",
+            "rodent",
+            "non-human primate",
+            "nonhuman primate",
+        ],
     ),
 }
 
@@ -194,18 +455,21 @@ def score_row(row: dict) -> dict[str, int]:
     text = haystack(row)
     scores = {}
     for code, (_, _, terms) in AXES.items():
-        hit = sum(1 for term in terms
-                  if re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", text))
+        hit = sum(
+            1 for term in terms if re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", text)
+        )
         if hit:
             scores[code] = hit
     return scores
 
 
 def tractable(row: dict) -> bool:
-    return (MIN_TEXT <= row.get("text_len", 0) <= MAX_TEXT
-            and row.get("n_analyses", 0) >= MIN_ANALYSES
-            and row.get("n_points", 0) >= MIN_POINTS
-            and len(row.get("abstract") or "") > 200)
+    return (
+        MIN_TEXT <= row.get("text_len", 0) <= MAX_TEXT
+        and row.get("n_analyses", 0) >= MIN_ANALYSES
+        and row.get("n_points", 0) >= MIN_POINTS
+        and len(row.get("abstract") or "") > 200
+    )
 
 
 def command_screen(args: argparse.Namespace) -> int:
@@ -220,12 +484,16 @@ def command_screen(args: argparse.Namespace) -> int:
     # candidate in the corpus should not be crowded out by fourteen better clinical ones.
     shortlist: dict[str, dict] = {}
     for code in AXES:
-        ranked = sorted((r for r in pool if r["scores"].get(code)),
-                        key=lambda r: (-r["scores"][code], -r["n_analyses"]))
-        for row in ranked[:args.per_axis]:
+        ranked = sorted(
+            (r for r in pool if r["scores"].get(code)),
+            key=lambda r: (-r["scores"][code], -r["n_analyses"]),
+        )
+        for row in ranked[: args.per_axis]:
             shortlist.setdefault(row["study"], row)
-        print(f"  {code:13s} {sum(1 for r in pool if r['scores'].get(code)):>5} match  "
-              f"top={ranked[0]['scores'][code] if ranked else 0}")
+        print(
+            f"  {code:13s} {sum(1 for r in pool if r['scores'].get(code)):>5} match  "
+            f"top={ranked[0]['scores'][code] if ranked else 0}"
+        )
 
     with args.out.open("w", encoding="utf-8") as fh:
         for row in shortlist.values():
@@ -283,8 +551,9 @@ def command_adjudge(args: argparse.Namespace) -> int:
     import openai  # noqa: PLC0415
 
     load_key_file(args.key_file)
-    client = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"],
-                           base_url=os.environ.get("OPENAI_API_GATEWAY"))
+    client = openai.OpenAI(
+        api_key=os.environ["OPENAI_API_KEY"], base_url=os.environ.get("OPENAI_API_GATEWAY")
+    )
 
     done: set[str] = set()
     if args.out.is_file() and not args.redo:
@@ -293,39 +562,62 @@ def command_adjudge(args: argparse.Namespace) -> int:
 
     rows = [json.loads(line) for line in args.shortlist.open(encoding="utf-8")]
     todo = [r for r in rows if r["study"] not in done]
-    axis_list = "\n".join(f"- {code}: {what} (schema: {surface})"
-                          for code, (what, surface, _) in AXES.items())
+    axis_list = "\n".join(
+        f"- {code}: {what} (schema: {surface})" for code, (what, surface, _) in AXES.items()
+    )
 
     with args.out.open("a", encoding="utf-8") as fh:
         for n, row in enumerate(todo, 1):
             keywords = row.get("keywords") or []
-            user = (f"# Axes\n\n{axis_list}\n\n# Paper\n\n"
-                    f"Title: {row['title']}\n"
-                    f"Journal: {row.get('journal')} ({row.get('year')})\n"
-                    f"Keywords: {', '.join(keywords) if keywords else 'none listed'}\n\n"
-                    f"Abstract:\n{row['abstract']}\n")
+            user = (
+                f"# Axes\n\n{axis_list}\n\n# Paper\n\n"
+                f"Title: {row['title']}\n"
+                f"Journal: {row.get('journal')} ({row.get('year')})\n"
+                f"Keywords: {', '.join(keywords) if keywords else 'none listed'}\n\n"
+                f"Abstract:\n{row['abstract']}\n"
+            )
             try:
                 response = client.chat.completions.create(
                     model=args.model,
                     reasoning_effort=args.effort,
-                    messages=[{"role": "system", "content": ADJUDGE_SYSTEM},
-                              {"role": "user", "content": user}],
-                    response_format={"type": "json_schema", "json_schema": {
-                        "name": "axis_judgement", "strict": True,
-                        "schema": adjudge_schema()}},
+                    messages=[
+                        {"role": "system", "content": ADJUDGE_SYSTEM},
+                        {"role": "user", "content": user},
+                    ],
+                    response_format={
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": "axis_judgement",
+                            "strict": True,
+                            "schema": adjudge_schema(),
+                        },
+                    },
                 )
                 verdict = json.loads(response.choices[0].message.content)
             except Exception as exc:
-                print(f"  {row['study']}: FAILED {type(exc).__name__}: {exc}"[:200],
-                      file=sys.stderr)
+                print(
+                    f"  {row['study']}: FAILED {type(exc).__name__}: {exc}"[:200],
+                    file=sys.stderr,
+                )
                 continue
-            fh.write(json.dumps({"study": row["study"], "pmid": row["pmid"],
-                                 "title": row["title"], **verdict},
-                                ensure_ascii=False) + "\n")
+            fh.write(
+                json.dumps(
+                    {
+                        "study": row["study"],
+                        "pmid": row["pmid"],
+                        "title": row["title"],
+                        **verdict,
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
             fh.flush()
             hits = [c for c, v in verdict["axes"].items() if v["present"]]
-            print(f"  [{n}/{len(todo)}] {row['study']} r={verdict['richness']} "
-                  f"{'+'.join(hits) or 'none'}")
+            print(
+                f"  [{n}/{len(todo)}] {row['study']} r={verdict['richness']} "
+                f"{'+'.join(hits) or 'none'}"
+            )
     return 0
 
 
@@ -337,8 +629,10 @@ def command_pick(args: argparse.Namespace) -> int:
     ("can the schema hold a mediation model?") is otherwise unanswered.
     """
 
-    index = {row["study"]: row for row in
-             (json.loads(l) for l in args.shortlist.open(encoding="utf-8"))}
+    index = {
+        row["study"]: row
+        for row in (json.loads(l) for l in args.shortlist.open(encoding="utf-8"))
+    }
     scored = [json.loads(l) for l in args.scored.open(encoding="utf-8")]
     for row in scored:
         row["hits"] = {c for c, v in row["axes"].items() if v["present"]}
@@ -376,7 +670,9 @@ def command_pick(args: argparse.Namespace) -> int:
 
     with args.out.open("w", encoding="utf-8") as fh:
         fh.write("# pmid\tneurostore_id\taxes\n")
-        fh.write("# Chosen by select_papers.py to span the schema; see deploy/DEPLOYMENT.md.\n")
+        fh.write(
+            "# Chosen by select_papers.py to span the schema; see deploy/DEPLOYMENT.md.\n"
+        )
         for row in chosen:
             axes = "+".join(sorted(row["hits"]))
             fh.write(f"{row['pmid']}\t{row['study']}\t{axes}\n")
@@ -397,8 +693,9 @@ def load_key_file(path: Path) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     screen = sub.add_parser("screen", help="keyword-score the index, write a shortlist")

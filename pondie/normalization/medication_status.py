@@ -19,13 +19,14 @@ NAIVE is kept apart from FREE deliberately: never-medicated and withdrawn-before
 different populations, and a moderator analysis that merges them cannot see a treatment-history
 effect.
 """
+
 from __future__ import annotations
 
 import re
 
-from . import OTHER, UNKNOWN
-from ._lexicon import Decision, Rule, classify
-from ._negation import mentions
+from pondie.normalization import OTHER, UNKNOWN
+from pondie.normalization._lexicon import Decision, Rule, classify
+from pondie.normalization._negation import mentions
 
 MEDICATED, FREE, NAIVE, MIXED = "MEDICATED", "FREE", "NAIVE", "MIXED"
 VALUES = (MEDICATED, FREE, NAIVE, MIXED, OTHER, UNKNOWN)
@@ -35,7 +36,9 @@ VALUES = (MEDICATED, FREE, NAIVE, MIXED, OTHER, UNKNOWN)
 CONCEPTS = re.compile(
     r"medicat|drug|antipsychot|antidepress|psychotrop|psychoactiv|neurolept|lithium|"
     r"stimulant|\bSSRI|\bSNRI|benzodiazep|anxiolytic|mood stabili[sz]|prescri|"
-    r"pharmacolog|pharmacotherap|\bmedic\b", re.I)
+    r"pharmacolog|pharmacotherap|\bmedic\b",
+    re.I,
+)
 
 #: Morphological negation. A parse cannot see it -- "unmedicated" is one token with no
 #: syntactic negation to attach to -- so it is stripped to its scope-visible form first.
@@ -47,10 +50,16 @@ DENIED_NAIVE = re.compile(r"\b(?:not|never|non)\b[\s\w-]{0,16}?na[iï]ve", re.I)
 #: Read before scope, because each names a status that negation alone cannot express. Each is
 #: itself checked for negation: "not drug-naive" contains "naive" and means the opposite.
 MARKERS = (
-    Rule.of(NAIVE, r"\bna[iï]ve\b|never (?:been )?(?:medicated|treated|prescribed)|"
-                   r"no (?:prior|previous|lifetime) (?:medication|treatment|exposure)"),
-    Rule.of(MIXED, r"\bmixed\b|\bsome (?:were|of (?:them|the|whom))|partially medicated|"
-                   r"\bboth medicated and\b|\bvaried\b|\bheterogeneous\b"),
+    Rule.of(
+        NAIVE,
+        r"\bna[iï]ve\b|never (?:been )?(?:medicated|treated|prescribed)|"
+        r"no (?:prior|previous|lifetime) (?:medication|treatment|exposure)",
+    ),
+    Rule.of(
+        MIXED,
+        r"\bmixed\b|\bsome (?:were|of (?:them|the|whom))|partially medicated|"
+        r"\bboth medicated and\b|\bvaried\b|\bheterogeneous\b",
+    ),
     Rule.of(OTHER, r"^\s*not applicable\s*$|^\s*n/?a\s*$"),
 )
 
@@ -80,11 +89,17 @@ def normalize(text: object) -> Decision:
 
 
 def report(patterns: tuple[str, ...] | None = None) -> str:
-    from ._lexicon import summarize
-    from ._records import DEFAULT, iter_records, strings_at
-    decisions = [normalize(s) for _study, body in iter_records(patterns or DEFAULT)
-                 for s in strings_at(body, "groups.medication_status")]
-    return f"groups.medication_status: {len(decisions)} values\n" + summarize(decisions, VALUES)
+    from pondie.normalization._lexicon import summarize
+    from pondie.normalization._records import DEFAULT, iter_records, strings_at
+
+    decisions = [
+        normalize(s)
+        for _study, body in iter_records(patterns or DEFAULT)
+        for s in strings_at(body, "groups.medication_status")
+    ]
+    return f"groups.medication_status: {len(decisions)} values\n" + summarize(
+        decisions, VALUES
+    )
 
 
 if __name__ == "__main__":

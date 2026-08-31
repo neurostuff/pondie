@@ -14,11 +14,12 @@ fallback is not decoration: it answers 11% of analyses, where the model left the
 `Table.coordinate_space` sits between the two and is empty in every table measured, so the
 middle step never fires on this corpus and is kept for the schema's sake rather than its yield.
 """
+
 from __future__ import annotations
 
-from . import OTHER, UNKNOWN
-from ._lexicon import ClosedField, Decision, Rule
-from ._records import value_of
+from pondie.normalization import OTHER, UNKNOWN
+from pondie.normalization._lexicon import ClosedField, Decision, Rule
+from pondie.normalization._records import value_of
 
 MNI, TAL = "MNI", "TAL"
 VALUES = (MNI, TAL, OTHER, UNKNOWN)
@@ -41,9 +42,11 @@ def resolve(analysis: dict, record: dict, points_by_key: dict | None = None) -> 
         return own
 
     wanted = {str(t) for t in (value_of(analysis.get("tables"), True) or [])}
-    seen = {normalize(value_of(t.get("coordinate_space"))).value
-            for t in (record.get("tables") or [])
-            if isinstance(t, dict) and str(value_of(t.get("local_id"))) in wanted}
+    seen = {
+        normalize(value_of(t.get("coordinate_space"))).value
+        for t in (record.get("tables") or [])
+        if isinstance(t, dict) and str(value_of(t.get("local_id"))) in wanted
+    }
     seen.discard(UNKNOWN)
     if len(seen) == 1:
         return Decision(seen.pop(), "tables agree")
@@ -51,8 +54,9 @@ def resolve(analysis: dict, record: dict, points_by_key: dict | None = None) -> 
         return Decision(UNKNOWN, "tables disagree")
 
     key = str(value_of(analysis.get("source_table_analysis")) or "")
-    spaces = {str(p.get("space") or "").upper()
-              for p in ((points_by_key or {}).get(key) or [])}
+    spaces = {
+        str(p.get("space") or "").upper() for p in ((points_by_key or {}).get(key) or [])
+    }
     spaces.discard("")
     if len(spaces) == 1:
         return Decision(normalize(spaces.pop()).value, "parsed coordinates")

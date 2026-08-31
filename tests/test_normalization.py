@@ -1,8 +1,13 @@
 """One test per shape, on the cases that were wrong before they were rules."""
+
 import pytest
 
-from pondie.normalization import (coordinate_space, handedness_distribution,
-                                  medication_status, multiple_comparison_method)
+from pondie.normalization import (
+    coordinate_space,
+    handedness_distribution,
+    medication_status,
+    multiple_comparison_method,
+)
 
 
 def test_a_space_naming_both_is_unknown_rather_than_a_guess():
@@ -17,10 +22,16 @@ def test_other_and_unknown_are_not_the_same_claim():
 
 
 def test_negation_decides_medication_status():
-    for text in ("not medicated", "no longer receiving medication", "unmedicated",
-                 "free of psychotropic medication"):
+    for text in (
+        "not medicated",
+        "no longer receiving medication",
+        "unmedicated",
+        "free of psychotropic medication",
+    ):
         assert medication_status.normalize(text).value == "FREE", text
-    assert medication_status.normalize("on stable antipsychotic medication").value == "MEDICATED"
+    assert (
+        medication_status.normalize("on stable antipsychotic medication").value == "MEDICATED"
+    )
 
 
 def test_a_negation_in_a_later_clause_does_not_invert_the_cohort():
@@ -50,8 +61,9 @@ def test_a_missing_parser_is_an_error_not_an_unreported_field(monkeypatch):
     from pondie.normalization import _negation
 
     _negation._parser.cache_clear()
-    monkeypatch.setattr(_deps.importlib, "import_module",
-                        lambda name: (_ for _ in ()).throw(ImportError(name)))
+    monkeypatch.setattr(
+        _deps.importlib, "import_module", lambda name: (_ for _ in ()).throw(ImportError(name))
+    )
     with pytest.raises(_deps.MissingDependency, match="spacy"):
         medication_status.normalize("patients were medicated")
     _negation._parser.cache_clear()

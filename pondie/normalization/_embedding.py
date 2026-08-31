@@ -13,6 +13,7 @@ instead of guessing a model.
 Encodings are cached on disk keyed by model and content, because the corpus side of a
 retrieval is the same on every run and re-encoding 32k MONDO labels is minutes each time.
 """
+
 from __future__ import annotations
 
 import functools
@@ -27,20 +28,23 @@ CACHE = Path("data/eval/embedding-cache")
 @functools.lru_cache(maxsize=4)
 def _model(name: str):
     from sentence_transformers import SentenceTransformer
+
     return SentenceTransformer(name, device="cpu")
 
 
 def encode(texts: list[str], model: str, cache: bool = True):
     """L2-normalized embeddings, from disk when the same texts were encoded before."""
     import numpy as np
+
     if not texts:
         return np.zeros((0, 1), dtype="float32")
     key = hashlib.sha256(("\x00".join([model, *texts])).encode()).hexdigest()[:24]
     path = CACHE / f"{model.split('/')[-1]}-{key}.npy"
     if cache and path.is_file():
         return np.load(path)
-    out = _model(model).encode(texts, normalize_embeddings=True, batch_size=128,
-                               show_progress_bar=False)
+    out = _model(model).encode(
+        texts, normalize_embeddings=True, batch_size=128, show_progress_bar=False
+    )
     if cache:
         CACHE.mkdir(parents=True, exist_ok=True)
         np.save(path, out)

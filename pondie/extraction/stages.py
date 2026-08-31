@@ -12,6 +12,7 @@ the term it points at.
 `Tables` takes no model at all. `table_number`, `caption` and `footer` are literal strings in
 the parse manifest, so putting them through a model can only introduce error.
 """
+
 from __future__ import annotations
 
 import json
@@ -19,9 +20,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-from . import passes  # noqa: F401 -- puts the extraction passes on the path
-from .models import (Cost, ModelCall, Paper, Settings, StageName, StageOutcome)
-from .llm import Caller
+from pondie.extraction.llm import Caller
+from pondie.extraction.models import Cost, ModelCall, Paper, Settings, StageName, StageOutcome
 
 
 @runtime_checkable
@@ -46,8 +46,9 @@ class _Base:
         return self.produces(paper, settings).is_file() and not settings.redo
 
     def _skip(self, paper: Paper, reason: str = "already produced") -> StageOutcome:
-        return StageOutcome(stage=self.name, study_id=paper.study_id, skipped=True,
-                            reason=reason)
+        return StageOutcome(
+            stage=self.name, study_id=paper.study_id, skipped=True, reason=reason
+        )
 
     def _write(self, paper: Paper, settings: Settings, payload: dict) -> Path:
         out = self.produces(paper, settings)
@@ -65,12 +66,23 @@ class Tables(_Base):
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
-        table_map = json.loads(paper.table_map.read_text()) if paper.table_map.is_file() else {}
-        tables = [{"local_id": local, "table_number": meta.get("table_number"),
-                   "caption": meta.get("caption"), "footer": meta.get("footer")}
-                  for local, meta in sorted(table_map.items())]
-        return StageOutcome(stage=self.name, study_id=paper.study_id,
-                            produced=(self._write(paper, settings, {"tables": tables}),))
+        table_map = (
+            json.loads(paper.table_map.read_text()) if paper.table_map.is_file() else {}
+        )
+        tables = [
+            {
+                "local_id": local,
+                "table_number": meta.get("table_number"),
+                "caption": meta.get("caption"),
+                "footer": meta.get("footer"),
+            }
+            for local, meta in sorted(table_map.items())
+        ]
+        return StageOutcome(
+            stage=self.name,
+            study_id=paper.study_id,
+            produced=(self._write(paper, settings, {"tables": tables}),),
+        )
 
 
 @dataclass(frozen=True)
@@ -85,18 +97,32 @@ class _ModelPass(_Base):
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
-        from extract_record import build_prompt
+        from pondie.extraction.passes.extract_record import build_prompt
 
         prompt, schema_name = build_prompt(
             paper.text.read_text(encoding="utf-8", errors="replace"),
-            self.mode, settings.retrieve_evidence, self.context(paper, settings))
-        reply = caller(ModelCall(model=settings.model, prompt=prompt,
-                                 schema_name=schema_name,
-                                 max_output_tokens=settings.max_output_tokens,
-                                 effort=settings.effort, attempts=settings.attempts),
-                       paper=paper.study_id, stage=self.name.value)
-        return StageOutcome(stage=self.name, study_id=paper.study_id, cost=reply.cost,
-                            produced=(self._write(paper, settings, reply.payload),))
+            self.mode,
+            settings.retrieve_evidence,
+            self.context(paper, settings),
+        )
+        reply = caller(
+            ModelCall(
+                model=settings.model,
+                prompt=prompt,
+                schema_name=schema_name,
+                max_output_tokens=settings.max_output_tokens,
+                effort=settings.effort,
+                attempts=settings.attempts,
+            ),
+            paper=paper.study_id,
+            stage=self.name.value,
+        )
+        return StageOutcome(
+            stage=self.name,
+            study_id=paper.study_id,
+            cost=reply.cost,
+            produced=(self._write(paper, settings, reply.payload),),
+        )
 
 
 @dataclass(frozen=True)
@@ -143,15 +169,16 @@ class Evidence(_Base):
             return self._skip(paper, "evidence disabled")
         if self.done(paper, settings):
             return self._skip(paper)
-        from add_evidence import SYSTEM, describe, iter_fields
+        from pondie.extraction.passes.add_evidence import SYSTEM, describe, iter_fields
 
-        fields = [(path, field)
-                  for stage in (StageName.demands, StageName.satisfy)
-                  for payload in [settings.payloads / paper.study_id / stage.value
-                                  / "payload.json"]
-                  if payload.is_file()
-                  for path, field in iter_fields(json.loads(payload.read_text()))
-                  if field.get("extraction_status") == "extracted"]
+        fields = [
+            (path, field)
+            for stage in (StageName.demands, StageName.satisfy)
+            for payload in [settings.payloads / paper.study_id / stage.value / "payload.json"]
+            if payload.is_file()
+            for path, field in iter_fields(json.loads(payload.read_text()))
+            if field.get("extraction_status") == "extracted"
+        ]
         if not fields:
             return self._skip(paper, "no extracted values to warrant")
 
@@ -159,20 +186,29 @@ class Evidence(_Base):
         quotes: dict[str, str] = {}
         cost = Cost()
         for start in range(0, len(fields), self.batch):
-            chunk = fields[start:start + self.batch]
+            chunk = fields[start : start + self.batch]
             listing = "\n".join(describe(path, field) for path, field in chunk)
-            reply = caller(ModelCall(
-                model=settings.model,
-                prompt=f"{SYSTEM}\n\n# Paper\n\n{text}\n\n"
-                       f"# Facts needing a supporting quote\n\n{listing}\n\n"
-                       "Return the JSON object mapping each id to its quote now.",
-                max_output_tokens=settings.max_output_tokens,
-                effort=settings.effort, attempts=settings.attempts),
-                paper=paper.study_id, stage=self.name.value)
+            reply = caller(
+                ModelCall(
+                    model=settings.model,
+                    prompt=f"{SYSTEM}\n\n# Paper\n\n{text}\n\n"
+                    f"# Facts needing a supporting quote\n\n{listing}\n\n"
+                    "Return the JSON object mapping each id to its quote now.",
+                    max_output_tokens=settings.max_output_tokens,
+                    effort=settings.effort,
+                    attempts=settings.attempts,
+                ),
+                paper=paper.study_id,
+                stage=self.name.value,
+            )
             quotes.update({k: v for k, v in reply.payload.items() if isinstance(v, str)})
             cost = cost + reply.cost
-        return StageOutcome(stage=self.name, study_id=paper.study_id, cost=cost,
-                            produced=(self._write(paper, settings, {"quotes": quotes}),))
+        return StageOutcome(
+            stage=self.name,
+            study_id=paper.study_id,
+            cost=cost,
+            produced=(self._write(paper, settings, {"quotes": quotes}),),
+        )
 
 
 @dataclass(frozen=True)
@@ -187,23 +223,28 @@ class Build(_Base):
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
-        from build_record import merge_payloads
-        from pipeline.repairs import Context, apply_all
+        from pondie.extraction.passes.build_record import merge_payloads
+        from pondie.extraction.passes.pipeline.repairs import Context, apply_all
 
         body = merge_payloads(settings.payloads / paper.study_id)
         stage1 = json.loads(paper.parse.read_text()) if paper.parse.is_file() else {}
-        table_map = json.loads(paper.table_map.read_text()) if paper.table_map.is_file() else {}
+        table_map = (
+            json.loads(paper.table_map.read_text()) if paper.table_map.is_file() else {}
+        )
         log = apply_all(body, Context(classes=_classes(), stage1=stage1, table_map=table_map))
         out = self.produces(paper, settings)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps({"study": body}, indent=1, ensure_ascii=False) + "\n")
-        return StageOutcome(stage=self.name, study_id=paper.study_id, produced=(out,),
-                            reason="" if log else "")
+        return StageOutcome(
+            stage=self.name, study_id=paper.study_id, produced=(out,), reason="" if log else ""
+        )
 
 
 def _classes():
     import schema_utils
-    from extract_record import EXTRACTION_SCHEMA
+
+    from pondie.extraction.passes.extract_record import EXTRACTION_SCHEMA
+
     return schema_utils.load_imported_classes(EXTRACTION_SCHEMA)
 
 

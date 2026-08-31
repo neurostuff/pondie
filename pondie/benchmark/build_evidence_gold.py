@@ -95,15 +95,16 @@ def locate(text: str, quote: str, near: int | None = None) -> tuple[int, int] | 
         if len(words) < size:
             continue
         for start in range(0, len(words) - size + 1):
-            probe = r"\s+".join(re.escape(w) for w in words[start:start + size])
+            probe = r"\s+".join(re.escape(w) for w in words[start : start + size])
             found = [m.start() for m in re.finditer(probe, text)]
             if not found:
                 continue
             at = min(found, key=lambda s: abs(s - near)) if near is not None else found[0]
             begin = max(0, at - sum(len(w) + 1 for w in words[:start]))
             window = (begin, min(len(text), begin + len(quote) + 40))
-            ratio = SequenceMatcher(None, _norm(quote),
-                                    _norm(text[window[0]:window[1]])).ratio()
+            ratio = SequenceMatcher(
+                None, _norm(quote), _norm(text[window[0] : window[1]])
+            ).ratio()
             if ratio >= 0.75:
                 return window
     return None
@@ -149,10 +150,17 @@ def build(decoded: list[dict], corrections_dir: Path) -> dict:
     realigned = [0]
 
     def slot(paper: str, path: str) -> dict:
-        return gold.setdefault(f"{paper}|{path}",
-                               {"paper": paper, "path": path,
-                                "positive": [], "negative": [], "kept": [],
-                                "retracted": []})
+        return gold.setdefault(
+            f"{paper}|{path}",
+            {
+                "paper": paper,
+                "path": path,
+                "positive": [],
+                "negative": [],
+                "kept": [],
+                "retracted": [],
+            },
+        )
 
     for entry in decoded:
         by_path = field_path(entry["review_key"])
@@ -164,10 +172,12 @@ def build(decoded: list[dict], corrections_dir: Path) -> dict:
         if text is None:
             continue
         evidence = entry.get("evidence") or {}
-        buckets = [("positive", evidence.get("added", [])),
-                   ("positive", [a["to"] for a in evidence.get("adjusted", [])]),
-                   ("negative", evidence.get("removed", [])),
-                   ("kept", evidence.get("kept", []))]
+        buckets = [
+            ("positive", evidence.get("added", [])),
+            ("positive", [a["to"] for a in evidence.get("adjusted", [])]),
+            ("negative", evidence.get("removed", [])),
+            ("kept", evidence.get("kept", [])),
+        ]
         for bucket, spans in buckets:
             for span in spans:
                 start, end, source = span.get("start"), span.get("end"), "review"
@@ -178,8 +188,12 @@ def build(decoded: list[dict], corrections_dir: Path) -> dict:
                         continue
                     start, end, source = at[0], at[1], "review-realigned"
                     realigned[0] += 1
-                record = {"start": start, "end": end,
-                          "text": text[start:end], "source": source}
+                record = {
+                    "start": start,
+                    "end": end,
+                    "text": text[start:end],
+                    "source": source,
+                }
                 if by_path is not None:
                     slot(paper, by_path[1])[bucket].append(dict(record))
                     continue
@@ -218,8 +232,13 @@ def build(decoded: list[dict], corrections_dir: Path) -> dict:
                 dropped += 1
                 continue
             slot(paper, path)["positive"].append(
-                {"start": at[0], "end": at[1], "text": text[at[0]:at[1]],
-                 "source": "correction"})
+                {
+                    "start": at[0],
+                    "end": at[1],
+                    "text": text[at[0] : at[1]],
+                    "source": "correction",
+                }
+            )
             quotes += 1
 
     # A deletion only counts against a locator when the reviewer put something else in
@@ -232,8 +251,10 @@ def build(decoded: list[dict], corrections_dir: Path) -> dict:
     for slot_data in gold.values():
         kept_negative = []
         for span in slot_data["negative"]:
-            replaced = any(not (other["start"] < span["end"] and span["start"] < other["end"])
-                           for other in slot_data["positive"])
+            replaced = any(
+                not (other["start"] < span["end"] and span["start"] < other["end"])
+                for other in slot_data["positive"]
+            )
             if replaced:
                 kept_negative.append(span)
             else:
@@ -241,8 +262,13 @@ def build(decoded: list[dict], corrections_dir: Path) -> dict:
                 retracted += 1
         slot_data["negative"] = kept_negative
 
-    return {"gold": gold, "dropped": dropped, "quotes": quotes,
-            "realigned": realigned[0], "retracted": retracted}
+    return {
+        "gold": gold,
+        "dropped": dropped,
+        "quotes": quotes,
+        "realigned": realigned[0],
+        "retracted": retracted,
+    }
 
 
 def main() -> int:
@@ -262,14 +288,19 @@ def main() -> int:
     scorable = sum(1 for g in gold.values() if g["positive"] or g["negative"])
     papers = len({g["paper"] for g in gold.values()})
 
-    args.out.write_text(json.dumps(gold, indent=1, ensure_ascii=False) + "\n",
-                        encoding="utf-8")
+    args.out.write_text(
+        json.dumps(gold, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     print(f"{len(gold)} field slots over {papers} papers, {scorable} scorable")
-    print(f"  {positive} positive ({built['quotes']} from correction quotes), "
-          f"{negative} negative, {kept} kept and {built['retracted']} retracted "
-          f"(neither scored)")
-    print(f"  {built['realigned']} span(s) re-located by text after their offsets "
-          f"failed to resolve")
+    print(
+        f"  {positive} positive ({built['quotes']} from correction quotes), "
+        f"{negative} negative, {kept} kept and {built['retracted']} retracted "
+        f"(neither scored)"
+    )
+    print(
+        f"  {built['realigned']} span(s) re-located by text after their offsets "
+        f"failed to resolve"
+    )
     print(f"  {built['dropped']} span(s) dropped: their text is not in the paper at all")
     print(f"wrote {args.out}")
     return 0

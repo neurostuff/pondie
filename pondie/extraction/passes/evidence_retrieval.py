@@ -34,16 +34,22 @@ from dataclasses import dataclass
 _SECTION_PATTERNS: list[tuple[str, str]] = [
     (r"materials?\s+and\s+methods?|methods?\s+and\s+materials?", "methods"),
     (r"^methods?$|^methodology$|^experimental\s+", "methods"),
-    (r"participants?|subjects?|procedures?|acquisition|data\s+analysis|"
-     r"statistical\s+analys|image\s+processing|preprocessing|pre-processing|"
-     r"pharmacotherapy|stimulation|paradigm|task|apparatus|measures?|instruments?", "methods"),
+    (
+        r"participants?|subjects?|procedures?|acquisition|data\s+analysis|"
+        r"statistical\s+analys|image\s+processing|preprocessing|pre-processing|"
+        r"pharmacotherapy|stimulation|paradigm|task|apparatus|measures?|instruments?",
+        "methods",
+    ),
     (r"^results?$|^findings?$|^imaging\s+results", "results"),
     (r"^discussion|^conclusions?|^limitations?|^general\s+discussion", "discussion"),
     (r"^abstract|^summary|^objectives?|^background\s+and\s+aims", "abstract"),
     (r"^introduction|^background$", "intro"),
     (r"^tables?\b|^figures?\b", "tables"),
-    (r"acknowledg|funding|conflict|competing\s+interest|references|"
-     r"supplementary|author\s+contribution|ethics|data\s+availability", "back"),
+    (
+        r"acknowledg|funding|conflict|competing\s+interest|references|"
+        r"supplementary|author\s+contribution|ethics|data\s+availability",
+        "back",
+    ),
 ]
 
 _HEADING = re.compile(r"^(#{1,4})\s*(.+?)\s*$", re.MULTILINE)
@@ -221,6 +227,7 @@ def alias_terms(field_path: str) -> tuple[str, ...]:
 
 # --- value surface forms ----------------------------------------------------
 
+
 def _fmt(number: float) -> str:
     """`2.0` -> `2`, `0.015` -> `0.015`. Papers do not print trailing zeros."""
     text = f"{number:.6f}".rstrip("0").rstrip(".")
@@ -347,9 +354,12 @@ def entity_hits(units: list[str], entity: str) -> list[int]:
     for length in range(2, len(words) + 1):
         needles.append("".join(w[0] for w in words[:length]).lower())
     folded = [normalize(unit) for unit in units]
-    hits = {index for index, unit in enumerate(folded)
-            for needle in needles
-            if re.search(rf"(?<![a-z]){re.escape(needle)}(?![a-z])", unit)}
+    hits = {
+        index
+        for index, unit in enumerate(folded)
+        for needle in needles
+        if re.search(rf"(?<![a-z]){re.escape(needle)}(?![a-z])", unit)
+    }
     # An entity named throughout the paper is not a locator. The floor keeps the guard
     # from firing on a handful of units, where a third of the text is one sentence.
     return sorted(hits) if len(hits) <= max(3, len(units) // 3) else []
@@ -376,6 +386,7 @@ def build_query(field_path: str, value: str) -> str:
 
 
 # --- units ------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class Unit:
@@ -421,17 +432,26 @@ def _table_units(block: list[tuple[int, str]]) -> list[Unit]:
     if not header:
         return []
     units = []
-    for offset, line in block[start_at + 1:]:
+    for offset, line in block[start_at + 1 :]:
         if _SEPARATOR.match(line):
             continue
         row = _cells(line)
         if not row:
             continue
-        pairs = [f"{column} is {cell}" for column, cell in zip(header[1:], row[1:])
-                 if cell and column]
+        pairs = [
+            f"{column} is {cell}"
+            for column, cell in zip(header[1:], row[1:])
+            if cell and column
+        ]
         if pairs:
-            units.append(Unit(offset, offset + len(line), line,
-                              f"For {row[0] or 'row'}: " + "; ".join(pairs) + "."))
+            units.append(
+                Unit(
+                    offset,
+                    offset + len(line),
+                    line,
+                    f"For {row[0] or 'row'}: " + "; ".join(pairs) + ".",
+                )
+            )
     return units
 
 
@@ -441,7 +461,7 @@ def sentence_units(text: str) -> list[Unit]:
     units: list[Unit] = []
     cursor = 0
     for match in re.finditer(r"(?<=[.;!?])\s+|\n\n+", text):
-        chunk = text[cursor:match.start()]
+        chunk = text[cursor : match.start()]
         if chunk.strip() and len(_ROW.findall(chunk)) < 3:
             units.append(Unit(cursor, cursor + len(chunk), chunk, chunk))
         cursor = match.end()
@@ -459,8 +479,11 @@ def sentence_units(text: str) -> list[Unit]:
     units += _table_units(block)
 
     spans = sectionize(text)
-    return [Unit(u.start, u.end, u.text, u.rendered, section_of(spans, u.start))
-            for u in units if MIN_UNIT < len(u.rendered) < MAX_UNIT]
+    return [
+        Unit(u.start, u.end, u.text, u.rendered, section_of(spans, u.start))
+        for u in units
+        if MIN_UNIT < len(u.rendered) < MAX_UNIT
+    ]
 
 
 # --- scoring ----------------------------------------------------------------
@@ -492,28 +515,32 @@ def load_reranker(model: str = RERANKER, device: str = "cpu"):
 
     try:
         import torch  # noqa: PLC0415
-        from transformers import (AutoModelForSequenceClassification,  # noqa: PLC0415
-                                  AutoTokenizer)
+        from transformers import AutoModelForSequenceClassification  # noqa: PLC0415
+        from transformers import AutoTokenizer
     except ImportError:
         # Said aloud for the same reason the OOM path below is: a run that quietly used one
         # locator when it was configured for two scores differently, and nothing in the
         # output distinguishes the two runs.
-        print("  reranker: not installed (pip install 'pondie[reranker]'); quote pass only",
-              file=sys.stderr)
+        print(
+            "  reranker: not installed (pip install 'pondie[reranker]'); quote pass only",
+            file=sys.stderr,
+        )
         return None
 
     for attempt in (device, "cpu") if device != "cpu" else ("cpu",):
         try:
             tokenizer = AutoTokenizer.from_pretrained(model)
-            scorer = (AutoModelForSequenceClassification
-                      .from_pretrained(model).to(attempt).eval())
+            scorer = (
+                AutoModelForSequenceClassification.from_pretrained(model).to(attempt).eval()
+            )
         except Exception as error:  # noqa: BLE001 -- any failure means "run without it"
-            print(f"  reranker on {attempt}: unavailable ({type(error).__name__}); "
-                  f"{'falling back to cpu' if attempt != 'cpu' else 'quote pass only'}",
-                  file=sys.stderr)
+            print(
+                f"  reranker on {attempt}: unavailable ({type(error).__name__}); "
+                f"{'falling back to cpu' if attempt != 'cpu' else 'quote pass only'}",
+                file=sys.stderr,
+            )
             continue
-        return {"tokenizer": tokenizer, "model": scorer, "device": attempt,
-                "torch": torch}
+        return {"tokenizer": tokenizer, "model": scorer, "device": attempt, "torch": torch}
     return None
 
 
@@ -521,17 +548,24 @@ def score_units(reranker, query: str, units: list[Unit], batch: int = 64) -> lis
     torch = reranker["torch"]
     scores: list[float] = []
     for start in range(0, len(units), batch):
-        chunk = [u.rendered for u in units[start:start + batch]]
-        encoded = reranker["tokenizer"]([query] * len(chunk), chunk, return_tensors="pt",
-                                        truncation=True, max_length=256, padding=True)
+        chunk = [u.rendered for u in units[start : start + batch]]
+        encoded = reranker["tokenizer"](
+            [query] * len(chunk),
+            chunk,
+            return_tensors="pt",
+            truncation=True,
+            max_length=256,
+            padding=True,
+        )
         encoded = {k: v.to(reranker["device"]) for k, v in encoded.items()}
         with torch.no_grad():
             scores += reranker["model"](**encoded).logits[:, 0].tolist()
     return scores
 
 
-def locate(reranker, units: list[Unit], field_path: str, value: str,
-           entity: str = "") -> Unit | None:
+def locate(
+    reranker, units: list[Unit], field_path: str, value: str, entity: str = ""
+) -> Unit | None:
     """The one unit that warrants this value, or None when nothing clears the gate."""
 
     if reranker is None or not units or not value:
@@ -541,10 +575,13 @@ def locate(reranker, units: list[Unit], field_path: str, value: str,
     named = set(entity_hits([u.rendered for u in units], entity)) if entity else set()
 
     base = score_units(reranker, build_query(field_path, value), units)
-    total = [score + section_prior(field_path, unit.section)
-             + (LITERAL_BONUS if index in literal else 0.0)
-             + (ENTITY_BONUS if index in named else 0.0)
-             for index, (score, unit) in enumerate(zip(base, units))]
+    total = [
+        score
+        + section_prior(field_path, unit.section)
+        + (LITERAL_BONUS if index in literal else 0.0)
+        + (ENTITY_BONUS if index in named else 0.0)
+        for index, (score, unit) in enumerate(zip(base, units))
+    ]
 
     order = sorted(range(len(total)), key=lambda i: -total[i])
     best = order[0]

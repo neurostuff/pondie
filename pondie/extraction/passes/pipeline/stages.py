@@ -17,13 +17,21 @@ from __future__ import annotations
 
 import re
 import subprocess
-import zlib
 import sys
 import time
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 
-from .kinds import DONE, FAILED, SKIPPED, Cost, Paper, StageOutcome, TableParse
+from pondie.extraction.passes.pipeline.kinds import (
+    DONE,
+    FAILED,
+    SKIPPED,
+    Cost,
+    Paper,
+    StageOutcome,
+    TableParse,
+)
 
 REVIEW = Path(__file__).resolve().parent.parent
 
@@ -87,13 +95,18 @@ class Stage:
 
     def run(self, paper: Paper, settings: Settings) -> StageOutcome:
         if not settings.redo and self.is_done(paper, settings):
-            return StageOutcome(self.name, paper.study_id, SKIPPED,
-                                notes=[f"{self.produces(paper, settings)} exists"])
+            return StageOutcome(
+                self.name,
+                paper.study_id,
+                SKIPPED,
+                notes=[f"{self.produces(paper, settings)} exists"],
+            )
         try:
             return self.perform(paper, settings)
         except Exception as error:  # noqa: BLE001 -- one paper must not end the run
-            return StageOutcome(self.name, paper.study_id, FAILED,
-                                error=f"{type(error).__name__}: {error}")
+            return StageOutcome(
+                self.name, paper.study_id, FAILED, error=f"{type(error).__name__}: {error}"
+            )
 
 
 class Subprocess(Stage):
@@ -112,10 +125,14 @@ class Subprocess(Stage):
         cost = self.price(output, time.time() - started)
         if finished.returncode != 0:
             tail = "\n".join(output.strip().splitlines()[-4:])
-            return StageOutcome(self.name, paper.study_id, FAILED, cost,
-                                error=f"exit {finished.returncode}\n{tail}")
-        return StageOutcome(self.name, paper.study_id, DONE, cost,
-                            notes=self.notes(output))
+            return StageOutcome(
+                self.name,
+                paper.study_id,
+                FAILED,
+                cost,
+                error=f"exit {finished.returncode}\n{tail}",
+            )
+        return StageOutcome(self.name, paper.study_id, DONE, cost, notes=self.notes(output))
 
     def price(self, output: str, seconds: float) -> Cost:
         total = Cost(seconds=seconds)
@@ -154,22 +171,20 @@ class SignSplit(Stage):
         if not paper.stage1_path.is_file():
             return False
         import copy  # noqa: PLC0415
-        import sys as _sys  # noqa: PLC0415
 
-        _sys.path.insert(0, str(REVIEW))
-        from parse_tables import adopt_withholding  # noqa: PLC0415
+        from pondie.extraction.passes.parse_tables import adopt_withholding  # noqa: PLC0415
 
         parse = TableParse.load(paper.stage1_path)
         if not parse.sign_split_applied:
             return False
         _analyses, converted = adopt_withholding(
-            copy.deepcopy(parse.document.get("analyses") or []))
+            copy.deepcopy(parse.document.get("analyses") or [])
+        )
         return not converted
 
     def perform(self, paper: Paper, settings: Settings) -> StageOutcome:
-        sys.path.insert(0, str(REVIEW))
-        from parse_tables import (adopt_withholding,  # noqa: PLC0415
-                                  split_opposite_signs)
+        from pondie.extraction.passes.parse_tables import adopt_withholding  # noqa: PLC0415
+        from pondie.extraction.passes.parse_tables import split_opposite_signs
 
         parse = TableParse.load(paper.stage1_path)
         before = parse.document.get("analyses") or []
@@ -181,9 +196,17 @@ class SignSplit(Stage):
         parse.replace_analyses(after)
         parse.save()
         withheld = len([a for a in after if a.get("withhold")])
-        return StageOutcome(self.name, paper.study_id, DONE, Cost(),
-                            notes=notes + [f"{len(before)} -> {len(after)} analyses, "
-                                           f"{withheld} withheld from the model"])
+        return StageOutcome(
+            self.name,
+            paper.study_id,
+            DONE,
+            Cost(),
+            notes=notes
+            + [
+                f"{len(before)} -> {len(after)} analyses, "
+                f"{withheld} withheld from the model"
+            ],
+        )
 
 
 class Tables(Stage):
@@ -215,12 +238,20 @@ class Tables(Stage):
 
         manifest = paper.text_path.parent / "tables.jsonl"
         if not manifest.is_file():
-            return StageOutcome(self.name, paper.study_id, DONE, Cost(),
-                                notes=[f"no tables.jsonl beside {paper.flavour} text; "
-                                       f"no Table records to copy"])
+            return StageOutcome(
+                self.name,
+                paper.study_id,
+                DONE,
+                Cost(),
+                notes=[
+                    f"no tables.jsonl beside {paper.flavour} text; "
+                    f"no Table records to copy"
+                ],
+            )
         tables, id_map = [], {}
-        for index, line in enumerate(manifest.read_text(encoding="utf-8").splitlines(),
-                                     start=1):
+        for index, line in enumerate(
+            manifest.read_text(encoding="utf-8").splitlines(), start=1
+        ):
             if not line.strip():
                 continue
             source = json.loads(line)
@@ -231,30 +262,49 @@ class Tables(Stage):
             id_map[str(source.get("table_id") or local_id)] = local_id
             metadata = source.get("metadata") or {}
             label = metadata.get("table_label") or (
-                f"Table {source['table_number']}" if source.get("table_number") else None)
+                f"Table {source['table_number']}" if source.get("table_number") else None
+            )
 
             def wrap(text):
                 if text in (None, ""):
-                    return {"extraction_status": "not_reported",
-                            "evidence": {"status": "not_applicable"}}
-                return {"extraction_status": "extracted", "value": text,
-                        "value_source": "reported",
-                        "evidence": {"status": "not_applicable"}}
+                    return {
+                        "extraction_status": "not_reported",
+                        "evidence": {"status": "not_applicable"},
+                    }
+                return {
+                    "extraction_status": "extracted",
+                    "value": text,
+                    "value_source": "reported",
+                    "evidence": {"status": "not_applicable"},
+                }
 
-            tables.append({"local_id": local_id, "table_number": wrap(label),
-                           "caption": wrap(source.get("caption")),
-                           "footer": wrap(source.get("footer"))})
+            tables.append(
+                {
+                    "local_id": local_id,
+                    "table_number": wrap(label),
+                    "caption": wrap(source.get("caption")),
+                    "footer": wrap(source.get("footer")),
+                }
+            )
 
         target = self.produces(paper, settings)
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(json.dumps({"tables": tables}, indent=1, ensure_ascii=False)
-                          + "\n", encoding="utf-8")
+        target.write_text(
+            json.dumps({"tables": tables}, indent=1, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
         paper.table_map_path.parent.mkdir(parents=True, exist_ok=True)
-        paper.table_map_path.write_text(json.dumps(id_map, indent=1) + "\n",
-                                        encoding="utf-8")
-        return StageOutcome(self.name, paper.study_id, DONE, Cost(),
-                            notes=[f"{len(tables)} Table record(s) copied from "
-                                   f"{paper.flavour}/tables.jsonl (deterministic)"])
+        paper.table_map_path.write_text(json.dumps(id_map, indent=1) + "\n", encoding="utf-8")
+        return StageOutcome(
+            self.name,
+            paper.study_id,
+            DONE,
+            Cost(),
+            notes=[
+                f"{len(tables)} Table record(s) copied from "
+                f"{paper.flavour}/tables.jsonl (deterministic)"
+            ],
+        )
 
 
 class Demands(Subprocess):
@@ -268,12 +318,30 @@ class Demands(Subprocess):
         return settings.payload_dir(paper) / "demands" / "requirements.json"
 
     def command(self, paper: Paper, settings: Settings) -> list[str]:
-        return ["--mode", "demands", "--paper", paper.study_id,
-                "--text", paper.text_path, "--out-dir", settings.payloads,
-                "--stage1", paper.stage1_path, "--tables", paper.table_map_path,
-                "--key-file", settings.key_file, "--model", settings.model,
-                "--effort", settings.effort, "--max-attempts", settings.max_attempts,
-                "--no-evidence", *(["--zero-foci-rule"] if settings.zero_foci_rule else [])]
+        return [
+            "--mode",
+            "demands",
+            "--paper",
+            paper.study_id,
+            "--text",
+            paper.text_path,
+            "--out-dir",
+            settings.payloads,
+            "--stage1",
+            paper.stage1_path,
+            "--tables",
+            paper.table_map_path,
+            "--key-file",
+            settings.key_file,
+            "--model",
+            settings.model,
+            "--effort",
+            settings.effort,
+            "--max-attempts",
+            settings.max_attempts,
+            "--no-evidence",
+            *(["--zero-foci-rule"] if settings.zero_foci_rule else []),
+        ]
 
 
 class Satisfy(Subprocess):
@@ -287,12 +355,27 @@ class Satisfy(Subprocess):
         return settings.payload_dir(paper) / "entities.json"
 
     def command(self, paper: Paper, settings: Settings) -> list[str]:
-        return ["--mode", "satisfy", "--paper", paper.study_id,
-                "--text", paper.text_path, "--out-dir", settings.payloads,
-                "--key-file", settings.key_file, "--model", settings.model,
-                "--effort", settings.effort, "--max-attempts", settings.max_attempts,
-                "--no-evidence", "--requirements",
-                settings.payload_dir(paper) / "demands" / "requirements.json"]
+        return [
+            "--mode",
+            "satisfy",
+            "--paper",
+            paper.study_id,
+            "--text",
+            paper.text_path,
+            "--out-dir",
+            settings.payloads,
+            "--key-file",
+            settings.key_file,
+            "--model",
+            settings.model,
+            "--effort",
+            settings.effort,
+            "--max-attempts",
+            settings.max_attempts,
+            "--no-evidence",
+            "--requirements",
+            settings.payload_dir(paper) / "demands" / "requirements.json",
+        ]
 
 
 class Evidence(Subprocess):
@@ -336,12 +419,23 @@ class Evidence(Subprocess):
         return False
 
     def command(self, paper: Paper, settings: Settings) -> list[str]:
-        return ["--paper", paper.study_id, "--text", paper.text_path,
-                "--payloads", settings.payload_dir(paper),
-                "--key-file", settings.key_file, "--model", settings.model,
-                "--effort", settings.effort,
-                "--reranker-device", settings.device_for(paper),
-                *([] if settings.union else ["--no-union"])]
+        return [
+            "--paper",
+            paper.study_id,
+            "--text",
+            paper.text_path,
+            "--payloads",
+            settings.payload_dir(paper),
+            "--key-file",
+            settings.key_file,
+            "--model",
+            settings.model,
+            "--effort",
+            settings.effort,
+            "--reranker-device",
+            settings.device_for(paper),
+            *([] if settings.union else ["--no-union"]),
+        ]
 
     def price(self, output: str, seconds: float) -> Cost:
         # The evidence pass prints one summary line rather than one per call.
@@ -369,21 +463,26 @@ class Build(Stage):
         return settings.record_path(paper)
 
     def perform(self, paper: Paper, settings: Settings) -> StageOutcome:
-        sys.path.insert(0, str(REVIEW))
         import json  # noqa: PLC0415
         from datetime import date  # noqa: PLC0415
 
-        import build_record  # noqa: PLC0415
+        from pondie.extraction.passes import build_record  # noqa: PLC0415
 
         started = time.time()
         record, report = build_record.build(
-            paper.study_id, paper.text_path, settings.payload_dir(paper),
-            extractor_model=settings.model, extractor_version="pipeline-1",
+            paper.study_id,
+            paper.text_path,
+            settings.payload_dir(paper),
+            extractor_model=settings.model,
+            extractor_version="pipeline-1",
             extraction_date=date.today().isoformat(),
-            stage1=paper.stage1_path, table_map=paper.table_map_path)
+            stage1=paper.stage1_path,
+            table_map=paper.table_map_path,
+        )
         settings.records.mkdir(parents=True, exist_ok=True)
         settings.record_path(paper).write_text(
-            json.dumps(record, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+            json.dumps(record, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
 
         notes = [f"repairs: {', '.join(report.repair_log.fired()) or 'none fired'}"]
         if report.failures:
@@ -394,11 +493,18 @@ class Build(Stage):
         # dangling reference is a field for a reviewer rather than a paper to discard --
         # treating it as a failure is what made five of sixteen papers read as lost when
         # all sixteen had been built and scored.
-        return StageOutcome(self.name, paper.study_id, DONE,
-                            Cost(seconds=time.time() - started), notes=notes)
+        return StageOutcome(
+            self.name, paper.study_id, DONE, Cost(seconds=time.time() - started), notes=notes
+        )
 
 
 #: The baseline, in order. Reading this list is meant to be the whole explanation of what
 #: the pipeline does.
-BASELINE: tuple[Stage, ...] = (Tables(), SignSplit(), Demands(), Satisfy(), Evidence(),
-                               Build())
+BASELINE: tuple[Stage, ...] = (
+    Tables(),
+    SignSplit(),
+    Demands(),
+    Satisfy(),
+    Evidence(),
+    Build(),
+)

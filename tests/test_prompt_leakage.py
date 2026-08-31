@@ -18,22 +18,18 @@ from __future__ import annotations
 
 import json
 import re
-import sys
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 GOLD = ROOT / "benchmarks" / "gold"
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
-
-import extract_record as er  # noqa: E402
-import preprocess  # noqa: E402
 import schema_utils  # noqa: E402
 
 from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
 from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
+from pondie.extraction.passes import extract_record as er  # noqa: E402
+from pondie.extraction.passes import preprocess  # noqa: E402
 
 #: Values short or generic enough that a match says nothing. A schema vocabulary term the
 #: paper happens to use is the prompt doing its job -- `diagnostic interview` is an
@@ -73,7 +69,8 @@ def static_prompt_sources() -> dict[str, str]:
     """Everything the pipeline puts in a prompt that does not vary with the paper."""
 
     recheck = (ROOT / "pondie" / "extraction" / "passes" / "recheck_cells.py").read_text(
-        encoding="utf-8")
+        encoding="utf-8"
+    )
     sources = {
         "extraction-readme.md": er.README.read_text(encoding="utf-8"),
         "representing-models.md section 5": er.worked_models(),
@@ -115,7 +112,8 @@ def test_no_gold_value_appears_in_the_static_prompt(gold_path):
             leaks[name] = hit
 
     assert not leaks, "gold content reached the prompt:\n" + "\n".join(
-        f"  {source}: {values!r}" for source, values in leaks.items())
+        f"  {source}: {values!r}" for source, values in leaks.items()
+    )
 
 
 def test_the_check_would_catch_a_real_leak():

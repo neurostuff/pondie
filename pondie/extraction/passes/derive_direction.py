@@ -29,24 +29,64 @@ _COMPARISONS: tuple[tuple[re.Pattern[str], int], ...] = (
     # right side and directed a `held` cell.
     (re.compile(r"(?P<a>[^<>.,;]+?)\s*>\s*(?P<b>[^<>.,;]+)"), +1),
     (re.compile(r"(?P<a>[^<>.,;]+?)\s*<\s*(?P<b>[^<>.,;]+)"), -1),
-    (re.compile(r"(?P<a>[^.,;]+?)\s+(?:greater|higher|larger|stronger|increased|more)\s+"
-                r"than\s+(?P<b>[^.,;]+)", re.I), +1),
-    (re.compile(r"(?P<a>[^.,;]+?)\s+(?:less|lower|smaller|weaker|decreased|reduced)\s+"
-                r"than\s+(?P<b>[^.,;]+)", re.I), -1),
-    (re.compile(r"(?:greater|higher|increased|stronger|more)\s+(?:\w+\s+){0,4}?in\s+"
-                r"(?P<a>[^.,;]+?)\s+(?:compared (?:with|to)|relative to|versus|vs\.?|than)"
-                r"\s+(?P<b>[^.,;]+)", re.I), +1),
-    (re.compile(r"(?:lower|reduced|decreased|weaker|less)\s+(?:\w+\s+){0,4}?in\s+"
-                r"(?P<a>[^.,;]+?)\s+(?:compared (?:with|to)|relative to|versus|vs\.?|than)"
-                r"\s+(?P<b>[^.,;]+)", re.I), -1),
+    (
+        re.compile(
+            r"(?P<a>[^.,;]+?)\s+(?:greater|higher|larger|stronger|increased|more)\s+"
+            r"than\s+(?P<b>[^.,;]+)",
+            re.I,
+        ),
+        +1,
+    ),
+    (
+        re.compile(
+            r"(?P<a>[^.,;]+?)\s+(?:less|lower|smaller|weaker|decreased|reduced)\s+"
+            r"than\s+(?P<b>[^.,;]+)",
+            re.I,
+        ),
+        -1,
+    ),
+    (
+        re.compile(
+            r"(?:greater|higher|increased|stronger|more)\s+(?:\w+\s+){0,4}?in\s+"
+            r"(?P<a>[^.,;]+?)\s+(?:compared (?:with|to)|relative to|versus|vs\.?|than)"
+            r"\s+(?P<b>[^.,;]+)",
+            re.I,
+        ),
+        +1,
+    ),
+    (
+        re.compile(
+            r"(?:lower|reduced|decreased|weaker|less)\s+(?:\w+\s+){0,4}?in\s+"
+            r"(?P<a>[^.,;]+?)\s+(?:compared (?:with|to)|relative to|versus|vs\.?|than)"
+            r"\s+(?P<b>[^.,;]+)",
+            re.I,
+        ),
+        -1,
+    ),
 )
 
 #: Dropped when comparing, so `ASD` matches `ASD group`. Never used to decide whether a
 #: side of a comparison exists: a contrast named "patients than controls" is made
 #: entirely of these words, and treating it as empty loses the commonest phrasing there
 #: is.
-_STOP = frozenset({"the", "a", "an", "of", "in", "for", "and", "group", "groups",
-                   "patients", "subjects", "participants", "children", "adults"})
+_STOP = frozenset(
+    {
+        "the",
+        "a",
+        "an",
+        "of",
+        "in",
+        "for",
+        "and",
+        "group",
+        "groups",
+        "patients",
+        "subjects",
+        "participants",
+        "children",
+        "adults",
+    }
+)
 
 
 def _tokens(text: str) -> frozenset[str]:
@@ -159,9 +199,11 @@ def mirror_analysis(described: dict, withheld: dict, parse_key: str = "") -> dic
     reversed_name = (withheld or {}).get("name")
     if reversed_name:
         mirrored["name"] = {
-            "extraction_status": "extracted", "value": str(reversed_name),
+            "extraction_status": "extracted",
+            "value": str(reversed_name),
             "value_source": "generated",
-            "evidence": {"status": "not_applicable"}}
+            "evidence": {"status": "not_applicable"},
+        }
 
     # The reversed half's coordinates are reached the way every other analysis reaches
     # its own -- by the parse key -- and not by carrying flipped rows inline. The schema
@@ -177,9 +219,11 @@ def mirror_analysis(described: dict, withheld: dict, parse_key: str = "") -> dic
         # the parse's, and `not_applicable` because no sentence of the paper warrants a
         # reversal it never describes.
         mirrored["source_table_analysis"] = {
-            "extraction_status": "extracted", "value": parse_key,
+            "extraction_status": "extracted",
+            "value": parse_key,
             "value_source": "generated",
-            "evidence": {"status": "not_applicable"}}
+            "evidence": {"status": "not_applicable"},
+        }
     else:
         mirrored.pop("source_table_analysis", None)
 

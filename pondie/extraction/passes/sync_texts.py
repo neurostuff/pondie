@@ -88,9 +88,14 @@ def sync_one(host: str, root: str, study: str, out_root: Path, dry_run: bool) ->
             includes += ["--include", item]
 
     command = [
-        "rsync", "-a", "--prune-empty-dirs",
-        *includes, "--exclude", "*",
-        f"{host}:{root}/{study}/", str(destination) + "/",
+        "rsync",
+        "-a",
+        "--prune-empty-dirs",
+        *includes,
+        "--exclude",
+        "*",
+        f"{host}:{root}/{study}/",
+        str(destination) + "/",
     ]
     if dry_run:
         command.insert(1, "--dry-run")

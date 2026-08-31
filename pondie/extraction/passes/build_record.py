@@ -30,23 +30,21 @@ import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-
-from pondie import _schema
 from typing import Any
 
-import known_gaps
-import spans as span_tools
+import schema_utils  # noqa: E402  (repo root is added above)
 import text_index
 
-import derive_direction  # noqa: E402  (beside this module)
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-import parse_tables  # noqa: E402  (one parse-key numbering)
-import schema_utils  # noqa: E402  (repo root is added above)
+from pondie import _schema
+from pondie.extraction.passes import derive_direction  # noqa: E402  (beside this module)
+from pondie.extraction.passes import parse_tables  # noqa: E402  (one parse-key numbering)
+from pondie.extraction.passes import known_gaps
+from pondie.extraction.passes import spans as span_tools
 
 #: The schema is a submodule of this repository, not the parent directory this
 #: module used to sit in.
 EXTRACTION_SCHEMA = _schema.ROOT / "neuroimaging-study-extraction.yaml"
+
 
 def _entity_lists() -> dict[str, str]:
     """Payload key -> dotted path to the Study attribute holding the inlined list.
@@ -139,13 +137,22 @@ class BuildReport:
     #: Every repair the builder performed, for the one-line report and the threshold.
     @property
     def repairs(self) -> int:
-        return (len(self.repaired_wrappers) + len(self.derived_acquisition_types)
-                + len(self.listified) + len(self.listified_scalars) + len(self.aligned_levels)
-                + len(self.repointed_references) + len(self.scoped_terms)
-                + len(self.filled_directions) + len(self.unwrapped)
-                + len(self.coerced_numbers) + len(self.stray_tables)
-                + len(self.repointed_cell_terms) + len(self.source_links)
-                + len(self.derived_ids))
+        return (
+            len(self.repaired_wrappers)
+            + len(self.derived_acquisition_types)
+            + len(self.listified)
+            + len(self.listified_scalars)
+            + len(self.aligned_levels)
+            + len(self.repointed_references)
+            + len(self.scoped_terms)
+            + len(self.filled_directions)
+            + len(self.unwrapped)
+            + len(self.coerced_numbers)
+            + len(self.stray_tables)
+            + len(self.repointed_cell_terms)
+            + len(self.source_links)
+            + len(self.derived_ids)
+        )
 
     def summary(self) -> str:
         return (
@@ -440,8 +447,9 @@ def apply_aliases(
     return rewrites
 
 
-def derive_coordinate_spaces(body: dict[str, Any], stage1: Path | None,
-                             table_map: Path | None) -> list[str]:
+def derive_coordinate_spaces(
+    body: dict[str, Any], stage1: Path | None, table_map: Path | None
+) -> list[str]:
     """Fill `Analysis.coordinate_space` from the space stage 1 read off the table.
 
     Stage 1 parses a space for every coordinate it extracts and is right about it: across
@@ -487,7 +495,9 @@ def derive_coordinate_spaces(body: dict[str, Any], stage1: Path | None,
         # dominated by the builder's own output and could not be thresholded on. There is no
         # quote to find for a value read off the table parse, so `not_found` is simply true.
         analysis["coordinate_space"] = {
-            "extraction_status": "extracted", "value": space, "value_source": "reported",
+            "extraction_status": "extracted",
+            "value": space,
+            "value_source": "reported",
             "evidence": {"status": "not_found"},
         }
         filled.append(f"analyses[{index}] -> {space}")
@@ -540,20 +550,21 @@ def listify_nested(body: dict[str, Any], classes: Mapping[str, Any]) -> list[str
                 # saying so. Where the model wrapped one anyway, take its `value` if it
                 # carried the list and drop to empty if it only carried the excuse.
                 inner = value.get("value")
-                node[key] = inner if isinstance(inner, list) else (
-                    [inner] if isinstance(inner, dict) else []
+                node[key] = (
+                    inner
+                    if isinstance(inner, list)
+                    else ([inner] if isinstance(inner, dict) else [])
                 )
                 fixed.append(f"{path}.{key} (unwrapped {value.get('extraction_status')})")
-            elif isinstance(value, dict) or (
-                kind == "reference" and isinstance(value, str)
-            ):
+            elif isinstance(value, dict) or (kind == "reference" and isinstance(value, str)):
                 node[key] = [value]
                 fixed.append(f"{path}.{key}")
             if kind == "nested":
                 target = attribute.get("range")
                 if isinstance(target, str):
-                    for index, item in enumerate(node[key] if isinstance(node[key], list)
-                                                 else []):
+                    for index, item in enumerate(
+                        node[key] if isinstance(node[key], list) else []
+                    ):
                         visit(item, target, f"{path}.{key}[{index}]")
 
     study_attributes = schema_utils.attributes_for(classes, "Study")
@@ -581,8 +592,11 @@ def align_cell_levels(body: dict[str, Any]) -> list[str]:
     """
 
     fixed: list[str] = []
-    models = {model.get("local_id"): model for model in body.get("model_estimations") or []
-              if isinstance(model, Mapping)}
+    models = {
+        model.get("local_id"): model
+        for model in body.get("model_estimations") or []
+        if isinstance(model, Mapping)
+    }
 
     def terms_in_scope(model_id: Any, seen: set[str] | None = None) -> dict[str, Any]:
         seen = set() if seen is None else seen
@@ -613,8 +627,11 @@ def align_cell_levels(body: dict[str, Any]) -> list[str]:
             term = scope.get(cell.get("term"))
             if not isinstance(level, str) or not isinstance(term, Mapping):
                 continue
-            declared = [_field_value(entry.get("level")) for entry in (term.get("levels") or [])
-                        if isinstance(entry, Mapping)]
+            declared = [
+                _field_value(entry.get("level"))
+                for entry in (term.get("levels") or [])
+                if isinstance(entry, Mapping)
+            ]
             declared = [name for name in declared if isinstance(name, str)]
             if level in declared:
                 continue
@@ -622,8 +639,10 @@ def align_cell_levels(body: dict[str, Any]) -> list[str]:
             matches = [name for name in declared if span_tools.fold_label(name) == folded]
             if len(matches) == 1:
                 cell["level"]["value"] = matches[0]
-                fixed.append(f"analyses[{index}].effect.cells[{position}].level: "
-                             f"{level!r} -> {matches[0]!r}")
+                fixed.append(
+                    f"analyses[{index}].effect.cells[{position}].level: "
+                    f"{level!r} -> {matches[0]!r}"
+                )
     return fixed
 
 
@@ -644,9 +663,15 @@ def fill_directions(body: dict[str, Any]) -> list[str]:
     for analysis in body.get("analyses") or []:
         if not isinstance(analysis, Mapping):
             continue
-        contrast = " . ".join(filter(None, [
-            str(_field_value(analysis.get("name")) or ""),
-            str(_field_value(analysis.get("definition")) or "")]))
+        contrast = " . ".join(
+            filter(
+                None,
+                [
+                    str(_field_value(analysis.get("name")) or ""),
+                    str(_field_value(analysis.get("definition")) or ""),
+                ],
+            )
+        )
         if not contrast:
             continue
         for cell in (analysis.get("effect") or {}).get("cells") or []:
@@ -665,11 +690,16 @@ def fill_directions(body: dict[str, Any]) -> list[str]:
                 node["extraction_status"] = "extracted"
                 node["value_source"] = "generated"
             else:
-                cell["direction"] = {"extraction_status": "extracted", "value": derived,
-                                     "value_source": "generated",
-                                     "evidence": {"status": "not_found"}}
-            filled.append(f"{_field_value(analysis.get('local_id'))}: "
-                          f"{level or '(unnamed level)'} -> {derived}")
+                cell["direction"] = {
+                    "extraction_status": "extracted",
+                    "value": derived,
+                    "value_source": "generated",
+                    "evidence": {"status": "not_found"},
+                }
+            filled.append(
+                f"{_field_value(analysis.get('local_id'))}: "
+                f"{level or '(unnamed level)'} -> {derived}"
+            )
     return filled
 
 
@@ -694,20 +724,25 @@ def mirror_withheld(body: dict[str, Any], stage1: Path | None) -> list[str]:
         return []
 
     analyses = body.setdefault("analyses", [])
-    by_name = {str(_field_value(a.get("name")) or ""): a for a in analyses
-               if isinstance(a, Mapping)}
+    by_name = {
+        str(_field_value(a.get("name")) or ""): a for a in analyses if isinstance(a, Mapping)
+    }
 
     made: list[str] = []
     for parse_key, entry in withheld:
         described = by_name.get(entry["mirror_of"])
         if described is None:
-            made.append(f"MISSING {entry['mirror_of']}: the described half is not in the "
-                        f"record, so its reversal cannot be built")
+            made.append(
+                f"MISSING {entry['mirror_of']}: the described half is not in the "
+                f"record, so its reversal cannot be built"
+            )
             continue
         mirrored = derive_direction.mirror_analysis(described, entry, parse_key)
         analyses.append(mirrored)
-        made.append(f"{entry['mirror_of']} -> {mirrored.get('local_id')} "
-                    f"(rows at {parse_key}, signs negated)")
+        made.append(
+            f"{entry['mirror_of']} -> {mirrored.get('local_id')} "
+            f"(rows at {parse_key}, signs negated)"
+        )
     return made
 
 
@@ -742,8 +777,11 @@ def listify_scalars(body: dict[str, Any], classes: Mapping[str, Any]) -> list[st
             kind = schema_utils.classify_slot(classes, key, attribute)
             if kind == "evidence" and _is_field(value):
                 wrapper = attribute.get("range")
-                declared = (schema_utils.attributes_for(classes, wrapper) or {}).get("value", {}) \
-                    if isinstance(wrapper, str) else {}
+                declared = (
+                    (schema_utils.attributes_for(classes, wrapper) or {}).get("value", {})
+                    if isinstance(wrapper, str)
+                    else {}
+                )
                 if not declared.get("multivalued") or "value" not in value:
                     continue
                 inner = value["value"]
@@ -755,7 +793,9 @@ def listify_scalars(body: dict[str, Any], classes: Mapping[str, Any]) -> list[st
             elif kind == "nested":
                 target = attribute.get("range")
                 if isinstance(target, str):
-                    for index, item in enumerate(value if isinstance(value, list) else [value]):
+                    for index, item in enumerate(
+                        value if isinstance(value, list) else [value]
+                    ):
                         suffix = f"[{index}]" if isinstance(value, list) else ""
                         visit(item, target, f"{path}.{key}{suffix}")
 
@@ -812,8 +852,11 @@ def scope_duplicate_terms(body: dict[str, Any]) -> list[str]:
     count(body)
     # Only ids whose every declaration is a term under a model. An id shared between a
     # term and a group is a conflict rather than a scope, and renaming it would hide that.
-    collisions = {name for name, total in counts.items()
-                  if total > 1 and len(declared_by.get(name, ())) == total}
+    collisions = {
+        name
+        for name, total in counts.items()
+        if total > 1 and len(declared_by.get(name, ())) == total
+    }
     if not collisions:
         return []
 
@@ -826,8 +869,7 @@ def scope_duplicate_terms(body: dict[str, Any]) -> list[str]:
                 if isinstance(value, str) and value in mapping:
                     node[key] = mapping[value]
                 elif isinstance(value, list):
-                    node[key] = [mapping.get(v, v) if isinstance(v, str) else v
-                                 for v in value]
+                    node[key] = [mapping.get(v, v) if isinstance(v, str) else v for v in value]
                     for item in node[key]:
                         rewrite(item, mapping)
                 else:
@@ -840,9 +882,11 @@ def scope_duplicate_terms(body: dict[str, Any]) -> list[str]:
     for name in sorted(collisions):
         owners = declared_by[name]
         # Which analyses could have meant which copy, from the model each one names.
-        reachable = {analysis_index: _field_value(analysis.get("model_estimation"))
-                     for analysis_index, analysis in enumerate(body.get("analyses") or [])
-                     if isinstance(analysis, Mapping)}
+        reachable = {
+            analysis_index: _field_value(analysis.get("model_estimation"))
+            for analysis_index, analysis in enumerate(body.get("analyses") or [])
+            if isinstance(analysis, Mapping)
+        }
         snapshot = json.loads(json.dumps(body))
 
         for model in models:
@@ -907,24 +951,35 @@ def unwrap_plain_slots(body: dict[str, Any], classes: Mapping[str, Any]) -> list
                     # rather than left, because the validator reads it as a malformed
                     # cross-reference and the paper said nothing either way.
                     del node[key]
-                    fixed.append(f"{here}: dropped an empty "
-                                 f"{value.get('extraction_status', 'valueless')!r} wrapper "
-                                 f"from a {kind} slot")
+                    fixed.append(
+                        f"{here}: dropped an empty "
+                        f"{value.get('extraction_status', 'valueless')!r} wrapper "
+                        f"from a {kind} slot"
+                    )
                 elif isinstance(value, list):
                     for index, item in enumerate(value):
                         if _is_field(item) and "value" in item:
                             value[index] = item["value"]
-                            fixed.append(f"{here}[{index}]: unwrapped a wrapper into a "
-                                         f"{kind} slot")
+                            fixed.append(
+                                f"{here}[{index}]: unwrapped a wrapper into a " f"{kind} slot"
+                            )
                 continue
-            if kind == "evidence" and value is not None and not isinstance(value, (dict, list)):
+            if (
+                kind == "evidence"
+                and value is not None
+                and not isinstance(value, (dict, list))
+            ):
                 # The inverse slip: a bare scalar in a slot that holds an ExtractedValue.
                 # The value is the model's answer and it offered no span for it, so the
                 # evidence is honestly `not_found` rather than invented.
-                node[key] = {"extraction_status": "extracted", "value": value,
-                             "evidence": {"status": "not_found"}}
-                fixed.append(f"{here}: wrapped a bare {type(value).__name__} into an "
-                             f"ExtractedValue")
+                node[key] = {
+                    "extraction_status": "extracted",
+                    "value": value,
+                    "evidence": {"status": "not_found"},
+                }
+                fixed.append(
+                    f"{here}: wrapped a bare {type(value).__name__} into an " f"ExtractedValue"
+                )
                 continue
             if kind == "nested":
                 target = attribute.get("range") or class_name
@@ -964,10 +1019,14 @@ def coerce_numeric_values(body: dict[str, Any], classes: Mapping[str, Any]) -> l
             here = f"{path}.{key}"
             wrapper = attribute.get("range")
             if _is_field(value) and isinstance(wrapper, str):
-                declared = (schema_utils.attributes_for(classes, wrapper) or {}).get("value", {})
+                declared = (schema_utils.attributes_for(classes, wrapper) or {}).get(
+                    "value", {}
+                )
                 wants = declared.get("range")
                 inner = value.get("value")
-                if wants in ("float", "double", "decimal", "integer") and isinstance(inner, str):
+                if wants in ("float", "double", "decimal", "integer") and isinstance(
+                    inner, str
+                ):
                     cleaned = re.sub(r"[^0-9eE.+-]", "", inner.strip())
                     try:
                         number = float(cleaned)
@@ -1004,8 +1063,11 @@ def rehome_stray_tables(body: dict[str, Any], classes: Mapping[str, Any]) -> lis
     for analysis in body.get("analyses") or []:
         if isinstance(analysis, Mapping):
             tables = _field_value(analysis.get("tables")) or []
-            referenced |= {t for t in (tables if isinstance(tables, list) else [tables])
-                           if isinstance(t, str)}
+            referenced |= {
+                t
+                for t in (tables if isinstance(tables, list) else [tables])
+                if isinstance(t, str)
+            }
 
     moved: list[str] = []
     for key in [k for k in body if k not in declared and k in referenced]:
@@ -1059,19 +1121,24 @@ def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> 
             analysis.pop("source_table_analysis", None)
             notes.append(f"{path}: {claimed!r} names no parsed row group -- dropped")
 
-        cited = [t for t in (_field_value(analysis.get("tables")) or [])
-                 if isinstance(t, str)]
+        cited = [t for t in (_field_value(analysis.get("tables")) or []) if isinstance(t, str)]
         wanted = fold(_field_value(analysis.get("name")))
-        same = [key for key, entry in keys.items()
-                if fold(entry.get("name")) == wanted
-                and (not cited or str(entry.get("table_id")) in cited)]
+        same = [
+            key
+            for key, entry in keys.items()
+            if fold(entry.get("name")) == wanted
+            and (not cited or str(entry.get("table_id")) in cited)
+        ]
         if len(same) == 1 and wanted:
             analysis["source_table_analysis"] = {
-                "extraction_status": "extracted", "value": same[0],
+                "extraction_status": "extracted",
+                "value": same[0],
                 "value_source": "generated",
-                "evidence": {"status": "not_applicable"}}
-            notes.append(f"{path}: filled {same[0]!r} from the parsed analysis of the "
-                         f"same name")
+                "evidence": {"status": "not_applicable"},
+            }
+            notes.append(
+                f"{path}: filled {same[0]!r} from the parsed analysis of the " f"same name"
+            )
     return notes
 
 
@@ -1153,8 +1220,11 @@ def repoint_out_of_scope_terms(body: dict[str, Any]) -> list[str]:
     means something larger is wrong than a mistyped identifier.
     """
 
-    models = {str(_field_value(m.get("local_id"))): m
-              for m in body.get("model_estimations") or [] if isinstance(m, Mapping)}
+    models = {
+        str(_field_value(m.get("local_id"))): m
+        for m in body.get("model_estimations") or []
+        if isinstance(m, Mapping)
+    }
 
     def scope(model_id: str, seen: set[str] | None = None) -> dict[str, Any]:
         seen = seen or set()
@@ -1163,16 +1233,20 @@ def repoint_out_of_scope_terms(body: dict[str, Any]) -> list[str]:
         seen.add(model_id)
         found: dict[str, Any] = {}
         for lower in models[model_id].get("inputs_from") or []:
-            found.update(scope(lower if isinstance(lower, str) else str(_field_value(lower)),
-                               seen))
+            found.update(
+                scope(lower if isinstance(lower, str) else str(_field_value(lower)), seen)
+            )
         for term in models[model_id].get("terms") or []:
             if isinstance(term, Mapping) and _field_value(term.get("local_id")):
                 found[str(_field_value(term["local_id"]))] = term
         return found
 
-    everywhere = {str(_field_value(t.get("local_id"))): t
-                  for m in models.values() for t in (m.get("terms") or [])
-                  if isinstance(t, Mapping) and _field_value(t.get("local_id"))}
+    everywhere = {
+        str(_field_value(t.get("local_id"))): t
+        for m in models.values()
+        for t in (m.get("terms") or [])
+        if isinstance(t, Mapping) and _field_value(t.get("local_id"))
+    }
 
     def name_of(term: Any) -> str:
         return str(_field_value((term or {}).get("name")) or "").strip().lower()
@@ -1194,8 +1268,10 @@ def repoint_out_of_scope_terms(body: dict[str, Any]) -> list[str]:
             same = [k for k, term in in_scope.items() if name_of(term) == wanted]
             if len(same) == 1:
                 cell["term"] = same[0]
-                fixed.append(f"analyses[{index}].effect.cells[{position}].term: "
-                             f"{named!r} -> {same[0]!r} (same name, in scope)")
+                fixed.append(
+                    f"analyses[{index}].effect.cells[{position}].term: "
+                    f"{named!r} -> {same[0]!r} (same name, in scope)"
+                )
     return fixed
 
 
@@ -1325,7 +1401,8 @@ def check_local_ids(body: dict[str, Any], classes: Mapping[str, Any]) -> list[st
     collect(body)
     problems: list[str] = [
         f"local_id {name!r} is declared {count} times; every reference to it is ambiguous"
-        for name, count in sorted(times.items()) if count > 1
+        for name, count in sorted(times.items())
+        if count > 1
     ]
 
     def visit(node: Any, class_name: str, path: str) -> None:
@@ -1343,14 +1420,20 @@ def check_local_ids(body: dict[str, Any], classes: Mapping[str, Any]) -> list[st
             here = f"{path}.{key}"
             kind = schema_utils.classify_slot(classes, key, attribute)
             if kind == "reference":
-                refs = [value] if isinstance(value, str) else value if isinstance(value, list) else []
+                refs = (
+                    [value]
+                    if isinstance(value, str)
+                    else value if isinstance(value, list) else []
+                )
                 for ref in refs:
                     if isinstance(ref, str) and ref and ref not in declared:
                         problems.append(f"{here} -> unknown local_id {ref!r}")
             elif kind == "nested":
                 target = attribute.get("range")
                 if isinstance(target, str):
-                    for index, item in enumerate(value if isinstance(value, list) else [value]):
+                    for index, item in enumerate(
+                        value if isinstance(value, list) else [value]
+                    ):
                         suffix = f"[{index}]" if isinstance(value, list) else ""
                         visit(item, target, f"{here}{suffix}")
 
@@ -1385,15 +1468,17 @@ def build(
     rewrites = apply_aliases(body, classes, load_aliases(payload_dir))
     if rewrites:
         report.payload_notes.append(
-            f"reconciled {rewrites} cross-reference(s) through aliases.json")
+            f"reconciled {rewrites} cross-reference(s) through aliases.json"
+        )
 
     # The order and its constraints live in `pipeline/repairs.py` as data, and are
     # checked before anything runs. They were nine consecutive statements with the
     # constraints in comments beside them, which states an ordering without enforcing it.
-    from pipeline import repairs as repair_sequence  # noqa: PLC0415
+    from pondie.extraction.passes.pipeline import repairs as repair_sequence  # noqa: PLC0415
 
     log = repair_sequence.apply_all(
-        body, repair_sequence.Context(classes=classes, stage1=stage1, table_map=table_map))
+        body, repair_sequence.Context(classes=classes, stage1=stage1, table_map=table_map)
+    )
     report.repair_log = log
     report.repaired_wrappers += log.changes("wrappers")
     report.unwrapped += log.changes("unwrapped")
@@ -1424,7 +1509,7 @@ def build(
             "source_text_hash": digest,
             "extraction_date": extraction_date,
             "paper_sections": [section.as_record() for section in sections],
-        }
+        },
     }
     record.update(body)
 
@@ -1474,20 +1559,36 @@ def main() -> int:
     parser.add_argument("--extractor-model", default="claude-opus-5")
     parser.add_argument("--extractor-version", default="review-bootstrap-0.1.0")
     parser.add_argument("--extraction-date", default="2026-08-02")
-    parser.add_argument("--stage1", type=Path,
-                        help="stage1/analyses.json, for the coordinate space")
-    parser.add_argument("--tables", type=Path,
-                        help="stage1/table-map.json, pairing pubget tables to Table ids")
-    parser.add_argument("--known-gaps", type=Path, default=known_gaps.DEFAULT,
-                        help="allowlist of findings a reviewer has accepted; see "
-                             "review/known-gaps.yaml")
-    parser.add_argument("--strict", action="store_true",
-                        help="also fail on the soft class: unresolved quotes, evidence "
-                             "downgrades and repairs above --max-unresolved/--max-repaired")
-    parser.add_argument("--max-unresolved", type=float, default=0.10,
-                        help="fraction of extracted fields whose quote may go unresolved")
-    parser.add_argument("--max-repaired", type=float, default=0.10,
-                        help="fraction of extracted fields the builder may repair")
+    parser.add_argument(
+        "--stage1", type=Path, help="stage1/analyses.json, for the coordinate space"
+    )
+    parser.add_argument(
+        "--tables", type=Path, help="stage1/table-map.json, pairing pubget tables to Table ids"
+    )
+    parser.add_argument(
+        "--known-gaps",
+        type=Path,
+        default=known_gaps.DEFAULT,
+        help="allowlist of findings a reviewer has accepted; see " "review/known-gaps.yaml",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="also fail on the soft class: unresolved quotes, evidence "
+        "downgrades and repairs above --max-unresolved/--max-repaired",
+    )
+    parser.add_argument(
+        "--max-unresolved",
+        type=float,
+        default=0.10,
+        help="fraction of extracted fields whose quote may go unresolved",
+    )
+    parser.add_argument(
+        "--max-repaired",
+        type=float,
+        default=0.10,
+        help="fraction of extracted fields the builder may repair",
+    )
     args = parser.parse_args()
 
     record, report = build(
@@ -1502,12 +1603,13 @@ def main() -> int:
     )
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    args.out.write_text(
+        json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
     classes = schema_utils.load_imported_classes(EXTRACTION_SCHEMA)
     gaps = known_gaps.load(args.known_gaps, args.paper)
-    report.dangling, suppressed = known_gaps.partition(
-        check_local_ids(record, classes), gaps)
+    report.dangling, suppressed = known_gaps.partition(check_local_ids(record, classes), gaps)
 
     print(f"\n{args.paper}: wrote {args.out}")
     for note in report.payload_notes:
@@ -1545,9 +1647,12 @@ def main() -> int:
             ("builder repairs", report.repairs, args.max_repaired),
         ):
             if count / denominator > bound:
-                print(f"\nFAILED --strict: {count} {label} is "
-                      f"{count / denominator:.0%} of {denominator} extracted fields, "
-                      f"over the {bound:.0%} bound", file=sys.stderr)
+                print(
+                    f"\nFAILED --strict: {count} {label} is "
+                    f"{count / denominator:.0%} of {denominator} extracted fields, "
+                    f"over the {bound:.0%} bound",
+                    file=sys.stderr,
+                )
                 return 1
     return 0
 

@@ -1,8 +1,9 @@
 """Stages are functions, so they are called directly and the model is substituted."""
+
 import json
 
-from pondie.extraction.models import Cost, ModelReply, Paper, Settings, StageName
 from pondie.extraction import plan, run
+from pondie.extraction.models import Cost, ModelReply, Paper, Settings, StageName
 
 
 class Recorder:
@@ -23,13 +24,15 @@ def _paper(tmp_path):
     (root / "S1" / "processed" / "pubget" / "text.txt").write_text("a paper")
     (root / "S1" / "stage1" / "analyses.json").write_text('{"analyses": []}')
     (root / "S1" / "stage1" / "table-map.json").write_text(
-        '{"t1": {"table_number": "1", "caption": "Peaks", "footer": ""}}')
+        '{"t1": {"table_number": "1", "caption": "Peaks", "footer": ""}}'
+    )
     return Paper(study_id="S1", root=root)
 
 
 def _settings(tmp_path, **kw):
-    return Settings(payloads=tmp_path / "payloads", records=tmp_path / "records",
-                    model="test-model", **kw)
+    return Settings(
+        payloads=tmp_path / "payloads", records=tmp_path / "records", model="test-model", **kw
+    )
 
 
 def test_tables_takes_no_model_call(tmp_path):
@@ -63,8 +66,11 @@ def test_evidence_asks_about_the_fields_that_exist_not_about_the_paper(tmp_path,
     settings = _settings(tmp_path, stages=(StageName.evidence,))
     payload = settings.payloads / "S1" / "satisfy"
     payload.mkdir(parents=True)
-    (payload / "payload.json").write_text(json.dumps(
-        {"groups": [{"name": {"extraction_status": "extracted", "value": "patients"}}]}))
+    (payload / "payload.json").write_text(
+        json.dumps(
+            {"groups": [{"name": {"extraction_status": "extracted", "value": "patients"}}]}
+        )
+    )
 
     caller = Recorder()
     outcome = Evidence().run(paper, settings, caller)
@@ -74,6 +80,7 @@ def test_evidence_asks_about_the_fields_that_exist_not_about_the_paper(tmp_path,
 
 def test_evidence_is_skipped_rather_than_failed_when_turned_off(tmp_path):
     from pondie.extraction.stages import Evidence
+
     settings = _settings(tmp_path, stages=(StageName.evidence,), retrieve_evidence=False)
     outcome = Evidence().run(_paper(tmp_path), settings, Recorder())
     assert outcome.skipped and outcome.ok and "disabled" in outcome.reason

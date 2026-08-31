@@ -86,50 +86,98 @@ def build_sequence() -> tuple[Repair, ...]:
     in the schema loader.
     """
 
-    import build_record as br  # noqa: PLC0415
+    from pondie.extraction.passes import build_record as br  # noqa: PLC0415
 
     return (
-        Repair("wrappers", "put a malformed ExtractedValue back into wrapper shape",
-               lambda body, ctx: br.repair_wrappers(body)),
-        Repair("unwrapped", "unwrap a wrapper the model put in a bare-scalar slot",
-               lambda body, ctx: br.unwrap_plain_slots(body, ctx.classes),
-               after="wrappers"),
-        Repair("numbers", "turn a numeric string into the number its slot declares",
-               lambda body, ctx: br.coerce_numeric_values(body, ctx.classes),
-               after="unwrapped"),
-        Repair("stray_tables", "move a Table written as a Study attribute into tables[]",
-               lambda body, ctx: br.rehome_stray_tables(body, ctx.classes)),
-        Repair("acquisition_type", "fill an acquisition's type from its own modality",
-               lambda body, ctx: br.derive_acquisition_types(body)),
-        Repair("coordinate_space", "fill the space stage 1 already read off the table",
-               lambda body, ctx: br.derive_coordinate_spaces(body, ctx.stage1, ctx.table_map)),
-        Repair("listified", "unwrap a nested slot the model wrote as an object",
-               lambda body, ctx: br.listify_nested(body, ctx.classes)),
-        Repair("listified_scalars", "wrap a lone scalar the slot declares multivalued",
-               lambda body, ctx: br.listify_scalars(body, ctx.classes),
-               after="listified"),
-        Repair("cell_levels", "rewrite a cell's level to the declared level it folds to",
-               lambda body, ctx: br.align_cell_levels(body),
-               after="listified"),
-        Repair("scoped_terms", "scope two models' identically-named terms by their model",
-               lambda body, ctx: br.scope_duplicate_terms(body)),
-        Repair("references", "repoint a dangling reference where the choice is forced",
-               lambda body, ctx: br.repair_references(body, ctx.classes),
-               after="scoped_terms"),
-        Repair("cell_terms", "repoint a cell at the same-named term its model reaches",
-               lambda body, ctx: br.repoint_out_of_scope_terms(body),
-               after="listified"),
-        Repair("source_links", "verify or fill each analysis's link to its parsed rows",
-               lambda body, ctx: br.resolve_source_table_analysis(body, ctx.stage1)),
-        Repair("derived_ids", "rename each analysis to an id the parse determines",
-               lambda body, ctx: br.derive_analysis_ids(body),
-               after="source_links"),
-        Repair("directions", "fill a cell's direction from the contrast's own name",
-               lambda body, ctx: br.fill_directions(body),
-               after="cell_levels"),
-        Repair("mirrored", "rebuild the reversed half of every sign-split contrast",
-               lambda body, ctx: br.mirror_withheld(body, ctx.stage1),
-               after="directions"),
+        Repair(
+            "wrappers",
+            "put a malformed ExtractedValue back into wrapper shape",
+            lambda body, ctx: br.repair_wrappers(body),
+        ),
+        Repair(
+            "unwrapped",
+            "unwrap a wrapper the model put in a bare-scalar slot",
+            lambda body, ctx: br.unwrap_plain_slots(body, ctx.classes),
+            after="wrappers",
+        ),
+        Repair(
+            "numbers",
+            "turn a numeric string into the number its slot declares",
+            lambda body, ctx: br.coerce_numeric_values(body, ctx.classes),
+            after="unwrapped",
+        ),
+        Repair(
+            "stray_tables",
+            "move a Table written as a Study attribute into tables[]",
+            lambda body, ctx: br.rehome_stray_tables(body, ctx.classes),
+        ),
+        Repair(
+            "acquisition_type",
+            "fill an acquisition's type from its own modality",
+            lambda body, ctx: br.derive_acquisition_types(body),
+        ),
+        Repair(
+            "coordinate_space",
+            "fill the space stage 1 already read off the table",
+            lambda body, ctx: br.derive_coordinate_spaces(body, ctx.stage1, ctx.table_map),
+        ),
+        Repair(
+            "listified",
+            "unwrap a nested slot the model wrote as an object",
+            lambda body, ctx: br.listify_nested(body, ctx.classes),
+        ),
+        Repair(
+            "listified_scalars",
+            "wrap a lone scalar the slot declares multivalued",
+            lambda body, ctx: br.listify_scalars(body, ctx.classes),
+            after="listified",
+        ),
+        Repair(
+            "cell_levels",
+            "rewrite a cell's level to the declared level it folds to",
+            lambda body, ctx: br.align_cell_levels(body),
+            after="listified",
+        ),
+        Repair(
+            "scoped_terms",
+            "scope two models' identically-named terms by their model",
+            lambda body, ctx: br.scope_duplicate_terms(body),
+        ),
+        Repair(
+            "references",
+            "repoint a dangling reference where the choice is forced",
+            lambda body, ctx: br.repair_references(body, ctx.classes),
+            after="scoped_terms",
+        ),
+        Repair(
+            "cell_terms",
+            "repoint a cell at the same-named term its model reaches",
+            lambda body, ctx: br.repoint_out_of_scope_terms(body),
+            after="listified",
+        ),
+        Repair(
+            "source_links",
+            "verify or fill each analysis's link to its parsed rows",
+            lambda body, ctx: br.resolve_source_table_analysis(body, ctx.stage1),
+        ),
+        Repair(
+            "derived_ids",
+            "rename each analysis to an id the parse determines",
+            lambda body, ctx: br.derive_analysis_ids(body),
+            after="source_links",
+        ),
+        Repair(
+            "directions",
+            "fill a cell's direction from the contrast's own name",
+            lambda body, ctx: br.fill_directions(body),
+            after="cell_levels",
+        ),
+        Repair(
+            "mirrored",
+            "rebuild the reversed half of every sign-split contrast",
+            lambda body, ctx: br.mirror_withheld(body, ctx.stage1),
+            after="directions",
+        ),
     )
 
 
@@ -144,8 +192,9 @@ def check_order(sequence: tuple[Repair, ...]) -> list[str]:
     return problems
 
 
-def apply_all(body: dict, ctx: Context,
-              sequence: tuple[Repair, ...] | None = None) -> RepairLog:
+def apply_all(
+    body: dict, ctx: Context, sequence: tuple[Repair, ...] | None = None
+) -> RepairLog:
     """Run the sequence in order, recording what each one changed."""
     sequence = build_sequence() if sequence is None else sequence
     broken = check_order(sequence)

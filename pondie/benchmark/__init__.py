@@ -15,6 +15,7 @@ those share a denominator with a polarity score over this gold, so none of them 
 for it. What the doubly-reviewed set does show is that of 52 disputed cells only 2 are
 `positive` vs `negative`: humans agree about polarity and argue about membership.
 """
-from .direction import load_gold, score  # noqa: F401
+
+from pondie.benchmark.direction import load_gold, score  # noqa: F401
 
 __all__ = ["load_gold", "score"]

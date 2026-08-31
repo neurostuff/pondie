@@ -19,15 +19,20 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .kinds import Paper
+from pondie.extraction.passes.pipeline.kinds import Paper
 
 #: The pond records a statistic's type as a bare letter. `parse_tables._point_sign` reads
 #: the kind to decide whether a value carries a direction at all, and it excludes
 #: `p-value` by that name, so the letters have to be spelled out or every p-value would
 #: be read as a signed statistic.
 STATISTIC_KINDS = {
-    "T": "t-statistic", "Z": "z-statistic", "F": "f-statistic",
-    "P": "p-value", "R": "correlation", "D": "cohens-d", "B": "beta",
+    "T": "t-statistic",
+    "Z": "z-statistic",
+    "F": "f-statistic",
+    "P": "p-value",
+    "R": "correlation",
+    "D": "cohens-d",
+    "B": "beta",
 }
 
 
@@ -37,16 +42,25 @@ def _point(coordinate: dict) -> dict:
     magnitude = coordinate.get("statistic_value")
     if isinstance(magnitude, (int, float)):
         letter = str(coordinate.get("statistic_type") or "").strip().upper()
-        values.append({"value": magnitude,
-                       "kind": STATISTIC_KINDS.get(letter, letter.lower() or "statistic")})
+        values.append(
+            {
+                "value": magnitude,
+                "kind": STATISTIC_KINDS.get(letter, letter.lower() or "statistic"),
+            }
+        )
     point: dict = {
         "coordinates": [coordinate.get("x"), coordinate.get("y"), coordinate.get("z")],
         "space": coordinate.get("space"),
     }
     if values:
         point["values"] = values
-    for extra in ("cluster_size", "cluster_measure", "is_subpeak", "is_deactivation",
-                  "is_seed"):
+    for extra in (
+        "cluster_size",
+        "cluster_measure",
+        "is_subpeak",
+        "is_deactivation",
+        "is_seed",
+    ):
         if coordinate.get(extra) not in (None, False):
             point[extra] = coordinate[extra]
     return point
@@ -71,8 +85,11 @@ def read_pond_parse(study: Path) -> tuple[list[dict], str]:
         path = study / "processed" / flavour / "analyses.jsonl"
         if not path.is_file():
             continue
-        entries = [json.loads(line) for line in
-                   path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        entries = [
+            json.loads(line)
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
         if entries:
             return [_analysis(e) for e in entries], flavour
     return [], ""
@@ -103,22 +120,29 @@ def stage(study_id: str, pond_root: Path, workspace: Path) -> tuple[Paper | None
         link.symlink_to(source / "processed")
 
     (target / "stage1" / "analyses.json").write_text(
-        json.dumps({"study": study_id, "source": f"ns-pond/{flavour}",
-                    "analyses": analyses}, indent=1, ensure_ascii=False) + "\n",
-        encoding="utf-8")
+        json.dumps(
+            {"study": study_id, "source": f"ns-pond/{flavour}", "analyses": analyses},
+            indent=1,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     # The pond already names its tables with the ids the extraction pass will use, so the
     # map is an identity over the tables that actually carry an analysis.
     tables = {a["table_id"]: a["table_id"] for a in analyses if a.get("table_id")}
     (target / "stage1" / "table-map.json").write_text(
-        json.dumps(tables, indent=1) + "\n", encoding="utf-8")
+        json.dumps(tables, indent=1) + "\n", encoding="utf-8"
+    )
 
     paper = Paper(study_id, workspace)
     ready, why = paper.is_ready()
     return (paper, "") if ready else (None, why)
 
 
-def stage_all(study_ids: list[str], pond_root: Path,
-              workspace: Path) -> tuple[list[Paper], list[str]]:
+def stage_all(
+    study_ids: list[str], pond_root: Path, workspace: Path
+) -> tuple[list[Paper], list[str]]:
     staged, refused = [], []
     for study_id in study_ids:
         paper, why = stage(study_id, pond_root, workspace)

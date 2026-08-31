@@ -11,13 +11,12 @@ import hashlib
 import json
 import random
 import re
-import sys
 from pathlib import Path
+
+import pytest
 
 from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
 from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
-
-import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -148,10 +147,12 @@ def test_a_deleted_entity_is_a_recall_miss_and_takes_its_edges_with_it(gold, sch
 
 def test_an_invented_entity_is_a_precision_hit(gold, schema):
     candidate = json.loads(json.dumps(gold))
-    candidate["regions"].append({
-        "local_id": "region_invented",
-        "name": {"extraction_status": "extracted", "value": "nucleus of nowhere"},
-    })
+    candidate["regions"].append(
+        {
+            "local_id": "region_invented",
+            "name": {"extraction_status": "extracted", "value": "nucleus of nowhere"},
+        }
+    )
 
     entities = run(gold, candidate, schema)["entities"]["per_type"]["Region"]
     assert entities["precision"] < 1.0
@@ -172,12 +173,14 @@ def test_edges_out_of_a_hallucinated_entity_are_false_positives_too(gold, schema
 
     candidate = json.loads(json.dumps(gold))
     # A seventh analysis has nothing left to pair with: the six copies take the six gold ones.
-    candidate["analyses"].append({
-        "local_id": "analysis_invented",
-        "name": {"extraction_status": "extracted", "value": "an analysis nobody ran"},
-        "measure": "measure_cbf",
-        "effect": {"cells": [], "statistic": {}},
-    })
+    candidate["analyses"].append(
+        {
+            "local_id": "analysis_invented",
+            "name": {"extraction_status": "extracted", "value": "an analysis nobody ran"},
+            "measure": "measure_cbf",
+            "effect": {"cells": [], "statistic": {}},
+        }
+    )
 
     rel = run(gold, candidate, schema)["relationships"]
     assert ("?analysis_invented", "measure", "measure_cbf") in rel["false_positives"]
@@ -221,15 +224,28 @@ def test_entities_match_across_different_names(schema):
     """`dev_verio` and `dev_magnetom_verio` are the same scanner."""
 
     gold_doc = {
-        "local_id": "p", "devices": [{
-            "local_id": "dev_verio",
-            "manufacturer": {"extraction_status": "extracted", "value": "Siemens Healthcare"},
-            "model": {"extraction_status": "extracted", "value": "Magnetom Verio"}}]}
+        "local_id": "p",
+        "devices": [
+            {
+                "local_id": "dev_verio",
+                "manufacturer": {
+                    "extraction_status": "extracted",
+                    "value": "Siemens Healthcare",
+                },
+                "model": {"extraction_status": "extracted", "value": "Magnetom Verio"},
+            }
+        ],
+    }
     candidate = {
-        "local_id": "p", "devices": [{
-            "local_id": "scanner_1",
-            "manufacturer": {"extraction_status": "extracted", "value": "Siemens"},
-            "model": {"extraction_status": "extracted", "value": "MAGNETOM Verio 3T"}}]}
+        "local_id": "p",
+        "devices": [
+            {
+                "local_id": "scanner_1",
+                "manufacturer": {"extraction_status": "extracted", "value": "Siemens"},
+                "model": {"extraction_status": "extracted", "value": "MAGNETOM Verio 3T"},
+            }
+        ],
+    }
 
     result = run(gold_doc, candidate, schema)
     assert result["entities"]["per_type"]["Device"]["f1"] == 1.0
@@ -247,6 +263,7 @@ def test_subclass_mismatch_is_a_wrong_field_not_an_unmatched_object(gold, schema
 
 # -- the matcher ------------------------------------------------------------
 
+
 def test_a_term_is_matched_by_who_references_it_not_only_by_its_name(gold, schema):
     """The failure this matcher was built for.
 
@@ -263,8 +280,11 @@ def test_a_term_is_matched_by_who_references_it_not_only_by_its_name(gold, schem
                 term["name"]["value"] = "cerebral perfusion"
 
     result = run(gold, candidate, schema)
-    matched = [r for r in result["structure"]["per_entity"]
-               if r["gold_id"] == "term_perfusion_condition"]
+    matched = [
+        r
+        for r in result["structure"]["per_entity"]
+        if r["gold_id"] == "term_perfusion_condition"
+    ]
     assert matched, "the renamed term was not matched at all"
     assert matched[0]["evidence"]["incoming"] > 0.9
     assert result["direction"]["primary"]["cell_prf"]["f1"] == 1.0
@@ -277,8 +297,10 @@ def test_incoming_references_include_those_held_by_inline_objects(gold, schema):
     sources = {source for source, path in record.incoming["term_gray_matter_volume"]}
     assert sources, "no incoming references found for a term every cell names"
     assert all(record.entities[s].etype == "Analysis" for s in sources)
-    assert any(path.startswith("effect.cells[]")
-               for _, path in record.incoming["term_gray_matter_volume"])
+    assert any(
+        path.startswith("effect.cells[]")
+        for _, path in record.incoming["term_gray_matter_volume"]
+    )
 
 
 def test_an_object_wired_into_the_wrong_place_is_reported_as_misplaced(gold, schema):
@@ -297,8 +319,10 @@ def test_an_object_wired_into_the_wrong_place_is_reported_as_misplaced(gold, sch
 
 def test_containment_separates_terms_of_different_models(gold, schema):
     record = ce.flatten(gold, schema, "g")
-    parents = {t: record.entities[t].parent
-               for t in ("term_perfusion_condition", "term_treatment_condition")}
+    parents = {
+        t: record.entities[t].parent
+        for t in ("term_perfusion_condition", "term_treatment_condition")
+    }
     assert parents["term_perfusion_condition"] == "model_bpm_correlation"
     assert parents["term_treatment_condition"] == "model_glm_paired"
 
@@ -319,6 +343,7 @@ def test_identical_records_still_align_perfectly_under_the_structural_matcher(go
 
 # -- the primitives ---------------------------------------------------------
 
+
 def test_hungarian_finds_the_optimum_a_greedy_pass_would_miss():
     # Greedy takes (0,0)=0.9 and is then forced onto (1,1)=0.1, for 1.0; the optimum is 1.6.
     score = [[0.9, 0.8], [0.8, 0.1]]
@@ -335,26 +360,41 @@ def test_hungarian_matches_brute_force(rows, cols):
     got = sum(score[r][c] for r, c in pairs.items())
 
     n = min(rows, cols)
-    best = max(
-        sum(score[r][c] for r, c in zip(range(rows), perm))
-        for perm in permutations(range(cols), n)
-    ) if rows <= cols else max(
-        sum(score[r][c] for r, c in zip(perm, range(cols)))
-        for perm in permutations(range(rows), n)
+    best = (
+        max(
+            sum(score[r][c] for r, c in zip(range(rows), perm))
+            for perm in permutations(range(cols), n)
+        )
+        if rows <= cols
+        else max(
+            sum(score[r][c] for r, c in zip(perm, range(cols)))
+            for perm in permutations(range(rows), n)
+        )
     )
     assert got == pytest.approx(best)
     assert len(set(pairs.values())) == len(pairs)
 
 
 def test_fuzzy_carries_an_abbreviation_against_its_expansion():
-    assert ce.fuzzy("SCID-II", "Structured Clinical Interview for DSM-IV Axis II (SCID-II)") > 0.6
+    assert (
+        ce.fuzzy("SCID-II", "Structured Clinical Interview for DSM-IV Axis II (SCID-II)") > 0.6
+    )
     assert ce.fuzzy("frontal lobe", "lobe frontal") > 0.9
     assert ce.fuzzy("frontal lobe", "cerebellum") < 0.4
 
 
-@pytest.mark.parametrize("raw,expected", [
-    (2, 2.0), (2.0, 2.0), ("2", 2.0), ("2.5 s", 2.5), ("-0.01", -0.01), (True, None), ("n/a", None),
-])
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        (2, 2.0),
+        (2.0, 2.0),
+        ("2", 2.0),
+        ("2.5 s", 2.5),
+        ("-0.01", -0.01),
+        (True, None),
+        ("n/a", None),
+    ],
+)
 def test_number_coercion(raw, expected):
     assert ce.as_number(raw) == expected
 
@@ -369,6 +409,7 @@ def test_semantic_similarity_uses_the_vectors_when_it_has_them():
     sem = ce.Semantics(True)
     sem.vectors = {"cerebral blood flow": [1.0, 0.0], "perfusion": [0.96, 0.28]}
     assert sem.similarity("cerebral blood flow", "perfusion") > ce.fuzzy(
-        "cerebral blood flow", "perfusion")
+        "cerebral blood flow", "perfusion"
+    )
     # An unembedded string still gets a score rather than an exception.
     assert 0.0 <= sem.similarity("cerebral blood flow", "unseen text") <= 1.0

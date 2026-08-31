@@ -10,20 +10,27 @@ from __future__ import annotations
 
 import collections
 import json
-import sys
 from pathlib import Path
-
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
 
 import pytest
 
-
-from pipeline import repairs as repair_module  # noqa: E402
-from pipeline.driver import plan, run_paper  # noqa: E402
-from pipeline.kinds import (DONE, FAILED, NOT_REQUESTED, SKIPPED, Cost,  # noqa: E402
-                            Paper, PaperOutcome, RunReport, StageOutcome, TableParse)
-from pipeline.stages import Settings, SignSplit, Stage  # noqa: E402
+from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
+from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
+from pondie.extraction.passes.pipeline import repairs as repair_module  # noqa: E402
+from pondie.extraction.passes.pipeline.driver import plan, run_paper  # noqa: E402
+from pondie.extraction.passes.pipeline.kinds import (  # noqa: E402
+    DONE,
+    FAILED,
+    NOT_REQUESTED,
+    SKIPPED,
+    Cost,
+    Paper,
+    PaperOutcome,
+    RunReport,
+    StageOutcome,
+    TableParse,
+)
+from pondie.extraction.passes.pipeline.stages import Settings, SignSplit, Stage  # noqa: E402
 
 
 def _paper(tmp_path: Path, study: str = "S1", flavours=(("local", "text.tables.txt"),)):
@@ -39,11 +46,13 @@ def _paper(tmp_path: Path, study: str = "S1", flavours=(("local", "text.tables.t
 
 
 def _settings(tmp_path: Path) -> Settings:
-    return Settings(payloads=tmp_path / "p", records=tmp_path / "r",
-                    key_file=tmp_path / ".env", model="m")
+    return Settings(
+        payloads=tmp_path / "p", records=tmp_path / "r", key_file=tmp_path / ".env", model="m"
+    )
 
 
 # --- Paper ------------------------------------------------------------------
+
 
 def test_the_table_bearing_flavour_wins(tmp_path):
     # A locator searching a table-free text cannot find the sentence a group size was
@@ -69,11 +78,19 @@ def test_a_paper_with_no_table_parse_is_not_ready(tmp_path):
 
 # --- TableParse and the withheld halves -------------------------------------
 
+
 def test_described_and_withheld_are_separable(tmp_path):
     path = tmp_path / "analyses.json"
-    path.write_text(json.dumps({"analyses": [
-        {"name": "A > B"},
-        {"name": "A > B (reversed)", "withhold": True, "mirror_of": "A > B"}]}))
+    path.write_text(
+        json.dumps(
+            {
+                "analyses": [
+                    {"name": "A > B"},
+                    {"name": "A > B (reversed)", "withhold": True, "mirror_of": "A > B"},
+                ]
+            }
+        )
+    )
     parse = TableParse.load(path)
     assert [a.name for a in parse.described()] == ["A > B"]
     assert [a.mirror_of for a in parse.withheld()] == ["A > B"]
@@ -81,9 +98,21 @@ def test_described_and_withheld_are_separable(tmp_path):
 
 def test_the_split_stage_withholds_the_reversed_half(tmp_path):
     paper = _paper(tmp_path)
-    paper.stage1_path.write_text(json.dumps({"analyses": [{"name": "A > B", "points": [
-        {"values": [{"kind": "t", "value": 3.1}]},
-        {"values": [{"kind": "t", "value": -2.9}]}]}]}))
+    paper.stage1_path.write_text(
+        json.dumps(
+            {
+                "analyses": [
+                    {
+                        "name": "A > B",
+                        "points": [
+                            {"values": [{"kind": "t", "value": 3.1}]},
+                            {"values": [{"kind": "t", "value": -2.9}]},
+                        ],
+                    }
+                ]
+            }
+        )
+    )
     outcome = SignSplit().run(paper, _settings(tmp_path))
     assert outcome.status == DONE
     parse = TableParse.load(paper.stage1_path)
@@ -94,9 +123,21 @@ def test_the_split_stage_withholds_the_reversed_half(tmp_path):
 def test_the_split_stage_does_not_re_split_what_it_already_partitioned(tmp_path):
     # Idempotence is what lets a resumed run re-enter this stage safely.
     paper = _paper(tmp_path)
-    paper.stage1_path.write_text(json.dumps({"analyses": [{"name": "A > B", "points": [
-        {"values": [{"kind": "t", "value": 3.1}]},
-        {"values": [{"kind": "t", "value": -2.9}]}]}]}))
+    paper.stage1_path.write_text(
+        json.dumps(
+            {
+                "analyses": [
+                    {
+                        "name": "A > B",
+                        "points": [
+                            {"values": [{"kind": "t", "value": 3.1}]},
+                            {"values": [{"kind": "t", "value": -2.9}]},
+                        ],
+                    }
+                ]
+            }
+        )
+    )
     settings = _settings(tmp_path)
     SignSplit().run(paper, settings)
     before = paper.stage1_path.read_text()
@@ -105,6 +146,7 @@ def test_the_split_stage_does_not_re_split_what_it_already_partitioned(tmp_path)
 
 
 # --- accounting -------------------------------------------------------------
+
 
 def test_costs_add():
     total = Cost(10, 2, calls=1) + Cost(5, 1, calls=1)
@@ -128,6 +170,7 @@ def test_the_report_totals_by_stage():
 
 
 # --- sequencing -------------------------------------------------------------
+
 
 class _Fake(Stage):
     def __init__(self, name, fails=False):
@@ -190,6 +233,7 @@ def test_the_plan_says_what_would_run_without_running_it(tmp_path):
 
 # --- the repair sequence ----------------------------------------------------
 
+
 def test_the_declared_repair_order_holds():
     assert repair_module.check_order(repair_module.build_sequence()) == []
 
@@ -203,8 +247,10 @@ def test_an_order_that_violates_its_own_constraint_is_refused():
 
 
 def test_the_log_says_which_repairs_fired():
-    sequence = (repair_module.Repair("noisy", "", lambda body, ctx: ["did a thing"]),
-                repair_module.Repair("quiet", "", lambda body, ctx: []))
+    sequence = (
+        repair_module.Repair("noisy", "", lambda body, ctx: ["did a thing"]),
+        repair_module.Repair("quiet", "", lambda body, ctx: []),
+    )
     log = repair_module.apply_all({}, repair_module.Context(classes={}), sequence)
     assert log.fired() == ["noisy"]
     assert log.total == 1
@@ -221,18 +267,23 @@ def test_the_mirror_runs_after_the_direction_fill():
 
 # --- adopting a corpus split by the earlier rule -----------------------------
 
-from parse_tables import adopt_withholding  # noqa: E402
+from pondie.extraction.passes.parse_tables import adopt_withholding  # noqa: E402
 
 
 def _part(parent, direction, points=1):
-    return {"name": f"{parent} ({direction})", "split_from": parent,
-            "split_direction": direction, "split_rule": "sign-of-directional-statistic",
-            "points": [{"values": [{"kind": "t", "value": 1.0}]}] * points}
+    return {
+        "name": f"{parent} ({direction})",
+        "split_from": parent,
+        "split_direction": direction,
+        "split_rule": "sign-of-directional-statistic",
+        "points": [{"values": [{"kind": "t", "value": 1.0}]}] * points,
+    }
 
 
 def test_an_old_pair_becomes_a_described_half_and_a_withheld_one():
     analyses, converted = adopt_withholding(
-        [_part("A > B", "positive"), _part("A > B", "negative")])
+        [_part("A > B", "positive"), _part("A > B", "negative")]
+    )
     described = [a for a in analyses if not a.get("withhold")]
     withheld = [a for a in analyses if a.get("withhold")]
     # The described half takes the paper's own name back: the prompt tells the model to
@@ -245,8 +296,11 @@ def test_an_old_pair_becomes_a_described_half_and_a_withheld_one():
 def test_an_entry_split_on_something_else_as_well_is_left_alone():
     # Three parts sharing a parent means a band or a session was also split on, and
     # which one the paper describes is not answerable from the sign.
-    parts = [_part("A > B", "positive"), _part("A > B", "negative"),
-             _part("A > B", "positive")]
+    parts = [
+        _part("A > B", "positive"),
+        _part("A > B", "negative"),
+        _part("A > B", "positive"),
+    ]
     analyses, converted = adopt_withholding(parts)
     assert converted == []
     assert not any(a.get("withhold") for a in analyses)
@@ -268,7 +322,7 @@ def test_adoption_is_idempotent():
 
 # --- resume safety ----------------------------------------------------------
 
-from pipeline.stages import Evidence  # noqa: E402
+from pondie.extraction.passes.pipeline.stages import Evidence  # noqa: E402
 
 
 def test_a_started_but_unfinished_evidence_stage_is_not_done(tmp_path):
@@ -279,8 +333,9 @@ def test_a_started_but_unfinished_evidence_stage_is_not_done(tmp_path):
     settings = _settings(tmp_path)
     payloads = settings.payload_dir(paper)
     (payloads / "noev").mkdir(parents=True)
-    (payloads / "analyses.json").write_text(json.dumps(
-        {"analyses": [{"name": {"extraction_status": "extracted", "value": "x"}}]}))
+    (payloads / "analyses.json").write_text(
+        json.dumps({"analyses": [{"name": {"extraction_status": "extracted", "value": "x"}}]})
+    )
     assert Evidence().is_done(paper, settings) is False
 
 
@@ -289,18 +344,34 @@ def test_evidence_is_done_once_a_payload_carries_it(tmp_path):
     settings = _settings(tmp_path)
     payloads = settings.payload_dir(paper)
     (payloads / "noev").mkdir(parents=True)
-    (payloads / "analyses.json").write_text(json.dumps(
-        {"analyses": [{"name": {"extraction_status": "extracted", "value": "x",
-                                "evidence": {"status": "present"}}}]}))
+    (payloads / "analyses.json").write_text(
+        json.dumps(
+            {
+                "analyses": [
+                    {
+                        "name": {
+                            "extraction_status": "extracted",
+                            "value": "x",
+                            "evidence": {"status": "present"},
+                        }
+                    }
+                ]
+            }
+        )
+    )
     assert Evidence().is_done(paper, settings) is True
 
 
 def test_devices_are_spread_and_reproducible(tmp_path):
     # crc32 and not hash: Python randomises string hashing per process, so a resumed run
     # would assign differently from the one that wrote the payloads.
-    settings = Settings(payloads=tmp_path / "p", records=tmp_path / "r",
-                        key_file=tmp_path / ".env", model="m",
-                        reranker_devices=("cuda:0", "cuda:1", "cuda:2", "cuda:3"))
+    settings = Settings(
+        payloads=tmp_path / "p",
+        records=tmp_path / "r",
+        key_file=tmp_path / ".env",
+        model="m",
+        reranker_devices=("cuda:0", "cuda:1", "cuda:2", "cuda:3"),
+    )
     papers = [Paper(f"study{i}", tmp_path) for i in range(40)]
     spread = collections.Counter(settings.device_for(p) for p in papers)
     assert len(spread) == 4 and max(spread.values()) - min(spread.values()) <= 2
@@ -309,22 +380,33 @@ def test_devices_are_spread_and_reproducible(tmp_path):
 
 # --- the deterministic repairs added for validator findings -------------------
 
-import build_record as br  # noqa: E402
+from pondie.extraction.passes import build_record as br  # noqa: E402
 
 
 @pytest.fixture(scope="module")
 def classes():
     import schema_utils
-    from build_record import EXTRACTION_SCHEMA
+
+    from pondie.extraction.passes.build_record import EXTRACTION_SCHEMA
+
     return schema_utils.load_imported_classes(EXTRACTION_SCHEMA)
 
 
 def test_a_wrapper_in_a_reference_slot_is_unwrapped(classes):
     # The model has just written twenty wrappers and writes a twenty-first into a slot
     # that holds a bare local_id. The wrapper's own value is the answer.
-    body = {"analyses": [{"local_id": "a1",
-                          "model_estimation": {"extraction_status": "extracted",
-                                               "value": "m1", "evidence": {"status": "present"}}}]}
+    body = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "model_estimation": {
+                    "extraction_status": "extracted",
+                    "value": "m1",
+                    "evidence": {"status": "present"},
+                },
+            }
+        ]
+    }
     changed = br.unwrap_plain_slots(body, classes)
     assert body["analyses"][0]["model_estimation"] == "m1"
     assert changed
@@ -333,19 +415,36 @@ def test_a_wrapper_in_a_reference_slot_is_unwrapped(classes):
 def test_a_wrapper_in_an_evidence_slot_is_left_alone(classes):
     # An evidence slot is supposed to hold a wrapper; unwrapping it destroys the value
     # and the span that warrants it.
-    body = {"groups": [{"local_id": "g1",
-                        "name": {"extraction_status": "extracted", "value": "controls",
-                                 "evidence": {"status": "present"}}}]}
+    body = {
+        "groups": [
+            {
+                "local_id": "g1",
+                "name": {
+                    "extraction_status": "extracted",
+                    "value": "controls",
+                    "evidence": {"status": "present"},
+                },
+            }
+        ]
+    }
     br.unwrap_plain_slots(body, classes)
     assert isinstance(body["groups"][0]["name"], dict)
     assert body["groups"][0]["name"]["value"] == "controls"
 
 
 def test_a_numeric_string_becomes_the_number_its_slot_declares(classes):
-    body = {"acquisitions": [{"local_id": "acq1",
-                              "acquisition_duration_seconds": {
-                                  "extraction_status": "extracted", "value": "252 s",
-                                  "evidence": {"status": "present"}}}]}
+    body = {
+        "acquisitions": [
+            {
+                "local_id": "acq1",
+                "acquisition_duration_seconds": {
+                    "extraction_status": "extracted",
+                    "value": "252 s",
+                    "evidence": {"status": "present"},
+                },
+            }
+        ]
+    }
     changed = br.coerce_numeric_values(body, classes)
     assert body["acquisitions"][0]["acquisition_duration_seconds"]["value"] == 252.0
     assert changed
@@ -353,10 +452,18 @@ def test_a_numeric_string_becomes_the_number_its_slot_declares(classes):
 
 def test_a_value_that_is_not_a_number_is_left_for_the_validator(classes):
     # Inventing a number is worse than reporting a string.
-    body = {"acquisitions": [{"local_id": "acq1",
-                              "acquisition_duration_seconds": {
-                                  "extraction_status": "extracted", "value": "not stated",
-                                  "evidence": {"status": "present"}}}]}
+    body = {
+        "acquisitions": [
+            {
+                "local_id": "acq1",
+                "acquisition_duration_seconds": {
+                    "extraction_status": "extracted",
+                    "value": "not stated",
+                    "evidence": {"status": "present"},
+                },
+            }
+        ]
+    }
     assert br.coerce_numeric_values(body, classes) == []
     assert body["acquisitions"][0]["acquisition_duration_seconds"]["value"] == "not stated"
 
@@ -364,8 +471,10 @@ def test_a_value_that_is_not_a_number_is_left_for_the_validator(classes):
 def test_a_table_written_as_a_study_attribute_is_rehomed(classes):
     # The stray key is dropped on load, so every analysis pointing at it loses the table
     # its coordinates join through and the paper contributes nothing.
-    body = {"analyses": [{"local_id": "a1", "tables": ["tab4"]}],
-            "tab4": {"table_number": {"extraction_status": "extracted", "value": 4}}}
+    body = {
+        "analyses": [{"local_id": "a1", "tables": ["tab4"]}],
+        "tab4": {"table_number": {"extraction_status": "extracted", "value": 4}},
+    }
     moved = br.rehome_stray_tables(body, classes)
     assert "tab4" not in body
     assert [t["local_id"] for t in body["tables"]] == ["tab4"]
@@ -382,12 +491,24 @@ def _scoped(cell_term):
     return {
         "model_estimations": [
             {"local_id": "m_low", "terms": [{"local_id": "t_low", "name": _wrapped("group")}]},
-            {"local_id": "m_high", "inputs_from": ["m_low"],
-             "terms": [{"local_id": "t_high", "name": _wrapped("condition")}]},
-            {"local_id": "m_other", "terms": [{"local_id": "t_other", "name": _wrapped("group")}]},
+            {
+                "local_id": "m_high",
+                "inputs_from": ["m_low"],
+                "terms": [{"local_id": "t_high", "name": _wrapped("condition")}],
+            },
+            {
+                "local_id": "m_other",
+                "terms": [{"local_id": "t_other", "name": _wrapped("group")}],
+            },
         ],
-        "analyses": [{"local_id": "a1", "model_estimation": "m_high",
-                      "effect": {"cells": [{"term": cell_term, "level": _wrapped("x")}]}}]}
+        "analyses": [
+            {
+                "local_id": "a1",
+                "model_estimation": "m_high",
+                "effect": {"cells": [{"term": cell_term, "level": _wrapped("x")}]},
+            }
+        ],
+    }
 
 
 def test_a_cell_is_repointed_to_the_same_named_term_in_scope():
@@ -416,7 +537,8 @@ def test_no_same_named_term_in_scope_is_left_reported():
 def test_two_same_named_terms_in_scope_are_not_guessed_between():
     body = _scoped("t_other")
     body["model_estimations"][1]["terms"].append(
-        {"local_id": "t_dup", "name": _wrapped("group")})
+        {"local_id": "t_dup", "name": _wrapped("group")}
+    )
     assert br.repoint_out_of_scope_terms(body) == []
 
 
@@ -424,18 +546,39 @@ def test_a_valueless_wrapper_in_a_reference_slot_is_dropped(classes):
     # Every valueless wrapper in the corpus says `not_reported`, which is correct in an
     # evidence slot and meaningless in a reference slot: a reference has no wrapper form,
     # so "not reported" is simply absence.
-    body = {"model_estimations": [{"local_id": "m1", "terms": [
-        {"local_id": "t1", "name": {"value": "age"},
-         "assessment": {"extraction_status": "not_reported",
-                        "evidence": {"status": "not_applicable"}}}]}]}
+    body = {
+        "model_estimations": [
+            {
+                "local_id": "m1",
+                "terms": [
+                    {
+                        "local_id": "t1",
+                        "name": {"value": "age"},
+                        "assessment": {
+                            "extraction_status": "not_reported",
+                            "evidence": {"status": "not_applicable"},
+                        },
+                    }
+                ],
+            }
+        ]
+    }
     changed = br.unwrap_plain_slots(body, classes)
     assert "assessment" not in body["model_estimations"][0]["terms"][0]
     assert changed and "dropped" in changed[0]
 
 
 def test_a_bare_scalar_in_an_evidence_slot_is_wrapped(classes):
-    body = {"analyses": [{"local_id": "a1", "effect": {"cells": [
-        {"term": "t1", "level": {"value": "x"}, "direction": "held"}]}}]}
+    body = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "effect": {
+                    "cells": [{"term": "t1", "level": {"value": "x"}, "direction": "held"}]
+                },
+            }
+        ]
+    }
     changed = br.unwrap_plain_slots(body, classes)
     cell = body["analyses"][0]["effect"]["cells"][0]
     assert cell["direction"]["value"] == "held"
@@ -447,7 +590,7 @@ def test_a_bare_scalar_in_an_evidence_slot_is_wrapped(classes):
 
 # --- the Tables stage, and the regression that motivated it -------------------
 
-from pipeline.stages import Tables  # noqa: E402
+from pondie.extraction.passes.pipeline.stages import Tables  # noqa: E402
 
 
 def _paper_with_manifest(tmp_path, rows, flavour="ace", name="text.txt"):
@@ -464,9 +607,17 @@ def _paper_with_manifest(tmp_path, rows, flavour="ace", name="text.txt"):
 def test_tables_are_copied_from_the_flavour_the_text_came_from(tmp_path):
     # The earlier implementation hardcoded processed/pubget/tables.jsonl, which no paper
     # staged from `ace` or `elsevier` has -- and this corpus is mostly those.
-    paper = _paper_with_manifest(tmp_path, [
-        {"table_id": "t0035", "table_number": 3, "caption": "Between-group differences.",
-         "footer": "L, left."}])
+    paper = _paper_with_manifest(
+        tmp_path,
+        [
+            {
+                "table_id": "t0035",
+                "table_number": 3,
+                "caption": "Between-group differences.",
+                "footer": "L, left.",
+            }
+        ],
+    )
     settings = _settings(tmp_path)
     outcome = Tables().run(paper, settings)
     assert outcome.status == DONE
@@ -490,8 +641,9 @@ def test_a_table_with_no_caption_is_not_reported_rather_than_empty(tmp_path):
 def test_table_number_is_not_used_as_the_identifier(tmp_path):
     # One paper in the corpus carries two tables numbered 1; keying on the number would
     # collapse them into one record.
-    paper = _paper_with_manifest(tmp_path, [
-        {"table_id": "a", "table_number": 1}, {"table_id": "b", "table_number": 1}])
+    paper = _paper_with_manifest(
+        tmp_path, [{"table_id": "a", "table_number": 1}, {"table_id": "b", "table_number": 1}]
+    )
     settings = _settings(tmp_path)
     Tables().run(paper, settings)
     written = json.loads((settings.payload_dir(paper) / "tables.json").read_text())
@@ -507,7 +659,8 @@ def test_a_paper_with_no_manifest_is_not_a_failure(tmp_path):
 
 def test_the_baseline_runs_tables_before_demands():
     # The analyses pass is told the local_ids this stage assigns, so it cannot run after.
-    from pipeline.stages import BASELINE
+    from pondie.extraction.passes.pipeline.stages import BASELINE
+
     names = [s.name for s in BASELINE]
     assert names.index("tables") < names.index("demands")
     assert "tables" in dict((s.name, s.needs) for s in BASELINE)["demands"]
@@ -515,11 +668,16 @@ def test_the_baseline_runs_tables_before_demands():
 
 # --- the link from an analysis to its parsed row group ------------------------
 
+
 def _wrapped(value):
     """A realistic ExtractedValue. `_is_field` keys on `extraction_status`, so a fixture
     of bare `{"value": ...}` never gets unwrapped and tests nothing."""
-    return {"extraction_status": "extracted", "value": value, "value_source": "reported",
-            "evidence": {"status": "not_applicable"}}
+    return {
+        "extraction_status": "extracted",
+        "value": value,
+        "value_source": "reported",
+        "evidence": {"status": "not_applicable"},
+    }
 
 
 def _stage1(tmp_path, entries):
@@ -529,11 +687,20 @@ def _stage1(tmp_path, entries):
 
 
 def test_a_present_key_that_names_a_row_group_is_left_alone(tmp_path):
-    stage1 = _stage1(tmp_path, [{"table_id": "t1", "name": "SZ > HC"},
-                                {"table_id": "t1", "name": "HC > SZ"}])
-    body = {"analyses": [{"local_id": "a1", "tables": ["t1"],
-                          "name": _wrapped("HC > SZ"),
-                          "source_table_analysis": _wrapped("t1#2")}]}
+    stage1 = _stage1(
+        tmp_path,
+        [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t1", "name": "HC > SZ"}],
+    )
+    body = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "tables": ["t1"],
+                "name": _wrapped("HC > SZ"),
+                "source_table_analysis": _wrapped("t1#2"),
+            }
+        ]
+    }
     assert br.resolve_source_table_analysis(body, stage1) == []
     assert body["analyses"][0]["source_table_analysis"]["value"] == "t1#2"
 
@@ -541,19 +708,27 @@ def test_a_present_key_that_names_a_row_group_is_left_alone(tmp_path):
 def test_an_invented_key_is_dropped(tmp_path):
     # A key that resolves to nothing is worse than none: it looks like a working join.
     stage1 = _stage1(tmp_path, [{"table_id": "t1", "name": "SZ > HC"}])
-    body = {"analyses": [{"local_id": "a1", "tables": ["t1"],
-                          "name": _wrapped("something else"),
-                          "source_table_analysis": _wrapped("t9#7")}]}
+    body = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "tables": ["t1"],
+                "name": _wrapped("something else"),
+                "source_table_analysis": _wrapped("t9#7"),
+            }
+        ]
+    }
     notes = br.resolve_source_table_analysis(body, stage1)
     assert "source_table_analysis" not in body["analyses"][0]
     assert notes and "names no parsed row group" in notes[0]
 
 
 def test_a_missing_key_is_filled_from_a_unique_name_match(tmp_path):
-    stage1 = _stage1(tmp_path, [{"table_id": "t1", "name": "SZ > HC"},
-                                {"table_id": "t1", "name": "HC > SZ"}])
-    body = {"analyses": [{"local_id": "a1", "tables": ["t1"],
-                          "name": _wrapped("HC>SZ")}]}
+    stage1 = _stage1(
+        tmp_path,
+        [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t1", "name": "HC > SZ"}],
+    )
+    body = {"analyses": [{"local_id": "a1", "tables": ["t1"], "name": _wrapped("HC>SZ")}]}
     notes = br.resolve_source_table_analysis(body, stage1)
     assert body["analyses"][0]["source_table_analysis"]["value"] == "t1#2"
     # Filled, not read off the page, so the provenance says so.
@@ -563,19 +738,23 @@ def test_a_missing_key_is_filled_from_a_unique_name_match(tmp_path):
 
 def test_an_ambiguous_name_leaves_the_analysis_honestly_unjoinable(tmp_path):
     # Two row groups with the same name: the join is a guess, and the slot stays empty.
-    stage1 = _stage1(tmp_path, [{"table_id": "t1", "name": "SZ > HC"},
-                                {"table_id": "t2", "name": "SZ > HC"}])
-    body = {"analyses": [{"local_id": "a1", "tables": ["t1", "t2"],
-                          "name": _wrapped("SZ > HC")}]}
+    stage1 = _stage1(
+        tmp_path,
+        [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t2", "name": "SZ > HC"}],
+    )
+    body = {
+        "analyses": [{"local_id": "a1", "tables": ["t1", "t2"], "name": _wrapped("SZ > HC")}]
+    }
     assert br.resolve_source_table_analysis(body, stage1) == []
     assert "source_table_analysis" not in body["analyses"][0]
 
 
 def test_the_key_is_scoped_to_the_tables_the_analysis_cites(tmp_path):
-    stage1 = _stage1(tmp_path, [{"table_id": "t1", "name": "SZ > HC"},
-                                {"table_id": "t2", "name": "SZ > HC"}])
-    body = {"analyses": [{"local_id": "a1", "tables": ["t2"],
-                          "name": _wrapped("SZ > HC")}]}
+    stage1 = _stage1(
+        tmp_path,
+        [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t2", "name": "SZ > HC"}],
+    )
+    body = {"analyses": [{"local_id": "a1", "tables": ["t2"], "name": _wrapped("SZ > HC")}]}
     br.resolve_source_table_analysis(body, stage1)
     assert body["analyses"][0]["source_table_analysis"]["value"] == "t2#1"
 
@@ -588,11 +767,18 @@ def test_no_parse_means_nothing_is_invented(tmp_path):
 
 # --- derived analysis ids -----------------------------------------------------
 
+
 def test_an_analysis_id_is_derived_from_its_parse_key():
     # A model-chosen id is unstable: over the same 16 papers extracted twice, only four
     # produced identical analysis ids.
-    body = {"analyses": [{"local_id": "a_independent_component_spatial_maps",
-                          "source_table_analysis": _wrapped("t0035#2")}]}
+    body = {
+        "analyses": [
+            {
+                "local_id": "a_independent_component_spatial_maps",
+                "source_table_analysis": _wrapped("t0035#2"),
+            }
+        ]
+    }
     notes = br.derive_analysis_ids(body)
     assert body["analyses"][0]["local_id"] == "a_t0035_2"
     assert notes and "t0035#2" in notes[0]
@@ -608,9 +794,12 @@ def test_deriving_ids_is_idempotent():
 
 def test_analyses_sharing_a_key_are_numbered_apart():
     # A SPLIT emits several analyses against one listing entry, so they share a key.
-    body = {"analyses": [
-        {"local_id": "a1", "source_table_analysis": _wrapped("t1#1")},
-        {"local_id": "a2", "source_table_analysis": _wrapped("t1#1")}]}
+    body = {
+        "analyses": [
+            {"local_id": "a1", "source_table_analysis": _wrapped("t1#1")},
+            {"local_id": "a2", "source_table_analysis": _wrapped("t1#1")},
+        ]
+    }
     br.derive_analysis_ids(body)
     assert [a["local_id"] for a in body["analyses"]] == ["a_t1_1", "a_t1_1_2"]
 
@@ -625,10 +814,16 @@ def test_an_analysis_with_no_key_keeps_the_models_id():
 
 def test_mirror_of_is_repointed_to_the_new_id():
     # `mirror_of` is the only pointer at an analysis anywhere in the record.
-    body = {"analyses": [
-        {"local_id": "a_described", "source_table_analysis": _wrapped("t1#1")},
-        {"local_id": "a_described-reversed", "mirror_of": "a_described",
-         "source_table_analysis": _wrapped("t1#2")}]}
+    body = {
+        "analyses": [
+            {"local_id": "a_described", "source_table_analysis": _wrapped("t1#1")},
+            {
+                "local_id": "a_described-reversed",
+                "mirror_of": "a_described",
+                "source_table_analysis": _wrapped("t1#2"),
+            },
+        ]
+    }
     br.derive_analysis_ids(body)
     assert body["analyses"][0]["local_id"] == "a_t1_1"
     assert body["analyses"][1]["mirror_of"] == "a_t1_1"
@@ -636,9 +831,12 @@ def test_mirror_of_is_repointed_to_the_new_id():
 
 def test_a_derived_id_already_taken_leaves_both_alone():
     # Collapsing two analyses into one id is worse than an unstable id.
-    body = {"analyses": [
-        {"local_id": "a_t1_1", "name": _wrapped("already answers to it")},
-        {"local_id": "a_other", "source_table_analysis": _wrapped("t1#1")}]}
+    body = {
+        "analyses": [
+            {"local_id": "a_t1_1", "name": _wrapped("already answers to it")},
+            {"local_id": "a_other", "source_table_analysis": _wrapped("t1#1")},
+        ]
+    }
     notes = br.derive_analysis_ids(body)
     assert body["analyses"][1]["local_id"] == "a_other"
     assert notes and "already taken" in notes[0]

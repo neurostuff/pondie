@@ -8,17 +8,14 @@ most of these tests are about refusing, not about matching.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
-
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
 
 import pytest
 
-
-from pipeline import normalize as nz  # noqa: E402
-from pipeline import query as q  # noqa: E402
+from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
+from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
+from pondie.extraction.passes.pipeline import normalize as nz  # noqa: E402
+from pondie.extraction.passes.pipeline import query as q  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -27,6 +24,7 @@ def onvoc():
 
 
 # --- surface forms ----------------------------------------------------------
+
 
 def test_a_parenthetical_acronym_is_its_own_candidate():
     got = nz.variants("Autism Diagnostic Observation Schedule (ADOS)")
@@ -47,6 +45,7 @@ def test_a_phrase_of_only_qualifiers_keeps_its_words():
 
 
 # --- acronyms ---------------------------------------------------------------
+
 
 def test_an_apostrophe_does_not_manufacture_an_initial():
     # Folding `Alzheimer's Disease` leaves a stray `s`, which turned a two-word name
@@ -72,20 +71,31 @@ def test_an_uncorroborated_acronym_is_refused(onvoc):
 
 
 def test_an_acronym_the_record_spells_out_is_accepted(onvoc):
-    record = {"local_id": "S1", "groups": [
-        {"name": {"value": "ASD"},
-         "description": {"value": "children with autism spectrum disorder"}}]}
+    record = {
+        "local_id": "S1",
+        "groups": [
+            {
+                "name": {"value": "ASD"},
+                "description": {"value": "children with autism spectrum disorder"},
+            }
+        ],
+    }
     mapped = [m for m in nz.normalize(record, {"ONVOC": onvoc}) if m.path == "groups.name"]
     assert mapped[0].matched and mapped[0].method == "acronym"
 
 
 # --- branch routing ---------------------------------------------------------
 
+
 def test_a_test_is_not_matched_to_a_psychological_concept(onvoc):
     # `Wechsler Abbreviated Scale of Intelligence` contains the word `Intelligence`, and
     # an unscoped lookup returns that concept confidently and wrongly.
-    record = {"local_id": "S1", "assessments": [
-        {"name": {"value": "Wechsler Abbreviated Scale of Intelligence (WASI-IV)"}}]}
+    record = {
+        "local_id": "S1",
+        "assessments": [
+            {"name": {"value": "Wechsler Abbreviated Scale of Intelligence (WASI-IV)"}}
+        ],
+    }
     mapped = nz.normalize(record, {"ONVOC": onvoc})
     assert all(m.concept is None or m.concept.branch == "Tests" for m in mapped)
 
@@ -104,6 +114,7 @@ def test_an_agent_is_looked_up_only_among_drugs(onvoc):
 
 # --- morphology -------------------------------------------------------------
 
+
 def test_a_stem_bridges_depression_to_depressive_disorder(onvoc):
     concept, _method, _others = onvoc.scoped(("disorders",)).match("depression")
     assert concept is not None and "Depress" in concept.label
@@ -119,20 +130,39 @@ def test_an_ambiguous_stem_is_not_guessed():
 
 # --- the treatment/control query --------------------------------------------
 
+
 def _trial(levels, kinds=("pharmacological", "placebo")):
     return {
         "local_id": "S1",
-        "design": {"arms": [
-            {"local_id": "a1", "name": {"value": "escitalopram"},
-             "arm_kind": {"value": kinds[0]}, "agent": {"value": "escitalopram"}},
-            {"local_id": "a2", "name": {"value": "placebo"},
-             "arm_kind": {"value": kinds[1]}, "agent": {"value": "saline"}}]},
-        "analyses": [{"local_id": "an1", "name": {"value": "drug > placebo"},
-                      "effect": {"cells": [
-                          {"level": {"value": levels[0]},
-                           "direction": {"value": "positive"}},
-                          {"level": {"value": levels[1]},
-                           "direction": {"value": "negative"}}]}}]}
+        "design": {
+            "arms": [
+                {
+                    "local_id": "a1",
+                    "name": {"value": "escitalopram"},
+                    "arm_kind": {"value": kinds[0]},
+                    "agent": {"value": "escitalopram"},
+                },
+                {
+                    "local_id": "a2",
+                    "name": {"value": "placebo"},
+                    "arm_kind": {"value": kinds[1]},
+                    "agent": {"value": "saline"},
+                },
+            ]
+        },
+        "analyses": [
+            {
+                "local_id": "an1",
+                "name": {"value": "drug > placebo"},
+                "effect": {
+                    "cells": [
+                        {"level": {"value": levels[0]}, "direction": {"value": "positive"}},
+                        {"level": {"value": levels[1]}, "direction": {"value": "negative"}},
+                    ]
+                },
+            }
+        ],
+    }
 
 
 def test_an_intervention_against_a_comparator_is_found():
@@ -146,9 +176,16 @@ def test_an_intervention_against_a_comparator_is_found():
 
 
 def test_a_trial_with_no_comparator_arm_yields_nothing():
-    assert list(q.treatment_contrasts(
-        _trial(("escitalopram", "placebo"),
-               kinds=("pharmacological", "pharmacological")))) == []
+    assert (
+        list(
+            q.treatment_contrasts(
+                _trial(
+                    ("escitalopram", "placebo"), kinds=("pharmacological", "pharmacological")
+                )
+            )
+        )
+        == []
+    )
 
 
 def test_a_group_contrast_is_not_a_treatment_contrast():
@@ -163,11 +200,19 @@ def test_a_level_naming_two_arms_places_neither():
     assert list(q.treatment_contrasts(record)) == []
 
 
-@pytest.mark.parametrize("kind,expected", [
-    ("pharmacological", "intervention"), ("stimulation", "intervention"),
-    ("active_comparator", "intervention"), ("placebo", "comparator"),
-    ("sham", "comparator"), ("usual_care", "comparator"),
-    ("no_intervention", "comparator"), ("", None)])
+@pytest.mark.parametrize(
+    "kind,expected",
+    [
+        ("pharmacological", "intervention"),
+        ("stimulation", "intervention"),
+        ("active_comparator", "intervention"),
+        ("placebo", "comparator"),
+        ("sham", "comparator"),
+        ("usual_care", "comparator"),
+        ("no_intervention", "comparator"),
+        ("", None),
+    ],
+)
 def test_every_arm_kind_has_a_side(kind, expected):
     assert q.role(kind) == expected
 
@@ -179,7 +224,7 @@ def test_levels_are_matched_by_words_not_similarity():
 
 # --- abbreviations ----------------------------------------------------------
 
-from pipeline import abbreviations as ab  # noqa: E402
+from pondie.extraction.passes.pipeline import abbreviations as ab  # noqa: E402
 
 
 def test_a_definition_in_brackets_is_mined():
@@ -250,10 +295,13 @@ def test_expansion_reaches_a_vocabulary_the_acronym_cannot(onvoc):
 
 # --- new-term candidates ----------------------------------------------------
 
+
 def test_unmatched_values_become_counted_candidates():
-    rows = [nz.Mapping("A", "assessments.name", "Beck Depression Inventory", None),
-            nz.Mapping("B", "assessments.name", "beck depression inventory (BDI)", None),
-            nz.Mapping("C", "assessments.name", "Something Else", None)]
+    rows = [
+        nz.Mapping("A", "assessments.name", "Beck Depression Inventory", None),
+        nz.Mapping("B", "assessments.name", "beck depression inventory (BDI)", None),
+        nz.Mapping("C", "assessments.name", "Something Else", None),
+    ]
     got = nz.candidates(rows, minimum=2)
     assert len(got) == 1
     assert got[0].support == 2

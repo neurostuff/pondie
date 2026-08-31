@@ -21,22 +21,20 @@ construction. The records themselves are read through `schema_utils.value_of`, w
 wrapper and the multivalued shape from the LinkML schema -- see
 docs/pipeline-architecture.md#the-contract-at-each-seam.
 """
+
 from __future__ import annotations
 
 import glob as globlib
 import json
 import re
-import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Iterable, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
 from schema_utils import value_of  # noqa: E402
 
-from ..normalization import coordinate_space  # noqa: E402
+from pondie.normalization import coordinate_space  # noqa: E402
 
 SpatialScope = Literal["whole_brain", "roi", "searchlight", "other"]
 Space = Literal["MNI", "TAL", "OTHER", "UNKNOWN"]
@@ -82,8 +80,14 @@ class Selection(BaseModel):
 class Result:
     """The selected rows, the funnel that produced them, and a NiMARE dataset."""
 
-    def __init__(self, selection: Selection, rows: list[dict], lost: Counter,
-                 kept_papers: set[str], seen_papers: set[str]):
+    def __init__(
+        self,
+        selection: Selection,
+        rows: list[dict],
+        lost: Counter,
+        kept_papers: set[str],
+        seen_papers: set[str],
+    ):
         self.selection, self.rows, self.lost = selection, rows, lost
         self.kept_papers, self.seen_papers = kept_papers, seen_papers
 
@@ -92,31 +96,38 @@ class Result:
         return {r["study"] for r in self.rows}
 
     def funnel(self) -> str:
-        out = [f"{len(self.seen_papers)} papers read, {len(self.kept_papers)} contribute",
-               f"{len(self.rows)} analyses selected from {len(self.studies)} studies, "
-               f"{sum(len(r['points']) for r in self.rows)} foci"]
+        out = [
+            f"{len(self.seen_papers)} papers read, {len(self.kept_papers)} contribute",
+            f"{len(self.rows)} analyses selected from {len(self.studies)} studies, "
+            f"{sum(len(r['points']) for r in self.rows)} foci",
+        ]
         if self.lost:
             out.append("lost:")
             out += [f"   {n:5d}  {why}" for why, n in self.lost.most_common()]
         if len(self.studies) < self.selection.min_studies:
-            out.append(f"WARNING: {len(self.studies)} studies is below min_studies="
-                       f"{self.selection.min_studies}; a coordinate meta-analysis over this "
-                       f"many converges on whichever paper reports the most foci")
+            out.append(
+                f"WARNING: {len(self.studies)} studies is below min_studies="
+                f"{self.selection.min_studies}; a coordinate meta-analysis over this "
+                f"many converges on whichever paper reports the most foci"
+            )
         return "\n".join(out)
 
     def to_dataset(self, target: str = "mni152_2mm"):
         """One experiment per study. `Studyset.combine_analyses()` does the pooling."""
         from nimare.dataset import Dataset
         from nimare.nimads import Studyset
+
         data: dict[str, dict] = {}
         for row in self.rows:
             held = data.setdefault(row["study"], {"contrasts": {}})
             xs, ys, zs = zip(*row["points"])
             held["contrasts"][str(len(held["contrasts"]))] = {
                 "coords": {"space": "MNI", "x": list(xs), "y": list(ys), "z": list(zs)},
-                "metadata": {"sample_sizes": [row["n"] or 30]}}
-        return Studyset.from_dataset(Dataset(data, target=target)) \
-                       .combine_analyses().to_dataset()
+                "metadata": {"sample_sizes": [row["n"] or 30]},
+            }
+        return (
+            Studyset.from_dataset(Dataset(data, target=target)).combine_analyses().to_dataset()
+        )
 
 
 def _texts(x) -> list[str]:
@@ -128,15 +139,22 @@ def _texts(x) -> list[str]:
 #: A coordinate meta-analysis indexed as a paper. Its peaks are already a convergence over
 #: primary studies, several of which are usually in the same corpus, so leaving it in counts
 #: those samples twice and piles the double count on the loci under test.
-META_ANALYSIS = re.compile(r"meta-?analy|activation likelihood estimation|\bALE\b|\bMKDA\b|"
-                           r"seed-based d mapping|\bSDM\b|coordinate-based", re.I)
+META_ANALYSIS = re.compile(
+    r"meta-?analy|activation likelihood estimation|\bALE\b|\bMKDA\b|"
+    r"seed-based d mapping|\bSDM\b|coordinate-based",
+    re.I,
+)
 
 
 def _is_meta_analysis(body: dict) -> bool:
     design = body.get("design") if isinstance(body.get("design"), dict) else {}
-    blob = " ".join([str(value_of(body.get("description")) or ""),
-                     str(value_of(design.get("description")) or ""),
-                     *(str(h) for h in (value_of(body.get("hypothesis"), True) or []))])
+    blob = " ".join(
+        [
+            str(value_of(body.get("description")) or ""),
+            str(value_of(design.get("description")) or ""),
+            *(str(h) for h in (value_of(body.get("hypothesis"), True) or [])),
+        ]
+    )
     return bool(META_ANALYSIS.search(blob))
 
 
@@ -144,9 +162,13 @@ def _points(entry: dict, space: str) -> list[list[float]]:
     """Coordinates from one parsed row group, moved into MNI where the space says to."""
     import numpy as np
     from nimare.utils import tal2mni
+
     raw = [p.get("coordinates") for p in (entry.get("points") or [])]
-    raw = [c for c in raw if isinstance(c, list) and len(c) == 3
-           and all(isinstance(v, (int, float)) for v in c)]
+    raw = [
+        c
+        for c in raw
+        if isinstance(c, list) and len(c) == 3 and all(isinstance(v, (int, float)) for v in c)
+    ]
     if not raw:
         return []
     if space == "TAL":
@@ -154,11 +176,12 @@ def _points(entry: dict, space: str) -> list[list[float]]:
     return raw
 
 
-def select(selection: Selection, diagnoses: dict | None = None,
-           task_families: dict | None = None) -> Result:
+def select(
+    selection: Selection, diagnoses: dict | None = None, task_families: dict | None = None
+) -> Result:
     """Apply the funnel. `diagnoses` and `task_families` are the normalizer outputs, keyed
     `study|local_id`; without them those two filters cannot be applied and say so."""
-    import parse_tables
+    from pondie.extraction.passes import parse_tables
 
     lost: Counter = Counter()
     rows: list[dict] = []
@@ -183,8 +206,12 @@ def select(selection: Selection, diagnoses: dict | None = None,
             lost["paper is itself a meta-analysis"] += 1
             continue
         if selection.species is not None:
-            said = {s.lower() for g in (body.get("groups") or []) if isinstance(g, dict)
-                    for s in _texts(g.get("species"))}
+            said = {
+                s.lower()
+                for g in (body.get("groups") or [])
+                if isinstance(g, dict)
+                for s in _texts(g.get("species"))
+            }
             if said and not (said & {s.lower() for s in selection.species}):
                 lost[f"species not in {sorted(selection.species)}"] += 1
                 continue
@@ -196,7 +223,7 @@ def select(selection: Selection, diagnoses: dict | None = None,
             keyed = dict(zip(parse_tables.parse_keys(parsed), parsed))
         points_by_key = {k: (v.get("points") or []) for k, v in keyed.items()}
 
-        for analysis in (body.get("analyses") or []):
+        for analysis in body.get("analyses") or []:
             if not isinstance(analysis, dict):
                 continue
             aid = value_of(analysis.get("local_id"))
@@ -208,9 +235,14 @@ def select(selection: Selection, diagnoses: dict | None = None,
 
             if selection.measure_type is not None:
                 mid = value_of(analysis.get("measure"))
-                kind = next((str(value_of(m.get("type")) or "")
-                             for m in (body.get("measures") or [])
-                             if isinstance(m, dict) and value_of(m.get("local_id")) == mid), "")
+                kind = next(
+                    (
+                        str(value_of(m.get("type")) or "")
+                        for m in (body.get("measures") or [])
+                        if isinstance(m, dict) and value_of(m.get("local_id")) == mid
+                    ),
+                    "",
+                )
                 if kind not in selection.measure_type:
                     lost[f"measure_type={kind or 'unset'}"] += 1
                     continue
@@ -257,17 +289,26 @@ def select(selection: Selection, diagnoses: dict | None = None,
                 count = value_of(link.get("n")) if isinstance(link, dict) else None
                 if isinstance(count, (int, float)):
                     n += int(count)
-            rows.append({"study": study, "analysis": aid, "points": pts, "n": n or None,
-                         "space": resolved["space"],
-                         "name": str(value_of(analysis.get("name")) or "")[:70]})
+            rows.append(
+                {
+                    "study": study,
+                    "analysis": aid,
+                    "points": pts,
+                    "n": n or None,
+                    "space": resolved["space"],
+                    "name": str(value_of(analysis.get("name")) or "")[:70],
+                }
+            )
             kept.add(study)
     return Result(selection, rows, lost, kept, seen)
 
 
 def main() -> int:
     import argparse
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--records", action="append")
     ap.add_argument("--measure-type", action="append")
     ap.add_argument("--spatial-scope", action="append")

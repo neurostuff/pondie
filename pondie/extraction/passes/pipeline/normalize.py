@@ -36,11 +36,35 @@ VOCAB_DIR = Path(__file__).resolve().parents[4] / "data" / "vocab"
 
 #: Words that carry no identity. Dropped only when comparing token sets, never when
 #: deciding whether a phrase exists -- "usual care" is made entirely of weak words.
-_WEAK = frozenset({
-    "the", "a", "an", "of", "in", "and", "or", "for", "with", "group", "groups",
-    "patients", "subjects", "participants", "condition", "conditions", "task", "tasks",
-    "test", "tests", "scale", "inventory", "questionnaire", "disorder", "arm",
-})
+_WEAK = frozenset(
+    {
+        "the",
+        "a",
+        "an",
+        "of",
+        "in",
+        "and",
+        "or",
+        "for",
+        "with",
+        "group",
+        "groups",
+        "patients",
+        "subjects",
+        "participants",
+        "condition",
+        "conditions",
+        "task",
+        "tasks",
+        "test",
+        "tests",
+        "scale",
+        "inventory",
+        "questionnaire",
+        "disorder",
+        "arm",
+    }
+)
 
 
 #: True function words. Distinct from `_WEAK`, which also drops domain nouns for the
@@ -84,8 +108,20 @@ class Concept:
 #: clinical noun phrase and papers write the everyday noun, and no amount of containment
 #: bridges the two: neither string contains the other. Ordered longest first so
 #: `-ational` is tried before `-al`.
-_SUFFIXES = ("ational", "iveness", "ically", "ation", "ities", "ive", "ity", "ies",
-             "ing", "ed", "al", "s")
+_SUFFIXES = (
+    "ational",
+    "iveness",
+    "ically",
+    "ation",
+    "ities",
+    "ive",
+    "ity",
+    "ies",
+    "ing",
+    "ed",
+    "al",
+    "s",
+)
 
 
 def stem(word: str) -> str:
@@ -126,7 +162,9 @@ _PARENTHETICAL = re.compile(r"\s*[\(\[]([^)\]]{2,60})[\)\]]")
 _QUALIFIERS = re.compile(
     r"\b(left|right|bilateral|ipsilateral|contralateral|anterior|posterior|dorsal|"
     r"ventral|superior|inferior|medial|lateral|rostral|caudal|parcel|roi|seed|mask|"
-    r"region|cluster|network|active|sham|total|mean|score|sub|scale)\b", re.I)
+    r"region|cluster|network|active|sham|total|mean|score|sub|scale)\b",
+    re.I,
+)
 
 
 def variants(text: str, abbreviations: Any = None) -> list[str]:
@@ -156,20 +194,23 @@ def variants(text: str, abbreviations: Any = None) -> list[str]:
 
     offer(text)
     for inner in _PARENTHETICAL.findall(text):
-        offer(inner)                                   # the acronym
-    offer(_PARENTHETICAL.sub("", text))                # the phrase without it
+        offer(inner)  # the acronym
+    offer(_PARENTHETICAL.sub("", text))  # the phrase without it
     stripped = _QUALIFIERS.sub(" ", _PARENTHETICAL.sub("", text))
     if content(stripped):
         offer(stripped)
 
     if abbreviations is not None:
-        from .abbreviations import expansions_in  # noqa: PLC0415
+        from pondie.extraction.passes.pipeline.abbreviations import (  # noqa: PLC0415
+            expansions_in,
+        )
 
         for candidate in list(out):
             replaced = candidate
             for short, expansion in expansions_in(candidate, abbreviations):
-                replaced = re.sub(rf"(?<![A-Za-z0-9]){re.escape(short)}(?![A-Za-z0-9])",
-                                  expansion, replaced)
+                replaced = re.sub(
+                    rf"(?<![A-Za-z0-9]){re.escape(short)}(?![A-Za-z0-9])", expansion, replaced
+                )
             if replaced != candidate:
                 offer(replaced)
                 offer(_QUALIFIERS.sub(" ", replaced))
@@ -205,8 +246,10 @@ class Candidate:
 
     def render(self) -> str:
         expanded = f"  (= {self.expansions[0]})" if self.expansions else ""
-        return (f"{self.support:3d} paper(s)  {self.branch_group:11s} "
-                f"{self.text[:58]!r}{expanded}")
+        return (
+            f"{self.support:3d} paper(s)  {self.branch_group:11s} "
+            f"{self.text[:58]!r}{expanded}"
+        )
 
 
 @dataclass(frozen=True)
@@ -232,8 +275,10 @@ class Mapping:
         if not self.concept:
             return f"{self.path}: {self.text!r} -> (no match)"
         extra = f"  ~{len(self.alternatives)} other" if self.alternatives else ""
-        return (f"{self.path}: {self.text!r} -> {self.concept.label!r} "
-                f"[{self.concept.vocabulary}/{self.method}]{extra}")
+        return (
+            f"{self.path}: {self.text!r} -> {self.concept.label!r} "
+            f"[{self.concept.vocabulary}/{self.method}]{extra}"
+        )
 
 
 class Vocabulary:
@@ -261,8 +306,7 @@ class Vocabulary:
                 key = stems(surface)
                 if key:
                     by_stem.setdefault(key, []).append(concept)
-        self.by_stem = {k: v[0] for k, v in by_stem.items()
-                        if len({c.id for c in v}) == 1}
+        self.by_stem = {k: v[0] for k, v in by_stem.items() if len({c.id for c in v}) == 1}
         # Acronyms built from the labels themselves. ONVOC spells `Autism Spectrum
         # Disorder` out and every paper writes `ASD`; the vocabulary carries no synonym
         # for it and nothing else can bridge three letters to three words. Ambiguous
@@ -274,8 +318,11 @@ class Vocabulary:
                 letters = acronym(surface)
                 if letters:
                     by_acronym.setdefault(letters, []).append(concept)
-        self.by_acronym = {k: v[0] for k, v in by_acronym.items()
-                           if len({c.id for c in v}) == 1 and k not in self.by_surface}
+        self.by_acronym = {
+            k: v[0]
+            for k, v in by_acronym.items()
+            if len({c.id for c in v}) == 1 and k not in self.by_surface
+        }
 
     def __len__(self) -> int:
         return len(self.concepts)
@@ -287,11 +334,13 @@ class Vocabulary:
             allowed = {branch for group in groups for branch in BRANCHES.get(group, ())}
             self._scopes[key] = Vocabulary(
                 f"{self.name}/{'+'.join(key)}",
-                [c for c in self.concepts if c.branch in allowed])
+                [c for c in self.concepts if c.branch in allowed],
+            )
         return self._scopes[key]
 
-    def match(self, text: str, abbreviations: Any = None
-              ) -> tuple[Concept | None, str, list[Concept]]:
+    def match(
+        self, text: str, abbreviations: Any = None
+    ) -> tuple[Concept | None, str, list[Concept]]:
         """The best concept for this phrase, the method used, and the runners-up.
 
         Each surface form of the phrase is tried in full before the next is considered,
@@ -315,9 +364,12 @@ class Vocabulary:
 
         # A label appearing whole inside the phrase: "paroxetine 20 mg daily" contains
         # "paroxetine". Guarded on a word boundary so "sham" does not match "shampoo".
-        contained = [surface for surface in self._ordered
-                     if len(surface) >= 4
-                     and re.search(rf"(?<![a-z0-9]){re.escape(surface)}(?![a-z0-9])", key)]
+        contained = [
+            surface
+            for surface in self._ordered
+            if len(surface) >= 4
+            and re.search(rf"(?<![a-z0-9]){re.escape(surface)}(?![a-z0-9])", key)
+        ]
         if contained:
             best = self.by_surface[contained[0]][0]
             return best, "contains", [self.by_surface[s][0] for s in contained[1:4]]
@@ -365,8 +417,11 @@ def crosswalk_synonyms(directory: Path | None = None) -> dict[str, set[str]]:
         header = lines[0].split("\t")
         try:
             onvoc_at = header.index("vocabulary_id")
-            term_at = next(i for i, column in enumerate(header)
-                           if column.endswith("_term") and column != "vocabulary_term")
+            term_at = next(
+                i
+                for i, column in enumerate(header)
+                if column.endswith("_term") and column != "vocabulary_term"
+            )
         except (ValueError, StopIteration):
             continue
         for line in lines[1:]:
@@ -393,16 +448,22 @@ def load_onvoc(path: Path | None = None) -> Vocabulary:
         parents = [p.get("prefLabel") or "" for p in entry.get("parents") or []]
         short = entry.get("@id", "").rsplit("/", 1)[-1].replace("_", ":")
         synonyms = set(entry.get("synonym") or ()) | crosswalked.get(short, set())
-        concepts.append(Concept(
-            id=entry.get("@id", ""), label=label, vocabulary="ONVOC",
-            synonyms=tuple(sorted(synonyms)),
-            branch=next((p for p in parents if p), ""),
-            definition=" ".join(entry.get("definition") or ())[:300]))
+        concepts.append(
+            Concept(
+                id=entry.get("@id", ""),
+                label=label,
+                vocabulary="ONVOC",
+                synonyms=tuple(sorted(synonyms)),
+                branch=next((p for p in parents if p), ""),
+                definition=" ".join(entry.get("definition") or ())[:300],
+            )
+        )
     return Vocabulary("ONVOC", concepts)
 
 
-def load_cognitive_atlas(kinds: tuple[str, ...] = ("task", "concept", "disorder"),
-                         directory: Path | None = None) -> Vocabulary:
+def load_cognitive_atlas(
+    kinds: tuple[str, ...] = ("task", "concept", "disorder"), directory: Path | None = None
+) -> Vocabulary:
     directory = directory or VOCAB_DIR
     concepts = []
     for kind in kinds:
@@ -414,11 +475,16 @@ def load_cognitive_atlas(kinds: tuple[str, ...] = ("task", "concept", "disorder"
             if not label:
                 continue
             alias = entry.get("alias") or ""
-            concepts.append(Concept(
-                id=entry.get("id", ""), label=label, vocabulary="CognitiveAtlas",
-                synonyms=tuple(a.strip() for a in alias.split(",") if a.strip()),
-                branch=kind,
-                definition=(entry.get("definition_text") or "")[:300]))
+            concepts.append(
+                Concept(
+                    id=entry.get("id", ""),
+                    label=label,
+                    vocabulary="CognitiveAtlas",
+                    synonyms=tuple(a.strip() for a in alias.split(",") if a.strip()),
+                    branch=kind,
+                    definition=(entry.get("definition_text") or "")[:300],
+                )
+            )
     return Vocabulary("CognitiveAtlas", concepts)
 
 
@@ -430,20 +496,52 @@ def load_cognitive_atlas(kinds: tuple[str, ...] = ("task", "concept", "disorder"
 #: claims about the same term -- so which branch a field may draw from is part of the
 #: mapping, not a filter applied to it afterwards.
 BRANCHES: dict[str, tuple[str, ...]] = {
-    "drugs": ("Drugs and Medications", "Antidepressants", "Anti Psychotics",
-              "Anxiolytics", "Mood Stabilizers", "Psychostimulants", "Opioids",
-              "Psychedelics", "Cannabinoids", "Anesthetics", "Anti Inflammatory",
-              "Parkinsons Disease Medication", "Migraine Medication", "Contraception",
-              "Dementia Medication", "ADHD Medications Nonstimulants"),
-    "disorders": ("Psychiatric Disorders", "Neurological Disorders", "Medical Disorders",
-                  "Psychiatric Symptoms", "Neurological Symptoms", "Medical Symptoms",
-                  "Health"),
-    "population": ("Population Groups", "Population Characteristics", "Age", "Species",
-                   "Family Relations"),
+    "drugs": (
+        "Drugs and Medications",
+        "Antidepressants",
+        "Anti Psychotics",
+        "Anxiolytics",
+        "Mood Stabilizers",
+        "Psychostimulants",
+        "Opioids",
+        "Psychedelics",
+        "Cannabinoids",
+        "Anesthetics",
+        "Anti Inflammatory",
+        "Parkinsons Disease Medication",
+        "Migraine Medication",
+        "Contraception",
+        "Dementia Medication",
+        "ADHD Medications Nonstimulants",
+    ),
+    "disorders": (
+        "Psychiatric Disorders",
+        "Neurological Disorders",
+        "Medical Disorders",
+        "Psychiatric Symptoms",
+        "Neurological Symptoms",
+        "Medical Symptoms",
+        "Health",
+    ),
+    "population": (
+        "Population Groups",
+        "Population Characteristics",
+        "Age",
+        "Species",
+        "Family Relations",
+    ),
     "tests": ("Tests",),
     "regions": ("Cortical Regions", "Subcortical Regions", "Brain Networks"),
-    "concepts": ("Psychological Concepts", "Decision Making", "Executive Function",
-                 "Attention", "Learning", "Memory", "Perception", "Social Cognition"),
+    "concepts": (
+        "Psychological Concepts",
+        "Decision Making",
+        "Executive Function",
+        "Attention",
+        "Learning",
+        "Memory",
+        "Perception",
+        "Social Cognition",
+    ),
 }
 
 #: (field, vocabulary, branch groups). A field may draw from more than one group -- a
@@ -508,23 +606,31 @@ def candidates(mappings: Iterable["Mapping"], minimum: int = 1) -> list[Candidat
     for mapping in mappings:
         if mapping.matched:
             continue
-        key = (fold(_PARENTHETICAL.sub("", mapping.text)) or fold(mapping.text),
-               mapping.path)
-        slot = grouped.setdefault(key, {"text": mapping.text, "path": mapping.path,
-                                        "papers": set(), "expansions": set()})
+        key = (fold(_PARENTHETICAL.sub("", mapping.text)) or fold(mapping.text), mapping.path)
+        slot = grouped.setdefault(
+            key,
+            {"text": mapping.text, "path": mapping.path, "papers": set(), "expansions": set()},
+        )
         slot["papers"].add(mapping.study_id)
         slot["expansions"].update(mapping.expansions)
         # Keep the longest surface form seen; it is the most informative proposal.
         if len(mapping.text) > len(slot["text"]):
             slot["text"] = mapping.text
 
-    out = [Candidate(text=slot["text"], path=slot["path"],
-                     branch_group="+".join(routes.get(slot["path"], ())) or "-",
-                     papers=tuple(sorted(slot["papers"])),
-                     expansions=tuple(sorted(slot["expansions"])))
-           for slot in grouped.values()]
-    return sorted([c for c in out if c.support >= minimum],
-                  key=lambda c: (-c.support, c.path, c.text.lower()))
+    out = [
+        Candidate(
+            text=slot["text"],
+            path=slot["path"],
+            branch_group="+".join(routes.get(slot["path"], ())) or "-",
+            papers=tuple(sorted(slot["papers"])),
+            expansions=tuple(sorted(slot["expansions"])),
+        )
+        for slot in grouped.values()
+    ]
+    return sorted(
+        [c for c in out if c.support >= minimum],
+        key=lambda c: (-c.support, c.path, c.text.lower()),
+    )
 
 
 def _all_text(node: Any, out: list[str]) -> None:
@@ -552,8 +658,9 @@ def corroborated(concept: Concept, record_text: str) -> bool:
     return bool(wanted) and wanted <= content(record_text)
 
 
-def normalize(record: dict, vocabularies: dict[str, Vocabulary],
-              abbreviations: Any = None) -> list[Mapping]:
+def normalize(
+    record: dict, vocabularies: dict[str, Vocabulary], abbreviations: Any = None
+) -> list[Mapping]:
     """Every mapping this record supports, matched and unmatched alike.
 
     Unmatched rows are kept on purpose. The useful question about a normalization layer
@@ -575,7 +682,9 @@ def normalize(record: dict, vocabularies: dict[str, Vocabulary],
         concept, method, others = scoped.match(text, abbreviations)
         expanded: tuple[str, ...] = ()
         if abbreviations is not None:
-            from .abbreviations import expansions_in  # noqa: PLC0415
+            from pondie.extraction.passes.pipeline.abbreviations import (  # noqa: PLC0415
+                expansions_in,
+            )
 
             expanded = tuple(e for _short, e in expansions_in(text, abbreviations))
         # An expansion the record never spells out is a guess, and a wrong mapping is
@@ -583,6 +692,15 @@ def normalize(record: dict, vocabularies: dict[str, Vocabulary],
         # and believed.
         if concept and method == "acronym" and not corroborated(concept, record_text):
             concept, method, others = None, "", []
-        found.append(Mapping(str(study_id), path, text, concept, method,
-                             tuple(c.label for c in others), expanded))
+        found.append(
+            Mapping(
+                str(study_id),
+                path,
+                text,
+                concept,
+                method,
+                tuple(c.label for c in others),
+                expanded,
+            )
+        )
     return found

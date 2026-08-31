@@ -18,11 +18,12 @@ Three stages, and the ordering is the design:
                  rest. Families are built OVER the identities from plain geometry, because a
                  logistic probability saturates near 0 and decides well while measuring badly.
 """
+
 from __future__ import annotations
 
 from collections import defaultdict
 
-from ._folding import fold, squash
+from pondie.normalization._folding import fold, squash
 
 
 def name_links(names: list[str]) -> list[tuple[int, int]]:
@@ -39,14 +40,14 @@ def name_links(names: list[str]) -> list[tuple[int, int]]:
     links = [(g[0], j) for g in by_exact.values() for j in g[1:]]
     long = [(i, t) for i, t in enumerate(tokens) if len(t) >= 2]
     for a, (i, ti) in enumerate(long):
-        for j, tj in long[a + 1:]:
+        for j, tj in long[a + 1 :]:
             if ti != tj and (_subsequence(ti, tj) or _subsequence(tj, ti)):
                 links.append((i, j))
     return links
 
 
 def _subsequence(short: tuple, long: tuple) -> bool:
-    return any(long[k:k + len(short)] == short for k in range(len(long) - len(short) + 1))
+    return any(long[k : k + len(short)] == short for k in range(len(long) - len(short) + 1))
 
 
 def components(n: int, links) -> list[int]:
@@ -76,7 +77,7 @@ def sample_pairs(comp: list[int], rng, per_positive: int = 3):
     for i, c in enumerate(comp):
         by[c].append(i)
     usable = [g for g in by.values() if len(g) >= 3]
-    pos = [(a, b) for g in usable for x, a in enumerate(g) for b in g[x + 1:]]
+    pos = [(a, b) for g in usable for x, a in enumerate(g) for b in g[x + 1 :]]
     members = [i for g in usable for i in g]
     neg = []
     while len(neg) < per_positive * len(pos) and members:
@@ -89,6 +90,7 @@ def sample_pairs(comp: list[int], rng, per_positive: int = 3):
 def distances(probabilities, pairs, n: int, must_link, cannot_link=()):
     """1 - P(same), with the ladder's certainties written in and any exclusions written out."""
     import numpy as np
+
     d = np.ones((n, n), dtype="float32")
     for (i, j), p in zip(pairs, probabilities):
         d[i, j] = d[j, i] = 1.0 - p
@@ -102,8 +104,10 @@ def distances(probabilities, pairs, n: int, must_link, cannot_link=()):
 
 def cluster(d, threshold: float):
     from sklearn.cluster import AgglomerativeClustering
-    return AgglomerativeClustering(n_clusters=None, distance_threshold=threshold,
-                                   metric="precomputed", linkage="average").fit_predict(d)
+
+    return AgglomerativeClustering(
+        n_clusters=None, distance_threshold=threshold, metric="precomputed", linkage="average"
+    ).fit_predict(d)
 
 
 def rescue(labels, d, threshold: float):
@@ -113,16 +117,17 @@ def rescue(labels, d, threshold: float):
     adjacent to one member -- measured on `one-back visual task`, held out of the n-back
     cluster at P=0.90.
     """
-    import numpy as np
     from collections import Counter
+
+    import numpy as np
+
     sizes = Counter(labels)
     labels = np.array(labels)
     moved = 0
     for i in range(len(labels)):
         if sizes[labels[i]] != 1:
             continue
-        near = next((j for j in np.argsort(d[i])
-                     if j != i and sizes[labels[j]] > 1), None)
+        near = next((j for j in np.argsort(d[i]) if j != i and sizes[labels[j]] > 1), None)
         if near is not None and (1.0 - d[i][near]) >= threshold:
             labels[i] = labels[near]
             moved += 1
@@ -133,9 +138,11 @@ def families(labels, prose, threshold: float):
     """Groups of identities, from prose geometry rather than from the model."""
     import numpy as np
     from sklearn.cluster import AgglomerativeClustering
+
     ids = sorted(set(labels))
     centroid = np.vstack([prose[labels == c].mean(0) for c in ids])
     centroid /= np.linalg.norm(centroid, axis=1, keepdims=True) + 1e-9
-    fam = AgglomerativeClustering(n_clusters=None, distance_threshold=threshold,
-                                  metric="cosine", linkage="average").fit_predict(centroid)
+    fam = AgglomerativeClustering(
+        n_clusters=None, distance_threshold=threshold, metric="cosine", linkage="average"
+    ).fit_predict(centroid)
     return np.array([fam[ids.index(c)] for c in labels])

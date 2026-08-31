@@ -1,33 +1,23 @@
-"""Make the schema submodule importable, once, from anywhere.
+"""Where the schema's data files are.
 
-`study_schema` is a git submodule rather than a package on the path, and the three modules
-it carries -- `schema_utils`, `text_index`, `table_parse` -- are imported by bare name.
-Rather than have every caller and every test insert paths, the setup happens here and
-importing this module is the whole interface.
+The schema is not only code. `extraction-readme.md` and `representing-models.md` are sent to
+the model as part of the prompt, and the extraction and storage YAML are what a record is
+validated against -- all of them live in the `study-schema` distribution beside the modules
+that read them.
 
-Those three are in the schema repository because they *define* the schema rather than merely
-read it: `ExtractionMetadata.source_text_hash` is the sha256 `text_index` computes, and a
-coordinate table is whatever `table_parse` says its rows are. A second copy would be a second
-definition. Everything that acts on a record -- extraction, normalization, the benchmark --
-is here instead.
+Their location is derived from the installed module rather than from a checkout layout, so it
+is correct whether the distribution was installed from this repository's submodule or from
+anywhere else, and there is no path for a caller to get wrong.
 """
+
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1] / "study_schema"
+import schema_utils
 
+#: The schema checkout, wherever `study-schema` was installed from.
+ROOT = Path(schema_utils.__file__).resolve().parent
 
-def ensure() -> Path:
-    """Put the schema on the path if it is not already there. Idempotent."""
-    if str(ROOT) not in sys.path:
-        sys.path.insert(0, str(ROOT))
-    if not (ROOT / "schema_utils.py").is_file():
-        raise ModuleNotFoundError(
-            f"{ROOT} is empty. It is a submodule: "
-            "git submodule update --init --recursive")
-    return ROOT
-
-
-ensure()
+EXTRACTION = ROOT / "neuroimaging-study-extraction.yaml"
+STORAGE = ROOT / "neuroimaging-study-storage.yaml"

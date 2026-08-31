@@ -15,13 +15,14 @@ Two conventions every field here shares:
   Nothing is bucketed silently.  An input no rule matches is UNKNOWN with `reason="unmatched"`
   and is reported by `residual`, so a new spelling forces a rule rather than vanishing.
 """
+
 from __future__ import annotations
 
 import re
 from collections import Counter
 from dataclasses import dataclass
 
-from . import OTHER, UNKNOWN
+from pondie.normalization import OTHER, UNKNOWN
 
 
 @dataclass(frozen=True)
@@ -50,8 +51,7 @@ class Decision:
         return self.value != UNKNOWN
 
 
-def classify(text: object, rules: tuple[Rule, ...],
-             ambiguous_to: str = UNKNOWN) -> Decision:
+def classify(text: object, rules: tuple[Rule, ...], ambiguous_to: str = UNKNOWN) -> Decision:
     """First matching rule wins; several distinct matches is an ambiguity, not a choice."""
     raw = text if isinstance(text, str) else ""
     if not raw.strip():
@@ -76,8 +76,9 @@ def residual(decisions: list[Decision]) -> Counter:
 def summarize(decisions: list[Decision], values: tuple[str, ...]) -> str:
     counts = Counter(d.value for d in decisions)
     total = max(1, sum(counts.values()))
-    lines = [f"  {v:34s} {counts[v]:6d}  ({counts[v] / total:4.0%})"
-             for v in values if counts[v]]
+    lines = [
+        f"  {v:34s} {counts[v]:6d}  ({counts[v] / total:4.0%})" for v in values if counts[v]
+    ]
     folded = Counter((d.value, d.text) for d in decisions if d.reason == "lexical" and d.text)
     for v in values:
         forms = [(t, n) for (val, t), n in folded.items() if val == v]
@@ -104,10 +105,13 @@ class ClosedField:
         return classify(text, self.rules, self.ambiguous_to)
 
     def scan(self, patterns: tuple[str, ...] | None = None) -> list[Decision]:
-        from ._records import DEFAULT, iter_records, strings_at
-        return [self.normalize(s)
-                for _study, body in iter_records(patterns or DEFAULT)
-                for s in strings_at(body, self.path)]
+        from pondie.normalization._records import DEFAULT, iter_records, strings_at
+
+        return [
+            self.normalize(s)
+            for _study, body in iter_records(patterns or DEFAULT)
+            for s in strings_at(body, self.path)
+        ]
 
     def report(self, patterns: tuple[str, ...] | None = None) -> str:
         decisions = self.scan(patterns)

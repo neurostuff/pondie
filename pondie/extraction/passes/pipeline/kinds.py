@@ -149,8 +149,8 @@ class TableParse:
 
     def save(self) -> None:
         self.path.write_text(
-            json.dumps(self.document, indent=1, ensure_ascii=False) + "\n",
-            encoding="utf-8")
+            json.dumps(self.document, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
 
     @property
     def analyses(self) -> list[ParsedAnalysis]:
@@ -184,11 +184,13 @@ class Cost:
     seconds: float = 0.0
 
     def __add__(self, other: "Cost") -> "Cost":
-        return Cost(self.prompt_tokens + other.prompt_tokens,
-                    self.completion_tokens + other.completion_tokens,
-                    self.cached_tokens + other.cached_tokens,
-                    self.calls + other.calls,
-                    self.seconds + other.seconds)
+        return Cost(
+            self.prompt_tokens + other.prompt_tokens,
+            self.completion_tokens + other.completion_tokens,
+            self.cached_tokens + other.cached_tokens,
+            self.calls + other.calls,
+            self.seconds + other.seconds,
+        )
 
     def __bool__(self) -> bool:
         return bool(self.calls or self.prompt_tokens)
@@ -196,8 +198,10 @@ class Cost:
     def render(self) -> str:
         if not self:
             return "free"
-        return (f"{self.prompt_tokens:,}->{self.completion_tokens:,} tok "
-                f"in {self.seconds:.0f}s [{self.calls} call(s)]")
+        return (
+            f"{self.prompt_tokens:,}->{self.completion_tokens:,} tok "
+            f"in {self.seconds:.0f}s [{self.calls} call(s)]"
+        )
 
 
 #: A stage did its work, found its work already done, was not asked for, or broke. Kept
@@ -292,17 +296,25 @@ class RunReport:
         """The whole run, per paper and then per stage. This is the debugging view."""
         lines = [paper.render() for paper in self.papers]
         n = max(len(self.papers), 1)
-        lines += ["", f"{len(self.papers)} paper(s), "
-                      f"{sum(1 for p in self.papers if p.ok)} clean", "",
-                  f"{'stage':<12} {'calls':>6} {'in/paper':>11} {'out/paper':>11}"]
+        lines += [
+            "",
+            f"{len(self.papers)} paper(s), " f"{sum(1 for p in self.papers if p.ok)} clean",
+            "",
+            f"{'stage':<12} {'calls':>6} {'in/paper':>11} {'out/paper':>11}",
+        ]
         for stage, cost in self.by_stage().items():
-            lines.append(f"{stage:<12} {cost.calls:6d} "
-                         f"{cost.prompt_tokens / n:11,.0f} {cost.completion_tokens / n:11,.0f}")
+            lines.append(
+                f"{stage:<12} {cost.calls:6d} "
+                f"{cost.prompt_tokens / n:11,.0f} {cost.completion_tokens / n:11,.0f}"
+            )
         total = self.cost
-        lines.append(f"{'TOTAL':<12} {total.calls:6d} "
-                     f"{total.prompt_tokens / n:11,.0f} {total.completion_tokens / n:11,.0f}")
+        lines.append(
+            f"{'TOTAL':<12} {total.calls:6d} "
+            f"{total.prompt_tokens / n:11,.0f} {total.completion_tokens / n:11,.0f}"
+        )
         if self.failures():
             lines += ["", "failures:"]
-            lines += [f"  {f.study_id}/{f.stage}: {f.error or f.status}"
-                      for f in self.failures()]
+            lines += [
+                f"  {f.study_id}/{f.stage}: {f.error or f.status}" for f in self.failures()
+            ]
         return "\n".join(lines)

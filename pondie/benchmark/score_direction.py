@@ -26,9 +26,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from .compare_extractions import (  # noqa: E402
+from pondie.benchmark.compare_extractions import (  # noqa: E402
     CELL_THRESHOLD,
     Aligner,
     Schema,
@@ -83,8 +81,9 @@ def _same_level(a: str, b: str) -> bool:
     return x == y or set(x) <= set(y) or set(y) <= set(x)
 
 
-def _pair_gold_to_cells(ref_cells: Sequence[Mapping], analysis_id: str,
-                        gold: Mapping[str, dict]) -> tuple[dict[int, dict], list[dict]]:
+def _pair_gold_to_cells(
+    ref_cells: Sequence[Mapping], analysis_id: str, gold: Mapping[str, dict]
+) -> tuple[dict[int, dict], list[dict]]:
     """Pair each reviewed cell with the reference cell it was a row for.
 
     Returns the pairing and the gold entries nothing could be paired to. The second half is
@@ -113,7 +112,9 @@ def _pair_gold_to_cells(ref_cells: Sequence[Mapping], analysis_id: str,
             # term alone identifies it.
             paired[candidates[0]] = entry
             continue
-        hit = next((i for i in candidates if _same_level(target, _level_of(ref_cells[i]))), None)
+        hit = next(
+            (i for i in candidates if _same_level(target, _level_of(ref_cells[i]))), None
+        )
         if hit is None:
             unresolved.append(entry)
         else:
@@ -137,8 +138,14 @@ def load_gold(path: Path) -> dict[str, dict]:
     return table
 
 
-def score(reference_doc: Mapping, cand_doc: Mapping, gold: Mapping[str, dict],
-          schema: Schema, sem: Semantics, label: str) -> dict[str, Any]:
+def score(
+    reference_doc: Mapping,
+    cand_doc: Mapping,
+    gold: Mapping[str, dict],
+    schema: Schema,
+    sem: Semantics,
+    label: str,
+) -> dict[str, Any]:
     """Align candidate to the record the reviewer was shown, then read only directions.
 
     The reference record supplies identity -- which term a row is a row of -- and nothing
@@ -153,7 +160,7 @@ def score(reference_doc: Mapping, cand_doc: Mapping, gold: Mapping[str, dict],
     cand_by_id = {e.local_id: e for e in cand.by_type.get("Analysis", [])}
     coverage = Counter()
     seen_analyses: set[str] = set()
-    pairs: list[tuple[str, str]] = []          # (gold, candidate) over signed-vs-signed
+    pairs: list[tuple[str, str]] = []  # (gold, candidate) over signed-vs-signed
     by_tier: dict[str, list[float]] = defaultdict(list)
     tier2 = Counter()
     tier3 = Counter()
@@ -168,10 +175,16 @@ def score(reference_doc: Mapping, cand_doc: Mapping, gold: Mapping[str, dict],
         seen_analyses.add(ref_ent.local_id)
         for entry in unresolved:
             coverage["gold_cell_not_in_reference"] += 1
-            detail.append({"analysis": entry["analysis"], "term": entry["term"],
-                           "level": entry.get("level"), "gold": entry["direction"],
-                           "tier": entry.get("tier", "accepted"),
-                           "outcome": "gold_cell_not_in_reference"})
+            detail.append(
+                {
+                    "analysis": entry["analysis"],
+                    "term": entry["term"],
+                    "level": entry.get("level"),
+                    "gold": entry["direction"],
+                    "tier": entry.get("tier", "accepted"),
+                    "outcome": "gold_cell_not_in_reference",
+                }
+            )
         judged = sorted(paired.items())
         if not judged:
             continue
@@ -180,23 +193,36 @@ def score(reference_doc: Mapping, cand_doc: Mapping, gold: Mapping[str, dict],
         if cand_id is None:
             coverage["analysis_unaligned"] += len(judged)
             for _, c in judged:
-                detail.append({"analysis": ref_ent.local_id, "term": _cell_term(c),
-                               "level": _level_of(c), "outcome": "analysis_unaligned"})
+                detail.append(
+                    {
+                        "analysis": ref_ent.local_id,
+                        "term": _cell_term(c),
+                        "level": _level_of(c),
+                        "outcome": "analysis_unaligned",
+                    }
+                )
             continue
 
         cand_ent = cand_by_id[cand_id]
         cand_cells = cand_ent.inline.get("effect.cells", ("Cell", []))[1]
-        aligned = match(ref_cells, cand_cells,
-                        lambda a, b: inline_similarity(a, b, "Cell", schema, sem),
-                        CELL_THRESHOLD)
+        aligned = match(
+            ref_cells,
+            cand_cells,
+            lambda a, b: inline_similarity(a, b, "Cell", schema, sem),
+            CELL_THRESHOLD,
+        )
         by_ref = {i: j for i, j, _ in aligned}
 
         for i, entry in judged:
             ref_cell = ref_cells[i]
             g_dir = entry["direction"]
-            row = {"analysis": ref_ent.local_id, "term": _cell_term(ref_cell),
-                   "level": _level_of(ref_cell), "gold": g_dir,
-                   "tier": entry.get("tier", "accepted")}
+            row = {
+                "analysis": ref_ent.local_id,
+                "term": _cell_term(ref_cell),
+                "level": _level_of(ref_cell),
+                "gold": g_dir,
+                "tier": entry.get("tier", "accepted"),
+            }
 
             j = by_ref.get(i)
             if j is None:
@@ -233,16 +259,21 @@ def score(reference_doc: Mapping, cand_doc: Mapping, gold: Mapping[str, dict],
                 tier3["sign_invention"] += 1
                 detail.append({**row, "outcome": "sign_invention"})
             else:
-                tier3["unsigned_agreement" if g_dir == c_dir
-                      else "unsigned_substitution"] += 1
+                tier3["unsigned_agreement" if g_dir == c_dir else "unsigned_substitution"] += 1
                 detail.append({**row, "outcome": "unsigned"})
 
     for entry in gold.values():
         if entry["analysis"] not in seen_analyses:
             coverage["gold_analysis_not_in_reference"] += 1
-            detail.append({"analysis": entry["analysis"], "term": entry["term"],
-                           "level": entry.get("level"), "gold": entry["direction"],
-                           "outcome": "gold_analysis_not_in_reference"})
+            detail.append(
+                {
+                    "analysis": entry["analysis"],
+                    "term": entry["term"],
+                    "level": entry.get("level"),
+                    "gold": entry["direction"],
+                    "outcome": "gold_analysis_not_in_reference",
+                }
+            )
 
     correct = sum(1 for g, c in pairs if g == c)
     return {
@@ -272,15 +303,25 @@ def render(results: Sequence[Mapping[str, Any]], verbose: bool) -> str:
     cov = Counter()
     t2, t3 = Counter(), Counter()
     for r in results:
-        cov.update(r["coverage"]); t2.update(r["tier2"]); t3.update(r["tier3"])
+        cov.update(r["coverage"])
+        t2.update(r["tier2"])
+        t3.update(r["tier3"])
 
     out.append("Tier 0 -- coverage (reported, never scored)")
     gold_total = sum(r["gold_cells"] for r in results)
     gold_signed = sum(r["gold_signed"] for r in results)
-    out.append(f"  reviewer cells {gold_total} ({gold_signed} signed) across "
-               f"{len(results)} record(s)")
-    for k in ("scorable", "cell_unaligned", "term_unaligned", "analysis_unaligned",
-              "gold_cell_not_in_reference", "gold_analysis_not_in_reference"):
+    out.append(
+        f"  reviewer cells {gold_total} ({gold_signed} signed) across "
+        f"{len(results)} record(s)"
+    )
+    for k in (
+        "scorable",
+        "cell_unaligned",
+        "term_unaligned",
+        "analysis_unaligned",
+        "gold_cell_not_in_reference",
+        "gold_analysis_not_in_reference",
+    ):
         if cov.get(k):
             out.append(f"  {k:20s} {cov[k]:5d}")
 
@@ -290,8 +331,9 @@ def render(results: Sequence[Mapping[str, Any]], verbose: bool) -> str:
         acc = tot_ok / tot_n
         lo, hi = bootstrap([h for r in results for h in r["hits"]])
         out.append(f"  n = {tot_n} signed-vs-signed cell(s)")
-        out.append(f"  accuracy       {acc:.1%}  ({tot_ok}/{tot_n})   95% CI "
-                   f"[{lo:.1%}, {hi:.1%}]")
+        out.append(
+            f"  accuracy       {acc:.1%}  ({tot_ok}/{tot_n})   95% CI " f"[{lo:.1%}, {hi:.1%}]"
+        )
         out.append(f"  sign_flip_rate {1 - acc:.1%}")
         out.append("  baselines:  coin flip 50.0%   human ceiling 95.8%")
         tiers: dict[str, list[float]] = defaultdict(list)
@@ -300,12 +342,16 @@ def render(results: Sequence[Mapping[str, Any]], verbose: bool) -> str:
                 tiers[k].extend(v)
         out.append("")
         out.append("  split by how the reviewer produced the gold:")
-        for k, label in (("changed", "reviewer moved the radio  [prediction-independent]"),
-                         ("accepted", "left, analysis ticked accept"),
-                         ("unflagged", "left, analysis flagged but not for direction")):
+        for k, label in (
+            ("changed", "reviewer moved the radio  [prediction-independent]"),
+            ("accepted", "left, analysis ticked accept"),
+            ("unflagged", "left, analysis flagged but not for direction"),
+        ):
             v = tiers.get(k) or []
             if v:
-                out.append(f"    {k:9s} n={len(v):4d}  accuracy {sum(v) / len(v):6.1%}   {label}")
+                out.append(
+                    f"    {k:9s} n={len(v):4d}  accuracy {sum(v) / len(v):6.1%}   {label}"
+                )
             else:
                 out.append(f"    {k:9s} n=   0                        {label}")
     else:
@@ -314,13 +360,19 @@ def render(results: Sequence[Mapping[str, Any]], verbose: bool) -> str:
 
     out.append("")
     out.append("Tier 2 -- polarity retention (gold signed, candidate did not sign)")
-    out.append(f"  sign_loss    {t2.get('sign_loss', 0):5d}  candidate produced the cell unsigned")
-    out.append(f"  sign_missing {t2.get('sign_missing', 0):5d}  candidate produced no such cell "
-               f"(out of scope, not penalised)")
+    out.append(
+        f"  sign_loss    {t2.get('sign_loss', 0):5d}  candidate produced the cell unsigned"
+    )
+    out.append(
+        f"  sign_missing {t2.get('sign_missing', 0):5d}  candidate produced no such cell "
+        f"(out of scope, not penalised)"
+    )
 
     out.append("")
     out.append("Tier 3 -- sign invention (excluded from the headline)")
-    out.append(f"  sign_invention {t3.get('sign_invention', 0):5d}  gold unsigned, candidate signed")
+    out.append(
+        f"  sign_invention {t3.get('sign_invention', 0):5d}  gold unsigned, candidate signed"
+    )
 
     if verbose:
         out.append("")
@@ -328,25 +380,34 @@ def render(results: Sequence[Mapping[str, Any]], verbose: bool) -> str:
         for r in sorted(results, key=lambda x: x["record"]):
             t = r["tier1"]
             acc = f"{t['accuracy']:.0%}" if t["accuracy"] is not None else "  --"
-            out.append(f"  {r['record']:24s} tier1 {acc} ({t['correct']}/{t['n']})"
-                       f"   scorable {r['coverage'].get('scorable', 0)}")
+            out.append(
+                f"  {r['record']:24s} tier1 {acc} ({t['correct']}/{t['n']})"
+                f"   scorable {r['coverage'].get('scorable', 0)}"
+            )
         flips = [d for r in results for d in r["detail"] if d["outcome"] == "sign_flip"]
         if flips:
             out.append("")
             out.append(f"sign flips ({len(flips)})")
             for d in flips[:40]:
-                out.append(f"  {d['analysis']}  {d['term']} : {d['level']}"
-                           f"   gold {d['gold']} -> candidate {d['candidate']}")
+                out.append(
+                    f"  {d['analysis']}  {d['term']} : {d['level']}"
+                    f"   gold {d['gold']} -> candidate {d['candidate']}"
+                )
     return "\n".join(out)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("records", nargs="+", help="candidate extraction records (globs ok)")
     ap.add_argument("--gold-dir", type=Path, default=ROOT / "benchmarks/gold/direction")
-    ap.add_argument("--reference-dir", type=Path, default=ROOT / "data/records",
-                    help="the records the reviewers were shown; supplies term identity only")
+    ap.add_argument(
+        "--reference-dir",
+        type=Path,
+        default=ROOT / "data/records",
+        help="the records the reviewers were shown; supplies term identity only",
+    )
     ap.add_argument("--semantic", action="store_true", help="embeddings for term same-ness")
     ap.add_argument("--json", type=Path)
     ap.add_argument("-v", "--verbose", action="store_true")
@@ -374,18 +435,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not gold:
             print(f"skip {path.name}: every reviewed cell disputed", file=sys.stderr)
             continue
-        results.append(score(
-            json.loads(ref_path.read_text(encoding="utf-8")),
-            json.loads(path.read_text(encoding="utf-8")),
-            gold, schema, sem, path.name.split(".")[0]))
+        results.append(
+            score(
+                json.loads(ref_path.read_text(encoding="utf-8")),
+                json.loads(path.read_text(encoding="utf-8")),
+                gold,
+                schema,
+                sem,
+                path.name.split(".")[0],
+            )
+        )
 
     if not results:
         print("nothing scored", file=sys.stderr)
         return 1
     print(render(results, args.verbose))
     if args.json:
-        args.json.write_text(json.dumps(results, indent=1, ensure_ascii=False),
-                             encoding="utf-8")
+        args.json.write_text(
+            json.dumps(results, indent=1, ensure_ascii=False), encoding="utf-8"
+        )
         print(f"\nwrote {args.json}")
     return 0
 

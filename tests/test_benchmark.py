@@ -1,4 +1,5 @@
 """The benchmark runs from a clean clone, and its number does not silently move."""
+
 import json
 
 from pondie.benchmark.run import CANDIDATE, GOLD, REFERENCE, run
@@ -20,8 +21,9 @@ def test_direction_polarity_does_not_regress():
 def test_coverage_is_reported_so_the_headline_cannot_omit():
     """Polarity is measured on cells both sides signed; the rest must stay visible."""
     result = run()
-    assert result.gold_cells > result.scored_cells, (
-        "if every reviewed cell were scored, coverage would not be worth reporting")
+    assert (
+        result.gold_cells > result.scored_cells
+    ), "if every reviewed cell were scored, coverage would not be worth reporting"
     assert 0.0 < result.coverage < 1.0
 
 
@@ -31,6 +33,9 @@ def test_the_benchmark_discriminates_between_extraction_runs():
     that way; the candidate run shipped here does not."""
     deployed = run(candidate=REFERENCE, reference=REFERENCE)
     shipped = run()
-    assert deployed.accuracy is not None and deployed.accuracy > shipped.accuracy, (
-        f"deployed {deployed.summary()} vs candidate {shipped.summary()}")
-    assert deployed.accuracy < 1.0, "a third-party gold means even the reviewed set can be wrong"
+    assert (
+        deployed.accuracy is not None and deployed.accuracy > shipped.accuracy
+    ), f"deployed {deployed.summary()} vs candidate {shipped.summary()}"
+    assert (
+        deployed.accuracy < 1.0
+    ), "a third-party gold means even the reviewed set can be wrong"

@@ -24,8 +24,7 @@ import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import preprocess  # noqa: E402
+from pondie.extraction.passes import preprocess  # noqa: E402
 
 
 def normalise(sentence: str) -> str:
@@ -44,8 +43,11 @@ def load_pipeline():
 def prose(text: str) -> str:
     """The same input both sides see: prose lines, no headings and no table rows."""
 
-    return "\n".join(line.strip() for line in text.split("\n")
-                     if line.strip() and not line.strip().startswith(("#", "|")))
+    return "\n".join(
+        line.strip()
+        for line in text.split("\n")
+        if line.strip() and not line.strip().startswith(("#", "|"))
+    )
 
 
 def compare(paper: str, text: str, nlp) -> dict:
@@ -58,8 +60,9 @@ def compare(paper: str, text: str, nlp) -> dict:
     theirs_abbrev = {}
     for abbreviation in document._.abbreviations:
         theirs_abbrev.setdefault(str(abbreviation), str(abbreviation._.long_form).lower())
-    ours_abbrev = {short: long_form.lower()
-                   for short, long_form, _ in preprocess.abbreviations(text)}
+    ours_abbrev = {
+        short: long_form.lower() for short, long_form, _ in preprocess.abbreviations(text)
+    }
 
     both = set(theirs_abbrev) & set(ours_abbrev)
     agree = {s for s in both if normalise(theirs_abbrev[s]) == normalise(ours_abbrev[s])}
@@ -74,8 +77,9 @@ def compare(paper: str, text: str, nlp) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--texts", type=Path, required=True)
     parser.add_argument("--papers", nargs="+", required=True)
     parser.add_argument("--variant", default="processed/local/text.tables.txt")
@@ -95,8 +99,12 @@ def main() -> int:
     for result in results:
         ours, theirs, shared = result["sentences"]
         union = ours + theirs - shared
-        print(f"  {result['paper']:<14} {ours:>5} {theirs:>6} {shared:>7}   "
-              f"{shared / union:>8.1%}" if union else "")
+        print(
+            f"  {result['paper']:<14} {ours:>5} {theirs:>6} {shared:>7}   "
+            f"{shared / union:>8.1%}"
+            if union
+            else ""
+        )
 
     print("\n-- abbreviations: vs scispaCy's AbbreviationDetector -------------------")
     print("  paper           ours  spacy  both  same expansion")

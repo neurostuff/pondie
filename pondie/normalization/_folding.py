@@ -4,12 +4,23 @@ Deliberately not domain rules. `use disorder -> dependence` and `affective -> mo
 claims about psychiatry and belong to a vocabulary or an encoder; case, punctuation, plurals
 and hyphenation are claims about English and belong here.
 """
+
 from __future__ import annotations
 
 import re
 
-_PLURAL_NOUNS = ("disorders", "diseases", "syndromes", "deficits", "symptoms", "episodes",
-                 "controls", "patients", "subjects", "participants")
+_PLURAL_NOUNS = (
+    "disorders",
+    "diseases",
+    "syndromes",
+    "deficits",
+    "symptoms",
+    "episodes",
+    "controls",
+    "patients",
+    "subjects",
+    "participants",
+)
 
 
 def fold(value: object) -> str:
@@ -24,8 +35,7 @@ def squash(value: object) -> str:
 
 def singular(text: str) -> str:
     """Plurals only. A four-letter minimum keeps `bias` and `axis` intact."""
-    out = re.sub(r"\b(" + "|".join(_PLURAL_NOUNS) + r")\b",
-                 lambda m: m.group(1)[:-1], text)
+    out = re.sub(r"\b(" + "|".join(_PLURAL_NOUNS) + r")\b", lambda m: m.group(1)[:-1], text)
     return re.sub(r"\b(\w{4,})s\b", r"\1", out)
 
 

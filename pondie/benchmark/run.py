@@ -18,6 +18,7 @@ Both sets ship, so a fresh clone gets a real number with no corpus and no creden
 Only cells both sides signed are scored. Missing terms are reported as coverage rather than
 penalised, so the headline cannot be a lie by omission.
 """
+
 from __future__ import annotations
 
 import json
@@ -25,8 +26,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
-from .compare import Schema, Semantics
-from .direction import load_gold, score
+from pondie.benchmark.compare import Schema, Semantics
+from pondie.benchmark.direction import load_gold, score
 
 ROOT = Path(__file__).resolve().parents[2] / "benchmarks"
 GOLD = ROOT / "gold" / "direction"
@@ -57,32 +58,52 @@ class DirectionScore(BaseModel):
     def summary(self) -> str:
         acc = f"{self.accuracy:.1%}" if self.accuracy is not None else "n/a"
         cov = f"{self.coverage:.0%}" if self.coverage is not None else "n/a"
-        return (f"{self.papers} paper(s) · polarity {acc} on {self.scored_cells} signed "
-                f"cell(s) · covering {cov} of {self.gold_cells} reviewed"
-                + (f" · {len(self.skipped)} skipped" if self.skipped else ""))
+        return (
+            f"{self.papers} paper(s) · polarity {acc} on {self.scored_cells} signed "
+            f"cell(s) · covering {cov} of {self.gold_cells} reviewed"
+            + (f" · {len(self.skipped)} skipped" if self.skipped else "")
+        )
 
 
-def run(candidate: Path = CANDIDATE, reference: Path = REFERENCE,
-        gold: Path = GOLD, semantic: bool = False) -> DirectionScore:
+def run(
+    candidate: Path = CANDIDATE,
+    reference: Path = REFERENCE,
+    gold: Path = GOLD,
+    semantic: bool = False,
+) -> DirectionScore:
     schema, sem = Schema(), Semantics(semantic)
     papers = scored = correct = reviewed = 0
     skipped: list[str] = []
     for table in sorted(gold.glob("*.direction.json")):
         paper = table.name.split(".")[0]
-        cand, ref = candidate / f"{paper}.extraction.json", reference / f"{paper}.extraction.json"
+        cand, ref = (
+            candidate / f"{paper}.extraction.json",
+            reference / f"{paper}.extraction.json",
+        )
         answers = load_gold(table)
         if not (cand.is_file() and ref.is_file() and answers):
             skipped.append(paper)
             continue
-        result = score(json.loads(ref.read_text()), json.loads(cand.read_text()),
-                       answers, schema, sem, paper)
+        result = score(
+            json.loads(ref.read_text()),
+            json.loads(cand.read_text()),
+            answers,
+            schema,
+            sem,
+            paper,
+        )
         tier1 = result.get("tier1") or {}
         papers += 1
         scored += int(tier1.get("n", 0))
         correct += int(tier1.get("correct", 0))
         reviewed += int(result.get("gold_signed", 0))
-    return DirectionScore(papers=papers, scored_cells=scored, correct=correct,
-                          gold_cells=reviewed, skipped=tuple(skipped))
+    return DirectionScore(
+        papers=papers,
+        scored_cells=scored,
+        correct=correct,
+        gold_cells=reviewed,
+        skipped=tuple(skipped),
+    )
 
 
 if __name__ == "__main__":

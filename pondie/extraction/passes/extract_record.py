@@ -38,17 +38,16 @@ import sys
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-
-from pondie import _schema
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-import build_record  # noqa: E402  (shares the payload contract; see ENTITY_LISTS)
-import preprocess  # noqa: E402  (deterministic text transforms; see --preprocess)
-import parse_tables  # noqa: E402  (one parse-key numbering)
 import schema_utils  # noqa: E402
+
+from pondie import _schema
+from pondie.extraction.passes import parse_tables  # noqa: E402  (one parse-key numbering)
+from pondie.extraction.passes import (  # noqa: E402  (shares the payload contract; see ENTITY_LISTS); noqa: E402  (deterministic text transforms; see --preprocess)
+    build_record,
+    preprocess,
+)
 
 REPO = Path(__file__).resolve().parents[3]
 #: The schema is a submodule of this repository, not the parent directory this
@@ -99,6 +98,7 @@ def load_key_file(path: Path) -> list[str]:
 
 # --------------------------------------------------------------- class selection
 
+
 def nested_closure(classes: Mapping[str, Any], roots: list[str]) -> set[str]:
     """Every class reachable from `roots` through slots the record owns.
 
@@ -145,6 +145,7 @@ def mode_classes(classes: Mapping[str, Any], mode: str) -> tuple[set[str], list[
 
 # ------------------------------------------------------------------- rendering
 
+
 def _wrap(text: str) -> str:
     return re.sub(r"\s+", " ", (text or "")).strip()
 
@@ -163,7 +164,7 @@ def enum_of(classes: Mapping[str, Any], enums: Mapping[str, Any], range_name: st
     definition = classes.get(range_name)
     if not isinstance(definition, Mapping):
         return None
-    value = ((definition.get("slot_usage") or {}).get("value") or {})
+    value = (definition.get("slot_usage") or {}).get("value") or {}
     ranges = schema_utils.attribute_ranges(value)
     named = [r for r in ranges if r in enums]
     if not named:
@@ -215,14 +216,23 @@ def render_schema(classes, enums, names: set[str], study_keep: list[str]) -> str
             # wrapping a nested record list as though it were a multivalued scalar.
             # So the shape is stated on the line rather than left to rule 4.
             if kind == "reference":
-                bits.append(f"local_id of {ranges[0]}"
-                            + (" — plain list of id strings" if spec.get("multivalued")
-                               else " — plain id string"))
+                bits.append(
+                    f"local_id of {ranges[0]}"
+                    + (
+                        " — plain list of id strings"
+                        if spec.get("multivalued")
+                        else " — plain id string"
+                    )
+                )
             elif kind == "nested":
-                bits.append(f"nested {ranges[0]} record"
-                            + ("s — a plain JSON LIST of objects, NOT an ExtractedValue wrapper"
-                               if spec.get("multivalued")
-                               else " — a plain JSON object, NOT an ExtractedValue wrapper"))
+                bits.append(
+                    f"nested {ranges[0]} record"
+                    + (
+                        "s — a plain JSON LIST of objects, NOT an ExtractedValue wrapper"
+                        if spec.get("multivalued")
+                        else " — a plain JSON object, NOT an ExtractedValue wrapper"
+                    )
+                )
 
             line = f"- `{attr}` ({', '.join(bits)}): {_wrap(spec.get('description', ''))}"
             vocabulary = enum_of(classes, enums, ranges[0])
@@ -230,11 +240,15 @@ def render_schema(classes, enums, names: set[str], study_keep: list[str]) -> str
                 values, closed, multivalued = vocabulary
                 joined = " | ".join(values)
                 if closed:
-                    line += (f"\n    value MUST be one of: {joined}"
-                             " -- there is no other permitted answer.")
+                    line += (
+                        f"\n    value MUST be one of: {joined}"
+                        " -- there is no other permitted answer."
+                    )
                 else:
-                    line += (f"\n    value is one of: {joined}"
-                             " -- or the paper's own wording when none of them fits.")
+                    line += (
+                        f"\n    value is one of: {joined}"
+                        " -- or the paper's own wording when none of them fits."
+                    )
                 if multivalued:
                     line += " `value` is a LIST of these."
             out.append(line)
@@ -242,6 +256,7 @@ def render_schema(classes, enums, names: set[str], study_keep: list[str]) -> str
 
 
 # ---------------------------------------------------------------- pass-2 context
+
 
 def entity_digest(classes: Mapping[str, Any], payload: Mapping[str, Any]) -> str:
     """Every local_id pass 1 assigned, at any depth, with the name it carries.
@@ -271,7 +286,8 @@ def entity_digest(classes: Mapping[str, Any], payload: Mapping[str, Any]) -> str
             return
         if isinstance(node.get("local_id"), str):
             found.setdefault(class_name, []).append(
-                f"{node['local_id']}: {name_of(node)}".rstrip(": "))
+                f"{node['local_id']}: {name_of(node)}".rstrip(": ")
+            )
         # Resolve the payload's own class before reading its slots, or an entity nested
         # under a self-naming payload is missing from the digest and pass 2 is told to
         # emit `not_reported` for a reference that could have resolved.
@@ -304,10 +320,12 @@ def entity_digest(classes: Mapping[str, Any], payload: Mapping[str, Any]) -> str
 
     if not found:
         return ""
-    lines = ["\n## Entities already extracted",
-             "Refer to these `local_id`s. Do NOT re-emit these records. If this list offers",
-             "nothing suitable for a reference slot, emit `not_reported` for it -- never",
-             "invent a local_id.\n"]
+    lines = [
+        "\n## Entities already extracted",
+        "Refer to these `local_id`s. Do NOT re-emit these records. If this list offers",
+        "nothing suitable for a reference slot, emit `not_reported` for it -- never",
+        "invent a local_id.\n",
+    ]
     for class_name in sorted(found):
         lines.append(f"{class_name}:")
         lines += [f"  {entry}" for entry in found[class_name]]
@@ -328,8 +346,12 @@ result of the same contrast must not extract to the same record.
 """
 
 
-def stage1_block(stage1: Mapping[str, Any], table_ids: Mapping[str, str],
-                 detail: bool = False, zero_foci_rule: bool = False) -> str:
+def stage1_block(
+    stage1: Mapping[str, Any],
+    table_ids: Mapping[str, str],
+    detail: bool = False,
+    zero_foci_rule: bool = False,
+) -> str:
     """The analyses parsed from the result tables, grouped by the table reporting them.
 
     Grouping is not decoration: the same analysis name recurs across tables in the
@@ -407,21 +429,35 @@ def stage1_block(stage1: Mapping[str, Any], table_ids: Mapping[str, str],
         first = entries[0][1]
         label = first.get("table_label") or f"Table {first.get('table_number')}"
         caption = _wrap(first.get("table_caption") or "")[:160]
-        lines.append(f'{label} — "{caption}"   [table local_id: {table_ids.get(table_id, table_id)}]')
+        lines.append(
+            f'{label} — "{caption}"   [table local_id: {table_ids.get(table_id, table_id)}]'
+        )
         for number, analysis in entries:
             points = analysis.get("points") or []
             spaces = sorted({p.get("space") for p in points if p.get("space")})
-            kinds = sorted({v.get("kind") for p in points for v in (p.get("values") or [])
-                            if v.get("kind")})
-            notes = [f"{len(points)} foci"
-                     if points or not zero_foci_rule
-                     else "0 foci -- tested, no cluster survived; still an analysis"]
+            kinds = sorted(
+                {
+                    v.get("kind")
+                    for p in points
+                    for v in (p.get("values") or [])
+                    if v.get("kind")
+                }
+            )
+            notes = [
+                (
+                    f"{len(points)} foci"
+                    if points or not zero_foci_rule
+                    else "0 foci -- tested, no cluster survived; still an analysis"
+                )
+            ]
             if spaces:
                 notes.append("/".join(spaces))
             if kinds:
                 notes.append("/".join(kinds))
-            lines.append(f"  {number}. {analysis.get('name')}   · {' · '.join(notes)}"
-                         f"   [parse key: {parse_keys[number]}]")
+            lines.append(
+                f"  {number}. {analysis.get('name')}   · {' · '.join(notes)}"
+                f"   [parse key: {parse_keys[number]}]"
+            )
             if analysis.get("description"):
                 lines.append(f"       ({_wrap(analysis['description'])[:150]})")
             if detail:
@@ -429,11 +465,11 @@ def stage1_block(stage1: Mapping[str, Any], table_ids: Mapping[str, str],
                 # only place some papers state which way a contrast went, and the digest
                 # above reduces it to a count.
                 for point in points[:40]:
-                    coordinates = ", ".join(
-                        f"{c:g}" for c in (point.get("coordinates") or []))
+                    coordinates = ", ".join(f"{c:g}" for c in (point.get("coordinates") or []))
                     values = " ".join(
                         f"{v.get('kind', '?')}={v.get('value')}"
-                        for v in (point.get("values") or []))
+                        for v in (point.get("values") or [])
+                    )
                     lines.append(f"       ({coordinates})  {values}")
                 if len(points) > 40:
                     lines.append(f"       ... {len(points) - 40} further foci")
@@ -684,8 +720,9 @@ def worked_models() -> str:
     text = MODELS.read_text(encoding="utf-8")
     # Up to the next `## ` heading. `### 5.1` and friends do not match it -- the
     # character after `##` is `#`, not a space -- so the subsections stay in.
-    match = re.search(rf"^{re.escape(WORKED_MODELS_SECTION)}$.*?(?=^## |\Z)",
-                      text, re.MULTILINE | re.DOTALL)
+    match = re.search(
+        rf"^{re.escape(WORKED_MODELS_SECTION)}$.*?(?=^## |\Z)", text, re.MULTILINE | re.DOTALL
+    )
     if match is None:
         raise RuntimeError(
             f"{MODELS.name} has no {WORKED_MODELS_SECTION!r} heading: the worked models "
@@ -713,9 +750,11 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> tuple[st
     # here would contradict rule 2, and merge_payloads resolves a top-level `arms` by
     # assigning over `design.arms` -- so a payload carrying both silently loses one.
     analysis_side = MODE_SCHEMA.get(mode, mode) == "analyses"
-    payload_keys = [k for k, v in ENTITY_LISTS.items()
-                    if "." not in v and v != "tables"
-                    and (v == "analyses") == analysis_side]
+    payload_keys = [
+        k
+        for k, v in ENTITY_LISTS.items()
+        if "." not in v and v != "tables" and (v == "analyses") == analysis_side
+    ]
     if mode == "demands":
         payload_keys.append("required_entities")
 
@@ -726,22 +765,28 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> tuple[st
     # prompt caches 100%, and a prompt sharing a 3.6k prefix with a different suffix caches
     # **zero**. The caching is whole-prompt, not incremental over the prefix, so no reordering
     # can help and the schema is kept ahead of the paper, where instructions belong.
-    system = SYSTEM_HEAD.format(
-        lists=", ".join(sorted(payload_keys)),
-        value_rule=VALUE_RULE_EVIDENCE if evidence else VALUE_RULE_NO_EVIDENCE,
-        absent_evidence=', "evidence": {"status": "not_applicable"}' if evidence else "",
-    ) + MODE_NOTE[mode]
+    system = (
+        SYSTEM_HEAD.format(
+            lists=", ".join(sorted(payload_keys)),
+            value_rule=VALUE_RULE_EVIDENCE if evidence else VALUE_RULE_NO_EVIDENCE,
+            absent_evidence=', "evidence": {"status": "not_applicable"}' if evidence else "",
+        )
+        + MODE_NOTE[mode]
+    )
 
     user = (
-        "# Conventions (extraction-readme.md)\n\n" + README.read_text(encoding="utf-8")
+        "# Conventions (extraction-readme.md)\n\n"
+        + README.read_text(encoding="utf-8")
         + "\n\n# Worked models (representing-models.md)\n\n"
         + "Twelve reported results and the encoding each takes. Follow the shape of the\n"
         + "one this paper's result is closest to; do not invent a third when its wording\n"
         + "sits between two of them.\n\n"
         + worked_models()
-        + "\n\n# Schema\n" + render_schema(classes, enums, names, study_keep)
+        + "\n\n# Schema\n"
+        + render_schema(classes, enums, names, study_keep)
         + context
-        + "\n\n# Paper\n\n" + text
+        + "\n\n# Paper\n\n"
+        + text
         + "\n\nEmit the JSON object now."
     )
     return system, user
@@ -755,8 +800,9 @@ def strip_fence(raw: str) -> str:
     return raw.strip()
 
 
-def postcondition_failures(payload: Mapping[str, Any], mode: str,
-                           declared: Sequence[Mapping[str, Any]] = ()) -> list[str]:
+def postcondition_failures(
+    payload: Mapping[str, Any], mode: str, declared: Sequence[Mapping[str, Any]] = ()
+) -> list[str]:
     """What is wrong with this payload that no schema check would catch.
 
     A pass that returns `{"groups": [], "measures": [], ...}` is well formed, legally empty,
@@ -771,23 +817,33 @@ def postcondition_failures(payload: Mapping[str, Any], mode: str,
         if not payload.get("analyses"):
             failures.append("no analyses were emitted")
         if mode == "demands" and not payload.get("required_entities"):
-            failures.append("no required_entities were declared, so the entity pass that "
-                            "follows has nothing to be held to")
+            failures.append(
+                "no required_entities were declared, so the entity pass that "
+                "follows has nothing to be held to"
+            )
     else:
         if not any(payload.get(key) for key in ENTITY_LISTS):
-            failures.append("every entity list is empty: no group, acquisition, measure or "
-                            "model estimation was emitted for a paper that has them")
+            failures.append(
+                "every entity list is empty: no group, acquisition, measure or "
+                "model estimation was emitted for a paper that has them"
+            )
         # Tables are copied from the pubget manifest, never extracted, so a declaration
         # naming one asks this pass for something it is forbidden to emit. Demanding it
         # spends the whole retry budget on a fault no retry can clear.
-        missing = [entry.get("local_id") for entry in declared
-                   if isinstance(entry, Mapping) and entry.get("local_id")
-                   and entry.get("kind") not in DETERMINISTIC_CLASSES
-                   and not str(entry["local_id"]).startswith("tbl")
-                   and not _declares(payload, entry["local_id"])]
+        missing = [
+            entry.get("local_id")
+            for entry in declared
+            if isinstance(entry, Mapping)
+            and entry.get("local_id")
+            and entry.get("kind") not in DETERMINISTIC_CLASSES
+            and not str(entry["local_id"]).startswith("tbl")
+            and not _declares(payload, entry["local_id"])
+        ]
         if missing:
-            failures.append("declared entities absent, leaving dangling references: "
-                            + ", ".join(sorted(missing)[:8]))
+            failures.append(
+                "declared entities absent, leaving dangling references: "
+                + ", ".join(sorted(missing)[:8])
+            )
     return failures
 
 
@@ -807,8 +863,11 @@ def design_model_mismatch(payload: Mapping[str, Any]) -> list[str]:
     the fault. Acting on it means re-running `demands`, which is a caller's decision.
     """
 
-    design = payload.get("study", {}).get("design") if isinstance(
-        payload.get("study"), Mapping) else None
+    design = (
+        payload.get("study", {}).get("design")
+        if isinstance(payload.get("study"), Mapping)
+        else None
+    )
     design = design if isinstance(design, Mapping) else payload.get("design")
     if not isinstance(design, Mapping):
         return []
@@ -825,9 +884,11 @@ def design_model_mismatch(payload: Mapping[str, Any]) -> list[str]:
             kind = term.get("type")
             if (kind.get("value") if isinstance(kind, Mapping) else kind) == "categorical":
                 return []
-    return [f"the design declares {len(arms)} arm(s) and {len(timepoints)} timepoint(s) but "
-            "no model term is categorical, so nothing in the model can express the "
-            "comparison the design says was made"]
+    return [
+        f"the design declares {len(arms)} arm(s) and {len(timepoints)} timepoint(s) but "
+        "no model term is categorical, so nothing in the model can express the "
+        "comparison the design says was made"
+    ]
 
 
 def _declares(payload: Mapping[str, Any], local_id: str) -> bool:
@@ -858,15 +919,15 @@ what changed is only that an answer with the fault named here is not acceptable.
 def extract(client, model: str, system: str, user: str, effort: str, max_out: int):
     kwargs: dict[str, Any] = {
         "model": model,
-        "messages": [{"role": "system", "content": system},
-                     {"role": "user", "content": user}],
+        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
         "response_format": {"type": "json_object"},
     }
     if effort:
         kwargs["reasoning_effort"] = effort
     if max_out:
         kwargs["max_completion_tokens"] = max_out
-    import usage_log
+    from pondie.extraction.passes import usage_log
+
     response, row = usage_log.call(client, **kwargs)
     raw = response.choices[0].message.content or ""
     return json.loads(strip_fence(raw) or "{}"), row
@@ -922,21 +983,30 @@ def normalize(payload: dict[str, Any], mode: str) -> tuple[dict[str, Any], list[
         # next pass with nothing to be held to and the failure is silent.
         analyses = payload.get("analyses")
         if isinstance(analyses, list):
-            declarations = [a for a in analyses
-                            if isinstance(a, Mapping) and not a.get("effect")]
+            declarations = [
+                a for a in analyses if isinstance(a, Mapping) and not a.get("effect")
+            ]
             if declarations:
                 payload["analyses"] = [a for a in analyses if a not in declarations]
                 declared = payload.setdefault("required_entities", [])
                 known = {d.get("local_id") for d in declared if isinstance(d, Mapping)}
                 for entry in declarations:
                     if entry.get("local_id") not in known:
-                        declared.append({"local_id": entry.get("local_id"),
-                                         "kind": entry.get("kind"),
-                                         "label": (entry.get("name") or {}).get("value")
-                                         if isinstance(entry.get("name"), Mapping)
-                                         else entry.get("label")})
-                notes.append(f"moved {len(declarations)} effect-less 'analyses' entries "
-                             "into required_entities")
+                        declared.append(
+                            {
+                                "local_id": entry.get("local_id"),
+                                "kind": entry.get("kind"),
+                                "label": (
+                                    (entry.get("name") or {}).get("value")
+                                    if isinstance(entry.get("name"), Mapping)
+                                    else entry.get("label")
+                                ),
+                            }
+                        )
+                notes.append(
+                    f"moved {len(declarations)} effect-less 'analyses' entries "
+                    "into required_entities"
+                )
 
     analysis_side = MODE_SCHEMA.get(mode, mode) == "analyses"
     if analysis_side:
@@ -958,34 +1028,55 @@ def main() -> int:
     parser.add_argument("--paper", required=True)
     parser.add_argument("--text", required=True, type=Path)
     parser.add_argument("--out-dir", required=True, type=Path)
-    parser.add_argument("--mode", default="entities",
-                        choices=["entities", "analyses", "demands", "satisfy"])
-    parser.add_argument("--requirements", type=Path,
-                        help="required_entities from the demands pass (satisfy mode)")
-    parser.add_argument("--no-evidence", action="store_true",
-                        help="drop the quote contract; review/add_evidence.py adds spans")
+    parser.add_argument(
+        "--mode", default="entities", choices=["entities", "analyses", "demands", "satisfy"]
+    )
+    parser.add_argument(
+        "--requirements",
+        type=Path,
+        help="required_entities from the demands pass (satisfy mode)",
+    )
+    parser.add_argument(
+        "--no-evidence",
+        action="store_true",
+        help="drop the quote contract; review/add_evidence.py adds spans",
+    )
     parser.add_argument("--stage1", type=Path, help="stage1/analyses.json (analyses mode)")
-    parser.add_argument("--stage1-detail", action="store_true",
-                        help="include each analysis's parsed foci, not just a count")
-    parser.add_argument("--zero-foci-rule", action="store_true",
-                        help="say that a stage-1 entry with no coordinates is a tested "
-                             "effect that found nothing, and is emitted like any other")
+    parser.add_argument(
+        "--stage1-detail",
+        action="store_true",
+        help="include each analysis's parsed foci, not just a count",
+    )
+    parser.add_argument(
+        "--zero-foci-rule",
+        action="store_true",
+        help="say that a stage-1 entry with no coordinates is a tested "
+        "effect that found nothing, and is emitted like any other",
+    )
     parser.add_argument("--entities", type=Path, help="pass 1 payload (analyses mode)")
-    parser.add_argument("--tables", type=Path,
-                        help="stage1/table-map.json: {source table_id: Table local_id}")
+    parser.add_argument(
+        "--tables", type=Path, help="stage1/table-map.json: {source table_id: Table local_id}"
+    )
     parser.add_argument("--key-file", type=Path)
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--effort", default="low")
     parser.add_argument("--max-out", type=int, default=48_000)
-    parser.add_argument("--max-attempts", type=int, default=1,
-                        help="retries when a pass fails its post-condition -- an empty "
-                             "payload, or a declared entity it did not emit. 1 disables it.")
+    parser.add_argument(
+        "--max-attempts",
+        type=int,
+        default=1,
+        help="retries when a pass fails its post-condition -- an empty "
+        "payload, or a declared entity it did not emit. 1 disables it.",
+    )
     parser.add_argument("--max-chars", type=int, default=200_000)
     # A preprocessing strategy changes what the model reads and nothing else. The record
     # is built from the untransformed file, so no offset a reviewer is shown moves.
-    parser.add_argument("--preprocess", default="none",
-                        choices=["none", *sorted(preprocess.STRATEGIES)],
-                        help="deterministic transform of the paper text (review/preprocess.py)")
+    parser.add_argument(
+        "--preprocess",
+        default="none",
+        choices=["none", *sorted(preprocess.STRATEGIES)],
+        help="deterministic transform of the paper text (review/preprocess.py)",
+    )
     parser.add_argument("--print-prompt", action="store_true", help="no API call")
     args = parser.parse_args()
 
@@ -998,7 +1089,8 @@ def main() -> int:
     if args.mode in ("analyses", "demands"):
         if args.entities and args.entities.is_file():
             context += entity_digest(
-                classes, json.loads(args.entities.read_text(encoding="utf-8")))
+                classes, json.loads(args.entities.read_text(encoding="utf-8"))
+            )
         table_ids: dict[str, str] = {}
         if args.tables and args.tables.is_file():
             # Flat {source table_id: local_id}. Kept out of the payload because
@@ -1006,14 +1098,19 @@ def main() -> int:
             table_ids = json.loads(args.tables.read_text(encoding="utf-8"))
         if args.stage1 and args.stage1.is_file():
             context += stage1_block(
-                json.loads(args.stage1.read_text(encoding="utf-8")), table_ids,
-                detail=args.stage1_detail, zero_foci_rule=args.zero_foci_rule)
+                json.loads(args.stage1.read_text(encoding="utf-8")),
+                table_ids,
+                detail=args.stage1_detail,
+                zero_foci_rule=args.zero_foci_rule,
+            )
 
     text = args.text.read_text(encoding="utf-8")[: args.max_chars]
     prepared = preprocess.apply_strategy(args.preprocess, text, args.mode)
     if args.preprocess != "none":
-        print(f"  preprocess {args.preprocess}: paper {len(text):,} -> "
-              f"{len(prepared.text):,} chars, digest {len(prepared.digest):,}")
+        print(
+            f"  preprocess {args.preprocess}: paper {len(text):,} -> "
+            f"{len(prepared.text):,} chars, digest {len(prepared.digest):,}"
+        )
     # The digest sits last in the context, so it is the block nearest the paper it is a
     # candidate list for. Everything before it -- the shopping list, the stage-1 listing --
     # is a contract the pass must satisfy, and a candidate list is not that.
@@ -1034,14 +1131,17 @@ def main() -> int:
         print("no OPENAI_API_KEY; pass --key-file", file=sys.stderr)
         return 2
 
-    import usage_log
+    from pondie.extraction.passes import usage_log
+
     client = usage_log.build_client(args.paper, args.mode)
 
     started = time.time()
     declared = []
     if args.mode == "satisfy" and args.requirements and args.requirements.is_file():
-        declared = (json.loads(args.requirements.read_text(encoding="utf-8"))
-                    .get("required_entities") or [])
+        declared = (
+            json.loads(args.requirements.read_text(encoding="utf-8")).get("required_entities")
+            or []
+        )
 
     # Retry names the fault rather than resampling blindly. The failure is stochastic --
     # the same prompt succeeds on the next draw most of the time -- but a model told what
@@ -1049,10 +1149,13 @@ def main() -> int:
     attempt, notes = 0, []
     while True:
         attempt += 1
-        prompt = user if attempt == 1 else user + RETRY_NOTE.format(
-            failures="\n".join(f"- {failure}" for failure in failures))
-        payload, usage = extract(client, args.model, system, prompt, args.effort,
-                                 args.max_out)
+        prompt = (
+            user
+            if attempt == 1
+            else user
+            + RETRY_NOTE.format(failures="\n".join(f"- {failure}" for failure in failures))
+        )
+        payload, usage = extract(client, args.model, system, prompt, args.effort, args.max_out)
         payload, notes = normalize(payload, args.mode)
         failures = postcondition_failures(payload, args.mode, declared)
         if not failures or attempt >= args.max_attempts:
@@ -1060,8 +1163,11 @@ def main() -> int:
         for failure in failures:
             print(f"  attempt {attempt} rejected: {failure}", file=sys.stderr)
     if failures:
-        print(f"  POST-CONDITION STILL FAILING after {attempt} attempt(s): "
-              + "; ".join(failures), file=sys.stderr)
+        print(
+            f"  POST-CONDITION STILL FAILING after {attempt} attempt(s): "
+            + "; ".join(failures),
+            file=sys.stderr,
+        )
     elif attempt > 1:
         print(f"  recovered on attempt {attempt}")
     for warning in design_model_mismatch(payload):
@@ -1081,18 +1187,27 @@ def main() -> int:
         stage.mkdir(parents=True, exist_ok=True)
         (stage / "requirements.json").write_text(
             json.dumps({"required_entities": declared}, indent=1, ensure_ascii=False) + "\n",
-            encoding="utf-8")
+            encoding="utf-8",
+        )
         print(f"  declared {len(declared)} required entities")
     written = {"demands": "analyses", "satisfy": "entities"}.get(args.mode, args.mode)
     (destination / f"{written}.json").write_text(
-        json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
     counts = {k: len(payload.get(k) or []) for k in ENTITY_LISTS if payload.get(k)}
-    usage_log.record(args.out_dir / "usage.jsonl", args.paper, args.mode, usage,
-                     {"attempt": attempt, "effort": args.effort})
-    print(f"{args.paper}/{args.mode}: {usage['prompt_tokens']}->{usage['completion_tokens']} tok "
-          f"(reasoning {usage['reasoning_tokens']}) in {time.time() - started:.0f}s "
-          f"[{usage['finish_reason']}]  {counts}")
+    usage_log.record(
+        args.out_dir / "usage.jsonl",
+        args.paper,
+        args.mode,
+        usage,
+        {"attempt": attempt, "effort": args.effort},
+    )
+    print(
+        f"{args.paper}/{args.mode}: {usage['prompt_tokens']}->{usage['completion_tokens']} tok "
+        f"(reasoning {usage['reasoning_tokens']}) in {time.time() - started:.0f}s "
+        f"[{usage['finish_reason']}]  {counts}"
+    )
     for note in notes:
         print(f"  note: {note}")
 
@@ -1101,13 +1216,18 @@ def main() -> int:
     # Reasoning effort makes it likelier -- thinking can consume the whole output budget --
     # so the check names the two causes it can tell apart.
     if not counts:
-        reason = ("the output budget went to reasoning"
-                  if usage["finish_reason"] == "length"
-                  or (usage["reasoning_tokens"] or 0) > 0.5 * args.max_out
-                  else "the model emitted an empty skeleton")
-        print(f"  DEGENERATE: {args.mode} produced no entities -- {reason}. "
-              f"reasoning={usage['reasoning_tokens']} of max_out={args.max_out}, "
-              f"finish={usage['finish_reason']}", file=sys.stderr)
+        reason = (
+            "the output budget went to reasoning"
+            if usage["finish_reason"] == "length"
+            or (usage["reasoning_tokens"] or 0) > 0.5 * args.max_out
+            else "the model emitted an empty skeleton"
+        )
+        print(
+            f"  DEGENERATE: {args.mode} produced no entities -- {reason}. "
+            f"reasoning={usage['reasoning_tokens']} of max_out={args.max_out}, "
+            f"finish={usage['finish_reason']}",
+            file=sys.stderr,
+        )
     return 0
 
 

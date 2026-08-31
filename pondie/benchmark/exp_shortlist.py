@@ -20,17 +20,13 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
 
-from .build_evidence_gold import locate  # noqa: E402
-
+from pondie.benchmark.build_evidence_gold import locate  # noqa: E402
 
 FULL_SYSTEM = """You locate supporting quotes in a scientific paper.
 
@@ -71,7 +67,9 @@ def overlaps(a, b, c, d) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rows", type=Path, default=ROOT / "data/eval/evidence-eval-rows.json")
+    parser.add_argument(
+        "--rows", type=Path, default=ROOT / "data/eval/evidence-eval-rows.json"
+    )
     parser.add_argument("--jobs", type=Path, default=ROOT / "data/eval/evidence-jobs.json")
     parser.add_argument("--texts", type=Path, default=ROOT / "data/texts")
     parser.add_argument("--out", type=Path, default=ROOT / "data/eval/shortlist-arms.json")
@@ -82,8 +80,10 @@ def main() -> int:
 
     load_key(args.key_file)
     from openai import OpenAI
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"],
-                    base_url=os.environ.get("OPENAI_API_GATEWAY"))
+
+    client = OpenAI(
+        api_key=os.environ["OPENAI_API_KEY"], base_url=os.environ.get("OPENAI_API_GATEWAY")
+    )
 
     rows = {r["key"]: r for r in json.loads(args.rows.read_text(encoding="utf-8"))}
     jobs = [j for j in json.loads(args.jobs.read_text(encoding="utf-8")) if j["key"] in rows]
@@ -101,10 +101,14 @@ def main() -> int:
 
         def ask(system: str, user: str, arm: str) -> dict:
             response = client.chat.completions.create(
-                model=args.model, reasoning_effort="low",
+                model=args.model,
+                reasoning_effort="low",
                 response_format={"type": "json_object"},
-                messages=[{"role": "system", "content": system},
-                          {"role": "user", "content": user}])
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+            )
             usage[arm][0] += response.usage.prompt_tokens
             usage[arm][1] += response.usage.completion_tokens
             body = (response.choices[0].message.content or "{}").strip()
@@ -117,22 +121,30 @@ def main() -> int:
 
         answers: dict[str, dict] = {}
         for start in range(0, len(group), args.batch):
-            batch = group[start:start + args.batch]
+            batch = group[start : start + args.batch]
 
-            listing = "\n".join(f"{i}. {j['field']} = {j['value'][:200]}"
-                                for i, j in enumerate(batch))
-            quotes = ask(FULL_SYSTEM,
-                         f"# Paper\n\n{text}\n\n# Facts needing a supporting quote\n\n"
-                         f"{listing}\n\nReturn the JSON object now.", "full")
+            listing = "\n".join(
+                f"{i}. {j['field']} = {j['value'][:200]}" for i, j in enumerate(batch)
+            )
+            quotes = ask(
+                FULL_SYSTEM,
+                f"# Paper\n\n{text}\n\n# Facts needing a supporting quote\n\n"
+                f"{listing}\n\nReturn the JSON object now.",
+                "full",
+            )
 
             blocks = []
             for i, job in enumerate(batch):
                 candidates = rows[job["key"]]["top12_texts"]
                 lines = "\n".join(f"   [{k}] {c}" for k, c in enumerate(candidates))
                 blocks.append(f"{i}. {job['field']} = {job['value'][:200]}\n{lines}")
-            picks = ask(SHORT_SYSTEM,
-                        "# Facts and their candidate sentences\n\n" + "\n\n".join(blocks)
-                        + "\n\nReturn the JSON object now.", "shortlist")
+            picks = ask(
+                SHORT_SYSTEM,
+                "# Facts and their candidate sentences\n\n"
+                + "\n\n".join(blocks)
+                + "\n\nReturn the JSON object now.",
+                "shortlist",
+            )
 
             for i, job in enumerate(batch):
                 answers[job["key"]] = {"quote": quotes.get(str(i)), "pick": picks.get(str(i))}
@@ -147,10 +159,19 @@ def main() -> int:
             # accuracy on an exact match confuses "quoted a different sentence" with
             # "quoted the right sentence through a line break".
             at = locate(text, quote) if isinstance(quote, str) else None
-            verdict["full"] = ("no pick" if not quote else
-                               "unlocatable" if at is None else
-                               "correct" if any(overlaps(at[0], at[1], c, d)
-                                                for c, d in positives) else "unknown")
+            verdict["full"] = (
+                "no pick"
+                if not quote
+                else (
+                    "unlocatable"
+                    if at is None
+                    else (
+                        "correct"
+                        if any(overlaps(at[0], at[1], c, d) for c, d in positives)
+                        else "unknown"
+                    )
+                )
+            )
 
             pick = answer.get("pick")
             row = rows[job["key"]]
@@ -161,25 +182,44 @@ def main() -> int:
                 # table rows, which are synthesised and appear nowhere in the paper, so
                 # searching for their text scores every table pick as unlocatable.
                 begin, end = row["top12_spans"][pick]
-                verdict["shortlist"] = ("correct" if any(overlaps(begin, end, c, d)
-                                                         for c, d in positives) else "unknown")
-            results.append({"key": job["key"], "field": job["field"], **verdict,
-                            "retriever_top1": row["top1"]})
-        print(f"  {paper}: {len(group)} slots  "
-              f"full={usage['full']} shortlist={usage['shortlist']}", flush=True)
+                verdict["shortlist"] = (
+                    "correct"
+                    if any(overlaps(begin, end, c, d) for c, d in positives)
+                    else "unknown"
+                )
+            results.append(
+                {
+                    "key": job["key"],
+                    "field": job["field"],
+                    **verdict,
+                    "retriever_top1": row["top1"],
+                }
+            )
+        print(
+            f"  {paper}: {len(group)} slots  "
+            f"full={usage['full']} shortlist={usage['shortlist']}",
+            flush=True,
+        )
 
-    args.out.write_text(json.dumps({"results": results, "usage": usage}, indent=1) + "\n",
-                        encoding="utf-8")
+    args.out.write_text(
+        json.dumps({"results": results, "usage": usage}, indent=1) + "\n", encoding="utf-8"
+    )
     n = len(results)
     print(f"\n{n} slots\n")
-    print(f'{"arm":12s} {"correct":>9s} {"unknown":>9s} {"no pick":>9s} {"unlocatable":>13s}'
-          f' {"prompt tok":>12s} {"completion":>11s}')
+    print(
+        f'{"arm":12s} {"correct":>9s} {"unknown":>9s} {"no pick":>9s} {"unlocatable":>13s}'
+        f' {"prompt tok":>12s} {"completion":>11s}'
+    )
     for arm in ("full", "shortlist"):
-        counts = {k: sum(1 for r in results if r[arm] == k)
-                  for k in ("correct", "unknown", "no pick", "unlocatable")}
-        print(f"{arm:12s} {counts['correct']*100/n:8.1f}% {counts['unknown']*100/n:8.1f}% "
-              f"{counts['no pick']*100/n:8.1f}% {counts['unlocatable']*100/n:12.1f}% "
-              f"{usage[arm][0]:12d} {usage[arm][1]:11d}")
+        counts = {
+            k: sum(1 for r in results if r[arm] == k)
+            for k in ("correct", "unknown", "no pick", "unlocatable")
+        }
+        print(
+            f"{arm:12s} {counts['correct']*100/n:8.1f}% {counts['unknown']*100/n:8.1f}% "
+            f"{counts['no pick']*100/n:8.1f}% {counts['unlocatable']*100/n:12.1f}% "
+            f"{usage[arm][0]:12d} {usage[arm][1]:11d}"
+        )
     both = sum(1 for r in results if "correct" in (r["full"], r["shortlist"]))
     print(f"\nunion of the two arms: {both*100/n:.1f}%")
     return 0

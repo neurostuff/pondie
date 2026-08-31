@@ -23,16 +23,12 @@ import argparse
 import glob
 import json
 import re
-import sys
 from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
 
-from parse_tables import _point_sign  # noqa: E402
-
+from pondie.extraction.passes.parse_tables import _point_sign  # noqa: E402
 
 
 def unwrap(node):
@@ -49,8 +45,11 @@ def _as_point(coordinate: dict) -> dict:
 
 def analysis_sign(parsed: dict) -> int | None:
     """The one sign every point of this parsed analysis agrees on, or None."""
-    signs = {sign for coordinate in (parsed.get("coordinates") or [])
-             if (sign := _point_sign(_as_point(coordinate))) is not None}
+    signs = {
+        sign
+        for coordinate in (parsed.get("coordinates") or [])
+        if (sign := _point_sign(_as_point(coordinate))) is not None
+    }
     return signs.pop() if len(signs) == 1 else None
 
 
@@ -60,6 +59,7 @@ def match_analysis(name: str, parsed_list: list[dict]) -> dict | None:
     The record's local_id is derived from the parse's `name`, so they are matched on a
     normalised form of it rather than on identity.
     """
+
     def fold(text: str) -> str:
         return re.sub(r"[^a-z0-9]+", "", (text or "").lower())
 
@@ -78,8 +78,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--gold", type=Path, default=ROOT / "benchmarks/gold/direction")
     parser.add_argument("--records", type=Path, default=ROOT / "data/records")
-    parser.add_argument("--parsed", type=Path, default=ROOT / "data/tables",
-                        help="parse_tables output, if present")
+    parser.add_argument(
+        "--parsed",
+        type=Path,
+        default=ROOT / "data/tables",
+        help="parse_tables output, if present",
+    )
     args = parser.parse_args()
 
     stats = Counter()
@@ -99,9 +103,14 @@ def main() -> int:
         # The statistics are in the table parse, not the record: the record keeps the
         # contrast and drops the rows it was read from.
         parsed_list = []
-        for path in sorted(glob.glob(str(ROOT / f"data/texts/{paper}/processed/*/analyses.jsonl"))):
-            parsed_list += [json.loads(line) for line in
-                            Path(path).read_text(encoding="utf-8").splitlines() if line.strip()]
+        for path in sorted(
+            glob.glob(str(ROOT / f"data/texts/{paper}/processed/*/analyses.jsonl"))
+        ):
+            parsed_list += [
+                json.loads(line)
+                for line in Path(path).read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
             break
         if not parsed_list:
             stats["no table parse"] += 1
@@ -133,8 +142,14 @@ def main() -> int:
             if positive == 1 and negative == 1:
                 stats["signed and a clean +/- pair"] += 1
                 if len(examples) < 6:
-                    examples.append((paper, analysis_id, sign,
-                                     [(c["level"], c["direction"]) for c in cells]))
+                    examples.append(
+                        (
+                            paper,
+                            analysis_id,
+                            sign,
+                            [(c["level"], c["direction"]) for c in cells],
+                        )
+                    )
             elif positive and not negative:
                 stats["signed, all positive"] += 1
             elif negative and not positive:
@@ -143,13 +158,22 @@ def main() -> int:
                 stats["signed, other shape"] += 1
 
     print(f"{stats['analyses']} gold analyses with a reviewed direction\n")
-    for key in ("analysis not in record", "no table parse", "no matching table parse",
-                "no usable sign", "signed",
-                "signed and a clean +/- pair", "signed, all positive",
-                "signed, all negative", "signed, other shape"):
+    for key in (
+        "analysis not in record",
+        "no table parse",
+        "no matching table parse",
+        "no usable sign",
+        "signed",
+        "signed and a clean +/- pair",
+        "signed, all positive",
+        "signed, all negative",
+        "signed, other shape",
+    ):
         if stats[key]:
-            print(f"  {key:34s} {stats[key]:4d}"
-                  f"  ({stats[key]*100/max(stats['analyses'],1):.0f}%)")
+            print(
+                f"  {key:34s} {stats[key]:4d}"
+                f"  ({stats[key]*100/max(stats['analyses'],1):.0f}%)"
+            )
     print("\ncell-direction shapes across all gold analyses:")
     for shape, count in shapes.most_common(8):
         rendered = ", ".join(f"{n}x{d}" for d, n in shape)

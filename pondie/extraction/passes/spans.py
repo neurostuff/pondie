@@ -25,12 +25,27 @@ from dataclasses import dataclass
 # for the same reason -- composing "e" + U+0301 into U+00E9 would shorten the
 # text and shift every following offset.
 _EQUIVALENT = {
-    "‘": "'", "’": "'", "‚": "'", "‛": "'",
-    "“": '"', "”": '"', "„": '"', "‟": '"',
-    "‐": "-", "‑": "-", "‒": "-", "–": "-",
-    "—": "-", "―": "-", "−": "-",
-    " ": " ", " ": " ", " ": " ", " ": " ",
-    "​": " ", "﻿": " ",
+    "‘": "'",
+    "’": "'",
+    "‚": "'",
+    "‛": "'",
+    "“": '"',
+    "”": '"',
+    "„": '"',
+    "‟": '"',
+    "‐": "-",
+    "‑": "-",
+    "‒": "-",
+    "–": "-",
+    "—": "-",
+    "―": "-",
+    "−": "-",
+    " ": " ",
+    " ": " ",
+    " ": " ",
+    " ": " ",
+    "​": " ",
+    "﻿": " ",
 }
 
 
@@ -100,7 +115,9 @@ def resolve(
     exact = [match.start() for match in re.finditer(re.escape(quote), normalized)]
     if exact:
         start = _pick(exact, near)
-        return ResolvedSpan(start, start + len(quote), normalized[start : start + len(quote)], True)
+        return ResolvedSpan(
+            start, start + len(quote), normalized[start : start + len(quote)], True
+        )
 
     haystack = folded_text if folded_text is not None else fold(normalized)
     matches = list(_tolerant_pattern(quote).finditer(haystack))

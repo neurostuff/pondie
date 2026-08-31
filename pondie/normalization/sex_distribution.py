@@ -7,10 +7,11 @@ query grouping by sex reads one value and not eight.
 The categories a paper reports are not always two: `OTHER` holds a reported category outside
 the binary, which is a value to preserve rather than a failure to classify.
 """
+
 from __future__ import annotations
 
-from . import OTHER, UNKNOWN
-from ._lexicon import ClosedField, Rule
+from pondie.normalization import OTHER, UNKNOWN
+from pondie.normalization._lexicon import ClosedField, Rule
 
 MALE, FEMALE = "MALE", "FEMALE"
 VALUES = (MALE, FEMALE, OTHER, UNKNOWN)

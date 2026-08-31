@@ -37,14 +37,11 @@ import re
 import sys
 import unicodedata
 from collections import Counter, defaultdict
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
-
-
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
 
 from schema_utils import (  # noqa: E402
     EXTRACTED_VALUE,
@@ -56,6 +53,8 @@ from schema_utils import (  # noqa: E402
     subclasses_of,
 )
 
+from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
+
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA = _schema.ROOT / "neuroimaging-study-extraction.yaml"
 CACHE = ROOT / ".cache" / "compare_embeddings.json"
@@ -66,9 +65,24 @@ SKIP_SLOTS = {"evidence", "extraction_metadata", "value_source"}
 #: Slots that carry an entity's identity, weighted up so a name is not drowned by forty
 #: sparse attributes when the assignment problem is scored.
 IDENTIFYING = {
-    "name", "definition", "description", "source_label", "caption", "table_number",
-    "model", "manufacturer", "level", "model_type", "estimator", "atlas", "category",
-    "specific_metric", "pulse_sequence_type", "acquisition_type", "type", "family",
+    "name",
+    "definition",
+    "description",
+    "source_label",
+    "caption",
+    "table_number",
+    "model",
+    "manufacturer",
+    "level",
+    "model_type",
+    "estimator",
+    "atlas",
+    "category",
+    "specific_metric",
+    "pulse_sequence_type",
+    "acquisition_type",
+    "type",
+    "family",
 }
 
 #: Excluded from the score that matches two inline objects, because the metric being
@@ -118,12 +132,19 @@ _WS = re.compile(r"\s+")
 #: the failure it just manufactured. Spelled-out forms are folded to the same tokens so
 #: `A > B` and `A greater than B` still meet.
 _COMPARATORS = (
-    ("\u2265", " gte "), ("\u2264", " lte "), ("\u2260", " ne "),
-    (">=", " gte "), ("<=", " lte "), (">", " gt "), ("<", " lt "),
+    ("\u2265", " gte "),
+    ("\u2264", " lte "),
+    ("\u2260", " ne "),
+    (">=", " gte "),
+    ("<=", " lte "),
+    (">", " gt "),
+    ("<", " lt "),
 )
 _COMPARATOR_WORDS = (
-    (r"\bgreater than or equal to\b", " gte "), (r"\bless than or equal to\b", " lte "),
-    (r"\bgreater than\b", " gt "), (r"\bless than\b", " lt "),
+    (r"\bgreater than or equal to\b", " gte "),
+    (r"\bless than or equal to\b", " lte "),
+    (r"\bgreater than\b", " gt "),
+    (r"\bless than\b", " lt "),
     (r"\bversus\b", " vs "),
 )
 
@@ -167,8 +188,9 @@ class Semantics:
     of requests for a few hundred distinct strings.
     """
 
-    def __init__(self, enabled: bool, model: str = "text-embedding-3-small",
-                 base_url: str | None = None) -> None:
+    def __init__(
+        self, enabled: bool, model: str = "text-embedding-3-small", base_url: str | None = None
+    ) -> None:
         self.enabled = enabled
         self.model = model
         self.base_url = base_url
@@ -193,13 +215,16 @@ class Semantics:
             try:
                 client = _openai_client(self.base_url)
                 for start in range(0, len(missing), 128):
-                    batch = missing[start:start + 128]
+                    batch = missing[start : start + 128]
                     response = client.embeddings.create(model=self.model, input=batch)
                     for text, item in zip(batch, response.data):
                         self._cache[text] = list(item.embedding)
             except Exception as exc:  # noqa: BLE001
-                print(f"note: semantic similarity unavailable ({type(exc).__name__}: {exc}); "
-                      "scoring strings by fuzzy overlap only.", file=sys.stderr)
+                print(
+                    f"note: semantic similarity unavailable ({type(exc).__name__}: {exc}); "
+                    "scoring strings by fuzzy overlap only.",
+                    file=sys.stderr,
+                )
                 self.enabled = False
                 return
             CACHE.parent.mkdir(parents=True, exist_ok=True)
@@ -251,7 +276,8 @@ def _openai_client(base_url: str | None = None):
 
     return OpenAI(
         api_key=os.environ["OPENAI_API_KEY"],
-        base_url=base_url or os.environ.get("OPENAI_EMBEDDING_BASE_URL")
+        base_url=base_url
+        or os.environ.get("OPENAI_EMBEDDING_BASE_URL")
         or os.environ.get("OPENAI_API_GATEWAY"),
     )
 
@@ -289,6 +315,7 @@ def numeric_agreement(a: float, b: float) -> tuple[bool, float]:
 # ---------------------------------------------------------------------------
 # assignment
 # ---------------------------------------------------------------------------
+
 
 def hungarian(score: list[list[float]]) -> dict[int, int]:
     """Maximum-weight bipartite matching, rows to columns, by shortest augmenting path.
@@ -343,8 +370,9 @@ def hungarian(score: list[list[float]]) -> dict[int, int]:
     return {c: r for r, c in pairs.items()} if transposed else pairs
 
 
-def match(rows: Sequence[Any], cols: Sequence[Any], scorer, threshold: float
-          ) -> list[tuple[int, int, float]]:
+def match(
+    rows: Sequence[Any], cols: Sequence[Any], scorer, threshold: float
+) -> list[tuple[int, int, float]]:
     """Assign rows to columns, dropping pairs the score does not support."""
 
     if not rows or not cols:
@@ -360,6 +388,7 @@ def match(rows: Sequence[Any], cols: Sequence[Any], scorer, threshold: float
 # ---------------------------------------------------------------------------
 # schema-driven flattening
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class Field:
@@ -395,13 +424,16 @@ class Entity:
 class Record:
     label: str
     entities: dict[str, Entity] = dataclass_field(default_factory=dict)
-    by_type: dict[str, list[Entity]] = dataclass_field(default_factory=lambda: defaultdict(list))
+    by_type: dict[str, list[Entity]] = dataclass_field(
+        default_factory=lambda: defaultdict(list)
+    )
     #: target -> {(source local_id, path)}. Which entities point at this one, and through
     #: which slot. For an entity that exists to be referenced -- a Measure, a Region, a
     #: continuous ModelTerm with no levels and so no outgoing edges at all -- this is most
     #: of what identifies it, and reading only outgoing edges leaves it identified by name.
     incoming: dict[str, set[tuple[str, str]]] = dataclass_field(
-        default_factory=lambda: defaultdict(set))
+        default_factory=lambda: defaultdict(set)
+    )
 
 
 class Schema:
@@ -453,8 +485,11 @@ def flatten(record: Mapping, schema: Schema, label: str) -> Record:
     out = Record(label=label)
 
     def entity(etype: str, node: Mapping, parent: Entity | None = None) -> Entity:
-        ent = Entity(etype=etype, local_id=str(node.get(LOCAL_ID)),
-                     parent=parent.local_id if parent else None)
+        ent = Entity(
+            etype=etype,
+            local_id=str(node.get(LOCAL_ID)),
+            parent=parent.local_id if parent else None,
+        )
         out.entities[ent.local_id] = ent
         out.by_type[etype].append(ent)
         return ent
@@ -506,8 +541,11 @@ def flatten(record: Mapping, schema: Schema, label: str) -> Record:
             # A bare scalar the schema left unwrapped: local_id, a type designator, an
             # acquisition_type. Real content, so compared, but never a missingness fact.
             if slot != LOCAL_ID and isinstance(raw, (str, int, float, bool)):
-                kind = "number" if isinstance(raw, (int, float)) and not isinstance(raw, bool) \
+                kind = (
+                    "number"
+                    if isinstance(raw, (int, float)) and not isinstance(raw, bool)
                     else "boolean" if isinstance(raw, bool) else "string"
+                )
                 owner.fields[path] = Field(path=path, kind=kind, status="extracted", value=raw)
 
     root = entity("Study", record if record.get(LOCAL_ID) else {**record, LOCAL_ID: label})
@@ -528,8 +566,9 @@ def flatten(record: Mapping, schema: Schema, label: str) -> Record:
     return out
 
 
-def flatten_inline(node: Mapping, class_name: str, schema: Schema, prefix: str
-                   ) -> tuple[dict[str, Field], set[tuple[str, str]]]:
+def flatten_inline(
+    node: Mapping, class_name: str, schema: Schema, prefix: str
+) -> tuple[dict[str, Field], set[tuple[str, str]]]:
     """Fields and edges of one member of an inline list, addressed under `prefix`."""
 
     holder = Entity(etype=class_name, local_id="")
@@ -549,7 +588,8 @@ def flatten_inline(node: Mapping, class_name: str, schema: Schema, prefix: str
             if target and schema.is_extracted(target):
                 if isinstance(raw, Mapping):
                     holder.fields[path] = Field(
-                        path=path, kind=schema.value_kind(target),
+                        path=path,
+                        kind=schema.value_kind(target),
                         status=str(raw.get("extraction_status", "extracted")),
                         value=raw.get("value"),
                     )
@@ -558,26 +598,39 @@ def flatten_inline(node: Mapping, class_name: str, schema: Schema, prefix: str
                     if isinstance(ref, str):
                         holder.edges.add((path, ref))
             elif target:
-                members = [m for m in (raw if isinstance(raw, list) else [raw])
-                           if isinstance(m, Mapping)]
+                members = [
+                    m
+                    for m in (raw if isinstance(raw, list) else [raw])
+                    if isinstance(m, Mapping)
+                ]
                 if isinstance(raw, list):
                     holder.inline[path] = (target, members)
                 elif members:
                     visit(members[0], target, f"{path}.")
             elif isinstance(raw, (str, int, float, bool)):
-                kind = "number" if isinstance(raw, (int, float)) and not isinstance(raw, bool) \
+                kind = (
+                    "number"
+                    if isinstance(raw, (int, float)) and not isinstance(raw, bool)
                     else "boolean" if isinstance(raw, bool) else "string"
-                holder.fields[path] = Field(path=path, kind=kind, status="extracted", value=raw)
+                )
+                holder.fields[path] = Field(
+                    path=path, kind=kind, status="extracted", value=raw
+                )
 
     visit(node, class_name, "")
-    return ({f"{prefix}{k}": Field(f"{prefix}{k}", v.kind, v.status, v.value)
-             for k, v in holder.fields.items()},
-            {(f"{prefix}{p}", t) for p, t in holder.edges})
+    return (
+        {
+            f"{prefix}{k}": Field(f"{prefix}{k}", v.kind, v.status, v.value)
+            for k, v in holder.fields.items()
+        },
+        {(f"{prefix}{p}", t) for p, t in holder.edges},
+    )
 
 
 # ---------------------------------------------------------------------------
 # value comparison
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ValueVerdict:
@@ -596,13 +649,16 @@ def compare_values(kind: str, gold: Any, cand: Any, sem: Semantics) -> ValueVerd
         ok, score = numeric_agreement(g, c)
         return ValueVerdict(match=ok, score=score, numeric_error=abs(g - c))
     if kind == "boolean":
-        return ValueVerdict(match=bool(gold) == bool(cand),
-                            score=1.0 if bool(gold) == bool(cand) else 0.0)
+        return ValueVerdict(
+            match=bool(gold) == bool(cand), score=1.0 if bool(gold) == bool(cand) else 0.0
+        )
     if kind.startswith("enum:"):
         exact = normalize(str(gold)) == normalize(str(cand))
         # Half credit for near-misses keeps the graded score informative on the open
         # vocabularies (variation_level, assessment_type) without ever calling them right.
-        return ValueVerdict(match=exact, score=1.0 if exact else 0.5 * fuzzy(str(gold), str(cand)))
+        return ValueVerdict(
+            match=exact, score=1.0 if exact else 0.5 * fuzzy(str(gold), str(cand))
+        )
     score = sem.similarity(str(gold), str(cand))
     return ValueVerdict(match=score >= TEXT_MATCH, score=score)
 
@@ -635,6 +691,7 @@ def compare_lists(kind: str, gold: Any, cand: Any, sem: Semantics) -> ValueVerdi
 # ---------------------------------------------------------------------------
 # entity alignment
 # ---------------------------------------------------------------------------
+
 
 def _field_key(node: Field | None) -> str:
     """A field's value reduced to something comparable for equality."""
@@ -691,8 +748,14 @@ class Aligner:
     PASSES = 4
     WEIGHTS = {"attributes": 0.45, "outgoing": 0.20, "incoming": 0.25, "parent": 0.10}
 
-    def __init__(self, gold: Record, cand: Record, schema: Schema, sem: Semantics,
-                 exclude: Mapping[str, set[str]] | None = None) -> None:
+    def __init__(
+        self,
+        gold: Record,
+        cand: Record,
+        schema: Schema,
+        sem: Semantics,
+        exclude: Mapping[str, set[str]] | None = None,
+    ) -> None:
         self.gold, self.cand, self.schema, self.sem = gold, cand, schema, sem
         self.exclude = exclude or {}
         self.weights = discriminative_weights(gold)
@@ -736,7 +799,8 @@ class Aligner:
     def incoming_score(self, a: Entity, b: Entity) -> float | None:
         return self._dice(
             self.gold.incoming.get(a.local_id, set()),
-            {(self.map.get(s, s), p) for s, p in self.cand.incoming.get(b.local_id, set())})
+            {(self.map.get(s, s), p) for s, p in self.cand.incoming.get(b.local_id, set())},
+        )
 
     def parent_score(self, a: Entity, b: Entity) -> float | None:
         if a.parent is None and b.parent is None:
@@ -753,9 +817,11 @@ class Aligner:
         attributes = 0.9 * attributes + 0.1 * fuzzy(a.local_id, b.local_id)
         parts = {"attributes": attributes}
         if self.map:
-            for name, value in (("outgoing", self.outgoing_score(a, b)),
-                                ("incoming", self.incoming_score(a, b)),
-                                ("parent", self.parent_score(a, b))):
+            for name, value in (
+                ("outgoing", self.outgoing_score(a, b)),
+                ("incoming", self.incoming_score(a, b)),
+                ("parent", self.parent_score(a, b)),
+            ):
                 if value is not None:
                     parts[name] = value
         total = sum(self.WEIGHTS[k] for k in parts)
@@ -765,9 +831,11 @@ class Aligner:
         """The components behind one pair's score, for the structure report."""
 
         parts = {"attributes": round(self.field_score(etype, a, b), 3)}
-        for name, value in (("outgoing", self.outgoing_score(a, b)),
-                            ("incoming", self.incoming_score(a, b)),
-                            ("parent", self.parent_score(a, b))):
+        for name, value in (
+            ("outgoing", self.outgoing_score(a, b)),
+            ("incoming", self.incoming_score(a, b)),
+            ("parent", self.parent_score(a, b)),
+        ):
             if value is not None:
                 parts[name] = round(value, 3)
         return parts
@@ -779,16 +847,18 @@ class Aligner:
             for etype in set(self.gold.by_type) | set(self.cand.by_type):
                 g = self.gold.by_type.get(etype, [])
                 c = self.cand.by_type.get(etype, [])
-                for i, j, s in match(g, c, lambda x, y, t=etype: self.pair_score(t, x, y),
-                                     MATCH_THRESHOLD):
+                for i, j, s in match(
+                    g, c, lambda x, y, t=etype: self.pair_score(t, x, y), MATCH_THRESHOLD
+                ):
                     new[c[j].local_id] = g[i].local_id
                     scores[g[i].local_id] = s
             if new == self.map:
                 break
             self.map, self.scores = new, scores
         self.parts = {
-            g: self.explain(self.gold.entities[g].etype,
-                            self.gold.entities[g], self.cand.entities[c])
+            g: self.explain(
+                self.gold.entities[g].etype, self.gold.entities[g], self.cand.entities[c]
+            )
             for c, g in self.map.items()
         }
 
@@ -797,12 +867,27 @@ class Aligner:
 # metrics
 # ---------------------------------------------------------------------------
 
+
 def prf(true_positive: int, false_positive: int, false_negative: int) -> dict[str, float]:
-    precision = true_positive / (true_positive + false_positive) if true_positive + false_positive else 0.0
-    recall = true_positive / (true_positive + false_negative) if true_positive + false_negative else 0.0
+    precision = (
+        true_positive / (true_positive + false_positive)
+        if true_positive + false_positive
+        else 0.0
+    )
+    recall = (
+        true_positive / (true_positive + false_negative)
+        if true_positive + false_negative
+        else 0.0
+    )
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-    return {"precision": precision, "recall": recall, "f1": f1,
-            "tp": true_positive, "fp": false_positive, "fn": false_negative}
+    return {
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "tp": true_positive,
+        "fp": false_positive,
+        "fn": false_negative,
+    }
 
 
 def cohen_kappa(pairs: Sequence[tuple[str, str]]) -> float:
@@ -833,8 +918,9 @@ def per_class_prf(pairs: Sequence[tuple[str, str]]) -> dict[str, Any]:
     return {"per_class": out, "macro_f1": macro}
 
 
-def bootstrap(values: Sequence[float], draws: int = 2000, seed: int = 0
-              ) -> tuple[float, float] | None:
+def bootstrap(
+    values: Sequence[float], draws: int = 2000, seed: int = 0
+) -> tuple[float, float] | None:
     """Percentile interval over the unit of analysis, so a headline carries its noise.
 
     A single record supplies few cells, and a direction accuracy of 0.86 over fourteen of
@@ -862,6 +948,7 @@ def direction_of(fields: Mapping[str, Field], path: str) -> str:
 # ---------------------------------------------------------------------------
 # comparison
 # ---------------------------------------------------------------------------
+
 
 def reachable(record: Record, schema: Schema, roots: Iterable[str]) -> set[str]:
     """Entity ids reachable from `roots` by following references, inline edges included."""
@@ -915,8 +1002,14 @@ def scope_to_tables(doc: Mapping, schema: Schema) -> dict:
     return scoped
 
 
-def compare(gold_doc: Mapping, cand_doc: Mapping, schema: Schema, sem: Semantics,
-            label: str, scope: str = "all") -> dict[str, Any]:
+def compare(
+    gold_doc: Mapping,
+    cand_doc: Mapping,
+    schema: Schema,
+    sem: Semantics,
+    label: str,
+    scope: str = "all",
+) -> dict[str, Any]:
     if scope == "tables":
         gold_doc = scope_to_tables(gold_doc, schema)
         cand_doc = scope_to_tables(cand_doc, schema)
@@ -937,7 +1030,9 @@ def compare(gold_doc: Mapping, cand_doc: Mapping, schema: Schema, sem: Semantics
     # owning entity, so a reference held by an AnalysisGroup or a FactorLevel does not exist
     # as an edge until it has run. Scoring relationships first would silently lose them.
     result["fields"] = field_metrics(pairs, schema, sem, inline_alignments)
-    result["relationships"] = relationship_metrics(gold, cand, aligner, inline_alignments, schema)
+    result["relationships"] = relationship_metrics(
+        gold, cand, aligner, inline_alignments, schema
+    )
     result["structure"] = structure_metrics(gold, cand, aligner)
     result["direction"] = {
         "primary": direction_metrics(gold, cand, aligner, schema, sem),
@@ -952,8 +1047,11 @@ def _all_text(record: Record) -> list[str]:
     for ent in record.entities.values():
         for f in ent.fields.values():
             if f.status == "extracted" and f.kind.startswith("string"):
-                texts.extend(v for v in (f.value if isinstance(f.value, list) else [f.value])
-                             if isinstance(v, str))
+                texts.extend(
+                    v
+                    for v in (f.value if isinstance(f.value, list) else [f.value])
+                    if isinstance(v, str)
+                )
         for _, members in ent.inline.values():
             for member in members:
                 for value in member.values():
@@ -975,19 +1073,25 @@ def entity_metrics(gold: Record, cand: Record, aligner: Aligner) -> dict[str, An
         stats["cand_n"] = len(c)
         stats["mean_match_score"] = (
             sum(aligner.scores.get(aligner.map[e.local_id], 0.0) for e in matched) / hit
-            if hit else 0.0
+            if hit
+            else 0.0
         )
-        stats["missed"] = sorted(e.local_id for e in g
-                                 if e.local_id not in aligner.inverse)
+        stats["missed"] = sorted(e.local_id for e in g if e.local_id not in aligner.inverse)
         stats["spurious"] = sorted(e.local_id for e in c if e.local_id not in aligner.map)
         per_type[etype] = stats
         tp, fp, fn = tp + hit, fp + len(c) - hit, fn + len(g) - hit
-    return {"micro": prf(tp, fp, fn), "per_type": per_type,
-            "macro_f1": sum(v["f1"] for v in per_type.values()) / len(per_type) if per_type else 0.0}
+    return {
+        "micro": prf(tp, fp, fn),
+        "per_type": per_type,
+        "macro_f1": (
+            sum(v["f1"] for v in per_type.values()) / len(per_type) if per_type else 0.0
+        ),
+    }
 
 
-def field_metrics(pairs: Sequence[tuple[Entity, Entity]], schema: Schema, sem: Semantics,
-                  inline_out: dict) -> dict[str, Any]:
+def field_metrics(
+    pairs: Sequence[tuple[Entity, Entity]], schema: Schema, sem: Semantics, inline_out: dict
+) -> dict[str, Any]:
     per_type: dict[str, dict[str, Any]] = {}
     per_entity: list[dict[str, Any]] = []
 
@@ -996,9 +1100,12 @@ def field_metrics(pairs: Sequence[tuple[Entity, Entity]], schema: Schema, sem: S
         edges_g, edges_c = set(g_ent.edges), set(c_ent.edges)
         for path, (cls, members) in g_ent.inline.items():
             cand_cls, cand_members = c_ent.inline.get(path, (cls, []))
-            aligned = match(members, cand_members,
-                            lambda a, b, k=cls: inline_similarity(a, b, k, schema, sem),
-                            CELL_THRESHOLD)
+            aligned = match(
+                members,
+                cand_members,
+                lambda a, b, k=cls: inline_similarity(a, b, k, schema, sem),
+                CELL_THRESHOLD,
+            )
             inline_out[(g_ent.local_id, path)] = (members, cand_members, aligned, cls)
             for i, j, _ in aligned:
                 gf, ge = flatten_inline(members[i], cls, schema, f"{path}[{i}].")
@@ -1031,8 +1138,14 @@ def field_metrics(pairs: Sequence[tuple[Entity, Entity]], schema: Schema, sem: S
                     if verdict.numeric_error is not None:
                         target["numeric"].append((as_number(gf.value), as_number(cf.value)))
                 if not verdict.match:
-                    row["wrong"].append({"path": path, "gold": gf.value, "cand": cf.value,
-                                         "score": round(verdict.score, 3)})
+                    row["wrong"].append(
+                        {
+                            "path": path,
+                            "gold": gf.value,
+                            "cand": cf.value,
+                            "score": round(verdict.score, 3),
+                        }
+                    )
             elif g_has and not c_has:
                 for target in (bucket, row):
                     target["missed"] += 1
@@ -1045,15 +1158,17 @@ def field_metrics(pairs: Sequence[tuple[Entity, Entity]], schema: Schema, sem: S
                 for target in (bucket, row):
                     target["absent_agree"] += 1
 
-        per_entity.append({
-            "type": g_ent.etype,
-            "gold_id": g_ent.local_id,
-            "cand_id": c_ent.local_id,
-            **_summarize_field_bucket(row),
-            "wrong": row["wrong"][:20],
-            "not_extracted": row["missing"][:20],
-            "over_extracted": row["hallucinated"][:20],
-        })
+        per_entity.append(
+            {
+                "type": g_ent.etype,
+                "gold_id": g_ent.local_id,
+                "cand_id": c_ent.local_id,
+                **_summarize_field_bucket(row),
+                "wrong": row["wrong"][:20],
+                "not_extracted": row["missing"][:20],
+                "over_extracted": row["hallucinated"][:20],
+            }
+        )
 
     return {
         "per_type": {k: _summarize_field_bucket(v) for k, v in sorted(per_type.items())},
@@ -1063,8 +1178,19 @@ def field_metrics(pairs: Sequence[tuple[Entity, Entity]], schema: Schema, sem: S
 
 
 def _empty_field_bucket() -> dict[str, Any]:
-    return {"total": 0, "both": 0, "score": 0.0, "correct": 0, "missed": 0, "spurious": 0,
-            "absent_agree": 0, "numeric": [], "wrong": [], "missing": [], "hallucinated": []}
+    return {
+        "total": 0,
+        "both": 0,
+        "score": 0.0,
+        "correct": 0,
+        "missed": 0,
+        "spurious": 0,
+        "absent_agree": 0,
+        "numeric": [],
+        "wrong": [],
+        "missing": [],
+        "hallucinated": [],
+    }
 
 
 def _merge_buckets(buckets: Iterable[dict[str, Any]]) -> dict[str, Any]:
@@ -1105,8 +1231,9 @@ def _summarize_field_bucket(b: dict[str, Any]) -> dict[str, Any]:
     return summary
 
 
-def inline_similarity(a: Mapping, b: Mapping, class_name: str, schema: Schema,
-                      sem: Semantics) -> float:
+def inline_similarity(
+    a: Mapping, b: Mapping, class_name: str, schema: Schema, sem: Semantics
+) -> float:
     blocked = ALIGN_EXCLUDE.get(class_name, set())
     fa, ea = flatten_inline(a, class_name, schema, "")
     fb, eb = flatten_inline(b, class_name, schema, "")
@@ -1153,45 +1280,58 @@ def structure_metrics(gold: Record, cand: Record, aligner: Aligner) -> dict[str,
         out_gold = g.ref_edges
         out_cand = {(p, aligner.map.get(t, f"?{t}")) for p, t in c.ref_edges}
         in_gold = gold.incoming.get(gold_id, set())
-        in_cand = {(aligner.map.get(s, f"?{s}"), p)
-                   for s, p in cand.incoming.get(cand_id, set())}
-        neighbours = prf(len(out_gold & out_cand) + len(in_gold & in_cand),
-                         len(out_cand - out_gold) + len(in_cand - in_gold),
-                         len(out_gold - out_cand) + len(in_gold - in_cand))
-        rows.append({
-            "type": g.etype,
-            "gold_id": gold_id,
-            "cand_id": cand_id,
-            "match_score": round(aligner.scores.get(gold_id, 0.0), 3),
-            "evidence": aligner.parts.get(gold_id, {}),
-            "neighbourhood": neighbours,
-            "missing": sorted(f"{p} -> {t}" for p, t in out_gold - out_cand)
-            + sorted(f"{s} -{p}-> here" for s, p in in_gold - in_cand),
-            "extra": sorted(f"{p} -> {t}" for p, t in out_cand - out_gold)
-            + sorted(f"{s} -{p}-> here" for s, p in in_cand - in_gold),
-        })
+        in_cand = {
+            (aligner.map.get(s, f"?{s}"), p) for s, p in cand.incoming.get(cand_id, set())
+        }
+        neighbours = prf(
+            len(out_gold & out_cand) + len(in_gold & in_cand),
+            len(out_cand - out_gold) + len(in_cand - in_gold),
+            len(out_gold - out_cand) + len(in_gold - in_cand),
+        )
+        rows.append(
+            {
+                "type": g.etype,
+                "gold_id": gold_id,
+                "cand_id": cand_id,
+                "match_score": round(aligner.scores.get(gold_id, 0.0), 3),
+                "evidence": aligner.parts.get(gold_id, {}),
+                "neighbourhood": neighbours,
+                "missing": sorted(f"{p} -> {t}" for p, t in out_gold - out_cand)
+                + sorted(f"{s} -{p}-> here" for s, p in in_gold - in_cand),
+                "extra": sorted(f"{p} -> {t}" for p, t in out_cand - out_gold)
+                + sorted(f"{s} -{p}-> here" for s, p in in_cand - in_gold),
+            }
+        )
 
     # An entity that neither refers to anything nor is referred to has no neighbourhood to
     # agree about -- a Timepoint no term's level reaches, the Study root itself. Scoring it
     # zero would report a structure defect where there is no structure to get wrong.
-    scored = [r for r in rows if r["neighbourhood"]["tp"] + r["neighbourhood"]["fp"]
-              + r["neighbourhood"]["fn"]]
+    scored = [
+        r
+        for r in rows
+        if r["neighbourhood"]["tp"] + r["neighbourhood"]["fp"] + r["neighbourhood"]["fn"]
+    ]
     unconnected = len(rows) - len(scored)
     return {
         "per_entity": sorted(scored, key=lambda r: r["neighbourhood"]["f1"]),
         "unconnected": unconnected,
         "mean_neighbourhood_f1": (
             sum(r["neighbourhood"]["f1"] for r in scored) / len(scored)
-            if scored else float("nan")),
+            if scored
+            else float("nan")
+        ),
         # An entity the attributes like and the graph does not: right object, wrong place.
-        "misplaced": [r for r in scored
-                      if r["evidence"].get("attributes", 0) >= 0.75
-                      and r["neighbourhood"]["f1"] < 0.5],
+        "misplaced": [
+            r
+            for r in scored
+            if r["evidence"].get("attributes", 0) >= 0.75 and r["neighbourhood"]["f1"] < 0.5
+        ],
     }
 
 
-def relationship_metrics(gold: Record, cand: Record, aligner: Aligner,
-                         inline_alignments: dict, schema: Schema) -> dict[str, Any]:
+def relationship_metrics(
+    gold: Record, cand: Record, aligner: Aligner, inline_alignments: dict, schema: Schema
+) -> dict[str, Any]:
     """Triples over the entity map: an edge touching an unmatched entity can only be wrong.
 
     Candidate edges are translated into gold identifiers first. An endpoint that never
@@ -1224,13 +1364,15 @@ def relationship_metrics(gold: Record, cand: Record, aligner: Aligner,
         "per_slot": per_slot,
         "false_negatives": sorted(gold_edges - cand_edges),
         "false_positives": sorted(cand_edges - gold_edges),
-        "unmatched_endpoint_edges": sum(1 for s, _, t in cand_edges
-                                        if s.startswith("?") or t.startswith("?")),
+        "unmatched_endpoint_edges": sum(
+            1 for s, _, t in cand_edges if s.startswith("?") or t.startswith("?")
+        ),
     }
 
 
-def direction_metrics(gold: Record, cand: Record, aligner: Aligner, schema: Schema,
-                      sem: Semantics) -> dict[str, Any]:
+def direction_metrics(
+    gold: Record, cand: Record, aligner: Aligner, schema: Schema, sem: Semantics
+) -> dict[str, Any]:
     """The headline: does the candidate say which way each contrast went, on the right term?
 
     A cell pair is only scored when its `term` reference resolves to the same ModelTerm on
@@ -1260,9 +1402,12 @@ def direction_metrics(gold: Record, cand: Record, aligner: Aligner, schema: Sche
         c_ent = cand_by_id[c_id]
         c_cells = c_ent.inline.get("effect.cells", ("Cell", []))[1]
         cells_cand += len(c_cells)
-        aligned = match(g_cells, c_cells,
-                        lambda a, b: inline_similarity(a, b, "Cell", schema, sem),
-                        CELL_THRESHOLD)
+        aligned = match(
+            g_cells,
+            c_cells,
+            lambda a, b: inline_similarity(a, b, "Cell", schema, sem),
+            CELL_THRESHOLD,
+        )
         cells_aligned += len(aligned)
 
         pairs_here: list[tuple[str, str]] = []
@@ -1283,19 +1428,27 @@ def direction_metrics(gold: Record, cand: Record, aligner: Aligner, schema: Sche
 
         verdict = _contrast_verdict(g_cells, c_cells, aligned, grounded_here, pairs_here)
         contrast[verdict] += 1
-        detail.append({
-            "gold_analysis": g_ent.local_id,
-            "cand_analysis": c_id,
-            "verdict": verdict,
-            "cells": [
-                {"gold": _cell_repr(g_cells[i]), "cand": _cell_repr(c_cells[j]),
-                 "term_grounded": (_cell_term(c_cells[j]) is not None
-                                   and aligner.map.get(_cell_term(c_cells[j]))
-                                   == _cell_term(g_cells[i])),
-                 "direction_match": _cell_direction(g_cells[i]) == _cell_direction(c_cells[j])}
-                for i, j, _ in aligned
-            ],
-        })
+        detail.append(
+            {
+                "gold_analysis": g_ent.local_id,
+                "cand_analysis": c_id,
+                "verdict": verdict,
+                "cells": [
+                    {
+                        "gold": _cell_repr(g_cells[i]),
+                        "cand": _cell_repr(c_cells[j]),
+                        "term_grounded": (
+                            _cell_term(c_cells[j]) is not None
+                            and aligner.map.get(_cell_term(c_cells[j]))
+                            == _cell_term(g_cells[i])
+                        ),
+                        "direction_match": _cell_direction(g_cells[i])
+                        == _cell_direction(c_cells[j]),
+                    }
+                    for i, j, _ in aligned
+                ],
+            }
+        )
 
     # Accuracy alone is gameable: an extractor that emits one easy cell per analysis and
     # drops the rest scores 100%. Recall is over every gold cell, so a dropped cell is a
@@ -1312,27 +1465,44 @@ def direction_metrics(gold: Record, cand: Record, aligner: Aligner, schema: Sche
 
     scored_contrasts = sum(contrast[k] for k in contrast)
     return {
-        "cells": {"gold": cells_gold, "candidate": cells_cand, "aligned": cells_aligned,
-                  "term_grounded": cells_grounded,
-                  "grounding_rate": cells_grounded / cells_aligned if cells_aligned else float("nan"),
-                  "cell_recall": cells_grounded / cells_gold if cells_gold else float("nan")},
-        "accuracy_term_grounded": sum(grounded_hits) / len(grounded_hits) if grounded_hits else float("nan"),
+        "cells": {
+            "gold": cells_gold,
+            "candidate": cells_cand,
+            "aligned": cells_aligned,
+            "term_grounded": cells_grounded,
+            "grounding_rate": (
+                cells_grounded / cells_aligned if cells_aligned else float("nan")
+            ),
+            "cell_recall": cells_grounded / cells_gold if cells_gold else float("nan"),
+        },
+        "accuracy_term_grounded": (
+            sum(grounded_hits) / len(grounded_hits) if grounded_hits else float("nan")
+        ),
         "accuracy_ci95": interval,
         "cell_prf": direction_prf,
         "accuracy_aligned_any_term": (
             sum(1 for g, c in aligned_labels if g == c) / len(aligned_labels)
-            if aligned_labels else float("nan")
+            if aligned_labels
+            else float("nan")
         ),
-        "signed_accuracy": (len(signed) - flips - lost) / len(signed) if signed else float("nan"),
+        "signed_accuracy": (
+            (len(signed) - flips - lost) / len(signed) if signed else float("nan")
+        ),
         "sign_flip_rate": flips / len(signed) if signed else float("nan"),
         "sign_loss_rate": lost / len(signed) if signed else float("nan"),
         "sign_invention_rate": invented / unsigned_gold if unsigned_gold else float("nan"),
         "kappa": cohen_kappa(labels),
         **per_class_prf(labels),
         "confusion": _confusion(labels),
-        "contrast": {"counts": dict(contrast),
-                     "exact_rate": contrast["exact"] / scored_contrasts if scored_contrasts else float("nan"),
-                     "reversed_rate": contrast["reversed"] / scored_contrasts if scored_contrasts else float("nan")},
+        "contrast": {
+            "counts": dict(contrast),
+            "exact_rate": (
+                contrast["exact"] / scored_contrasts if scored_contrasts else float("nan")
+            ),
+            "reversed_rate": (
+                contrast["reversed"] / scored_contrasts if scored_contrasts else float("nan")
+            ),
+        },
         "detail": detail,
     }
 
@@ -1365,14 +1535,20 @@ def _cell_direction(cell: Mapping) -> str:
 
 def _cell_repr(cell: Mapping) -> dict[str, Any]:
     level = cell.get("level")
-    return {"term": _cell_term(cell),
-            "level": level.get("value") if isinstance(level, Mapping) else None,
-            "direction": _cell_direction(cell)}
+    return {
+        "term": _cell_term(cell),
+        "level": level.get("value") if isinstance(level, Mapping) else None,
+        "direction": _cell_direction(cell),
+    }
 
 
-def _contrast_verdict(g_cells: Sequence[Mapping], c_cells: Sequence[Mapping],
-                      aligned: Sequence[tuple[int, int, float]], grounded: int,
-                      pairs: Sequence[tuple[str, str]]) -> str:
+def _contrast_verdict(
+    g_cells: Sequence[Mapping],
+    c_cells: Sequence[Mapping],
+    aligned: Sequence[tuple[int, int, float]],
+    grounded: int,
+    pairs: Sequence[tuple[str, str]],
+) -> str:
     """One label per analysis, because a contrast is only right as a whole.
 
     `reversed` is split out from `wrong` on purpose. Every sign flipped is one diagnosable
@@ -1380,13 +1556,20 @@ def _contrast_verdict(g_cells: Sequence[Mapping], c_cells: Sequence[Mapping],
     downstream from a contrast that is merely partly wrong.
     """
 
-    if grounded != len(g_cells) or len(c_cells) != len(g_cells) or len(aligned) != len(g_cells):
+    if (
+        grounded != len(g_cells)
+        or len(c_cells) != len(g_cells)
+        or len(aligned) != len(g_cells)
+    ):
         return "structure_mismatch"
     if all(g == c for g, c in pairs):
         return "exact"
     signed = [(g, c) for g, c in pairs if g in DIRECTIONAL]
-    if signed and all(c == FLIP[g] for g, c in signed) and \
-            all(g == c for g, c in pairs if g not in DIRECTIONAL):
+    if (
+        signed
+        and all(c == FLIP[g] for g, c in signed)
+        and all(g == c for g, c in pairs if g not in DIRECTIONAL)
+    ):
         return "reversed"
     return "wrong_direction"
 
@@ -1409,13 +1592,18 @@ def composite(result: Mapping[str, Any]) -> dict[str, Any]:
     }
     usable = {k: v for k, v in parts.items() if isinstance(v, float) and not math.isnan(v)}
     total = sum(COMPOSITE_WEIGHTS[k] for k in usable)
-    score = sum(COMPOSITE_WEIGHTS[k] * v for k, v in usable.items()) / total if total else float("nan")
+    score = (
+        sum(COMPOSITE_WEIGHTS[k] * v for k, v in usable.items()) / total
+        if total
+        else float("nan")
+    )
     return {"score": score, "parts": parts, "weights": COMPOSITE_WEIGHTS}
 
 
 # ---------------------------------------------------------------------------
 # report
 # ---------------------------------------------------------------------------
+
 
 def pct(value: Any) -> str:
     if not isinstance(value, (int, float)) or (isinstance(value, float) and math.isnan(value)):
@@ -1430,62 +1618,91 @@ def render(result: Mapping[str, Any], verbose: bool) -> str:
 
     comp = result["composite"]
     add("")
-    add(f"composite {pct(comp['score'])}   " + "  ".join(
-        f"{k} {pct(v)}(w={COMPOSITE_WEIGHTS[k]})" for k, v in comp["parts"].items()))
+    add(
+        f"composite {pct(comp['score'])}   "
+        + "  ".join(
+            f"{k} {pct(v)}(w={COMPOSITE_WEIGHTS[k]})" for k, v in comp["parts"].items()
+        )
+    )
 
     primary = result["direction"]["primary"]
     blind = result["direction"]["structure_only"]
     add("")
     add("-- DIRECTION (highest weight) ---------------------------------------")
     cells = primary["cells"]
-    add(f"cells   gold {cells['gold']}  candidate {cells['candidate']}  "
+    add(
+        f"cells   gold {cells['gold']}  candidate {cells['candidate']}  "
         f"aligned {cells['aligned']}  term-grounded {cells['term_grounded']} "
-        f"({pct(cells['grounding_rate'])} of aligned, {pct(cells['cell_recall'])} of gold)")
+        f"({pct(cells['grounding_rate'])} of aligned, {pct(cells['cell_recall'])} of gold)"
+    )
     cell_prf = primary["cell_prf"]
-    add(f"signed-cell recovery  P {pct(cell_prf['precision'])}  R {pct(cell_prf['recall'])}  "
+    add(
+        f"signed-cell recovery  P {pct(cell_prf['precision'])}  R {pct(cell_prf['recall'])}  "
         f"F1 {pct(cell_prf['f1'])}   (a correct direction on the correct term, "
-        f"over every candidate / every gold cell)")
+        f"over every candidate / every gold cell)"
+    )
     ci = primary["accuracy_ci95"]
     band = f"  [95% CI {pct(ci[0])} {pct(ci[1])}]" if ci else ""
     add(f"direction accuracy (term-grounded) {pct(primary['accuracy_term_grounded'])}{band}")
-    add(f"  alignment blind to analysis prose  {pct(blind['accuracy_term_grounded'])}"
-        "   (a bracket, not a correction -- see docs/extraction-comparison-metrics.md)")
-    add(f"  ignoring term identity             {pct(primary['accuracy_aligned_any_term'])}"
-        "   (upper bound: credits a right sign on a wrong term)")
-    add(f"signed cells: accuracy {pct(primary['signed_accuracy'])}   "
+    add(
+        f"  alignment blind to analysis prose  {pct(blind['accuracy_term_grounded'])}"
+        "   (a bracket, not a correction -- see docs/extraction-comparison-metrics.md)"
+    )
+    add(
+        f"  ignoring term identity             {pct(primary['accuracy_aligned_any_term'])}"
+        "   (upper bound: credits a right sign on a wrong term)"
+    )
+    add(
+        f"signed cells: accuracy {pct(primary['signed_accuracy'])}   "
         f"sign flips {pct(primary['sign_flip_rate'])}   "
         f"sign lost {pct(primary['sign_loss_rate'])}   "
-        f"sign invented {pct(primary['sign_invention_rate'])}")
+        f"sign invented {pct(primary['sign_invention_rate'])}"
+    )
     kappa = primary["kappa"]
-    add(f"macro-F1 {pct(primary['macro_f1'])}   Cohen kappa "
-        f"{'  --  ' if math.isnan(kappa) else f'{kappa:6.3f}'}")
+    add(
+        f"macro-F1 {pct(primary['macro_f1'])}   Cohen kappa "
+        f"{'  --  ' if math.isnan(kappa) else f'{kappa:6.3f}'}"
+    )
     if primary["per_class"]:
         add("  per direction     P       R      F1    n")
         for label, stats in sorted(primary["per_class"].items()):
-            add(f"    {label:<14} {pct(stats['precision'])} {pct(stats['recall'])} "
-                f"{pct(stats['f1'])}  {stats['tp'] + stats['fn']:3d}")
+            add(
+                f"    {label:<14} {pct(stats['precision'])} {pct(stats['recall'])} "
+                f"{pct(stats['f1'])}  {stats['tp'] + stats['fn']:3d}"
+            )
     counts = primary["contrast"]["counts"]
-    add("  whole contrasts: " + ("  ".join(f"{k}={v}" for k, v in sorted(counts.items())) or "none"))
+    add(
+        "  whole contrasts: "
+        + ("  ".join(f"{k}={v}" for k, v in sorted(counts.items())) or "none")
+    )
     for row in primary["detail"]:
         if row["verdict"] != "exact":
-            add(f"    ! {row['gold_analysis']} -> {row.get('cand_analysis', '(none)')}: "
-                f"{row['verdict']}")
+            add(
+                f"    ! {row['gold_analysis']} -> {row.get('cand_analysis', '(none)')}: "
+                f"{row['verdict']}"
+            )
             for cell in row.get("cells", []):
                 if not cell["direction_match"] or not cell["term_grounded"]:
                     add(f"        gold {cell['gold']}")
-                    add(f"        cand {cell['cand']}"
-                        f"{'' if cell['term_grounded'] else '   [different term]'}")
+                    add(
+                        f"        cand {cell['cand']}"
+                        f"{'' if cell['term_grounded'] else '   [different term]'}"
+                    )
 
     ents = result["entities"]
     add("")
     add("-- OBJECTS ----------------------------------------------------------")
-    add(f"micro  P {pct(ents['micro']['precision'])}  R {pct(ents['micro']['recall'])}  "
-        f"F1 {pct(ents['micro']['f1'])}   macro-F1 {pct(ents['macro_f1'])}")
+    add(
+        f"micro  P {pct(ents['micro']['precision'])}  R {pct(ents['micro']['recall'])}  "
+        f"F1 {pct(ents['micro']['f1'])}   macro-F1 {pct(ents['macro_f1'])}"
+    )
     add(f"  {'type':<20} {'gold':>4} {'cand':>4} {'P':>6} {'R':>6} {'F1':>6}  match")
     for etype, stats in sorted(ents["per_type"].items()):
-        add(f"  {etype:<20} {stats['gold_n']:>4} {stats['cand_n']:>4} "
+        add(
+            f"  {etype:<20} {stats['gold_n']:>4} {stats['cand_n']:>4} "
             f"{pct(stats['precision'])} {pct(stats['recall'])} {pct(stats['f1'])}  "
-            f"{pct(stats['mean_match_score'])}")
+            f"{pct(stats['mean_match_score'])}"
+        )
         if stats["missed"]:
             add(f"      missed:   {', '.join(stats['missed'])}")
         if stats["spurious"]:
@@ -1494,38 +1711,53 @@ def render(result: Mapping[str, Any], verbose: bool) -> str:
     rel = result["relationships"]
     add("")
     add("-- RELATIONSHIPS ----------------------------------------------------")
-    add(f"micro  P {pct(rel['micro']['precision'])}  R {pct(rel['micro']['recall'])}  "
+    add(
+        f"micro  P {pct(rel['micro']['precision'])}  R {pct(rel['micro']['recall'])}  "
         f"F1 {pct(rel['micro']['f1'])}   "
         f"FP {rel['micro']['fp']}  FN {rel['micro']['fn']}  "
-        f"({rel['unmatched_endpoint_edges']} candidate edges touch an unmatched entity)")
+        f"({rel['unmatched_endpoint_edges']} candidate edges touch an unmatched entity)"
+    )
     for slot, stats in sorted(rel["per_slot"].items()):
-        add(f"  {slot:<34} P {pct(stats['precision'])} R {pct(stats['recall'])} "
-            f"F1 {pct(stats['f1'])}  fp {stats['fp']:2d} fn {stats['fn']:2d}")
+        add(
+            f"  {slot:<34} P {pct(stats['precision'])} R {pct(stats['recall'])} "
+            f"F1 {pct(stats['f1'])}  fp {stats['fp']:2d} fn {stats['fn']:2d}"
+        )
     if verbose:
         for kind in ("false_negatives", "false_positives"):
             for edge in rel[kind][:40]:
-                add(f"  {'FN' if kind == 'false_negatives' else 'FP'} "
-                    f"{edge[0]} --{edge[1]}--> {edge[2]}")
+                add(
+                    f"  {'FN' if kind == 'false_negatives' else 'FP'} "
+                    f"{edge[0]} --{edge[1]}--> {edge[2]}"
+                )
 
     structure = result["structure"]
     add("")
     add("-- STRUCTURE (is each matched object wired where its counterpart is?) --")
-    add(f"mean neighbourhood F1 over {len(structure['per_entity'])} connected matched "
+    add(
+        f"mean neighbourhood F1 over {len(structure['per_entity'])} connected matched "
         f"entities {pct(structure['mean_neighbourhood_f1'])}"
-        + (f"  ({structure['unconnected']} matched entities have no neighbourhood)"
-           if structure["unconnected"] else ""))
+        + (
+            f"  ({structure['unconnected']} matched entities have no neighbourhood)"
+            if structure["unconnected"]
+            else ""
+        )
+    )
     if structure["misplaced"]:
         add("  right object, wrong place -- attributes agree, neighbourhood does not:")
         for row in structure["misplaced"]:
-            add(f"    {row['type']}/{row['gold_id']} <- {row['cand_id']}  "
+            add(
+                f"    {row['type']}/{row['gold_id']} <- {row['cand_id']}  "
                 f"attrs {pct(row['evidence'].get('attributes'))} "
-                f"neighbourhood F1 {pct(row['neighbourhood']['f1'])}")
+                f"neighbourhood F1 {pct(row['neighbourhood']['f1'])}"
+            )
     worst = [r for r in structure["per_entity"] if r["neighbourhood"]["f1"] < 1.0]
     for row in worst[: 40 if verbose else 6]:
-        add(f"  {row['type']}/{row['gold_id']} <- {row['cand_id']}: "
+        add(
+            f"  {row['type']}/{row['gold_id']} <- {row['cand_id']}: "
             f"F1 {pct(row['neighbourhood']['f1'])}  "
             f"match {pct(row['match_score'])} from "
-            + ", ".join(f"{k} {v}" for k, v in row["evidence"].items()))
+            + ", ".join(f"{k} {v}" for k, v in row["evidence"].items())
+        )
         for link in row["missing"][: 6 if verbose else 3]:
             add(f"      missing  {link}")
         for link in row["extra"][: 6 if verbose else 3]:
@@ -1537,30 +1769,42 @@ def render(result: Mapping[str, Any], verbose: bool) -> str:
     add("")
     add("-- FIELDS -----------------------------------------------------------")
     overall = fields["overall"]
-    add(f"overall  value accuracy {pct(overall['value_accuracy'])}  "
+    add(
+        f"overall  value accuracy {pct(overall['value_accuracy'])}  "
         f"graded {pct(overall['value_score'])}  "
         f"presence F1 {pct(overall['presence']['f1'])}  "
-        f"(compared {overall['fields_compared']}, both extracted {overall['both_extracted']})")
+        f"(compared {overall['fields_compared']}, both extracted {overall['both_extracted']})"
+    )
     if "numeric" in overall:
         num = overall["numeric"]
-        add(f"numeric  n {num['n']}  within {NUMERIC_RTOL:.0%} {pct(num['within_tolerance'])}  "
+        add(
+            f"numeric  n {num['n']}  within {NUMERIC_RTOL:.0%} {pct(num['within_tolerance'])}  "
             f"MAE {num['mae']:.4g}  RMSE {num['rmse']:.4g}  MAPE {num['mape']:.3f}  "
-            f"bias {num['bias']:+.4g}")
-    add(f"  {'type':<20} {'acc':>6} {'graded':>7} {'presP':>6} {'presR':>6} {'both':>5} "
-        f"{'miss':>5} {'extra':>5}")
+            f"bias {num['bias']:+.4g}"
+        )
+    add(
+        f"  {'type':<20} {'acc':>6} {'graded':>7} {'presP':>6} {'presR':>6} {'both':>5} "
+        f"{'miss':>5} {'extra':>5}"
+    )
     for etype, stats in fields["per_type"].items():
-        add(f"  {etype:<20} {pct(stats['value_accuracy'])} {pct(stats['value_score'])} "
+        add(
+            f"  {etype:<20} {pct(stats['value_accuracy'])} {pct(stats['value_score'])} "
             f"{pct(stats['presence']['precision'])} {pct(stats['presence']['recall'])} "
             f"{stats['both_extracted']:>5} {stats['presence']['fn']:>5} "
-            f"{stats['presence']['fp']:>5}")
+            f"{stats['presence']['fp']:>5}"
+        )
     if verbose:
         add("")
         for row in sorted(fields["per_entity"], key=lambda r: r["value_accuracy"]):
-            add(f"  {row['type']}/{row['gold_id']} <- {row['cand_id']}: "
-                f"acc {pct(row['value_accuracy'])} graded {pct(row['value_score'])}")
+            add(
+                f"  {row['type']}/{row['gold_id']} <- {row['cand_id']}: "
+                f"acc {pct(row['value_accuracy'])} graded {pct(row['value_score'])}"
+            )
             for wrong in row["wrong"]:
-                add(f"      {wrong['path']}: gold={_short(wrong['gold'])} "
-                    f"cand={_short(wrong['cand'])} ({wrong['score']})")
+                add(
+                    f"      {wrong['path']}: gold={_short(wrong['gold'])} "
+                    f"cand={_short(wrong['cand'])} ({wrong['score']})"
+                )
             if row["not_extracted"]:
                 add(f"      not extracted: {', '.join(row['not_extracted'])}")
             if row["over_extracted"]:
@@ -1576,6 +1820,7 @@ def _short(value: Any, limit: int = 60) -> str:
 # ---------------------------------------------------------------------------
 # aggregation across records
 # ---------------------------------------------------------------------------
+
 
 def aggregate(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     """Macro over records and micro over units, because they answer different questions.
@@ -1609,13 +1854,17 @@ def aggregate(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "records": len(results),
         "entities_micro": pooled("entities"),
         "relationships_micro": pooled("relationships"),
-        "direction_micro_prf": prf(sum(c["tp"] for c in cells), sum(c["fp"] for c in cells),
-                                   sum(c["fn"] for c in cells)),
+        "direction_micro_prf": prf(
+            sum(c["tp"] for c in cells),
+            sum(c["fp"] for c in cells),
+            sum(c["fn"] for c in cells),
+        ),
         "direction_micro_accuracy": sum(hits) / len(hits) if hits else float("nan"),
         "direction_micro_ci95": bootstrap(hits),
         "direction_micro_kappa": cohen_kappa(labels),
         "direction_macro_accuracy": macro(
-            lambda r: r["direction"]["primary"]["accuracy_term_grounded"]),
+            lambda r: r["direction"]["primary"]["accuracy_term_grounded"]
+        ),
         "field_macro_accuracy": macro(lambda r: r["fields"]["overall"]["value_accuracy"]),
         "composite_macro": macro(lambda r: r["composite"]["score"]),
     }
@@ -1625,25 +1874,44 @@ def aggregate(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 # entry point
 # ---------------------------------------------------------------------------
 
+
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("candidate", nargs="+", type=Path,
-                        help="candidate extraction JSON, one or more")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "candidate", nargs="+", type=Path, help="candidate extraction JSON, one or more"
+    )
     parser.add_argument("--gold", type=Path, help="gold record for a single candidate")
-    parser.add_argument("--gold-dir", type=Path, default=ROOT / "benchmarks" / "gold",
-                        help="directory holding <local_id>.extraction.json gold records")
-    parser.add_argument("--semantic", action="store_true",
-                        help="add embedding cosine to the string similarity (needs OPENAI_API_KEY)")
+    parser.add_argument(
+        "--gold-dir",
+        type=Path,
+        default=ROOT / "benchmarks" / "gold",
+        help="directory holding <local_id>.extraction.json gold records",
+    )
+    parser.add_argument(
+        "--semantic",
+        action="store_true",
+        help="add embedding cosine to the string similarity (needs OPENAI_API_KEY)",
+    )
     parser.add_argument("--embedding-model", default="text-embedding-3-small")
-    parser.add_argument("--embedding-base-url",
-                        help="send /embeddings here instead of OPENAI_API_GATEWAY")
+    parser.add_argument(
+        "--embedding-base-url", help="send /embeddings here instead of OPENAI_API_GATEWAY"
+    )
     parser.add_argument("--json", type=Path, help="write the full metric tree here")
-    parser.add_argument("--scope", default="all", choices=["all", "tables"],
-                        help="'tables' keeps only analyses a publication table reported, "
-                             "on both sides, plus what they reach")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="list every wrong field and every mismatched relationship")
+    parser.add_argument(
+        "--scope",
+        default="all",
+        choices=["all", "tables"],
+        help="'tables' keeps only analyses a publication table reported, "
+        "on both sides, plus what they reach",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="list every wrong field and every mismatched relationship",
+    )
     args = parser.parse_args(argv)
 
     schema = Schema()
@@ -1655,7 +1923,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.gold and len(args.candidate) == 1:
             gold_path = args.gold
         else:
-            gold_path = args.gold_dir / f"{candidate.get('local_id', path.stem)}.extraction.json"
+            gold_path = (
+                args.gold_dir / f"{candidate.get('local_id', path.stem)}.extraction.json"
+            )
         if not gold_path.is_file():
             print(f"no gold record for {path.name} (looked for {gold_path})", file=sys.stderr)
             continue
@@ -1675,10 +1945,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"relationships micro-F1 {pct(summary['relationships_micro']['f1'])}")
         ci = summary["direction_micro_ci95"]
         band = f"  [95% CI {pct(ci[0])} {pct(ci[1])}]" if ci else ""
-        print(f"direction     micro-F1 {pct(summary['direction_micro_prf']['f1'])}  "
-              f"accuracy micro {pct(summary['direction_micro_accuracy'])}{band}  "
-              f"macro {pct(summary['direction_macro_accuracy'])}  "
-              f"kappa {summary['direction_micro_kappa']:.3f}")
+        print(
+            f"direction     micro-F1 {pct(summary['direction_micro_prf']['f1'])}  "
+            f"accuracy micro {pct(summary['direction_micro_accuracy'])}{band}  "
+            f"macro {pct(summary['direction_macro_accuracy'])}  "
+            f"kappa {summary['direction_micro_kappa']:.3f}"
+        )
         print(f"fields        macro accuracy {pct(summary['field_macro_accuracy'])}")
         print(f"composite     macro {pct(summary['composite_macro'])}")
     else:
@@ -1687,7 +1959,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.json:
         args.json.write_text(
             json.dumps({"results": results, "summary": summary}, indent=2, default=str),
-            encoding="utf-8")
+            encoding="utf-8",
+        )
         print(f"wrote {args.json}")
     return 0
 

@@ -23,19 +23,16 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 from collections.abc import Mapping
 from pathlib import Path
-
-from pondie import _schema
 from typing import Any
 
-import known_gaps
-import spans as span_tools
+import schema_utils  # noqa: E402  (repo root is added above)
 import text_index
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-import schema_utils  # noqa: E402  (repo root is added above)
+from pondie import _schema
+from pondie.extraction.passes import known_gaps
+from pondie.extraction.passes import spans as span_tools
 
 ROOT = Path(__file__).resolve().parent.parent
 #: The schema is a submodule of this repository, not the parent directory this
@@ -68,6 +65,7 @@ def storage_rules() -> Mapping[str, list[Mapping[str, Any]]]:
         }
     return _RULES
 
+
 _EXTRACTION_STATUS = {"extracted", "not_reported"}
 _VALUE_SOURCE = {"reported", "generated"}
 _EVIDENCE_STATUS = {"present", "not_found", "not_applicable"}
@@ -95,9 +93,19 @@ _BY_CROSSING = re.compile(r"([a-z]+)-by-([a-z]+)")
 #: the comparison, so a name stating one is a factor written down from its contrast's
 #: side -- the shape `check_occasion_factors` looks for. The operator pattern requires a
 #: word character on both sides so that a threshold such as "p < .001" is not an axis.
-_COMPARISON_WORDS = ("versus", " vs ", " vs. ", "greater than", "less than",
-                     "difference between", "change in", "change from",
-                     "pre-post", "pre/post", "prepost")
+_COMPARISON_WORDS = (
+    "versus",
+    " vs ",
+    " vs. ",
+    "greater than",
+    "less than",
+    "difference between",
+    "change in",
+    "change from",
+    "pre-post",
+    "pre/post",
+    "prepost",
+)
 _COMPARISON_OPERATOR = re.compile(r"[a-z0-9)\]]\s*[<>]\s*[a-z0-9(\[]")
 
 #: Derivation language in a `ModelTerm.name` -- a column computed from several of an
@@ -106,17 +114,35 @@ _COMPARISON_OPERATOR = re.compile(r"[a-z0-9)\]]\s*[<>]\s*[a-z0-9(\[]")
 #: measurement and not a difference; a bare "change" catches "pre > post rsFC change",
 #: which is a collapsed occasion factor and `check_occasion_factors`' finding rather
 #: than this one.
-_DERIVED_WORDS = ("change in", "change from", "change over", "percent change",
-                  "percentage change", "percent reduction", "difference between",
-                  "difference in", "improvement in", "delta ")
+_DERIVED_WORDS = (
+    "change in",
+    "change from",
+    "change over",
+    "percent change",
+    "percentage change",
+    "percent reduction",
+    "difference between",
+    "difference in",
+    "improvement in",
+    "delta ",
+)
 
 #: Prose claiming a result is a change across occasions, read off an analysis's `name`
 #: and `definition`. Deliberately not "baseline": a record whose analyses are all
 #: baseline-only is the legitimate reading of a design that scanned twice and reported
 #: once, and it is not what this looks for.
-_CHANGE_WORDS = ("change", "longitudinal", "over time", "follow-up", "followup",
-                 "pre > post", "post > pre", "pre-post", "following treatment",
-                 "after treatment")
+_CHANGE_WORDS = (
+    "change",
+    "longitudinal",
+    "over time",
+    "follow-up",
+    "followup",
+    "pre > post",
+    "post > pre",
+    "pre-post",
+    "following treatment",
+    "after treatment",
+)
 
 
 def _unwrap(node: Any) -> Any:
@@ -134,8 +160,10 @@ def names_a_comparison(*fields: Any) -> bool:
     """Does this term's own name state the comparison it was the subject of?"""
 
     text = _prose(*fields)
-    return (any(word in text for word in _COMPARISON_WORDS)
-            or _COMPARISON_OPERATOR.search(text) is not None)
+    return (
+        any(word in text for word in _COMPARISON_WORDS)
+        or _COMPARISON_OPERATOR.search(text) is not None
+    )
 
 
 def names_a_change_over_time(*fields: Any) -> bool:
@@ -167,8 +195,12 @@ def names_a_crossing(*fields: Any) -> bool:
 
 
 class Validator:
-    def __init__(self, classes: Mapping[str, Any], normalized: str | None,
-                 enums: Mapping[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        classes: Mapping[str, Any],
+        normalized: str | None,
+        enums: Mapping[str, Any] | None = None,
+    ) -> None:
         self.classes = classes
         self.enums = enums or {}
         self.normalized = normalized
@@ -257,9 +289,7 @@ class Validator:
                 continue
             self.error(path, rule.get("description") or f"violates a rule on {class_name}")
 
-    def conditions_hold(
-        self, node: Mapping[str, Any], conditions: Any, path: str
-    ) -> bool:
+    def conditions_hold(self, node: Mapping[str, Any], conditions: Any, path: str) -> bool:
         """Whether a pre- or postcondition block holds of this instance."""
 
         if not isinstance(conditions, Mapping):
@@ -318,7 +348,9 @@ class Validator:
         is worse than the prose it replaced.
         """
 
-        self.error(path, f"rule construct {keyword!r} is not implemented; the rule was not checked")
+        self.error(
+            path, f"rule construct {keyword!r} is not implemented; the rule was not checked"
+        )
 
     def check_slot(
         self, value: Any, name: str, attribute: Mapping[str, Any], path: str
@@ -341,7 +373,9 @@ class Validator:
                     self.error(here, "local_id must be a non-empty string")
             elif kind == "reference":
                 if not isinstance(item, str):
-                    self.error(here, f"cross-reference must be a string, got {type(item).__name__}")
+                    self.error(
+                        here, f"cross-reference must be a string, got {type(item).__name__}"
+                    )
             elif kind == "native":
                 self.check_native(item, attribute, here)
             elif kind == "nested":
@@ -350,7 +384,9 @@ class Validator:
                     self.check_instance(item, target, here)
             elif kind == "evidence":
                 target = attribute.get("range")
-                self.check_field(item, target if isinstance(target, str) else "ExtractedValue", here)
+                self.check_field(
+                    item, target if isinstance(target, str) else "ExtractedValue", here
+                )
 
     def check_native(self, value: Any, attribute: Mapping[str, Any], path: str) -> None:
         """Type-check a pipeline scalar. Enum ranges are checked by their callers."""
@@ -384,11 +420,16 @@ class Validator:
 
         status = node.get("extraction_status")
         if status not in _EXTRACTION_STATUS:
-            self.error(path, f"extraction_status must be one of {sorted(_EXTRACTION_STATUS)}, got {status!r}")
+            self.error(
+                path,
+                f"extraction_status must be one of {sorted(_EXTRACTION_STATUS)}, got {status!r}",
+            )
 
         source = node.get("value_source")
         if source is not None and source not in _VALUE_SOURCE:
-            self.error(path, f"value_source must be one of {sorted(_VALUE_SOURCE)}, got {source!r}")
+            self.error(
+                path, f"value_source must be one of {sorted(_VALUE_SOURCE)}, got {source!r}"
+            )
 
         evidence = node.get("evidence")
         if evidence is None:
@@ -433,8 +474,9 @@ class Validator:
         # evidence for whether the vocabulary is short a value.
         vocabulary, closed = self.vocabulary_of(value_slot)
         if vocabulary is not None:
-            for item in (value if value_slot.get("multivalued")
-                         and isinstance(value, list) else [value]):
+            for item in (
+                value if value_slot.get("multivalued") and isinstance(value, list) else [value]
+            ):
                 if not isinstance(item, str):
                     continue
                 # Missingness has one encoding, and no vocabulary offers `unstated` any
@@ -442,13 +484,18 @@ class Validator:
                 # text with only a warning, and on a closed one the membership error would
                 # name the wrong defect.
                 if item == "unstated":
-                    self.error(path, "'unstated' is not a value: a fact the source does "
-                                     "not report is `extraction_status: not_reported`, "
-                                     "which is the one encoding of missingness. Drop "
-                                     "`value` and set `evidence.status` to not_applicable")
+                    self.error(
+                        path,
+                        "'unstated' is not a value: a fact the source does "
+                        "not report is `extraction_status: not_reported`, "
+                        "which is the one encoding of missingness. Drop "
+                        "`value` and set `evidence.status` to not_applicable",
+                    )
                 elif item not in vocabulary:
-                    message = (f"{item!r} is not a permissible value "
-                               f"({', '.join(sorted(vocabulary))})")
+                    message = (
+                        f"{item!r} is not a permissible value "
+                        f"({', '.join(sorted(vocabulary))})"
+                    )
                     if closed:
                         self.error(path, message)
                     else:
@@ -464,10 +511,19 @@ class Validator:
         if value_slot.get("multivalued") and not isinstance(value, list):
             # `declared` is "Any" for an any_of slot, which reads as nonsense in the
             # message, so name what the slot actually accepts.
-            accepts = declared if declared in _SCALAR_TYPES else " or ".join(
-                r for r in schema_utils.attribute_ranges(value_slot) if r != "Any") or "value"
-            self.error(path, f"{class_name}.value must be a list of {accepts}, "
-                             f"got {type(value).__name__}")
+            accepts = (
+                declared
+                if declared in _SCALAR_TYPES
+                else " or ".join(
+                    r for r in schema_utils.attribute_ranges(value_slot) if r != "Any"
+                )
+                or "value"
+            )
+            self.error(
+                path,
+                f"{class_name}.value must be a list of {accepts}, "
+                f"got {type(value).__name__}",
+            )
             return
 
         if declared in {"Any", None} or declared not in _SCALAR_TYPES:
@@ -480,10 +536,12 @@ class Validator:
         # inclusion_criteria, preprocessing step and echo time in the record.
         if value_slot.get("multivalued"):
             for index, item in enumerate(value):
-                self.check_value_type(item, class_name,
-                                      {"value": {k: v for k, v in value_slot.items()
-                                                 if k != "multivalued"}},
-                                      f"{path}.value[{index}]")
+                self.check_value_type(
+                    item,
+                    class_name,
+                    {"value": {k: v for k, v in value_slot.items() if k != "multivalued"}},
+                    f"{path}.value[{index}]",
+                )
             return
 
         # A multivalued concept expressed as a list inside a scalar ExtractedValue
@@ -506,7 +564,10 @@ class Validator:
 
         evidence_status = node.get("status")
         if evidence_status not in _EVIDENCE_STATUS:
-            self.error(path, f"status must be one of {sorted(_EVIDENCE_STATUS)}, got {evidence_status!r}")
+            self.error(
+                path,
+                f"status must be one of {sorted(_EVIDENCE_STATUS)}, got {evidence_status!r}",
+            )
 
         if status == "not_reported" and evidence_status != "not_applicable":
             self.error(path, "not_reported fields must have evidence.status not_applicable")
@@ -609,9 +670,13 @@ class Validator:
         """
 
         parts = sorted(
-            (str(cell.get("term")), str(_unwrap(cell.get("level"))),
-             str(_unwrap(cell.get("direction"))))
-            for cell in (cells or []) if isinstance(cell, Mapping)
+            (
+                str(cell.get("term")),
+                str(_unwrap(cell.get("level"))),
+                str(_unwrap(cell.get("direction"))),
+            )
+            for cell in (cells or [])
+            if isinstance(cell, Mapping)
         )
         return (str(model_id), tuple(parts))
 
@@ -719,8 +784,12 @@ class Validator:
             cell.get("term")
             for analysis in record.get("analyses") or []
             if isinstance(analysis, Mapping)
-            for cell in ((analysis.get("effect") or {}).get("cells")
-                         if isinstance(analysis.get("effect"), Mapping) else None) or []
+            for cell in (
+                (analysis.get("effect") or {}).get("cells")
+                if isinstance(analysis.get("effect"), Mapping)
+                else None
+            )
+            or []
             if isinstance(cell, Mapping)
         }
 
@@ -818,7 +887,8 @@ class Validator:
                 term = terms.get(term_id)
                 declared = [
                     _unwrap(level.get("level"))
-                    for level in (term.get("levels") if isinstance(term, Mapping) else None) or []
+                    for level in (term.get("levels") if isinstance(term, Mapping) else None)
+                    or []
                     if isinstance(level, Mapping)
                 ]
                 if len(declared) < 2 or set(declared) - set(celled.get(term_id, [])):
@@ -895,9 +965,12 @@ class Validator:
 
         referenced = {
             local_id
-            for model in record.get("model_estimations") or [] if isinstance(model, Mapping)
-            for term in model.get("terms") or [] if isinstance(term, Mapping)
-            for level in term.get("levels") or [] if isinstance(level, Mapping)
+            for model in record.get("model_estimations") or []
+            if isinstance(model, Mapping)
+            for term in model.get("terms") or []
+            if isinstance(term, Mapping)
+            for level in term.get("levels") or []
+            if isinstance(level, Mapping)
             for local_id in level.get("timepoints") or []
         }
         if referenced:
@@ -1099,29 +1172,40 @@ class Validator:
                 continue
             local = analysis.get("local_id") or f"analyses[{index}]"
 
-            pointers = [(f"analyses[{index}].effect.cells[{n}]", cell.get("term"), cell)
-                        for n, cell in enumerate(effect.get("cells") or [])
-                        if isinstance(cell, Mapping)]
+            pointers = [
+                (f"analyses[{index}].effect.cells[{n}]", cell.get("term"), cell)
+                for n, cell in enumerate(effect.get("cells") or [])
+                if isinstance(cell, Mapping)
+            ]
             mediation = effect.get("mediation")
             if isinstance(mediation, Mapping):
                 pointers.append(
-                    (f"analyses[{index}].effect.mediation", mediation.get("mediator"), None))
+                    (f"analyses[{index}].effect.mediation", mediation.get("mediator"), None)
+                )
 
             for path, term_id, cell in pointers:
                 if not isinstance(term_id, str):
                     continue
                 term = terms.get(term_id)
                 if term is None:
-                    owner = next((m.get("local_id") for m in models.values()
-                                  for t in (m.get("terms") or [])
-                                  if isinstance(t, Mapping) and t.get("local_id") == term_id),
-                                 None)
+                    owner = next(
+                        (
+                            m.get("local_id")
+                            for m in models.values()
+                            for t in (m.get("terms") or [])
+                            if isinstance(t, Mapping) and t.get("local_id") == term_id
+                        ),
+                        None,
+                    )
                     if owner is None:
                         self.error(path, f"term {term_id!r} names no ModelTerm anywhere")
                     else:
-                        self.error(path, f"term {term_id!r} belongs to {owner!r}, which "
-                                         f"{local!r}'s model ({model_id!r}) does not reach "
-                                         "through inputs_from")
+                        self.error(
+                            path,
+                            f"term {term_id!r} belongs to {owner!r}, which "
+                            f"{local!r}'s model ({model_id!r}) does not reach "
+                            "through inputs_from",
+                        )
                     continue
                 if cell is None:
                     continue
@@ -1129,12 +1213,18 @@ class Validator:
                 level = _unwrap(cell.get("level"))
                 if not isinstance(level, str):
                     continue
-                declared = [_unwrap(entry.get("level")) for entry in (term.get("levels") or [])
-                            if isinstance(entry, Mapping)]
+                declared = [
+                    _unwrap(entry.get("level"))
+                    for entry in (term.get("levels") or [])
+                    if isinstance(entry, Mapping)
+                ]
                 declared = [name for name in declared if isinstance(name, str)]
                 if not declared:
-                    self.error(f"{path}.level", f"is {level!r} but term {term_id!r} declares "
-                                                "no levels to match it against")
+                    self.error(
+                        f"{path}.level",
+                        f"is {level!r} but term {term_id!r} declares "
+                        "no levels to match it against",
+                    )
                 elif level not in declared:
                     self.error(
                         f"{path}.level",
@@ -1168,10 +1258,12 @@ class Validator:
                 if not isinstance(current, str):
                     return
                 if current in trail:
-                    cycle = " -> ".join(trail[trail.index(current):] + (current,))
-                    self.error(f"{path}.inputs_from",
-                               f"inputs_from is cyclic: {cycle}. A model fitted on its own "
-                               "output is not a stage order")
+                    cycle = " -> ".join(trail[trail.index(current) :] + (current,))
+                    self.error(
+                        f"{path}.inputs_from",
+                        f"inputs_from is cyclic: {cycle}. A model fitted on its own "
+                        "output is not a stage order",
+                    )
                     return
                 lower = models.get(current)
                 if isinstance(lower, Mapping):
@@ -1199,7 +1291,9 @@ class Validator:
                 seen[folded] = owner_id
 
     def _chain_terms(
-        self, model_id: Any, models: Mapping[str, Mapping[str, Any]],
+        self,
+        model_id: Any,
+        models: Mapping[str, Mapping[str, Any]],
         seen: set[str] | None = None,
     ) -> list[tuple[str, Mapping[str, Any]]]:
         """`(owning model local_id, term)` for a model and every stage below it.
@@ -1218,8 +1312,9 @@ class Validator:
         found: list[tuple[str, Mapping[str, Any]]] = []
         for lower in model.get("inputs_from") or []:
             found += self._chain_terms(lower, models, seen)
-        found += [(model_id, term) for term in model.get("terms") or []
-                  if isinstance(term, Mapping)]
+        found += [
+            (model_id, term) for term in model.get("terms") or [] if isinstance(term, Mapping)
+        ]
         return found
 
     def check_table_purpose(self, record: Mapping[str, Any]) -> None:
@@ -1241,9 +1336,13 @@ class Validator:
         judgement to review and not a malformed record.
         """
 
-        referenced = {name for analysis in record.get("analyses") or []
-                      if isinstance(analysis, Mapping)
-                      for name in (analysis.get("tables") or []) if isinstance(name, str)}
+        referenced = {
+            name
+            for analysis in record.get("analyses") or []
+            if isinstance(analysis, Mapping)
+            for name in (analysis.get("tables") or [])
+            if isinstance(name, str)
+        }
         for index, table in enumerate(record.get("tables") or []):
             if not isinstance(table, Mapping):
                 continue
@@ -1283,9 +1382,11 @@ class Validator:
         `check_slot` reports that shape from the schema, and reporting it twice helps nobody.
         """
 
-        known = {entry.get("local_id")
-                 for entry in record.get(container) or []
-                 if isinstance(entry, Mapping)}
+        known = {
+            entry.get("local_id")
+            for entry in record.get(container) or []
+            if isinstance(entry, Mapping)
+        }
         for index, item in enumerate(record.get(owner) or []):
             if not isinstance(item, Mapping):
                 continue
@@ -1294,8 +1395,11 @@ class Validator:
             for position, local_id in enumerate(ids):
                 if not isinstance(local_id, str) or local_id in known:
                     continue
-                path = (f"{owner}[{index}].{slot}[{position}]" if multivalued
-                        else f"{owner}[{index}].{slot}")
+                path = (
+                    f"{owner}[{index}].{slot}[{position}]"
+                    if multivalued
+                    else f"{owner}[{index}].{slot}"
+                )
                 self.error(path, f"names {local_id!r}, which is not {tail}")
 
     def check_group_instruments(self, record: Mapping[str, Any]) -> None:
@@ -1317,8 +1421,8 @@ class Validator:
             container="assessments",
             multivalued=True,
             tail="an assessment of this study. Add it to "
-                 "`assessments` with the purpose the source states for administering it, or "
-                 "drop the reference if nothing established this group's diagnosis",
+            "`assessments` with the purpose the source states for administering it, or "
+            "drop the reference if nothing established this group's diagnosis",
         )
 
     def check_analysis_inference_settings(self, record: Mapping[str, Any]) -> None:
@@ -1338,8 +1442,8 @@ class Validator:
             slot="inference_settings",
             container="inference_settings",
             tail="an inference settings record of this "
-                 "study. Add it to `inference_settings` with the thresholding the source "
-                 "states, or point at the existing scheme this analysis shares",
+            "study. Add it to `inference_settings` with the thresholding the source "
+            "states, or point at the existing scheme this analysis shares",
         )
 
     def check_analysis_measures(self, record: Mapping[str, Any]) -> None:
@@ -1358,7 +1462,7 @@ class Validator:
             slot="measure",
             container="measures",
             tail="a measure of this study. Add it to `measures` with the quantity the "
-                 "source names, or point at the existing measure this analysis shares",
+            "source names, or point at the existing measure this analysis shares",
         )
 
     def check_acquisition_devices(self, record: Mapping[str, Any]) -> None:
@@ -1376,7 +1480,7 @@ class Validator:
             slot="device",
             container="devices",
             tail="a device of this study. Add it to `devices` with the scanner the source "
-                 "names, or point at the existing device this acquisition shares",
+            "names, or point at the existing device this acquisition shares",
         )
 
     def check_record(self, record: Any) -> None:
@@ -1411,11 +1515,16 @@ class Validator:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--record", required=True, type=Path)
-    parser.add_argument("--text", type=Path, help="normalized source text; enables offset checks")
+    parser.add_argument(
+        "--text", type=Path, help="normalized source text; enables offset checks"
+    )
     parser.add_argument("--paper", help="neurostore id, for matching --known-gaps entries")
-    parser.add_argument("--known-gaps", type=Path, default=known_gaps.DEFAULT,
-                        help="allowlist of findings a reviewer has accepted; see "
-                             "review/known-gaps.yaml")
+    parser.add_argument(
+        "--known-gaps",
+        type=Path,
+        default=known_gaps.DEFAULT,
+        help="allowlist of findings a reviewer has accepted; see " "review/known-gaps.yaml",
+    )
     args = parser.parse_args()
 
     normalized = None

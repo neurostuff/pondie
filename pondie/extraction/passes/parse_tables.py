@@ -39,8 +39,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from sync_texts import read_pmids  # noqa: E402
+from pondie.extraction.passes.sync_texts import read_pmids  # noqa: E402
 
 DEFAULT_MODEL = "@psyc-aid338-ope-333f18/gpt-5.6-luna"
 
@@ -111,7 +110,8 @@ def build_client(effort: str):
     """
 
     from autonima.coordinates.openai_client import (  # noqa: PLC0415
-        CoordinateParsingClient, _sanitize_parse_result,
+        CoordinateParsingClient,
+        _sanitize_parse_result,
     )
     from autonima.coordinates.schema import ParseAnalysesOutput  # noqa: PLC0415
 
@@ -213,8 +213,10 @@ def split_opposite_signs(analyses: list[dict]) -> tuple[list[dict], list[str]]:
         name = analysis.get("name") or "(unnamed)"
         if None in signs:
             unsigned = sum(1 for s in signs if s is None)
-            notes.append(f"FLAG {name}: both directions present but {unsigned} of "
-                         f"{len(points)} rows carry no sign -- left whole")
+            notes.append(
+                f"FLAG {name}: both directions present but {unsigned} of "
+                f"{len(points)} rows carry no sign -- left whole"
+            )
             out.append(analysis)
             continue
 
@@ -238,8 +240,10 @@ def split_opposite_signs(analyses: list[dict]) -> tuple[list[dict], list[str]]:
             out.append(part)
 
         counts = f"{signs.count(1)}+/{signs.count(-1)}-"
-        notes.append(f"SPLIT {name} -> ({counts}) on statistic sign; "
-                     f"the negative half is withheld and mirrored after extraction")
+        notes.append(
+            f"SPLIT {name} -> ({counts}) on statistic sign; "
+            f"the negative half is withheld and mirrored after extraction"
+        )
 
     return out, notes
 
@@ -358,18 +362,22 @@ def coordinate_tables(study_dir: Path) -> list[dict]:
         name = Path(metadata.get("data_path") or "").name
         csv_path = tables_dir / name
         if not name or not csv_path.is_file():
-            print(f"    WARNING: no CSV for {table['table_id']} ({name or 'no data_path'})",
-                  file=sys.stderr)
+            print(
+                f"    WARNING: no CSV for {table['table_id']} ({name or 'no data_path'})",
+                file=sys.stderr,
+            )
             continue
-        out.append({
-            "table_id": table["table_id"],
-            "table_number": table.get("table_number"),
-            "table_label": metadata.get("table_label"),
-            "caption": table.get("caption") or "",
-            "footer": table.get("footer") or "",
-            "csv_path": csv_path,
-            "csv_text": csv_path.read_text(encoding="utf-8"),
-        })
+        out.append(
+            {
+                "table_id": table["table_id"],
+                "table_number": table.get("table_number"),
+                "table_label": metadata.get("table_label"),
+                "caption": table.get("caption") or "",
+                "footer": table.get("footer") or "",
+                "csv_path": csv_path,
+                "csv_text": csv_path.read_text(encoding="utf-8"),
+            }
+        )
     return out
 
 
@@ -379,7 +387,11 @@ def pond_analyses(study_dir: Path) -> list[dict]:
     path = study_dir / "processed" / "pubget" / "analyses.jsonl"
     if not path.is_file():
         return []
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def diff_report(study: str, fresh: list[dict], pond: list[dict]) -> str:
@@ -444,8 +456,9 @@ def resplit(pmids: Path, texts: Path) -> int:
             #: Recorded on the document rather than inferred from the parts, so a reader can
             #: tell a file the rule has been applied to from one parsed before it existed.
             doc["sign_split_applied"] = True
-            path.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n",
-                            encoding="utf-8")
+            path.write_text(
+                json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+            )
             print(f"{study}: {len(before)} -> {len(after)} analyses, rewrote {path}")
             changed += 1
     print(f"\n{changed} study file(s) rewritten")
@@ -458,20 +471,32 @@ def main() -> int:
     parser.add_argument("--texts", type=Path, default=REPO / "review" / "texts")
     parser.add_argument("--autonima", type=Path, default=REPO / ".tmp_repos" / "autonima")
     parser.add_argument("--model", default=DEFAULT_MODEL)
-    parser.add_argument("--effort", default=DEFAULT_EFFORT,
-                        help="reasoning effort; empty string to send none at all")
+    parser.add_argument(
+        "--effort",
+        default=DEFAULT_EFFORT,
+        help="reasoning effort; empty string to send none at all",
+    )
     parser.add_argument("--key-file", type=Path, default=REPO / ".env")
     parser.add_argument("--dry-run", action="store_true", help="list tables, make no calls")
-    parser.add_argument("--resplit", action="store_true",
-                        help="apply the sign split to the stage1/analyses.json already on "
-                             "disk and rewrite it; the partition is arithmetic, so this "
-                             "needs no model call and no autonima checkout")
+    parser.add_argument(
+        "--resplit",
+        action="store_true",
+        help="apply the sign split to the stage1/analyses.json already on "
+        "disk and rewrite it; the partition is arithmetic, so this "
+        "needs no model call and no autonima checkout",
+    )
     args = parser.parse_args()
 
     if args.resplit:
         return resplit(args.pmids, args.texts)
 
-    sys.path.insert(0, str(args.autonima.resolve()))
+    # Not import wiring: autonima is a separate checkout the caller points at, with no
+    # distribution to depend on. Checked first so a wrong --autonima says so here rather
+    # than as an ImportError three lines down.
+    checkout = args.autonima.resolve()
+    if not (checkout / "autonima").is_dir():
+        raise SystemExit(f"no autonima checkout at {checkout}; point --autonima at one")
+    sys.path.insert(0, str(checkout))
     from autonima.coordinates.parser import parse_single_table
     from autonima.coordinates.prompts import COORDINATE_PARSING_PROMPT_VERSION
 
@@ -484,8 +509,10 @@ def main() -> int:
             return 2
         client = build_client(args.effort)
 
-    print(f"autonima prompt version {COORDINATE_PARSING_PROMPT_VERSION}, "
-          f"model {args.model}, effort {args.effort or 'unset'}\n")
+    print(
+        f"autonima prompt version {COORDINATE_PARSING_PROMPT_VERSION}, "
+        f"model {args.model}, effort {args.effort or 'unset'}\n"
+    )
 
     failures = 0
     for pmid, study, _axis in read_pmids(args.pmids):
@@ -500,13 +527,19 @@ def main() -> int:
                 continue
             try:
                 result = parse_single_table(
-                    table["table_id"], table["caption"], table["footer"],
-                    table["csv_text"], client, args.model,
+                    table["table_id"],
+                    table["caption"],
+                    table["footer"],
+                    table["csv_text"],
+                    client,
+                    args.model,
                 )
                 parsed = result["parsed_json"].get("analyses") or []
-            except Exception as exc:                  # one table must not sink the study
-                print(f"  {table['table_id']}: FAILED {type(exc).__name__}: {exc}"[:200],
-                      file=sys.stderr)
+            except Exception as exc:  # one table must not sink the study
+                print(
+                    f"  {table['table_id']}: FAILED {type(exc).__name__}: {exc}"[:200],
+                    file=sys.stderr,
+                )
                 failures += 1
                 continue
             for analysis in parsed:
@@ -521,24 +554,37 @@ def main() -> int:
             for note in notes:
                 print(f"    {note}")
             analyses.extend(parsed)
-            print(f"  {table['table_id']}: {len(parsed)} analyses, "
-                  f"{sum(len(a.get('points') or []) for a in parsed)} points")
+            print(
+                f"  {table['table_id']}: {len(parsed)} analyses, "
+                f"{sum(len(a.get('points') or []) for a in parsed)} points"
+            )
 
         if args.dry_run:
             continue
 
         out_dir = study_dir / "stage1"
         out_dir.mkdir(parents=True, exist_ok=True)
-        (out_dir / "analyses.json").write_text(json.dumps({
-            "study": study, "pmid": pmid, "model": args.model,
-            "effort": args.effort,
-            "prompt_version": COORDINATE_PARSING_PROMPT_VERSION,
-            "analyses": analyses,
-        }, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        (out_dir / "analyses.json").write_text(
+            json.dumps(
+                {
+                    "study": study,
+                    "pmid": pmid,
+                    "model": args.model,
+                    "effort": args.effort,
+                    "prompt_version": COORDINATE_PARSING_PROMPT_VERSION,
+                    "analyses": analyses,
+                },
+                indent=1,
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
 
         pond = pond_analyses(study_dir)
-        (out_dir / "diff-vs-pond.md").write_text(diff_report(study, analyses, pond),
-                                                 encoding="utf-8")
+        (out_dir / "diff-vs-pond.md").write_text(
+            diff_report(study, analyses, pond), encoding="utf-8"
+        )
         mark = "same count" if len(analyses) == len(pond) else f"DIFFERS (pond {len(pond)})"
         print(f"  -> {len(analyses)} analyses, {mark}\n")
 

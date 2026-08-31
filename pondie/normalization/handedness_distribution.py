@@ -3,10 +3,11 @@
 14 surface forms over 265 values for three answers. Case and hyphenation, as with sex; kept
 separate because the answer set differs and a shared "demographics" module would hide that.
 """
+
 from __future__ import annotations
 
-from . import OTHER, UNKNOWN
-from ._lexicon import ClosedField, Rule
+from pondie.normalization import OTHER, UNKNOWN
+from pondie.normalization._lexicon import ClosedField, Rule
 
 RIGHT, LEFT, AMBIDEXTROUS = "RIGHT", "LEFT", "AMBIDEXTROUS"
 VALUES = (RIGHT, LEFT, AMBIDEXTROUS, OTHER, UNKNOWN)

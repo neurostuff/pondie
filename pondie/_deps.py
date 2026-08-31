@@ -11,6 +11,7 @@ So a dependency whose absence would change an answer raises here instead. A depe
 absence only costs an *enhancement* -- a second evidence locator, a better abbreviation miner
 -- may still fall back, but it says which path it took rather than degrading in silence.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -28,4 +29,5 @@ def require(module: str, extra: str, because: str):
     except ImportError as error:
         raise MissingDependency(
             f"{module} is not installed, and {because}. "
-            f"Install it with: pip install 'pondie[{extra}]'") from error
+            f"Install it with: pip install 'pondie[{extra}]'"
+        ) from error

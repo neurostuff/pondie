@@ -46,9 +46,9 @@ from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import table_parse  # noqa: E402
-from sync_texts import read_pmids  # noqa: E402
+
+from pondie.extraction.passes.sync_texts import read_pmids  # noqa: E402
 
 #: Left by `text_extraction.xsl` where each table sat. pubget's own `_insert_tables`
 #: replaces these with tab-separated values; we substitute markdown instead, because the
@@ -123,7 +123,9 @@ def load_pubget(checkout: Path) -> tuple[Any, Any, str]:
     try:
         commit = subprocess.run(
             ["git", "-C", str(checkout), "rev-parse", "HEAD"],
-            capture_output=True, text=True, check=True,
+            capture_output=True,
+            text=True,
+            check=True,
         ).stdout.strip()
     except Exception:
         commit = "unknown"
@@ -194,8 +196,14 @@ def insert_tables(body: str, article_dir: Path, report: dict | None = None) -> s
         report["parsed"] = len(grids)
         report["floated"] = floated_ranks
     if floated_ranks:
-        out = (out.rstrip() + "\n\n" + _FLOATED_HEADING + "\n\n"
-               + "\n\n".join(grids[rank] for rank in floated_ranks) + "\n")
+        out = (
+            out.rstrip()
+            + "\n\n"
+            + _FLOATED_HEADING
+            + "\n\n"
+            + "\n\n".join(grids[rank] for rank in floated_ranks)
+            + "\n"
+        )
     return out
 
 
@@ -225,7 +233,6 @@ def build(
     """
 
     from lxml import etree
-
     from pubget._utils import load_stylesheet  # noqa: PLC0415
 
     stylesheet = load_stylesheet("text_extraction.xsl")
@@ -278,7 +285,8 @@ def check_equivalence(rebuilt: str, corpus: str) -> str | None:
         return (
             "the corpus text for this study has no markdown headings, so it is the "
             "XSLT-failure fallback (a flat xpath text join) rather than stylesheet "
-            "output. No stylesheet setting reproduces it.\n" + first_difference(rebuilt, corpus)
+            "output. No stylesheet setting reproduces it.\n"
+            + first_difference(rebuilt, corpus)
         )
     return first_difference(rebuilt, corpus)
 
@@ -308,8 +316,9 @@ def build_one(study_dir: Path, text_module: Any, commit: str, *, allow_drift: bo
         )
 
     tables_report: dict = {"parsed": 0, "floated": []}
-    with_tables = build(article_xml, article_dir, text_module,
-                        keep_tables=True, report=tables_report)
+    with_tables = build(
+        article_xml, article_dir, text_module, keep_tables=True, report=tables_report
+    )
     leftover = with_tables.count("[pubget-table-")
     if leftover:
         raise BuildError(
@@ -387,12 +396,13 @@ def main() -> int:
                 if not (article_dir / "article.xml").is_file():
                     raise BuildError(f"no {article_dir / 'article.xml'}")
                 raw = build(
-                    article_dir / "article.xml", article_dir, text_module,
-                    keep_tables=False, style=False,
+                    article_dir / "article.xml",
+                    article_dir,
+                    text_module,
+                    keep_tables=False,
+                    style=False,
                 )
-                problem = check_equivalence(
-                    raw, corpus_path.read_text(encoding="utf-8")
-                )
+                problem = check_equivalence(raw, corpus_path.read_text(encoding="utf-8"))
                 if problem:
                     raise BuildError(problem)
                 print(f"  {study}  pmid {pmid}  reproduces the corpus text ({len(raw):,} ch)")
@@ -404,10 +414,14 @@ def main() -> int:
                 # variant exists to prevent and it is otherwise invisible: the text is
                 # simply shorter, and nothing downstream can tell that from a paper
                 # that genuinely has no tables.
-                where = (f", {info['tables_parsed']} tables "
-                         f"({info['tables_parsed'] - len(floated)} inline"
-                         + (f", {len(floated)} floated" if floated else "") + ")"
-                         if info["tables_parsed"] else ", no tables")
+                where = (
+                    f", {info['tables_parsed']} tables "
+                    f"({info['tables_parsed'] - len(floated)} inline"
+                    + (f", {len(floated)} floated" if floated else "")
+                    + ")"
+                    if info["tables_parsed"]
+                    else ", no tables"
+                )
                 print(
                     f"  {study}  pmid {pmid}  "
                     f"plain {info['variants']['plain']['chars']:,} ch, "

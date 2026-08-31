@@ -42,13 +42,11 @@ RECORDS = DATA / "records"
 TEXTS = DATA / "texts"
 CORRECTIONS = ROOT / "corrections"
 
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
 
-import build_record  # noqa: E402
-import spans as span_tools  # noqa: E402
 import text_index  # noqa: E402
 
+from pondie.extraction.passes import build_record  # noqa: E402
+from pondie.extraction.passes import spans as span_tools  # noqa: E402
 
 #: Stamped onto every corrected record. The corrections are themselves a model's output
 #: -- read by Claude against the paper, not typed by a curator -- so they are labelled as
@@ -58,6 +56,7 @@ CORRECTED_VERSION = "adjudicated-0.1.0"
 
 
 # ------------------------------------------------------------------ reading
+
 
 def is_field(node: Any) -> bool:
     return isinstance(node, dict) and "extraction_status" in node
@@ -123,8 +122,10 @@ def render(node: Any, path: str = "", depth: int = 0, out: list | None = None) -
 def command_show(args: argparse.Namespace) -> int:
     record = json.loads((RECORDS / f"{args.paper}.extraction.json").read_text("utf-8"))
     meta = record.get("extraction_metadata", {})
-    print(f"# {args.paper}   extractor={meta.get('extractor_model')} "
-          f"{meta.get('extractor_version')}")
+    print(
+        f"# {args.paper}   extractor={meta.get('extractor_model')} "
+        f"{meta.get('extractor_version')}"
+    )
     body = {k: v for k, v in record.items() if k not in ("extraction_metadata",)}
     if args.section:
         body = {k: v for k, v in body.items() if k in args.section}
@@ -163,9 +164,15 @@ def attach_quote(field: dict, quote: str, normalized: str, folded: str, path: st
     field["evidence"] = {"status": "present", "sets": [{"spans": [found.as_record()]}]}
 
 
-def apply_one(paper: str, *, dry_run: bool,
-              records: Path = RECORDS, texts: Path = TEXTS,
-              model: str = CORRECTED_MODEL, version: str = CORRECTED_VERSION) -> int:
+def apply_one(
+    paper: str,
+    *,
+    dry_run: bool,
+    records: Path = RECORDS,
+    texts: Path = TEXTS,
+    model: str = CORRECTED_MODEL,
+    version: str = CORRECTED_VERSION,
+) -> int:
     record_path = records / f"{paper}.extraction.json"
     corrections_path = CORRECTIONS / f"{paper}.corrections.json"
     if not corrections_path.is_file():
@@ -202,8 +209,10 @@ def apply_one(paper: str, *, dry_run: bool,
                 # correction that fills one has to create the wrapper. Only for dict
                 # containers: an out-of-range list index is a mistake in the path.
                 if isinstance(container, dict) and key not in container:
-                    container[key] = {"extraction_status": "not_reported",
-                                      "evidence": {"status": "not_applicable"}}
+                    container[key] = {
+                        "extraction_status": "not_reported",
+                        "evidence": {"status": "not_applicable"},
+                    }
                 field = container[key]
                 # A cross-reference is a bare local_id string, not a wrapper -- there is
                 # no `not_reported` form of a reference -- so `set` writes it directly.
@@ -222,8 +231,7 @@ def apply_one(paper: str, *, dry_run: bool,
                 else:
                     field["extraction_status"] = "extracted"
                     field["value"] = operation["value"]
-                    field.setdefault("value_source", operation.get("value_source",
-                                                                   "reported"))
+                    field.setdefault("value_source", operation.get("value_source", "reported"))
                 if operation.get("quote"):
                     attach_quote(field, operation["quote"], normalized, folded, path)
                 elif kind != "status":
@@ -235,35 +243,55 @@ def apply_one(paper: str, *, dry_run: bool,
             print(f"  FAILED {path}: {type(error).__name__}: {error}", file=sys.stderr)
             failed += 1
 
-    record.setdefault("extraction_metadata", {}).update({
-        "extractor_model": model,
-        "extractor_version": version,
-    })
+    record.setdefault("extraction_metadata", {}).update(
+        {
+            "extractor_model": model,
+            "extractor_version": version,
+        }
+    )
 
-    print(f"{paper}: {applied} applied, {failed} failed"
-          + (f", {len(report.failures)} quote(s) unresolved" if report.failures else ""))
+    print(
+        f"{paper}: {applied} applied, {failed} failed"
+        + (f", {len(report.failures)} quote(s) unresolved" if report.failures else "")
+    )
     for failure in report.failures:
         print(f"  unresolved: {failure}", file=sys.stderr)
     if failed:
         return 1
     if not dry_run:
-        record_path.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n",
-                               encoding="utf-8")
+        record_path.write_text(
+            json.dumps(record, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
     return 0
 
 
 def command_apply(args: argparse.Namespace) -> int:
-    papers = ([p.stem.split(".")[0] for p in sorted(CORRECTIONS.glob("*.corrections.json"))]
-              if args.all else [args.paper])
-    return max(apply_one(p, dry_run=args.dry_run,
-                         records=args.records_dir, texts=args.texts_dir,
-                         model=args.extractor_model, version=args.extractor_version)
-               for p in papers) if papers else 0
+    papers = (
+        [p.stem.split(".")[0] for p in sorted(CORRECTIONS.glob("*.corrections.json"))]
+        if args.all
+        else [args.paper]
+    )
+    return (
+        max(
+            apply_one(
+                p,
+                dry_run=args.dry_run,
+                records=args.records_dir,
+                texts=args.texts_dir,
+                model=args.extractor_model,
+                version=args.extractor_version,
+            )
+            for p in papers
+        )
+        if papers
+        else 0
+    )
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     show = sub.add_parser("show", help="print a record's assertions without the wrappers")

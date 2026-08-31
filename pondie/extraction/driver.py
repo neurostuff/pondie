@@ -8,28 +8,39 @@ A paper stops at its first failing stage. The stages are ordered by dependency, 
 past a failure would run a stage against inputs that do not exist and report a second, less
 informative error.
 """
+
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from typing import Iterable
 
-from .models import Paper, PaperOutcome, RunReport, Settings, StageOutcome
-from .llm import Caller
-from .stages import sequence
+from pondie.extraction.llm import Caller
+from pondie.extraction.models import Paper, PaperOutcome, RunReport, Settings, StageOutcome
+from pondie.extraction.stages import sequence
 
 
 def run_paper(paper: Paper, settings: Settings, caller: Caller) -> PaperOutcome:
     outcomes: list[StageOutcome] = []
     if not paper.ready():
-        return PaperOutcome(study_id=paper.study_id, outcomes=(
-            StageOutcome(stage=settings.stages[0], study_id=paper.study_id,
-                         reason=f"missing text or stage-1 parse under {paper.root}"),))
+        return PaperOutcome(
+            study_id=paper.study_id,
+            outcomes=(
+                StageOutcome(
+                    stage=settings.stages[0],
+                    study_id=paper.study_id,
+                    reason=f"missing text or stage-1 parse under {paper.root}",
+                ),
+            ),
+        )
     for stage in sequence(settings):
         try:
             outcome = stage.run(paper, settings, caller)
         except Exception as error:  # noqa: BLE001 -- one paper's failure is not the run's
-            outcome = StageOutcome(stage=stage.name, study_id=paper.study_id,
-                                   reason=f"{type(error).__name__}: {error}")
+            outcome = StageOutcome(
+                stage=stage.name,
+                study_id=paper.study_id,
+                reason=f"{type(error).__name__}: {error}",
+            )
         outcomes.append(outcome)
         if not outcome.ok:
             break
@@ -42,17 +53,21 @@ def plan(papers: Iterable[Paper], settings: Settings) -> dict[str, list[str]]:
     for paper in papers:
         steps = []
         for stage in sequence(settings):
-            state = "skip" if getattr(stage, "done", lambda *_: False)(paper, settings) else "run"
+            state = (
+                "skip" if getattr(stage, "done", lambda *_: False)(paper, settings) else "run"
+            )
             steps.append(f"{state}:{stage.name.value}")
         out[paper.study_id] = steps
     return out
 
 
-def run(papers: Iterable[Paper], settings: Settings, caller: Caller,
-        workers: int = 1) -> RunReport:
+def run(
+    papers: Iterable[Paper], settings: Settings, caller: Caller, workers: int = 1
+) -> RunReport:
     papers = list(papers)
     if workers <= 1:
         return RunReport(papers=tuple(run_paper(p, settings, caller) for p in papers))
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        return RunReport(papers=tuple(pool.map(
-            lambda p: run_paper(p, settings, caller), papers)))
+        return RunReport(
+            papers=tuple(pool.map(lambda p: run_paper(p, settings, caller), papers))
+        )

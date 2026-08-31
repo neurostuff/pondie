@@ -27,15 +27,9 @@ import argparse
 import json
 import os
 import re
-import sys
 from pathlib import Path
 
-
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
-
-import evidence_retrieval  # noqa: E402
-
+from pondie.extraction.passes import evidence_retrieval  # noqa: E402
 
 SYSTEM = """You repair the model graph of a structured record extracted from a neuroimaging paper.
 
@@ -81,7 +75,9 @@ def scope(models: dict, model_id: str, seen: set | None = None) -> dict:
     seen.add(model_id)
     found = {}
     for lower in models[model_id].get("inputs_from") or []:
-        found.update(scope(models, lower if isinstance(lower, str) else str(value(lower)), seen))
+        found.update(
+            scope(models, lower if isinstance(lower, str) else str(value(lower)), seen)
+        )
     for term in models[model_id].get("terms") or []:
         if isinstance(term, dict) and value(term.get("local_id")):
             found[str(value(term["local_id"]))] = term
@@ -94,19 +90,28 @@ def graph_block(record: dict) -> str:
     lines = []
     for model in record.get("model_estimations") or []:
         mid = str(value(model.get("local_id")))
-        edges = [e if isinstance(e, str) else str(value(e))
-                 for e in (model.get("inputs_from") or [])]
-        lines.append(f"- model {mid!r}  family={value(model.get('model_family'))!r} "
-                     f"inputs_from={edges}")
+        edges = [
+            e if isinstance(e, str) else str(value(e))
+            for e in (model.get("inputs_from") or [])
+        ]
+        lines.append(
+            f"- model {mid!r}  family={value(model.get('model_family'))!r} "
+            f"inputs_from={edges}"
+        )
         for term in model.get("terms") or []:
             levels = [str(value(l.get("level"))) for l in (term.get("levels") or [])]
-            lines.append(f"    term {str(value(term.get('local_id')))!r} "
-                         f"name={str(value(term.get('name')))!r} "
-                         f"type={value(term.get('type'))!r} levels={levels}")
+            lines.append(
+                f"    term {str(value(term.get('local_id')))!r} "
+                f"name={str(value(term.get('name')))!r} "
+                f"type={value(term.get('type'))!r} levels={levels}"
+            )
         if not (model.get("terms") or []):
             lines.append("    (no terms extracted for this model)")
-        used = [str(value(a.get('name')))[:50] for a in record.get("analyses") or []
-                if str(value(a.get("model_estimation"))) == mid]
+        used = [
+            str(value(a.get("name")))[:50]
+            for a in record.get("analyses") or []
+            if str(value(a.get("model_estimation"))) == mid
+        ]
         lines.append(f"    analyses naming this model: {used[:4]}")
     return "\n".join(lines)
 
@@ -117,9 +122,12 @@ def graph_block(record: dict) -> str:
 #: short line that is a heading and nothing else.
 _PLAIN_METHOD = re.compile(
     r"^[ \t]*(?:\d+\.?[ \t]*)?(MATERIALS?[ \t]+AND[ \t]+METHODS?|METHODS?|METHOD[ \t]+AND[ \t]+"
-    r"MATERIALS?|Materials?[ \t]+and[ \t]+[Mm]ethods?|Methods?)[ \t]*:?[ \t]*$", re.M)
+    r"MATERIALS?|Materials?[ \t]+and[ \t]+[Mm]ethods?|Methods?)[ \t]*:?[ \t]*$",
+    re.M,
+)
 _PLAIN_AFTER = re.compile(
-    r"^[ \t]*(?:\d+\.?[ \t]*)?(RESULTS?|DISCUSSION|Results?|Discussion)[ \t]*:?[ \t]*$", re.M)
+    r"^[ \t]*(?:\d+\.?[ \t]*)?(RESULTS?|DISCUSSION|Results?|Discussion)[ \t]*:?[ \t]*$", re.M
+)
 
 #: Vocabulary that marks a paragraph as describing how the models were estimated. Used
 #: only when no heading of either kind can be found, which is the case for roughly half
@@ -129,7 +137,9 @@ _MODEL_TALK = re.compile(
     r"fixed[- ]effects?|design matrix|regressor|contrast images?|brought forward|entered "
     r"into|flexible factorial|full factorial|ANOVA|ANCOVA|general linear model|\bGLM\b|"
     r"mixed[- ]effects?|regression|covariate|group[- ]level|subject[- ]level|SPM|FSL|"
-    r"FEAT|AFNI|statistical (?:analys\w+|threshold|parametric))\b", re.I)
+    r"FEAT|AFNI|statistical (?:analys\w+|threshold|parametric))\b",
+    re.I,
+)
 
 #: Generous, because the whole point is not to truncate the paragraphs that decide the
 #: question. 40k chars is ~10k tokens, which is $0.002 of input at luna prices.
@@ -157,8 +167,7 @@ def tables_block(record: dict, stage1: dict, analysis: dict) -> str:
     """
 
     named = _field_value(analysis.get("tables")) or []
-    named = [t for t in (named if isinstance(named, list) else [named])
-             if isinstance(t, str)]
+    named = [t for t in (named if isinstance(named, list) else [named]) if isinstance(t, str)]
 
     #: Which analyses point at each table, and under which model. The comparative signal.
     users: dict[str, list[str]] = {}
@@ -170,35 +179,51 @@ def tables_block(record: dict, stage1: dict, analysis: dict) -> str:
             if isinstance(table_id, str):
                 users.setdefault(table_id, []).append(
                     f"{str(value(other.get('name')))[:40]!r} "
-                    f"(model {str(value(other.get('model_estimation')))!r})")
+                    f"(model {str(value(other.get('model_estimation')))!r})"
+                )
 
-    declared = {str(value(t.get("local_id"))): t for t in record.get("tables") or []
-                if isinstance(t, dict)}
+    declared = {
+        str(value(t.get("local_id"))): t
+        for t in record.get("tables") or []
+        if isinstance(t, dict)
+    }
     parsed: dict[str, list[dict]] = {}
     for entry in stage1.get("analyses") or []:
         parsed.setdefault(str(entry.get("table_id")), []).append(entry)
 
     lines = [f"The analysis being repaired names tables: {named or '(none)'}"]
     if named and not any(t in declared for t in named):
-        lines.append("NOTE: none of those are declared in the record's `tables`, so the "
-                     "reference is dangling. Every table the paper has is listed below.")
+        lines.append(
+            "NOTE: none of those are declared in the record's `tables`, so the "
+            "reference is dangling. Every table the paper has is listed below."
+        )
     lines.append("")
 
     for table_id in sorted(set(declared) | set(parsed) | set(named)):
         mark = "  <-- named by the analysis being repaired" if table_id in named else ""
         entry = declared.get(table_id)
         number = value(entry.get("table_number")) if entry else None
-        lines.append(f"- table {table_id!r} number={number!r}"
-                     f"{'' if entry else '  [not declared in `tables`]'}{mark}")
+        lines.append(
+            f"- table {table_id!r} number={number!r}"
+            f"{'' if entry else '  [not declared in `tables`]'}{mark}"
+        )
         for slot in ("caption", "footer"):
             said = str(value((entry or {}).get(slot)) or "").strip()
             if said:
                 lines.append(f"    {slot}: {said[:300]!r}")
         for read in parsed.get(table_id, []):
-            kinds = sorted({v.get("kind") for pt in (read.get("points") or [])
-                            for v in (pt.get("values") or []) if v.get("kind")})
-            lines.append(f"    stage 1 read {str(read.get('name'))[:56]!r} -- "
-                         f"{len(read.get('points') or [])} foci, statistics={kinds}")
+            kinds = sorted(
+                {
+                    v.get("kind")
+                    for pt in (read.get("points") or [])
+                    for v in (pt.get("values") or [])
+                    if v.get("kind")
+                }
+            )
+            lines.append(
+                f"    stage 1 read {str(read.get('name'))[:56]!r} -- "
+                f"{len(read.get('points') or [])} foci, statistics={kinds}"
+            )
             caption = str(read.get("table_caption") or "").strip()
             if caption and not entry:
                 lines.append(f"      caption from the parse: {caption[:300]!r}")
@@ -225,7 +250,7 @@ def methods_text(text: str, limit: int = METHODS_LIMIT) -> tuple[str, str]:
     start = _PLAIN_METHOD.search(text)
     if start:
         after = _PLAIN_AFTER.search(text, start.end())
-        block = text[start.start(): after.start() if after else len(text)]
+        block = text[start.start() : after.start() if after else len(text)]
         if len(block) > 500:
             return block[:limit], "plain-text heading"
 
@@ -253,24 +278,43 @@ def methods_text(text: str, limit: int = METHODS_LIMIT) -> tuple[str, str]:
 
 def broken(record: dict):
     """(analysis index, analysis, the terms it names out of scope, the models owning them)."""
-    models = {str(value(m.get("local_id"))): m
-              for m in record.get("model_estimations") or [] if isinstance(m, dict)}
-    owner = {str(value(t.get("local_id"))): mid for mid, m in models.items()
-             for t in (m.get("terms") or []) if isinstance(t, dict)}
+    models = {
+        str(value(m.get("local_id"))): m
+        for m in record.get("model_estimations") or []
+        if isinstance(m, dict)
+    }
+    owner = {
+        str(value(t.get("local_id"))): mid
+        for mid, m in models.items()
+        for t in (m.get("terms") or [])
+        if isinstance(t, dict)
+    }
     for index, analysis in enumerate(record.get("analyses") or []):
         if not isinstance(analysis, dict):
             continue
         mid = str(value(analysis.get("model_estimation")) or "")
         in_scope = scope(models, mid)
-        bad = [str(value(c.get("term"))) for c in (analysis.get("effect") or {}).get("cells") or []
-               if isinstance(value(c.get("term")), str)
-               and str(value(c.get("term"))) not in in_scope]
+        bad = [
+            str(value(c.get("term")))
+            for c in (analysis.get("effect") or {}).get("cells") or []
+            if isinstance(value(c.get("term")), str)
+            and str(value(c.get("term"))) not in in_scope
+        ]
         if bad:
             yield index, analysis, sorted(set(bad)), {owner.get(t) for t in bad}, models
 
 
-def ask(client, model: str, effort: str, record: dict, index: int, analysis: dict,
-        bad: list[str], text: str, stage1: dict) -> dict:
+def ask(
+    client,
+    model: str,
+    effort: str,
+    record: dict,
+    index: int,
+    analysis: dict,
+    bad: list[str],
+    text: str,
+    stage1: dict,
+) -> dict:
     methods, how = methods_text(text)
     user = (
         f"# The broken analysis\n\n"
@@ -282,11 +326,13 @@ def ask(client, model: str, effort: str, record: dict, index: int, analysis: dic
         f"{tables_block(record, stage1, analysis)}\n\n"
         f"# The model graph\n\n{graph_block(record)}\n\n"
         f"# The paper's methods (selected by {how})\n\n{methods}\n\n"
-        f"Return the JSON object now.")
-    kwargs = {"model": model,
-              "messages": [{"role": "system", "content": SYSTEM},
-                           {"role": "user", "content": user}],
-              "response_format": {"type": "json_object"}}
+        f"Return the JSON object now."
+    )
+    kwargs = {
+        "model": model,
+        "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}],
+        "response_format": {"type": "json_object"},
+    }
     if effort:
         kwargs["reasoning_effort"] = effort
     response = client.chat.completions.create(**kwargs)
@@ -338,8 +384,11 @@ def apply_and_check(record: dict, index: int, answer: dict, text: str) -> tuple[
             if str(value(model.get("local_id"))) == mid:
                 model.setdefault("inputs_from", []).append(target)
     still = [b for b in broken(trial) if b[0] == index]
-    return (not still), ("graph is valid after the repair" if not still
-                         else "the repair does not satisfy reachability")
+    return (not still), (
+        "graph is valid after the repair"
+        if not still
+        else "the repair does not satisfy reachability"
+    )
 
 
 def main() -> int:
@@ -358,8 +407,10 @@ def main() -> int:
             k, _, val = line.partition("=")
             os.environ.setdefault(k.strip(), val.strip().strip("'\""))
     from openai import OpenAI
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"],
-                    base_url=os.environ.get("OPENAI_API_GATEWAY"))
+
+    client = OpenAI(
+        api_key=os.environ["OPENAI_API_KEY"], base_url=os.environ.get("OPENAI_API_GATEWAY")
+    )
 
     rows, spent = [], [0, 0]
     for path in sorted(args.records.glob("*.extraction.json")):
@@ -370,39 +421,65 @@ def main() -> int:
         found = list(broken(record))
         if not found:
             continue
-        flavour = next((f for f in ("pubget", "ace", "elsevier")
-                        if (args.texts / study / "processed" / f / "text.txt").is_file()), None)
+        flavour = next(
+            (
+                f
+                for f in ("pubget", "ace", "elsevier")
+                if (args.texts / study / "processed" / f / "text.txt").is_file()
+            ),
+            None,
+        )
         if not flavour:
             continue
         text = (args.texts / study / "processed" / flavour / "text.txt").read_text(
-            encoding="utf-8", errors="replace")
+            encoding="utf-8", errors="replace"
+        )
         index, analysis, bad, owners, _models = found[0]
         stage1_path = args.texts / study / "stage1" / "analyses.json"
-        stage1 = (json.loads(stage1_path.read_text(encoding="utf-8"))
-                  if stage1_path.is_file() else {})
-        answer = ask(client, args.model, args.effort, record, index, analysis, bad, text,
-                     stage1)
-        spent[0] += answer["_tokens"][0]; spent[1] += answer["_tokens"][1]
+        stage1 = (
+            json.loads(stage1_path.read_text(encoding="utf-8"))
+            if stage1_path.is_file()
+            else {}
+        )
+        answer = ask(
+            client, args.model, args.effort, record, index, analysis, bad, text, stage1
+        )
+        spent[0] += answer["_tokens"][0]
+        spent[1] += answer["_tokens"][1]
         ok, note = apply_and_check(record, index, answer, text)
-        rows.append({"study": study, "analysis_index": index,
-                     "analysis": str(value(analysis.get("name")))[:60],
-                     "model": str(value(analysis.get("model_estimation"))),
-                     "bad_terms": bad, "owned_by": sorted(x for x in owners if x),
-                     "repair": answer.get("repair"), "target": answer.get("target"),
-                     "quote": (answer.get("quote") or "")[:200],
-                     "why": (answer.get("why") or "")[:200],
-                     "accepted": ok, "check": note,
-                     "methods_route": answer.get("_methods", ("?", 0))[0],
-                     "methods_chars": answer.get("_methods", ("?", 0))[1]})
-        print(f"  {study}: {answer.get('repair')} -> {answer.get('target')}  [{note}]",
-              flush=True)
+        rows.append(
+            {
+                "study": study,
+                "analysis_index": index,
+                "analysis": str(value(analysis.get("name")))[:60],
+                "model": str(value(analysis.get("model_estimation"))),
+                "bad_terms": bad,
+                "owned_by": sorted(x for x in owners if x),
+                "repair": answer.get("repair"),
+                "target": answer.get("target"),
+                "quote": (answer.get("quote") or "")[:200],
+                "why": (answer.get("why") or "")[:200],
+                "accepted": ok,
+                "check": note,
+                "methods_route": answer.get("_methods", ("?", 0))[0],
+                "methods_chars": answer.get("_methods", ("?", 0))[1],
+            }
+        )
+        print(
+            f"  {study}: {answer.get('repair')} -> {answer.get('target')}  [{note}]",
+            flush=True,
+        )
 
-    args.out.write_text(json.dumps({"effort": args.effort, "tokens": spent, "rows": rows},
-                                   indent=1) + "\n", encoding="utf-8")
+    args.out.write_text(
+        json.dumps({"effort": args.effort, "tokens": spent, "rows": rows}, indent=1) + "\n",
+        encoding="utf-8",
+    )
     accepted = sum(r["accepted"] for r in rows)
     declined = sum(r["repair"] == "cannot_tell" for r in rows)
-    print(f"\n{len(rows)} cases at effort={args.effort!r}: {accepted} passed the checks "
-          f"({declined} of them by declining), {len(rows) - accepted} discarded")
+    print(
+        f"\n{len(rows)} cases at effort={args.effort!r}: {accepted} passed the checks "
+        f"({declined} of them by declining), {len(rows) - accepted} discarded"
+    )
     print(f"tokens {spent[0]:,} in / {spent[1]:,} out")
     return 0
 

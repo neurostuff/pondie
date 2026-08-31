@@ -5,21 +5,18 @@ slot's declared shape from the LinkML schema. Hand-rolling that unwrap conflates
 different claims -- absent, `not_reported`, and reported-empty -- and each conflation is a
 silent wrong answer. See docs/pipeline-architecture.md, "The contract at each seam".
 """
+
 from __future__ import annotations
 
 import glob as globlib
 import json
-import sys
 from pathlib import Path
 from typing import Iterator
 
-#: The schema is a submodule, and `schema_utils` is the reader that knows a slot's declared
-#: shape. Resolved from this package rather than the working directory so a caller may run
-#: from anywhere.
-SCHEMA = Path(__file__).resolve().parents[2] / "study_schema"
-if str(SCHEMA) not in sys.path:
-    sys.path.insert(0, str(SCHEMA))
-from schema_utils import NOT_REPORTED, value_of  # noqa: E402
+#: `schema_utils` is the reader that knows a slot's declared shape. It ships in the
+#: `study-schema` distribution, which is this repository's submodule installed rather than
+#: appended to the path, so the import resolves the same from anywhere.
+from schema_utils import NOT_REPORTED, value_of
 
 __all__ = ["NOT_REPORTED", "iter_records", "strings_at", "value_of"]
 

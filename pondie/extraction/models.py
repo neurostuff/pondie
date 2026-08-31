@@ -14,6 +14,7 @@ through the schema. These models sit around the record, not inside it.
 `extra="forbid"` throughout, deliberately: a misspelled field in a config is otherwise a
 setting that silently does not apply.
 """
+
 from __future__ import annotations
 
 from enum import Enum
@@ -94,8 +95,9 @@ class Cost(Strict):
     calls: int = 0
 
     def __add__(self, other: "Cost") -> "Cost":
-        return Cost(**{f: getattr(self, f) + getattr(other, f)
-                       for f in type(self).model_fields})
+        return Cost(
+            **{f: getattr(self, f) + getattr(other, f) for f in type(self).model_fields}
+        )
 
 
 class ModelCall(Strict):
@@ -144,7 +146,8 @@ class Settings(Strict):
         if self.workflow is not Workflow.demand_driven:
             raise ValueError(
                 f"workflow={self.workflow.value} is not implemented; the stages run "
-                f"{Workflow.demand_driven.value} only")
+                f"{Workflow.demand_driven.value} only"
+            )
         return self
 
     @model_validator(mode="after")
@@ -154,7 +157,8 @@ class Settings(Strict):
             if not existing.exists():
                 raise ValueError(
                     "build without satisfy needs payloads on disk from an earlier run; "
-                    f"{existing} does not exist")
+                    f"{existing} does not exist"
+                )
         return self
 
 
@@ -207,6 +211,8 @@ class RunReport(Strict):
 
     def summary(self) -> str:
         cost = self.cost
-        return (f"{len(self.papers)} paper(s), {len(self.failures)} failed · "
-                f"{cost.input_tokens:,} in / {cost.output_tokens:,} out tokens "
-                f"over {cost.calls} call(s)")
+        return (
+            f"{len(self.papers)} paper(s), {len(self.failures)} failed · "
+            f"{cost.input_tokens:,} in / {cost.output_tokens:,} out tokens "
+            f"over {cost.calls} call(s)"
+        )

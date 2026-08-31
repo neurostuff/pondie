@@ -73,9 +73,7 @@ def terms_in_scope(
     return terms
 
 
-def derive_effect_kind(
-    cells: Any, terms: Mapping[str, Mapping[str, Any]]
-) -> tuple[str, str]:
+def derive_effect_kind(cells: Any, terms: Mapping[str, Mapping[str, Any]]) -> tuple[str, str]:
     """The derived kind, and the step that decided it.
 
     Steps are §3's, in §3's order, and the order is load-bearing: a moderation is a product
