@@ -1,0 +1,15 @@
+Article Navigation
+
+Journal Article
+
+Navbar Search Filter
+            
+
+            Mobile Enter search term
+        
+
+Search
+
+Abstract
+
+Klinefelter syndrome (47, XXY; henceforth: XXY syndrome) is a high-impact but poorly understood genetic risk factor for neuropsychiatric impairment. Here, we provide the first study to map alterations of functional brain connectivity in XXY syndrome and relate these changes to brain anatomy and psychopathology. We used resting-state functional magnetic resonance imaging data from 75 individuals with XXY and 84 healthy XY males to 1) implement a brain-wide screen for altered global resting-state functional connectivity (rsFC) in XXY versus XY males and 2) decompose these alterations through seed-based analysis. We then compared these rsFC findings with measures of regional brain anatomy, psychopathology, and cognition. XXY syndrome was characterized by i

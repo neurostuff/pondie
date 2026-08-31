@@ -157,6 +157,71 @@ def _markdown_tables(article_dir: Path) -> dict[int, str]:
     return out
 
 
+def _manifest_tables(study_dir: Path, flavour: str) -> dict[int, str]:
+    """Every table the manifest lists, rendered, keyed by the order it lists them.
+
+    For elsevier and ace, which have no placeholder to key on. The number is a position in
+    the manifest and nothing else -- these all end up floated, so it only decides the order
+    they are appended in.
+    """
+
+    source = Path(study_dir) / "source" / flavour
+    out: dict[int, str] = {}
+    for rank, (table_id, record) in enumerate(
+        sorted(table_parse.read_manifest(study_dir, flavour).items())
+    ):
+        data_file = record.get("data_file") or ""
+        if not data_file:
+            # The manifest names the raw file by absolute path on the corpus host, which
+            # is not where it is here; the id is the basename it was synced under.
+            data_file = f"{table_id}{'.xml' if flavour == 'elsevier' else '.html'}"
+        table = table_parse.read_table(
+            source,
+            data_file,
+            flavour=flavour,
+            label=record.get("table_label") or "",
+            caption=record.get("caption") or "",
+        )
+        if table:
+            out[rank] = table_parse.markdown_table(table)
+    return out
+
+
+def build_appended(study_dir: Path, flavour: str, *, report: dict | None = None) -> str:
+    """The corpus text for a non-pubget flavour, with its tables appended.
+
+    pubget's text has to be *rebuilt* from the article XML, because inlining a table at
+    its placeholder moves every offset after it and the only way to know the result still
+    matches the corpus is to reproduce the corpus render exactly. Elsevier and ace have no
+    such render to reproduce: their `text.txt` is the corpus text, so the tables go on the
+    end and every offset into the original prose is unchanged by construction.
+
+    Appending loses each table's position in the article. That is the same trade
+    `_inline` already makes for a pubget table the XSLT never placed, and for the same
+    reason -- a reviewer spanning a coordinate needs the row to be *in* the document, not
+    to be in the right part of it.
+    """
+
+    corpus = Path(study_dir) / "processed" / flavour / "text.txt"
+    if not corpus.is_file():
+        raise BuildError(f"no corpus text at {corpus}")
+    body = corpus.read_text(encoding="utf-8")
+    grids = _manifest_tables(study_dir, flavour)
+    if report is not None:
+        report["parsed"] = len(grids)
+        report["floated"] = sorted(grids)
+    if not grids:
+        return body
+    return (
+        body.rstrip()
+        + "\n\n"
+        + _FLOATED_HEADING
+        + "\n\n"
+        + "\n\n".join(grids[rank] for rank in sorted(grids))
+        + "\n"
+    )
+
+
 #: Where floated tables go. Named in the text because the reviewer needs to know that a
 #: table appearing after the discussion was not printed there -- the article never placed
 #: it in the prose at all.

@@ -1,0 +1,15 @@
+# Dynamic patterns make the premotor cortex interested in objects: influence of stimulus and task revealed by fMRI
+
+DOI: 10.1016/S0926-6410(02)00138-6
+PII: S0926641002001386
+
+## Keywords
+
+Premotor cortex
+fMRI
+Hand-object-interaction
+Sensorimotor integration
+
+## Abstract
+
+Research in monkey and man indicates that the ventrolateral premotor cortex (PMv) underlies not only the preparation of manual movements, but also the perceptual representation of pragmatic object properties. However, visual stimuli without any pragmatic meaning were recently found to elicit selective PMv responses if they were subjected to a perceivable pattern of change. We used functional magnetic resonance imaging (fMRI) to investigate if perceptual representations in the PMv might apply not only to pragmatic, but also to dynamic stimulus properties. To this end, a sequential figure matching task that required the pr
