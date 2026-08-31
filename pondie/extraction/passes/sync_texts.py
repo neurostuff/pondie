@@ -37,11 +37,24 @@ WANTED = [
     "processed/pubget/analyses.jsonl",
     "processed/pubget/coordinates.csv",
     "processed/pubget/metadata.json",
-    # The input to review/build_text.py, which rebuilds the text with each table inline.
+    # The input to build_text, which rebuilds the text with each table inline.
     # Without it that script cannot run at all, and rsync tolerates missing sources
     # silently -- so `report()` below names a study that arrived without one.
     "source/pubget/article.xml",
     "source/pubget/tables/",
+    # Elsevier is the second source, and for 10,594 papers of the corpus the best one
+    # available: it ships a table manifest for every paper it covers, where pubget misses
+    # ~900 of its own and ace ships none. Same layout as pubget, so the same two things are
+    # wanted -- the manifest, and the raw tables the render is rebuilt from.
+    "processed/elsevier/text.txt",
+    "processed/elsevier/tables.jsonl",
+    "processed/elsevier/analyses.jsonl",
+    "processed/elsevier/coordinates.csv",
+    "processed/elsevier/metadata.json",
+    "source/elsevier/content.xml",
+    "source/elsevier/tables/",
+    # Last: ace has no table manifest at all, only the rendered article.
+    "processed/ace/text.txt",
     "source/ace/",
 ]
 
@@ -107,15 +120,37 @@ def sync_one(host: str, root: str, study: str, out_root: Path, dry_run: bool) ->
 
 
 def report(destination: Path) -> str:
-    text = destination / "processed" / "pubget" / "text.txt"
-    tables = destination / "source" / "pubget" / "tables"
-    article = destination / "source" / "pubget" / "article.xml"
-    size = f"{len(text.read_text(encoding='utf-8')):,} ch" if text.is_file() else "NO TEXT"
-    csvs = len(list(tables.glob("*.csv"))) if tables.is_dir() else 0
-    # Named rather than implied: rsync skips a missing source without complaint, and the
-    # absence only surfaces later as a build_text.py failure with no obvious cause.
-    missing = "" if article.is_file() else ", NO article.xml"
-    return f"{size}, {csvs} table csv{missing}"
+    """What arrived, named per flavour so a study missing its best source says so.
+
+    Named rather than implied: rsync skips a missing source without complaint, and the
+    absence only surfaces later as a build_text failure with no obvious cause. Reported
+    best-first, because a paper with elsevier tables and no pubget ones is fine and a
+    paper with neither is the one worth looking at.
+    """
+
+    parts = []
+    for flavour in ("pubget", "elsevier", "ace"):
+        text = destination / "processed" / flavour / "text.txt"
+        if not text.is_file():
+            continue
+        size = f"{len(text.read_text(encoding='utf-8')):,} ch"
+        tables = destination / "source" / flavour / "tables"
+        # pubget renders its tables to CSV; elsevier ships the raw XML. Count whichever
+        # this flavour uses rather than assuming one of them.
+        found = (
+            len(list(tables.glob("*.csv"))) + len(list(tables.glob("*.xml")))
+            if tables.is_dir()
+            else 0
+        )
+        parts.append(f"{flavour} {size}" + (f", {found} table file(s)" if found else ""))
+    if not parts:
+        return "NO TEXT in any flavour"
+    if (
+        not (destination / "source" / "pubget" / "article.xml").is_file()
+        and (destination / "processed" / "pubget" / "text.txt").is_file()
+    ):
+        parts.append("NO article.xml")
+    return " | ".join(parts)
 
 
 def main() -> int:

@@ -31,12 +31,17 @@ class Strict(BaseModel):
 
 
 class Flavour(str, Enum):
-    """Which render of a paper the text came from. The pipeline reads one per paper."""
+    """Which render of a paper the text came from. The pipeline reads one per paper.
 
-    pubget = "pubget"
-    ace = "ace"
-    elsevier = "elsevier"
+    Declared best-first, and `pipeline.kinds.TEXT_FLAVOURS` is the same order: pubget,
+    then elsevier, then ace, by whether the render keeps the paper's tables. `local` is
+    the build with those tables inlined and is what extraction actually reads.
+    """
+
     local = "local"
+    pubget = "pubget"
+    elsevier = "elsevier"
+    ace = "ace"
 
 
 class StageName(str, Enum):

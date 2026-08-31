@@ -23,11 +23,17 @@ from typing import Any, Iterator
 #: what the extraction passes read; the others are fallbacks for a paper the local build
 #: never covered. A locator searching a table-free flavour cannot find the sentence a
 #: group size was read from, so the order here is not cosmetic.
+#:
+#: pubget, then elsevier, then ace, by how much of a paper's tables survive the render.
+#: Measured over the 39,270-study ns-pond corpus: pubget ships a table manifest for 12,390
+#: of its 13,313 papers and elsevier for all 10,595 of its own, while ace ships none at all
+#: -- 29,474 papers of ace text with the coordinates only ever in the stage-1 parse. Ranking
+#: ace above elsevier costs a paper its tables whenever both exist.
 TEXT_FLAVOURS: tuple[tuple[str, str], ...] = (
     ("local", "text.tables.txt"),
     ("pubget", "text.txt"),
-    ("ace", "text.txt"),
     ("elsevier", "text.txt"),
+    ("ace", "text.txt"),
 )
 
 
