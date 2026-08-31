@@ -1,6 +1,6 @@
-"""One entry point, three verbs: extract, normalize, select.
+"""One entry point, four verbs: extract, normalize, select, benchmark.
 
-Arguments are parsed into the same pydantic contracts a library caller builds by hand, so a
+Arguments are parsed into the same pydantic models a library caller builds by hand, so a
 mistyped flag fails the same way a mistyped keyword does and there is one definition of what
 a valid run is.
 """
@@ -10,7 +10,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .contracts import Flavour, Paper, Settings, StageName, Workflow
+from .extraction.models import Flavour, Paper, Settings, StageName, Workflow
 
 
 def _papers(root: Path, ids: Path, flavour: Flavour) -> list[Paper]:

@@ -16,6 +16,12 @@ dependencies = [
     # rather than failing, so a missing parser looks like a paper that said nothing.
     # The model is a separate download: python -m spacy download en_core_web_sm
     "spacy>=3.7",
+    # The model client. `extraction/llm.py` is the only place a prompt becomes a network
+    # call, and it imports this; without it the package can normalize and query but not
+    # extract, which is most of what it is for.
+    "openai>=1",
+    # `validate_record` reads the storage schema's class rules through it.
+    "linkml-runtime",
 ]
 
 [project.optional-dependencies]
@@ -23,6 +29,11 @@ dependencies = [
 encoders = ["sentence-transformers", "scikit-learn", "numpy"]
 # Coordinate-based meta-analysis. Not needed to extract or normalize a record.
 meta = ["nimare>=0.2", "numpy", "nibabel"]
+# A second evidence locator, scored against the quote pass. An enhancement: without it the
+# evidence stage still runs and says which locator it used.
+reranker = ["torch", "transformers"]
+# Schwartz-Hearst abbreviation detection. Without it a documented weaker miner runs.
+abbreviations = ["scispacy"]
 dev = ["pytest"]
 
 [project.scripts]

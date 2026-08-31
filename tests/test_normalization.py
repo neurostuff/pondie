@@ -1,4 +1,6 @@
 """One test per shape, on the cases that were wrong before they were rules."""
+import pytest
+
 from pondie.normalization import (coordinate_space, handedness_distribution,
                                   medication_status, multiple_comparison_method)
 
@@ -35,3 +37,21 @@ def test_cluster_level_names_a_unit_not_an_error_family():
     assert multiple_comparison_method.normalize("cluster correction").value == "OTHER"
     assert multiple_comparison_method.normalize("family-wise error (FWE)").value == "FWE"
     assert multiple_comparison_method.normalize("uncorrected").value == "UNCORRECTED"
+
+
+def test_a_missing_parser_is_an_error_not_an_unreported_field(monkeypatch):
+    """Without a parse the field read UNKNOWN, which is what a silent paper reads too.
+
+    So a broken environment was indistinguishable from a corpus that stopped reporting
+    medication. It raises now, naming the package and the install.
+    """
+
+    from pondie import _deps
+    from pondie.normalization import _negation
+
+    _negation._parser.cache_clear()
+    monkeypatch.setattr(_deps.importlib, "import_module",
+                        lambda name: (_ for _ in ()).throw(ImportError(name)))
+    with pytest.raises(_deps.MissingDependency, match="spacy"):
+        medication_status.normalize("patients were medicated")
+    _negation._parser.cache_clear()

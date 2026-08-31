@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -108,7 +109,13 @@ def detector():
         nlp.add_pipe("sentencizer")
         nlp.add_pipe("abbreviation_detector")
         _DETECTOR = nlp
-    except Exception:  # noqa: BLE001 -- absence is expected, not exceptional
+    except Exception as error:  # noqa: BLE001 -- absence is expected, not exceptional
+        # `mine_builtin` is a real second implementation, not a stub, so falling back is
+        # right. Saying so is what stops a corpus mined two different ways from looking
+        # like one corpus.
+        print(f"  abbreviations: scispacy unavailable ({type(error).__name__}); "
+              f"using the builtin miner (pip install 'pondie[abbreviations]')",
+              file=sys.stderr)
         _DETECTOR = None
     return _DETECTOR
 

@@ -6,12 +6,12 @@ Three packages, and the boundary between them is a contract rather than a conven
     pondie.normalization  a record's own wording -> shared values, one module per field
     pondie.query          records -> the subset a meta-analysis should pool
 
-`pondie.contracts` holds the pydantic models that cross those boundaries. The record's own
-shape is not among them: that is the LinkML schema in `study_schema`, which generates the
-extraction schema, validates records, and answers whether a slot is multivalued. Restating it
-here would be a second source of truth.
+Each pipeline declares its own inputs and outputs beside itself:
+`pondie.extraction.models` for the extraction stages, `pondie.query.engine` for a selection,
+`pondie.benchmark.run` for a score. The record's own shape is not among them: that is the
+LinkML schema in `study_schema`, which generates the extraction schema, validates records, and
+answers whether a slot is multivalued. Restating it here would be a second source of truth.
 """
-from . import contracts
 
-__all__ = ["contracts"]
+__all__: list[str] = []
 __version__ = "0.1.0"

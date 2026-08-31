@@ -13,7 +13,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from typing import Iterable
 
-from ..contracts import Paper, PaperOutcome, RunReport, Settings, StageOutcome
+from .models import Paper, PaperOutcome, RunReport, Settings, StageOutcome
 from .llm import Caller
 from .stages import sequence
 

@@ -1,7 +1,7 @@
 """Stages are functions, so they are called directly and the model is substituted."""
 import json
 
-from pondie.contracts import Cost, ModelReply, Paper, Settings, StageName
+from pondie.extraction.models import Cost, ModelReply, Paper, Settings, StageName
 from pondie.extraction import plan, run
 
 

@@ -1,4 +1,4 @@
-"""The boundary contracts: what crosses between stages, and what a caller may pass in.
+"""The extraction pipeline's inputs and outputs: what a caller passes in, what stages return.
 
 Every seam in this pipeline used to be a command line and a parsed stdout, which meant a
 stage's inputs were checked by whichever script happened to read them and its cost had to be
@@ -9,7 +9,7 @@ the boundary instead of three stages later.
 What is NOT here: the record itself. Its shape is the LinkML schema in `study-schema`, which
 generates the extraction schema, validates records and answers `multivalued` -- restating any
 of that in pydantic would be a second source of truth that drifts. `pondie.records` reads it
-through the schema. These contracts sit around the record, not inside it.
+through the schema. These models sit around the record, not inside it.
 
 `extra="forbid"` throughout, deliberately: a misspelled field in a config is otherwise a
 setting that silently does not apply.
@@ -131,6 +131,21 @@ class Settings(Strict):
     retrieve_evidence: bool = True
     zero_foci_rule: bool = True
     redo: bool = False
+
+    @model_validator(mode="after")
+    def _workflow_is_implemented(self) -> "Settings":
+        """`entity_first` names an ordering this package does not have.
+
+        It is kept in `Workflow` because it names a real alternative that was measured and
+        rejected, and a run recorded as `entity_first` should not silently mean the other
+        thing. Refusing here is the same rule as `extra="forbid"`: a setting that does not
+        apply is an error, not a default.
+        """
+        if self.workflow is not Workflow.demand_driven:
+            raise ValueError(
+                f"workflow={self.workflow.value} is not implemented; the stages run "
+                f"{Workflow.demand_driven.value} only")
+        return self
 
     @model_validator(mode="after")
     def _build_needs_its_inputs(self) -> "Settings":

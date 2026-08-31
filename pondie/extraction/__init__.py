@@ -1,6 +1,6 @@
 """Extraction: papers in, validated records out.
 
-    from pondie.contracts import Paper, Settings
+    from pondie.extraction.models import Paper, Settings
     from pondie.extraction import GatewayCaller, run
 
     report = run(papers, settings, GatewayCaller())

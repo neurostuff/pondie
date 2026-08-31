@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 from . import passes  # noqa: F401 -- puts the extraction passes on the path
-from ..contracts import (Cost, ModelCall, Paper, Settings, StageName, StageOutcome)
+from .models import (Cost, ModelCall, Paper, Settings, StageName, StageOutcome)
 from .llm import Caller
 
 

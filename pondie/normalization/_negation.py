@@ -19,6 +19,8 @@ from __future__ import annotations
 import functools
 import re
 
+from .._deps import MissingDependency, require
+
 #: Negation expressed as a modifier rather than a `neg` dependency: "drug-free", "off
 #: medication", "absence of treatment". Closed and short by design.
 _ADJECTIVAL = re.compile(r"\b(?:free|naive|na[iï]ve|off|absent)\b|\bfree$|-free\b", re.I)
@@ -30,16 +32,29 @@ _NEGATORS = {"no", "not", "never", "nor", "neither", "without", "none", "n't"}
 
 @functools.lru_cache(maxsize=1)
 def _parser():
-    """The blank-parse pipeline, built once. None when no model is installed."""
+    """The blank-parse pipeline, built once.
+
+    Raises rather than returning None. Without a parse there is no scope, and without scope
+    "not medicated" and "medicated" contain the same words -- the field would read UNKNOWN,
+    which is also what a paper that never mentions medication reads. A missing model would
+    look like a corpus that stopped reporting.
+    """
+    spacy = require("spacy", "nlp", "negation scope cannot be read without a parse")
     try:
-        import spacy
         return spacy.load("en_core_web_sm", exclude=["ner", "lemmatizer"])
-    except Exception:  # noqa: BLE001 -- absence is expected, not exceptional
-        return None
+    except OSError as error:
+        raise MissingDependency(
+            "spaCy is installed but the en_core_web_sm model is not. "
+            "Install it with: python -m spacy download en_core_web_sm") from error
 
 
 def available() -> bool:
-    return _parser() is not None
+    """Whether a parse is possible. For reporting the state of a run, not for deciding."""
+    try:
+        _parser()
+    except MissingDependency:
+        return False
+    return True
 
 
 def mentions(text: str, concepts: re.Pattern) -> list[tuple[str, bool]]:
@@ -50,8 +65,6 @@ def mentions(text: str, concepts: re.Pattern) -> list[tuple[str, bool]]:
     whatever else the sentence goes on to deny.
     """
     nlp = _parser()
-    if nlp is None:
-        return []
     found = []
     for token in nlp(text):
         if not concepts.search(token.text):

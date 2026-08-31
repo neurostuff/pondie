@@ -17,7 +17,7 @@ import uuid
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-from ..contracts import Cost, ModelCall, ModelReply
+from .models import Cost, ModelCall, ModelReply
 
 #: One id for a whole run, so calls from several stages are attributable to it.
 RUN_ID = os.environ.get("PONDIE_RUN_ID") or uuid.uuid4().hex[:12]

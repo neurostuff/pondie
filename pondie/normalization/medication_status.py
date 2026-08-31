@@ -25,7 +25,7 @@ import re
 
 from . import OTHER, UNKNOWN
 from ._lexicon import Decision, Rule, classify
-from ._negation import available, mentions
+from ._negation import mentions
 
 MEDICATED, FREE, NAIVE, MIXED = "MEDICATED", "FREE", "NAIVE", "MIXED"
 VALUES = (MEDICATED, FREE, NAIVE, MIXED, OTHER, UNKNOWN)
@@ -68,9 +68,9 @@ def normalize(text: object) -> Decision:
     #: antipsychotic naive" the negation belongs to the first clause and not to the marker.
     if marked and not (marked.value == NAIVE and DENIED_NAIVE.search(text_)):
         return marked
-    if not available():
-        return Decision(UNKNOWN, "no parser installed", raw)
-
+    # No `available()` guard: without a parse this returned UNKNOWN, which is also what a
+    # paper that never mentions medication returns, so an uninstalled model read as a corpus
+    # that stopped reporting. `mentions` raises instead, naming the package.
     found = mentions(text_, CONCEPTS)
     if not found:
         return Decision(UNKNOWN, "no medication mention", raw)

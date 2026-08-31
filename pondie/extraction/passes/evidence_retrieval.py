@@ -23,6 +23,7 @@ fails on perhaps a fifth of papers, and a hard filter turns those into guarantee
 from __future__ import annotations
 
 import re
+import sys
 import unicodedata
 from dataclasses import dataclass
 
@@ -494,6 +495,11 @@ def load_reranker(model: str = RERANKER, device: str = "cpu"):
         from transformers import (AutoModelForSequenceClassification,  # noqa: PLC0415
                                   AutoTokenizer)
     except ImportError:
+        # Said aloud for the same reason the OOM path below is: a run that quietly used one
+        # locator when it was configured for two scores differently, and nothing in the
+        # output distinguishes the two runs.
+        print("  reranker: not installed (pip install 'pondie[reranker]'); quote pass only",
+              file=sys.stderr)
         return None
 
     for attempt in (device, "cpu") if device != "cpu" else ("cpu",):
@@ -504,7 +510,7 @@ def load_reranker(model: str = RERANKER, device: str = "cpu"):
         except Exception as error:  # noqa: BLE001 -- any failure means "run without it"
             print(f"  reranker on {attempt}: unavailable ({type(error).__name__}); "
                   f"{'falling back to cpu' if attempt != 'cpu' else 'quote pass only'}",
-                  file=__import__("sys").stderr)
+                  file=sys.stderr)
             continue
         return {"tokenizer": tokenizer, "model": scorer, "device": attempt,
                 "torch": torch}
