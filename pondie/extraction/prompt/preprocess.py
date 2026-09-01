@@ -1592,7 +1592,19 @@ PROMPT_LITERALS = (
 
 
 def apply_strategy(name: str, text: str, mode: str) -> Prepared:
-    """The one entry point `render.py` calls."""
+    """The one entry point into the strategies, and nothing in the pipeline calls it.
+
+    It used to say `render.py` calls this. `render.py` does not, and never did in this
+    layout: it names `preprocess` in a comment and imports nothing from it. The only
+    production import of this module anywhere is `evidence/retrieval.py` taking
+    `ends_mid_sentence`; every strategy below is reachable from `main()` and from
+    `tests/test_preprocess.py` and from nowhere else.
+
+    That is the right outcome rather than a regression to fix.
+    `docs/text-preprocessing-experiments.md` measured these arms against a fixed pipeline
+    and found run-to-run spread swamping them, so none was wired in. What was wrong was
+    only this docstring, which sent a reader looking for a call site that does not exist.
+    """
 
     if not name or name == "none":
         return Prepared(text)

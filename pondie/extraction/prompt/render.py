@@ -235,80 +235,6 @@ def render_schema(sch: Schema, names: set[str], study_keep: list[str]) -> str:
 # ---------------------------------------------------------------- pass-2 context
 
 
-def entity_digest(sch: Schema, payload: Mapping[str, Any]) -> str:
-    """Every local_id pass 1 assigned, at any depth, with the name it carries.
-
-    Depth is the point. `Cell.term` points at a ModelTerm that lives under
-    `model_estimations[].terms`, and `DecodingClass.condition` at a Condition under
-    `tasks[].conditions`; a digest of the top-level lists alone leaves pass 2 with
-    nothing to reference and it invents ids instead.
-
-    Only ids and names: pass 1's full records would double the input for no gain,
-    since pass 2 only needs something to point at.
-    """
-
-    found: dict[str, list[str]] = {}
-
-    def name_of(entity: Mapping[str, Any]) -> str:
-        for key in ("name", "label", "description", "source_label"):
-            value = entity.get(key)
-            if isinstance(value, Mapping) and isinstance(value.get("value"), str):
-                return value["value"]
-            if isinstance(value, str):
-                return value
-        return ""
-
-    def visit(node: Any, class_name: str) -> None:
-        if not isinstance(node, dict) or "extraction_status" in node:
-            return
-        if isinstance(node.get("local_id"), str):
-            found.setdefault(class_name, []).append(
-                f"{node['local_id']}: {name_of(node)}".rstrip(": ")
-            )
-        # Resolve the payload's own class before reading its slots, or an entity nested
-        # under a self-naming payload is missing from the digest and pass 2 is told to
-        # emit `not_reported` for a reference that could have resolved.
-        class_name = sch.designated_type(node, class_name)
-        attributes = sch.attributes(class_name)
-        for key, value in node.items():
-            spec = attributes.get(key)
-            if spec is None or sch.classify(key, spec) != "nested":
-                continue
-            target = sch.ranges(spec)
-            if not target:
-                continue
-            for item in (value if isinstance(value, list) else [value]):
-                visit(item, target[0])
-
-    study_attributes = sch.attributes("Study")
-    body = dict(payload.get("study") or {})
-    for key, value in payload.items():
-        if key != "study":
-            body[key] = value
-    for attr, spec in study_attributes.items():
-        if sch.classify(attr, spec) != "nested":
-            continue
-        target = sch.ranges(spec)
-        value = body.get(attr)
-        if not target or value is None:
-            continue
-        for item in (value if isinstance(value, list) else [value]):
-            visit(item, target[0])
-
-    if not found:
-        return ""
-    lines = [
-        "\n## Entities already extracted",
-        "Refer to these `local_id`s. Do NOT re-emit these records. If this list offers",
-        "nothing suitable for a reference slot, emit `not_reported` for it -- never",
-        "invent a local_id.\n",
-    ]
-    for class_name in sorted(found):
-        lines.append(f"{class_name}:")
-        lines += [f"  {entry}" for entry in found[class_name]]
-    return "\n".join(lines) + "\n"
-
-
 ZERO_FOCI_RULE = """
 A "0 foci" entry is a TESTED EFFECT THAT FOUND NOTHING, and it is emitted like any other.
 It is not one of the OMIT cases above. The contrast was run, the paper reports its result,
@@ -768,14 +694,6 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
     return Prompt(system=system, user=user)
 
 
-def strip_fence(raw: str) -> str:
-    raw = raw.strip()
-    if raw.startswith("```"):
-        raw = re.sub(r"^```[a-zA-Z]*\n", "", raw)
-        raw = re.sub(r"\n```$", "", raw.strip())
-    return raw.strip()
-
-
 def postcondition_failures(
     payload: Mapping[str, Any], mode: str, declared: Sequence[Mapping[str, Any]] = ()
 ) -> list[str]:
@@ -890,7 +808,6 @@ RETRY_NOTE = """
 
 Emit the complete object this time. Everything the instructions above ask for still applies;
 what changed is only that an answer with the fault named here is not acceptable."""
-
 
 
 def normalize(payload: dict[str, Any], mode: str) -> tuple[dict[str, Any], list[str]]:
