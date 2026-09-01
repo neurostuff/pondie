@@ -22,9 +22,12 @@ dependencies = [
     "openai>=1",
     # `validate_record` reads the storage schema's class rules through it.
     "linkml-runtime",
-    # The submodule, installed rather than put on sys.path. It carries schema_utils,
-    # text_index and table_parse -- the three modules that define what a record is.
-    "study-schema",
+    # Plural folding. `folding.singular` produces one of the two keys an exact vocabulary
+    # lookup tries, so without it a plural head term misses its concept and falls through
+    # to the embedding path, where a threshold decides it -- a missing install that reads
+    # as a term the vocabulary does not cover. The corpus is a separate download:
+    # python -m nltk.downloader wordnet
+    "nltk",
 ]
 
 [project.optional-dependencies]
@@ -35,24 +38,38 @@ meta = ["nimare>=0.2", "numpy", "nibabel"]
 # A second evidence locator, scored against the quote pass. An enhancement: without it the
 # evidence stage still runs and says which locator it used.
 reranker = ["torch", "transformers"]
+# Rebuilding a paper's text with its tables inlined. `corpus.rebuild` runs pubget's own
+# stylesheet over `article.xml` and requires the result to reproduce the corpus text byte
+# for byte -- the guarantee every existing record's offsets rest on -- so it has to be
+# pubget's transform and not a reimplementation.
+#
+# Three packages, not pubget itself: `rebuild.load_pubget` imports `pubget._text` and
+# `pubget._utils` through a stub package, deliberately never running `pubget/__init__.py`,
+# which pulls in neuroquery. `lxml` and `pandas` are what those two modules import;
+# `nilearn` is what `pubget._typing` needs for one type annotation, and its own
+# `try/except ImportError` only covers the old import path, so an absent nilearn fails
+# both branches.
+#
+# The checkout is a git clone rather than a dependency for the same reason -- and it must be
+# the branch, not a release:
+#     git clone -b enh/keep_references_option https://github.com/jdkent/pubget .tmp_repos/pubget
+pubget = ["lxml", "pandas", "nilearn"]
 # Schwartz-Hearst abbreviation detection. Without it a documented weaker miner runs.
 abbreviations = ["scispacy"]
-dev = ["pytest", "black", "isort", "pyflakes"]
+# `nimare` is here as well as in `meta` because `Result.to_dataset` is the last step of
+# the query pipeline and the suite runs no skipped tests: a dependency that is optional
+# to a user is not optional to the thing that checks the code works.
+dev = ["pytest", "black", "isort", "pyflakes", "mypy", "nimare>=0.2"]
 
 [project.scripts]
 pondie = "pondie.cli:main"
-
-[tool.uv.sources]
-# A git submodule of this repository: checked out by `git submodule update --init`,
-# installed from the checkout so its version always matches the pinned commit.
-study-schema = { path = "study_schema", editable = true }
 
 [tool.setuptools.packages.find]
 include = ["pondie*"]
 
 [tool.setuptools.package-data]
-# `known_gaps` resolves its yaml alongside itself, and the referents are prompt input.
-pondie = ["extraction/passes/known-gaps.yaml", "extraction/passes/referents/*"]
+# The referents are prompt input, read from the installed package.
+pondie = ["extraction/prompt/referents/*"]
 
 [tool.black]
 # 95 rather than the default 88: the existing code sits at p95=90, p99=94, and 88 would
@@ -60,10 +77,35 @@ pondie = ["extraction/passes/known-gaps.yaml", "extraction/passes/referents/*"]
 line-length = 95
 target-version = ["py311"]
 
+[tool.mypy]
+# Added after a rename left `Context.classes: Mapping` holding a `Schema` -- a `Schema` is
+# not a Mapping, six call sites passed it into functions typed to take one, and nothing
+# could see it. Pyflakes cannot: it checks names, not types. The threshold is deliberately
+# low; the point is to catch that class of residue, not to reach strictness.
+python_version = "3.12"
+ignore_missing_imports = true
+# Scoped to the contract modules, not the whole package, and the distinction is the point.
+# A record's shape is the LinkML schema rather than a Python class, so the code that walks
+# one is `dict[str, Any]` by design and type-checking it would fight the design -- it
+# reports 85 things, none of which is a bug, and a checker that cannot be run clean is one
+# nobody runs. These files are the opposite: every one of them exists to say what crosses a
+# boundary, so a wrong annotation here is a wrong contract.
+files = [
+    "pondie/paths.py",
+    "pondie/formats/values.py",
+    "pondie/formats/parse_keys.py",
+    "pondie/schema/reader.py",
+    "pondie/extraction/models.py",
+    "pondie/extraction/parse.py",
+    "pondie/extraction/llm.py",
+    "pondie/extraction/driver.py",
+]
+disallow_untyped_defs = false
+# Imports are followed for types but not reported on, so the errors are about the files
+# above and not about everything they happen to touch.
+follow_imports = "silent"
+
 [tool.isort]
 profile = "black"
 line_length = 95
 known_first_party = ["pondie"]
-# The schema distribution is a dependency, not part of this package, but it ships bare
-# module names, so isort cannot tell it from a local module without being told.
-known_third_party = ["schema_utils", "text_index", "table_parse"]
