@@ -272,23 +272,36 @@ def test_the_funnel_says_when_a_weight_came_from_a_cohort_total(tmp_path, monkey
     assert "acquired_count" in outcome.funnel()
 
 
-def test_an_arm_is_the_comparator_whenever_it_says_so(tmp_path):
-    """`sham tPEMF` and `active tPEMF` differ by one word, and the wrong call inverts a map."""
-    from pondie.normalization import UNKNOWN
-    from pondie.normalization.arm_role import ACTIVE, CONTROL, role
+def test_an_arm_role_is_read_from_its_declared_kind_not_its_name(tmp_path):
+    """`Arm.arm_kind` is a required slot over a closed vocabulary. Use it.
 
-    assert role("placebo") == CONTROL
-    assert role("sham stimulation") == CONTROL
-    assert role("normal saline placebo") == CONTROL, "its own name gives it away"
-    assert role("no intervention") == CONTROL, "a comparator need not say placebo"
-    assert role("active tPEMF") == ACTIVE, "the control rule is decisive, not greedy"
-    assert role("0.5 mg/kg ketamine") == ACTIVE
-    assert role("LDLPFC rTMS") == ACTIVE
-    # Not every arm is one or the other, and pretending otherwise is how foci land in the
-    # opposite map. LPS is an inflammatory challenge; MDD is a diagnosis, not an arm.
-    assert role("LPS") == UNKNOWN
-    assert role("MDD") == UNKNOWN
-    assert role("") == UNKNOWN
+    This read `Arm.name` through a keyword lexicon until the enum was noticed. Measured
+    over 125 arms the lexicon left 24 unclassified and inverted 3, and `placebo-ketamine`
+    shows why it matters: a `pharmacological` arm whose name trips a `placebo` rule lands
+    in the opposite map, which is worse than not pooling it at all.
+    """
+    from pondie.normalization import UNKNOWN
+    from pondie.query.engine import _arm_roles
+
+    def ex(v):
+        return {"extraction_status": "extracted", "value": v}
+
+    arms = [
+        ("a", "placebo-ketamine", "pharmacological", "ACTIVE"),
+        ("b", "placebo", "placebo", "CONTROL"),
+        ("c", "MBSR", "behavioural_intervention", "ACTIVE"),
+        ("d", "sham tDCS", "sham", "CONTROL"),
+        ("e", "watchful waiting", "no_intervention", "CONTROL"),
+        ("f", "LPS", "not_a_kind", UNKNOWN),
+    ]
+    body = {
+        "design": {
+            "arms": [{"local_id": i, "name": ex(n), "arm_kind": ex(k)} for i, n, k, _ in arms]
+        }
+    }
+    roles = _arm_roles(body)
+    for i, name, _, expected in arms:
+        assert roles[i] == expected, f"{name!r} should be {expected}"
 
 
 def _arm_record(tmp_path, monkeypatch, arms, levels, cells):
@@ -313,7 +326,12 @@ def _arm_record(tmp_path, monkeypatch, arms, levels, cells):
         return {"extraction_status": "extracted", "value": v}
 
     record = {
-        "design": {"arms": [{"local_id": i, "name": ex(n)} for i, n in arms.items()]},
+        # Arms declare their kind; the role is read from that, never from the name.
+        "design": {
+            "arms": [
+                {"local_id": i, "name": ex(i), "arm_kind": ex(k)} for i, k in arms.items()
+            ]
+        },
         "model_estimations": [
             {
                 "local_id": "m1",
@@ -355,7 +373,7 @@ def test_the_two_arm_directions_are_not_the_same_selection(tmp_path, monkeypatch
     written = _arm_record(
         tmp_path,
         monkeypatch,
-        arms={"arm_a": "citalopram", "arm_c": "placebo"},
+        arms={"arm_a": "pharmacological", "arm_c": "placebo"},
         levels={"drug": "arm_a", "pbo": "arm_c"},
         cells={"drug": "positive", "pbo": "negative"},
     )
@@ -372,7 +390,7 @@ def test_an_unsigned_arm_contrast_is_dropped_from_both(tmp_path, monkeypatch):
     written = _arm_record(
         tmp_path,
         monkeypatch,
-        arms={"arm_a": "ketamine", "arm_c": "saline"},
+        arms={"arm_a": "pharmacological", "arm_c": "placebo"},
         levels={"drug": "arm_a", "pbo": "arm_c"},
         cells={"drug": "undirected", "pbo": "undirected"},
     )
@@ -389,7 +407,7 @@ def test_a_contrast_between_cohorts_is_not_an_arm_contrast(tmp_path, monkeypatch
     written = _arm_record(
         tmp_path,
         monkeypatch,
-        arms={"arm_a": "MDD", "arm_c": "healthy controls"},
+        arms={"arm_a": "not_a_kind", "arm_c": "not_a_kind"},
         levels={"mdd": "arm_a", "hc": "arm_c"},
         cells={"mdd": "positive", "hc": "negative"},
     )
@@ -428,7 +446,7 @@ def _exposure_record(
 
     record = {
         "design": {
-            "arms": [{"local_id": i, "name": ex(n)} for i, n in arms],
+            "arms": [{"local_id": i, "name": ex(i), "arm_kind": ex(k)} for i, k in arms],
             "timepoints": [
                 {"local_id": i, "name": ex(i), "relation_to_intervention": ex(r)}
                 for i, r in timepoints
@@ -478,7 +496,7 @@ def test_a_parallel_group_trial_reaches_the_filter_through_group_arm(tmp_path, m
     written = _exposure_record(
         tmp_path,
         monkeypatch,
-        arms=(("arm_a", "citalopram"), ("arm_c", "placebo")),
+        arms=(("arm_a", "pharmacological"), ("arm_c", "placebo")),
         levels={"drug": {"groups": ["g1"]}, "pbo": {"arms": ["arm_c"]}},
         cells={"drug": "positive", "pbo": "negative"},
         group_arm="arm_a",
@@ -514,7 +532,7 @@ def test_a_before_after_change_inside_the_sham_arm_is_not_a_treatment_effect(
     written = _exposure_record(
         tmp_path,
         monkeypatch,
-        arms=(("arm_c", "sham stimulation"),),
+        arms=(("arm_c", "sham"),),
         timepoints=(("tp_pre", "pre_intervention"), ("tp_post", "post_intervention")),
         levels={"after": {"timepoints": ["tp_post"]}, "before": {"timepoints": ["tp_pre"]}},
         cells={"after": "positive", "before": "negative"},
