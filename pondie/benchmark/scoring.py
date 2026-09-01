@@ -186,10 +186,17 @@ class Semantics:
     """
 
     def __init__(
-        self, enabled: bool, model: str = "text-embedding-3-small", base_url: str | None = None
+        self, enabled: bool, model: str | None = None, base_url: str | None = None
     ) -> None:
         self.enabled = enabled
-        self.model = model
+        # `OPENAI_EMBEDDING_MODEL` alongside the `OPENAI_EMBEDDING_BASE_URL` that
+        # `_openai_client` already reads: a Portkey-style gateway routes on a
+        # provider-qualified name (`@provider-slug/text-embedding-3-small`) and rejects
+        # the bare one, so a deployment behind a gateway cannot use `--semantic` at all
+        # without being able to say which name to send.
+        self.model = (
+            model or os.environ.get("OPENAI_EMBEDDING_MODEL") or "text-embedding-3-small"
+        )
         self.base_url = base_url
         self.vectors: dict[str, list[float]] = {}
         self._cache: dict[str, list[float]] = {}
