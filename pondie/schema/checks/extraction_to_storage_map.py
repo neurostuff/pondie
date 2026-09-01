@@ -45,6 +45,7 @@ from pondie.schema.authoring import (
     LOCAL_ID,
     attribute_ranges,
     is_marked,
+    is_selected,
     is_structural,
     load_imported_classes,
     own_attributes,
@@ -116,7 +117,7 @@ def check_identity(
     for class_name in sorted(storage):
         target = extraction.get(class_name)
         for attribute_name, attribute in own_attributes(storage, class_name).items():
-            if not (is_structural(attribute) or is_marked(attribute, EXTRACTED_SUBSET)):
+            if not is_selected(attribute, EXTRACTED_SUBSET):
                 continue
             expected = extraction_name(attribute_name, attribute)
             if target is None:

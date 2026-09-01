@@ -1,4 +1,3 @@
-
 """Ask one question across many records: which contrast is treatment against control?
 
 Normalization, not query, and the package docstring says why: "a record's own wording ->
@@ -49,7 +48,6 @@ def role(arm_kind: str | None) -> str | None:
     if arm_kind in COMPARATOR:
         return "comparator"
     return None
-
 
 
 def _direction(node: Any) -> str | None:
@@ -235,7 +233,9 @@ def treatment_contrasts(
         if isinstance(measure, dict) and values.read(measure.get("local_id")):
             local = str(values.read(measure["local_id"]))
             measures[local] = str(
-                values.read(measure.get("source_label")) or values.read(measure.get("type")) or ""
+                values.read(measure.get("source_label"))
+                or values.read(measure.get("type"))
+                or ""
             )
             kinds[local] = (
                 str(values.read(measure.get("type")) or ""),
@@ -293,8 +293,12 @@ def treatment_contrasts(
             direction=_direction((intervention[1] or {}).get("direction")),
             agent_concept=agents.get(intervention[0].agent, ""),
             measure=measures.get(str(values.read(analysis.get("measure")) or ""), ""),
-            measure_type=kinds.get(str(values.read(analysis.get("measure")) or ""), ("", ""))[0],
-            measure_family=kinds.get(str(values.read(analysis.get("measure")) or ""), ("", ""))[1],
+            measure_type=kinds.get(str(values.read(analysis.get("measure")) or ""), ("", ""))[
+                0
+            ],
+            measure_family=kinds.get(
+                str(values.read(analysis.get("measure")) or ""), ("", "")
+            )[1],
             held=held,
             comparator_direction=_direction((comparator[1] or {}).get("direction")),
         )
@@ -370,6 +374,14 @@ class GroupContrast:
 
 
 def group_contrasts(record: dict) -> Iterator[GroupContrast]:
+    # NOTHING CALLS THIS, where its sibling `treatment_contrasts` is called by
+    # `normalization/corpus.py`. The two ask different questions -- that one is arms, this
+    # one is cohorts -- and only the first has a consumer yet.
+    #
+    # Kept because deleting it cascades: `cohort_role` below has no other caller, and it
+    # carries the patient/control/risk lexicon that a cohort question needs. That is
+    # measured domain knowledge, not scaffolding, and it would be rewritten from scratch
+    # the first time anyone asks for patients-versus-controls across a corpus.
     """Every analysis whose cells put a patient cohort against a comparison cohort.
 
     The link from a cell to a cohort is `FactorLevel.groups` where the model filled it and
@@ -403,7 +415,9 @@ def group_contrasts(record: dict) -> Iterator[GroupContrast]:
         if isinstance(measure, dict) and values.read(measure.get("local_id")):
             local = str(values.read(measure["local_id"]))
             measures[local] = str(
-                values.read(measure.get("source_label")) or values.read(measure.get("type")) or ""
+                values.read(measure.get("source_label"))
+                or values.read(measure.get("type"))
+                or ""
             )
             kinds[local] = str(values.read(measure.get("type")) or "")
 

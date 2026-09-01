@@ -73,6 +73,15 @@ def terms_in_scope(
 
 
 def derive_effect_kind(cells: Any, terms: Mapping[str, Mapping[str, Any]]) -> tuple[str, str]:
+    # NOTHING CALLS THIS. Kept deliberately, and the reason is not "it might be useful":
+    # `Effect.kind` comes from the model today, and this is the only written-down statement
+    # of the four-axis rubric that decides it -- the axes `study_schema` documents as the
+    # thing this schema has and others do not. Deleting it would leave the rubric nowhere
+    # in code, and `tests/test_effect_kind_derivation.py` would go with it.
+    #
+    # It is a deriver waiting for a caller, not a deriver whose caller was removed. Wire it
+    # in `record/rules.py` if a measurement ever shows the model's `kind` disagreeing with
+    # the cells it emitted.
     """The derived kind, and the step that decided it.
 
     Steps are §3's, in §3's order, and the order is load-bearing: a moderation is a product
@@ -86,7 +95,9 @@ def derive_effect_kind(cells: Any, terms: Mapping[str, Mapping[str, Any]]) -> tu
             continue
         term_id = cell.get("term")
         term = terms.get(term_id) if isinstance(term_id, str) else None
-        parsed.append((term_id, term, values.read(cell.get("level")), values.read(cell.get("direction"))))
+        parsed.append(
+            (term_id, term, values.read(cell.get("level")), values.read(cell.get("direction")))
+        )
 
     if not parsed:
         return NO_LABEL, "no cells"

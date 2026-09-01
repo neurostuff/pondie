@@ -36,10 +36,6 @@ ROOT = Path(__file__).resolve().parents[3]
 TEXTS = paths.CORPUS
 
 
-
-
-
-
 # -- sources ----------------------------------------------------------------
 
 
@@ -271,7 +267,11 @@ DERIVERS: list[tuple[str, str, str, Callable[..., Any]]] = [
     ("Group.age_unit", "groups", "age_unit", derive_age_unit),
     ("Statistic.family", "analysis.statistic", "family", derive_statistic_family),
     ("Cell.direction", "analysis.cells", "direction", derive_cell_direction),
-    # Group.diagnostic_system and ModelEstimation.hrf_model are deliberately absent. Both
+    # Group.diagnostic_system, ModelEstimation.hrf_model and Group.handedness_category are
+    # deliberately absent. Handedness is out for a different reason from the other two:
+    # `normalization/handedness_distribution.py` already answers that field from the
+    # record, so a keyword pass over the paper would be a second opinion nothing
+    # reconciles. The other two are out because the model's value carries more. Both
     # are `range: string`, and the model's value carries more than a code does:
     # `DSM-IV-TR; NINCDS-ADRDA` against a derived `DSM-IV` loses an edition and a whole
     # second system. `diagnostic_system` also has a documented false positive a keyword
@@ -324,7 +324,9 @@ def _targets(record: Mapping, paper: str):
                         label,
                         cell,
                         key,
-                        deriver(paper, analysis=analysis, level=values.read(cell.get("level"))),
+                        deriver(
+                            paper, analysis=analysis, level=values.read(cell.get("level"))
+                        ),
                         values.read(cell.get(key)),
                     )
 
