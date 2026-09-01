@@ -127,16 +127,26 @@ class GatewayCaller:
             # loop and the post-condition loop in `_ModelPass`, so the one fault the retry
             # machinery exists to absorb was the one it could not see. It also escaped the
             # accounting, and a paper that spent 40,000 tokens logged `calls: 0`.
+            finish = response.choices[0].finish_reason or ""
             try:
                 payload = _as_json(body)
             except json.JSONDecodeError as error:
+                # The finish reason is the difference between two faults that look
+                # identical from the parse error alone: `length` is the model being cut
+                # off mid-object and wants a bigger `max_output_tokens`, anything else is
+                # a body that ended where it meant to and came out malformed anyway, which
+                # wants a retry or JSON mode. It was recorded on `ModelReply` and read by
+                # nothing, so an investigation into 25 unparseable papers had to rule
+                # truncation out by measuring instead of by looking.
                 last = MalformedReply(
-                    f"reply was not valid JSON: {error}", body=body, cost=spent
+                    f"reply was not valid JSON (finish_reason={finish!r}): {error}",
+                    body=body,
+                    cost=spent,
                 )
                 continue
             return ModelReply(
                 payload=payload,
-                stop_reason=response.choices[0].finish_reason or "",
+                stop_reason=finish,
                 # Read off the RAW response: both are headers, and the SDK drops them once
                 # it has turned the reply into a model object.
                 trace_id=raw.headers.get("x-portkey-trace-id") or "",

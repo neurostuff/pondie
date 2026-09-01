@@ -892,3 +892,87 @@ def test_the_caller_treats_an_unparseable_body_as_a_failed_attempt(tmp_path):
         )
     # The cost rides on the exception, which is how the stage bills a rejected reply.
     assert raised.value.cost.input_tokens == 11 and raised.value.cost.calls == 1
+
+
+def test_a_reply_cut_off_mid_answer_says_so(tmp_path):
+    """A truncated reply can still parse, and nothing else notices.
+
+    The model closes what it has open and returns valid JSON describing half a paper. The
+    post-condition objects to an empty list, not to a short one, so the record is built
+    from a fragment and reads as a paper that reported little. `stop_reason` is the only
+    witness, and it was written by the caller and read by nobody.
+    """
+    from pondie.extraction.stages import Demands
+
+    class CutOff:
+        def __call__(self, call, *, paper, stage):
+            return ModelReply(
+                payload={
+                    "analyses": [
+                        {"local_id": "a1", "name": "A", "effect": {"kind": "contrast"}}
+                    ],
+                    "required_entities": [{"local_id": "g1", "kind": "Group"}],
+                },
+                cost=Cost(calls=1),
+                stop_reason="length",
+            )
+
+    outcome = Demands().run(_paper(tmp_path), _settings(tmp_path), CutOff())
+    assert outcome.ok, "a short answer is still an answer; this is a note, not a failure"
+    assert any("length" in n and "cut short" in n for n in outcome.notes), outcome.notes
+
+
+def test_a_reply_that_finished_cleanly_says_nothing(tmp_path):
+    """The note has to be silent on the normal path or it is noise, not a signal."""
+    from pondie.extraction.stages import Demands
+
+    class Clean:
+        def __call__(self, call, *, paper, stage):
+            return ModelReply(
+                payload={
+                    "analyses": [
+                        {"local_id": "a1", "name": "A", "effect": {"kind": "contrast"}}
+                    ],
+                    "required_entities": [{"local_id": "g1", "kind": "Group"}],
+                },
+                cost=Cost(calls=1),
+                stop_reason="stop",
+            )
+
+    outcome = Demands().run(_paper(tmp_path), _settings(tmp_path), Clean())
+    assert not any("cut short" in n for n in outcome.notes), outcome.notes
+
+
+def test_the_finish_reason_rides_on_an_unparseable_reply(tmp_path):
+    """`length` and a malformed body produce the same JSONDecodeError and want opposite
+    fixes: a bigger budget, or a retry. The message has to distinguish them."""
+    from pondie.extraction.llm import GatewayCaller, MalformedReply
+    from pondie.extraction.models import ModelCall
+
+    class Raw:
+        headers: dict = {}
+
+        def parse(self):
+            message = type("M", (), {"content": '{"cut": '})()
+            choice = type("C", (), {"message": message, "finish_reason": "length"})()
+            usage = type("U", (), {"prompt_tokens": 9, "completion_tokens": 48000})()
+            return type("R", (), {"choices": [choice], "usage": usage})()
+
+    class Client:
+        def __init__(self):
+            self.chat = type(
+                "Chat", (), {"completions": type("C", (), {"with_raw_response": self})()}
+            )()
+
+        def create(self, **_):
+            return Raw()
+
+    caller = GatewayCaller()
+    caller._client = lambda paper, stage: Client()
+    with pytest.raises(MalformedReply) as raised:
+        caller(
+            ModelCall(model="m", system="s", prompt="p", max_output_tokens=10, attempts=1),
+            paper="S1",
+            stage="demands",
+        )
+    assert "finish_reason='length'" in str(raised.value)

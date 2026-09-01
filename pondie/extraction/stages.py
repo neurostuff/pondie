@@ -265,6 +265,7 @@ class _ModelPass(_Base):
         payload: dict = {}
         failures: list[str] = []
         parse_failures: list[str] = []
+        truncation_notes: list[str] = []
         parsed = False
         for attempt in range(1, settings.attempts + 1):
             user = (
@@ -303,6 +304,15 @@ class _ModelPass(_Base):
                 continue
             cost = cost + reply.cost
             traces.append((reply.trace_id, reply.cache_status))
+            # A reply can be cut off and still parse: the model closes what it has open and
+            # the body is valid JSON describing half a paper. Nothing downstream can tell,
+            # and the post-condition only objects when a list is empty rather than short.
+            # `stop_reason` is the only witness, and it was written and never read.
+            if reply.stop_reason and reply.stop_reason != "stop":
+                truncation_notes.append(
+                    f"attempt {attempt} finished on {reply.stop_reason!r}, not 'stop'; "
+                    f"the payload may be cut short"
+                )
             # Hoisting first: an entity list nested under `study` is otherwise shadowed by
             # an empty top-level sibling, and the post-condition would reject a good answer.
             payload, notes = render.normalize(reply.payload, self.mode)
@@ -322,7 +332,7 @@ class _ModelPass(_Base):
                 cost=cost,
             )
 
-        outcome_notes = list(notes)
+        outcome_notes = list(notes) + truncation_notes
         if parse_failures:
             outcome_notes += [f"retried after a malformed reply: {f}" for f in parse_failures]
         if failures:
