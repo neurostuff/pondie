@@ -1077,7 +1077,10 @@ def _field_path(path: str) -> str:
 
 
 def field_metrics(
-    pairs: Sequence[tuple[Entity, Entity]], sch: reader.Schema, sem: Semantics, inline_out: dict
+    pairs: Sequence[tuple[Entity, Entity]],
+    sch: reader.Schema,
+    sem: Semantics,
+    inline_out: dict,
 ) -> dict[str, Any]:
     per_type: dict[str, dict[str, Any]] = {}
     per_field: dict[str, dict[str, Any]] = {}
@@ -1815,54 +1818,6 @@ def _short(value: Any, limit: int = 60) -> str:
 # ---------------------------------------------------------------------------
 # aggregation across records
 # ---------------------------------------------------------------------------
-
-
-def aggregate(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    """Macro over records and micro over units, because they answer different questions.
-
-    Macro says how the extractor does on a typical paper; micro says how much of the
-    corpus's evidence it got right, and a paper with forty analyses moves only the second.
-    """
-
-    def macro(getter) -> float:
-        values = [getter(r) for r in results]
-        values = [v for v in values if isinstance(v, (int, float)) and not math.isnan(v)]
-        return sum(values) / len(values) if values else float("nan")
-
-    def pooled(section: str) -> dict[str, float]:
-        tp = sum(r[section]["micro"]["tp"] for r in results)
-        fp = sum(r[section]["micro"]["fp"] for r in results)
-        fn = sum(r[section]["micro"]["fn"] for r in results)
-        return prf(tp, fp, fn)
-
-    labels: list[tuple[str, str]] = []
-    hits: list[float] = []
-    for r in results:
-        for row in r["direction"]["primary"]["detail"]:
-            for cell in row.get("cells", []):
-                if cell["term_grounded"]:
-                    labels.append((cell["gold"]["direction"], cell["cand"]["direction"]))
-                    hits.append(float(cell["direction_match"]))
-    cells = [r["direction"]["primary"]["cell_prf"] for r in results]
-
-    return {
-        "records": len(results),
-        "entities_micro": pooled("entities"),
-        "relationships_micro": pooled("relationships"),
-        "direction_micro_prf": prf(
-            sum(c["tp"] for c in cells),
-            sum(c["fp"] for c in cells),
-            sum(c["fn"] for c in cells),
-        ),
-        "direction_micro_accuracy": sum(hits) / len(hits) if hits else float("nan"),
-        "direction_micro_ci95": bootstrap(hits),
-        "direction_micro_kappa": cohen_kappa(labels),
-        "direction_macro_accuracy": macro(
-            lambda r: r["direction"]["primary"]["accuracy_term_grounded"]
-        ),
-        "field_macro_accuracy": macro(lambda r: r["fields"]["overall"]["value_accuracy"]),
-        "composite_macro": macro(lambda r: r["composite"]["score"]),
-    }
 
 
 # ---------------------------------------------------------------------------

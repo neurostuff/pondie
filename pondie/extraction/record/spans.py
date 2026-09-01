@@ -137,22 +137,6 @@ def _pick(starts: list[int], near: int | None) -> int:
     return min(starts, key=lambda start: abs(start - near))
 
 
-def resolve_all(
-    normalized: str, quotes: list[str], *, near: int | None = None
-) -> tuple[list[ResolvedSpan], list[str]]:
-    """Resolve many quotes against one document, reporting failures rather than raising."""
-
-    folded_text = fold(normalized)
-    resolved: list[ResolvedSpan] = []
-    failures: list[str] = []
-    for quote in quotes:
-        try:
-            resolved.append(resolve(normalized, quote, near=near, folded_text=folded_text))
-        except SpanResolutionError as error:
-            failures.append(str(error))
-    return resolved, failures
-
-
 def verify(normalized: str, span: dict[str, object]) -> None:
     """Assert the schema invariant for one serialized EvidenceSpan."""
 
