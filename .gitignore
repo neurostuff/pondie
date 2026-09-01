@@ -10,3 +10,8 @@ __pycache__
 # Vocabularies and run inputs: large, rebuildable, and not this repository to ship.
 data/
 .venv/
+
+# Scratch clones the README tells you to make: pubget for `corpus.rebuild`, autonima for
+# the stage-1 table parse. Both are checkouts of other repositories, pinned by commit in
+# the docs rather than vendored here.
+.tmp_repos/
