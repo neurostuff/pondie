@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -44,6 +45,18 @@ def load_env(path: Path) -> list[str]:
     return names
 
 
+class MalformedReply(ValueError):
+    """The call succeeded and the body it returned is not JSON.
+
+    Carries what it cost, because the tokens were spent whatever the body says, and the
+    stage that catches this adds them to the paper's total rather than losing them.
+    """
+
+    def __init__(self, message: str, *, body: str, cost: Cost):
+        super().__init__(message)
+        self.body, self.cost = body, cost
+
+
 class GatewayCaller:
     """An OpenAI-compatible gateway, with every request tagged for the analytics API."""
 
@@ -68,35 +81,70 @@ class GatewayCaller:
     def __call__(self, call: ModelCall, *, paper: str, stage: str) -> ModelReply:
         client = self._client(paper, stage)
         last: Exception | None = None
+        # Dropped for the rest of this call if the provider says it does not know the
+        # parameter, so a gateway without JSON mode degrades to the old behaviour instead
+        # of failing every attempt on an argument error.
+        constrain = call.json_object
         for _attempt in range(call.attempts):
             started = time.time()
             try:
                 raw = client.chat.completions.with_raw_response.create(
                     model=call.model,
-                    messages=[{"role": "user", "content": call.prompt}],
+                    messages=(
+                        [{"role": "system", "content": call.system}] if call.system else []
+                    )
+                    + [{"role": "user", "content": call.prompt}],
                     max_completion_tokens=call.max_output_tokens,
                     reasoning_effort=call.effort,
+                    **({"response_format": {"type": "json_object"}} if constrain else {}),
                 )
                 response = raw.parse()
             except Exception as error:  # noqa: BLE001 -- retried, then surfaced
                 last = error
+                if constrain and "response_format" in str(error):
+                    print(
+                        f"  {stage}: gateway rejected response_format; "
+                        f"retrying without JSON mode",
+                        file=sys.stderr,
+                    )
+                    constrain = False
                 continue
             usage = response.usage
             out = getattr(usage, "completion_tokens_details", None)
             inp = getattr(usage, "prompt_tokens_details", None)
             body = response.choices[0].message.content or ""
-            return ModelReply(
-                payload=_as_json(body),
-                stop_reason=response.choices[0].finish_reason or "",
-                cost=Cost(
-                    input_tokens=usage.prompt_tokens,
-                    output_tokens=usage.completion_tokens,
-                    reasoning_tokens=getattr(out, "reasoning_tokens", 0) or 0,
-                    cached_tokens=getattr(inp, "cached_tokens", 0) or 0,
-                    seconds=round(time.time() - started, 2),
-                    calls=1,
-                ),
+            spent = Cost(
+                input_tokens=usage.prompt_tokens,
+                output_tokens=usage.completion_tokens,
+                reasoning_tokens=getattr(out, "reasoning_tokens", 0) or 0,
+                cached_tokens=getattr(inp, "cached_tokens", 0) or 0,
+                cache_write_tokens=getattr(inp, "cache_write_tokens", 0) or 0,
+                seconds=round(time.time() - started, 2),
+                calls=1,
             )
+            # Parse inside the loop. A reply that is not JSON is a failed attempt like any
+            # other: it used to be parsed in the `return` below, where it escaped both this
+            # loop and the post-condition loop in `_ModelPass`, so the one fault the retry
+            # machinery exists to absorb was the one it could not see. It also escaped the
+            # accounting, and a paper that spent 40,000 tokens logged `calls: 0`.
+            try:
+                payload = _as_json(body)
+            except json.JSONDecodeError as error:
+                last = MalformedReply(
+                    f"reply was not valid JSON: {error}", body=body, cost=spent
+                )
+                continue
+            return ModelReply(
+                payload=payload,
+                stop_reason=response.choices[0].finish_reason or "",
+                # Read off the RAW response: both are headers, and the SDK drops them once
+                # it has turned the reply into a model object.
+                trace_id=raw.headers.get("x-portkey-trace-id") or "",
+                cache_status=raw.headers.get("x-portkey-cache-status") or "",
+                cost=spent,
+            )
+        if isinstance(last, MalformedReply):
+            raise last
         raise RuntimeError(f"{stage} for {paper}: {call.attempts} attempt(s) failed") from last
 
 

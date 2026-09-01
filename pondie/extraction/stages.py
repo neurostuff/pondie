@@ -15,13 +15,32 @@ the parse manifest, so putting them through a model can only introduce error.
 
 from __future__ import annotations
 
+import copy
 import json
+import shutil
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
 
-from pondie.extraction.llm import Caller
-from pondie.extraction.models import Cost, ModelCall, Paper, Settings, StageName, StageOutcome
+from pondie import schema
+from pondie.extraction.llm import Caller, MalformedReply
+from pondie.extraction.models import (
+    Cost,
+    EvidenceCounts,
+    ModelCall,
+    Paper,
+    Settings,
+    StageName,
+    StageOutcome,
+)
+from pondie.extraction.parse import TableParse
+from pondie.extraction.prompt import render
+from pondie.formats import values
+
+#: Written into every record's `extraction_metadata`, so a record says which pipeline made
+#: it. Bump it when a change would make two records incomparable.
+EXTRACTOR_VERSION = "pondie-1"
 
 
 @runtime_checkable
@@ -40,7 +59,15 @@ class _Base:
     name: StageName
 
     def produces(self, paper: Paper, settings: Settings) -> Path:
-        return settings.payloads / paper.study_id / self.name.value / "payload.json"
+        """One file per stage, flat, beside its siblings.
+
+        Flat because `builder.merge_payloads` globs `<payload_dir>/*.json` and merges
+        what it finds -- a stage writing `<stage>/payload.json` produces a file the builder
+        never sees, and the record comes out with metadata and an empty body. It is also
+        the layout the evidence pass reads and writes back through, and the one every
+        archived run on disk already uses.
+        """
+        return settings.payloads / paper.study_id / f"{self.name.value}.json"
 
     def done(self, paper: Paper, settings: Settings) -> bool:
         return self.produces(paper, settings).is_file() and not settings.redo
@@ -57,31 +84,147 @@ class _Base:
         return out
 
 
+def _manifest_value(text: str | None) -> dict:
+    """A literal copied from the table manifest, in the shape the schema declares.
+
+    `not_applicable` because there is no sentence to quote: the value came from the
+    manifest, not from the paper's prose. `None` becomes `not_reported` -- a claim that the
+    manifest carried no caption -- rather than an empty string, which reads as a blank one.
+    """
+    return values.wrap(text, source="reported", evidence="not_applicable")
+
+
 @dataclass(frozen=True)
 class Tables(_Base):
-    """Copy the parse manifest into Table records. Deterministic, and first."""
+    """Copy the table manifest into Table records. No model, and first.
+
+    `table_number`, `caption` and `footer` are literal strings in the manifest, so retyping
+    them through a model can only introduce error. It runs first because the analyses pass
+    is told the local_ids it assigns, and every `Analysis.tables` reference points at one.
+
+    Omitting this stage is the regression that motivated writing it down: a rewritten
+    pipeline dropped it and 155 of 156 records ended up with no tables declared while 1,076
+    of 1,084 analyses referenced one. Direction scoring never noticed -- polarity needs the
+    parse, not the Table entity -- so the fault stayed invisible until a coordinate query
+    asked for the join.
+
+    The manifest is read from the same flavour the text came from. Hardcoding
+    `processed/pubget/tables.jsonl` finds nothing for a paper staged from `ace` or
+    `elsevier`, and this corpus is mostly those.
+    """
 
     name: StageName = StageName.tables
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
-        table_map = (
-            json.loads(paper.table_map.read_text()) if paper.table_map.is_file() else {}
-        )
-        tables = [
-            {
-                "local_id": local,
-                "table_number": meta.get("table_number"),
-                "caption": meta.get("caption"),
-                "footer": meta.get("footer"),
-            }
-            for local, meta in sorted(table_map.items())
-        ]
+        manifest = paper.text.parent / "tables.jsonl"
+        if not manifest.is_file():
+            return StageOutcome(
+                stage=self.name,
+                study_id=paper.study_id,
+                produced=(self._write(paper, settings, {"tables": []}),),
+                notes=(
+                    f"no tables.jsonl beside the {paper.flavour.value} text; "
+                    f"no Table records to copy",
+                ),
+            )
+
+        tables, id_map = [], {}
+        for index, line in enumerate(
+            manifest.read_text(encoding="utf-8").splitlines(), start=1
+        ):
+            if not line.strip():
+                continue
+            source = json.loads(line)
+            # Keyed on the manifest's own table_id so the identity the staging wrote keeps
+            # holding, and positionally only when it has none. `table_number` is not an
+            # identifier: one paper in the corpus carries two tables numbered 1.
+            local_id = str(source.get("table_id") or f"tbl{index}")
+            id_map[str(source.get("table_id") or local_id)] = local_id
+            metadata = source.get("metadata") or {}
+            label = metadata.get("table_label") or (
+                f"Table {source['table_number']}" if source.get("table_number") else None
+            )
+            tables.append(
+                {
+                    "local_id": local_id,
+                    "table_number": _manifest_value(label),
+                    "caption": _manifest_value(source.get("caption")),
+                    "footer": _manifest_value(source.get("footer")),
+                }
+            )
+
+        paper.table_map.parent.mkdir(parents=True, exist_ok=True)
+        paper.table_map.write_text(json.dumps(id_map, indent=1) + "\n", encoding="utf-8")
         return StageOutcome(
             stage=self.name,
             study_id=paper.study_id,
             produced=(self._write(paper, settings, {"tables": tables}),),
+            notes=(
+                f"{len(tables)} Table record(s) copied from "
+                f"{paper.flavour.value}/tables.jsonl (deterministic)",
+            ),
+        )
+
+
+@dataclass(frozen=True)
+class SignSplit(_Base):
+    """Partition a parse that reports both signs, and withhold the reversed half.
+
+    Runs before anything reads the parse, because it changes what the extraction pass is
+    shown. A table holding effects of both signs is two contrasts and only one of them has
+    prose in the paper: the positive half keeps the parsed name and is extracted, the
+    negative half is marked `withhold` and rebuilt afterwards by the mirror repair.
+
+    Its artefact is the parse it rewrote, so `done` cannot be the file existing -- it always
+    does. `sign_split_applied` alone is not enough either: a corpus partitioned before the
+    mirror existed carries that flag and still holds both halves as ordinary entries, which
+    is exactly the case the mirror was built for. Both conditions are checked.
+    """
+
+    name: StageName = StageName.sign_split
+
+    def produces(self, paper: Paper, settings: Settings) -> Path:
+        return paper.parse
+
+    def done(self, paper: Paper, settings: Settings) -> bool:
+        if settings.redo or not paper.parse.is_file():
+            return False
+        from pondie.extraction.corpus.tables import adopt_withholding
+
+        parse = TableParse.load(paper.parse)
+        if not parse.sign_split_applied:
+            return False
+        adopted = adopt_withholding(copy.deepcopy(parse.document.get("analyses") or []))
+        return not adopted.notes
+
+    def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
+        if self.done(paper, settings):
+            return self._skip(paper)
+        from pondie.extraction.corpus.tables import (
+            adopt_withholding,
+            split_opposite_signs,
+        )
+
+        parse = TableParse.load(paper.parse)
+        before = parse.document.get("analyses") or []
+        split = split_opposite_signs(before)
+        # A corpus partitioned before the mirror existed holds both halves as ordinary
+        # entries. Re-splitting cannot reach them -- each part already holds one sign --
+        # so the pair is converted from what the parts themselves record.
+        adopted = adopt_withholding(list(split.analyses))
+        parse.replace_analyses(list(adopted.analyses))
+        parse.save()
+        return StageOutcome(
+            stage=self.name,
+            study_id=paper.study_id,
+            produced=(paper.parse,),
+            notes=(
+                *split.notes,
+                f"{len(before)} -> {len(adopted.analyses)} analyses, "
+                f"{adopted.withheld} withheld",
+            ),
         )
 
 
@@ -94,34 +237,111 @@ class _ModelPass(_Base):
     def context(self, paper: Paper, settings: Settings) -> str:
         return ""
 
+    def declared(self, paper: Paper, settings: Settings) -> Sequence[Mapping[str, Any]]:
+        """The entities this pass was asked to produce, for the post-condition to check."""
+        return ()
+
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
-        from pondie.extraction.passes.extract_record import build_prompt
-
-        prompt, schema_name = build_prompt(
+        prompt = render.build_prompt(
             paper.text.read_text(encoding="utf-8", errors="replace"),
             self.mode,
             settings.retrieve_evidence,
             self.context(paper, settings),
         )
-        reply = caller(
-            ModelCall(
-                model=settings.model,
-                prompt=prompt,
-                schema_name=schema_name,
-                max_output_tokens=settings.max_output_tokens,
-                effort=settings.effort,
-                attempts=settings.attempts,
-            ),
-            paper=paper.study_id,
-            stage=self.name.value,
-        )
+        declared = self.declared(paper, settings)
+
+        # Retry names the fault rather than resampling blindly. The failure is stochastic --
+        # the same prompt succeeds on the next draw most of the time -- but a model told what
+        # was wrong with its last answer does better than one asked the same question twice.
+        #
+        # Without this the pass accepted whatever came back. A payload of
+        # `{"groups": [], "measures": [], ...}` is well formed, legally empty, and builds
+        # and validates into a record about no study at all -- 2 runs in 10 of the best
+        # configuration measured, and silent: `finish=stop`, nothing truncated, no validator
+        # objection. `attempts` was reaching only the gateway's network retry.
+        cost, traces, notes = Cost(), [], []
+        payload: dict = {}
+        failures: list[str] = []
+        parse_failures: list[str] = []
+        parsed = False
+        for attempt in range(1, settings.attempts + 1):
+            user = (
+                prompt.user
+                if attempt == 1
+                else prompt.user
+                + render.RETRY_NOTE.format(
+                    failures="\n".join(f"- {failure}" for failure in failures)
+                )
+            )
+            try:
+                reply = caller(
+                    ModelCall(
+                        model=settings.model,
+                        system=prompt.system,
+                        prompt=user,
+                        max_output_tokens=settings.max_output_tokens,
+                        effort=settings.effort,
+                        # One network attempt per post-condition attempt: the two retries
+                        # answer different questions, and multiplying them spends the
+                        # budget twice.
+                        attempts=1,
+                    ),
+                    paper=paper.study_id,
+                    stage=self.name.value,
+                )
+            except MalformedReply as error:
+                # A reply that will not parse is a rejected answer, not a broken run. It is
+                # the same stochastic fault the post-condition loop already absorbs -- an
+                # unbalanced bracket a few thousand characters in -- so it goes round again
+                # carrying the note, and only a paper that cannot produce JSON in
+                # `settings.attempts` tries fails.
+                cost = cost + error.cost
+                failures = [str(error)]
+                parse_failures.append(str(error))
+                continue
+            cost = cost + reply.cost
+            traces.append((reply.trace_id, reply.cache_status))
+            # Hoisting first: an entity list nested under `study` is otherwise shadowed by
+            # an empty top-level sibling, and the post-condition would reject a good answer.
+            payload, notes = render.normalize(reply.payload, self.mode)
+            parsed = True
+            failures = render.postcondition_failures(payload, self.mode, declared)
+            if not failures:
+                break
+
+        # Never parsed is not the same as parsed-but-imperfect. Writing `{}` here would
+        # build a record about no study at all, which is the exact silent failure the
+        # post-condition was added to stop.
+        if not parsed:
+            raise MalformedReply(
+                f"{self.name.value} for {paper.study_id}: no valid JSON in "
+                f"{settings.attempts} attempt(s): " + "; ".join(parse_failures),
+                body="",
+                cost=cost,
+            )
+
+        outcome_notes = list(notes)
+        if parse_failures:
+            outcome_notes += [f"retried after a malformed reply: {f}" for f in parse_failures]
+        if failures:
+            outcome_notes.append(
+                f"post-condition still failing after {settings.attempts} attempt(s): "
+                + "; ".join(failures)
+            )
+        # Reported, never retried on: measured at 64% recall with 27 real findings against
+        # one false alarm, which is a good signal to show a reviewer and a bad one to
+        # re-ask a model about.
+        outcome_notes += [f"suspect: {w}" for w in render.design_model_mismatch(payload)]
+
         return StageOutcome(
             stage=self.name,
             study_id=paper.study_id,
-            cost=reply.cost,
-            produced=(self._write(paper, settings, reply.payload),),
+            cost=cost,
+            traces=tuple(traces),
+            notes=tuple(outcome_notes),
+            produced=(self._write(paper, settings, payload),),
         )
 
 
@@ -133,7 +353,26 @@ class Demands(_ModelPass):
     mode: str = "demands"
 
     def context(self, paper: Paper, settings: Settings) -> str:
-        return paper.parse.read_text() if paper.parse.is_file() else ""
+        """The stage-1 parse, rendered as instructions rather than dumped as JSON.
+
+        This used to be `paper.parse.read_text()`. The file is a machine artefact, and
+        handing it over raw drops everything `stage1_block` exists to say: the parse key
+        each analysis must carry back in `source_table_analysis` -- the only exact join
+        from an analysis to its coordinates -- the table `local_id`s that `Analysis.tables`
+        is required to hold, which entries were sign-split and must not be re-merged, and
+        the zero-foci rule, which is worth **+16 points** paired with this ordering and
+        **-25** on its own. None of that survives being serialised back to JSON.
+        """
+        if not paper.parse.is_file():
+            return ""
+        table_ids = (
+            json.loads(paper.table_map.read_text("utf-8")) if paper.table_map.is_file() else {}
+        )
+        return render.stage1_block(
+            json.loads(paper.parse.read_text("utf-8")),
+            table_ids,
+            zero_foci_rule=settings.zero_foci_rule,
+        )
 
 
 @dataclass(frozen=True)
@@ -143,9 +382,24 @@ class Satisfy(_ModelPass):
     name: StageName = StageName.satisfy
     mode: str = "satisfy"
 
-    def context(self, paper: Paper, settings: Settings) -> str:
+    def declared(self, paper: Paper, settings: Settings) -> Sequence[Mapping[str, Any]]:
         demands = Demands().produces(paper, settings)
-        return demands.read_text() if demands.is_file() else ""
+        if not demands.is_file():
+            return ()
+        return json.loads(demands.read_text("utf-8")).get("required_entities") or ()
+
+    def context(self, paper: Paper, settings: Settings) -> str:
+        """The shopping list the demands pass wrote, as this pass's contract.
+
+        Raw JSON again before: `requirements_block` is what turns the declared entities
+        into "emit one of each, with EXACTLY the local_id given", which is the whole point
+        of asking the analyses first. Without it the pass is free to invent its own ids and
+        every cell that points at one dangles.
+        """
+        demands = Demands().produces(paper, settings)
+        if not demands.is_file():
+            return ""
+        return render.requirements_block(json.loads(demands.read_text("utf-8")))
 
 
 @dataclass(frozen=True)
@@ -155,65 +409,174 @@ class Evidence(_Base):
     45% of the pipeline's input tokens. Omitting it leaves a record that is structurally
     complete and unreviewable, which is a different thing from an incomplete one.
 
-    Not a `_ModelPass`: this stage asks about the fields that already exist rather than about
-    the paper, so its prompt is assembled from the earlier payloads. The assembly uses the
-    same `iter_fields` / `describe` the record builder uses, and the call still goes through
-    `Caller` -- one model boundary, so a test substitutes a fake here as anywhere else.
+    It does not write a payload of its own: `evidence` is a REQUIRED block on every
+    `ExtractedValue`, so the blocks go onto the fields in the payloads the earlier stages
+    wrote, and those payloads are rewritten in place. `noev/` is a copy taken first, so the
+    stage can be re-run without re-running `satisfy`.
+
+    Two locators, unioned. The model reads the whole paper -- handing it a retrieved
+    shortlist instead was measured and cost 21 points -- and the retriever contributes a
+    second span when it clears its own gate, at no marginal cost because it runs locally.
+    The retriever is optional by design: a host without torch does the quote pass and says
+    so, rather than taking the stage down.
     """
 
     name: StageName = StageName.evidence
     batch: int = 60
+
+    def produces(self, paper: Paper, settings: Settings) -> Path:
+        return settings.payloads / paper.study_id / "noev"
+
+    def done(self, paper: Paper, settings: Settings) -> bool:
+        """Did the evidence get written, or did the stage merely start?
+
+        `noev/` is the pre-evidence backup and is made BEFORE any evidence is, so its
+        presence proves only that the stage began. Reading it as "done" cost seventeen
+        papers their evidence: the stage died loading its reranker, the backup was already
+        on disk, and every resume skipped it and built records with no evidence at all.
+
+        Nor can the payloads answer it. `retrieve_evidence` also selects the prompt rule
+        that asks the extraction passes to emit `evidence` inline, so on the default
+        settings every extracted field already carries a block in exactly the shape this
+        pass writes -- there is nothing in a payload that distinguishes what the model said
+        from what this stage did. Any content check is answering a different question.
+
+        The stage records this state in a file it writes last. The file exists only if the loop
+        over every payload completed.
+        """
+        return not settings.redo and self._marker(paper, settings).is_file()
+
+    def _marker(self, paper: Paper, settings: Settings) -> Path:
+        """Written after the last payload, so it means finished and not started."""
+        return self.produces(paper, settings) / ".complete"
+
+    def _payloads(self, paper: Paper, settings: Settings) -> list[Path]:
+        """The payloads a model pass wrote, which are the ones needing warrant.
+
+        `tables.json` is excluded rather than merely skipped: its values are literals copied
+        from the table manifest and are born `not_applicable`, so asking a model to quote
+        them spends tokens to replace a correct claim with `not_found` -- which
+        `values.py` documents as "a defect a reviewer should see". Three manufactured
+        defects per table, per paper.
+        """
+        directory = settings.payloads / paper.study_id
+        deterministic = {"aliases.json", f"{StageName.tables.value}.json"}
+        if not directory.is_dir():
+            return []
+        return sorted(p for p in directory.glob("*.json") if p.name not in deterministic)
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if not settings.retrieve_evidence:
             return self._skip(paper, "evidence disabled")
         if self.done(paper, settings):
             return self._skip(paper)
-        from pondie.extraction.passes.add_evidence import SYSTEM, describe, iter_fields
+        from pondie.extraction.evidence.quote import (
+            SYSTEM,
+            apply_evidence,
+            describe,
+            iter_fields,
+        )
 
-        fields = [
-            (path, field)
-            for stage in (StageName.demands, StageName.satisfy)
-            for payload in [settings.payloads / paper.study_id / stage.value / "payload.json"]
-            if payload.is_file()
-            for path, field in iter_fields(json.loads(payload.read_text()))
-            if field.get("extraction_status") == "extracted"
-        ]
-        if not fields:
-            return self._skip(paper, "no extracted values to warrant")
+        targets = self._payloads(paper, settings)
+        if not targets:
+            return self._skip(paper, "no payloads to warrant")
 
+        # Taken before anything is written, so a re-run starts from the payloads as the
+        # extraction passes left them rather than from ones already carrying evidence.
+        backup = self.produces(paper, settings)
+        restoring = backup.is_dir()
+        backup.mkdir(parents=True, exist_ok=True)
+        self._marker(paper, settings).unlink(missing_ok=True)
+        for saved in backup.glob("*.json") if restoring else ():
+            shutil.copy(saved, settings.payloads / paper.study_id / saved.name)
+        if not restoring:
+            for target in targets:
+                shutil.copy(target, backup / target.name)
+
+        reranker, units = self._retriever(paper, settings)
         text = paper.text.read_text(encoding="utf-8", errors="replace")
-        quotes: dict[str, str] = {}
         cost = Cost()
-        for start in range(0, len(fields), self.batch):
-            chunk = fields[start : start + self.batch]
-            listing = "\n".join(describe(path, field) for path, field in chunk)
-            reply = caller(
-                ModelCall(
-                    model=settings.model,
-                    prompt=f"{SYSTEM}\n\n# Paper\n\n{text}\n\n"
-                    f"# Facts needing a supporting quote\n\n{listing}\n\n"
-                    "Return the JSON object mapping each id to its quote now.",
-                    max_output_tokens=settings.max_output_tokens,
-                    effort=settings.effort,
-                    attempts=settings.attempts,
-                ),
-                paper=paper.study_id,
-                stage=self.name.value,
+        traces: list[tuple[str, str]] = []
+        totals = EvidenceCounts()
+
+        for target in targets:
+            payload = json.loads(target.read_text(encoding="utf-8"))
+            wanted = [
+                (path, field)
+                for path, field in iter_fields(payload)
+                if field.get("extraction_status") == "extracted"
+            ]
+            quotes: dict[str, str] = {}
+            for begin in range(0, len(wanted), self.batch):
+                chunk = wanted[begin : begin + self.batch]
+                listing = "\n".join(describe(path, field) for path, field in chunk)
+                reply = caller(
+                    ModelCall(
+                        model=settings.model,
+                        # The instructions on the `system` half like every other pass. They
+                        # were concatenated into the user turn, which left the largest pass
+                        # in the pipeline -- 45% of input tokens -- sending nothing on the
+                        # one half a prompt cache can hit.
+                        system=SYSTEM,
+                        prompt=f"# Paper\n\n{text}\n\n"
+                        f"# Facts needing a supporting quote\n\n{listing}\n\n"
+                        "Return the JSON object mapping each id to its quote now.",
+                        max_output_tokens=settings.max_output_tokens,
+                        effort=settings.effort,
+                        attempts=settings.attempts,
+                    ),
+                    paper=paper.study_id,
+                    stage=self.name.value,
+                )
+                quotes.update({k: v for k, v in reply.payload.items() if isinstance(v, str)})
+                cost = cost + reply.cost
+                traces.append((reply.trace_id, reply.cache_status))
+
+            totals = totals + apply_evidence(payload, quotes, reranker, units)
+            target.write_text(
+                json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
             )
-            quotes.update({k: v for k, v in reply.payload.items() if isinstance(v, str)})
-            cost = cost + reply.cost
+
+        self._marker(paper, settings).write_text("", encoding="utf-8")
         return StageOutcome(
             stage=self.name,
             study_id=paper.study_id,
             cost=cost,
-            produced=(self._write(paper, settings, {"quotes": quotes}),),
+            traces=tuple(traces),
+            produced=tuple(targets),
+            notes=(
+                f"{totals.filled} warranted, {totals.unsupported} unsupported, "
+                f"{totals.not_reported} not_reported, {totals.unioned} retrieved",
+            ),
         )
+
+    def _retriever(self, paper: Paper, settings: Settings):
+        """The second locator, or nothing. An enhancement must not take the stage down."""
+        if not settings.union:
+            return None, ()
+        from pondie.extraction.evidence import retrieval
+
+        reranker = retrieval.load_reranker(device=settings.device_for(paper))
+        if reranker is None:
+            return None, ()
+        text = paper.text.read_text(encoding="utf-8", errors="replace")
+        return reranker, retrieval.sentence_units(text)
 
 
 @dataclass(frozen=True)
 class Build(_Base):
-    """Merge the payloads, repair, resolve quotes to offsets, validate. No model."""
+    """Merge the payloads, repair, resolve quotes to offsets, validate. No model.
+
+    The validation is the part that had gone missing. `Validator` was constructed only by
+    its own CLI and by tests, so a run printed `N paper(s), 0 failed` for records carrying
+    dangling references, directions outside their vocabulary and spans that do not verify
+    against the declared hash.
+
+    Findings are notes, never a `reason`. A record is written either way: a defect is a
+    field for a reviewer rather than a paper to discard, and treating one as a failure is
+    what made five of sixteen papers read as lost when all sixteen had been built and
+    scored.
+    """
 
     name: StageName = StageName.build
 
@@ -223,33 +586,79 @@ class Build(_Base):
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
-        from pondie.extraction.passes.build_record import merge_payloads
-        from pondie.extraction.passes.pipeline.repairs import Context, apply_all
+        from pondie.extraction.record.builder import build
 
-        body = merge_payloads(settings.payloads / paper.study_id)
-        stage1 = json.loads(paper.parse.read_text()) if paper.parse.is_file() else {}
-        table_map = (
-            json.loads(paper.table_map.read_text()) if paper.table_map.is_file() else {}
+        # `build` and not `merge_payloads`: merging assembles the body, and the record is
+        # the body plus the three things only the builder can supply -- every quote
+        # resolved to an offset into the normalized text, the `source_text_hash` those
+        # offsets are relative to, and the `local_id` the schema requires on Study. A
+        # record without them is not a partial record, it is an unvalidatable one.
+        record, report = build(
+            paper.study_id,
+            paper.text,
+            settings.payloads / paper.study_id,
+            extractor_model=settings.model,
+            extractor_version=EXTRACTOR_VERSION,
+            extraction_date=date.today().isoformat(),
+            stage1=paper.parse if paper.parse.is_file() else None,
+            table_map=paper.table_map if paper.table_map.is_file() else None,
         )
-        log = apply_all(body, Context(classes=_classes(), stage1=stage1, table_map=table_map))
         out = self.produces(paper, settings)
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps({"study": body}, indent=1, ensure_ascii=False) + "\n")
+        out.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
+
+        notes = [f"repairs: {', '.join(report.repair_log.fired()) or 'none fired'}"]
+        if report.failures:
+            notes.append(f"{len(report.failures)} quote(s) did not resolve")
+        if report.dangling:
+            notes.append(f"{len(report.dangling)} cross-reference(s) need a human")
+        notes += self._validate(record, paper, settings)
         return StageOutcome(
-            stage=self.name, study_id=paper.study_id, produced=(out,), reason="" if log else ""
+            stage=self.name, study_id=paper.study_id, produced=(out,), notes=tuple(notes)
         )
 
+    def _validate(self, record: dict, paper: Paper, settings: Settings) -> list[str]:
+        """Check the record against the schema, with the accepted findings suppressed.
 
-def _classes():
-    import schema_utils
+        Never fatal, and never a `reason`: this reports, and the record is already written.
+        The text is passed so spans are checked against the document they claim to address,
+        which is the invariant the whole evidence design rests on.
+        """
+        from pondie.extraction.record import validate
+        from pondie.schema import reader
 
-    from pondie.extraction.passes.extract_record import EXTRACTION_SCHEMA
-
-    return schema_utils.load_imported_classes(EXTRACTION_SCHEMA)
+        try:
+            validator = validate.Validator(
+                reader.load(schema.EXTRACTION),
+                paper.text.read_text(encoding="utf-8", errors="replace"),
+            )
+            validator.check_record(record)
+        except Exception as error:  # noqa: BLE001
+            # The docstring above says never fatal and the code has to mean it. The record
+            # is already written at this point, so a fault in the checker must not turn a
+            # built paper into a failed one -- a validator bug reported as a paper failure
+            # is the worst of both: the paper looks lost and the bug looks like the data.
+            return [f"validation could not run ({type(error).__name__}: {error})"]
+        notes = []
+        if validator.errors:
+            notes.append(
+                f"{len(validator.errors)} validation error(s): "
+                + "; ".join(validator.errors[:3])
+            )
+        if validator.warnings:
+            notes.append(f"{len(validator.warnings)} validation warning(s)")
+        return notes
 
 
 #: Named orderings, so a workflow is a name rather than a remembered set of flags.
-DEMAND_DRIVEN: tuple[Stage, ...] = (Tables(), Demands(), Satisfy(), Evidence(), Build())
+DEMAND_DRIVEN: tuple[Stage, ...] = (
+    Tables(),
+    SignSplit(),
+    Demands(),
+    Satisfy(),
+    Evidence(),
+    Build(),
+)
 
 
 def sequence(settings: Settings) -> tuple[Stage, ...]:
