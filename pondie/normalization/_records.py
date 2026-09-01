@@ -1,6 +1,6 @@
 """Reading records: iteration, and pulling a field out by a dotted path.
 
-The value access goes through `schema_utils.value_of`, which takes the wrapper and the
+The value access goes through `values.value_of`, which takes the wrapper and the
 slot's declared shape from the LinkML schema. Hand-rolling that unwrap conflates three
 different claims -- absent, `not_reported`, and reported-empty -- and each conflation is a
 silent wrong answer. See docs/pipeline-architecture.md, "The contract at each seam".
@@ -16,11 +16,12 @@ from typing import Iterator
 #: `schema_utils` is the reader that knows a slot's declared shape. It ships in the
 #: `study-schema` distribution, which is this repository's submodule installed rather than
 #: appended to the path, so the import resolves the same from anywhere.
-from schema_utils import NOT_REPORTED, value_of
+from pondie import paths
+from pondie.formats.values import NOT_REPORTED, value_of
 
 __all__ = ["NOT_REPORTED", "iter_records", "strings_at", "value_of"]
 
-DEFAULT = ("data/runs/*/records/*.extraction.json",)
+DEFAULT = (str(paths.RUNS / "*" / "records" / "*.extraction.json"),)
 
 
 def iter_records(patterns: tuple[str, ...] = DEFAULT) -> Iterator[tuple[str, dict]]:

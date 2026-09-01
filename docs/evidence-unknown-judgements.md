@@ -6,8 +6,8 @@ bucket means two incompatible things: a pick that supports the value but was not
 sentence the reviewer happened to highlight, or a genuine miss. Until it is split, the
 42% union figure is uninterpretable, and so is every decision resting on it.
 
-So: 42 cases, sampled across the five disagreement buckets and spread over fields so no
-one repeated field dominates, read by hand against the papers. For each one this file has
+I reviewed 42 cases by hand against the papers. The sample covers all five disagreement
+buckets and spreads cases across fields so no repeated field dominates. For each case, this file has
 the value, the retriever's top-1, the LLM's quote, what the reviewer marked, what the
 reviewer deleted, and my judgement. Corroborate freely — the whole point is that the
 automated verdict cannot be trusted here.
@@ -87,7 +87,7 @@ They are not one problem, and none of them is a ranking problem:
 
 Two of these — aliases for registry identifiers and for `prior_literature`-style terms,
 and superscript-aware value variants — are the same kind of fix as the alias and unit work
-already in `review/evidence_retrieval.py`, and would land in the same table.
+already in ``pondie.extraction.evidence.retrieval``, and would land in the same table.
 
 ## What the harness fixes were worth
 

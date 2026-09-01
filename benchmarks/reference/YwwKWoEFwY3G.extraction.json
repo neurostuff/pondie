@@ -1,3297 +1,3297 @@
 {
-  "local_id": "YwwKWoEFwY3G",
-  "extraction_metadata": {
-    "extractor_model": "claude-opus-5",
-    "extractor_version": "adjudicated-0.1.0",
-    "source_text_hash": "f056f8e511a661dac9c88ee8ac38369f2a942d301d32113b4584d18576625efd",
-    "extraction_date": "2026-08-12",
-    "paper_sections": [
+ "local_id": "YwwKWoEFwY3G",
+ "extraction_metadata": {
+  "extractor_model": "claude-opus-5",
+  "extractor_version": "adjudicated-0.1.0",
+  "source_text_hash": "f056f8e511a661dac9c88ee8ac38369f2a942d301d32113b4584d18576625efd",
+  "extraction_date": "2026-08-12",
+  "paper_sections": [
+   {
+    "ordinal": 0,
+    "title": "INTRODUCTION",
+    "level": 1,
+    "start_char": 1733,
+    "end_char": 7261
+   },
+   {
+    "ordinal": 1,
+    "title": "METHODS",
+    "level": 1,
+    "start_char": 7261,
+    "end_char": 18788
+   },
+   {
+    "ordinal": 2,
+    "title": "Participants",
+    "level": 2,
+    "start_char": 7276,
+    "end_char": 8551,
+    "parent_section": "METHODS"
+   },
+   {
+    "ordinal": 3,
+    "title": "Experimental paradigm",
+    "level": 2,
+    "start_char": 8551,
+    "end_char": 9732,
+    "parent_section": "METHODS"
+   },
+   {
+    "ordinal": 4,
+    "title": "MEG data acquisition",
+    "level": 2,
+    "start_char": 9732,
+    "end_char": 10328,
+    "parent_section": "METHODS"
+   },
+   {
+    "ordinal": 5,
+    "title": "Structural MRI processing and MEG coregistration",
+    "level": 2,
+    "start_char": 10328,
+    "end_char": 11973,
+    "parent_section": "METHODS"
+   },
+   {
+    "ordinal": 6,
+    "title": "MEG preprocessing, time-frequency transformation, and sensor-level statistics",
+    "level": 2,
+    "start_char": 11973,
+    "end_char": 15330,
+    "parent_section": "METHODS"
+   },
+   {
+    "ordinal": 7,
+    "title": "MEG source imaging and statistics",
+    "level": 2,
+    "start_char": 15330,
+    "end_char": 17827,
+    "parent_section": "METHODS"
+   },
+   {
+    "ordinal": 8,
+    "title": "Statistical analyses",
+    "level": 2,
+    "start_char": 17827,
+    "end_char": 18450,
+    "parent_section": "METHODS"
+   },
+   {
+    "ordinal": 9,
+    "title": "Data availability",
+    "level": 2,
+    "start_char": 18450,
+    "end_char": 18788,
+    "parent_section": "METHODS"
+   },
+   {
+    "ordinal": 10,
+    "title": "RESULTS",
+    "level": 1,
+    "start_char": 18788,
+    "end_char": 30888
+   },
+   {
+    "ordinal": 11,
+    "title": "Behavioral results",
+    "level": 2,
+    "start_char": 18803,
+    "end_char": 19300,
+    "parent_section": "RESULTS"
+   },
+   {
+    "ordinal": 12,
+    "title": "Spectrally-specific neural oscillations",
+    "level": 2,
+    "start_char": 19300,
+    "end_char": 20989,
+    "parent_section": "RESULTS"
+   },
+   {
+    "ordinal": 13,
+    "title": "Beamformer analysis",
+    "level": 2,
+    "start_char": 20989,
+    "end_char": 30888,
+    "parent_section": "RESULTS"
+   },
+   {
+    "ordinal": 14,
+    "title": "DISCUSSION",
+    "level": 1,
+    "start_char": 30888,
+    "end_char": 44076
+   },
+   {
+    "ordinal": 15,
+    "title": "Supplementary Materials",
+    "level": 1,
+    "start_char": 44076,
+    "end_char": 44102
+   }
+  ]
+ },
+ "description": {
+  "extraction_status": "extracted",
+  "value": "The study examined age-related alterations in theta, alpha, and beta oscillatory dynamics during encoding, maintenance, and retrieval in a verbal working-memory task using MEG source imaging and whole-brain age correlations in healthy adults.",
+  "value_source": "reported",
+  "evidence": {
+   "status": "present",
+   "sets": [
+    {
+     "spans": [
       {
-        "ordinal": 0,
-        "title": "INTRODUCTION",
-        "level": 1,
-        "start_char": 1733,
-        "end_char": 7261
-      },
-      {
-        "ordinal": 1,
-        "title": "METHODS",
-        "level": 1,
-        "start_char": 7261,
-        "end_char": 18788
-      },
-      {
-        "ordinal": 2,
-        "title": "Participants",
-        "level": 2,
-        "start_char": 7276,
-        "end_char": 8551,
-        "parent_section": "METHODS"
-      },
-      {
-        "ordinal": 3,
-        "title": "Experimental paradigm",
-        "level": 2,
-        "start_char": 8551,
-        "end_char": 9732,
-        "parent_section": "METHODS"
-      },
-      {
-        "ordinal": 4,
-        "title": "MEG data acquisition",
-        "level": 2,
-        "start_char": 9732,
-        "end_char": 10328,
-        "parent_section": "METHODS"
-      },
-      {
-        "ordinal": 5,
-        "title": "Structural MRI processing and MEG coregistration",
-        "level": 2,
-        "start_char": 10328,
-        "end_char": 11973,
-        "parent_section": "METHODS"
-      },
-      {
-        "ordinal": 6,
-        "title": "MEG preprocessing, time-frequency transformation, and sensor-level statistics",
-        "level": 2,
-        "start_char": 11973,
-        "end_char": 15330,
-        "parent_section": "METHODS"
-      },
-      {
-        "ordinal": 7,
-        "title": "MEG source imaging and statistics",
-        "level": 2,
-        "start_char": 15330,
-        "end_char": 17827,
-        "parent_section": "METHODS"
-      },
-      {
-        "ordinal": 8,
-        "title": "Statistical analyses",
-        "level": 2,
-        "start_char": 17827,
-        "end_char": 18450,
-        "parent_section": "METHODS"
-      },
-      {
-        "ordinal": 9,
-        "title": "Data availability",
-        "level": 2,
-        "start_char": 18450,
-        "end_char": 18788,
-        "parent_section": "METHODS"
-      },
-      {
-        "ordinal": 10,
-        "title": "RESULTS",
-        "level": 1,
-        "start_char": 18788,
-        "end_char": 30888
-      },
-      {
-        "ordinal": 11,
-        "title": "Behavioral results",
-        "level": 2,
-        "start_char": 18803,
-        "end_char": 19300,
-        "parent_section": "RESULTS"
-      },
-      {
-        "ordinal": 12,
-        "title": "Spectrally-specific neural oscillations",
-        "level": 2,
-        "start_char": 19300,
-        "end_char": 20989,
-        "parent_section": "RESULTS"
-      },
-      {
-        "ordinal": 13,
-        "title": "Beamformer analysis",
-        "level": 2,
-        "start_char": 20989,
-        "end_char": 30888,
-        "parent_section": "RESULTS"
-      },
-      {
-        "ordinal": 14,
-        "title": "DISCUSSION",
-        "level": 1,
-        "start_char": 30888,
-        "end_char": 44076
-      },
-      {
-        "ordinal": 15,
-        "title": "Supplementary Materials",
-        "level": 1,
-        "start_char": 44076,
-        "end_char": 44102
+       "text": "In the current study, we investigated the neural mechanisms serving WM function in seventy-eight healthy aging adults (range: 20.2–65.2 years) using magnetoencephalography (MEG) and a Sternberg WM task with letter stimuli.",
+       "start_char": 520,
+       "end_char": 742
       }
-    ]
-  },
+     ]
+    }
+   ]
+  }
+ },
+ "design": {
   "description": {
+   "extraction_status": "extracted",
+   "value": "Observational healthy-aging study of HIV-negative adults across the adult lifespan; participants provided written informed consent and were studied during a modified Sternberg working-memory task.",
+   "value_source": "reported",
+   "evidence": {
+    "status": "not_found"
+   }
+  },
+  "allocation": {
+   "extraction_status": "extracted",
+   "value": "not_applicable",
+   "value_source": "generated",
+   "evidence": {
+    "status": "not_found"
+   }
+  },
+  "assignment_structure": {
+   "extraction_status": "extracted",
+   "value": "single_group",
+   "value_source": "generated",
+   "evidence": {
+    "status": "not_found"
+   }
+  },
+  "blinding": {
+   "extraction_status": "extracted",
+   "value": "not_applicable",
+   "value_source": "generated",
+   "evidence": {
+    "status": "not_found"
+   }
+  },
+  "arms": [],
+  "timepoints": []
+ },
+ "analyses": [
+  {
+   "local_id": "analysis-theta-encoding-age",
+   "name": {
     "extraction_status": "extracted",
-    "value": "The study examined age-related alterations in theta, alpha, and beta oscillatory dynamics during encoding, maintenance, and retrieval in a verbal working-memory task using MEG source imaging and whole-brain age correlations in healthy adults.",
+    "value": "Age correlation with theta activity during encoding",
     "value_source": "reported",
     "evidence": {
-      "status": "present",
-      "sets": [
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
         {
-          "spans": [
-            {
-              "text": "In the current study, we investigated the neural mechanisms serving WM function in seventy-eight healthy aging adults (range: 20.2–65.2 years) using magnetoencephalography (MEG) and a Sternberg WM task with letter stimuli.",
-              "start_char": 520,
-              "end_char": 742
-            }
-          ]
+         "text": "theta oscillations during encoding became significantly stronger as a function of age in the left primary visual cortex (  p   = .037, corrected) and left dlPFC (  p   = .045, corrected;  Figure 4 )",
+         "start_char": 24995,
+         "end_char": 25193
         }
-      ]
+       ]
+      }
+     ]
     }
-  },
-  "design": {
-    "description": {
+   },
+   "definition": {
+    "extraction_status": "extracted",
+    "value": "Whole-brain correlation between age and theta-band (3-6 Hz) pseudo-t power during the encoding phase.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "theta oscillations during encoding became significantly stronger as a function of age in the left primary visual cortex (  p   = .037, corrected) and left dlPFC (  p   = .045, corrected;  Figure 4 )",
+         "start_char": 24995,
+         "end_char": 25193
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "prespecification": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "interpretations": {
+    "extraction_status": "extracted",
+    "value": [
+     "Theta activity during encoding increased with age in the left primary visual cortex (r = .42) and left dlPFC (r = .40)."
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "theta oscillations during encoding became significantly stronger as a function of age in the left primary visual cortex (  p   = .037, corrected) and left dlPFC (  p   = .045, corrected;  Figure 4 )",
+         "start_char": 24995,
+         "end_char": 25193
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_scope": {
+    "extraction_status": "extracted",
+    "value": "whole_brain",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Neural activity during the different phases of the WM task (i.e., encoding, maintenance, and retrieval) were imaged using a time-frequency resolved beamformer and whole-brain statistics were performed.",
+         "start_char": 743,
+         "end_char": 944
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "measure": "measure_electrophysiological_power",
+   "groups": [
+    {
+     "group": "grp-healthy-adults",
+     "n": {
       "extraction_status": "extracted",
-      "value": "Observational healthy-aging study of HIV-negative adults across the adult lifespan; participants provided written informed consent and were studied during a modified Sternberg working-memory task.",
+      "value": 72,
+      "value_source": "generated",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "| Left primary visual cortex            | θ         | −2  | −85 | 10.0  | 70.0 | .42       |",
+           "start_char": 29081,
+           "end_char": 29173
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "effect": {
+    "cells": [
+     {
+      "term": "term-age",
+      "direction": {
+       "extraction_status": "extracted",
+       "value": "positive",
+       "value_source": "reported",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "spans": [
+           {
+            "text": "theta oscillations during encoding became significantly stronger as a function of age in the left primary visual cortex (  p   = .037, corrected) and left dlPFC (  p   = .045, corrected;  Figure 4 )",
+            "start_char": 24995,
+            "end_char": 25193
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "statistic": {
+     "family": {
+      "extraction_status": "extracted",
+      "value": "correlation",
       "value_source": "reported",
       "evidence": {
-        "status": "not_found"
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "| Left primary visual cortex            | θ         | −2  | −85 | 10.0  | 70.0 | .42       |",
+           "start_char": 29081,
+           "end_char": 29173
+          }
+         ]
+        }
+       ]
       }
-    },
-    "allocation": {
+     },
+     "degrees_of_freedom_denominator": {
       "extraction_status": "extracted",
-      "value": "not_applicable",
-      "value_source": "generated",
+      "value": 70.0,
+      "value_source": "reported",
       "evidence": {
-        "status": "not_found"
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "| Left primary visual cortex            | θ         | −2  | −85 | 10.0  | 70.0 | .42       |",
+           "start_char": 29081,
+           "end_char": 29173
+          }
+         ]
+        }
+       ]
       }
-    },
-    "assignment_structure": {
-      "extraction_status": "extracted",
-      "value": "single_group",
-      "value_source": "generated",
-      "evidence": {
-        "status": "not_found"
+     }
+    }
+   },
+   "details": {
+    "details_type": "MassUnivariateDetails"
+   },
+   "acquisitions": [
+    "acq-meg",
+    "acq-mri"
+   ],
+   "tasks": [
+    "task-sternberg-working-memory"
+   ],
+   "model_estimation": "model-age-regression",
+   "inference_settings": "inference_cluster_based_permutation_testing",
+   "tables": [
+    "tbl1"
+   ],
+   "coordinate_space": {
+    "extraction_status": "extracted",
+    "value": "TAL",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "All coordinates are in Talairach space.",
+         "start_char": 28586,
+         "end_char": 28625
+        }
+       ]
       }
-    },
-    "blinding": {
-      "extraction_status": "extracted",
-      "value": "not_applicable",
-      "value_source": "generated",
-      "evidence": {
-        "status": "not_found"
+     ]
+    }
+   },
+   "model_representation_notes": {
+    "extraction_status": "extracted",
+    "value": "The frequency band is carried in Measure.specific_metric because MeasureType has no value for it and no slot holds a band -- one of the known limits in extraction-readme.md §5. It is the field that distinguishes this analysis from its siblings in the same task phase.",
+    "value_source": "generated",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "theta oscillations during encoding became significantly stronger as a function of age in the left primary visual cortex (  p   = .037, corrected) and left dlPFC (  p   = .045, corrected;  Figure 4 )",
+         "start_char": 24995,
+         "end_char": 25193
+        }
+       ]
       }
-    },
-    "arms": [],
-    "timepoints": []
+     ]
+    }
+   }
   },
-  "analyses": [
-    {
-      "local_id": "analysis-theta-encoding-age",
-      "name": {
-        "extraction_status": "extracted",
-        "value": "Age correlation with theta activity during encoding",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "theta oscillations during encoding became significantly stronger as a function of age in the left primary visual cortex (  p   = .037, corrected) and left dlPFC (  p   = .045, corrected;  Figure 4 )",
-                  "start_char": 24995,
-                  "end_char": 25193
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "definition": {
-        "extraction_status": "extracted",
-        "value": "Whole-brain correlation between age and theta-band (3-6 Hz) pseudo-t power during the encoding phase.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "theta oscillations during encoding became significantly stronger as a function of age in the left primary visual cortex (  p   = .037, corrected) and left dlPFC (  p   = .045, corrected;  Figure 4 )",
-                  "start_char": 24995,
-                  "end_char": 25193
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "prespecification": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "interpretations": {
-        "extraction_status": "extracted",
-        "value": [
-          "Theta activity during encoding increased with age in the left primary visual cortex (r = .42) and left dlPFC (r = .40)."
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "theta oscillations during encoding became significantly stronger as a function of age in the left primary visual cortex (  p   = .037, corrected) and left dlPFC (  p   = .045, corrected;  Figure 4 )",
-                  "start_char": 24995,
-                  "end_char": 25193
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "spatial_scope": {
-        "extraction_status": "extracted",
-        "value": "whole_brain",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Neural activity during the different phases of the WM task (i.e., encoding, maintenance, and retrieval) were imaged using a time-frequency resolved beamformer and whole-brain statistics were performed.",
-                  "start_char": 743,
-                  "end_char": 944
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "measure": "measure_electrophysiological_power",
-      "groups": [
+  {
+   "local_id": "analysis-alpha-encoding-age",
+   "name": {
+    "extraction_status": "extracted",
+    "value": "Age correlation with alpha activity during encoding",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
         {
-          "group": "grp-healthy-adults",
-          "n": {
-            "extraction_status": "extracted",
-            "value": 72,
-            "value_source": "generated",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left primary visual cortex            | θ         | −2  | −85 | 10.0  | 70.0 | .42       |",
-                      "start_char": 29081,
-                      "end_char": 29173
-                    }
-                  ]
-                }
-              ]
-            }
-          }
+         "text": "During the encoding phase, decreases in alpha became stronger (i.e., more negative) as a function of age in the left middle frontal gyrus (  p   = .023, corrected) and the left anterior cingulate gyrus (  p   = .033, corrected).",
+         "start_char": 25488,
+         "end_char": 25716
         }
-      ],
-      "effect": {
-        "cells": [
+       ]
+      }
+     ]
+    }
+   },
+   "definition": {
+    "extraction_status": "extracted",
+    "value": "Whole-brain correlation between age and alpha-band (9-15 Hz) pseudo-t power during the encoding phase.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "During the encoding phase, decreases in alpha became stronger (i.e., more negative) as a function of age in the left middle frontal gyrus (  p   = .023, corrected) and the left anterior cingulate gyrus (  p   = .033, corrected).",
+         "start_char": 25488,
+         "end_char": 25716
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "prespecification": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "interpretations": {
+    "extraction_status": "extracted",
+    "value": [
+     "Alpha decreases during encoding became stronger with age in the left middle frontal gyrus (r = -.41) and the left anterior cingulate gyrus (r = -.40)."
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "During the encoding phase, decreases in alpha became stronger (i.e., more negative) as a function of age in the left middle frontal gyrus (  p   = .023, corrected) and the left anterior cingulate gyrus (  p   = .033, corrected).",
+         "start_char": 25488,
+         "end_char": 25716
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_scope": {
+    "extraction_status": "extracted",
+    "value": "whole_brain",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Neural activity during the different phases of the WM task (i.e., encoding, maintenance, and retrieval) were imaged using a time-frequency resolved beamformer and whole-brain statistics were performed.",
+         "start_char": 743,
+         "end_char": 944
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "measure": "measure_electrophysiological_power_2",
+   "groups": [
+    {
+     "group": "grp-healthy-adults",
+     "n": {
+      "extraction_status": "extracted",
+      "value": 76,
+      "value_source": "generated",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
           {
-            "term": "term-age",
-            "direction": {
-              "extraction_status": "extracted",
-              "value": "positive",
-              "value_source": "reported",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "theta oscillations during encoding became significantly stronger as a function of age in the left primary visual cortex (  p   = .037, corrected) and left dlPFC (  p   = .045, corrected;  Figure 4 )",
-                        "start_char": 24995,
-                        "end_char": 25193
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+           "text": "| Left middle frontal gyrus             | α         | −42 | −5  | 54.0  | 74.0 | −.41      |",
+           "start_char": 29267,
+           "end_char": 29359
           }
-        ],
-        "statistic": {
-          "family": {
-            "extraction_status": "extracted",
-            "value": "correlation",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left primary visual cortex            | θ         | −2  | −85 | 10.0  | 70.0 | .42       |",
-                      "start_char": 29081,
-                      "end_char": 29173
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "degrees_of_freedom_denominator": {
-            "extraction_status": "extracted",
-            "value": 70.0,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left primary visual cortex            | θ         | −2  | −85 | 10.0  | 70.0 | .42       |",
-                      "start_char": 29081,
-                      "end_char": 29173
-                    }
-                  ]
-                }
-              ]
-            }
-          }
+         ]
         }
-      },
-      "details": {
-        "details_type": "MassUnivariateDetails"
-      },
-      "acquisitions": [
-        "acq-meg",
-        "acq-mri"
-      ],
-      "tasks": [
-        "task-sternberg-working-memory"
-      ],
-      "model_estimation": "model-age-regression",
-      "inference_settings": "inference_cluster_based_permutation_testing",
-      "tables": [
-        "tbl1"
-      ],
-      "coordinate_space": {
-        "extraction_status": "extracted",
-        "value": "TAL",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "All coordinates are in Talairach space.",
-                  "start_char": 28586,
-                  "end_char": 28625
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "model_representation_notes": {
-        "extraction_status": "extracted",
-        "value": "The frequency band is carried in Measure.specific_metric because MeasureType has no value for it and no slot holds a band -- one of the known limits in extraction-readme.md §5. It is the field that distinguishes this analysis from its siblings in the same task phase.",
-        "value_source": "generated",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "theta oscillations during encoding became significantly stronger as a function of age in the left primary visual cortex (  p   = .037, corrected) and left dlPFC (  p   = .045, corrected;  Figure 4 )",
-                  "start_char": 24995,
-                  "end_char": 25193
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
-    },
-    {
-      "local_id": "analysis-alpha-encoding-age",
-      "name": {
-        "extraction_status": "extracted",
-        "value": "Age correlation with alpha activity during encoding",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "During the encoding phase, decreases in alpha became stronger (i.e., more negative) as a function of age in the left middle frontal gyrus (  p   = .023, corrected) and the left anterior cingulate gyrus (  p   = .033, corrected).",
-                  "start_char": 25488,
-                  "end_char": 25716
-                }
-              ]
-            }
+     }
+    }
+   ],
+   "effect": {
+    "cells": [
+     {
+      "term": "term-age",
+      "direction": {
+       "extraction_status": "extracted",
+       "value": "negative",
+       "value_source": "reported",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "spans": [
+           {
+            "text": "During the encoding phase, decreases in alpha became stronger (i.e., more negative) as a function of age in the left middle frontal gyrus (  p   = .023, corrected) and the left anterior cingulate gyrus (  p   = .033, corrected).",
+            "start_char": 25488,
+            "end_char": 25716
+           }
           ]
-        }
-      },
-      "definition": {
-        "extraction_status": "extracted",
-        "value": "Whole-brain correlation between age and alpha-band (9-15 Hz) pseudo-t power during the encoding phase.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "During the encoding phase, decreases in alpha became stronger (i.e., more negative) as a function of age in the left middle frontal gyrus (  p   = .023, corrected) and the left anterior cingulate gyrus (  p   = .033, corrected).",
-                  "start_char": 25488,
-                  "end_char": 25716
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "prespecification": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "interpretations": {
-        "extraction_status": "extracted",
-        "value": [
-          "Alpha decreases during encoding became stronger with age in the left middle frontal gyrus (r = -.41) and the left anterior cingulate gyrus (r = -.40)."
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "During the encoding phase, decreases in alpha became stronger (i.e., more negative) as a function of age in the left middle frontal gyrus (  p   = .023, corrected) and the left anterior cingulate gyrus (  p   = .033, corrected).",
-                  "start_char": 25488,
-                  "end_char": 25716
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "spatial_scope": {
-        "extraction_status": "extracted",
-        "value": "whole_brain",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Neural activity during the different phases of the WM task (i.e., encoding, maintenance, and retrieval) were imaged using a time-frequency resolved beamformer and whole-brain statistics were performed.",
-                  "start_char": 743,
-                  "end_char": 944
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "measure": "measure_electrophysiological_power_2",
-      "groups": [
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "statistic": {
+     "family": {
+      "extraction_status": "extracted",
+      "value": "correlation",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
         {
-          "group": "grp-healthy-adults",
-          "n": {
-            "extraction_status": "extracted",
-            "value": 76,
-            "value_source": "generated",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left middle frontal gyrus             | α         | −42 | −5  | 54.0  | 74.0 | −.41      |",
-                      "start_char": 29267,
-                      "end_char": 29359
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      ],
-      "effect": {
-        "cells": [
+         "spans": [
           {
-            "term": "term-age",
-            "direction": {
-              "extraction_status": "extracted",
-              "value": "negative",
-              "value_source": "reported",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "During the encoding phase, decreases in alpha became stronger (i.e., more negative) as a function of age in the left middle frontal gyrus (  p   = .023, corrected) and the left anterior cingulate gyrus (  p   = .033, corrected).",
-                        "start_char": 25488,
-                        "end_char": 25716
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+           "text": "| Left middle frontal gyrus             | α         | −42 | −5  | 54.0  | 74.0 | −.41      |",
+           "start_char": 29267,
+           "end_char": 29359
           }
-        ],
-        "statistic": {
-          "family": {
-            "extraction_status": "extracted",
-            "value": "correlation",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left middle frontal gyrus             | α         | −42 | −5  | 54.0  | 74.0 | −.41      |",
-                      "start_char": 29267,
-                      "end_char": 29359
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "degrees_of_freedom_denominator": {
-            "extraction_status": "extracted",
-            "value": 74.0,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left middle frontal gyrus             | α         | −42 | −5  | 54.0  | 74.0 | −.41      |",
-                      "start_char": 29267,
-                      "end_char": 29359
-                    }
-                  ]
-                }
-              ]
-            }
-          }
+         ]
         }
-      },
-      "details": {
-        "details_type": "MassUnivariateDetails"
-      },
-      "acquisitions": [
-        "acq-meg",
-        "acq-mri"
-      ],
-      "tasks": [
-        "task-sternberg-working-memory"
-      ],
-      "model_estimation": "model-age-regression",
-      "inference_settings": "inference_cluster_based_permutation_testing",
-      "tables": [
-        "tbl1"
-      ],
-      "coordinate_space": {
-        "extraction_status": "extracted",
-        "value": "TAL",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "All coordinates are in Talairach space.",
-                  "start_char": 28586,
-                  "end_char": 28625
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
-    },
-    {
-      "local_id": "analysis-maintenance-age",
-      "name": {
-        "extraction_status": "extracted",
-        "value": "Age correlation with alpha/beta activity during maintenance",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "This age-related change in activity in the left middle frontal gyrus was sustained through the maintenance phase (  p   = .029, corrected), along with stronger decreases in alpha/band responses (i.e., more negative) in the left dlPFC (  p   = .031, corrected).",
-                  "start_char": 25717,
-                  "end_char": 25977
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "definition": {
-        "extraction_status": "extracted",
-        "value": "Whole-brain correlation between age and alpha/beta-band (12-17 Hz) pseudo-t power during the maintenance phase.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "This age-related change in activity in the left middle frontal gyrus was sustained through the maintenance phase (  p   = .029, corrected), along with stronger decreases in alpha/band responses (i.e., more negative) in the left dlPFC (  p   = .031, corrected).",
-                  "start_char": 25717,
-                  "end_char": 25977
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "prespecification": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "interpretations": {
-        "extraction_status": "extracted",
-        "value": [
-          "Alpha/beta decreases during maintenance became stronger with age in the left middle frontal gyrus and the left dlPFC (both r = -.42)."
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "This age-related change in activity in the left middle frontal gyrus was sustained through the maintenance phase (  p   = .029, corrected), along with stronger decreases in alpha/band responses (i.e., more negative) in the left dlPFC (  p   = .031, corrected).",
-                  "start_char": 25717,
-                  "end_char": 25977
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "spatial_scope": {
-        "extraction_status": "extracted",
-        "value": "whole_brain",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Neural activity during the different phases of the WM task (i.e., encoding, maintenance, and retrieval) were imaged using a time-frequency resolved beamformer and whole-brain statistics were performed.",
-                  "start_char": 743,
-                  "end_char": 944
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "measure": "measure_electrophysiological_power_3",
-      "groups": [
+     },
+     "degrees_of_freedom_denominator": {
+      "extraction_status": "extracted",
+      "value": 74.0,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
         {
-          "group": "grp-healthy-adults",
-          "n": {
-            "extraction_status": "extracted",
-            "value": 74,
-            "value_source": "generated",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left middle frontal gyrus             | α/β       | −42 | −1  | 54.0  | 72.0 | −.42      |",
-                      "start_char": 29546,
-                      "end_char": 29638
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      ],
-      "effect": {
-        "cells": [
+         "spans": [
           {
-            "term": "term-age",
-            "direction": {
-              "extraction_status": "extracted",
-              "value": "negative",
-              "value_source": "reported",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "This age-related change in activity in the left middle frontal gyrus was sustained through the maintenance phase (  p   = .029, corrected), along with stronger decreases in alpha/band responses (i.e., more negative) in the left dlPFC (  p   = .031, corrected).",
-                        "start_char": 25717,
-                        "end_char": 25977
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+           "text": "| Left middle frontal gyrus             | α         | −42 | −5  | 54.0  | 74.0 | −.41      |",
+           "start_char": 29267,
+           "end_char": 29359
           }
-        ],
-        "statistic": {
-          "family": {
-            "extraction_status": "extracted",
-            "value": "correlation",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left middle frontal gyrus             | α/β       | −42 | −1  | 54.0  | 72.0 | −.42      |",
-                      "start_char": 29546,
-                      "end_char": 29638
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "degrees_of_freedom_denominator": {
-            "extraction_status": "extracted",
-            "value": 72.0,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left middle frontal gyrus             | α/β       | −42 | −1  | 54.0  | 72.0 | −.42      |",
-                      "start_char": 29546,
-                      "end_char": 29638
-                    }
-                  ]
-                }
-              ]
-            }
-          }
+         ]
         }
-      },
-      "details": {
-        "details_type": "MassUnivariateDetails"
-      },
-      "acquisitions": [
-        "acq-meg",
-        "acq-mri"
-      ],
-      "tasks": [
-        "task-sternberg-working-memory"
-      ],
-      "model_estimation": "model-age-regression",
-      "inference_settings": "inference_cluster_based_permutation_testing",
-      "tables": [
-        "tbl1"
-      ],
-      "coordinate_space": {
-        "extraction_status": "extracted",
-        "value": "TAL",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "All coordinates are in Talairach space.",
-                  "start_char": 28586,
-                  "end_char": 28625
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
-    },
-    {
-      "local_id": "analysis-retrieval-alpha-age",
-      "name": {
-        "extraction_status": "extracted",
-        "value": "Age correlation with alpha activity during retrieval",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "During the retrieval phase, decreases in alpha oscillations also became stronger (i.e., more negative) as a function of age in the left insula (  p   = .009, corrected), left anterior cingulate (  p   = .020, corrected), and left middle temporal gyrus (  p   = .031, corrected).",
-                  "start_char": 25978,
-                  "end_char": 26256
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "definition": {
-        "extraction_status": "extracted",
-        "value": "Whole-brain correlation between age and alpha-band (8-12 Hz) pseudo-t power during the retrieval phase.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "During the retrieval phase, decreases in alpha oscillations also became stronger (i.e., more negative) as a function of age in the left insula (  p   = .009, corrected), left anterior cingulate (  p   = .020, corrected), and left middle temporal gyrus (  p   = .031, corrected).",
-                  "start_char": 25978,
-                  "end_char": 26256
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "prespecification": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "interpretations": {
-        "extraction_status": "extracted",
-        "value": [
-          "Alpha decreases during retrieval became stronger with age in the left insula (r = -.41), left anterior cingulate (r = -.40) and left middle temporal gyrus (r = -.39)."
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "During the retrieval phase, decreases in alpha oscillations also became stronger (i.e., more negative) as a function of age in the left insula (  p   = .009, corrected), left anterior cingulate (  p   = .020, corrected), and left middle temporal gyrus (  p   = .031, corrected).",
-                  "start_char": 25978,
-                  "end_char": 26256
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "spatial_scope": {
-        "extraction_status": "extracted",
-        "value": "whole_brain",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Neural activity during the different phases of the WM task (i.e., encoding, maintenance, and retrieval) were imaged using a time-frequency resolved beamformer and whole-brain statistics were performed.",
-                  "start_char": 743,
-                  "end_char": 944
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "measure": "measure_electrophysiological_power_4",
-      "groups": [
+     }
+    }
+   },
+   "details": {
+    "details_type": "MassUnivariateDetails"
+   },
+   "acquisitions": [
+    "acq-meg",
+    "acq-mri"
+   ],
+   "tasks": [
+    "task-sternberg-working-memory"
+   ],
+   "model_estimation": "model-age-regression",
+   "inference_settings": "inference_cluster_based_permutation_testing",
+   "tables": [
+    "tbl1"
+   ],
+   "coordinate_space": {
+    "extraction_status": "extracted",
+    "value": "TAL",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
         {
-          "group": "grp-healthy-adults",
-          "n": {
-            "extraction_status": "extracted",
-            "value": 74,
-            "value_source": "generated",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left insula                           | α         | −30 | −13 | 10.0  | 72.0 | −.41      |",
-                      "start_char": 29825,
-                      "end_char": 29917
-                    }
-                  ]
-                }
-              ]
-            }
-          }
+         "text": "All coordinates are in Talairach space.",
+         "start_char": 28586,
+         "end_char": 28625
         }
-      ],
-      "effect": {
-        "cells": [
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "local_id": "analysis-maintenance-age",
+   "name": {
+    "extraction_status": "extracted",
+    "value": "Age correlation with alpha/beta activity during maintenance",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "This age-related change in activity in the left middle frontal gyrus was sustained through the maintenance phase (  p   = .029, corrected), along with stronger decreases in alpha/band responses (i.e., more negative) in the left dlPFC (  p   = .031, corrected).",
+         "start_char": 25717,
+         "end_char": 25977
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "definition": {
+    "extraction_status": "extracted",
+    "value": "Whole-brain correlation between age and alpha/beta-band (12-17 Hz) pseudo-t power during the maintenance phase.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "This age-related change in activity in the left middle frontal gyrus was sustained through the maintenance phase (  p   = .029, corrected), along with stronger decreases in alpha/band responses (i.e., more negative) in the left dlPFC (  p   = .031, corrected).",
+         "start_char": 25717,
+         "end_char": 25977
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "prespecification": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "interpretations": {
+    "extraction_status": "extracted",
+    "value": [
+     "Alpha/beta decreases during maintenance became stronger with age in the left middle frontal gyrus and the left dlPFC (both r = -.42)."
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "This age-related change in activity in the left middle frontal gyrus was sustained through the maintenance phase (  p   = .029, corrected), along with stronger decreases in alpha/band responses (i.e., more negative) in the left dlPFC (  p   = .031, corrected).",
+         "start_char": 25717,
+         "end_char": 25977
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_scope": {
+    "extraction_status": "extracted",
+    "value": "whole_brain",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Neural activity during the different phases of the WM task (i.e., encoding, maintenance, and retrieval) were imaged using a time-frequency resolved beamformer and whole-brain statistics were performed.",
+         "start_char": 743,
+         "end_char": 944
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "measure": "measure_electrophysiological_power_3",
+   "groups": [
+    {
+     "group": "grp-healthy-adults",
+     "n": {
+      "extraction_status": "extracted",
+      "value": 74,
+      "value_source": "generated",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
           {
-            "term": "term-age",
-            "direction": {
-              "extraction_status": "extracted",
-              "value": "negative",
-              "value_source": "reported",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "During the retrieval phase, decreases in alpha oscillations also became stronger (i.e., more negative) as a function of age in the left insula (  p   = .009, corrected), left anterior cingulate (  p   = .020, corrected), and left middle temporal gyrus (  p   = .031, corrected).",
-                        "start_char": 25978,
-                        "end_char": 26256
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+           "text": "| Left middle frontal gyrus             | α/β       | −42 | −1  | 54.0  | 72.0 | −.42      |",
+           "start_char": 29546,
+           "end_char": 29638
           }
-        ],
-        "statistic": {
-          "family": {
-            "extraction_status": "extracted",
-            "value": "correlation",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left insula                           | α         | −30 | −13 | 10.0  | 72.0 | −.41      |",
-                      "start_char": 29825,
-                      "end_char": 29917
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "degrees_of_freedom_denominator": {
-            "extraction_status": "extracted",
-            "value": 72.0,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left insula                           | α         | −30 | −13 | 10.0  | 72.0 | −.41      |",
-                      "start_char": 29825,
-                      "end_char": 29917
-                    }
-                  ]
-                }
-              ]
-            }
-          }
+         ]
         }
-      },
-      "details": {
-        "details_type": "MassUnivariateDetails"
-      },
-      "acquisitions": [
-        "acq-meg",
-        "acq-mri"
-      ],
-      "tasks": [
-        "task-sternberg-working-memory"
-      ],
-      "model_estimation": "model-age-regression",
-      "inference_settings": "inference_cluster_based_permutation_testing",
-      "tables": [
-        "tbl1"
-      ],
-      "coordinate_space": {
-        "extraction_status": "extracted",
-        "value": "TAL",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "All coordinates are in Talairach space.",
-                  "start_char": 28586,
-                  "end_char": 28625
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
-    },
-    {
-      "local_id": "analysis-retrieval-beta-age",
-      "name": {
-        "extraction_status": "extracted",
-        "value": "Age correlation with beta activity during retrieval",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Finally, the decreases in beta oscillations (14-19 Hz) during the retrieval phase were found to get stronger (i.e., more negative) with increasing age in the left primary motor cortex",
-                  "start_char": 26257,
-                  "end_char": 26440
-                }
-              ]
-            }
+     }
+    }
+   ],
+   "effect": {
+    "cells": [
+     {
+      "term": "term-age",
+      "direction": {
+       "extraction_status": "extracted",
+       "value": "negative",
+       "value_source": "reported",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "spans": [
+           {
+            "text": "This age-related change in activity in the left middle frontal gyrus was sustained through the maintenance phase (  p   = .029, corrected), along with stronger decreases in alpha/band responses (i.e., more negative) in the left dlPFC (  p   = .031, corrected).",
+            "start_char": 25717,
+            "end_char": 25977
+           }
           ]
-        }
-      },
-      "definition": {
-        "extraction_status": "extracted",
-        "value": "Whole-brain correlation between age and beta-band (14-19 Hz) pseudo-t power during the retrieval phase.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Finally, the decreases in beta oscillations (14-19 Hz) during the retrieval phase were found to get stronger (i.e., more negative) with increasing age in the left primary motor cortex",
-                  "start_char": 26257,
-                  "end_char": 26440
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "prespecification": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "interpretations": {
-        "extraction_status": "extracted",
-        "value": [
-          "Beta decreases during retrieval became stronger with age in the left primary motor cortex (r = -.45), right primary somatosensory cortex (r = -.46), bilateral superior parietal cortices (r = -.45), left dlPFC (r = -.41) and left anterior superior temporal gyrus (r = -.41)."
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Finally, the decreases in beta oscillations (14-19 Hz) during the retrieval phase were found to get stronger (i.e., more negative) with increasing age in the left primary motor cortex",
-                  "start_char": 26257,
-                  "end_char": 26440
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "spatial_scope": {
-        "extraction_status": "extracted",
-        "value": "whole_brain",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Neural activity during the different phases of the WM task (i.e., encoding, maintenance, and retrieval) were imaged using a time-frequency resolved beamformer and whole-brain statistics were performed.",
-                  "start_char": 743,
-                  "end_char": 944
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "measure": "measure_electrophysiological_power_5",
-      "groups": [
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "statistic": {
+     "family": {
+      "extraction_status": "extracted",
+      "value": "correlation",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
         {
-          "group": "grp-healthy-adults",
-          "n": {
-            "extraction_status": "extracted",
-            "value": 73,
-            "value_source": "generated",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left primary motor cortex             | β         | −42 | −13 | 50.0  | 71.0 | −.45      |",
-                      "start_char": 30104,
-                      "end_char": 30196
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      ],
-      "effect": {
-        "cells": [
+         "spans": [
           {
-            "term": "term-age",
-            "direction": {
-              "extraction_status": "extracted",
-              "value": "negative",
-              "value_source": "reported",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "Finally, the decreases in beta oscillations (14-19 Hz) during the retrieval phase were found to get stronger (i.e., more negative) with increasing age in the left primary motor cortex",
-                        "start_char": 26257,
-                        "end_char": 26440
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+           "text": "| Left middle frontal gyrus             | α/β       | −42 | −1  | 54.0  | 72.0 | −.42      |",
+           "start_char": 29546,
+           "end_char": 29638
           }
-        ],
-        "statistic": {
-          "family": {
-            "extraction_status": "extracted",
-            "value": "correlation",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left primary motor cortex             | β         | −42 | −13 | 50.0  | 71.0 | −.45      |",
-                      "start_char": 30104,
-                      "end_char": 30196
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "degrees_of_freedom_denominator": {
-            "extraction_status": "extracted",
-            "value": 71.0,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "| Left primary motor cortex             | β         | −42 | −13 | 50.0  | 71.0 | −.45      |",
-                      "start_char": 30104,
-                      "end_char": 30196
-                    }
-                  ]
-                }
-              ]
-            }
-          }
+         ]
         }
-      },
-      "details": {
-        "details_type": "MassUnivariateDetails"
-      },
-      "acquisitions": [
-        "acq-meg",
-        "acq-mri"
-      ],
-      "tasks": [
-        "task-sternberg-working-memory"
-      ],
-      "model_estimation": "model-age-regression",
-      "inference_settings": "inference_cluster_based_permutation_testing",
-      "tables": [
-        "tbl1"
-      ],
-      "coordinate_space": {
-        "extraction_status": "extracted",
-        "value": "TAL",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "All coordinates are in Talairach space.",
-                  "start_char": 28586,
-                  "end_char": 28625
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
+     },
+     "degrees_of_freedom_denominator": {
+      "extraction_status": "extracted",
+      "value": 72.0,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "| Left middle frontal gyrus             | α/β       | −42 | −1  | 54.0  | 72.0 | −.42      |",
+           "start_char": 29546,
+           "end_char": 29638
+          }
+         ]
+        }
+       ]
+      }
+     }
     }
-  ],
-  "acquisitions": [
+   },
+   "details": {
+    "details_type": "MassUnivariateDetails"
+   },
+   "acquisitions": [
+    "acq-meg",
+    "acq-mri"
+   ],
+   "tasks": [
+    "task-sternberg-working-memory"
+   ],
+   "model_estimation": "model-age-regression",
+   "inference_settings": "inference_cluster_based_permutation_testing",
+   "tables": [
+    "tbl1"
+   ],
+   "coordinate_space": {
+    "extraction_status": "extracted",
+    "value": "TAL",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "All coordinates are in Talairach space.",
+         "start_char": 28586,
+         "end_char": 28625
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "local_id": "analysis-retrieval-alpha-age",
+   "name": {
+    "extraction_status": "extracted",
+    "value": "Age correlation with alpha activity during retrieval",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "During the retrieval phase, decreases in alpha oscillations also became stronger (i.e., more negative) as a function of age in the left insula (  p   = .009, corrected), left anterior cingulate (  p   = .020, corrected), and left middle temporal gyrus (  p   = .031, corrected).",
+         "start_char": 25978,
+         "end_char": 26256
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "definition": {
+    "extraction_status": "extracted",
+    "value": "Whole-brain correlation between age and alpha-band (8-12 Hz) pseudo-t power during the retrieval phase.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "During the retrieval phase, decreases in alpha oscillations also became stronger (i.e., more negative) as a function of age in the left insula (  p   = .009, corrected), left anterior cingulate (  p   = .020, corrected), and left middle temporal gyrus (  p   = .031, corrected).",
+         "start_char": 25978,
+         "end_char": 26256
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "prespecification": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "interpretations": {
+    "extraction_status": "extracted",
+    "value": [
+     "Alpha decreases during retrieval became stronger with age in the left insula (r = -.41), left anterior cingulate (r = -.40) and left middle temporal gyrus (r = -.39)."
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "During the retrieval phase, decreases in alpha oscillations also became stronger (i.e., more negative) as a function of age in the left insula (  p   = .009, corrected), left anterior cingulate (  p   = .020, corrected), and left middle temporal gyrus (  p   = .031, corrected).",
+         "start_char": 25978,
+         "end_char": 26256
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_scope": {
+    "extraction_status": "extracted",
+    "value": "whole_brain",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Neural activity during the different phases of the WM task (i.e., encoding, maintenance, and retrieval) were imaged using a time-frequency resolved beamformer and whole-brain statistics were performed.",
+         "start_char": 743,
+         "end_char": 944
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "measure": "measure_electrophysiological_power_4",
+   "groups": [
     {
-      "local_id": "acq-meg",
-      "acquisition_type": "OtherModality",
-      "modality": {
-        "extraction_status": "extracted",
-        "value": "MEG",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "using magnetoencephalography (MEG)",
-                  "start_char": 663,
-                  "end_char": 697
-                }
-              ]
-            }
+     "group": "grp-healthy-adults",
+     "n": {
+      "extraction_status": "extracted",
+      "value": 74,
+      "value_source": "generated",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "| Left insula                           | α         | −30 | −13 | 10.0  | 72.0 | −.41      |",
+           "start_char": 29825,
+           "end_char": 29917
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "effect": {
+    "cells": [
+     {
+      "term": "term-age",
+      "direction": {
+       "extraction_status": "extracted",
+       "value": "negative",
+       "value_source": "reported",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "spans": [
+           {
+            "text": "During the retrieval phase, decreases in alpha oscillations also became stronger (i.e., more negative) as a function of age in the left insula (  p   = .009, corrected), left anterior cingulate (  p   = .020, corrected), and left middle temporal gyrus (  p   = .031, corrected).",
+            "start_char": 25978,
+            "end_char": 26256
+           }
           ]
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "statistic": {
+     "family": {
+      "extraction_status": "extracted",
+      "value": "correlation",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "| Left insula                           | α         | −30 | −13 | 10.0  | 72.0 | −.41      |",
+           "start_char": 29825,
+           "end_char": 29917
+          }
+         ]
         }
-      },
-      "acquisition_duration_seconds": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
+       ]
+      }
+     },
+     "degrees_of_freedom_denominator": {
+      "extraction_status": "extracted",
+      "value": 72.0,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "| Left insula                           | α         | −30 | −13 | 10.0  | 72.0 | −.41      |",
+           "start_char": 29825,
+           "end_char": 29917
+          }
+         ]
         }
-      },
-      "modality_label": {
-        "extraction_status": "extracted",
-        "value": "magnetoencephalography (MEG)",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "magnetoencephalography (MEG)",
-                  "start_char": 669,
-                  "end_char": 697
-                }
-              ]
-            }
+       ]
+      }
+     }
+    }
+   },
+   "details": {
+    "details_type": "MassUnivariateDetails"
+   },
+   "acquisitions": [
+    "acq-meg",
+    "acq-mri"
+   ],
+   "tasks": [
+    "task-sternberg-working-memory"
+   ],
+   "model_estimation": "model-age-regression",
+   "inference_settings": "inference_cluster_based_permutation_testing",
+   "tables": [
+    "tbl1"
+   ],
+   "coordinate_space": {
+    "extraction_status": "extracted",
+    "value": "TAL",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "All coordinates are in Talairach space.",
+         "start_char": 28586,
+         "end_char": 28625
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "local_id": "analysis-retrieval-beta-age",
+   "name": {
+    "extraction_status": "extracted",
+    "value": "Age correlation with beta activity during retrieval",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Finally, the decreases in beta oscillations (14-19 Hz) during the retrieval phase were found to get stronger (i.e., more negative) with increasing age in the left primary motor cortex",
+         "start_char": 26257,
+         "end_char": 26440
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "definition": {
+    "extraction_status": "extracted",
+    "value": "Whole-brain correlation between age and beta-band (14-19 Hz) pseudo-t power during the retrieval phase.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Finally, the decreases in beta oscillations (14-19 Hz) during the retrieval phase were found to get stronger (i.e., more negative) with increasing age in the left primary motor cortex",
+         "start_char": 26257,
+         "end_char": 26440
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "prespecification": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "interpretations": {
+    "extraction_status": "extracted",
+    "value": [
+     "Beta decreases during retrieval became stronger with age in the left primary motor cortex (r = -.45), right primary somatosensory cortex (r = -.46), bilateral superior parietal cortices (r = -.45), left dlPFC (r = -.41) and left anterior superior temporal gyrus (r = -.41)."
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Finally, the decreases in beta oscillations (14-19 Hz) during the retrieval phase were found to get stronger (i.e., more negative) with increasing age in the left primary motor cortex",
+         "start_char": 26257,
+         "end_char": 26440
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_scope": {
+    "extraction_status": "extracted",
+    "value": "whole_brain",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Neural activity during the different phases of the WM task (i.e., encoding, maintenance, and retrieval) were imaged using a time-frequency resolved beamformer and whole-brain statistics were performed.",
+         "start_char": 743,
+         "end_char": 944
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "measure": "measure_electrophysiological_power_5",
+   "groups": [
+    {
+     "group": "grp-healthy-adults",
+     "n": {
+      "extraction_status": "extracted",
+      "value": 73,
+      "value_source": "generated",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "| Left primary motor cortex             | β         | −42 | −13 | 50.0  | 71.0 | −.45      |",
+           "start_char": 30104,
+           "end_char": 30196
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "effect": {
+    "cells": [
+     {
+      "term": "term-age",
+      "direction": {
+       "extraction_status": "extracted",
+       "value": "negative",
+       "value_source": "reported",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "spans": [
+           {
+            "text": "Finally, the decreases in beta oscillations (14-19 Hz) during the retrieval phase were found to get stronger (i.e., more negative) with increasing age in the left primary motor cortex",
+            "start_char": 26257,
+            "end_char": 26440
+           }
           ]
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "statistic": {
+     "family": {
+      "extraction_status": "extracted",
+      "value": "correlation",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "| Left primary motor cortex             | β         | −42 | −13 | 50.0  | 71.0 | −.45      |",
+           "start_char": 30104,
+           "end_char": 30196
+          }
+         ]
         }
-      },
-      "device": "dev_vectorview"
+       ]
+      }
+     },
+     "degrees_of_freedom_denominator": {
+      "extraction_status": "extracted",
+      "value": 71.0,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "| Left primary motor cortex             | β         | −42 | −13 | 50.0  | 71.0 | −.45      |",
+           "start_char": 30104,
+           "end_char": 30196
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   },
+   "details": {
+    "details_type": "MassUnivariateDetails"
+   },
+   "acquisitions": [
+    "acq-meg",
+    "acq-mri"
+   ],
+   "tasks": [
+    "task-sternberg-working-memory"
+   ],
+   "model_estimation": "model-age-regression",
+   "inference_settings": "inference_cluster_based_permutation_testing",
+   "tables": [
+    "tbl1"
+   ],
+   "coordinate_space": {
+    "extraction_status": "extracted",
+    "value": "TAL",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "All coordinates are in Talairach space.",
+         "start_char": 28586,
+         "end_char": 28625
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "acquisitions": [
+  {
+   "local_id": "acq-meg",
+   "acquisition_type": "OtherModality",
+   "modality": {
+    "extraction_status": "extracted",
+    "value": "MEG",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "using magnetoencephalography (MEG)",
+         "start_char": 663,
+         "end_char": 697
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "acquisition_duration_seconds": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "modality_label": {
+    "extraction_status": "extracted",
+    "value": "magnetoencephalography (MEG)",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "magnetoencephalography (MEG)",
+         "start_char": 669,
+         "end_char": 697
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "device": "dev_vectorview"
+  },
+  {
+   "local_id": "acq-mri",
+   "acquisition_type": "MRI",
+   "modality": {
+    "extraction_status": "extracted",
+    "value": "sMRI",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Structural MRI data",
+         "start_char": 11682,
+         "end_char": 11701
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "magnetic_field_strength_tesla": {
+    "extraction_status": "extracted",
+    "value": 3,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "a Siemens Prisma 3T scanner",
+         "start_char": 11421,
+         "end_char": 11448
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "pulse_sequence_type": {
+    "extraction_status": "extracted",
+    "value": "MP-RAGE",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "An MP-RAGE sequence was utilized",
+         "start_char": 11506,
+         "end_char": 11538
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "repetition_time_seconds": {
+    "extraction_status": "extracted",
+    "value": 2.3,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "TR: 2300 ms",
+         "start_char": 11570,
+         "end_char": 11581
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "echo_time_seconds": {
+    "extraction_status": "extracted",
+    "value": [
+     0.00298
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "TE = 2.98 ms",
+         "start_char": 11583,
+         "end_char": 11595
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "acquisition_voxel_size_mm": {
+    "extraction_status": "extracted",
+    "value": [
+     1,
+     1,
+     1
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "voxel size = 1 × 1 × 1 mm",
+         "start_char": 11655,
+         "end_char": 11680
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "acquisition_duration_seconds": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "device": "dev_prisma"
+  }
+ ],
+ "groups": [
+  {
+   "local_id": "grp-healthy-adults",
+   "name": {
+    "extraction_status": "extracted",
+    "value": "healthy aging adults",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "healthy aging adults",
+         "start_char": 617,
+         "end_char": 637
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "species": {
+    "extraction_status": "extracted",
+    "value": "human",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "description": {
+    "extraction_status": "extracted",
+    "value": "Seventy-eight HIV-negative healthy adults included in the investigation of healthy aging.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "with only the HIV-negative participants included in this investigation of healthy aging.",
+         "start_char": 7609,
+         "end_char": 7697
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "acquired_count": {
+    "extraction_status": "extracted",
+    "value": 78,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Seventy-eight adults",
+         "start_char": 7297,
+         "end_char": 7317
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "excluded_count": {
+    "extraction_status": "extracted",
+    "value": 2,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "two were removed due to poor task performance",
+         "start_char": 18888,
+         "end_char": 18933
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "age_mean": {
+    "extraction_status": "extracted",
+    "value": 45.1,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "a mean age of 45.10 (SD = 12.76) years",
+         "start_char": 7323,
+         "end_char": 7361
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "age_standard_deviation": {
+    "extraction_status": "extracted",
+    "value": 12.76,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "SD = 12.76",
+         "start_char": 7344,
+         "end_char": 7354
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "age_minimum": {
+    "extraction_status": "extracted",
+    "value": 20.2,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "The age range for males was 20.2 to 65.2 years",
+         "start_char": 7405,
+         "end_char": 7451
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "age_maximum": {
+    "extraction_status": "extracted",
+    "value": 65.2,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "The age range for males was 20.2 to 65.2 years",
+         "start_char": 7405,
+         "end_char": 7451
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "age_unit": {
+    "extraction_status": "extracted",
+    "value": "years",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "years",
+         "start_char": 656,
+         "end_char": 661
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "sex_distribution": [
+    {
+     "category": {
+      "extraction_status": "extracted",
+      "value": "male",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "79% were male",
+           "start_char": 7739,
+           "end_char": 7752
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "percentage": {
+      "extraction_status": "extracted",
+      "value": 79,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "79%",
+           "start_char": 7739,
+           "end_char": 7742
+          }
+         ]
+        }
+       ]
+      }
+     }
     },
     {
-      "local_id": "acq-mri",
-      "acquisition_type": "MRI",
-      "modality": {
-        "extraction_status": "extracted",
-        "value": "sMRI",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Structural MRI data",
-                  "start_char": 11682,
-                  "end_char": 11701
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "magnetic_field_strength_tesla": {
-        "extraction_status": "extracted",
-        "value": 3,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "a Siemens Prisma 3T scanner",
-                  "start_char": 11421,
-                  "end_char": 11448
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "pulse_sequence_type": {
-        "extraction_status": "extracted",
-        "value": "MP-RAGE",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "An MP-RAGE sequence was utilized",
-                  "start_char": 11506,
-                  "end_char": 11538
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "repetition_time_seconds": {
-        "extraction_status": "extracted",
-        "value": 2.3,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "TR: 2300 ms",
-                  "start_char": 11570,
-                  "end_char": 11581
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "echo_time_seconds": {
-        "extraction_status": "extracted",
-        "value": [
-          0.00298
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "TE = 2.98 ms",
-                  "start_char": 11583,
-                  "end_char": 11595
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "acquisition_voxel_size_mm": {
-        "extraction_status": "extracted",
-        "value": [
-          1,
-          1,
-          1
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "voxel size = 1 × 1 × 1 mm",
-                  "start_char": 11655,
-                  "end_char": 11680
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "acquisition_duration_seconds": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "device": "dev_prisma"
-    }
-  ],
-  "groups": [
-    {
-      "local_id": "grp-healthy-adults",
-      "name": {
-        "extraction_status": "extracted",
-        "value": "healthy aging adults",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "healthy aging adults",
-                  "start_char": 617,
-                  "end_char": 637
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "species": {
-        "extraction_status": "extracted",
-        "value": "human",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "description": {
-        "extraction_status": "extracted",
-        "value": "Seventy-eight HIV-negative healthy adults included in the investigation of healthy aging.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "with only the HIV-negative participants included in this investigation of healthy aging.",
-                  "start_char": 7609,
-                  "end_char": 7697
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "acquired_count": {
-        "extraction_status": "extracted",
-        "value": 78,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Seventy-eight adults",
-                  "start_char": 7297,
-                  "end_char": 7317
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "excluded_count": {
-        "extraction_status": "extracted",
-        "value": 2,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "two were removed due to poor task performance",
-                  "start_char": 18888,
-                  "end_char": 18933
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "age_mean": {
-        "extraction_status": "extracted",
-        "value": 45.1,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "a mean age of 45.10 (SD = 12.76) years",
-                  "start_char": 7323,
-                  "end_char": 7361
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "age_standard_deviation": {
-        "extraction_status": "extracted",
-        "value": 12.76,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "SD = 12.76",
-                  "start_char": 7344,
-                  "end_char": 7354
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "age_minimum": {
-        "extraction_status": "extracted",
-        "value": 20.2,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "The age range for males was 20.2 to 65.2 years",
-                  "start_char": 7405,
-                  "end_char": 7451
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "age_maximum": {
-        "extraction_status": "extracted",
-        "value": 65.2,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "The age range for males was 20.2 to 65.2 years",
-                  "start_char": 7405,
-                  "end_char": 7451
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "age_unit": {
-        "extraction_status": "extracted",
-        "value": "years",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "years",
-                  "start_char": 656,
-                  "end_char": 661
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "sex_distribution": [
-        {
-          "category": {
-            "extraction_status": "extracted",
-            "value": "male",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "79% were male",
-                      "start_char": 7739,
-                      "end_char": 7752
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "percentage": {
-            "extraction_status": "extracted",
-            "value": 79,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "79%",
-                      "start_char": 7739,
-                      "end_char": 7742
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "category": {
-            "extraction_status": "extracted",
-            "value": "female",
-            "value_source": "reported",
-            "evidence": {
-              "status": "not_found"
-            }
-          },
-          "percentage": {
-            "extraction_status": "extracted",
-            "value": 21,
-            "value_source": "generated",
-            "evidence": {
-              "status": "not_found"
-            }
-          }
-        }
-      ],
-      "handedness_distribution": [
-        {
-          "category": {
-            "extraction_status": "extracted",
-            "value": "right-handed",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "95% were right-handed",
-                      "start_char": 7716,
-                      "end_char": 7737
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "percentage": {
-            "extraction_status": "extracted",
-            "value": 95,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "95%",
-                      "start_char": 7716,
-                      "end_char": 7719
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      ],
-      "race_distribution": [
-        {
-          "category": {
-            "extraction_status": "extracted",
-            "value": "African-American",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "10% were African-American",
-                      "start_char": 7754,
-                      "end_char": 7779
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "percentage": {
-            "extraction_status": "extracted",
-            "value": 10,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "10%",
-                      "start_char": 7754,
-                      "end_char": 7757
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "category": {
-            "extraction_status": "extracted",
-            "value": "Asian",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "6% were Asian",
-                      "start_char": 7781,
-                      "end_char": 7794
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "percentage": {
-            "extraction_status": "extracted",
-            "value": 6,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "6%",
-                      "start_char": 7781,
-                      "end_char": 7783
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "category": {
-            "extraction_status": "extracted",
-            "value": "Caucasian",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "77% were Caucasian",
-                      "start_char": 7796,
-                      "end_char": 7814
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "percentage": {
-            "extraction_status": "extracted",
-            "value": 77,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "77%",
-                      "start_char": 7796,
-                      "end_char": 7799
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "category": {
-            "extraction_status": "extracted",
-            "value": "more than one race",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "4% were more than one race",
-                      "start_char": 7816,
-                      "end_char": 7842
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "percentage": {
-            "extraction_status": "extracted",
-            "value": 4,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "4%",
-                      "start_char": 7816,
-                      "end_char": 7818
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "category": {
-            "extraction_status": "extracted",
-            "value": "preferred not to answer",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "3% preferred not to answer",
-                      "start_char": 7862,
-                      "end_char": 7888
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "percentage": {
-            "extraction_status": "extracted",
-            "value": 3,
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "3%",
-                      "start_char": 7862,
-                      "end_char": 7864
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      ],
-      "is_healthy": {
-        "extraction_status": "extracted",
-        "value": true,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "investigation of healthy aging",
-                  "start_char": 7666,
-                  "end_char": 7696
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "medical_condition": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "inclusion_criteria": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "exclusion_criteria": {
-        "extraction_status": "extracted",
-        "value": [
-          "medical illness affecting CNS function",
-          "HIV/AIDS",
-          "Lupus",
-          "neurological or psychiatric disorder",
-          "cognitive impairment",
-          "history of head trauma",
-          "current substance abuse",
-          "MEG laboratory standard exclusion criteria"
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Exclusionary criteria included any medical illness affecting CNS function (e.g., HIV/AIDS, Lupus, etc.), any neurological or psychiatric disorder, cognitive impairment, history of head trauma, current substance abuse, and the MEG laboratory’s standard exclusionary criteria (e.g., ferromagnetic implants).",
-                  "start_char": 8071,
-                  "end_char": 8376
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "approached_count": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "consented_count": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "enrolled_count": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "recruitment_method": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "recruitment_dates": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "age_median": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "gender_distribution": [],
-      "ethnicity_distribution": [],
-      "diagnostic_system": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "diagnostic_instrument": [],
-      "clinical_characteristics": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "medications": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "medication_status": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "education_summary": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "socioeconomic_status_summary": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
+     "category": {
+      "extraction_status": "extracted",
+      "value": "female",
+      "value_source": "reported",
+      "evidence": {
+       "status": "not_found"
       }
-    }
-  ],
-  "model_estimations": [
-    {
-      "local_id": "model-age-regression",
-      "model_family": {
-        "extraction_status": "extracted",
-        "value": "glm",
-        "value_source": "generated",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "based on the general linear model",
-                  "start_char": 14045,
-                  "end_char": 14078
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "model_type": {
-        "extraction_status": "extracted",
-        "value": "whole-brain linear regression analysis",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Whole-brain linear regression analysis",
-                  "start_char": 26993,
-                  "end_char": 27031
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "hrf_model": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "model_settings": {
-        "extraction_status": "extracted",
-        "value": "Whole-brain voxel-wise regression of source-image pseudo-t values as a function of age, followed by cluster-based permutation testing for multiple-comparisons correction.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Whole-brain linear regression analysis revealed that theta activity increased in the left primary visual cortex and left dlPFC with older age.",
-                  "start_char": 26993,
-                  "end_char": 27135
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "stage": {
-        "extraction_status": "extracted",
-        "value": "group",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "estimator": {
-        "extraction_status": "extracted",
-        "value": "linear regression",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "linear regression analysis",
-                  "start_char": 27005,
-                  "end_char": 27031
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "software": {
-        "extraction_status": "extracted",
-        "value": "custom R and MATLAB scripts; BESA Statistics version 2.1",
-        "value_source": "reported",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "inputs_from": [],
-      "terms": [
-        {
-          "local_id": "term-age",
-          "name": {
-            "extraction_status": "extracted",
-            "value": "age",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "Finally, these source images were subjected to correlation analyses with age to investigate how the oscillatory processes underlying WM encoding, maintenance, and retrieval change as a function of age.",
-                      "start_char": 17044,
-                      "end_char": 17245
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "type": {
-            "extraction_status": "extracted",
-            "value": "continuous",
-            "value_source": "generated",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "our whole-brain data were modeled using age as a continuous variable",
-                      "start_char": 41134,
-                      "end_char": 41202
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "levels": [],
-          "variation_level": {
-            "extraction_status": "extracted",
-            "value": "between_subject",
-            "value_source": "generated",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "age as a continuous variable",
-                      "start_char": 41174,
-                      "end_char": 41202
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "functional_form": {
-            "extraction_status": "extracted",
-            "value": "linear",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "Whole-brain linear regression analysis revealed that theta activity increased in the left primary visual cortex and left dlPFC with older age.",
-                      "start_char": 26993,
-                      "end_char": 27135
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "unit": {
-            "extraction_status": "extracted",
-            "value": "years",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "The age range for males was 20.2 to 65.2 years and that for females was 21.4 to 62.2 years.",
-                      "start_char": 7405,
-                      "end_char": 7496
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "source_definition": {
-            "extraction_status": "extracted",
-            "value": "Participant age used as the predictor of whole-brain oscillatory source-image activity.",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "Finally, these source images were subjected to correlation analyses with age to investigate how the oscillatory processes underlying WM encoding, maintenance, and retrieval change as a function of age.",
-                      "start_char": 17044,
-                      "end_char": 17245
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      ],
-      "spatial_unit": {
-        "extraction_status": "extracted",
-        "value": "voxel",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "preprocessing": [
-        "prep-meg"
-      ]
-    }
-  ],
-  "preprocessings": [
-    {
-      "local_id": "prep-meg",
-      "description": {
-        "extraction_status": "extracted",
-        "value": "MEG data were corrected for head motion and external noise, cleaned of blink and cardiac artifacts, epoched, artifact-rejected, transformed into the time-frequency domain, and baseline normalized before source imaging and statistics.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "software": {
-        "extraction_status": "extracted",
-        "value": [
-          "BESA version 7.0",
-          "BESA Statistics version 2.1"
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "MEG pre-processing and imaging used BESA (version 7.0) software.",
-                  "start_char": 16693,
-                  "end_char": 16757
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "steps": {
-        "extraction_status": "extracted",
-        "value": [
-          "head-motion correction",
-          "signal space separation with temporal extension",
-          "adaptive blink and cardiac artifact correction",
-          "epoching into 7200 ms epochs",
-          "artifact rejection using fixed thresholds and visual inspection",
-          "complex-demodulation time-frequency transformation",
-          "baseline normalization",
-          "LCMV beamforming",
-          "spatial transformation to Talairach space",
-          "spatial resampling"
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "smoothing_fwhm_mm": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
+     },
+     "percentage": {
+      "extraction_status": "extracted",
+      "value": 21,
+      "value_source": "generated",
+      "evidence": {
+       "status": "not_found"
       }
+     }
+    }
+   ],
+   "handedness_distribution": [
+    {
+     "category": {
+      "extraction_status": "extracted",
+      "value": "right-handed",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "95% were right-handed",
+           "start_char": 7716,
+           "end_char": 7737
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "percentage": {
+      "extraction_status": "extracted",
+      "value": 95,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "95%",
+           "start_char": 7716,
+           "end_char": 7719
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "race_distribution": [
+    {
+     "category": {
+      "extraction_status": "extracted",
+      "value": "African-American",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "10% were African-American",
+           "start_char": 7754,
+           "end_char": 7779
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "percentage": {
+      "extraction_status": "extracted",
+      "value": 10,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "10%",
+           "start_char": 7754,
+           "end_char": 7757
+          }
+         ]
+        }
+       ]
+      }
+     }
     },
     {
-      "local_id": "prep-mri",
-      "description": {
-        "extraction_status": "extracted",
-        "value": "Structural T1-weighted MRI data were transformed into Talairach space and aligned parallel to the anterior and posterior commissures for MEG coregistration and source reconstruction.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Structural MRI data were transformed into standardized space (i.e., Talairach space) and aligned parallel to the anterior and posterior commissures.",
-                  "start_char": 11682,
-                  "end_char": 11830
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "software": {
-        "extraction_status": "extracted",
-        "value": [
-          "BESA MRI version 2.0"
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Brain Electrical Source Analysis MRI (BESA MRI, Version 2.0, BESA GmbH, Gräfelfing, Germany).",
-                  "start_char": 11256,
-                  "end_char": 11349
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "steps": {
-        "extraction_status": "extracted",
-        "value": [
-          "coregistration with MEG data",
-          "transformation to Talairach space",
-          "alignment parallel to the anterior and posterior commissures",
-          "spatial resampling"
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "smoothing_fwhm_mm": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      }
-    }
-  ],
-  "tasks": [
-    {
-      "local_id": "task-sternberg-working-memory",
-      "name": {
-        "extraction_status": "extracted",
-        "value": "modified Sternberg working memory paradigm",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Modified Sternberg working memory paradigm.",
-                  "start_char": 9460,
-                  "end_char": 9503
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "description": {
-        "extraction_status": "extracted",
-        "value": "Participants encoded and maintained six consonant letters presented in a 3 × 2 grid, followed by retrieval of a probe consonant and an in/out-of-set judgment.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Participants were required to encode and maintain six letter stimuli. During the retrieval stage, participants were then required to indicate whether the probe letter was or was not present in the initial six letter set.",
-                  "start_char": 9506,
-                  "end_char": 9726
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "conditions": [
+     "category": {
+      "extraction_status": "extracted",
+      "value": "Asian",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
         {
-          "local_id": "cond-encoding",
-          "name": {
-            "extraction_status": "extracted",
-            "value": "encoding",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "encoding phase",
-                      "start_char": 5490,
-                      "end_char": 5504
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "description": {
-            "extraction_status": "extracted",
-            "value": "A six-consonant array was presented for 2.0 seconds for encoding.",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "An array of six consonants then appeared at fixed locations within the grid for 2.0 s (i.e., encoding phase).",
-                      "start_char": 8691,
-                      "end_char": 8800
-                    }
-                  ]
-                }
-              ]
-            }
+         "spans": [
+          {
+           "text": "6% were Asian",
+           "start_char": 7781,
+           "end_char": 7794
           }
-        },
+         ]
+        }
+       ]
+      }
+     },
+     "percentage": {
+      "extraction_status": "extracted",
+      "value": 6,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
         {
-          "local_id": "cond-maintenance",
-          "name": {
-            "extraction_status": "extracted",
-            "value": "maintenance",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "maintenance phase",
-                      "start_char": 1999,
-                      "end_char": 2016
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "description": {
-            "extraction_status": "extracted",
-            "value": "The letters disappeared and the empty grid remained for 3.0 seconds while information was maintained.",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "Following the encoding phase, the letters disappeared and the empty grid remained on the screen for 3.0 s (i.e., maintenance phase).",
-                      "start_char": 8801,
-                      "end_char": 8933
-                    }
-                  ]
-                }
-              ]
-            }
+         "spans": [
+          {
+           "text": "6%",
+           "start_char": 7781,
+           "end_char": 7783
           }
-        },
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "category": {
+      "extraction_status": "extracted",
+      "value": "Caucasian",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
         {
-          "local_id": "cond-retrieval",
-          "name": {
-            "extraction_status": "extracted",
-            "value": "retrieval",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "retrieval phase",
-                      "start_char": 1478,
-                      "end_char": 1493
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "description": {
-            "extraction_status": "extracted",
-            "value": "A single probe consonant was presented for 0.9 seconds and participants judged whether it was in or out of the prior letter array.",
-            "value_source": "reported",
-            "evidence": {
-              "status": "present",
-              "sets": [
-                {
-                  "spans": [
-                    {
-                      "text": "Finally, during the retrieval phase, a single probe consonant then appeared in the grid for 0.9 s, and the participant was instructed to respond via button press with their right index or middle finger as to whether the probe was in or out of the previous array of letters.",
-                      "start_char": 8934,
-                      "end_char": 9207
-                    }
-                  ]
-                }
-              ]
-            }
+         "spans": [
+          {
+           "text": "77% were Caucasian",
+           "start_char": 7796,
+           "end_char": 7814
           }
+         ]
         }
-      ],
-      "design_type": {
-        "extraction_status": "extracted",
-        "value": "event-related",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "acquisitions": [
-        "acq-meg",
-        "acq-mri"
-      ],
-      "presentation_software": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "instructions": {
-        "extraction_status": "extracted",
-        "value": "Respond via button press with the right index or middle finger as to whether the probe was in or out of the previous array of letters.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "the participant was instructed to respond via button press with their right index or middle finger as to whether the probe was in or out of the previous array of letters.",
-                  "start_char": 9037,
-                  "end_char": 9207
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "stimuli": {
-        "extraction_status": "extracted",
-        "value": "Centrally presented fixation cross embedded in a 3 × 2 grid and arrays of six consonant letters, followed by a probe consonant.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Participants were shown a centrally-presented fixation cross embedded in a 3 × 2 grid for 1.3 s ( Figure 1 ). An array of six consonants then appeared at fixed locations within the grid for 2.0 s (i.e., encoding phase).",
-                  "start_char": 8581,
-                  "end_char": 8800
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "response_mode": {
-        "extraction_status": "extracted",
-        "value": [
-          "button_press"
-        ],
-        "value_source": "generated",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "respond via button press",
-                  "start_char": 9071,
-                  "end_char": 9095
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "performance_measures": {
-        "extraction_status": "extracted",
-        "value": [
-          "accuracy",
-          "reaction time",
-          "total correct trials"
-        ],
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Correlation analyses were used to test differences as a function of healthy aging in education, accuracy, reaction time, total correct trials, amplitude cutoffs, and gradient cutoffs.",
-                  "start_char": 17941,
-                  "end_char": 18124
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
-    }
-  ],
-  "tables": [
-    {
-      "local_id": "tbl1",
-      "table_number": {
-        "extraction_status": "extracted",
-        "value": "Table 1",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Table 1",
-                  "start_char": 26913,
-                  "end_char": 26920
-                }
-              ]
-            }
-          ]
+     },
+     "percentage": {
+      "extraction_status": "extracted",
+      "value": 77,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "77%",
+           "start_char": 7796,
+           "end_char": 7799
+          }
+         ]
         }
-      },
-      "caption": {
-        "extraction_status": "extracted",
-        "value": "Coordinates of the peak response in each significant age correlation cluster.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Coordinates of the peak response in each significant age correlation cluster.",
-                  "start_char": 28399,
-                  "end_char": 28476
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "footer": {
-        "extraction_status": "extracted",
-        "value": "All test statistics are significant at p < .001 level and survive cluster-based permutation testing. All coordinates are in Talairach space. Abbreviations: dlPFC: dorsolateral prefrontal cortex; df: degrees of freedom.",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "All test statistics are significant at p < .001 level and survive cluster-based permutation testing. All coordinates are in Talairach space. Abbreviations: dlPFC: dorsolateral prefrontal cortex; df: degrees of freedom.",
-                  "start_char": 30663,
-                  "end_char": 30881
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
-    }
-  ],
-  "measures": [
-    {
-      "local_id": "measure_electrophysiological_power",
-      "family": {
-        "extraction_status": "extracted",
-        "value": "electrophysiology",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "type": {
-        "extraction_status": "extracted",
-        "value": "electrophysiological_power",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "source_label": {
-        "extraction_status": "extracted",
-        "value": "pseudo-t noise-normalized power change from baseline",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Such images are typically referred to as pseudo-t maps, with units (pseudo-t) that reflect noise-normalized power differences (i.e., active vs. passive) per voxel.",
-                  "start_char": 16529,
-                  "end_char": 16692
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "specific_metric": {
-        "extraction_status": "extracted",
-        "value": "theta band power, 3-6 Hz, 0-2000 ms",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "During the encoding phase, theta band (3-6 Hz) activity sharply increased immediately following stimulus presentation (i.e., 0 ms), continued through the encoding phase, and slowly dissipated over the first 800 ms of the maintenance phase (i.e., 3-6 Hz, 0-2800 ms;   p   < .001, corrected).",
-                  "start_char": 19586,
-                  "end_char": 19876
-                }
-              ]
-            }
-          ]
-        }
-      }
+     }
     },
     {
-      "local_id": "measure_electrophysiological_power_2",
-      "family": {
-        "extraction_status": "extracted",
-        "value": "electrophysiology",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
+     "category": {
+      "extraction_status": "extracted",
+      "value": "more than one race",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "4% were more than one race",
+           "start_char": 7816,
+           "end_char": 7842
+          }
+         ]
         }
-      },
-      "type": {
-        "extraction_status": "extracted",
-        "value": "electrophysiological_power",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "source_label": {
-        "extraction_status": "extracted",
-        "value": "pseudo-t noise-normalized power change from baseline",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Such images are typically referred to as pseudo-t maps, with units (pseudo-t) that reflect noise-normalized power differences (i.e., active vs. passive) per voxel.",
-                  "start_char": 16529,
-                  "end_char": 16692
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "specific_metric": {
-        "extraction_status": "extracted",
-        "value": "alpha band power, 9-15 Hz, 200-1800 ms",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Additionally, decreases in alpha band (9-15 Hz) activity began around 200 ms after the onset of the encoding grid and were sustained throughout the encoding phase, terminating near the beginning of the maintenance phase (i.e., 9-15 Hz, 200-1800 ms;   p   < .001, corrected).",
-                  "start_char": 19877,
-                  "end_char": 20151
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
+     },
+     "percentage": {
+      "extraction_status": "extracted",
+      "value": 4,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "4%",
+           "start_char": 7816,
+           "end_char": 7818
+          }
+         ]
+        }
+       ]
+      }
+     }
     },
     {
-      "local_id": "measure_electrophysiological_power_3",
-      "family": {
-        "extraction_status": "extracted",
-        "value": "electrophysiology",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
+     "category": {
+      "extraction_status": "extracted",
+      "value": "preferred not to answer",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "3% preferred not to answer",
+           "start_char": 7862,
+           "end_char": 7888
+          }
+         ]
         }
-      },
-      "type": {
-        "extraction_status": "extracted",
-        "value": "electrophysiological_power",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "source_label": {
-        "extraction_status": "extracted",
-        "value": "pseudo-t noise-normalized power change from baseline",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Such images are typically referred to as pseudo-t maps, with units (pseudo-t) that reflect noise-normalized power differences (i.e., active vs. passive) per voxel.",
-                  "start_char": 16529,
-                  "end_char": 16692
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "specific_metric": {
-        "extraction_status": "extracted",
-        "value": "alpha/beta band power, 12-17 Hz, 2500-2900 ms",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "This age-related change in activity in the left middle frontal gyrus was sustained through the maintenance phase (  p   = .029, corrected), along with stronger decreases in alpha/band responses (i.e., more negative) in the left dlPFC (  p   = .031, corrected).",
-                  "start_char": 25717,
-                  "end_char": 25977
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
-    },
-    {
-      "local_id": "measure_electrophysiological_power_4",
-      "family": {
-        "extraction_status": "extracted",
-        "value": "electrophysiology",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
+     },
+     "percentage": {
+      "extraction_status": "extracted",
+      "value": 3,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "3%",
+           "start_char": 7862,
+           "end_char": 7864
+          }
+         ]
         }
-      },
-      "type": {
-        "extraction_status": "extracted",
-        "value": "electrophysiological_power",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "source_label": {
-        "extraction_status": "extracted",
-        "value": "pseudo-t noise-normalized power change from baseline",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Such images are typically referred to as pseudo-t maps, with units (pseudo-t) that reflect noise-normalized power differences (i.e., active vs. passive) per voxel.",
-                  "start_char": 16529,
-                  "end_char": 16692
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "specific_metric": {
-        "extraction_status": "extracted",
-        "value": "alpha band power, 8-12 Hz, 5350-5750 ms",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Finally, overlapping decreases in alpha (8-12 Hz; 5350-5750 ms) and beta (14-19 Hz; 5250-5650 ms) band activity were observed during the retrieval phase (both ps < .001, corrected).",
-                  "start_char": 20479,
-                  "end_char": 20660
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
-    },
-    {
-      "local_id": "measure_electrophysiological_power_5",
-      "family": {
-        "extraction_status": "extracted",
-        "value": "electrophysiology",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "type": {
-        "extraction_status": "extracted",
-        "value": "electrophysiological_power",
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "source_label": {
-        "extraction_status": "extracted",
-        "value": "pseudo-t noise-normalized power change from baseline",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Such images are typically referred to as pseudo-t maps, with units (pseudo-t) that reflect noise-normalized power differences (i.e., active vs. passive) per voxel.",
-                  "start_char": 16529,
-                  "end_char": 16692
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "specific_metric": {
-        "extraction_status": "extracted",
-        "value": "beta band power, 14-19 Hz, 5250-5650 ms",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Finally, overlapping decreases in alpha (8-12 Hz; 5350-5750 ms) and beta (14-19 Hz; 5250-5650 ms) band activity were observed during the retrieval phase (both ps < .001, corrected).",
-                  "start_char": 20479,
-                  "end_char": 20660
-                }
-              ]
-            }
-          ]
-        }
-      }
+     }
     }
-  ],
-  "inference_settings": [
-    {
-      "local_id": "inference_cluster_based_permutation_testing",
-      "inference_level": {
-        "extraction_status": "extracted",
-        "value": "cluster",
-        "value_source": "generated",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
-                  "start_char": 17539,
-                  "end_char": 17822
-                }
-              ]
-            }
-          ]
+   ],
+   "is_healthy": {
+    "extraction_status": "extracted",
+    "value": true,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "investigation of healthy aging",
+         "start_char": 7666,
+         "end_char": 7696
         }
-      },
-      "voxelwise_threshold_value": {
-        "extraction_status": "extracted",
-        "value": 0.001,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
-                  "start_char": 17539,
-                  "end_char": 17822
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "voxelwise_threshold_type": {
-        "extraction_status": "extracted",
-        "value": "p",
-        "value_source": "generated",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
-                  "start_char": 17539,
-                  "end_char": 17822
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "clusterwise_threshold_value": {
-        "extraction_status": "extracted",
-        "value": 0.05,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
-                  "start_char": 17539,
-                  "end_char": 17822
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "multiple_comparison_method": {
-        "extraction_status": "extracted",
-        "value": "cluster-based permutation testing",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
-                  "start_char": 17539,
-                  "end_char": 17822
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "correction_scope": {
-        "extraction_status": "extracted",
-        "value": "whole brain",
-        "value_source": "generated",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
-                  "start_char": 17539,
-                  "end_char": 17822
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "tfce_used": {
-        "extraction_status": "extracted",
-        "value": false,
-        "value_source": "generated",
-        "evidence": {
-          "status": "not_found"
-        }
-      },
-      "permutation_count": {
-        "extraction_status": "extracted",
-        "value": 10000,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "the significance level of the cluster(s) from stage one was tested directly using this permuted distribution, which was the result of 10,000 permutations",
-                  "start_char": 14906,
-                  "end_char": 15059
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "alpha_level": {
-        "extraction_status": "extracted",
-        "value": 0.05,
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
-                  "start_char": 17539,
-                  "end_char": 17822
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
+     ]
     }
-  ],
-  "devices": [
-    {
-      "local_id": "dev_vectorview",
-      "manufacturer": {
-        "extraction_status": "extracted",
-        "value": "MEGIN",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "using a MEGIN Vectorview MEG system",
-                  "start_char": 9959,
-                  "end_char": 9994
-                }
-              ]
-            }
-          ]
+   },
+   "medical_condition": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "inclusion_criteria": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "exclusion_criteria": {
+    "extraction_status": "extracted",
+    "value": [
+     "medical illness affecting CNS function",
+     "HIV/AIDS",
+     "Lupus",
+     "neurological or psychiatric disorder",
+     "cognitive impairment",
+     "history of head trauma",
+     "current substance abuse",
+     "MEG laboratory standard exclusion criteria"
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Exclusionary criteria included any medical illness affecting CNS function (e.g., HIV/AIDS, Lupus, etc.), any neurological or psychiatric disorder, cognitive impairment, history of head trauma, current substance abuse, and the MEG laboratory’s standard exclusionary criteria (e.g., ferromagnetic implants).",
+         "start_char": 8071,
+         "end_char": 8376
         }
-      },
-      "model": {
-        "extraction_status": "extracted",
-        "value": "Vectorview",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "MEGIN Vectorview MEG system",
-                  "start_char": 9967,
-                  "end_char": 9994
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
+     ]
+    }
+   },
+   "approached_count": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "consented_count": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "enrolled_count": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "recruitment_method": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "recruitment_dates": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "age_median": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "gender_distribution": [],
+   "ethnicity_distribution": [],
+   "diagnostic_system": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "diagnostic_instrument": [],
+   "clinical_characteristics": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "medications": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "medication_status": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "education_summary": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "socioeconomic_status_summary": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   }
+  }
+ ],
+ "model_estimations": [
+  {
+   "local_id": "model-age-regression",
+   "model_family": {
+    "extraction_status": "extracted",
+    "value": "glm",
+    "value_source": "generated",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "based on the general linear model",
+         "start_char": 14045,
+         "end_char": 14078
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "model_type": {
+    "extraction_status": "extracted",
+    "value": "whole-brain linear regression analysis",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Whole-brain linear regression analysis",
+         "start_char": 26993,
+         "end_char": 27031
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "hrf_model": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "model_settings": {
+    "extraction_status": "extracted",
+    "value": "Whole-brain voxel-wise regression of source-image pseudo-t values as a function of age, followed by cluster-based permutation testing for multiple-comparisons correction.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Whole-brain linear regression analysis revealed that theta activity increased in the left primary visual cortex and left dlPFC with older age.",
+         "start_char": 26993,
+         "end_char": 27135
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "stage": {
+    "extraction_status": "extracted",
+    "value": "group",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "estimator": {
+    "extraction_status": "extracted",
+    "value": "linear regression",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "linear regression analysis",
+         "start_char": 27005,
+         "end_char": 27031
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "software": {
+    "extraction_status": "extracted",
+    "value": "custom R and MATLAB scripts; BESA Statistics version 2.1",
+    "value_source": "reported",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "inputs_from": [],
+   "terms": [
+    {
+     "local_id": "term-age",
+     "name": {
+      "extraction_status": "extracted",
+      "value": "age",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "Finally, these source images were subjected to correlation analyses with age to investigate how the oscillatory processes underlying WM encoding, maintenance, and retrieval change as a function of age.",
+           "start_char": 17044,
+           "end_char": 17245
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "type": {
+      "extraction_status": "extracted",
+      "value": "continuous",
+      "value_source": "generated",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "our whole-brain data were modeled using age as a continuous variable",
+           "start_char": 41134,
+           "end_char": 41202
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "levels": [],
+     "variation_level": {
+      "extraction_status": "extracted",
+      "value": "between_subject",
+      "value_source": "generated",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "age as a continuous variable",
+           "start_char": 41174,
+           "end_char": 41202
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "functional_form": {
+      "extraction_status": "extracted",
+      "value": "linear",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "Whole-brain linear regression analysis revealed that theta activity increased in the left primary visual cortex and left dlPFC with older age.",
+           "start_char": 26993,
+           "end_char": 27135
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "unit": {
+      "extraction_status": "extracted",
+      "value": "years",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "The age range for males was 20.2 to 65.2 years and that for females was 21.4 to 62.2 years.",
+           "start_char": 7405,
+           "end_char": 7496
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "source_definition": {
+      "extraction_status": "extracted",
+      "value": "Participant age used as the predictor of whole-brain oscillatory source-image activity.",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "Finally, these source images were subjected to correlation analyses with age to investigate how the oscillatory processes underlying WM encoding, maintenance, and retrieval change as a function of age.",
+           "start_char": 17044,
+           "end_char": 17245
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "spatial_unit": {
+    "extraction_status": "extracted",
+    "value": "voxel",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "preprocessing": [
+    "prep-meg"
+   ]
+  }
+ ],
+ "preprocessings": [
+  {
+   "local_id": "prep-meg",
+   "description": {
+    "extraction_status": "extracted",
+    "value": "MEG data were corrected for head motion and external noise, cleaned of blink and cardiac artifacts, epoched, artifact-rejected, transformed into the time-frequency domain, and baseline normalized before source imaging and statistics.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "software": {
+    "extraction_status": "extracted",
+    "value": [
+     "BESA version 7.0",
+     "BESA Statistics version 2.1"
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "MEG pre-processing and imaging used BESA (version 7.0) software.",
+         "start_char": 16693,
+         "end_char": 16757
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "steps": {
+    "extraction_status": "extracted",
+    "value": [
+     "head-motion correction",
+     "signal space separation with temporal extension",
+     "adaptive blink and cardiac artifact correction",
+     "epoching into 7200 ms epochs",
+     "artifact rejection using fixed thresholds and visual inspection",
+     "complex-demodulation time-frequency transformation",
+     "baseline normalization",
+     "LCMV beamforming",
+     "spatial transformation to Talairach space",
+     "spatial resampling"
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "smoothing_fwhm_mm": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   }
+  },
+  {
+   "local_id": "prep-mri",
+   "description": {
+    "extraction_status": "extracted",
+    "value": "Structural T1-weighted MRI data were transformed into Talairach space and aligned parallel to the anterior and posterior commissures for MEG coregistration and source reconstruction.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Structural MRI data were transformed into standardized space (i.e., Talairach space) and aligned parallel to the anterior and posterior commissures.",
+         "start_char": 11682,
+         "end_char": 11830
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "software": {
+    "extraction_status": "extracted",
+    "value": [
+     "BESA MRI version 2.0"
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Brain Electrical Source Analysis MRI (BESA MRI, Version 2.0, BESA GmbH, Gräfelfing, Germany).",
+         "start_char": 11256,
+         "end_char": 11349
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "steps": {
+    "extraction_status": "extracted",
+    "value": [
+     "coregistration with MEG data",
+     "transformation to Talairach space",
+     "alignment parallel to the anterior and posterior commissures",
+     "spatial resampling"
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "smoothing_fwhm_mm": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   }
+  }
+ ],
+ "tasks": [
+  {
+   "local_id": "task-sternberg-working-memory",
+   "name": {
+    "extraction_status": "extracted",
+    "value": "modified Sternberg working memory paradigm",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Modified Sternberg working memory paradigm.",
+         "start_char": 9460,
+         "end_char": 9503
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "description": {
+    "extraction_status": "extracted",
+    "value": "Participants encoded and maintained six consonant letters presented in a 3 × 2 grid, followed by retrieval of a probe consonant and an in/out-of-set judgment.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Participants were required to encode and maintain six letter stimuli. During the retrieval stage, participants were then required to indicate whether the probe letter was or was not present in the initial six letter set.",
+         "start_char": 9506,
+         "end_char": 9726
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "conditions": [
+    {
+     "local_id": "cond-encoding",
+     "name": {
+      "extraction_status": "extracted",
+      "value": "encoding",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "encoding phase",
+           "start_char": 5490,
+           "end_char": 5504
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "description": {
+      "extraction_status": "extracted",
+      "value": "A six-consonant array was presented for 2.0 seconds for encoding.",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "An array of six consonants then appeared at fixed locations within the grid for 2.0 s (i.e., encoding phase).",
+           "start_char": 8691,
+           "end_char": 8800
+          }
+         ]
+        }
+       ]
+      }
+     }
     },
     {
-      "local_id": "dev_prisma",
-      "manufacturer": {
-        "extraction_status": "extracted",
-        "value": "Siemens Medical Solutions",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Siemens Medical Solutions",
-                  "start_char": 11450,
-                  "end_char": 11475
-                }
-              ]
-            }
-          ]
+     "local_id": "cond-maintenance",
+     "name": {
+      "extraction_status": "extracted",
+      "value": "maintenance",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "maintenance phase",
+           "start_char": 1999,
+           "end_char": 2016
+          }
+         ]
         }
-      },
-      "model": {
-        "extraction_status": "extracted",
-        "value": "Prisma",
-        "value_source": "reported",
-        "evidence": {
-          "status": "present",
-          "sets": [
-            {
-              "spans": [
-                {
-                  "text": "Siemens Prisma 3T scanner",
-                  "start_char": 11423,
-                  "end_char": 11448
-                }
-              ]
-            }
-          ]
-        }
+       ]
       }
+     },
+     "description": {
+      "extraction_status": "extracted",
+      "value": "The letters disappeared and the empty grid remained for 3.0 seconds while information was maintained.",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "Following the encoding phase, the letters disappeared and the empty grid remained on the screen for 3.0 s (i.e., maintenance phase).",
+           "start_char": 8801,
+           "end_char": 8933
+          }
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "local_id": "cond-retrieval",
+     "name": {
+      "extraction_status": "extracted",
+      "value": "retrieval",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "retrieval phase",
+           "start_char": 1478,
+           "end_char": 1493
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "description": {
+      "extraction_status": "extracted",
+      "value": "A single probe consonant was presented for 0.9 seconds and participants judged whether it was in or out of the prior letter array.",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "spans": [
+          {
+           "text": "Finally, during the retrieval phase, a single probe consonant then appeared in the grid for 0.9 s, and the participant was instructed to respond via button press with their right index or middle finger as to whether the probe was in or out of the previous array of letters.",
+           "start_char": 8934,
+           "end_char": 9207
+          }
+         ]
+        }
+       ]
+      }
+     }
     }
-  ]
+   ],
+   "design_type": {
+    "extraction_status": "extracted",
+    "value": "event-related",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "acquisitions": [
+    "acq-meg",
+    "acq-mri"
+   ],
+   "presentation_software": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "instructions": {
+    "extraction_status": "extracted",
+    "value": "Respond via button press with the right index or middle finger as to whether the probe was in or out of the previous array of letters.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "the participant was instructed to respond via button press with their right index or middle finger as to whether the probe was in or out of the previous array of letters.",
+         "start_char": 9037,
+         "end_char": 9207
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "stimuli": {
+    "extraction_status": "extracted",
+    "value": "Centrally presented fixation cross embedded in a 3 × 2 grid and arrays of six consonant letters, followed by a probe consonant.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Participants were shown a centrally-presented fixation cross embedded in a 3 × 2 grid for 1.3 s ( Figure 1 ). An array of six consonants then appeared at fixed locations within the grid for 2.0 s (i.e., encoding phase).",
+         "start_char": 8581,
+         "end_char": 8800
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "response_mode": {
+    "extraction_status": "extracted",
+    "value": [
+     "button_press"
+    ],
+    "value_source": "generated",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "respond via button press",
+         "start_char": 9071,
+         "end_char": 9095
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "performance_measures": {
+    "extraction_status": "extracted",
+    "value": [
+     "accuracy",
+     "reaction time",
+     "total correct trials"
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Correlation analyses were used to test differences as a function of healthy aging in education, accuracy, reaction time, total correct trials, amplitude cutoffs, and gradient cutoffs.",
+         "start_char": 17941,
+         "end_char": 18124
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "tables": [
+  {
+   "local_id": "tbl1",
+   "table_number": {
+    "extraction_status": "extracted",
+    "value": "Table 1",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Table 1",
+         "start_char": 26913,
+         "end_char": 26920
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "caption": {
+    "extraction_status": "extracted",
+    "value": "Coordinates of the peak response in each significant age correlation cluster.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Coordinates of the peak response in each significant age correlation cluster.",
+         "start_char": 28399,
+         "end_char": 28476
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "footer": {
+    "extraction_status": "extracted",
+    "value": "All test statistics are significant at p < .001 level and survive cluster-based permutation testing. All coordinates are in Talairach space. Abbreviations: dlPFC: dorsolateral prefrontal cortex; df: degrees of freedom.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "All test statistics are significant at p < .001 level and survive cluster-based permutation testing. All coordinates are in Talairach space. Abbreviations: dlPFC: dorsolateral prefrontal cortex; df: degrees of freedom.",
+         "start_char": 30663,
+         "end_char": 30881
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "measures": [
+  {
+   "local_id": "measure_electrophysiological_power",
+   "family": {
+    "extraction_status": "extracted",
+    "value": "electrophysiology",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "type": {
+    "extraction_status": "extracted",
+    "value": "electrophysiological_power",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "source_label": {
+    "extraction_status": "extracted",
+    "value": "pseudo-t noise-normalized power change from baseline",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Such images are typically referred to as pseudo-t maps, with units (pseudo-t) that reflect noise-normalized power differences (i.e., active vs. passive) per voxel.",
+         "start_char": 16529,
+         "end_char": 16692
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "specific_metric": {
+    "extraction_status": "extracted",
+    "value": "theta band power, 3-6 Hz, 0-2000 ms",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "During the encoding phase, theta band (3-6 Hz) activity sharply increased immediately following stimulus presentation (i.e., 0 ms), continued through the encoding phase, and slowly dissipated over the first 800 ms of the maintenance phase (i.e., 3-6 Hz, 0-2800 ms;   p   < .001, corrected).",
+         "start_char": 19586,
+         "end_char": 19876
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "local_id": "measure_electrophysiological_power_2",
+   "family": {
+    "extraction_status": "extracted",
+    "value": "electrophysiology",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "type": {
+    "extraction_status": "extracted",
+    "value": "electrophysiological_power",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "source_label": {
+    "extraction_status": "extracted",
+    "value": "pseudo-t noise-normalized power change from baseline",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Such images are typically referred to as pseudo-t maps, with units (pseudo-t) that reflect noise-normalized power differences (i.e., active vs. passive) per voxel.",
+         "start_char": 16529,
+         "end_char": 16692
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "specific_metric": {
+    "extraction_status": "extracted",
+    "value": "alpha band power, 9-15 Hz, 200-1800 ms",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Additionally, decreases in alpha band (9-15 Hz) activity began around 200 ms after the onset of the encoding grid and were sustained throughout the encoding phase, terminating near the beginning of the maintenance phase (i.e., 9-15 Hz, 200-1800 ms;   p   < .001, corrected).",
+         "start_char": 19877,
+         "end_char": 20151
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "local_id": "measure_electrophysiological_power_3",
+   "family": {
+    "extraction_status": "extracted",
+    "value": "electrophysiology",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "type": {
+    "extraction_status": "extracted",
+    "value": "electrophysiological_power",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "source_label": {
+    "extraction_status": "extracted",
+    "value": "pseudo-t noise-normalized power change from baseline",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Such images are typically referred to as pseudo-t maps, with units (pseudo-t) that reflect noise-normalized power differences (i.e., active vs. passive) per voxel.",
+         "start_char": 16529,
+         "end_char": 16692
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "specific_metric": {
+    "extraction_status": "extracted",
+    "value": "alpha/beta band power, 12-17 Hz, 2500-2900 ms",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "This age-related change in activity in the left middle frontal gyrus was sustained through the maintenance phase (  p   = .029, corrected), along with stronger decreases in alpha/band responses (i.e., more negative) in the left dlPFC (  p   = .031, corrected).",
+         "start_char": 25717,
+         "end_char": 25977
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "local_id": "measure_electrophysiological_power_4",
+   "family": {
+    "extraction_status": "extracted",
+    "value": "electrophysiology",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "type": {
+    "extraction_status": "extracted",
+    "value": "electrophysiological_power",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "source_label": {
+    "extraction_status": "extracted",
+    "value": "pseudo-t noise-normalized power change from baseline",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Such images are typically referred to as pseudo-t maps, with units (pseudo-t) that reflect noise-normalized power differences (i.e., active vs. passive) per voxel.",
+         "start_char": 16529,
+         "end_char": 16692
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "specific_metric": {
+    "extraction_status": "extracted",
+    "value": "alpha band power, 8-12 Hz, 5350-5750 ms",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Finally, overlapping decreases in alpha (8-12 Hz; 5350-5750 ms) and beta (14-19 Hz; 5250-5650 ms) band activity were observed during the retrieval phase (both ps < .001, corrected).",
+         "start_char": 20479,
+         "end_char": 20660
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "local_id": "measure_electrophysiological_power_5",
+   "family": {
+    "extraction_status": "extracted",
+    "value": "electrophysiology",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "type": {
+    "extraction_status": "extracted",
+    "value": "electrophysiological_power",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "source_label": {
+    "extraction_status": "extracted",
+    "value": "pseudo-t noise-normalized power change from baseline",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Such images are typically referred to as pseudo-t maps, with units (pseudo-t) that reflect noise-normalized power differences (i.e., active vs. passive) per voxel.",
+         "start_char": 16529,
+         "end_char": 16692
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "specific_metric": {
+    "extraction_status": "extracted",
+    "value": "beta band power, 14-19 Hz, 5250-5650 ms",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Finally, overlapping decreases in alpha (8-12 Hz; 5350-5750 ms) and beta (14-19 Hz; 5250-5650 ms) band activity were observed during the retrieval phase (both ps < .001, corrected).",
+         "start_char": 20479,
+         "end_char": 20660
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "inference_settings": [
+  {
+   "local_id": "inference_cluster_based_permutation_testing",
+   "inference_level": {
+    "extraction_status": "extracted",
+    "value": "cluster",
+    "value_source": "generated",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
+         "start_char": 17539,
+         "end_char": 17822
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "height_threshold_value": {
+    "extraction_status": "extracted",
+    "value": 0.001,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
+         "start_char": 17539,
+         "end_char": 17822
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "height_threshold_type": {
+    "extraction_status": "extracted",
+    "value": "p",
+    "value_source": "generated",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
+         "start_char": 17539,
+         "end_char": 17822
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "clusterwise_threshold_value": {
+    "extraction_status": "extracted",
+    "value": 0.05,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
+         "start_char": 17539,
+         "end_char": 17822
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "multiple_comparison_method": {
+    "extraction_status": "extracted",
+    "value": "cluster-based permutation testing",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
+         "start_char": 17539,
+         "end_char": 17822
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "correction_scope": {
+    "extraction_status": "extracted",
+    "value": "whole brain",
+    "value_source": "generated",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
+         "start_char": 17539,
+         "end_char": 17822
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "tfce_used": {
+    "extraction_status": "extracted",
+    "value": false,
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "permutation_count": {
+    "extraction_status": "extracted",
+    "value": 10000,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "the significance level of the cluster(s) from stage one was tested directly using this permuted distribution, which was the result of 10,000 permutations",
+         "start_char": 14906,
+         "end_char": 15059
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "alpha_level": {
+    "extraction_status": "extracted",
+    "value": 0.05,
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "with the exception that the input data was voxel-level neural responses and we used a different statistical threshold following permutation testing (i.e., stage one threshold of   p   < .001; threshold of   p   < .05 following permutation testing for multiple comparisons correction)",
+         "start_char": 17539,
+         "end_char": 17822
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "devices": [
+  {
+   "local_id": "dev_vectorview",
+   "manufacturer": {
+    "extraction_status": "extracted",
+    "value": "MEGIN",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "using a MEGIN Vectorview MEG system",
+         "start_char": 9959,
+         "end_char": 9994
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "model": {
+    "extraction_status": "extracted",
+    "value": "Vectorview",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "MEGIN Vectorview MEG system",
+         "start_char": 9967,
+         "end_char": 9994
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "local_id": "dev_prisma",
+   "manufacturer": {
+    "extraction_status": "extracted",
+    "value": "Siemens Medical Solutions",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Siemens Medical Solutions",
+         "start_char": 11450,
+         "end_char": 11475
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "model": {
+    "extraction_status": "extracted",
+    "value": "Prisma",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "spans": [
+        {
+         "text": "Siemens Prisma 3T scanner",
+         "start_char": 11423,
+         "end_char": 11448
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
+ ]
 }

@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # k=3 replicates of the recommended configuration over the reviewer-gold papers.
 #
-# Each replicate gets its own payload tree AND its own record directory. Sharing the record
-# directory silently collapses the replicates onto each other: run_extraction writes built
-# records to --examples, so three replicates pointed at one directory leave one set of
-# records on disk and two replicates unscoreable.
+# Give each replicate its own payload tree and record directory. `run_extraction` writes
+# built records to `--examples`; sharing that directory would leave one set of records and
+# make two replicates impossible to score.
 #
-# VERSION is the prompt revision under test, so a re-run never overwrites the arm it is
-# being compared against.
+# VERSION identifies the prompt revision under test and prevents reruns from overwriting
+# the comparison arm.
 set -u
 cd "$(dirname "$0")/.."
 PY=${PY:-python3}

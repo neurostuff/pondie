@@ -1,6 +1,6 @@
 # Searching the extraction workflow space
 
-`compare_extractions.py` gives a per-record score. This file is the design for using it to
+`pondie.benchmark.scoring` gives a per-record score. This file is the design for using it to
 choose a pipeline shape: what the candidate shapes are, which variables actually distinguish
 them, how many runs it takes to tell them apart, and — first — what is currently wrong with
 the measurement substrate, because that bounds everything else.
@@ -9,8 +9,8 @@ Metric definitions: [extraction-comparison-metrics.md](extraction-comparison-met
 Text preprocessing on this same substrate, and the evidence that §5.8's numbers no longer
 reproduce:
 [text-preprocessing-experiments.md](text-preprocessing-experiments.md).
-The pipeline being varied: `study-schema/review/run_extraction.py`, and
-`study-schema/review/baseline-run.md` for how its present shape was arrived at.
+The pipeline being varied: `pondie extract`, and
+[baseline-run.md](baseline-run.md) for how its present shape was arrived at.
 
 ---
 
@@ -52,7 +52,7 @@ nothing here measures what the extraction *missed*" — with a number on it.
 1. **n = 1 paper, 12 direction cells.** No factorial design is estimable. A screening matrix
    over five factors would produce eight numbers with no error bars, and reading a rank order
    off them would be indistinguishable from reading tea leaves.
-2. **So the first measurement is not a comparison at all: it is the run-to-run spread of one
+2. **The first measurement is not a comparison: it is the run-to-run spread of one
    configuration.** Until the same-config standard deviation is known, no between-config
    delta on one paper can be interpreted. This is what `sweep_extractions.py --replicates`
    exists for, and it is the only sweep worth running today.
@@ -90,7 +90,7 @@ analyses pass with nothing to point at") — and the failure happened anyway. Th
 that this is a *workflow ordering* problem and not a prompt-wording problem, which is
 precisely what makes it worth an experiment rather than an edit.
 
-So the leading hypothesis is **H1: demand-driven ordering beats supply-driven ordering.**
+The leading hypothesis is **H1: demand-driven ordering beats supply-driven ordering.**
 Extract analyses first; let each analysis name the entities it needs; resolve those into
 records afterwards. Nothing gets created that no analysis asked for, and nothing an analysis
 asked for is missing.
@@ -228,7 +228,7 @@ spending selectively — which is the actual question.
 
 ### Not an axis: the evidence pass
 
-Stage 4 (`add_evidence.py`) adds 4–7 calls per paper and `compare_extractions.py` does not
+Stage 4 (`evidence/quote.py`) adds 4–7 calls per paper and `pondie.benchmark.scoring` does not
 score evidence spans at all. It is switched **off** for every sweep run. That is a ~70%
 saving on call count for zero metric effect, and it should not be confused with a finding.
 
@@ -351,8 +351,8 @@ cost 3.6× the wall clock (142s vs 38s per paper), and *lowered* field accuracy 
 it did do is cut the spread: sd falls from 13.6 to 7.1 on composite, 19.5 to 3.2 on entities,
 24.9 to 5.9 on relationships.
 
-So effort is not a lever on correctness here, and `baseline-run.md`'s "low reasoning effort
-held up" survives contact with a metric. But it is a lever on *reproducibility*, and a pipeline
+Effort does not affect correctness here, confirming `baseline-run.md`'s claim that "low
+reasoning effort held up." It does affect *reproducibility*, and a pipeline
 whose entity F1 ranges over 42 points run to run has a reproducibility problem worth paying
 for. If the plausibility gate in §5.2 lands, it should be re-tested — the gate and high effort
 may be two fixes for the same failure, in which case the cheap one wins.
@@ -388,12 +388,12 @@ and C3 were aimed at.
 
 ### 5.5 The direction failure is upstream of the cells: the model itself is wrong
 
-The targeted cell re-ask (C3, `review/recheck_cells.py`) works. Handed the baseline's
+The targeted cell re-ask (C3, ``recheck_cells` (removed; see what-was-removed.md)`) works. Handed the baseline's
 one-cell contrasts, it rewrote all three into gold's shape — `held` on the condition, the
 sign on the slope — and **every cell it could ground was correct**: direction accuracy
 100%, kappa 1.0, no sign flips.
 
-Its F1 is nonetheless 42.9%, and the reason is not in the cells:
+Its F1 is nonetheless 42.9%, but the cells do not explain the result:
 
 | | candidate | gold |
 |---|---|---|
@@ -405,7 +405,7 @@ term does not align, because it is *not the same term* — the entities pass mod
 treatment condition as a continuous covariate rather than as a factor whose levels the arms
 carry. A `held` cell on a continuous term is not even coherent: there is no level to hold.
 
-So the cell re-ask was asked to repair a contrast over a model that cannot express it.
+The cell re-ask therefore tried to repair a contrast over a model that cannot express it.
 **`Effect.cells` cannot be righter than `ModelEstimation.terms`**, and the term inventory is
 decided in the entities pass — before any analysis has said what it needs. That is the
 strongest evidence yet for demand-driven ordering (axis A1/A2): the model structure should
@@ -475,7 +475,7 @@ knows the right shape and produces it about half the time.
 | `recheck_cells#1` | 6, right shape, but one analysis swapped which term is `held` — 57.1% |
 | `recheck_high#0/1` | 6, right shape, no swaps — 85.7% both |
 
-So the re-ask raises the floor: it makes the two-cell shape reliable where baseline gets it by
+The re-ask raises the floor: it makes the two-cell shape reliable where baseline gets it by
 luck. Effort on the re-ask then removes the residual held/signed swap. The remaining gap
 between `recheck_high` and `recheck_cells` is 14 points with `recheck_cells` ranging
 57.1–85.7, so it is **not** separable from noise at two replicates — a much weaker claim than
@@ -548,7 +548,7 @@ obstacle between this pipeline and a perfect direction score on this paper.
 > change. The prompt material was the obvious suspect and has been tested: two trees
 > differing only in `extraction-readme.md`, `representing-models.md` §5 and the extraction
 > schema differ by +28.8 points at p = 0.23, which does not account for it. The untested
-> candidates are the uncommitted `extract_record.py` state those runs used and model-side
+> candidates are the uncommitted `prompt/render.py` state those runs used and model-side
 > drift. See [text-preprocessing-experiments.md](text-preprocessing-experiments.md) §5.4.
 > Treat the numbers in this section as a record of what the pipeline did in August 2026, not
 > of what it does now.
@@ -579,7 +579,7 @@ required entities, and the `satisfy` pass is forbidden to emit Tables — they a
 the pubget manifest. The post-condition demanded them anyway and spent whole retry budgets on
 a fault no retry could clear, so declarations of a deterministic class are now exempt.
 
-**This does not generalise to a validator-driven repair loop for free.** `validate_record.py`
+**This does not generalise to a validator-driven repair loop for free.** `record/validate.py`
 emits `path: message` and `adjudicate.py` already applies `{op, path, value}` patches at
 exactly that addressing, so the machinery for a full repair loop exists. But a validator
 measures internal consistency, and the cheapest way to satisfy one is to delete the offending
@@ -681,4 +681,4 @@ measured; what follows them is not.
   main effect and a two-factor interaction are indistinguishable — fine for ranking, wrong for
   a final recommendation, hence stage 2.
 - **The scorer shares no code with the extractor**, which is the one thing genuinely in this
-  design's favour: `compare_extractions.py` reads the schema, not the pipeline.
+  design's favour: `pondie.benchmark.scoring` reads the schema, not the pipeline.

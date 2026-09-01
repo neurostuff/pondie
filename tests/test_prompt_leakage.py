@@ -4,7 +4,7 @@ An extractor handed a gold value scores for reproducing it, and the score then m
 the prompt rather than the reading. The failure is silent and it flatters: it looks exactly
 like the pipeline having improved.
 
-This is not hypothetical. A worked example written into `recheck_cells.py`'s instructions
+This is not hypothetical. A worked example written into a pass's instructions
 was lifted verbatim from `xevP8UDRAVh9`'s gold record -- "placebo-associated perfusion" --
 and the configuration using it was, briefly, the best-scoring one in the sweep.
 
@@ -17,19 +17,15 @@ is input, not leakage.
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 GOLD = ROOT / "benchmarks" / "gold"
-import schema_utils  # noqa: E402
-
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
-from pondie.extraction.passes import extract_record as er  # noqa: E402
-from pondie.extraction.passes import preprocess  # noqa: E402
+from pondie.extraction.prompt import preprocess
+from pondie.extraction.prompt import render as er
+from pondie.schema import reader
 
 #: Values short or generic enough that a match says nothing. A schema vocabulary term the
 #: paper happens to use is the prompt doing its job -- `diagnostic interview` is an
@@ -68,14 +64,10 @@ def distinctive_strings(record: dict) -> set[str]:
 def static_prompt_sources() -> dict[str, str]:
     """Everything the pipeline puts in a prompt that does not vary with the paper."""
 
-    recheck = (ROOT / "pondie" / "extraction" / "passes" / "recheck_cells.py").read_text(
-        encoding="utf-8"
-    )
     sources = {
         "extraction-readme.md": er.README.read_text(encoding="utf-8"),
         "representing-models.md section 5": er.worked_models(),
         "SYSTEM_HEAD": er.SYSTEM_HEAD,
-        "recheck_cells.py SYSTEM": recheck.split('SYSTEM = """')[1].split('"""')[0],
         "ZERO_FOCI_RULE": er.ZERO_FOCI_RULE,
         # The preprocessing digests' preambles. Their bodies are derived from the paper
         # and so are input, but the headings and cautions around them are as static as
@@ -84,15 +76,15 @@ def static_prompt_sources() -> dict[str, str]:
     }
     sources.update({f"MODE_NOTE[{name}]": note for name, note in er.MODE_NOTE.items()})
 
-    classes = schema_utils.load_imported_classes(er.EXTRACTION_SCHEMA)
-    enums = schema_utils.load_imported_classes(er.EXTRACTION_SCHEMA, "enums")
+    sch = reader.load(er.EXTRACTION_SCHEMA)
+    enums = sch.enums
     for mode in ("entities", "analyses"):
-        names, keep = er.mode_classes(classes, er.MODE_SCHEMA.get(mode, mode))
+        names, keep = er.mode_classes(sch, er.MODE_SCHEMA.get(mode, mode))
         # Enum values are the vocabulary the field is filled from, not leaked content, so
         # they are stripped before the comparison.
-        rendered = er.render_schema(classes, enums, names, keep)
+        rendered = er.render_schema(sch, names, keep)
         for enum in enums.values():
-            for value in (enum or {}).get("permissible_values") or {}:
+            for value in enum.permissible_values or {}:
                 rendered = rendered.replace(value, " ")
         sources[f"rendered schema ({mode})"] = rendered
     return sources

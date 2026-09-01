@@ -18,11 +18,12 @@ from __future__ import annotations
 
 import functools
 import hashlib
-from pathlib import Path
+
+from pondie import paths
 
 PHRASE_MODEL = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
 PROSE_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-CACHE = Path("data/eval/embedding-cache")
+CACHE = paths.CACHE / "embeddings"
 
 
 @functools.lru_cache(maxsize=4)

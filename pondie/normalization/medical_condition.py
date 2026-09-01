@@ -23,13 +23,11 @@ from __future__ import annotations
 import re
 from collections import Counter
 from dataclasses import dataclass
-from pathlib import Path
 
-from pondie.normalization import UNKNOWN
-from pondie.normalization._folding import fold, variants
 from pondie.normalization._negation import available as parser_available
 from pondie.normalization._records import DEFAULT, iter_records, strings_at, value_of
-from pondie.normalization._vocabulary import Vocabulary, load_mondo
+from pondie.vocabularies.folding import variants
+from pondie.vocabularies.mondo import Vocabulary, load_mondo
 
 #: A condition field recording the ABSENCE of a condition. Left in, these dominate the tail.
 NEGATION = re.compile(

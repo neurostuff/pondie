@@ -11,7 +11,7 @@ What changed the ground:
   it a twelve-sentence shortlist instead costs **21.4 points** to save 45% of the prompt,
   so retrieval cannot substitute for reading ([evidence-union-design.md](evidence-union-design.md)).
 - The retriever adds **+6.3 points** as a second voter, free, and is now in
-  `add_evidence.py`.
+  `evidence/quote.py`.
 - A pick containing the value verbatim is **80.9%** confirmed-correct against 27.8%
   without — deterministic matching, where it applies, beats the learned scorer by 2.9x.
 - **61%** of reviewer evidence is in Methods; Discussion holds 0.7%.

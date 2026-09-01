@@ -173,7 +173,7 @@ coverage table already implied:
 `healthy controls` is the striking one: the commonest comparison group in the literature,
 and ONVOC's Population Groups branch has no term for it.
 
-`normalize_records.py` writes all three artefacts -- mappings, proposals and treatment
+`tools/normalize.py` writes all three artefacts -- mappings, proposals and treatment
 contrasts -- to one JSON.
 
 ## What has not been tried yet, and why it is next

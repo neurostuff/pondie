@@ -22,6 +22,10 @@ RULES = (
 
 FIELD = ClosedField("groups.handedness_distribution.category", RULES, VALUES)
 normalize = FIELD.normalize
+#: The residual, for `pondie normalize <field>`. `__init__` states the contract --
+#: "Every module exposes `normalize(...)` ... and `report(...)`" -- and five of the eight
+#: closed-target modules bound only the first, so the CLI verb raised for them.
+report = FIELD.report
 
 
 if __name__ == "__main__":

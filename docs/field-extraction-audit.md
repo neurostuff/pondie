@@ -40,7 +40,7 @@ which covers the fields that were shipped; this is the exhaustive pass behind it
 | surface 10–50% | 23 |
 | **surface < 10% — model-only** | **36** (827 instances) |
 
-So the schema splits three ways: 20 fields a pattern can do precisely, 36 that are not on the
+The schema splits three ways: 20 fields a pattern can handle precisely, 36 that are not on the
 page at all, and a large middle where the value is present and ambiguous. That middle is the
 scoping problem, and it is why no recogniser helps — see the method notes below.
 

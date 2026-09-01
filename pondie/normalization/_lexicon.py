@@ -1,6 +1,6 @@
 """The closed-target shape: free-text input, a small fixed set of answers.
 
-Rules and not an encoder, and the reason is auditability rather than accuracy. Sixteen
+This module uses rules instead of an encoder for auditability, not accuracy. Sixteen
 surface forms over two coordinate spaces, or 293 over four correction methods, is a case
 where a rule can be read and argued with and a cosine cannot -- and where a wrong answer is
 acted on, not merely displayed.

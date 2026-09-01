@@ -10,9 +10,9 @@ import re
 from pathlib import Path
 
 import pytest
-import table_parse as tp
 
-from pondie.extraction.passes.build_text import build_appended
+from pondie.extraction.corpus.rebuild import build_appended
+from pondie.formats import table_parse as tp
 
 FIXTURES = Path(__file__).parent / "fixtures" / "flavours"
 CASES = [("els", "elsevier"), ("ace", "ace")]
@@ -99,7 +99,7 @@ def test_the_flavour_is_chosen_and_built_without_a_pubget_checkout(name, flavour
 
     import shutil
 
-    from pondie.extraction.passes.build_text import build_one, choose_flavour
+    from pondie.extraction.corpus.rebuild import build_one, choose_flavour
 
     study = tmp_path / name
     shutil.copytree(FIXTURES / name, study)
@@ -113,7 +113,7 @@ def test_pubget_is_preferred_when_it_can_actually_be_built(tmp_path):
     """Text alone does not make a pubget paper: without the article XML there is nothing
     to rebuild, so it falls through rather than failing."""
 
-    from pondie.extraction.passes.build_text import choose_flavour
+    from pondie.extraction.corpus.rebuild import choose_flavour
 
     study = tmp_path / "s"
     (study / "processed" / "pubget").mkdir(parents=True)
@@ -134,8 +134,8 @@ def test_the_built_text_is_addressable_as_the_local_flavour(tmp_path):
 
     import shutil
 
+    from pondie.extraction.corpus.rebuild import build_one
     from pondie.extraction.models import Flavour, Paper
-    from pondie.extraction.passes.build_text import build_one
 
     shutil.copytree(FIXTURES / "ace", tmp_path / "ace")
     build_one(tmp_path / "ace", None, "", allow_drift=False)
@@ -149,7 +149,7 @@ def test_an_identical_rebuild_is_allowed(tmp_path):
 
     import shutil
 
-    from pondie.extraction.passes.build_text import build_one
+    from pondie.extraction.corpus.rebuild import build_one
 
     shutil.copytree(FIXTURES / "ace", tmp_path / "ace")
     first = build_one(tmp_path / "ace", None, "", allow_drift=False)
@@ -163,7 +163,7 @@ def test_a_build_that_would_replace_a_different_text_is_refused(tmp_path):
 
     import shutil
 
-    from pondie.extraction.passes.build_text import BuildError, build_one
+    from pondie.extraction.corpus.rebuild import BuildError, build_one
 
     study = tmp_path / "ace"
     shutil.copytree(FIXTURES / "ace", study)

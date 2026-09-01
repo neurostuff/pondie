@@ -41,7 +41,7 @@ analyses the paper reports alongside it.
 
 ## Why it matters more than three papers
 
-Interaction designs are how placebo-controlled imaging trials are analysed. So this
+Placebo-controlled imaging trials commonly use interaction designs. This
 failure systematically removes exactly the directed treatment-versus-comparator contrasts
 a coordinate-based meta-analysis needs, while leaving a record that looks complete: the
 arms are there, the analysis is there, the cells are there, and every direction is a
@@ -58,7 +58,7 @@ distinguished by a column the name does not mention, and OMIT when a table repor
 tested effect. Neither covers this case, because the *table* is fine: it is the
 interaction's table, and the post-hoc effects have no table of their own.
 
-So the instruction needed is a third departure, and it is the mirror of SPLIT:
+The instructions need a third departure that mirrors SPLIT:
 
 **ADD an entry for a post-hoc or simple effect the text reports for an interaction whose
 table you were given.** An omnibus interaction has no direction, and a paper that reports
@@ -151,4 +151,3 @@ Class A alone -- the failure this document is about -- accounts for 7, and B for
 - **19423079** -- typhoid vaccine vs placebo. The between-arm result quoted is serum IL-6, not imaging.
 - **38288056** -- dual / single / sham stimulation. Four within-arm pre/post analyses with 'dual group' held -- correctly encoded, simply not a between-arm contrast.
 - **32111579** -- active vs sham tDCS. Six task contrasts, some split by group. The between-arm sentences found are background citations, not this study's results.
-

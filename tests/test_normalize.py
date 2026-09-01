@@ -2,20 +2,16 @@
 
 A wrong mapping is worse than a missing one. A missing mapping is visible -- the row says
 no match and someone looks. A wrong one is queried across a corpus and believed, and the
-paper's own wording that would have exposed it is sitting in a field nobody re-reads. So
+paper's own wording that would have exposed it is sitting in a field nobody re-reads. Therefore,
 most of these tests are about refusing, not about matching.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
-from pondie.extraction.passes.pipeline import normalize as nz  # noqa: E402
-from pondie.extraction.passes.pipeline import query as q  # noqa: E402
+from pondie.normalization import contrasts as q  # noqa: E402
+from pondie.vocabularies import onvoc as nz  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -26,14 +22,26 @@ def onvoc():
 # --- surface forms ----------------------------------------------------------
 
 
+def _wrapped(value):
+    """A realistic `ExtractedValue`.
+
+    `extraction_status` is what makes a mapping a wrapper -- `values.read` keys on it, and
+    the builder's `repair_wrappers` exists to guarantee it. These fixtures used a bare
+    `{"value": ...}`, a shape that appears in **zero** of the 128 wrappers in a shipped
+    record, so they were exercising an unwrapper more permissive than the one production
+    uses and would have passed against a reader that was wrong about real data.
+    """
+    return {"extraction_status": "extracted", "value": value}
+
+
 def test_a_parenthetical_acronym_is_its_own_candidate():
-    got = nz.variants("Autism Diagnostic Observation Schedule (ADOS)")
+    got = nz.surface_forms("Autism Diagnostic Observation Schedule (ADOS)")
     assert "ADOS" in got
     assert "Autism Diagnostic Observation Schedule" in got
 
 
 def test_laterality_is_stripped_but_only_after_the_whole_phrase_is_tried():
-    got = nz.variants("left anterior insula")
+    got = nz.surface_forms("left anterior insula")
     assert got[0] == "left anterior insula"
     assert any("insula" == v.strip().lower() for v in got)
 
@@ -41,7 +49,7 @@ def test_laterality_is_stripped_but_only_after_the_whole_phrase_is_tried():
 def test_a_phrase_of_only_qualifiers_keeps_its_words():
     # Stripping every content word would leave nothing to look up, and an empty query
     # matches whatever is shortest.
-    assert nz.variants("left right") == ["left right"]
+    assert nz.surface_forms("left right") == ["left right"]
 
 
 # --- acronyms ---------------------------------------------------------------
@@ -65,7 +73,7 @@ def test_a_two_word_label_has_no_acronym():
 def test_an_uncorroborated_acronym_is_refused(onvoc):
     # ONVOC has exactly one label whose initials are MDD and it is Mood Dysregulation
     # Disorder, while a paper writing MDD means Major Depressive Disorder.
-    record = {"local_id": "S1", "groups": [{"name": {"value": "MDD"}}]}
+    record = {"local_id": "S1", "groups": [{"name": _wrapped("MDD")}]}
     mapped = nz.normalize(record, {"ONVOC": onvoc})
     assert [m.matched for m in mapped] == [False]
 
@@ -75,8 +83,8 @@ def test_an_acronym_the_record_spells_out_is_accepted(onvoc):
         "local_id": "S1",
         "groups": [
             {
-                "name": {"value": "ASD"},
-                "description": {"value": "children with autism spectrum disorder"},
+                "name": _wrapped("ASD"),
+                "description": _wrapped("children with autism spectrum disorder"),
             }
         ],
     }
@@ -93,7 +101,7 @@ def test_a_test_is_not_matched_to_a_psychological_concept(onvoc):
     record = {
         "local_id": "S1",
         "assessments": [
-            {"name": {"value": "Wechsler Abbreviated Scale of Intelligence (WASI-IV)"}}
+            {"name": _wrapped("Wechsler Abbreviated Scale of Intelligence (WASI-IV)")}
         ],
     }
     mapped = nz.normalize(record, {"ONVOC": onvoc})
@@ -138,26 +146,26 @@ def _trial(levels, kinds=("pharmacological", "placebo")):
             "arms": [
                 {
                     "local_id": "a1",
-                    "name": {"value": "escitalopram"},
-                    "arm_kind": {"value": kinds[0]},
-                    "agent": {"value": "escitalopram"},
+                    "name": _wrapped("escitalopram"),
+                    "arm_kind": _wrapped(kinds[0]),
+                    "agent": _wrapped("escitalopram"),
                 },
                 {
                     "local_id": "a2",
-                    "name": {"value": "placebo"},
-                    "arm_kind": {"value": kinds[1]},
-                    "agent": {"value": "saline"},
+                    "name": _wrapped("placebo"),
+                    "arm_kind": _wrapped(kinds[1]),
+                    "agent": _wrapped("saline"),
                 },
             ]
         },
         "analyses": [
             {
                 "local_id": "an1",
-                "name": {"value": "drug > placebo"},
+                "name": _wrapped("drug > placebo"),
                 "effect": {
                     "cells": [
-                        {"level": {"value": levels[0]}, "direction": {"value": "positive"}},
-                        {"level": {"value": levels[1]}, "direction": {"value": "negative"}},
+                        {"level": _wrapped(levels[0]), "direction": _wrapped("positive")},
+                        {"level": _wrapped(levels[1]), "direction": _wrapped("negative")},
                     ]
                 },
             }
@@ -224,7 +232,7 @@ def test_levels_are_matched_by_words_not_similarity():
 
 # --- abbreviations ----------------------------------------------------------
 
-from pondie.extraction.passes.pipeline import abbreviations as ab  # noqa: E402
+from pondie.vocabularies import abbreviations as ab  # noqa: E402
 
 
 def test_a_definition_in_brackets_is_mined():
@@ -284,7 +292,7 @@ def test_a_curated_entry_is_not_overwritten_by_a_mined_one():
 def test_expansion_reaches_a_vocabulary_the_acronym_cannot(onvoc):
     store = ab.Abbreviations()
     store.add("dlPFC", "dorsolateral prefrontal cortex", "curated")
-    record = {"local_id": "S1", "regions": [{"name": {"value": "left dlPFC parcel"}}]}
+    record = {"local_id": "S1", "regions": [{"name": _wrapped("left dlPFC parcel")}]}
     without = nz.normalize(record, {"ONVOC": onvoc})
     with_store = nz.normalize(record, {"ONVOC": onvoc}, store)
     assert [m.expansions for m in with_store] == [("dorsolateral prefrontal cortex",)]

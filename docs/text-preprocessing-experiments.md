@@ -17,9 +17,9 @@ config effects, and every failure found so far on the verified paper is *structu
 than a misreading. Preprocessing is an intervention on reading. That is the prior it has to
 beat.
 
-Code: [`study-schema/review/preprocess.py`](../study-schema/review/preprocess.py),
+Code: [`pondie/extraction/preprocess.py`](../pondie/extraction/preprocess.py),
 [`compare_agreement.py`](../compare_agreement.py),
-[`study-schema/test_preprocess.py`](../study-schema/test_preprocess.py).
+[`tests/test_preprocess.py`](../tests/test_preprocess.py).
 
 ---
 
@@ -32,7 +32,7 @@ Code: [`study-schema/review/preprocess.py`](../study-schema/review/preprocess.py
 | papers | `xevP8UDRAVh9` (the one human-verified gold record), `6oTrCJA43Jcd`, `SULKxviGFurw`, `aVGe9BmFTMDR` |
 | replicates | 3 per (arm × paper), then 10 on the five arms worth resolving — 176 pipeline runs, ~360 model calls |
 | model | `gpt-5.6-luna`, low effort, evidence pass off |
-| gold scoring | `compare_extractions.py`, on `xevP8UDRAVh9` only; `--scope tables` as primary and `--scope all` as a check (§5.5) |
+| gold scoring | `pondie.benchmark.scoring`, on `xevP8UDRAVh9` only; `--scope tables` as primary and `--scope all` as a check (§5.5) |
 | agreement scoring | `compare_agreement.py`, on all four |
 
 **One gold record still bounds everything.** Three of the four papers have no answer key, so
@@ -47,7 +47,7 @@ plainly rather than dressing agreement up as a score.
 
 ## 1. Where preprocessing can act, and the invariant that makes it safe
 
-`extract_record.py` builds one prompt per pass: conventions → worked models → schema →
+`prompt/render.py` builds one prompt per pass: conventions → worked models → schema →
 context blocks → **the paper** → "emit the JSON object now". A transform can act on the
 paper string or add a block just before it, and the two are kept apart on purpose:
 
@@ -61,7 +61,7 @@ Separating them is what makes the result interpretable. If reduction wins and au
 does not, the mechanism is distraction; if augmentation wins and reduction does not, the
 mechanism is retrieval difficulty; if both win, they are different mechanisms and compose.
 
-**Nothing a strategy does moves an offset.** `build_record.py` is handed the untransformed
+**Nothing a strategy does moves an offset.** `record/builder.py` is handed the untransformed
 file, so `EvidenceSpan.start_char` and `ExtractionMetadata.source_text_hash` are computed
 against the paper as the corpus stores it whatever the prompt contained. A reviewer is shown
 the same text either way. This is not incidental — it is what allows an arm to delete 40% of
@@ -205,11 +205,11 @@ them changes the record.
 assuming: this repo's dependency list is three packages, and a preprocessing step needing a
 100 MB biomedical model is a different proposition from one needing a regex.
 
-So the two components where a trained pipeline could plausibly do better were measured
+The two components where a trained pipeline could plausibly improve were measured
 against scispaCy — `en_core_sci_sm` for sentence boundaries, and its `AbbreviationDetector`,
 which implements the same Schwartz & Hearst algorithm, for abbreviations
 ([ScispaCy](https://aclanthology.org/W19-5034.pdf)).
-[`check_against_spacy.py`](../study-schema/review/check_against_spacy.py) does it.
+[`check_against_spacy.py`](../pondie/extraction/check_against_spacy.py) does it.
 
 Abbreviation counts are after the two-character fix described below.
 
@@ -255,8 +255,8 @@ values, 0% and 100%:
 | `pre_retrieval` | **100 100 100 100** 0 50 **100** 0 0 **100** |
 | `pre_combo` | **100 100 100 100 100** 0 0 **100** 0 **100** |
 
-The reason is the one the workflow experiments identified: `Effect.cells` cannot be righter
-than `ModelEstimation.terms`. Gold encodes each correlation as **two** cells — `held` at a
+The workflow experiments explain this result: `Effect.cells` cannot be more accurate than
+`ModelEstimation.terms`. Gold encodes each correlation as **two** cells — `held` at a
 level of a categorical `perfusion condition` term, plus a signed slope on a continuous term.
 A run that models the two perfusion conditions as two *continuous* covariates emits one
 signed cell per analysis, and then not one of its cells can match:
@@ -266,7 +266,7 @@ signed cell per analysis, and then not one of its cells can match:
 | a losing run | `placebo-associated perfusion` (continuous), `heroin-associated perfusion` (continuous) | 4, one per analysis | 0% |
 | a winning run | `perfusion condition` (categorical, 2 levels), a continuous slope | 8, held + signed per analysis | 100% |
 
-So an arm is not making cells more accurate. **It is changing the probability that the
+An arm does not make cells more accurate. **It changes the probability that the
 entity pass builds a model that can express the contrast at all.** Every number below should
 be read as that probability, and the run — not the cell — is the independent unit, because
 all eight cells of a run share one model.
@@ -383,8 +383,8 @@ Three conclusions, and the first two are corrections:
    well be a real regression — the point estimate is large and in the expected direction —
    but thirteen runs a side cannot establish it, and this report should not have claimed it.
 2. **The archived 93.6% is not reproduced by either tree.** 11/12 then, 4/10 and 3/10 now, on
-   the same paper with the same scorer. So the difference is not in these three files. What
-   is left is the *uncommitted* code state at the time of those runs — `extract_record.py`
+   the same paper with the same scorer. The difference is not in these three files. What
+   is left is the *uncommitted* code state at the time of those runs — `prompt/render.py`
    changed by 369 lines across the interval, and it carries prompt text of its own in
    `MODE_NOTE`, `SATISFY_NOTE` and `DEMANDS_NOTE` that this probe did not revert — or a
    change on the model side, which nothing here can rule out. **The regression is real and
@@ -422,7 +422,7 @@ reading is the one the workflow experiments already argued: these failures were 
 failures. The model could already find `3T` and `frontal lobe`; handing them over saves it a
 search it was not losing.
 
-**And this is not an artefact of what was scored.** `--scope tables` restricts gold to the
+**This is not an artefact of what was scored.** `--scope tables` restricts gold to the
 four analyses a publication table reported — which excludes exactly the two text-only VBM
 analyses `pre_contrasts` was aimed at, and would have *penalised* an arm for emitting them.
 Re-scored with `--scope all`, so gold is all 6 analyses and all 12 cells, the ranking is
@@ -444,7 +444,7 @@ n = 10.** `pre_sections` is the only arm that ever exceeds it, in one or two run
 `pre_contrasts` never does. The 80% direction ceiling that every winning run hits is exactly
 the four cells of the two analyses nobody finds.
 
-So `contrasts` is the sharpest failure in the report, and the most informative. It put the
+`contrasts` is the sharpest and most informative failure in the report. It put the
 sentence carrying both missing analyses in front of the pass whose one job is to enumerate
 analyses, tagged `comparison+null`, in a prompt where a `--zero-foci-rule` paragraph already
 told the pass that an effect finding nothing is still an effect. The pass ignored it in all
@@ -454,7 +454,7 @@ first thing to try and it demonstrably does not work.
 
 ### 5.6 On the secondary metrics, one arm improves everything
 
-Ten replicates, properly matched by `compare_extractions.py`, gold paper, scope `tables`:
+Ten replicates, properly matched by `pondie.benchmark.scoring`, gold paper, scope `tables`:
 
 | arm | composite | entity F1 | relationship F1 | field acc |
 |---|---:|---:|---:|---:|
@@ -485,7 +485,7 @@ inverts the finding, a missing `Device` does not.
 - entity and field agreement separate the arms by 10–30 points, but in an order that has
   little to do with the gold-scored order (§5.8).
 
-So the honest statement about the three extra papers is that **they contributed no evidence
+The three extra papers **contributed no evidence
 about which preprocessing strategy is better.** They were not wasted — they are what shows
 the agreement instrument has no resolution on the metric that matters, and they surfaced the
 defect below — but no arm ranking rests on them.
@@ -495,7 +495,7 @@ defect below — but no arm ranking rests on them.
 spatial maps"*, which by the stage-1 OMIT rule is a component-definition listing and not a
 tested effect, so the right answer is **zero** analyses and a filled `Table.non_analysis_content`.
 The arms emitted 0, 1, 2 and — once, under `retrieval` — **14**, one per component. No run
-filled `non_analysis_content`. And the `demands` post-condition treats "no analyses" as a
+filled `non_analysis_content`. The `demands` post-condition also treats "no analyses" as a
 failure, so every run that gave the likely-correct answer burned its whole retry budget and
 was logged `DEGENERATE`: all six degenerate runs in the sweep are this paper, four of them in
 reduction arms. **The post-condition punishes the correct answer on a paper whose only table
@@ -514,7 +514,7 @@ five arms on the gold paper:
 | entity | 60.0% | 25.0% | 10 | 24 |
 | field | 66.2% | 23.0% | 77 | 222 |
 
-And the rank correlation between an arm's agreement and its correctness:
+The following table shows the rank correlation between an arm's agreement and correctness:
 
 | fact family | self-agreement vs gold | consensus-agreement vs gold |
 |---|---:|---:|
@@ -568,7 +568,7 @@ conclusion that matters.
    versioned input so the next one is attributable.** §5.4 establishes the regression and
    *fails* to explain it: the three rendered prompt files account for +28.8 points at
    p = 0.23, which leaves most of it unexplained. The remaining candidates are the
-   uncommitted code state those runs used — `extract_record.py` moved 369 lines and carries
+   uncommitted code state those runs used — `prompt/render.py` moved 369 lines and carries
    its own prompt text in `MODE_NOTE`, `SATISFY_NOTE` and `DEMANDS_NOTE` — and model-side
    drift. Both are cheap to test and neither has been. Separately and regardless of the
    answer: the parent repo pins `420f799`, the working tree runs `628ad75`, and
@@ -586,7 +586,7 @@ conclusion that matters.
 
 If `retrieval` is eventually adopted, the mechanics are easy: the flag exists
 (`--preprocess retrieval`), the transform is deterministic and standard-library,
-`build_record.py` still sees the untouched file so no offset moves, and the budget is one
+`record/builder.py` still sees the untouched file so no offset moves, and the budget is one
 number to tune. What it must not be adopted with is a claim that the mechanism is understood.
 §5.3 shows it is not, and §5.4 shows the practical cost of that: an unexplained mechanism is
 an effect nobody can predict the transfer of.
@@ -603,7 +603,7 @@ Ordered so that each step's result changes what the next one is.
    that pose that choice can replicate it. This is the whole experiment's binding constraint,
    exactly as §0 of the workflow experiments said.
 2. **Explain the control regression.** Bisect the interval with the *code* held variable
-   rather than the three data files: `extract_record.py`'s embedded prompt text is the
+   rather than the three data files: `prompt/render.py`'s embedded prompt text is the
    untested candidate, and the archived payloads are on disk to diff against. If nothing in
    the repo explains it, the remaining hypothesis is model-side drift, which is worth knowing
    before any further single-state measurement is trusted.
@@ -669,5 +669,5 @@ Ordered so that each step's result changes what the next one is.
 - **`degen` is uninterpretable on `6oTrCJA43Jcd`** (§5.7), because the post-condition rejects
   the likely-correct answer there. Degenerate counts are reported per paper for that reason.
 - **The scorer shares no code with the extractor**, and `preprocess.py` shares none with
-  either. That much is in the design's favour: `compare_extractions.py` reads the schema, and
+  either. That much is in the design's favour: `pondie.benchmark.scoring` reads the schema, and
   the transforms cannot see the metric.

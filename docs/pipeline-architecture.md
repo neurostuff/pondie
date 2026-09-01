@@ -35,10 +35,10 @@ beast:/data/alejandro/projects/ns-pond/data/<study_id>/
 the same five artifacts under different names, so which sync script to use is decided per
 study, not per corpus:
 
-| render | script | note |
+| render | module | note |
 |---|---|---|
-| pubget (`processed/pubget/text.txt` non-empty) | `review/sync_texts.py` | then `review/build_text.py` to inline tables |
-| ace only | `review/sync_texts_ace.py` | writes the pubget paths itself; no `build_text` step |
+| pubget (`processed/pubget/text.txt` non-empty) | `pondie.extraction.corpus.sync` | then `pondie.extraction.corpus.rebuild` to inline tables |
+| ace or elsevier | `pondie.extraction.corpus.sync` | `--flavour`; ace ships no table manifest, so the coordinates are only ever in the stage-1 parse |
 
 Both take `--host beast --root /data/alejandro/projects/ns-pond/data`. **The default host is
 `beast-proxy`, which does not resolve from this machine** -- pass `--host beast`.
@@ -48,16 +48,33 @@ and no text render. Check `text.txt` size and the table CSV count.
 
 ### Local layout, after sync
 
+One definition, in `pondie/paths.py`. Every module reads it from there rather than counting
+`..` from its own file, which is how `_abbreviations` came to point at a `pondie/data/` that
+has never existed — a lookup against a missing vocabulary returns no matches, and no matches
+is indistinguishable from a word the vocabulary does not have.
+
 ```
-data/texts/<id>/
-├── stage1/analyses.json          the analysis inventory -- see §2
-├── stage1/table-map.json         pubget table_id -> record Table local_id
-├── processed/local/text.tables.txt   THE text every offset addresses
+data/corpus/<id>/                  INPUT: fetched, never written by a run
+├── stage1/analyses.json               the analysis inventory -- see §2
+├── stage1/table-map.json              manifest table_id -> record Table local_id
+├── processed/local/text.tables.txt    THE text every offset addresses
 └── source/pubget/tables/*.csv
-data/records/<id>.extraction.json     one record per paper
-data/gold/direction/<id>.direction.json   reviewer direction table
-data/gold/direction-prediction-history.json   pre-fills as reviewers saw them
+data/runs/<name>/                  OUTPUT: one extraction, all of it together
+├── payloads/<id>/*.json               per-stage payloads; noev/ is the pre-evidence copy
+├── records/<id>.extraction.json       one record per paper
+└── usage.jsonl                        what it cost
+data/vocab/                        INPUT: fetched vocabularies, shared by every run
+data/selection/                    which papers to run at all
+benchmarks/gold/direction/         reviewer direction tables -- tracked in git, not here
 ```
+
+A run is a directory rather than three trees keyed by study id. The question asked of these
+files is almost always "what did this run produce", and the old shape could only answer
+"what does this paper have, from whichever run wrote last". `pondie extract --run v3` is the
+whole of the naming.
+
+`PONDIE_DATA_DIR` moves the tree, which is how a run reads a corpus that will not fit beside
+the checkout.
 
 ### The review layer
 
@@ -81,17 +98,17 @@ contracts rather than leaving to be rediscovered.
 
 | seam | contract | what a violation looks like |
 |---|---|---|
-| ns-pond → `data/texts/` | a study is usable when `processed/*/text.txt` is non-empty **and** the table CSVs are present | a study with `analyses.jsonl` and no render passes a naive check and yields nothing |
+| ns-pond → `data/corpus/` | a study is usable when `processed/*/text.txt` is non-empty **and** the table CSVs are present | a study with `analyses.jsonl` and no render passes a naive check and yields nothing |
 | `--pmids` file | TAB-separated, three columns: `pmid \t study_id \t source` | a bare id per line logs `skipping unparseable line`, then **`all stages clean` with zero records written** |
-| `--texts <root>` | `<root>/<id>/processed/<flavour>/text.txt` and `<root>/<id>/stage1/{analyses.json,table-map.json}` | stage 1 is **not** regenerated here; a missing `stage1/` skips the paper |
-| `--examples <dir>` | the directory built records are **written to**, despite the name | its default is `review/examples`, the suite's fixture — accepting the default overwrites test data |
-| record → any consumer | read it with `schema_utils.value_of` / `slot_value`, which take the shape from the schema; **`pipeline/repairs.py` has already normalized the structure at build time** (`wrappers`, `unwrapped`, `listified_scalars`, `coordinate_space`, 16 in all) | a hand-rolled unwrapper returns the wrapper for `not_reported` and drops every entry but the first from a multivalued slot, both without erroring |
+| `--corpus <root>` | `<root>/<id>/processed/<flavour>/text.txt` and `<root>/<id>/stage1/analyses.json` | stage 1 is **not** regenerated here; a missing `stage1/` skips the paper |
+| payloads → builder | flat: `payloads/<id>/<stage>.json`, which `merge_payloads` globs | a nested `<stage>/payload.json` is merged as nothing, and the record comes out with metadata and an empty body |
+| record → any consumer | read it with `pondie.schema.reader.value_of` / `slot_value`, which take the shape from the schema; **`record/repairs.py` has already normalized the structure at build time** (`wrappers`, `unwrapped`, `listified_scalars`, `coordinate_space`, 16 in all) | a hand-rolled unwrapper returns the wrapper for `not_reported` and drops every entry but the first from a multivalued slot, both without erroring |
 | `data/vocab/` | `onvoc.json`, `cognitiveatlas-*.json`, `abbreviations.json`, `mondo.json`; fetched, none in git | absent files degrade to no matches rather than an error |
 
 The `not_reported` shape is the one that bites repeatedly: `value` missing is a *positive
 assertion that the paper did not report it*, and is not the same as the field being absent.
 
-**Do not hand-roll the unwrap.** `schema_utils.value_of(node, multivalued)` reads the wrapper
+**Do not hand-roll the unwrap.** `pondie.schema.reader.value_of(node, multivalued)` reads the wrapper
 and the slot's declared shape; `slot_value(classes, class_name, entity, slot)` takes
 `multivalued` from the schema so a caller never guesses it. The three outcomes it keeps apart
 are the three a hand-written unwrapper conflates:
@@ -121,22 +138,24 @@ A validator rule, not a repair.
 ## 2. The current pipeline (P0), stage by stage
 
 ```
-  ns-pond ──sync_texts[_ace]──▶ data/texts/<id>/
+  ns-pond ──────sync_texts──────▶ data/corpus/<id>/
                                      │
   parse_tables.py ◀───────────────────┘        ONE LLM CALL PER TABLE (autonima)
       │  + split_opposite_signs()               deterministic post-pass
       ▼
   stage1/analyses.json          the analysis inventory: names, points, statistics
       │
-      ├──▶ run_extraction.py --workflow demand-driven
-      │        tables    copy the pubget manifest        deterministic
-      │        demands   analyses first; each declares   LLM
+      ├──▶ pondie extract --run <name> --pmids <file> --model <model>
+      │        tables    copy the manifest, mint Table ids   deterministic
+      │        split     partition a two-signed parse,       deterministic
+      │                  withholding the reversed half
+      │        demands   analyses first; each declares       LLM
       │                  the entities it needs
-      │        satisfy   fill that shopping list          LLM
-      │        evidence  attach spans to values           LLM   ← 45% of input
-      │        build     build_record.py + validate       deterministic
+      │        satisfy   fill that shopping list             LLM
+      │        evidence  attach spans to values              LLM   ← 45% of input
+      │        build     merge, repair, resolve quotes       deterministic
       ▼
-  data/records/<id>.extraction.json
+  data/runs/<name>/records/<id>.extraction.json
       │
       ├──▶ derive_fields.py --fill      8 fields at 93.7-100%
       ├──▶ ls.py export                 tasks per project
@@ -205,15 +224,15 @@ cheap unique-string fields carry that 44%. Realistic share is ~25 of 86 fields.
 
 ## 5. Five that build on the demand-driven design
 
-P0's discovery, stated in `run_extraction.py`:
+P0's discovery, now stated in `pondie/extraction/stages.py`:
 
 > the entity pass cannot know what the contrasts will need. Asked to guess, it modelled a
 > crossover's condition as a continuous covariate, and **a cell cannot be righter than the
 > term it points at**.
 
 Two ideas. **Dependency ordering** -- the consumer declares its needs before the producer
-supplies, because the producer cannot guess. And a **precision cascade** -- error flows
-terms → cells → direction, so accuracy upstream is worth more than accuracy anywhere else.
+supplies because the producer cannot guess. A **precision cascade** also sends errors through
+terms → cells → direction, so upstream accuracy is worth more than downstream accuracy.
 Together, 38.1% → 80% direction F1.
 
 All five below keep that loop and push it further. Each must **match 96.6% direction first**;
@@ -288,7 +307,7 @@ each level-matching failures.
 
 *Predicted:* the largest accuracy headroom here, because it attacks the upstream of the
 cascade. *Falsified if:* term accuracy is already near-perfect -- **which is unmeasured.**
-There is no term-level gold, only the direction table, so this pipeline is gated on the
+Only the direction table has gold labels. Without term-level gold, this pipeline depends on the
 `structure` project's entity dispositions (281 rows available, 4 answered).
 
 ### P11 — Demand-driven evidence

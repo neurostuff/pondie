@@ -1,11 +1,21 @@
 """The pipeline models exist to fail early. These check that they do."""
 
+import collections
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from pondie.extraction.models import Cost, Paper, Settings, StageName, Workflow
+from pondie.extraction.models import (
+    Cost,
+    Paper,
+    PaperOutcome,
+    RunReport,
+    Settings,
+    StageName,
+    StageOutcome,
+    Workflow,
+)
 from pondie.extraction.stages import sequence
 
 
@@ -53,8 +63,54 @@ def test_the_implemented_workflow_is_still_accepted(tmp_path):
     assert settings.workflow is Workflow.demand_driven
     assert [stage.name.value for stage in sequence(settings)] == [
         "tables",
+        "split",
         "demands",
         "satisfy",
         "evidence",
         "build",
     ]
+
+
+def test_costs_add(tmp_path):
+    """A run total is one addition, not a tally scraped back off logging."""
+    total = Cost(input_tokens=10, output_tokens=2, calls=1) + Cost(
+        input_tokens=5, output_tokens=1, calls=1
+    )
+    assert (total.input_tokens, total.output_tokens, total.calls) == (15, 3, 2)
+
+
+def test_a_report_totals_what_its_stages_spent(tmp_path):
+    report = RunReport(
+        papers=tuple(
+            PaperOutcome(
+                study_id=study,
+                outcomes=(
+                    StageOutcome(
+                        stage=StageName.demands,
+                        study_id=study,
+                        cost=Cost(input_tokens=100, calls=1),
+                    ),
+                    StageOutcome(stage=StageName.build, study_id=study),
+                ),
+            )
+            for study in ("A", "B")
+        )
+    )
+    assert report.cost.input_tokens == 200
+    assert report.cost.calls == 2
+
+
+def test_evidence_devices_are_spread_and_reproducible(tmp_path):
+    """crc32 and not hash: Python randomises string hashing per process, so a resumed run
+    would assign differently from the one that wrote the payloads, and a spread that cannot
+    be reproduced cannot be debugged."""
+    settings = Settings(
+        payloads=tmp_path,
+        records=tmp_path,
+        model="m",
+        reranker_devices=("cuda:0", "cuda:1", "cuda:2", "cuda:3"),
+    )
+    papers = [Paper(study_id=f"study{i}", root=tmp_path) for i in range(40)]
+    spread = collections.Counter(settings.device_for(p) for p in papers)
+    assert len(spread) == 4 and max(spread.values()) - min(spread.values()) <= 2
+    assert settings.device_for(papers[0]) == settings.device_for(papers[0])

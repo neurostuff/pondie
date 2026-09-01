@@ -1,0 +1,100 @@
+{
+ "tables": [
+  {
+   "local_id": "tbl1",
+   "table_number": {
+    "extraction_status": "extracted",
+    "value": "Table 1",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "Table 1"
+       ]
+      }
+     ]
+    }
+   },
+   "caption": {
+    "extraction_status": "extracted",
+    "value": "Correlation between gray matter with placebo-associated perfusion.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "Correlation between gray matter with placebo-associated perfusion."
+       ]
+      }
+     ]
+    }
+   },
+   "footer": {
+    "extraction_status": "extracted",
+    "value": "L, left; R, right.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "L, left; R, right."
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "local_id": "tbl2",
+   "table_number": {
+    "extraction_status": "extracted",
+    "value": "Table 2",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "Table 2"
+       ]
+      }
+     ]
+    }
+   },
+   "caption": {
+    "extraction_status": "extracted",
+    "value": "Correlation between gray matter with heroin-associated perfusion.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "Correlation between gray matter with heroin-associated perfusion."
+       ]
+      }
+     ]
+    }
+   },
+   "footer": {
+    "extraction_status": "extracted",
+    "value": "L, left; R, right.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "L, left; R, right."
+       ]
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

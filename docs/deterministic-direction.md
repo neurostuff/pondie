@@ -41,7 +41,7 @@ answer is more useful than either number:
 | disagree, model right | 0 |
 
 In every disagreement the model had said `absent` -- it declined to assign a direction --
-and the rule recovered five of those correctly and lost nothing. So the rule is not a
+and the rule recovered five of those correctly and lost nothing. The rule is not a
 replacement for the pass; it is a filler for the cells the pass gives up on.
 
 The one remaining error is genuinely ambiguous: `Baseline > week 6` on an analysis whose
@@ -63,7 +63,7 @@ contrast read the other way, and that reading is almost never written down. Aski
 model to name and define a contrast with no prose behind it produces invention, not
 extraction -- and costs a full analysis's worth of tokens to do it.
 
-So the split hands the extraction pass only the described half, under the parsed name
+The split therefore gives the extraction pass only the described half, under the parsed name
 unchanged. The negative half is emitted with `withhold: True` and `mirror_of`, and
 `stage1_block` filters it out of the prompt. After extraction,
 `derive_direction.mirror_analysis` rebuilds it: the described half's cells with their
@@ -105,7 +105,7 @@ A withheld half whose described partner is not in the record is reported, never 
 ## The statistics flip with the contrast
 
 A `t` of -2.9 for "FESZ > NC" is +2.9 for the reversed reading: same effect, same
-magnitude, the other way round. So the mirror carries the withheld rows with their signed
+magnitude, the other way round. The mirror therefore carries the withheld rows with their signed
 statistics negated, and the mirrored analysis reports positive statistics for the effects
 it names, exactly as the described half does.
 

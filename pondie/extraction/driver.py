@@ -11,7 +11,9 @@ informative error.
 
 from __future__ import annotations
 
+import json
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 from typing import Iterable
 
 from pondie.extraction.llm import Caller
@@ -66,8 +68,49 @@ def run(
 ) -> RunReport:
     papers = list(papers)
     if workers <= 1:
-        return RunReport(papers=tuple(run_paper(p, settings, caller) for p in papers))
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        return RunReport(
-            papers=tuple(pool.map(lambda p: run_paper(p, settings, caller), papers))
-        )
+        report = RunReport(papers=tuple(run_paper(p, settings, caller) for p in papers))
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            report = RunReport(
+                papers=tuple(pool.map(lambda p: run_paper(p, settings, caller), papers))
+            )
+    _record_usage(report, settings)
+    return report
+
+
+def _record_usage(report: RunReport, settings: Settings) -> None:
+    """Append one row per stage to the run's `usage.jsonl`.
+
+    The file the cost figures come from -- "~310k input and ~27k output tokens per paper,
+    an 11.5:1 ratio", "every call reports cache_status: DISABLED" -- and nothing was
+    writing it. The module that used to had been orphaned: its two callers were themselves
+    dead, and it tagged rows with a different run id and a different pipeline name from the
+    caller that actually makes the requests, so even had it run the rows would not have
+    joined up.
+
+    Never fatal. Accounting must not sink an extraction that has already been paid for, so
+    a failure here is reported and swallowed.
+    """
+    rows = [
+        {
+            "paper": outcome.study_id,
+            "stage": stage.stage.value,
+            "at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "skipped": stage.skipped,
+            "trace_ids": [trace for trace, _status in stage.traces if trace],
+            "cache_status": sorted({status for _t, status in stage.traces if status}),
+            **stage.cost.model_dump(),
+        }
+        for outcome in report.papers
+        for stage in outcome.outcomes
+    ]
+    if not rows:
+        return
+    target = settings.payloads.parent / "usage.jsonl"
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("a", encoding="utf-8") as handle:
+            for row in rows:
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except OSError as error:
+        print(f"  usage not recorded ({type(error).__name__}: {error})", flush=True)

@@ -2,7 +2,7 @@
 
 An adjudication of the 6 `ModelEstimation`s and 18 `Analysis` contrasts in
 `ns-review-structure`, judged against the Methods and Results of the three papers
-in `review/examples/`. Read the paper first, then the record; every finding below
+in ``tests/fixtures/examples/``. Read the paper first, then the record; every finding below
 cites the sentence it turns on.
 
 Verdict per paper, then the findings.

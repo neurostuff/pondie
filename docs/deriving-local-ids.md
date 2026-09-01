@@ -2,7 +2,7 @@
 
 A `local_id` is an address. The review layer uses it as one directly --
 `paper|value|Analysis|<local_id>|<path>` -- and `tasks.py` states the consequence: "a
-vanished address orphans the answer". So an id the model invents is an address that moves
+vanished address orphans the answer". An id invented by the model is an address that moves
 when nothing about the paper has.
 
 It moves a lot. Over the same sixteen papers extracted twice, **only four produced
@@ -78,7 +78,7 @@ removed. The prefix should be fixed per class; today it is not, which is measura
 | `inference_settings` | 3 — `inf`, `inference`, `is` | `multiple_comparison_method` 51/51 |
 | `devices` | 2 — `device`, `dev` | `manufacturer` 42/42 |
 
-Every anchor is filled on every entity. So the prefix inconsistency is pure variance with
+Every anchor is filled on every entity. The prefix inconsistency is therefore pure variance with
 nothing behind it, and fixing the prefix alone removes a third of the resolution problem
 for free.
 

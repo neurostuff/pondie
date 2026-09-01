@@ -13,14 +13,11 @@ opposite, must come back unchanged rather than plausible.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
-from pondie import _schema  # noqa: F401 -- puts the schema submodule on the path
-from pondie.extraction import passes  # noqa: F401 -- and the extraction passes
-from pondie.extraction.passes import derive_direction as dd  # noqa: E402
-from pondie.extraction.passes.parse_tables import split_opposite_signs  # noqa: E402
+from pondie.extraction.corpus.tables import split_opposite_signs  # noqa: E402
+from pondie.extraction.record import direction as dd
 
 # --- reading a contrast's own name ------------------------------------------
 
@@ -77,7 +74,8 @@ def test_only_the_positive_half_is_offered_for_extraction():
             ],
         }
     ]
-    out, notes = split_opposite_signs(analyses)
+    split = split_opposite_signs(analyses)
+    out, notes = list(split.analyses), list(split.notes)
     described = [a for a in out if not a.get("withhold")]
     withheld = [a for a in out if a.get("withhold")]
     assert len(described) == 1 and len(withheld) == 1
@@ -99,7 +97,7 @@ def test_each_half_keeps_only_its_own_rows():
             ],
         }
     ]
-    out, _ = split_opposite_signs(analyses)
+    out = list(split_opposite_signs(analyses).analyses)
     described = next(a for a in out if not a.get("withhold"))
     withheld = next(a for a in out if a.get("withhold"))
     assert len(described["points"]) == 2
@@ -213,7 +211,7 @@ def test_a_flipped_direction_is_marked_generated():
 
 # --- wired into the build ---------------------------------------------------
 
-from pondie.extraction.passes import build_record  # noqa: E402
+from pondie.extraction.record import builder
 
 
 def _cell(level, direction):
@@ -233,7 +231,7 @@ def test_the_build_fills_only_the_cells_the_model_gave_up_on():
             }
         ]
     }
-    filled = build_record.fill_directions(body)
+    filled = builder.fill_directions(body)
     cells = body["analyses"][0]["effect"]["cells"]
     assert cells[0]["direction"]["value"] == "positive"
     assert cells[0]["direction"]["value_source"] == "generated"
@@ -254,7 +252,7 @@ def test_the_build_leaves_a_level_the_contrast_does_not_name():
             }
         ]
     }
-    assert build_record.fill_directions(body) == []
+    assert builder.fill_directions(body) == []
     assert body["analyses"][0]["effect"]["cells"][0]["direction"]["value"] == "absent"
 
 
@@ -284,7 +282,7 @@ def test_the_mirror_is_built_from_the_corrected_record(tmp_path):
             }
         ]
     }
-    made = build_record.mirror_withheld(body, stage1)
+    made = builder.mirror_withheld(body, stage1)
     assert len(made) == 1 and len(body["analyses"]) == 2
     mirrored = body["analyses"][1]
     assert [c["direction"]["value"] for c in mirrored["effect"]["cells"]] == [
@@ -311,6 +309,70 @@ def test_a_withheld_half_whose_partner_vanished_is_reported_not_invented(tmp_pat
         )
     )
     body = {"analyses": []}
-    made = build_record.mirror_withheld(body, stage1)
+    made = builder.mirror_withheld(body, stage1)
     assert body["analyses"] == []
     assert made and made[0].startswith("MISSING")
+
+
+def test_two_tables_reporting_the_same_contrast_each_get_their_own_mirror(tmp_path):
+    """A parse name is not unique, and the table is the only thing that tells them apart.
+
+    An ROI table and a whole-brain table routinely report one contrast under one name.
+    Joined on the name alone the lookup was last-wins, and it failed silently in three
+    directions: the first table's half was never mirrored and no MISSING note fired,
+    because *a* described half had been found; the mirror carried one table's cells against
+    the other's coordinates; and both mirrors were minted with the same `local_id`.
+    """
+    stage1 = tmp_path / "analyses.json"
+    stage1.write_text(
+        json.dumps(
+            {
+                "analyses": [
+                    {"name": "A > B", "table_id": "t1"},
+                    {
+                        "name": "A > B (reversed)",
+                        "table_id": "t1",
+                        "mirror_of": "A > B",
+                        "withhold": True,
+                    },
+                    {"name": "A > B", "table_id": "t2"},
+                    {
+                        "name": "A > B (reversed)",
+                        "table_id": "t2",
+                        "mirror_of": "A > B",
+                        "withhold": True,
+                    },
+                ]
+            }
+        )
+    )
+
+    def analysis(local_id: str, key: str, level: str) -> dict:
+        return {
+            "local_id": local_id,
+            "source_table_analysis": {"extraction_status": "extracted", "value": key},
+            "name": {"extraction_status": "extracted", "value": "A > B"},
+            "effect": {"cells": [_cell(level, "positive")]},
+        }
+
+    body = {
+        "analyses": [
+            analysis("a_t1_1", "t1#1", "ROI"),
+            analysis("a_t2_1", "t2#1", "WHOLE-BRAIN"),
+        ]
+    }
+    made = builder.mirror_withheld(body, stage1)
+
+    assert len(made) == 2, "both tables' reversed halves are built"
+    ids = [a["local_id"] for a in body["analyses"]]
+    assert len(ids) == len(set(ids)), f"local_ids must stay unique: {ids}"
+
+    # Each mirror carries its own table's cells, against its own table's coordinates.
+    by_id = {a["local_id"]: a for a in body["analyses"]}
+    for parent, key in (("a_t1_1", "t1#2"), ("a_t2_1", "t2#2")):
+        mirror = by_id[f"{parent}-reversed"]
+        assert mirror["source_table_analysis"]["value"] == key
+        assert (
+            mirror["effect"]["cells"][0]["level"]["value"]
+            == by_id[parent]["effect"]["cells"][0]["level"]["value"]
+        ), "the mirror carries its OWN table's cells, not the other table's"

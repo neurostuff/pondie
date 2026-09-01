@@ -1,0 +1,1715 @@
+{
+ "analyses": [
+  {
+   "local_id": "analysis_placebo_positive_correlation",
+   "name": {
+    "extraction_status": "extracted",
+    "value": "Positive correlation",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "POSITIVE CORRELATION"
+       ]
+      }
+     ]
+    }
+   },
+   "definition": {
+    "extraction_status": "extracted",
+    "value": "Positive correlation between gray matter and placebo-associated perfusion.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "Biological Parametric Mapping analysis integrating GM and perfusion data after the placebo treatment revealed a significant positive correlation between perfusion and GM volume in frontal areas on both hemispheres including the precentral gyrus, the inferior, middle and superior frontal gyrus, the frontal pole, and the right paracingulate cortex, including parts of the ACC (Table  1  and Figure  2 , upper panel)."
+       ]
+      }
+     ]
+    }
+   },
+   "prespecification": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "interpretations": {
+    "extraction_status": "extracted",
+    "value": [
+     "Biological Parametric Mapping analysis integrating GM and perfusion data after the placebo treatment revealed a significant positive correlation between perfusion and GM volume in frontal areas on both hemispheres.",
+     "These findings indicate that, in heroin-dependent patients, low GM volume is positively associated with low perfusion within frontal regions."
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "Biological Parametric Mapping analysis integrating GM and perfusion data after the placebo treatment revealed a significant positive correlation between perfusion and GM volume in frontal areas on both hemispheres including the precentral gyrus, the inferior, middle and superior frontal gyrus, the frontal pole, and the right paracingulate cortex, including parts of the ACC (Table  1  and Figure  2 , upper panel)."
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_scope": {
+    "extraction_status": "extracted",
+    "value": "whole_brain",
+    "value_source": "generated",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_unit": {
+    "extraction_status": "extracted",
+    "value": "voxel",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+       ]
+      }
+     ]
+    }
+   },
+   "roi_definition": {
+    "extraction_status": "extracted",
+    "value": "not_applicable",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "roi_labels": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "measure": {
+    "family": {
+     "extraction_status": "extracted",
+     "value": "perfusion",
+     "value_source": "generated",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cerebral blood flow (perfusion maps) was calculated by in-house software from ASL DICOM data."
+        ]
+       }
+      ]
+     }
+    },
+    "type": {
+     "extraction_status": "extracted",
+     "value": "cerebral_blood_flow",
+     "value_source": "generated",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Studies on cerebral blood flow (CBF) in heroin addiction have showed that chronic heroin use is associated with a decrease in global perfusion, with the greatest decrease in the frontal, occipital, and temporal regions ( 16 )."
+        ]
+       }
+      ]
+     }
+    },
+    "source_label": {
+     "extraction_status": "extracted",
+     "value": "gray matter volume and perfusion",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "We correlated each perfusion condition (heroin and placebo) separately with a VBM sample that was identical for the two treatment conditions."
+        ]
+       }
+      ]
+     }
+    },
+    "specific_metric": {
+     "extraction_status": "extracted",
+     "value": "Pearson r correlation between cerebral blood flow and gray matter volume",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+        ]
+       }
+      ]
+     }
+    },
+    "unit": {
+     "extraction_status": "extracted",
+     "value": "ml/100 g/min",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "The resulting perfusion maps were expressed in the unit ml/100 g/min."
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "groups": [
+    {
+     "group": "group_heroin_dependent",
+     "n": {
+      "extraction_status": "extracted",
+      "value": 14,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "quotes": [
+          "Nevertheless, three patients were tested positive for cannabis and six patients for cocaine at one or both points of the measurement."
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "effect": {
+    "cells": [
+     {
+      "term": "term_perfusion_condition",
+      "level": {
+       "extraction_status": "extracted",
+       "value": "placebo",
+       "value_source": "reported",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "quotes": [
+           "In BPM, each perfusion condition (heroin and placebo) was correlated separately with the VBM data."
+          ]
+         }
+        ]
+       }
+      },
+      "direction": {
+       "extraction_status": "extracted",
+       "value": "positive",
+       "value_source": "generated",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "quotes": [
+           "Biological Parametric Mapping analysis integrating GM and perfusion data after the placebo treatment revealed a significant positive correlation between perfusion and GM volume in frontal areas on both hemispheres including the precentral gyrus, the inferior, middle and superior frontal gyrus, the frontal pole, and the right paracingulate cortex, including parts of the ACC (Table  1  and Figure  2 , upper panel)."
+          ]
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "statistic": {
+     "family": {
+      "extraction_status": "extracted",
+      "value": "correlation",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "quotes": [
+          "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+         ]
+        }
+       ]
+      }
+     },
+     "degrees_of_freedom_numerator": {
+      "extraction_status": "not_reported",
+      "evidence": {
+       "status": "not_applicable"
+      }
+     },
+     "degrees_of_freedom_denominator": {
+      "extraction_status": "not_reported",
+      "evidence": {
+       "status": "not_applicable"
+      }
+     }
+    }
+   },
+   "details": {
+    "details_type": "MassUnivariateDetails"
+   },
+   "acquisitions": [
+    "acq_mprage",
+    "acq_asl"
+   ],
+   "tasks": [
+    "task_drug_perfusion"
+   ],
+   "model_estimation": "model_bpm_correlation",
+   "inference_settings": {
+    "inference_level": {
+     "extraction_status": "extracted",
+     "value": "cluster",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cluster-level inference was performed using a homologous correlation field ( 30 ) and a cluster-forming threshold of   p   < 0.01."
+        ]
+       }
+      ]
+     }
+    },
+    "voxelwise_threshold_value": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "voxelwise_threshold_type": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "cluster_forming_threshold_value": {
+     "extraction_status": "extracted",
+     "value": 0.01,
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cluster-level inference was performed using a homologous correlation field ( 30 ) and a cluster-forming threshold of   p   < 0.01."
+        ]
+       }
+      ]
+     }
+    },
+    "cluster_extent_threshold": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "clusterwise_threshold_value": {
+     "extraction_status": 0.05,
+     "value_source": "reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "multiple_comparison_method": {
+     "extraction_status": "extracted",
+     "value": "FWE",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Significant clusters were corrected for multiple comparisons with a FWE of   p   < 0.05 ( 29 )."
+        ]
+       }
+      ]
+     }
+    },
+    "correction_scope": {
+     "extraction_status": "extracted",
+     "value": "explicit frontal and temporal lobe mask",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "In order to restrict our analyses to fronto-temporal regions, that we had found to be hypoperfused during heroin ( 17 ), we used an explicit mask of the frontal and temporal lobe by WFU PickAtlas ."
+        ]
+       }
+      ]
+     }
+    },
+    "search_volume": {
+     "extraction_status": "extracted",
+     "value": "explicit mask of the frontal and temporal lobe",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "we used an explicit mask of the frontal and temporal lobe by WFU PickAtlas ."
+        ]
+       }
+      ]
+     }
+    },
+    "neighborhood_definition": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "tfce_used": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "tfce_parameters": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "permutation_count": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "alpha_level": {
+     "extraction_status": 0.05,
+     "value_source": "reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "number_of_tests": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    }
+   },
+   "preprocessing": "preproc_asl",
+   "tables": [
+    "tbl1"
+   ],
+   "assessments": [
+    "assessment_scid_ii"
+   ],
+   "coordinate_space": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "model_representation_notes": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   }
+  },
+  {
+   "local_id": "analysis_placebo_negative_correlation",
+   "name": {
+    "extraction_status": "extracted",
+    "value": "Negative correlation",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "NEGATIVE CORRELATION"
+       ]
+      }
+     ]
+    }
+   },
+   "definition": {
+    "extraction_status": "extracted",
+    "value": "Negative correlation between gray matter and placebo-associated perfusion; no significant clusters reported.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "No significant cluster was found in the temporal lobe and there was no significant negative correlation between modalities (Table  1 )."
+       ]
+      }
+     ]
+    }
+   },
+   "prespecification": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "interpretations": {
+    "extraction_status": "extracted",
+    "value": [
+     "There was no significant negative correlation between modalities."
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "there was no significant negative correlation between modalities (Table  1 )."
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_scope": {
+    "extraction_status": "extracted",
+    "value": "whole_brain",
+    "value_source": "generated",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_unit": {
+    "extraction_status": "extracted",
+    "value": "voxel",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+       ]
+      }
+     ]
+    }
+   },
+   "roi_definition": {
+    "extraction_status": "extracted",
+    "value": "not_applicable",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "measure": {
+    "family": {
+     "extraction_status": "extracted",
+     "value": "perfusion",
+     "value_source": "generated",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cerebral blood flow (perfusion maps) was calculated by in-house software from ASL DICOM data."
+        ]
+       }
+      ]
+     }
+    },
+    "type": {
+     "extraction_status": "extracted",
+     "value": "cerebral_blood_flow",
+     "value_source": "generated",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Studies on cerebral blood flow (CBF) in heroin addiction have showed that chronic heroin use is associated with a decrease in global perfusion, with the greatest decrease in the frontal, occipital, and temporal regions ( 16 )."
+        ]
+       }
+      ]
+     }
+    },
+    "source_label": {
+     "extraction_status": "extracted",
+     "value": "gray matter volume and perfusion",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "We correlated each perfusion condition (heroin and placebo) separately with a VBM sample that was identical for the two treatment conditions."
+        ]
+       }
+      ]
+     }
+    },
+    "specific_metric": {
+     "extraction_status": "extracted",
+     "value": "Pearson r correlation between cerebral blood flow and gray matter volume",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+        ]
+       }
+      ]
+     }
+    },
+    "unit": {
+     "extraction_status": "extracted",
+     "value": "ml/100 g/min",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "The resulting perfusion maps were expressed in the unit ml/100 g/min."
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "groups": [
+    {
+     "group": "group_heroin_dependent",
+     "n": {
+      "extraction_status": "extracted",
+      "value": 14,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "quotes": [
+          "Nevertheless, three patients were tested positive for cannabis and six patients for cocaine at one or both points of the measurement."
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "effect": {
+    "cells": [
+     {
+      "term": "term_perfusion_condition",
+      "level": {
+       "extraction_status": "extracted",
+       "value": "placebo",
+       "value_source": "reported",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "quotes": [
+           "In BPM, each perfusion condition (heroin and placebo) was correlated separately with the VBM data."
+          ]
+         }
+        ]
+       }
+      },
+      "direction": {
+       "extraction_status": "extracted",
+       "value": "negative",
+       "value_source": "generated",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "quotes": [
+           "there was no significant negative correlation between modalities (Table  1 )."
+          ]
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "statistic": {
+     "family": {
+      "extraction_status": "extracted",
+      "value": "correlation",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "quotes": [
+          "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+         ]
+        }
+       ]
+      }
+     },
+     "degrees_of_freedom_numerator": {
+      "extraction_status": "not_reported",
+      "evidence": {
+       "status": "not_applicable"
+      }
+     },
+     "degrees_of_freedom_denominator": {
+      "extraction_status": "not_reported",
+      "evidence": {
+       "status": "not_applicable"
+      }
+     }
+    }
+   },
+   "details": {
+    "details_type": "MassUnivariateDetails"
+   },
+   "acquisitions": [
+    "acq_mprage",
+    "acq_asl"
+   ],
+   "tasks": [
+    "task_drug_perfusion"
+   ],
+   "model_estimation": "model_bpm_correlation",
+   "inference_settings": {
+    "inference_level": {
+     "extraction_status": "extracted",
+     "value": "cluster",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cluster-level inference was performed using a homologous correlation field ( 30 ) and a cluster-forming threshold of   p   < 0.01."
+        ]
+       }
+      ]
+     }
+    },
+    "voxelwise_threshold_value": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "voxelwise_threshold_type": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "cluster_forming_threshold_value": {
+     "extraction_status": "extracted",
+     "value": 0.01,
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cluster-level inference was performed using a homologous correlation field ( 30 ) and a cluster-forming threshold of   p   < 0.01."
+        ]
+       }
+      ]
+     }
+    },
+    "cluster_extent_threshold": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "clusterwise_threshold_value": {
+     "extraction_status": 0.05,
+     "value_source": "reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "multiple_comparison_method": {
+     "extraction_status": "extracted",
+     "value": "FWE",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Significant clusters were corrected for multiple comparisons with a FWE of   p   < 0.05 ( 29 )."
+        ]
+       }
+      ]
+     }
+    },
+    "correction_scope": {
+     "extraction_status": "extracted",
+     "value": "explicit frontal and temporal lobe mask",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "In order to restrict our analyses to fronto-temporal regions, that we had found to be hypoperfused during heroin ( 17 ), we used an explicit mask of the frontal and temporal lobe by WFU PickAtlas ."
+        ]
+       }
+      ]
+     }
+    },
+    "search_volume": {
+     "extraction_status": "extracted",
+     "value": "explicit mask of the frontal and temporal lobe",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "we used an explicit mask of the frontal and temporal lobe by WFU PickAtlas ."
+        ]
+       }
+      ]
+     }
+    },
+    "neighborhood_definition": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "tfce_used": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "tfce_parameters": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "permutation_count": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "alpha_level": {
+     "extraction_status": 0.05,
+     "value_source": "reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "number_of_tests": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    }
+   },
+   "preprocessing": "preproc_asl",
+   "tables": [
+    "tbl1"
+   ],
+   "assessments": [
+    "assessment_scid_ii"
+   ],
+   "coordinate_space": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "model_representation_notes": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   }
+  },
+  {
+   "local_id": "analysis_heroin_positive_correlation",
+   "name": {
+    "extraction_status": "extracted",
+    "value": "Positive correlation",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "POSITIVE CORRELATION"
+       ]
+      }
+     ]
+    }
+   },
+   "definition": {
+    "extraction_status": "extracted",
+    "value": "Positive correlation between gray matter and heroin-associated perfusion.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "Biological Parametric Mapping analysis integrating GM and perfusion data after the heroin treatment also showed a positive correlation between perfusion and GM volume in frontal areas."
+       ]
+      }
+     ]
+    }
+   },
+   "prespecification": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "interpretations": {
+    "extraction_status": "extracted",
+    "value": [
+     "Biological Parametric Mapping analysis integrating GM and perfusion data after the heroin treatment also showed a positive correlation between perfusion and GM volume in frontal areas."
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "Biological Parametric Mapping analysis integrating GM and perfusion data after the heroin treatment also showed a positive correlation between perfusion and GM volume in frontal areas."
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_scope": {
+    "extraction_status": "extracted",
+    "value": "whole_brain",
+    "value_source": "generated",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_unit": {
+    "extraction_status": "extracted",
+    "value": "voxel",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+       ]
+      }
+     ]
+    }
+   },
+   "roi_definition": {
+    "extraction_status": "extracted",
+    "value": "not_applicable",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "measure": {
+    "family": {
+     "extraction_status": "extracted",
+     "value": "perfusion",
+     "value_source": "generated",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cerebral blood flow (perfusion maps) was calculated by in-house software from ASL DICOM data."
+        ]
+       }
+      ]
+     }
+    },
+    "type": {
+     "extraction_status": "extracted",
+     "value": "cerebral_blood_flow",
+     "value_source": "generated",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Studies on cerebral blood flow (CBF) in heroin addiction have showed that chronic heroin use is associated with a decrease in global perfusion, with the greatest decrease in the frontal, occipital, and temporal regions ( 16 )."
+        ]
+       }
+      ]
+     }
+    },
+    "source_label": {
+     "extraction_status": "extracted",
+     "value": "gray matter volume and perfusion",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "We correlated each perfusion condition (heroin and placebo) separately with a VBM sample that was identical for the two treatment conditions."
+        ]
+       }
+      ]
+     }
+    },
+    "specific_metric": {
+     "extraction_status": "extracted",
+     "value": "Pearson r correlation between cerebral blood flow and gray matter volume",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+        ]
+       }
+      ]
+     }
+    },
+    "unit": {
+     "extraction_status": "extracted",
+     "value": "ml/100 g/min",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "The resulting perfusion maps were expressed in the unit ml/100 g/min."
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "groups": [
+    {
+     "group": "group_heroin_dependent",
+     "n": {
+      "extraction_status": "extracted",
+      "value": 14,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "quotes": [
+          "Fourteen (eight male, six female; mean age 40.7 ± 6.8 years) non-left-handed heroin-dependent out-patients were recruited from the Center of Substance Use Disorders of the Department of Psychiatry in Basel University."
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "effect": {
+    "cells": [
+     {
+      "term": "term_perfusion_condition",
+      "level": {
+       "extraction_status": "extracted",
+       "value": "heroin",
+       "value_source": "reported",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "quotes": [
+           "Biological Parametric Mapping analysis integrating GM and perfusion data after the heroin treatment also showed a positive correlation between perfusion and GM volume in frontal areas."
+          ]
+         }
+        ]
+       }
+      },
+      "direction": {
+       "extraction_status": "extracted",
+       "value": "positive",
+       "value_source": "generated",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "quotes": [
+           "Biological Parametric Mapping analysis integrating GM and perfusion data after the heroin treatment also showed a positive correlation between perfusion and GM volume in frontal areas."
+          ]
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "statistic": {
+     "family": {
+      "extraction_status": "extracted",
+      "value": "correlation",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "quotes": [
+          "In BPM, each perfusion condition (heroin and placebo) was correlated separately with the VBM data."
+         ]
+        }
+       ]
+      }
+     },
+     "degrees_of_freedom_numerator": {
+      "extraction_status": "not_reported",
+      "evidence": {
+       "status": "not_applicable"
+      }
+     },
+     "degrees_of_freedom_denominator": {
+      "extraction_status": "not_reported",
+      "evidence": {
+       "status": "not_applicable"
+      }
+     }
+    }
+   },
+   "details": {
+    "details_type": "MassUnivariateDetails"
+   },
+   "acquisitions": [
+    "acq_mprage",
+    "acq_asl"
+   ],
+   "tasks": [
+    "task_drug_perfusion"
+   ],
+   "model_estimation": "model_bpm_correlation",
+   "inference_settings": {
+    "inference_level": {
+     "extraction_status": "extracted",
+     "value": "cluster",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cluster-level inference was performed using a homologous correlation field ( 30 ) and a cluster-forming threshold of   p   < 0.01."
+        ]
+       }
+      ]
+     }
+    },
+    "voxelwise_threshold_value": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "voxelwise_threshold_type": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "cluster_forming_threshold_value": {
+     "extraction_status": "extracted",
+     "value": 0.01,
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cluster-level inference was performed using a homologous correlation field ( 30 ) and a cluster-forming threshold of   p   < 0.01."
+        ]
+       }
+      ]
+     }
+    },
+    "cluster_extent_threshold": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "clusterwise_threshold_value": {
+     "extraction_status": 0.05,
+     "value_source": "reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "multiple_comparison_method": {
+     "extraction_status": "extracted",
+     "value": "FWE",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Significant clusters were corrected for multiple comparisons with a FWE of   p   < 0.05 ( 29 )."
+        ]
+       }
+      ]
+     }
+    },
+    "correction_scope": {
+     "extraction_status": "extracted",
+     "value": "explicit frontal and temporal lobe mask",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "In order to restrict our analyses to fronto-temporal regions, that we had found to be hypoperfused during heroin ( 17 ), we used an explicit mask of the frontal and temporal lobe by WFU PickAtlas ."
+        ]
+       }
+      ]
+     }
+    },
+    "search_volume": {
+     "extraction_status": "extracted",
+     "value": "explicit mask of the frontal and temporal lobe",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "In order to restrict our analyses to fronto-temporal regions, that we had found to be hypoperfused during heroin ( 17 ), we used an explicit mask of the frontal and temporal lobe by WFU PickAtlas ."
+        ]
+       }
+      ]
+     }
+    },
+    "neighborhood_definition": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "tfce_used": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "tfce_parameters": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "permutation_count": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "alpha_level": {
+     "extraction_status": 0.05,
+     "value_source": "reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "number_of_tests": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    }
+   },
+   "preprocessing": "preproc_asl",
+   "tables": [
+    "tbl2"
+   ],
+   "assessments": [
+    "assessment_scid_ii"
+   ],
+   "coordinate_space": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "model_representation_notes": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   }
+  },
+  {
+   "local_id": "analysis_heroin_negative_correlation",
+   "name": {
+    "extraction_status": "extracted",
+    "value": "Negative correlation",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "NEGATIVE CORRELATION"
+       ]
+      }
+     ]
+    }
+   },
+   "definition": {
+    "extraction_status": "extracted",
+    "value": "Negative correlation between gray matter and heroin-associated perfusion.",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "A negative correlation was found in the inferior temporal gyrus and the temporal fusiform cortex on both hemispheres."
+       ]
+      }
+     ]
+    }
+   },
+   "prespecification": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "interpretations": {
+    "extraction_status": "extracted",
+    "value": [
+     "A negative correlation was found in the inferior temporal gyrus and the temporal fusiform cortex on both hemispheres."
+    ],
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "A negative correlation was found in the inferior temporal gyrus and the temporal fusiform cortex on both hemispheres."
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_scope": {
+    "extraction_status": "extracted",
+    "value": "whole_brain",
+    "value_source": "generated",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "Preprocessed perfusion and VBM maps were realigned and used for whole-brain voxel-to-voxel correlation analysis."
+       ]
+      }
+     ]
+    }
+   },
+   "spatial_unit": {
+    "extraction_status": "extracted",
+    "value": "voxel",
+    "value_source": "reported",
+    "evidence": {
+     "status": "present",
+     "sets": [
+      {
+       "quotes": [
+        "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+       ]
+      }
+     ]
+    }
+   },
+   "roi_definition": {
+    "extraction_status": "extracted",
+    "value": "not_applicable",
+    "value_source": "generated",
+    "evidence": {
+     "status": "not_found"
+    }
+   },
+   "measure": {
+    "family": {
+     "extraction_status": "extracted",
+     "value": "perfusion",
+     "value_source": "generated",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "In BPM, each perfusion condition (heroin and placebo) was correlated separately with the VBM data."
+        ]
+       }
+      ]
+     }
+    },
+    "type": {
+     "extraction_status": "extracted",
+     "value": "cerebral_blood_flow",
+     "value_source": "generated",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cerebral blood flow (perfusion maps) was calculated by in-house software from ASL DICOM data."
+        ]
+       }
+      ]
+     }
+    },
+    "source_label": {
+     "extraction_status": "extracted",
+     "value": "gray matter volume and perfusion",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Biological Parametric Mapping analysis integrating GM and perfusion data after the heroin treatment also showed a positive correlation between perfusion and GM volume in frontal areas."
+        ]
+       }
+      ]
+     }
+    },
+    "specific_metric": {
+     "extraction_status": "extracted",
+     "value": "Pearson r correlation between cerebral blood flow and gray matter volume",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "In addition, we calculated Pearson   r   correlations between perfusion and VBM data for each voxel within the standardized MNI space."
+        ]
+       }
+      ]
+     }
+    },
+    "unit": {
+     "extraction_status": "extracted",
+     "value": "ml/100 g/min",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "The resulting perfusion maps were expressed in the unit ml/100 g/min."
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "groups": [
+    {
+     "group": "group_heroin_dependent",
+     "n": {
+      "extraction_status": "extracted",
+      "value": 14,
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "quotes": [
+          "Fourteen (eight male, six female; mean age 40.7 ± 6.8 years) non-left-handed heroin-dependent out-patients were recruited from the Center of Substance Use Disorders of the Department of Psychiatry in Basel University."
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "effect": {
+    "cells": [
+     {
+      "term": "term_perfusion_condition",
+      "level": {
+       "extraction_status": "extracted",
+       "value": "heroin",
+       "value_source": "reported",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "quotes": [
+           "A negative correlation was found in the inferior temporal gyrus and the temporal fusiform cortex on both hemispheres."
+          ]
+         }
+        ]
+       }
+      },
+      "direction": {
+       "extraction_status": "extracted",
+       "value": "negative",
+       "value_source": "generated",
+       "evidence": {
+        "status": "present",
+        "sets": [
+         {
+          "quotes": [
+           "A negative correlation was found in the inferior temporal gyrus and the temporal fusiform cortex on both hemispheres."
+          ]
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "statistic": {
+     "family": {
+      "extraction_status": "extracted",
+      "value": "correlation",
+      "value_source": "reported",
+      "evidence": {
+       "status": "present",
+       "sets": [
+        {
+         "quotes": [
+          "In BPM, each perfusion condition (heroin and placebo) was correlated separately with the VBM data."
+         ]
+        }
+       ]
+      }
+     },
+     "degrees_of_freedom_numerator": {
+      "extraction_status": "not_reported",
+      "evidence": {
+       "status": "not_applicable"
+      }
+     },
+     "degrees_of_freedom_denominator": {
+      "extraction_status": "not_reported",
+      "evidence": {
+       "status": "not_applicable"
+      }
+     }
+    }
+   },
+   "details": {
+    "details_type": "MassUnivariateDetails"
+   },
+   "acquisitions": [
+    "acq_mprage",
+    "acq_asl"
+   ],
+   "tasks": [
+    "task_drug_perfusion"
+   ],
+   "model_estimation": "model_bpm_correlation",
+   "inference_settings": {
+    "inference_level": {
+     "extraction_status": "extracted",
+     "value": "cluster",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cluster-level inference was performed using a homologous correlation field ( 30 ) and a cluster-forming threshold of   p   < 0.01."
+        ]
+       }
+      ]
+     }
+    },
+    "voxelwise_threshold_value": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "voxelwise_threshold_type": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "cluster_forming_threshold_value": {
+     "extraction_status": "extracted",
+     "value": 0.01,
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Cluster-level inference was performed using a homologous correlation field ( 30 ) and a cluster-forming threshold of   p   < 0.01."
+        ]
+       }
+      ]
+     }
+    },
+    "cluster_extent_threshold": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "clusterwise_threshold_value": {
+     "extraction_status": 0.05,
+     "value_source": "reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "multiple_comparison_method": {
+     "extraction_status": "extracted",
+     "value": "FWE",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "Significant clusters were corrected for multiple comparisons with a FWE of   p   < 0.05 ( 29 )."
+        ]
+       }
+      ]
+     }
+    },
+    "correction_scope": {
+     "extraction_status": "extracted",
+     "value": "explicit frontal and temporal lobe mask",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "In order to restrict our analyses to fronto-temporal regions, that we had found to be hypoperfused during heroin ( 17 ), we used an explicit mask of the frontal and temporal lobe by WFU PickAtlas ."
+        ]
+       }
+      ]
+     }
+    },
+    "search_volume": {
+     "extraction_status": "extracted",
+     "value": "explicit mask of the frontal and temporal lobe",
+     "value_source": "reported",
+     "evidence": {
+      "status": "present",
+      "sets": [
+       {
+        "quotes": [
+         "In order to restrict our analyses to fronto-temporal regions, that we had found to be hypoperfused during heroin ( 17 ), we used an explicit mask of the frontal and temporal lobe by WFU PickAtlas ."
+        ]
+       }
+      ]
+     }
+    },
+    "neighborhood_definition": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "tfce_used": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "tfce_parameters": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "permutation_count": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "alpha_level": {
+     "extraction_status": 0.05,
+     "value_source": "reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    },
+    "number_of_tests": {
+     "extraction_status": "not_reported",
+     "evidence": {
+      "status": "not_applicable"
+     }
+    }
+   },
+   "preprocessing": "preproc_asl",
+   "tables": [
+    "tbl2"
+   ],
+   "assessments": [
+    "assessment_scid_ii"
+   ],
+   "coordinate_space": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   },
+   "model_representation_notes": {
+    "extraction_status": "not_reported",
+    "evidence": {
+     "status": "not_applicable"
+    }
+   }
+  }
+ ]
+}

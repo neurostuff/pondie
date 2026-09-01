@@ -194,12 +194,24 @@ _BOUNDARY = re.compile(r"[.!?][\"')\]]?\s+(?=[\"'(\[]?[A-Z0-9])")
 _LAST_WORD = re.compile(r"([A-Za-z][A-Za-z.]*)\.?$")
 
 
+def ends_mid_sentence(text: str) -> bool:
+    """Whether a run of text ends on a period that does not end a sentence.
+
+    Public, and the only copy: `evidence/retrieval.py` cuts its units on the same
+    punctuation and needs the same answer. It had no guard at all, and 9.6% of the units it
+    returned over the corpus ended at `et al.` or `e.g.` -- a second abbreviation list would
+    have drifted from this one, which is the reason this is a function and not a duplicate.
+    """
+
+    word = _LAST_WORD.search(text.rstrip(".!?"))
+    return bool(word and word.group(1).lower().rstrip(".") in _NON_TERMINAL)
+
+
 def _split_sentences(line: str) -> list[str]:
     pieces, start = [], 0
     for boundary in _BOUNDARY.finditer(line):
         head = line[start : boundary.start() + 1]
-        word = _LAST_WORD.search(head.rstrip(".!?"))
-        if word and word.group(1).lower().rstrip(".") in _NON_TERMINAL:
+        if ends_mid_sentence(head):
             continue
         pieces.append(head)
         start = boundary.end()
@@ -359,7 +371,7 @@ _STATISTIC_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     (
         "p",
         re.compile(
-            rf"\bp\s*(?:-?\s*value)?\s*[=<>≤≥]\s*\.?\d+(?:\.\d+)?" r"(?:\s*[eE]\s*-\s*\d+)?",
+            r"\bp\s*(?:-?\s*value)?\s*[=<>≤≥]\s*\.?\d+(?:\.\d+)?" r"(?:\s*[eE]\s*-\s*\d+)?",
             re.I,
         ),
     ),
@@ -558,10 +570,31 @@ _METHOD_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
         "scanner",
         "Device.manufacturer, Device.model",
         re.compile(
-            r"\b(Siemens|Philips|General Electric|\bGE\b|Bruker|Canon|Toshiba|Hitachi|"
+            r"\b(Siemens|Philips|General Electric|Bruker|Canon|Toshiba|Hitachi|"
             r"Magnetom|Verio|Trio|TrioTim|Prisma|Skyra|Avanto|Allegra|Sonata|Vida|"
-            r"Achieva|Ingenia|Intera|Gyroscan|Signa|Discovery|Premier|Elekta|Neuromag|"
+            r"Achieva|Ingenia|Intera|Gyroscan|Signa|Premier|Elekta|Neuromag|"
             r"BioSemi|Brain Products|EGI|Neuroscan)\b"
+        ),
+    ),
+    # `GE` and `Discovery` are vendor names that are also ordinary text, and over the
+    # corpus the ordinary readings outnumber the scanners: `GE` is gradient echo in
+    # `GE-EPI` and an author's initials in "Holder GE McCulloch"; `Discovery` is the
+    # "False Discovery Rate" and the "AI Discovery Assistant" banner an ace render scrapes
+    # off the journal page. Kept only where a division or a model name settles it, which is
+    # how a Methods section that means the scanner writes them anyway -- "GE Signa",
+    # "Discovery MR750", "3 T scanner (GE)". Case-sensitive, like the list above.
+    (
+        "scanner",
+        "Device.manufacturer, Device.model",
+        re.compile(
+            r"\b(?:GE|General Electric)[\s-]+(?:Healthcare|Medical Systems?|Signa|SIGNA|"
+            r"Discovery|MR\s?\d+\w*|HDxt?|HD|LX|Horizon|Advance|Excite|EXCITE|"
+            r"Neuro-optimi[sz]ed|whole-head)\b|"
+            r"\bDiscovery[\s-]+(?:MR|ST|RX|LX|IQ|VCT|Elite|PET|\d)[\w/-]*|"
+            # A bare `GE` needs the sentence to have said "scanner" a few words earlier.
+            # The lookahead is what keeps `3 T ... GE-EPI` out: that GE is the sequence.
+            r"(?:\d(?:\.\d)?\s*T(?:esla)?\b|scanners?\b|MRI\b|MR system\b|magnet\b)"
+            r"[^.\n]{0,12}?\bGE\b(?![\s-]?EPI)"
         ),
     ),
     (
@@ -835,7 +868,11 @@ _COHORT_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
         "diagnosis",
         "Group.medical_condition, .diagnostic_system, .diagnostic_instrument",
         re.compile(
-            r"\b(?:DSM[- ]?(?:IV|5|V)(?:-TR)?|ICD[- ]?\d+|SCID(?:-\w+)?|MINI|"
+            # `MINI\b` and not `MINI`: the group opens with `\b` and does not close, so
+            # the bare form matched the front of "minimize", "minimal" and "miniblocks".
+            # Over the corpus that was 53,614 of the 62,002 hits -- 86% of them wrong, in a
+            # pattern whose output names a schema slot rather than a candidate to confirm.
+            r"\b(?:DSM[- ]?(?:IV|5|V)(?:-TR)?|ICD[- ]?\d+|SCID(?:-\w+)?|MINI\b|"
             r"diagnos\w+ (?:of|with)\s+[\w \-]{3,40}|"
             r"met criteria for\s+[\w \-]{3,40})",
             re.I,

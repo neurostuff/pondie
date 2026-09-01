@@ -7,9 +7,9 @@ paper genuinely warrants, so a missing install is indistinguishable from a paper
 nothing -- and it is indistinguishable in the direction that looks like data rather than like
 a broken environment.
 
-So a dependency whose absence would change an answer raises here instead. A dependency whose
-absence only costs an *enhancement* -- a second evidence locator, a better abbreviation miner
--- may still fall back, but it says which path it took rather than degrading in silence.
+This module raises an error when a missing dependency would change an answer. Code may fall
+back when the dependency provides only an enhancement, such as a second evidence locator or
+a better abbreviation miner, but it reports which path it used.
 """
 
 from __future__ import annotations

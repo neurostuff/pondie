@@ -1,17 +1,17 @@
 # Scoring an extraction against a gold record
 
-`compare_extractions.py` answers one question -- *how much of this paper did the extractor
+`pondie.benchmark.scoring` answers one question -- *how much of this paper did the extractor
 get right?* -- by decomposing it into four that can be measured separately. This file is
 why those four and why those measures; the script says how.
 
-    python compare_extractions.py data/records/xevP8UDRAVh9.extraction.json \
+    pondie benchmark \
         --gold data/gold/xevP8UDRAVh9.extraction.json -v
 
 ## The dependency that shapes everything
 
 Nothing can be compared until the two records' entities have been put in correspondence.
 Field accuracy is accuracy *on matched pairs*; relationship F1 is over triples *in gold
-identifiers*. So the entity map is computed first, and every later number is conditional
+identifiers*. The entity map is computed first, and every later number is conditional
 on it. Two consequences the report never hides:
 
 - **Unmatched entities are printed next to the field scores.** An extractor that emits two
@@ -36,7 +36,7 @@ rather than by a link-by-link comparison.
 
 **Four kinds of evidence, to a fixed point.** An entity's identity is where it sits in the
 record as much as what it says. A `Measure` is *the quantity these three analyses measured*;
-a `ModelTerm` is *the term those cells are contrasts on, declared by that model*. So the
+a `ModelTerm` is *the term those cells are contrasts on, declared by that model*. The
 score combines:
 
 | evidence | weight | what it reads |
@@ -78,7 +78,7 @@ two.
 **Matched within the declared family, not the concrete class.** An `Acquisition` slot may
 hold an `MRI` or a `PET`. Matching per concrete class would make a candidate that typed a
 scan wrong into two unmatched objects -- one missing, one spurious -- when it is one entity
-with one wrong field. So the family is the matching unit and the type designator is scored
+with one wrong field. The family is therefore the matching unit, and the type designator is scored
 as a field.
 
 **Below-threshold pairs are dropped.** The assignment problem will happily marry the last
@@ -109,7 +109,7 @@ Relationship F1 is one number over the whole graph. It says a structure is wrong
 saying where, and it averages away the failure worth naming: an object whose *attributes* are
 right and whose *place* is not.
 
-So each matched pair also gets its own neighbourhood precision, recall and F1 over both
+Each matched pair also gets its own neighbourhood precision, recall, and F1 over both
 directions — the references it makes and the references made to it — with the specific links
 missing and extra listed. Entities scoring high on attributes and low on neighbourhood are
 called out as **misplaced**: a plausible object wired into the wrong slot, which is a
@@ -185,7 +185,7 @@ the cell alignment score (`ALIGN_EXCLUDE`).
 extractor that emits one easy cell per analysis and drops the rest scores 1.0. Precision is
 over every candidate cell and recall over every gold cell, so a dropped cell is a miss and
 an invented one a false positive. The observed failure on
-`data/records/xevP8UDRAVh9.extraction.json` is exactly this shape -- one cell per analysis
+`data/runs/<run>/records/xevP8UDRAVh9.extraction.json` is exactly this shape -- one cell per analysis
 where gold has two -- and accuracy alone would have understated it.
 
 The rest of the panel names the *kind* of error, because they are not interchangeable:
@@ -253,7 +253,7 @@ more than it says; the parts are the finding.
 
 - **Everything downstream of §1 is conditional on the entity map.** Read the recall column.
 - **Evidence spans are not compared.** Whether a value is supported by the right characters
-  of the paper is a different question, and `review/validate_record.py` and the review layer
+  of the paper is a different question, and ``pondie.extraction.record.validate`` and the review layer
   already ask it.
 - **Ordered lists are compared as sets.** A permuted `acquisition_voxel_size_mm` is a real
   error this will not flag; the field's own description states the ordering rule, and

@@ -17,11 +17,17 @@ setting that silently does not apply.
 
 from __future__ import annotations
 
+import zlib
 from enum import Enum
 from pathlib import Path
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from pondie import paths
+
+#: Re-exported: a render is a fact about the corpus layout, so `paths` owns it.
+Flavour = paths.Flavour
 
 
 class Strict(BaseModel):
@@ -30,34 +36,12 @@ class Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
-class Flavour(str, Enum):
-    """Which render of a paper the text came from. The pipeline reads one per paper.
-
-    Declared best-first, and `pipeline.kinds.TEXT_FLAVOURS` is the same order: pubget,
-    then elsevier, then ace, by whether the render keeps the paper's tables. `local` is
-    the build with those tables inlined and is what extraction actually reads.
-    """
-
-    local = "local"
-    pubget = "pubget"
-    elsevier = "elsevier"
-    ace = "ace"
-
-    @property
-    def filename(self) -> str:
-        """What the text is called under `processed/<flavour>/`.
-
-        `local` is the only one that differs, and it differs because it is not a fetched
-        render but a built one: `text.tables.txt` sits beside the `text.txt` it was built
-        from so the two are never confused. Reading `text.txt` from the local directory
-        finds nothing, which reads downstream as a paper with no text at all.
-        """
-
-        return "text.tables.txt" if self is Flavour.local else "text.txt"
-
-
 class StageName(str, Enum):
     tables = "tables"
+    #: `sign_split`, not `split`: on a `str` Enum a member named `split` shadows
+    #: `str.split` on the class. The wire value stays "split" -- it is what
+    #: `--stages` takes and what a payload filename is named after.
+    sign_split = "split"
     demands = "demands"
     satisfy = "satisfy"
     evidence = "evidence"
@@ -84,27 +68,42 @@ class Paper(Strict):
     root: Path
     flavour: Flavour = Flavour.pubget
 
+    # The layout is `pondie.paths`'s to state. These are the pipeline's names for it, so a
+    # stage says `paper.text` rather than assembling five path segments -- and there is one
+    # place to change when the corpus moves.
     @property
     def text(self) -> Path:
-        return (
-            self.root
-            / self.study_id
-            / "processed"
-            / self.flavour.value
-            / self.flavour.filename
-        )
+        return paths.text(self.study_id, self.flavour, self.root)
 
     @property
     def parse(self) -> Path:
-        return self.root / self.study_id / "stage1" / "analyses.json"
+        return paths.stage1(self.study_id, self.root)
 
     @property
     def table_map(self) -> Path:
-        return self.root / self.study_id / "stage1" / "table-map.json"
+        return paths.table_map(self.study_id, self.root)
 
     def ready(self) -> bool:
         """Stage 1 is an input, not something this pipeline regenerates."""
         return self.text.is_file() and self.parse.is_file()
+
+    @classmethod
+    def best(cls, study_id: str, root: Path) -> "Paper":
+        """The paper on the best flavour it actually has a text for.
+
+        `Flavour` is declared best-first by how much of a paper's tables survive the render,
+        so the first hit is the right one. Probing matters because the ranking is measured
+        rather than cosmetic: over the 39,270-study corpus, pubget ships a table manifest
+        for 12,390 of its 13,313 papers and elsevier for all 10,595 of its own, while ace
+        ships none -- so taking ace when elsevier exists costs that paper its tables, and a
+        locator searching a table-free flavour cannot find the sentence a group size came
+        from.
+        """
+        for flavour in Flavour:
+            candidate = cls(study_id=study_id, root=root, flavour=flavour)
+            if candidate.text.is_file():
+                return candidate
+        raise FileNotFoundError(f"{study_id}: no text under {root / study_id}")
 
 
 class Cost(Strict):
@@ -114,6 +113,12 @@ class Cost(Strict):
     output_tokens: int = 0
     reasoning_tokens: int = 0
     cached_tokens: int = 0
+    #: Written but never read back: every call reports `cache_write_tokens: 36423,
+    #: cached_tokens: 0, cache_status: DISABLED`. Five stages send a near-identical prefix
+    #: and each pays full input price. Recorded here because that is the only way the
+    #: deviation ("one cached prefix", docs/pipeline-architecture.md D2) can be falsified
+    #: from a run's own output rather than from a dashboard.
+    cache_write_tokens: int = 0
     seconds: float = 0.0
     calls: int = 0
 
@@ -127,17 +132,34 @@ class ModelCall(Strict):
     """One request to a language model. The only place a prompt becomes a network call."""
 
     model: str
+    #: The user turn. Everything that varies per paper.
     prompt: str
-    schema_name: str | None = None
+    #: The instruction half, sent as its own message. Empty for a pass that has none.
+    system: str = ""
     max_output_tokens: Annotated[int, Field(gt=0)] = 48_000
     effort: Literal["minimal", "low", "medium", "high"] = "low"
     attempts: Annotated[int, Field(ge=1)] = 3
+    #: Ask the provider to constrain the reply to syntactically valid JSON.
+    #:
+    #: Measured, not assumed. Asked free-form for one paper's `satisfy` pass, the model
+    #: returned a body that would not parse in 5 of 6 draws -- an unbalanced bracket some
+    #: thousands of characters in, at a different place each time. The same prompt in JSON
+    #: mode parsed 6 of 6. It is not a concurrency artefact: sequential draws failed at the
+    #: same rate as parallel ones. Retrying cannot fix a 5-in-6 fault, which is why a run
+    #: over 89 papers lost 25 of them with all three attempts spent.
+    json_object: bool = True
 
 
 class ModelReply(Strict):
     payload: dict
     cost: Cost
     stop_reason: str = ""
+    #: The gateway's own id for this request. A header, so it is gone the moment the SDK
+    #: parses the response -- which is why the caller reads the raw response first. Without
+    #: it a run's own accounting cannot be joined to the gateway's.
+    trace_id: str = ""
+    #: What the gateway said about the cache for this call, verbatim.
+    cache_status: str = ""
 
 
 class Settings(Strict):
@@ -150,6 +172,13 @@ class Settings(Strict):
     stages: tuple[StageName, ...] = tuple(StageName)
     effort: Literal["minimal", "low", "medium", "high"] = "low"
     max_output_tokens: Annotated[int, Field(gt=0)] = 48_000
+    #: The second evidence locator. On by default because it costs nothing at the margin --
+    #: it runs locally -- and recovers spans the quote pass did not place.
+    union: bool = True
+    #: Devices the evidence retriever may use, cycled per paper. One device shared by nine
+    #: workers exhausted an 8GB card; a list lets a run spread them without any stage
+    #: having to know how many workers there are.
+    reranker_devices: tuple[str, ...] = ("cpu",)
     attempts: Annotated[int, Field(ge=1)] = 3
     #: Evidence is 45% of input tokens. Dropping it leaves a record whose values have no
     #: supporting span -- structurally complete, and unreviewable.
@@ -173,6 +202,16 @@ class Settings(Strict):
             )
         return self
 
+    def device_for(self, paper: "Paper") -> str:
+        """A device for this paper, spread deterministically over those available.
+
+        `crc32` and not `hash`: Python randomises string hashing per process, so `hash`
+        would give a resumed run a different assignment from the one that wrote the
+        payloads -- and a spread that cannot be reproduced cannot be debugged.
+        """
+        pool = self.reranker_devices or ("cpu",)
+        return pool[zlib.crc32(paper.study_id.encode()) % len(pool)]
+
     @model_validator(mode="after")
     def _build_needs_its_inputs(self) -> "Settings":
         if StageName.build in self.stages and StageName.satisfy not in self.stages:
@@ -194,6 +233,12 @@ class StageOutcome(Strict):
     cost: Cost = Cost()
     skipped: bool = False
     reason: str = ""
+    #: What the stage observed but was not stopped by -- repairs that fired, quotes that
+    #: did not resolve. A defect a reviewer should see is a note; `reason` is a failure.
+    notes: tuple[str, ...] = ()
+    #: One entry per model call: the gateway's trace id and what it said about the cache.
+    #: Empty for a deterministic stage, which is the honest answer rather than a zero.
+    traces: tuple[tuple[str, str], ...] = ()
 
     @property
     def ok(self) -> bool:
@@ -239,3 +284,59 @@ class RunReport(Strict):
             f"{cost.input_tokens:,} in / {cost.output_tokens:,} out tokens "
             f"over {cost.calls} call(s)"
         )
+
+
+class Prompt(Strict):
+    """One rendered ask, in its two halves.
+
+    Named, and not `tuple[str, str]`, because nothing at a call site said which half was
+    which -- and one call site got it wrong. `stages` unpacked this as
+    `(prompt, schema_name)`, so the `user` half went into a `ModelCall` field the caller
+    ignores and **the model was never sent the paper**. A fake `Caller` in the tests records
+    what it was asked and does not read it, so nothing caught it. Two named fields cannot be
+    swapped by accident.
+
+    `system` is the instructions and the schema; it is identical across papers, which is what
+    a prompt cache needs. `user` is the conventions, the worked models, the context and the
+    paper itself.
+    """
+
+    system: str = Field(min_length=1)
+    user: str = Field(min_length=1)
+
+
+class EvidenceCounts(Strict):
+    """What one payload's evidence pass did, per outcome.
+
+    Named because the five are different claims and a caller summing them would be summing
+    apples: `unsupported` is a defect a reviewer should see, `not_reported` is a field the
+    paper was silent on, and only `recovered` says the retriever earned its place.
+    """
+
+    filled: int = 0
+    unsupported: int = 0
+    not_reported: int = 0
+    unioned: int = 0
+    recovered: int = 0
+
+    def __add__(self, other: "EvidenceCounts") -> "EvidenceCounts":
+        return EvidenceCounts(
+            **{f: getattr(self, f) + getattr(other, f) for f in type(self).model_fields}
+        )
+
+
+class SplitResult(Strict):
+    """The analyses after a partition, and what the partition did.
+
+    `notes` is not logging: a `FLAG` line records an analysis the rule declined to split and
+    why, which is the difference between a parse the rule found nothing to do in and one it
+    refused to touch. Discarding it makes those two look the same.
+    """
+
+    analyses: tuple[dict, ...] = ()
+    notes: tuple[str, ...] = ()
+
+    @property
+    def withheld(self) -> int:
+        """How many halves are kept from the model, to be rebuilt by arithmetic."""
+        return sum(1 for entry in self.analyses if entry.get("withhold"))

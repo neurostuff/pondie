@@ -27,6 +27,10 @@ import sys
 import unicodedata
 from dataclasses import dataclass
 
+# One abbreviation list for the repo. `preprocess` owns it because that is where it was
+# measured against scispaCy; importing it is cheaper than the drift of a second copy.
+from pondie.extraction.prompt.preprocess import ends_mid_sentence
+
 # --- sections ---------------------------------------------------------------
 
 #: Heading text -> canonical section. Matched against the lowercased heading with
@@ -52,12 +56,21 @@ _SECTION_PATTERNS: list[tuple[str, str]] = [
     ),
 ]
 
-_HEADING = re.compile(r"^(#{1,4})\s*(.+?)\s*$", re.MULTILINE)
+#: `{1,6}` and not `{1,4}`: markdown has six levels and `text.py` writes all of them. Capped
+#: at four, the fifth `#` of a level-5 heading fell out of the group and into the heading
+#: *text*, so `##### Results` arrived here as `# Results` and every `^`-anchored entry in
+#: `_SECTION_PATTERNS` missed it. That is 1,710 papers of the corpus reading their Results
+#: and Discussion as `unknown`, and section is what disambiguates a phrase the paper repeats.
+_HEADING = re.compile(r"^(#{1,6})\s*(.+?)\s*$", re.MULTILINE)
 
 
 def _canon_heading(raw: str) -> str:
     """Strip numbering and punctuation so '2.3. Statistical analysis' matches."""
-    text = re.sub(r"^[\d.\s]+", "", raw).strip(" .:").lower()
+    # A leading `#` is stripped as well as the numbering. It cannot arrive from `_HEADING`
+    # any more, but every `_SECTION_PATTERNS` entry is `^`-anchored and one stray marker
+    # silently unclassifies the section rather than misclassifying it -- a failure with
+    # nothing on the face of it to say so, which is why the guard outlives its cause.
+    text = re.sub(r"^[#\d.\s]+", "", raw).strip(" .:#").lower()
     return re.sub(r"\s+", " ", text)
 
 
@@ -462,6 +475,12 @@ def sentence_units(text: str) -> list[Unit]:
     cursor = 0
     for match in re.finditer(r"(?<=[.;!?])\s+|\n\n+", text):
         chunk = text[cursor : match.start()]
+        # The period of `et al.` is not a unit boundary. Without this the corpus yielded
+        # 1.3M units cut mid-citation, and because the stub in front of the cut is usually
+        # under MIN_UNIT the filter below then dropped it outright -- 1.59M passages that
+        # no locator could return. Left where the cursor is, so the unit continues.
+        if ends_mid_sentence(chunk):
+            continue
         if chunk.strip() and len(_ROW.findall(chunk)) < 3:
             units.append(Unit(cursor, cursor + len(chunk), chunk, chunk))
         cursor = match.end()

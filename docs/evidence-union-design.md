@@ -2,8 +2,8 @@
 
 The evidence stage answers one question per filled field -- *which characters of the paper
 warrant this value*. There are two things that can answer it: the LLM quote pass
-(`review/add_evidence.py`), which reads the paper and writes a quote, and the cross-encoder
-retriever (`review/evidence_retrieval.py`), which ranks sentence units against a query built
+(``pondie.extraction.evidence.quote``), which reads the paper and writes a quote, and the cross-encoder
+retriever (``pondie.extraction.evidence.retrieval``), which ranks sentence units against a query built
 from the field and its value.
 
 **The decision is to run both and union their spans, not to pick one.** The LLM reads the
@@ -14,7 +14,7 @@ records what that rests on, and what had to be measured twice to get right.
 
 173 field slots across 16 papers, each one a field where a human reviewer left evidence:
 drew a span in the review layer, replaced one the extractor had produced, or wrote a
-supporting quote into a correction file. Built by `build_evidence_gold.py` and resolved to
+supporting quote into a correction file. Built by a since-removed tool (see [what-was-removed.md](what-was-removed.md)) and resolved to
 fields by `prepare_evidence_eval.py`.
 
 The gold is incomplete on purpose and the scoring has to respect that. A reviewer
@@ -62,7 +62,7 @@ quote, and exactly the fields where a value has a literal surface form to match.
 wins where the supporting sentence shares no vocabulary with the value, which is 57% of
 gold evidence and the case retrieval is structurally worst at.
 
-So replacing either with the other discards a quarter of the answers. Neither alternative
+Replacing either with the other discards a quarter of the answers. Neither alternative
 survives its own numbers:
 
 - **Retriever only** loses the 23 slots where the supporting sentence and the value have no
@@ -75,7 +75,7 @@ survives its own numbers:
 
 The retriever runs first and locally, so it costs nothing per paper beyond GPU time:
 
-1. **Locate.** For each filled field, build the lean query (`review/evidence_retrieval.py`
+1. **Locate.** For each filled field, build the lean query (``pondie.extraction.evidence.retrieval``
    `build_query`: field leaf, up to two aliases, up to two value surface forms -- no entity
    name, which measured worse in the query than out of it), score every sentence unit and
    sentence-ified table row, and add the section prior, literal-match bonus and
@@ -106,7 +106,7 @@ was wrong for that reason.
 | retriever top-1 alone | 42.2% | — | — | — | 0 | 0 |
 
 **The shortlist loses 21.4 points to save 45% of the prompt.** That is not a trade worth
-making, and the reason is structural rather than fixable by a better prompt: the
+making. The cause is structural, not something a better prompt can fix: the
 retriever's recall at twelve is 69.9%, so a shortlist caps the model at 69.9% before it
 reads a word, and the whole-paper arm already reaches 67.1%. Handing the model a shortlist
 takes away exactly the sentences it is better than the retriever at finding.

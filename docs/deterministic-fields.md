@@ -6,8 +6,8 @@
 otherwise. This file is which fields those are, the precision measured for each, and why the
 rejected candidates were rejected — the script says how.
 
-    python derive_fields.py --audit 'data/records/*.extraction.json' -v
-    python derive_fields.py --fill  'data/records/*.extraction.json' --apply
+    python -m pondie.extraction.tools.derive_fields --audit 'data/runs/<run>/records/*.extraction.json' -v
+    python -m pondie.extraction.tools.derive_fields --fill  'data/runs/<run>/records/*.extraction.json' --apply
 
 ## The rule that makes this safe
 

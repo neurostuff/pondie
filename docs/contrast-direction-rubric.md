@@ -1,11 +1,11 @@
 # Scoring contrast direction against reviewer gold
 
-`compare_extractions.py` asks how much of a paper an extractor got right, over four
+`pondie.benchmark.scoring` asks how much of a paper an extractor got right, over four
 families of metric. This file scopes that down to the one question a synthesis cannot
 recover from anywhere else: **for a term that both sides agree is in the contrast, did the
 extractor put it on the right side?**
 
-    python score_direction.py data/records/84rGLhCbUJTh.extraction.json \
+    pondie benchmark \
         --gold data/gold/direction/84rGLhCbUJTh.direction.json -v
 
 Everything here is deliberately narrower than §4 of
@@ -25,7 +25,7 @@ What the contrast project produces is narrower and does not have that defect. Ev
 direction from the same six-value vocabulary the schema uses for `Cell.direction`. It is a
 direct human judgement of exactly the field being scored, not an inference from a diff.
 
-So the gold artefact is a **direction table**: a mapping
+The gold artefact is a **direction table**: a mapping
 
     (paper, analysis local_id, term local_id, level) -> direction
 
@@ -55,7 +55,7 @@ exactly none. That number measured nothing.
 The reviewers were not idle: they ticked `direction_wrong` on **35 of 126** analyses. The
 signal was in the verdict checkbox while the radios stayed where the extractor left them.
 
-So every answer carries a provenance tier, and the scorer reports the split rather than a
+Every answer carries a provenance tier, and the scorer reports the split rather than a
 blended figure:
 
 | tier | what it is | count | independent of the prediction? |
@@ -183,10 +183,11 @@ scorer then reads a flipped sign as correct — the exact error being measured, 
 the instrument. A first attempt here used containment plus a 0.85 ratio and matched both
 pairs.
 
-So the test is on whole words: equal after normalization, or one side's word set contained in
+The test therefore uses whole words: the sides must be equal after normalization, or one
+side's word set must be contained in
 the other's. `{schizophrenia, or, schizoaffective, disorder}` is a subset of `{patients,
 with, …}`; `{men}` is not a subset of `{women}`. The rule lives in both `tasks._same_level`
-and `score_direction._same_level`, with a test asserting the two agree — if they drift, the
+and `pondie.benchmark.scoring._same_level`, with a test asserting the two agree — if they drift, the
 scorer pairs cells the grid never showed.
 
 ### The tier history has to be frozen before re-exporting
@@ -316,7 +317,7 @@ nothing: their reviewer gold is `absent` almost throughout, or their signed cell
 resolved to a candidate cell. A mean over this set is close to a statement about
 `JzsUUQbDr2bm`.
 
-So the number to act on is not 91.3%. It is that **the benchmark has 46 usable cells from
+The actionable result is not 91.3%. **The benchmark has 46 usable cells from
 3 papers**, and widening it — more reviewed papers, and reviewers who move the radio rather
 than ticking a verdict — buys more than any further tuning of the extractor would.
 
@@ -330,14 +331,14 @@ discriminator in the splitting rule. An analysis holding both a positive and a n
 statistic is therefore not a judgement call; it is two analyses that were never separated.
 
 **The pass being asked to split cannot see what it is being asked to split on.**
-`extract_record.py`'s stage-1 block already instructs the model to split an entry "when the
+`prompt/render.py`'s stage-1 block already instructs the model to split an entry "when the
 table distinguishes the rows it covers by a column the entry's name does not mention", and
 names the trigger explicitly: "one entry would otherwise hold effects of opposite sign". But
 the same block states the constraint that makes this impossible — "the parse had the contrast
 name and not the rows". The extraction passes are shown captions, never cell values. The
 signal is real and the pass is blind to it.
 
-Stage 1 is not. `parse_tables.py` holds the parsed rows, so `split_opposite_signs` partitions
+Stage 1 is not. `corpus/tables.py` holds the parsed rows, so `split_opposite_signs` partitions
 them there, before `analyses.json` is written and therefore before anything downstream sees
 the list. Nothing about Autonima's prompt changes: the split is a post-pass over what
 `parse_single_table` returns, and the partition is arithmetic rather than a second opinion.
@@ -474,7 +475,7 @@ analysis's own `Cell.direction` now breaks the tie, applied only to siblings car
 | `analysis-theta-encoding-age` | Left primary visual `+.42`, Left dlPFC `+.40` |
 | `analysis-alpha-encoding-age` | Left middle frontal `−.41`, Left ant. cingulate `−.40` |
 
-Which is what the paper says: theta *"became significantly stronger as a function of age in
+This matches the paper: theta *"became significantly stronger as a function of age in
 the left primary visual cortex"* and *"older individuals showed significantly stronger
 decreases in alpha activity"*. The record's `negative` for alpha was right all along; the
 gold answer was taken against rows belonging to the theta contrast and needs re-review.
@@ -493,7 +494,7 @@ another contrast's rows. A reviewer
 given no anchor on a double-negative sentence or an unstated contrast ordering gets it
 backwards, and the two failures compound.
 
-So the ranked fixes are not about the extractor:
+The ranked fixes therefore do not concern the extractor:
 
 1. **Re-adjudicate the 21 flagged tasks** now that pre-fills are correct. These 3 cells are
    among them.

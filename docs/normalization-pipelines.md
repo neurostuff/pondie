@@ -1,12 +1,12 @@
 # Normalizing a field depends on the field's shape, not on the corpus
 
 > Where this sits: [pipeline-architecture.md](pipeline-architecture.md) covers extraction, up
-> to `data/records/<id>.extraction.json`. This file starts there. The vocabulary-matching
+> to `data/runs/<run>/records/<id>.extraction.json`. This file starts there. The vocabulary-matching
 > layer common to several of these pipelines is [normalizing-across-papers.md](normalizing-across-papers.md);
 > its measured coverage is [normalizing-with-onvoc.md](normalizing-with-onvoc.md).
 
-There is no single normalization pipeline, and asking for one is the mistake. A field's shape
-decides the method, and three shapes recur. Getting the shape wrong wastes the effort: task
+No single normalization pipeline fits every field. A field's shape determines the method,
+and three shapes recur. Using the wrong shape wastes effort: task
 descriptions have no target vocabulary to link to, medical conditions have one and should not
 be clustered, and cohort role has four values and needs neither.
 
@@ -45,7 +45,7 @@ Two corollaries that also do not transfer between the two regimes:
 ## Shape 1 — closed enum: do not build a pipeline
 
 `arm_kind` and `relation_to_intervention` are enums in the schema and are queryable today with
-no normalization work at all. `cohort_role()` in `review/pipeline/query.py` is the counterexample:
+no normalization work at all. `cohort_role()` in ``pondie.normalization.contrasts`` is the counterexample:
 a hand-written regex over group names, which fails on **13% of schizophrenia group names, 57%
 of MID and 60% of depression**. It looks fine because it was written against schizophrenia.
 
@@ -75,7 +75,7 @@ the 62 where it is unset.
 
 **The accept threshold cannot be a single cut.** On 1500 held-out MONDO synonym queries the
 score distributions overlap: correct matches have p10 = 0.807 while *wrong* top-1s have a
-median of 0.820. Precision/recall is 72%/91% at 0.80, 79%/82% at 0.85, 86%/70% at 0.90. So the
+median of 0.820. Precision/recall is 72%/91% at 0.80, 79%/82% at 0.85, 86%/70% at 0.90. The
 stage routes three ways — auto-accept, a review queue carrying top-5 candidates, and reject
 with the nearest miss recorded — rather than pretending a threshold separates them.
 
@@ -91,7 +91,7 @@ carrying a UMLS CUI (96%)**.
 No target vocabulary is usable — ONVOC has no task branch at all, and Cognitive Atlas
 retrieval from the description alone tops out at R@1 62.9% with no threshold that separates
 covered from new (81% of unmatched task signatures score above the 10th percentile of the
-known-covered set). So the corpus is clustered against itself.
+known-covered set). The corpus is therefore clustered against itself.
 
 ```
 1. name ladder   folded equality + bidirectional containment -> MUST-LINK,
@@ -128,7 +128,7 @@ tail is real rather than under-merging: all 150 singleton task clusters have a n
 unique in the corpus, and their median nearest-neighbour P(same task) is 0.317 against 0.984
 for clustered tasks.
 
-So a cluster earns a vocabulary term on **cross-paper support**, never on a per-item score. A
+A cluster earns a vocabulary term through **cross-paper support**, never a per-item score. A
 term used once is a paper's phrasing; a term used in ten is a term the vocabulary lacks, and
 the unplaced report is the evidence for it. The same rule governs both shapes.
 

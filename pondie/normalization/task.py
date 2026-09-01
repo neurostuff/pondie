@@ -2,7 +2,7 @@
 
 The cluster shape, because no target vocabulary is usable: ONVOC has no task branch, and
 Cognitive Atlas retrieval from a description alone has no threshold separating covered from
-new. So tasks are grouped against each other and the group's most frequent name becomes its
+new. Tasks are therefore grouped against each other, and each group's most frequent name becomes its
 label.
 
 Six channels, kept separate. Folding `performance_measures` into one concatenated signature

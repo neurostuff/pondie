@@ -1,7 +1,7 @@
 # Baseline and two variants, measured
 
 Three configurations over the sixteen reviewer-gold papers
-(`data/gold-direction-16.pmids`), scored on contrast polarity by `score_direction.py` and
+(`data/gold-direction-16.pmids`), scored on contrast polarity by `pondie.benchmark` and
 priced from each stage's own token report. Run on beast in a uv-managed environment, four
 papers in parallel per arm, one GPU per shard for the evidence union.
 
@@ -99,7 +99,7 @@ cost. That is the union's whole contribution and it is stable across arms.
 
 ## Two rules that did not fire
 
-`fill_directions` filled **zero** cells across all sixteen papers, and the reason is worth
+`fill_directions` filled **zero** cells across all sixteen papers. The explanation is worth
 recording rather than treating as a bug. It only fills a cell the model left `absent`, and
 this pipeline leaves almost none: 10 unsigned cells out of 164, of which exactly 1 sits
 under an analysis whose name carries a comparison operator. The rule was measured at 98%
@@ -107,7 +107,7 @@ on 17% of the *reviewer gold*, whose records came from an earlier pipeline that 
 directions far more often. The gap it was built to fill has largely closed, and it now
 costs nothing and earns nothing.
 
-`mirror_withheld` also fired zero times, for a different and fixable reason: `run_extraction`
+`mirror_withheld` also fired zero times, for a different and fixable reason: the runner
 does not re-run stage 1, so the stage-1 files on disk were partitioned by the old rule and
 carry no `withhold` entries. Measuring the mirror needs `parse_tables --resplit` over the
 corpus first.

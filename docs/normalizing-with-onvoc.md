@@ -1,7 +1,7 @@
 # Normalizing tasks and conditions against ONVOC
 
 Measured on 328 records — the 299 schizophrenia papers and the first 29 monetary-incentive-delay
-papers — using `review/pipeline/normalize.py`.
+papers — using ``pondie.normalization._onvoc``.
 
 ## ONVOC is already the level we want to settle at
 
@@ -9,7 +9,7 @@ papers — using `review/pipeline/normalize.py`.
 children of their own, and those are branches themselves (`Tests`, `Executive Function`,
 `Substance Abuse`). There is no subtype tree — ONVOC has `Schizophrenia` and nothing below it.
 
-So rolling up to "a step above the subtype" is not tree navigation. ONVOC's leaf *is* that
+Rolling up to "a step above the subtype" is not tree navigation. ONVOC's leaf *is* that
 step, and the whole problem is getting a paper's surface form onto it.
 
 Tested directly: stripping subtype qualifiers (`first-episode`, `chronic`, `paranoid`,

@@ -5,11 +5,11 @@ fix does; this says why it was worth doing and how much it bought.
 
 The corpus throughout is the 300 schizophrenia papers staged on beast at
 `/home/james/nsv-runs/schiz`, of which 299 build. The bench is the sixteen reviewer-gold
-papers in `data/gold-direction-16.pmids`, scored by `score_direction.py`.
+papers in `data/gold-direction-16.pmids`, scored by `pondie.benchmark`.
 
 ## The repair chain was never wired in on beast
 
-`unwrap_plain_slots` was defined but never called in the copy of `build_record.py` the
+`unwrap_plain_slots` was defined but never called in the copy of `record/builder.py` the
 schizophrenia run used, and every paper logged `repairs: none fired`. Rebuilding the same
 payloads locally, with no new model calls, moved:
 
@@ -81,7 +81,7 @@ independent findings, and a meta-analysis counting both counts one sample twice.
 
 ## Two ways a rebuild lost papers
 
-`run_extraction.TEXT_VARIANTS` listed two text flavours where `pipeline.kinds.TEXT_FLAVOURS`
+the runner's text-flavour list listed two text flavours where `Flavour`
 lists four, so a paper whose only text is `ace` built fine under the pipeline driver and
 failed here with "no text". It now derives from the one list.
 
@@ -113,6 +113,39 @@ Same 687 case-control contrasts detected either way; the difference is how many 
 | Control > SZ | 248 analyses / 118 studies | 324 / 145 |
 
 The name-match fallback now fires zero times: every included contrast joins by exact key.
+
+## Two defects a reviewer logged, and what closed them
+
+Both were logged per paper in a `known-gaps.yaml` and are now gone. Recorded here rather
+than there because that file had turned into an allowlist a module read to *suppress*
+findings, which was never the intent of writing them down. Re-measured on the seventeen
+records under `benchmarks/`: all five papers report **zero** cross-reference findings of
+either kind.
+
+**A seed region named rather than referenced.** `MODE_NOTE["entities"]` never mentioned
+`Region`, so eleven of sixteen papers emitted none — and an analysis whose seed had no
+Region to point at wrote the region's *name* into the reference slot. Five papers carried
+it: `7HPLh5nJzmP5` (`left dlPFC parcel`, `right dlPFC parcel`), `aVGe9BmFTMDR` (seeds named
+by coordinates — `responder Rlocation (-42, 34, 38)`), `QQCjAAT6SwwQ` (seven salience-network
+seeds), `kzMj26hGWacQ`, `TgcHKMRfrVog` (nine references to three rsFC seeds).
+
+It was invisible twice over: `check_local_ids` could not see it at all until it learned to
+follow the type designator into `ConnectivityDetails`, and even then nothing ran
+`check_local_ids` — `BuildReport.dangling` was declared and never assigned, so the count the
+build reports could not print. *Closed by* the Region paragraph now in `MODE_NOTE`, which
+says a Region is an entity in the sense a Group is and that pass is the only place one can
+be created.
+
+**Two sibling models minting the same column ids.** On `QQCjAAT6SwwQ`, two linear
+mixed-effects models each declared `term_age`, `term_sex`, `term_education` and `term_group`,
+so a `Cell.term` naming one of them could not say which model's column it meant. Both
+declarations resolve, so nothing but a duplicate-id check notices. *Closed by* the
+`ModelEstimation` description deviation stating that a model fitted over a different sample
+is a different record.
+
+The shape both share is worth keeping: a reference that **resolves to the wrong thing** is
+harder to find than one that resolves to nothing, and neither was reachable by the
+validator — both are `check_local_ids` findings, which is a different stream.
 
 ## Open
 

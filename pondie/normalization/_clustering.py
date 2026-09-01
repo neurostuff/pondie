@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from pondie.normalization._folding import fold, squash
+from pondie.vocabularies.folding import fold, squash
 
 
 def name_links(names: list[str]) -> list[tuple[int, int]]:
@@ -69,9 +69,9 @@ def components(n: int, links) -> list[int]:
 def sample_pairs(comp: list[int], rng, per_positive: int = 3):
     """Positives inside a component, negatives across. Distant supervision from the ladder.
 
-    The negatives are assumed rather than verified: two items in different components may be
-    the same thing under different names, which is exactly the population this model exists
-    to find. It biases the model conservative, and that is the safe direction.
+    The ladder assumes, but does not verify, the negative pairs. Items in different
+    components may be the same thing under different names—the cases this model should
+    find. This assumption makes the model conservative, which is safer.
     """
     by: dict[int, list[int]] = defaultdict(list)
     for i, c in enumerate(comp):
@@ -135,7 +135,7 @@ def rescue(labels, d, threshold: float):
 
 
 def families(labels, prose, threshold: float):
-    """Groups of identities, from prose geometry rather than from the model."""
+    """Group identities by the geometry of their prose embeddings."""
     import numpy as np
     from sklearn.cluster import AgglomerativeClustering
 

@@ -35,10 +35,9 @@ _NEGATORS = {"no", "not", "never", "nor", "neither", "without", "none", "n't"}
 def _parser():
     """The blank-parse pipeline, built once.
 
-    Raises rather than returning None. Without a parse there is no scope, and without scope
-    "not medicated" and "medicated" contain the same words -- the field would read UNKNOWN,
-    which is also what a paper that never mentions medication reads. A missing model would
-    look like a corpus that stopped reporting.
+    Raise an error if parsing is unavailable. Without scope, "not medicated" and
+    "medicated" contain the same words, so the field would read UNKNOWN. Papers that never
+    mention medication also read UNKNOWN, making a missing model look like missing data.
     """
     spacy = require("spacy", "nlp", "negation scope cannot be read without a parse")
     try:

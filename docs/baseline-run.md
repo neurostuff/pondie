@@ -41,14 +41,14 @@ Five stages. Only stages 2–4 are model calls on the paper.
 
 | stage | what | model | calls/paper |
 |---|---|---|---|
-| 1 · tables → analyses | `review/parse_tables.py`, upstream autonima | `gpt-5-mini` | 1 per coordinate table |
+| 1 · tables → analyses | ``pondie.extraction.corpus.tables``, upstream autonima | `gpt-5-mini` | 1 per coordinate table |
 | — · tables → `Table` records | copied from the pubget manifest, **no model** | — | 0 |
 | 2 · entities | `extract_record.py --mode entities --no-evidence` | `gpt-5.6-luna`, low | 1 |
 | 3 · analyses | `--mode analyses --no-evidence`, given stage 1's list + a digest of stage 2 | `gpt-5.6-luna`, low | 1 |
-| 4 · evidence | `add_evidence.py`, quotes only, ~50 fields per call | `gpt-5.6-luna` | 4–7 |
-| 5 · build + validate | `build_record.py`, `validate_record.py` | — | 0 |
+| 4 · evidence | `evidence/quote.py`, quotes only, ~50 fields per call | `gpt-5.6-luna` | 4–7 |
+| 5 · build + validate | `record/builder.py`, `record/validate.py` | — | 0 |
 
-`review/run_extraction.py --pmids bench-baseline.pmids` chains 2–5.
+``pondie extract` --pmids bench-baseline.pmids` chains 2–5.
 
 Two departures from the published recommendation, both worth keeping:
 
@@ -157,7 +157,7 @@ the 11 are a subset of a group, not a group, and no slot links a participant sub
 acquisition. The paper's own handling (scanner as a covariate of no interest) *is* captured.
 
 **A tested null result has nowhere to go.** `5Rw4BhGBShSR` computed the Gaze × Clarity
-interaction and reports no significant clusters. Because it yields no coordinates it appears
+interaction and reports no significant clusters. It yields no coordinates, so it appears
 in no table, so stage 1 never surfaces it and no `Analysis` records it. The record cannot
 distinguish an effect tested and null from an effect never tested. This is inherent to
 scoping extraction to coordinate-bearing analyses, and worth deciding deliberately.
@@ -187,9 +187,9 @@ it.
 ## Reproducing
 
 ```bash
-python review/sync_texts.py   --pmids bench-baseline.pmids
-python review/parse_tables.py --pmids bench-baseline.pmids --key-file .env   # stage 1, costs money
-python review/run_extraction.py --pmids bench-baseline.pmids --key-file .env # stages 2-5
+python `pondie.extraction.corpus.sync`   --pmids bench-baseline.pmids
+python `pondie.extraction.corpus.tables` --pmids bench-baseline.pmids --key-file .env   # stage 1, costs money
+python pondie extract --pmids bench-baseline.pmids --run baseline --model <model> --env .env
 python -m pytest test_extraction_prompt.py                                   # prompt contract
 ```
 

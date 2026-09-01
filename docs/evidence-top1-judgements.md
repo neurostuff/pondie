@@ -12,7 +12,7 @@ measure.
 
 > **What the comparison target is.** Everything scored here is measured against the
 > evidence spans in the extraction records, and those were produced by the incumbent
-> LLM evidence pass (`review/add_evidence.py`), not by a human. So every agreement
+> LLM evidence pass (``pondie.extraction.evidence.quote``), not by a human. Every agreement
 > number below says *how often the retriever picks the same sentence the LLM picked* --
 > not how often either is right. The hand judgements in the case list are the only part
 > of this file that assesses truth, because there I read the paper and decided myself;
@@ -36,7 +36,7 @@ exact-unit metric reports. The metric undercounts by roughly 2.4x, because a pap
 states a fact in more than one place and the LLM pass picked one of them.
 
 Four picks are *better* than the incumbent LLM's own span (#27, #37, #41, #60). In #60 the
-retriever cites the demographics row reading "FESZ patients (n=43)" while the LLM cited a coordinate table row that never mentions 43. So exact-unit agreement is not
+retriever cites the demographics row reading "FESZ patients (n=43)" while the LLM cited a coordinate table row that never mentions 43. Exact-unit agreement is therefore not
 merely a strict metric, it is measuring against a noisy target, and it has no 100%.
 
 ## The failure taxonomy
@@ -107,8 +107,8 @@ Raw dumps: `data/eval/top1-judgements.json`.
 ## The fixes, and what they were worth
 
 Four of the failure classes above are fixable before any model runs. They are
-implemented in `review/evidence_retrieval.py` and tested in
-`study-schema/test_evidence_retrieval.py`; each test is one of the cases below.
+implemented in ``pondie.extraction.evidence.retrieval`` and tested in
+`tests/test_evidence_retrieval.py`; each test is one of the cases below.
 
 Measured over **4,074 field instances across all 21 papers**, scoring the retriever's
 pick against the incumbent LLM evidence pass's unit. First, each fix alone against the baseline
@@ -158,7 +158,7 @@ the evidence for both groups' `n`.
 
 The result that matters is the third column. In the one stratum where the entity name
 is the *only* possible discriminator, putting it in the query scores 14.9% -- below
-both alternatives. The cross-encoder cannot use it as a term. So the entity is scored
+both alternatives. The cross-encoder cannot use it as a term, so the entity is scored
 as a separate signal instead, the way the literal bonus already works.
 
 ### Final
