@@ -26,6 +26,31 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from pondie import paths
 
+
+def available_reranker_devices() -> tuple[str, ...]:
+    """Every visible CUDA device, or CPU when there is none.
+
+    The evidence retriever's cross-encoder is the one model this package runs
+    locally, and defaulting it to CPU meant a host with four idle GPUs scored spans
+    on its cores. Detection is here rather than at the call site so every entry
+    point gets it -- `pondie extract` exposes no flag for the field, so a CLI run
+    could not opt in at all.
+
+    Every failure mode falls back to CPU rather than raising: torch is an optional
+    dependency (the `reranker` extra), and a driver too old for the installed build
+    makes `is_available()` warn and return False. `retrieval.load_reranker` retries
+    on CPU per paper as well, so a card that will not hold the model costs that
+    paper its reranker and nothing else.
+    """
+    try:
+        import torch  # noqa: PLC0415
+
+        if torch.cuda.is_available() and torch.cuda.device_count():
+            return tuple(f"cuda:{i}" for i in range(torch.cuda.device_count()))
+    except Exception:
+        pass
+    return ("cpu",)
+
 #: Re-exported: a render is a fact about the corpus layout, so `paths` owns it.
 Flavour = paths.Flavour
 
@@ -177,8 +202,9 @@ class Settings(Strict):
     union: bool = True
     #: Devices the evidence retriever may use, cycled per paper. One device shared by nine
     #: workers exhausted an 8GB card; a list lets a run spread them without any stage
-    #: having to know how many workers there are.
-    reranker_devices: tuple[str, ...] = ("cpu",)
+    #: having to know how many workers there are. Defaults to every visible GPU, falling
+    #: back to CPU -- see `available_reranker_devices`.
+    reranker_devices: tuple[str, ...] = Field(default_factory=available_reranker_devices)
     attempts: Annotated[int, Field(ge=1)] = 3
     #: Evidence is 45% of input tokens. Dropping it leaves a record whose values have no
     #: supporting span -- structurally complete, and unreviewable.
