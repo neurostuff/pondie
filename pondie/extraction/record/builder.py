@@ -79,9 +79,7 @@ def _entity_lists() -> dict[str, str]:
         nested = attribute.range
         if nested not in sch:
             continue
-        for key, path in lists_on(
-            sch.attributes(nested), f"{name}."
-        ).items():
+        for key, path in lists_on(sch.attributes(nested), f"{name}.").items():
             found.setdefault(key, path)
     return found
 
@@ -150,7 +148,6 @@ class BuildReport:
             )
             + ")"
         )
-
 
 
 #: The only two things `extraction_status` may say.
@@ -254,9 +251,7 @@ def _resolve_field(
         # ("not_reported fields must have evidence.status not_applicable"). That shape is
         # what `--no-evidence` instructs the model to emit, so every such run produced it.
         located = status == "extracted"
-        node["evidence"] = evidence = {
-            "status": "not_found" if located else "not_applicable"
-        }
+        node["evidence"] = evidence = {"status": "not_found" if located else "not_applicable"}
         report.downgraded.append(f"{path}: {status} with no evidence block")
 
     raw_sets = evidence.get("sets")
@@ -380,9 +375,7 @@ def load_aliases(payload_dir: Path) -> dict[str, str]:
     return {k: v for k, v in aliases.items() if isinstance(k, str) and isinstance(v, str)}
 
 
-def apply_aliases(
-    body: dict[str, Any], sch: Schema, aliases: dict[str, str]
-) -> int:
+def apply_aliases(body: dict[str, Any], sch: Schema, aliases: dict[str, str]) -> int:
     """Rewrite cross-reference slots through the alias map, in place.
 
     Only slots the schema classifies as references are touched, so an alias can
@@ -759,7 +752,6 @@ def mirror_withheld(body: dict[str, Any], stage1: Path | None) -> list[str]:
     return made
 
 
-
 def listify_scalars(body: dict[str, Any], sch: Schema) -> list[str]:
     """Wrap a lone scalar in a list inside an `Extracted<T>List` wrapper.
 
@@ -1025,10 +1017,12 @@ def coerce_numeric_values(body: dict[str, Any], sch: Schema) -> list[str]:
             here = f"{path}.{key}"
             wrapper = attribute.range
             if values.is_field(value) and isinstance(wrapper, str):
-                declared = (sch.attributes(wrapper) or {}).get(
-                    "value", {}
-                )
-                wants = declared.range
+                declared = (sch.attributes(wrapper) or {}).get("value")
+                # `getattr`, not `.range`: the fallback for a wrapper class that declares
+                # no `value` slot was a bare `{}`, which has no `.range` and took the whole
+                # build down with an AttributeError -- one paper in 89, at the last stage,
+                # after every model call it needed had been paid for.
+                wants = getattr(declared, "range", None)
                 inner = value.get("value")
                 if wants in ("float", "double", "decimal", "integer") and isinstance(
                     inner, str
