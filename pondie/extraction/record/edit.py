@@ -19,6 +19,7 @@ set with nothing left to check it against.
 
 from __future__ import annotations
 
+import functools
 import re
 from dataclasses import dataclass, field as dataclass_field
 from typing import Any, Callable, Mapping, MutableMapping
@@ -243,6 +244,17 @@ class EditLog:
         return bool(self.written)
 
 
+@functools.lru_cache(maxsize=1)
+def ADDRESSABLE() -> frozenset[str]:
+    """Classes a record addresses by `local_id`, read from the extraction projection."""
+    from pondie.extraction.record.validate import EXTRACTION_SCHEMA
+    from pondie.schema import reader
+
+    schema = reader.load(EXTRACTION_SCHEMA)
+    return frozenset(name for name in schema.classes
+                     if "local_id" in schema.attributes(name))
+
+
 def label_of(entity: Mapping[str, Any]) -> str:
     """What a source would call this entity: its name, else its definition, else its id."""
     for slot in ("name", "definition", "model_type", "type"):
@@ -335,6 +347,11 @@ def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
 
     taken = {e.get("local_id") for e in record.get(_container(sch, class_name)) or []
              if isinstance(e, Mapping)}
+    if class_name not in ADDRESSABLE():
+        # `local_id` is the extraction projection's, not storage's, so the question is asked
+        # of the schema a record is written against. `ExternalDataset` has no local_id there,
+        # and an entity minted for it carries an attribute its class does not declare.
+        return None, f"{class_name} takes no local_id, so a new one cannot be addressed"
     label = str(proposal.get("name") or proposal.get("definition") or "").strip()
     if not label:
         return None, f"the proposed {class_name} has no name to build an id from"

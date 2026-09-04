@@ -248,7 +248,8 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     # text when it finds nothing, which is the honest behaviour for a paper it cannot split.
     premise = _premise(text)
     if proposer is not None:
-        _sweep(record, premise, sch, proposer, checker, threshold, report, abbreviations)
+        _sweep(record, premise, text, sch, proposer, checker, threshold, report,
+               abbreviations)
     if checker is not None:
         grounding.drop_unsupported_spans(record, checker, report.refused)
     if caller is not None and model:
@@ -315,10 +316,18 @@ def _abbreviations(text: str) -> Any:
         return None
 
 
-def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: Any,
-           checker: Checker | None, threshold: float, report: Report,
+def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: Schema,
+           proposer: Any, checker: Checker | None, threshold: float, report: Report,
            abbreviations: Any = None) -> None:
-    """Ask the proposer per class, targets first, and write what survives the guards."""
+    """Ask the proposer per class, targets first, and write what survives the guards.
+
+    Two texts, and conflating them writes spans that address the wrong string. The models see
+    `premise` -- the methods and results -- because that is where an entity is described. A
+    span is resolved against `document`, the whole normalized text, because that is what
+    every offset in the record is measured from and what `source_text_hash` covers. Passing
+    the premise to both put offsets into the slice: "span text disagrees with source at
+    2180-2225" on three of three spot-checked papers.
+    """
     from pondie.extraction.recall import candidates, sweep_order
 
     # Every class, not only the populated ones. Sweeping what the record already has asks
@@ -329,23 +338,23 @@ def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: A
     for container in sweep_order(sch, list(by_container)):
         class_name = by_container[container]
         proposals = proposer.propose(
-            sch, class_name, text,
+            sch, class_name, premise,
             candidates(sch, record, class_name))
         by_id = {e.get("local_id"): e for e in record.get(container) or []
                  if isinstance(e, Mapping)}
-        graded = grounding.supported(proposals, class_name, text, checker, threshold,
+        graded = grounding.supported(proposals, class_name, premise, checker, threshold,
                                      report.refused)
         for proposal in graded:
             entity = by_id.get(str(proposal.get("local_id") or "").strip())
             if entity is None:
-                entity, why = edit_module.create(sch, record, class_name, proposal, text,
-                                                 abbreviations)
+                entity, why = edit_module.create(sch, record, class_name, proposal,
+                                                 document, abbreviations)
                 if entity is None:
                     report.refused.append(Refusal(container, why))
                     continue
                 record.setdefault(container, []).append(entity)
                 report.written.append(f"{container}/{entity['local_id']} created")
-            log = edit_module.apply(sch, record, class_name, entity, proposal, text,
+            log = edit_module.apply(sch, record, class_name, entity, proposal, document,
                                     abbreviations)
             report.written += [f"{container}/{entity['local_id']}.{s}" for s, _v in log.written]
             report.refused += log.refused
