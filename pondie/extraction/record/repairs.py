@@ -103,6 +103,11 @@ def build_sequence() -> tuple[Repair, ...]:
             after="wrappers",
         ),
         Repair(
+            "denominators",
+            "fill a distribution's denominator from its count and percentage",
+            lambda body, ctx: br.derive_denominators(body),
+        ),
+        Repair(
             "numbers",
             "turn a numeric string into the number its slot declares",
             lambda body, ctx: br.coerce_numeric_values(body, ctx.schema),

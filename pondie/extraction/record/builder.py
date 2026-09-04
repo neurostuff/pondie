@@ -441,6 +441,68 @@ def apply_aliases(body: dict[str, Any], sch: Schema, aliases: dict[str, str]) ->
     return rewrites
 
 
+def derive_denominators(body: dict[str, Any]) -> list[str]:
+    """Fill `CategoryDistribution.denominator` from the count and the percentage.
+
+    The slot records the base the paper divided by, which is often not the group's `n`: a
+    handedness figure may cover only those who answered, and a race breakdown may be of the
+    analysed sample after exclusions. That is why it exists, and why the count check reads
+    it rather than guessing -- but it is populated in none of 200 records, so nothing
+    checked anything.
+
+    Where a paper writes "12 male (60%)" the base is stated twice over and needs no model:
+    12 / 0.60 is 20. Filled only when the division lands within a tenth of a whole number
+    and every entry of the distribution agrees on the same base, because a rounded
+    percentage on a small sample is ambiguous -- 1 of 3 prints as 33% and implies 3.03.
+    `value_source` is `generated`, since the paper stated a percentage and not this.
+    """
+    from pondie.formats import values as value_tools
+
+    filled: list[str] = []
+    for owner in ("groups",):
+        for index, group in enumerate(body.get(owner) or []):
+            if not isinstance(group, dict):
+                continue
+            for slot in ("sex_distribution", "race_distribution", "handedness_distribution"):
+                entries = [e for e in (group.get(slot) or []) if isinstance(e, dict)]
+                bases: list[float] = []
+                for entry in entries:
+                    if value_tools.read(entry.get("denominator")) is not None:
+                        bases = []
+                        break
+                    count = value_tools.read(entry.get("count"))
+                    share = value_tools.read(entry.get("percentage"))
+                    if not isinstance(count, (int, float)) or not isinstance(share, (int, float)):
+                        continue
+                    if not 0 < float(share) <= 100:
+                        continue
+                    implied = float(count) / (float(share) / 100.0)
+                    if abs(implied - round(implied)) > 0.1:
+                        continue
+                    bases.append(round(implied))
+                if not bases or len(set(bases)) != 1 or len(bases) != len(entries):
+                    continue
+                base = bases[0]
+                # The base has to reproduce every percentage the paper printed. This is a
+                # stronger condition than the division landing near a whole number, and it
+                # is what separates a base the paper implies from one arithmetic invented:
+                # 1 of 3 prints as 33% and 2 of 3 as 67%, and only 3 gives back both.
+                if base <= 0 or any(
+                    round(float(value_tools.read(entry.get("count"))) / base * 100)
+                    != round(float(value_tools.read(entry.get("percentage"))))
+                    for entry in entries
+                ):
+                    continue
+                for entry in entries:
+                    entry["denominator"] = {
+                        "extraction_status": "extracted", "value": int(base),
+                        "value_source": "generated",
+                        "evidence": {"status": "not_applicable"},
+                    }
+                filled.append(f"{owner}[{index}].{slot}.denominator = {int(base)}")
+    return filled
+
+
 def derive_coordinate_spaces(
     body: dict[str, Any], stage1: Path | None, table_map: Path | None
 ) -> list[str]:

@@ -2244,3 +2244,92 @@ def test_the_locator_keeps_the_larger_cross_encoder() -> None:
     from pondie.extraction.evidence import retrieval
 
     assert retrieval.RERANKER == "cross-encoder/ms-marco-MiniLM-L12-v2"
+
+
+def test_a_denominator_is_derived_from_the_count_and_the_percentage() -> None:
+    """The slot records the base the paper divided by, which is often not the group's `n`.
+    It is populated in none of 200 records, so the count check had nothing to read -- but
+    where a paper writes "12 male (60%)" the base is stated twice and 12 / 0.60 is 20."""
+    from pondie.extraction.record import builder
+
+    def entry(count, share):
+        return {"count": {"extraction_status": "extracted", "value": count,
+                          "value_source": "reported", "evidence": {"status": "not_found"}},
+                "percentage": {"extraction_status": "extracted", "value": share,
+                               "value_source": "reported",
+                               "evidence": {"status": "not_found"}}}
+
+    body = {"groups": [{"local_id": "g", "sex_distribution": [entry(12, 60), entry(8, 40)]}]}
+    filled = builder.derive_denominators(body)
+
+    assert filled == ["groups[0].sex_distribution.denominator = 20"]
+    for e in body["groups"][0]["sex_distribution"]:
+        assert e["denominator"]["value"] == 20
+        assert e["denominator"]["value_source"] == "generated", \
+            "the paper stated a percentage, not this"
+
+
+def test_a_rounded_percentage_still_yields_its_base_when_it_round_trips() -> None:
+    """1 of 3 prints as 33% and divides to 3.03, which looks like a guess -- but only 3
+    gives back both 33% and 67%, so the round trip decides it rather than a tolerance."""
+    from pondie.extraction.record import builder
+
+    def entry(count, share):
+        return {"count": {"extraction_status": "extracted", "value": count,
+                          "value_source": "reported", "evidence": {"status": "not_found"}},
+                "percentage": {"extraction_status": "extracted", "value": share,
+                               "value_source": "reported",
+                               "evidence": {"status": "not_found"}}}
+
+    body = {"groups": [{"local_id": "g", "sex_distribution": [entry(1, 33), entry(2, 67)]}]}
+    assert builder.derive_denominators(body) == \
+        ["groups[0].sex_distribution.denominator = 3"]
+    assert body["groups"][0]["sex_distribution"][0]["denominator"]["value"] == 3
+
+
+def test_a_base_that_does_not_reproduce_the_percentages_is_refused() -> None:
+    """The division can land near a whole number and still be wrong. 5 at 51% divides to
+    9.8, and 10 gives back 50% -- not what the paper printed."""
+    from pondie.extraction.record import builder
+
+    def entry(count, share):
+        return {"count": {"extraction_status": "extracted", "value": count,
+                          "value_source": "reported", "evidence": {"status": "not_found"}},
+                "percentage": {"extraction_status": "extracted", "value": share,
+                               "value_source": "reported",
+                               "evidence": {"status": "not_found"}}}
+
+    body = {"groups": [{"local_id": "g", "sex_distribution": [entry(5, 51), entry(5, 49)]}]}
+    assert builder.derive_denominators(body) == []
+
+
+def test_entries_that_disagree_on_the_base_are_left_alone() -> None:
+    """Two entries implying different bases means one of them was misread, and filling in
+    either would bury the disagreement the count check exists to surface."""
+    from pondie.extraction.record import builder
+
+    def entry(count, share):
+        return {"count": {"extraction_status": "extracted", "value": count,
+                          "value_source": "reported", "evidence": {"status": "not_found"}},
+                "percentage": {"extraction_status": "extracted", "value": share,
+                               "value_source": "reported",
+                               "evidence": {"status": "not_found"}}}
+
+    body = {"groups": [{"local_id": "g", "sex_distribution": [entry(12, 60), entry(8, 20)]}]}
+    assert builder.derive_denominators(body) == []
+
+
+def test_a_stated_denominator_is_never_overwritten() -> None:
+    """What the paper said outranks what arithmetic implies."""
+    from pondie.extraction.record import builder
+
+    stated = {"extraction_status": "extracted", "value": 25, "value_source": "reported",
+              "evidence": {"status": "present", "sets": [{"spans": [{"text": "of 25"}]}]}}
+    body = {"groups": [{"local_id": "g", "sex_distribution": [
+        {"count": {"extraction_status": "extracted", "value": 12,
+                   "value_source": "reported", "evidence": {"status": "not_found"}},
+         "percentage": {"extraction_status": "extracted", "value": 60,
+                        "value_source": "reported", "evidence": {"status": "not_found"}},
+         "denominator": stated}]}]}
+    assert builder.derive_denominators(body) == []
+    assert body["groups"][0]["sex_distribution"][0]["denominator"]["value"] == 25

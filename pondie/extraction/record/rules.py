@@ -1185,11 +1185,15 @@ def check_counts_add_up(record: Mapping[str, Any], findings: Findings) -> None:
             if any(c is None for c in counted) or len(declared) != 1:
                 continue
             total, got = declared.pop(), sum(c for c in counted if c is not None)
-            if got != total:
+            # Only the impossible direction. A paper reporting "16 female (53%)" of 30 has
+            # given one category of two, and its counts sum below the base by design --
+            # every one of the nine this fired on was that, and none was an error. More
+            # participants in the categories than in the base cannot be right either way.
+            if got > total:
                 findings.warn(
                     f"groups[{index}].{slot}",
-                    f"the counts sum to {got} but the entries give a denominator "
-                    f"of {total}",
+                    f"the counts sum to {got}, more than the denominator of {total} the "
+                    f"entries give",
                 )
 
         seen = [(slot, whole(group.get(slot))) for slot in funnel]

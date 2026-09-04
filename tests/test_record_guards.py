@@ -1332,18 +1332,25 @@ def test_a_breakdown_that_does_not_sum_to_its_own_denominator():
     def entry(count, denominator):
         return {"count": field(count), "denominator": field(denominator)}
 
-    record = {"groups": [{"local_id": "g",
-                          "sex_distribution": [entry(12, 20), entry(6, 20)]}]}
+    over = {"groups": [{"local_id": "g",
+                        "sex_distribution": [entry(12, 20), entry(14, 20)]}]}
     found = _Findings()
-    rules.check_counts_add_up(record, found)
+    rules.check_counts_add_up(over, found)
     assert len(found.warnings) == 1
-    assert "sum to 18" in found.warnings[0][1] and "denominator of 20" in found.warnings[0][1]
+    assert "sum to 26" in found.warnings[0][1] and "denominator of 20" in found.warnings[0][1]
 
     ok = {"groups": [{"local_id": "g",
                       "sex_distribution": [entry(12, 20), entry(8, 20)]}]}
     clean = _Findings()
     rules.check_counts_add_up(ok, clean)
     assert clean.warnings == []
+
+    # A paper reporting one category of two sums below the base by design. Every one of the
+    # nine this fired on across the corpus was that, and none was an error.
+    partial = {"groups": [{"local_id": "g", "sex_distribution": [entry(16, 30)]}]}
+    quiet = _Findings()
+    rules.check_counts_add_up(partial, quiet)
+    assert quiet.warnings == []
 
 
 def test_an_enrolment_funnel_that_grows():
