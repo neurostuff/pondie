@@ -233,6 +233,10 @@ class Settings(Strict):
     #: `pondie[repair]` or a GPU is missing, the stage says so once and carries on with the
     #: adjudication, which needs neither.
     repair: bool = True
+    #: Sweeps over the record. Two, because the first pass creates the entities the second
+    #: can link to: a region proposed in pass one is a candidate an analysis can name in pass
+    #: two, and with one pass those links have nothing to point at.
+    repair_iterations: Annotated[int, Field(ge=1)] = 2
     #: Which cards this process may use, set once before either local model loads. The
     #: checker places itself from this and nothing else, so it cannot be given a card of its
     #: own without hiding the proposer's. Empty leaves the environment alone.

@@ -230,7 +230,8 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
 
 def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: str,
         proposer: Any = None, checker: Checker | None = None, caller: Any = None,
-        model: str = "", threshold: float = 0.5, service_tier: str = "") -> Report:
+        model: str = "", threshold: float = 0.5, service_tier: str = "",
+        iterations: int = 2) -> Report:
     """Repair `record` in place. Returns what happened, including anything it broke."""
     from copy import deepcopy
 
@@ -247,9 +248,12 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     # abstract and introduction before it sees a method. `sectionize` falls back to the whole
     # text when it finds nothing, which is the honest behaviour for a paper it cannot split.
     premise = _premise(text)
-    if proposer is not None:
+    for _pass in range(iterations if proposer is not None else 0):
+        before_pass = len(report.written)
         _sweep(record, premise, text, sch, proposer, checker, threshold, report,
                abbreviations)
+        if len(report.written) == before_pass:
+            break                       # nothing changed, so a further pass sees the same
     if checker is not None:
         grounding.drop_unsupported_spans(record, checker, report.refused)
     if caller is not None and model:
@@ -342,9 +346,16 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
             existing(sch, record, class_name) + candidates(sch, record, class_name))
         by_id = {e.get("local_id"): e for e in record.get(container) or []
                  if isinstance(e, Mapping)}
-        graded = grounding.supported(proposals, class_name, premise, checker, threshold,
-                                     report.refused)
-        for proposal in graded:
+        # Only what would be created is asked to justify its existence. A proposal naming an
+        # entity the record already holds is an *edit*, and the extractor established that
+        # entity already -- re-asking whether the paper describes it rejects corrections to
+        # things that are plainly there. On 26424424 that cost 61 refusals and all but one of
+        # the links: the model returned every ROI of all three analyses, by their exact ids,
+        # and the existence gate threw the proposals away before the edit was attempted.
+        edits = [p for p in proposals if str(p.get("local_id") or "").strip() in by_id]
+        news = [p for p in proposals if p not in edits]
+        for proposal in edits + grounding.supported(news, class_name, premise, checker,
+                                                    threshold, report.refused):
             entity = by_id.get(str(proposal.get("local_id") or "").strip())
             if entity is None:
                 entity, why = edit_module.create(sch, record, class_name, proposal,

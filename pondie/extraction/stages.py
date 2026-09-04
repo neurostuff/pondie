@@ -736,6 +736,7 @@ class Repair(_Base):
             caller=caller if settings.adjudicate else None,
             model=settings.model if settings.adjudicate else "",
             service_tier=settings.service_tier,
+            iterations=settings.repair_iterations,
         )
         record_path.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
         out = self.produces(paper, settings)

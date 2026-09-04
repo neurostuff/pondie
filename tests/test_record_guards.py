@@ -612,3 +612,31 @@ def test_a_slot_of_a_subclass_is_written_against_that_subclass(sch):
     edit_module.apply(sch, record, "Acquisition", record["acquisitions"][0],
                       {"magnetic_field_strength_tesla": "3"})
     assert "magnetic_field_strength_tesla" in record["acquisitions"][0]
+
+
+def test_an_edit_to_an_existing_entity_is_not_asked_to_justify_its_existence(sch):
+    """26424424: the model returned every ROI of all three analyses by their exact ids, and
+    the existence gate threw the proposals away before the edit was attempted -- 61 refusals
+    and all but one of the links. An entity the extractor already found does not need its
+    existence re-established."""
+    from pondie.extraction import repair as repair_pass
+
+    class RejectEverything:
+        def score(self, claims):
+            return [0.0] * len(claims)
+
+    record = {
+        "regions": [{"local_id": "r_ains", "name": field("left aINS"),
+                     "definition_method": field("anatomical_a_priori")}],
+        "analyses": [{"local_id": "an_group_gmv", "name": field("group contrast"),
+                      "spatial_scope": field("roi"), "regions": []}]}
+
+    class Proposer:
+        def propose(self, sch_, class_name, premise, instruction):
+            if class_name != "Analysis":
+                return []
+            return [{"local_id": "an_group_gmv", "regions": ["left aINS"]}]
+
+    report = repair_pass.run(record, "", sch, study_id="p",
+                             proposer=Proposer(), checker=RejectEverything())
+    assert record["analyses"][0]["regions"] == ["r_ains"], report.refused
