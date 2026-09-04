@@ -21,6 +21,23 @@ from pondie.extraction.models import Paper, PaperOutcome, RunReport, Settings, S
 from pondie.extraction.stages import sequence
 
 
+def _why(error: BaseException, depth: int = 3) -> str:
+    """The exception and what caused it, down the chain.
+
+    `llm.py` raises `RuntimeError("satisfy for X: 1 attempt(s) failed") from last`, and
+    recording only `str(error)` threw `last` away -- so four papers failed in one batch and
+    the log could not say whether the gateway had refused them, timed out, or returned
+    something unparseable. The chain is the whole diagnosis.
+    """
+    parts, seen = [f"{type(error).__name__}: {error}"], {id(error)}
+    cause = error.__cause__ or error.__context__
+    while cause is not None and id(cause) not in seen and len(parts) <= depth:
+        seen.add(id(cause))
+        parts.append(f"{type(cause).__name__}: {str(cause)[:300]}")
+        cause = cause.__cause__ or cause.__context__
+    return " <- ".join(parts)
+
+
 def run_paper(paper: Paper, settings: Settings, caller: Caller) -> PaperOutcome:
     outcomes: list[StageOutcome] = []
     if not paper.ready():
@@ -41,7 +58,7 @@ def run_paper(paper: Paper, settings: Settings, caller: Caller) -> PaperOutcome:
             outcome = StageOutcome(
                 stage=stage.name,
                 study_id=paper.study_id,
-                reason=f"{type(error).__name__}: {error}",
+                reason=_why(error),
             )
         outcomes.append(outcome)
         if not outcome.ok:

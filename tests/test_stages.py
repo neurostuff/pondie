@@ -976,3 +976,77 @@ def test_the_finish_reason_rides_on_an_unparseable_reply(tmp_path):
             stage="demands",
         )
     assert "finish_reason='length'" in str(raised.value)
+
+
+def test_a_failure_records_what_caused_it() -> None:
+    """`llm.py` raises `RuntimeError("... 1 attempt(s) failed") from last`. Recording only
+    the outer message threw the cause away, so four papers failed in one batch and the log
+    could not say whether the gateway refused them, timed out, or answered unparseably."""
+    from pondie.extraction.driver import _why
+
+    try:
+        try:
+            raise ConnectionError("Connection reset by peer")
+        except ConnectionError as inner:
+            raise RuntimeError("satisfy for 21764527: 1 attempt(s) failed") from inner
+    except RuntimeError as outer:
+        why = _why(outer)
+
+    assert "1 attempt(s) failed" in why
+    assert "ConnectionError: Connection reset by peer" in why
+    assert why.count("<-") == 1
+
+
+def test_the_cause_chain_stops_rather_than_looping() -> None:
+    """A cycle through `__context__` would otherwise hang the failure path, which is the
+    one path that must never be the thing that takes a run down."""
+    from pondie.extraction.driver import _why
+
+    first, second = ValueError("a"), ValueError("b")
+    first.__cause__, second.__cause__ = second, first
+    assert _why(first).count("<-") <= 3
+
+
+class _Boom:
+    """An SDK-shaped failure carrying an HTTP status."""
+
+    def __init__(self, status):
+        self.status_code = status
+
+    def __call__(self, *_a, **_k):
+        raise self._error()
+
+    def _error(self):
+        error = RuntimeError(f"status {self.status_code}")
+        error.status_code = self.status_code
+        return error
+
+
+def test_a_call_that_never_landed_does_not_cost_an_attempt(monkeypatch) -> None:
+    """Four papers died on "1 attempt(s) failed" while `settings.attempts` was 3: a
+    transport error raised past the loop that absorbs model faults. A call that did not land
+    spent no tokens, so it must not spend an attempt either."""
+    from pondie.extraction import llm
+
+    assert llm._transient(_Boom(429)._error())
+    assert llm._transient(_Boom(503)._error())
+    assert llm._transient(TimeoutError("read timed out"))
+    assert llm._transient(ConnectionError("reset by peer"))
+
+
+def test_a_request_the_provider_refused_is_not_retried() -> None:
+    """A 400 is the request itself. Retrying only spends the budget -- and worse here, the
+    post-condition loop lengthens the prompt each time, so an over-length context would
+    retry its way further from success."""
+    from pondie.extraction import llm
+
+    assert not llm._transient(_Boom(400)._error())
+    assert not llm._transient(_Boom(422)._error())
+    assert not llm._transient(_Boom(401)._error())
+
+
+def test_the_transport_budget_is_bounded() -> None:
+    """Unbounded, a provider that is simply down would hang the run rather than fail it."""
+    from pondie.extraction import llm
+
+    assert 1 <= llm.UNREACHABLE_TRIES <= 8

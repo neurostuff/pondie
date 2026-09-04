@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import sys
 import time
 import uuid
@@ -43,6 +44,32 @@ def load_env(path: Path) -> list[str]:
         os.environ.setdefault(name.strip(), value.strip().strip("'\""))
         names.append(name.strip())
     return names
+
+
+#: Statuses another attempt may clear. Flex is capacity-scheduled and answers 429 when
+#: there is none; the 5xx family and the timeouts are the provider or the wire. A 400 or a
+#: 422 is the request itself, and retrying it only spends the budget -- worse here, since the
+#: post-condition loop lengthens the prompt on each retry, so an over-length context would
+#: retry its way further from success.
+RETRYABLE = frozenset({408, 409, 425, 429, 500, 502, 503, 504})
+
+#: How many times a call may fail to land before it counts against `attempts`.
+UNREACHABLE_TRIES = 4
+
+
+def _transient(error: BaseException) -> bool:
+    """Whether this failure is worth another call rather than another answer."""
+    status = getattr(error, "status_code", None)
+    if status is None:
+        status = getattr(getattr(error, "response", None), "status_code", None)
+    if status is not None:
+        return int(status) in RETRYABLE
+    # No status at all is a connection reset, a DNS failure or a read timeout -- the wire,
+    # not the request.
+    return isinstance(error, (ConnectionError, TimeoutError, OSError)) or any(
+        name in type(error).__name__
+        for name in ("Connection", "Timeout", "APIError")
+    )
 
 
 class MalformedReply(ValueError):
@@ -85,7 +112,15 @@ class GatewayCaller:
         # parameter, so a gateway without JSON mode degrades to the old behaviour instead
         # of failing every attempt on an argument error.
         constrain = call.json_object
-        for _attempt in range(call.attempts):
+        # Two budgets, because they answer different questions. `call.attempts` is for
+        # faults the model owns -- an unparseable body, a post-condition it failed. Reaching
+        # the provider at all is not one of those, and a call that never landed spent no
+        # tokens, so it must not consume an attempt. Four papers in one batch died on
+        # `1 attempt(s) failed` while `settings.attempts` was 3, because a transport error
+        # raised straight past the loop that absorbs model faults; re-running all four later
+        # succeeded, which is what transient means.
+        attempt = unreachable = 0
+        while attempt < call.attempts:
             started = time.time()
             try:
                 raw = client.chat.completions.with_raw_response.create(
@@ -109,6 +144,15 @@ class GatewayCaller:
                         file=sys.stderr,
                     )
                     constrain = False
+                    continue
+                if _transient(error) and unreachable < UNREACHABLE_TRIES:
+                    unreachable += 1
+                    # The SDK has already backed off twice inside this one call, so this
+                    # spaces whole calls. Jittered: eight workers that hit the same limit
+                    # would otherwise return in lockstep and hit it again.
+                    time.sleep(min(2.0 ** unreachable, 30.0) * (0.5 + random.random() / 2))
+                    continue
+                attempt += 1
                 continue
             usage = response.usage
             out = getattr(usage, "completion_tokens_details", None)
@@ -144,6 +188,9 @@ class GatewayCaller:
                     body=body,
                     cost=spent,
                 )
+                # A body that will not parse is the model's fault and spent real tokens, so
+                # it costs an attempt -- unlike a call that never landed.
+                attempt += 1
                 continue
             return ModelReply(
                 payload=payload,
@@ -156,7 +203,10 @@ class GatewayCaller:
             )
         if isinstance(last, MalformedReply):
             raise last
-        raise RuntimeError(f"{stage} for {paper}: {call.attempts} attempt(s) failed") from last
+        raise RuntimeError(
+            f"{stage} for {paper}: {call.attempts} attempt(s) failed"
+            + (f" after {unreachable} that never reached the provider" if unreachable else "")
+        ) from last
 
 
 def _as_json(body: str) -> dict:
