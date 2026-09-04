@@ -1445,3 +1445,74 @@ def test_a_short_derived_label_does_not_match_inside_a_word():
              "Images were acquired on a Siemens Trio scanner."]
     assert retrieval.entity_hits(units, "fa") == []
     assert retrieval.entity_hits(units, "siemens trio") == [1]
+
+
+def test_a_replacement_that_is_part_of_what_it_replaces_is_refused(sch):
+    """The proposer returns a quote cut mid-word often enough that this fired twice in
+    fifteen changes over three papers: `hrf_model` lost "and temporally smoothed the data."
+    to "and temporally smo", and `software` went from two complete spans to one ending at
+    "2.1 x 2.1 x 7 mm,". Both scored well -- a prefix of a sentence says most of what the
+    sentence says -- so the score cannot be what stops it."""
+    from pondie.extraction.evidence import relocate as relocate_module
+
+    full = "We used a delayed boxcar model and temporally smoothed the data."
+    doc = f"Methods. {full} Results follow."
+
+    class Proposer:
+        def ask(self, template, instruction, premise, what=""):
+            tags = template["fields"][0]["field_id"]
+            return {"fields": [{"field_id": tags[0],
+                                "supporting_sentences": ["We used a delayed boxcar model "
+                                                         "and temporally smo"]}]}
+
+        def propose(self, *_a, **_k):
+            return []
+
+    class Checker:
+        def score(self, claims):
+            return [0.9] * len(claims)      # the fragment would win on score
+
+    record = {"model_estimations": [{"local_id": "m",
+                                     "hrf_model": cited("delayed boxcar model", full)}]}
+    refused: list = []
+    improved = relocate_module.relocate(
+        record, doc, doc, [("model_estimations[0].hrf_model", 0.01)],
+        Proposer(), Checker(), refused)
+
+    assert improved == [], "a fragment of the incumbent is not an improvement"
+    assert record["model_estimations"][0]["hrf_model"]["evidence"]["sets"][0]["spans"][0][
+        "text"] == full
+    assert any("part of the sentence it would replace" in r.why for r in refused)
+
+
+def test_a_genuinely_different_sentence_still_replaces(sch):
+    """The guard is containment, not length: a better sentence may be shorter."""
+    from pondie.extraction.evidence import relocate as relocate_module
+
+    doc = ("Methods. Images were acquired on a 3 T Siemens scanner. "
+           "The authors thank the department for its support.")
+
+    class Proposer:
+        def ask(self, template, instruction, premise, what=""):
+            tags = template["fields"][0]["field_id"]
+            return {"fields": [{"field_id": tags[0], "supporting_sentences":
+                                ["Images were acquired on a 3 T Siemens scanner."]}]}
+
+        def propose(self, *_a, **_k):
+            return []
+
+    class Checker:
+        def __init__(self):
+            self.calls = 0
+
+        def score(self, claims):
+            self.calls += 1
+            return [0.9 if self.calls == 1 else 0.02] * len(claims)
+
+    record = {"acquisitions": [{"local_id": "a", "modality": cited(
+        "3 T", "The authors thank the department for its support.")}]}
+    refused: list = []
+    improved = relocate_module.relocate(
+        record, doc, doc, [("acquisitions[0].modality", 0.02)],
+        Proposer(), Checker(), refused)
+    assert improved == ["acquisitions[0].modality"]

@@ -1050,3 +1050,37 @@ def test_the_transport_budget_is_bounded() -> None:
     from pondie.extraction import llm
 
     assert 1 <= llm.UNREACHABLE_TRIES <= 8
+
+
+def test_repair_keeps_the_record_it_started_from(tmp_path, monkeypatch) -> None:
+    """The stage writes the record in place, and that record is the only copy of what
+    `build` produced. Without a copy, asking whether a repair helped means running it again
+    -- forty seconds a paper, and a different answer whenever the models move."""
+    import json
+
+    from pondie import paths
+    from pondie.extraction import stages
+    from pondie.extraction.models import Paper, Settings, StageName
+
+    records = tmp_path / "records"
+    records.mkdir()
+    original = {"analyses": [{"local_id": "an"}]}
+    (records / "p1.extraction.json").write_text(json.dumps(original))
+
+    corpus = tmp_path / "corpus" / "p1" / "processed" / "local"
+    corpus.mkdir(parents=True)
+    (corpus / "text.tables.txt").write_text("Methods. A contrast was computed.")
+
+    settings = Settings(payloads=tmp_path / "payloads", records=records, model="m",
+                        proposer_url="", union=False, adjudicate=False,
+                        stages=(StageName.repair,))
+    paper = Paper(study_id="p1", root=tmp_path / "corpus",
+                  flavour=paths.Flavour.local)
+
+    monkeypatch.setattr("pondie.extraction.repair.models",
+                        lambda *a, **k: (_ for _ in ()).throw(ImportError("no models")))
+    stages.Repair().run(paper, settings, caller=None)
+
+    kept = tmp_path / "unrepaired" / "p1.extraction.json"
+    assert kept.is_file(), "the pre-repair record must survive"
+    assert json.loads(kept.read_text()) == original

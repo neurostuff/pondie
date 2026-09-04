@@ -169,6 +169,16 @@ def label_for(record: Mapping[str, Any], path: str) -> str:
     return label_of(entities[position]) or ""
 
 
+def _fragment(candidate: str, incumbent: str) -> bool:
+    """Is `candidate` a shorter piece of `incumbent`, whitespace aside?
+
+    Not equality: the proposer's copy of a sentence differs from the record's in spacing,
+    and a quote cut mid-word is a prefix rather than a duplicate.
+    """
+    one, other = " ".join(candidate.split()), " ".join(incumbent.split())
+    return len(one) < len(other) and one in other
+
+
 def relocate(record: MutableMapping[str, Any], document: str, premise: str,
              weak: Sequence[tuple[str, float]], proposer: Any, checker: Checker,
              refused: list, abbreviations: Any = None, paper: str = "",
@@ -238,6 +248,18 @@ def relocate(record: MutableMapping[str, Any], document: str, premise: str,
     improved: list[str] = []
     best: dict[str, float] = {}
     for (row, node, fresh), new, old in zip(candidates, after, before):
+        # A candidate that is contained in what it would replace is a fragment of it, and
+        # carries strictly less. The proposer returns a quote cut mid-word often enough that
+        # this fired twice in fifteen changes on three papers: `hrf_model` lost "and
+        # temporally smoothed the data." to "and temporally smo", and `software` went from
+        # two complete spans to one ending at "2.1 x 2.1 x 7 mm,". Both scored well, because
+        # a prefix of a sentence says most of what the sentence says.
+        candidate = " ".join(sp["text"] for sp in fresh["sets"][0]["spans"])
+        if row.premise and _fragment(candidate, row.premise):
+            refused.append(Refusal(
+                "evidence", f"the replacement for {row.path} is part of the sentence it "
+                            f"would replace, and shorter"))
+            continue
         floor = 0.0 if not row.premise else float(old)
         # Two candidates may answer for one field. The better one wins, and only if it also
         # beats what is already there.

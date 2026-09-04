@@ -716,6 +716,15 @@ class Repair(_Base):
             return StageOutcome(stage=self.name, study_id=paper.study_id,
                                 reason="no record to repair; build did not produce one")
         record = json.loads(record_path.read_text())
+        # Kept before anything is changed, because this stage writes the record in place and
+        # the record is the only copy of what `build` produced. Without it, asking "did the
+        # repair help?" means running the repair again -- forty seconds a paper and a
+        # different answer each time the models move. Written once: a re-run must diff
+        # against the original extraction, not against the previous repair.
+        kept = settings.records.parent / "unrepaired" / f"{paper.study_id}.extraction.json"
+        if not kept.is_file():
+            kept.parent.mkdir(parents=True, exist_ok=True)
+            kept.write_text(record_path.read_text(), encoding="utf-8")
         # The local locator, moved here from `evidence` so every card-bound pass sits in one
         # stage. Optional like the rest: a host without torch repairs without it.
         reranker, units = self._retriever(paper, settings)
