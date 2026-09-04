@@ -467,24 +467,28 @@ def test_only_a_field_a_sentence_could_support_is_grounded(slot, node, expected)
 
 
 def test_a_span_that_supports_something_else_is_dropped_and_the_value_kept(sch):
-    """Only the span. The value stays and its evidence becomes `not_found`, which is the
-    honest state -- removing the value too would delete a reading because a citation was
-    wrong about it."""
+    """A doubted citation is reported and left where it is.
+
+    Deleting it destroyed 46% of all spans across a six-paper sample, 36% of them sentences
+    containing the value verbatim. The pass this was ported from replaced a span only when a
+    proposer found a better one, so total support could only rise."""
     from pondie.extraction.evidence import grounding
 
     class Reject:
         def score(self, claims):
             return [0.04] * len(claims)
 
-    record = {"acquisitions": [{"local_id": "acq", "magnetic_strength": cited(
-        "3 T", "The authors thank the Dipartimento per i Rapporti Internazionali.")}]}
+    quote = "The authors thank the Dipartimento per i Rapporti Internazionali."
+    record = {"acquisitions": [{"local_id": "acq", "magnetic_strength": cited("3 T", quote)}]}
     refused: list = []
-    grounding.drop_unsupported_spans(record, Reject(), refused)
+    weak = grounding.review_spans(record, Reject(), refused)
 
     node = record["acquisitions"][0]["magnetic_strength"]
     assert values.read(node) == "3 T"
-    assert node["evidence"]["status"] == "not_found"
-    assert any("does not support" in r.why for r in refused)
+    assert node["evidence"]["status"] == "present", "the citation must survive the doubt"
+    assert node["evidence"]["sets"][0]["spans"][0]["text"] == quote
+    assert weak and weak[0][1] == 0.04
+    assert any("left in place" in r.why for r in refused)
 
 
 def test_a_span_that_does_support_its_value_is_left_alone(sch):
@@ -496,7 +500,7 @@ def test_a_span_that_does_support_its_value_is_left_alone(sch):
 
     record = {"acquisitions": [{"local_id": "acq", "magnetic_strength": cited(
         "3 T", "Images were acquired on a 3 T scanner.")}]}
-    grounding.drop_unsupported_spans(record, Accept(), [])
+    grounding.review_spans(record, Accept(), [])
     assert record["acquisitions"][0]["magnetic_strength"]["evidence"]["status"] == "present"
 
 
@@ -697,3 +701,51 @@ def test_the_default_is_one_paper_in_the_models_at_a_time(tmp_path):
     from pondie.extraction.models import Settings
 
     assert Settings(payloads=tmp_path, records=tmp_path, model="m").repair_workers == 1
+
+
+def test_a_numeric_value_is_not_judged_against_prose(sch):
+    """"echo time seconds is 0.004" against "TE = 4 ms" reads as unsupported however the
+    paper wrote it. The pass this was ported from measured prose claims at 0.571 and numeric
+    claims at 0.114 and excluded numerics for that reason; scoring them anyway took 100% of
+    `echo_time_seconds`, `height_threshold_value` and `clusterwise_threshold_value`."""
+    from pondie.extraction.evidence import grounding
+
+    class Reject:
+        def score(self, claims):
+            return [0.01] * len(claims)
+
+    record = {"acquisitions": [{"local_id": "acq", "echo_time_seconds": cited(
+        "0.004", "Images were acquired with TE = 4 ms.")}]}
+    refused: list = []
+    assert grounding.review_spans(record, Reject(), refused) == []
+    assert refused == [], "a number must not be scored against the prose that states it"
+
+
+def test_a_claim_names_the_entity_and_where_in_it_the_leaf_sits(sch):
+    """`effect.cells[0].level` read "level is African American." -- a fragment naming
+    nothing. 44% of `level` spans were discarded on claims like that."""
+    from pondie.extraction.evidence import grounding
+
+    record = {"analyses": [{"local_id": "an", "name": field("AA versus CC smokers"),
+                            "effect": {"cells": [{"level": field("African American")}]}}]}
+    claim = grounding.claim_for(record, "analyses[0].effect.cells[0].level",
+                                "African American")
+    assert "AA versus CC smokers" in claim, claim
+    assert "contrast cell 1" in claim, claim
+    assert claim.endswith("the level is African American.")
+
+
+def test_the_papers_own_abbreviation_is_written_beside_the_acronym(sch):
+    """The value says "African American" and the sentence says "AA", so the checker entails
+    nothing and scores 0.016. The paper defines the pair; `repair.run` already builds the
+    table for `same_entity`."""
+    from pondie.extraction.evidence import grounding
+
+    class Store:
+        def expand(self, short, paper=""):
+            return {"AA": "African American", "CC": "Caucasian"}.get(short)
+
+    span = "AA smokers showed greater activation than CC smokers"
+    out = grounding.expand(span, Store(), "16759342")
+    assert "AA (African American)" in out and "CC (Caucasian)" in out
+    assert grounding.expand(span, None) == span

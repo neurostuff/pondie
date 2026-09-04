@@ -17,6 +17,7 @@ heavyweight optional dependency and the rest of a repair is deterministic.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any, Mapping, MutableMapping, Protocol, Sequence
 
@@ -203,38 +204,134 @@ def _abbreviations(text: str) -> Any:
 PRUNE_BELOW = 0.2
 
 
-def drop_unsupported_spans(record: MutableMapping[str, Any], checker: Checker,
-                           refused: list) -> None:
-    """Drop a span that does not support what it is cited for.
+#: A normalized number reads as unsupported against prose that states it differently:
+#: "echo time seconds is 0.004" against "TE = 4 ms". Measured on one paper by the pass this
+#: was ported from -- prose claims mean 0.571, numeric claims 0.114 -- so scoring them
+#: together buries the signal. Reintroducing them cost 100% of `echo_time_seconds`,
+#: `height_threshold_value` and `clusterwise_threshold_value` on a six-paper sample.
+NUMERIC = re.compile(r"^[-+0-9.,;:\s]+$")
 
-    Only the span. The value stays and its evidence becomes `not_found`, which is the honest
-    state: something was extracted and no sentence has been found for it. Removing the value
-    too would be deleting a reading on the strength of a citation being wrong about it.
+#: What a nested container is, said in words. Without it a claim about
+#: `effect.cells[0].level` reads "level is PTSD" with nothing saying which cell, and no
+#: checker can fairly judge an unanchored fragment -- 13% of claims were unanchored that way
+#: before the trail was added, and 44% of `level` spans were being discarded after it was
+#: dropped in the port.
+CONTAINER = {
+    "cells": "contrast cell", "terms": "model term", "levels": "factor level",
+    "groups": "analysis group", "conditions": "task condition", "arms": "trial arm",
+    "timepoints": "timepoint", "sex_distribution": "sex breakdown entry",
+    "race_distribution": "race breakdown entry", "steps": "preprocessing step",
+    "effect": "reported effect", "statistic": "test statistic",
+    "details": "method detail", "design": "study design", "mediation": "mediation path",
+}
+
+#: The top-level containers, said in words, so a claim has a subject.
+SUBJECT = {
+    "analyses": "analysis", "groups": "group", "tasks": "task", "measures": "measure",
+    "regions": "brain region", "acquisitions": "acquisition", "devices": "device",
+    "preprocessings": "preprocessing procedure", "model_estimations": "statistical model",
+    "inference_settings": "statistical threshold", "tables": "table",
+    "assessments": "assessment",
+}
+
+_INDEX = re.compile(r"^([a-z_]+)(?:\[(\d+)\])?$")
+
+
+def is_numeric(value: Any) -> bool:
+    """A value that is only digits and separators, however the paper chose to write it."""
+    return bool(NUMERIC.match(str(value).strip()))
+
+
+def claim_for(record: Mapping[str, Any], path: str, value: Any) -> str:
+    """The subject, where in it the leaf sits, then the assertion.
+
+    `analyses[1].effect.cells[0].level` becomes "The analysis 'AA versus CC smokers', in the
+    reported effect, in contrast cell 1, the level is African American." -- not "level is
+    African American.", which names nothing and entails from nothing.
+    """
+    from pondie.extraction.record.edit import label_of
+
+    parts = path.split(".")
+    subject, trail, cursor = "", [], record
+    for i, part in enumerate(parts[:-1]):
+        matched = _INDEX.match(part)
+        if not matched:
+            break
+        name, index = matched.group(1), matched.group(2)
+        step = cursor.get(name) if isinstance(cursor, Mapping) else None
+        if index is not None and isinstance(step, list) and int(index) < len(step):
+            step = step[int(index)]
+        if i == 0 and name in SUBJECT:
+            label = label_of(step) if isinstance(step, Mapping) else None
+            subject = f"The {SUBJECT[name]}" + (f" {label!r}" if label else "")
+        elif name in CONTAINER:
+            trail.append(f"in {CONTAINER[name]} {int(index) + 1}" if index is not None
+                         else f"in the {CONTAINER[name]}")
+        cursor = step
+    field = parts[-1].split("[")[0].replace("_", " ")
+    head = subject or "The study"
+    where = f", {', '.join(trail)}," if trail else ","
+    return f"{head}{where} the {field} is {value}."
+
+
+#: Two to six capitals is what a paper's own short forms look like. Anything longer is a
+#: word in caps, and a single capital is an initial.
+ACRONYM = re.compile(r"\b[A-Z]{2,6}\b")
+
+
+def expand(text: str, abbreviations: Any, paper: str = "") -> str:
+    """Write the paper's own expansion beside each acronym it defines.
+
+    The value says "African American" and the sentence says "AA", so the checker is asked to
+    entail a phrase the premise never contains and scores 0.016. Resolved per paper, because
+    `AD` is axial diffusivity in a DTI paper and Alzheimer's disease in a dementia one --
+    `Abbreviations.expand` already takes the paper for exactly that reason.
+    """
+    if abbreviations is None:
+        return text
+    for short in dict.fromkeys(ACRONYM.findall(text)):
+        long = abbreviations.expand(short, paper)
+        if long and long.lower() not in text.lower():
+            text = re.sub(rf"\b{re.escape(short)}\b", f"{short} ({long})", text, count=1)
+    return text
+
+
+def review_spans(record: MutableMapping[str, Any], checker: Checker, refused: list,
+                 abbreviations: Any = None, paper: str = "") -> list[tuple[str, float]]:
+    """Score every citation and report the weak ones. Never delete one.
+
+    The pass this was ported from asked a proposer for a better sentence and swapped only on
+    a strict improvement, keeping the original when none was found -- so total support could
+    only rise. The port replaced that with an unconditional delete below a threshold, which
+    destroyed 46% of all spans across a six-paper sample, 36% of them sentences containing
+    the value verbatim: "Experimental stimuli were controlled by computer (NeuroStim)" cited
+    for `presentation_software` = NeuroStim, scored 0.021 and deleted.
+
+    Deleting is the one thing this cannot do. A low score means the citation is worth a
+    second look, not that the extractor was wrong, and nothing here knows which.
     """
     from pondie.formats.values import iter_fields
 
-    scored: list[tuple[dict, dict, Claim]] = []
+    scored: list[tuple[str, dict, Claim]] = []
     for path, node in iter_fields(record):
         slot = path.rsplit(".", 1)[-1]
-        if not groundable(slot, node):
+        value = values.read(node)
+        if not groundable(slot, node) or is_numeric(value):
             continue
         for group in (node.get("evidence") or {}).get("sets") or []:
             for span in group.get("spans") or []:
                 if span.get("text"):
-                    scored.append((node, span, Claim(
-                        claim=f"{slot.replace('_', ' ')} is {values.read(node)}.",
-                        premise=span["text"])))
+                    scored.append((path, span, Claim(
+                        claim=claim_for(record, path, value),
+                        premise=expand(span["text"], abbreviations, paper))))
     if not scored:
-        return
-    for (node, span, _claim), score in zip(scored, checker.score([c for *_x, c in scored])):
+        return []
+    weak = []
+    for (path, span, _claim), score in zip(scored, checker.score([c for *_x, c in scored])):
         if score >= PRUNE_BELOW:
             continue
-        evidence = node.get("evidence") or {}
-        for group in evidence.get("sets") or []:
-            group["spans"] = [s for s in group.get("spans") or [] if s is not span]
-        evidence["sets"] = [g for g in evidence.get("sets") or [] if g.get("spans")]
-        if not evidence["sets"]:
-            node["evidence"] = {"status": "not_found"}
+        weak.append((path, float(score)))
         refused.append(Refusal(
-            "evidence", f"the span does not support the value ({score:.2f})",
+            "evidence", f"the span may not support the value ({score:.2f}); left in place",
             span.get("text", "")[:80]))
+    return weak

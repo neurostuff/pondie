@@ -98,6 +98,9 @@ class Report:
 
     written: list[str] = field(default_factory=list)
     refused: list[Refusal] = field(default_factory=list)
+    #: (path, score) for citations the checker doubts. Reported, never acted on: see
+    #: `grounding.review_spans` for what acting on them cost.
+    weak_evidence: list[tuple[str, float]] = field(default_factory=list)
     adjudicated: list[str] = field(default_factory=list)
     #: What the adjudication spent, so a run can sum it. Every other stage returns its cost
     #: rather than logging it, for the reason `llm.py` gives: a stage that has to scrape its
@@ -278,7 +281,8 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
             if len(report.written) == before_pass:
                 break                   # nothing changed, so a further pass sees the same
         if checker is not None:
-            grounding.drop_unsupported_spans(record, checker, report.refused)
+            report.weak_evidence = grounding.review_spans(
+                record, checker, report.refused, abbreviations, study_id)
     if caller is not None and model:
         reply = adjudicate(record, sch, text, caller, study_id=study_id, model=model,
                            report=report, service_tier=service_tier)
