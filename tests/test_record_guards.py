@@ -641,6 +641,9 @@ def test_an_edit_to_an_existing_entity_is_not_asked_to_justify_its_existence(sch
                 return []
             return [{"local_id": "an_group_gmv", "regions": ["left aINS"]}]
 
+        def ask(self, template, instruction, premise, what=""):
+            return {}
+
     report = repair_pass.run(record, "", sch, study_id="p",
                              proposer=Proposer(), checker=RejectEverything())
     assert record["analyses"][0]["regions"] == ["r_ains"], report.refused
@@ -749,3 +752,75 @@ def test_the_papers_own_abbreviation_is_written_beside_the_acronym(sch):
     out = grounding.expand(span, Store(), "16759342")
     assert "AA (African American)" in out and "CC (Caucasian)" in out
     assert grounding.expand(span, None) == span
+
+
+def _relocating(monkeypatch, sentences, old_score, new_score):
+    """A proposer that offers `sentences`, and a checker that scores the incumbent
+    `old_score` and the replacement `new_score`."""
+    from pondie.extraction.evidence import relocate
+
+    class Proposer:
+        def ask(self, template, instruction, premise, what=""):
+            tags = template["fields"][0]["field_id"]
+            return {"fields": [{"field_id": tags[0], "supporting_sentences": sentences}]}
+
+    class Checker:
+        def __init__(self):
+            self.calls = 0
+
+        def score(self, claims):
+            self.calls += 1
+            return [new_score if self.calls == 1 else old_score] * len(claims)
+
+    return relocate, Proposer(), Checker()
+
+
+def test_a_better_sentence_replaces_the_one_it_beats(sch, monkeypatch):
+    """The half that made the original numbers good: ask for the sentence that does support
+    the value, and swap only on a strict improvement, so total support can only rise."""
+    doc = "Methods. Images were acquired on a 3 T Siemens scanner. We thank the department."
+    record = {"acquisitions": [{"local_id": "acq", "modality": cited(
+        "3 T", "We thank the department.")}]}
+    relocate, proposer, checker = _relocating(
+        monkeypatch, ["Images were acquired on a 3 T Siemens scanner."], 0.04, 0.91)
+
+    refused: list = []
+    improved = relocate.relocate(record, doc, doc, [("acquisitions[0].modality", 0.04)],
+                                 proposer, checker, refused)
+
+    span = record["acquisitions"][0]["modality"]["evidence"]["sets"][0]["spans"][0]
+    assert improved == ["acquisitions[0].modality"]
+    assert span["text"] == "Images were acquired on a 3 T Siemens scanner."
+    assert doc[span["start_char"]:span["end_char"]] == span["text"]
+
+
+def test_a_replacement_that_is_no_better_is_not_made(sch, monkeypatch):
+    """`new <= old` keeps the incumbent. Without the re-score the pass could make evidence
+    worse while reporting that it repaired it."""
+    doc = "Methods. Images were acquired on a 3 T Siemens scanner. Something else entirely."
+    quote = "Images were acquired on a 3 T Siemens scanner."
+    record = {"acquisitions": [{"local_id": "acq", "modality": cited("3 T", quote)}]}
+    relocate, proposer, checker = _relocating(
+        monkeypatch, ["Something else entirely."], 0.80, 0.30)
+
+    refused: list = []
+    improved = relocate.relocate(record, doc, doc, [("acquisitions[0].modality", 0.80)],
+                                 proposer, checker, refused)
+
+    assert improved == []
+    assert record["acquisitions"][0]["modality"]["evidence"]["sets"][0]["spans"][0]["text"] \
+        == quote
+    assert any("no better sentence" in r.why for r in refused)
+
+
+def test_a_field_with_no_citation_is_contested_even_though_it_scored_nothing(sch):
+    """A `not_found` field says no sentence was ever located for it -- the clearest case for
+    going to look. Reached only through a scoring fallback before, which left 96 fields
+    across five papers that nothing asked about."""
+    from pondie.extraction.evidence import relocate
+
+    record = {"acquisitions": [{"local_id": "acq",
+                                "modality": field("3 T")}]}
+    rows = relocate.contested(record, weak=[])
+    assert [r.path for r in rows] == ["acquisitions[0].modality"]
+    assert rows[0].premise == ""

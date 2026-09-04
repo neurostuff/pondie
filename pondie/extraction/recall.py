@@ -31,10 +31,19 @@ from pondie.schema.reader import Schema
 
 
 class Proposer(Protocol):
-    """Returns entities of `class_name` the paper describes, as flat dicts."""
+    """Returns entities of `class_name` the paper describes, as flat dicts.
+
+    `ask` is on the protocol and not an implementation detail of `NuExtract`, because
+    `evidence.relocate` calls it with its own template. A stub carrying only `propose`
+    satisfied the type and then failed at the second caller -- the shape of stub that has
+    twice let a real fault reach a live run here.
+    """
 
     def propose(self, sch: Schema, class_name: str, premise: str,
                 instruction: str) -> Sequence[Mapping[str, Any]]: ...
+
+    def ask(self, template: Mapping[str, Any], instruction: str, premise: str,
+            what: str = "") -> Mapping[str, Any]: ...
 
 
 class Starved(RuntimeError):
@@ -175,17 +184,30 @@ class NuExtract:
 
     def propose(self, sch: Schema, class_name: str, premise: str,
                 instruction: str) -> Sequence[Mapping[str, Any]]:
+        template = template_for(sch, class_name)
+        key = next(iter(template))
+        payload = self.ask(template, instruction, premise, what=class_name)
+        proposed = payload.get(key) if isinstance(payload, Mapping) else None
+        return [p for p in (proposed or []) if isinstance(p, Mapping)]
+
+    def ask(self, template: Mapping[str, Any], instruction: str, premise: str,
+            what: str = "") -> Mapping[str, Any]:
+        """One templated generation, halving the premise until it fits.
+
+        Split out of `propose` so a caller with its own template -- `evidence.relocate`, which
+        asks for the sentences that support a value rather than for entities -- reuses this
+        ladder rather than writing a second one that OOMs differently.
+        """
         import json
 
         import torch
 
-        template = template_for(sch, class_name)
-        key = next(iter(template))
         limit = self._max_chars
         while True:
             messages = [{"role": "user", "content": [
                 {"type": "text",
-                 "text": directive(class_name) + INSTRUCTION + instruction
+                 "text": (directive(what) if what in _NOUN or what == "Analysis" else "")
+                         + INSTRUCTION + instruction
                          + premise[:limit]}]}]
             inputs = self._processor.apply_chat_template(
                 messages, add_generation_prompt=True, tokenize=True, return_dict=True,
@@ -204,17 +226,16 @@ class NuExtract:
                 torch.cuda.empty_cache()
                 if limit <= 6_000:
                     raise Starved(
-                        f"{class_name}: out of memory at a {limit}-character premise, "
-                        f"the smallest this pass will try")
+                        f"{what or 'proposal'}: out of memory at a {limit}-character "
+                        f"premise, the smallest this pass will try")
                 limit //= 2
         text = self._processor.batch_decode(
             ids[:, inputs.input_ids.shape[1]:], skip_special_tokens=True)[0].strip()
         try:
             payload = json.loads(text)
         except json.JSONDecodeError:
-            return []
-        proposed = payload.get(key) if isinstance(payload, Mapping) else None
-        return [p for p in (proposed or []) if isinstance(p, Mapping)]
+            return {}
+        return payload if isinstance(payload, Mapping) else {}
 
 
 def sweep_order(sch: Schema, keys: Sequence[str]) -> list[str]:

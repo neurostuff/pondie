@@ -746,6 +746,9 @@ class Repair(_Base):
             "written": report.written,
             "refused": [{"slot": r.slot, "why": r.why} for r in report.refused],
             "adjudicated": report.adjudicated,
+            "recited": report.recited,
+            "weak_evidence": [{"path": p, "score": round(s, 3)}
+                              for p, s in report.weak_evidence],
             "introduced": report.introduced,
         }, indent=1) + "\n")
         # A finding this pass introduced is a defect in the pass rather than in the paper.

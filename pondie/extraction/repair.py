@@ -32,6 +32,7 @@ from typing import Any, Mapping, MutableMapping, Sequence
 
 from pondie.extraction import recall
 from pondie.extraction.evidence import grounding
+from pondie.extraction.evidence import relocate
 from pondie.extraction.evidence.grounding import Checker
 from pondie.extraction.record import edit as edit_module
 from pondie.extraction.record.edit import Edit, Refusal, UNRESTRICTED, refusals
@@ -98,9 +99,11 @@ class Report:
 
     written: list[str] = field(default_factory=list)
     refused: list[Refusal] = field(default_factory=list)
-    #: (path, score) for citations the checker doubts. Reported, never acted on: see
+    #: (path, score) for citations the checker doubts. Never acted on directly: see
     #: `grounding.review_spans` for what acting on them cost.
     weak_evidence: list[tuple[str, float]] = field(default_factory=list)
+    #: Paths whose citation was replaced by a better-scoring one.
+    recited: list[str] = field(default_factory=list)
     adjudicated: list[str] = field(default_factory=list)
     #: What the adjudication spent, so a run can sum it. Every other stage returns its cost
     #: rather than logging it, for the reason `llm.py` gives: a stage that has to scrape its
@@ -111,8 +114,9 @@ class Report:
     introduced: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
-        return (f"wrote {len(self.written)}, refused {len(self.refused)}, "
-                f"adjudicated {len(self.adjudicated)}, introduced {len(self.introduced)}")
+        return (f"wrote {len(self.written)}, recited {len(self.recited)}, "
+                f"refused {len(self.refused)}, adjudicated {len(self.adjudicated)}, "
+                f"introduced {len(self.introduced)}")
 
 
 @dataclass(frozen=True)
@@ -283,6 +287,13 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
         if checker is not None:
             report.weak_evidence = grounding.review_spans(
                 record, checker, report.refused, abbreviations, study_id)
+            # Doubt is not a verdict, so it is spent going to look rather than deleting.
+            # `review_spans` says which citations are suspect; this asks for better ones and
+            # keeps them only when they score higher than what they replace.
+            if proposer is not None:
+                report.recited = relocate.relocate(
+                    record, text, premise, report.weak_evidence, proposer, checker,
+                    report.refused, abbreviations, study_id)
     if caller is not None and model:
         reply = adjudicate(record, sch, text, caller, study_id=study_id, model=model,
                            report=report, service_tier=service_tier)
