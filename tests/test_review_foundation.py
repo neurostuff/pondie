@@ -2227,3 +2227,20 @@ def test_an_initialism_will_not_take_a_number_or_a_bracket_for_a_word() -> None:
     assert abbreviations._initialism("AB", "| 12 | 3.4 (0.2)") is None
     assert abbreviations._initialism("aa", "african american") is None, \
         "lower-case short forms are not initialisms"
+
+
+def test_the_locator_keeps_the_larger_cross_encoder() -> None:
+    """L6 measured better -- top-1 92.7% against 90.2% over 356 cases -- and that did not
+    earn the switch. Every case was selected because the value occurs verbatim in exactly
+    one sentence, which is a filter for lexical overlap: it samples the regime a small model
+    handles and excludes the paraphrase cases a reranker exists for. A benchmark built from
+    a string match measures what string matching already solves.
+
+    What the sweep does support is rejecting the alternatives, which lost on the easy cases
+    they should have won: bge-reranker-base 87.5%, mxbai-rerank-xsmall 80.4%, and
+    MedCPT-Cross-Encoder 79.5% -- the biomedical model last, because it is trained on
+    article retrieval where this is sentence ranking.
+    """
+    from pondie.extraction.evidence import retrieval
+
+    assert retrieval.RERANKER == "cross-encoder/ms-marco-MiniLM-L12-v2"
