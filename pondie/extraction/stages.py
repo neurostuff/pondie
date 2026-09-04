@@ -669,9 +669,11 @@ class Repair(_Base):
     `done()` keys on that rather than on the record, which already exists by the time this
     starts.
 
-    Skipped unless asked for. The local models want a GPU and the adjudication costs a call,
-    and neither is worth paying for by default -- but they are independent, so a run with no
-    GPU can still resolve what the paper plainly answers.
+    Both halves are on by default and they are independent, so a run without a GPU still
+    resolves what the paper plainly answers. The local models are an optional dependency, and
+    a missing one is a note rather than a failure: a record that could not be improved is the
+    record `build` wrote, which is a worse outcome than repairing it and a much better one
+    than losing the paper.
     """
 
     name: StageName = StageName.repair
@@ -696,12 +698,19 @@ class Repair(_Base):
         text = paper.text()
 
         proposer = checker = None
+        notes: list[str] = []
         if settings.repair:
-            # Imported here, not at module scope: the weights are an optional dependency and
-            # a run that does not ask for them should not need them installed.
-            from pondie.extraction.evidence.grounding import MiniCheck
+            # Imported here, not at module scope: the weights are an optional dependency,
+            # and on by default only works if absent weights degrade instead of failing.
+            try:
+                from pondie.extraction.evidence.grounding import MiniCheck
 
-            checker = MiniCheck()
+                checker = MiniCheck()
+            except Exception as error:  # noqa: BLE001 -- absence is expected, not exceptional
+                notes.append(
+                    f"no local repair models ({type(error).__name__}); "
+                    f"install pondie[repair] for entity recall and grounding"
+                )
         report = repair_pass.run(
             record, text, reader.load(schema.STORAGE), study_id=paper.study_id,
             proposer=proposer, checker=checker,
@@ -718,7 +727,7 @@ class Repair(_Base):
         # A finding this pass introduced is a defect in the pass, not in the paper, and is
         # the one thing here worth failing on.
         return StageOutcome(stage=self.name, study_id=paper.study_id,
-                            notes=tuple(report.introduced) if report.introduced else ())
+                            notes=tuple(notes + report.introduced))
 
 
 DEMAND_DRIVEN: tuple[Stage, ...] = (

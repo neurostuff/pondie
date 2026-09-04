@@ -216,20 +216,50 @@ def test_references_are_written_before_the_values_that_guard_against_them(sch):
 # ------------------------------------------------------------------------- orchestration
 
 
-def test_repair_is_in_the_sequence_and_does_nothing_unless_asked(tmp_path):
-    """It wants a GPU for the local models and a call for the adjudication. A run that asks
-    for neither should pay for neither, so being in the sequence has to be free."""
+def test_repair_runs_by_default_and_can_be_turned_off(tmp_path):
+    """On by default, both halves, and independent -- so a machine with no GPU still gets
+    the adjudication, and a run that wants neither can say so."""
     from pondie.extraction.models import Settings, StageName
     from pondie.extraction.stages import Repair, sequence
 
-    settings = Settings(payloads=tmp_path, records=tmp_path, model="m")
-    assert StageName.repair in [s.name for s in sequence(settings)]
+    default = Settings(payloads=tmp_path, records=tmp_path, model="m")
+    assert default.repair and default.adjudicate
+    assert StageName.repair in [s.name for s in sequence(default)]
 
     class Stub:
         study_id = "p"
 
-    outcome = Repair().run(paper=Stub(), settings=settings, caller=None)
+    off = Settings(payloads=tmp_path, records=tmp_path, model="m",
+                   repair=False, adjudicate=False)
+    outcome = Repair().run(paper=Stub(), settings=off, caller=None)
     assert outcome.skipped and "neither" in (outcome.reason or "")
+
+
+def test_a_missing_local_model_is_a_note_rather_than_a_lost_paper(tmp_path, monkeypatch):
+    """On by default only works if absent weights degrade. A record that could not be
+    improved is the record `build` wrote; a record that was never written is a lost paper."""
+    from pondie.extraction.models import Settings
+    from pondie.extraction import stages as stages_module
+
+    records = tmp_path / "records"
+    records.mkdir()
+    (records / "p.extraction.json").write_text('{"analyses": []}')
+
+    class Stub:
+        study_id = "p"
+
+        def text(self):
+            return "Some methods and results."
+
+    def explode(*_a, **_k):
+        raise ImportError("no minicheck")
+
+    monkeypatch.setattr("pondie.extraction.evidence.grounding.MiniCheck", explode)
+    settings = Settings(payloads=tmp_path / "payloads", records=records, model="m",
+                        adjudicate=False)
+    outcome = stages_module.Repair().run(paper=Stub(), settings=settings, caller=None)
+    assert outcome.ok
+    assert any("pondie[repair]" in note for note in outcome.notes)
 
 
 def test_repair_reports_what_it_introduced(sch, tmp_path):

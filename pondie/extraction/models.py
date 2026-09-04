@@ -215,11 +215,14 @@ class Settings(Strict):
     retrieve_evidence: bool = True
     zero_foci_rule: bool = True
     #: Ask a local model for the entities and links the extraction missed, and ground its
-    #: proposals before writing them. Needs `pondie[repair]` and a GPU.
-    repair: bool = False
+    #: proposals before writing them. On by default, and degrades rather than fails: where
+    #: `pondie[repair]` or a GPU is missing, the stage says so once and carries on with the
+    #: adjudication, which needs neither.
+    repair: bool = True
     #: Put the contradictions nothing else could settle to the extraction model, once per
-    #: record, with the paper. Needs only the gateway, so it is useful without a GPU.
-    adjudicate: bool = False
+    #: record, with the paper. Costs one call for a record that has one, and nothing for a
+    #: record that does not -- 8 cases across 42 records measured.
+    adjudicate: bool = True
     redo: bool = False
 
     @model_validator(mode="after")
