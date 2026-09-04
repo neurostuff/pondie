@@ -2132,3 +2132,19 @@ def test_two_protocols_in_one_acquisition_are_reported() -> None:
     quiet = Collected()
     rules.check_one_protocol_per_acquisition(multi_echo, quiet)
     assert quiet.messages == []
+
+
+def test_a_stray_token_in_an_entity_list_does_not_lose_the_paper(tmp_path: Path) -> None:
+    """16023086's `analyses` came back as [{...}, "required_entities"]. Every walker
+    downstream assumes an entity list holds objects, so `derive_coordinate_spaces` called
+    `.get` on the string and the build raised -- discarding a paper that had already paid
+    for all six stages over one stray token in one reply."""
+    (tmp_path / "agent.json").write_text(
+        json.dumps({"analyses": [{"local_id": "an_1"}, "required_entities"]}),
+        encoding="utf-8",
+    )
+
+    body, notes = builder.merge_payloads(tmp_path)
+
+    assert [a["local_id"] for a in body["analyses"]] == ["an_1"]
+    assert any("dropped 1 non-object" in n for n in notes), notes

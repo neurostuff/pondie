@@ -349,7 +349,18 @@ def merge_payloads(payload_dir: Path) -> tuple[dict[str, Any], list[str]]:
                         collisions.append(f"{attr} (from {path.name})")
                     study[attr] = attr_value
             elif key in _ENTITY_LISTS and isinstance(value, list):
-                lists.setdefault(_ENTITY_LISTS[key], []).extend(value)
+                # An entity list holds objects. 16023086's `analyses` came back as
+                # [{...}, "required_entities"] -- one stray token from the reply, which
+                # `derive_coordinate_spaces` then called `.get` on, losing a paper that had
+                # already paid for all six stages. Dropped here rather than guarded at each
+                # consumer, because every walker downstream assumes the same shape.
+                kept = [v for v in value if isinstance(v, dict)]
+                if len(kept) != len(value):
+                    collisions.append(
+                        f"{key}: dropped {len(value) - len(kept)} non-object "
+                        f"entr{'y' if len(value) - len(kept) == 1 else 'ies'} "
+                        f"(from {path.name})")
+                lists.setdefault(_ENTITY_LISTS[key], []).extend(kept)
             elif key not in _CONSUMED_ELSEWHERE:
                 # The one signal that an entity list was silently lost. `arms` and
                 # `timepoints` were added to Study, every intervention and longitudinal
