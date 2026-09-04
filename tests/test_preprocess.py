@@ -629,3 +629,33 @@ def test_prose_entries_share_the_parse_address_space_without_shifting_it():
     after = parse_keys.parse_keys([*parsed, *entries])
     assert after[:len(before)] == before, "appending prose renumbered the table entries"
     assert after[len(before):] == ["prose#1"]
+
+
+def test_a_statistic_is_paired_to_the_coordinate_it_follows():
+    """A prose point should carry what a table point carries. The sentences write the
+    value after the location, so pairing is positional -- and the third axis is the trap:
+    `z = -6` matches the Z-statistic pattern too, and taking it would give every point a
+    z-statistic equal to its own z coordinate."""
+    points = preprocess.prose_points(
+        "both bilateral amygdala ( x = 22, y = −3, z = −15, Z = 3.85; "
+        "x = −16, y = −3 z = −19, Z = 4.01)")
+    assert [p["coordinates"] for p in points] == [[22.0, -3.0, -15.0], [-16.0, -3.0, -19.0]]
+    assert [p["values"] for p in points] == [
+        [{"value": 3.85, "kind": "z-statistic"}],
+        [{"value": 4.01, "kind": "z-statistic"}],
+    ]
+
+
+def test_a_space_between_the_minus_and_the_digits_keeps_the_sign():
+    """"[- 18, 15, 12]" is one coordinate, not a positive 18. Typesetting puts a space
+    after the minus; a coordinate parsed with the wrong sign is in the other hemisphere,
+    and `table_parse` normalises the same way for the same reason."""
+    points = preprocess.prose_points("MNI coordinates of the peak voxel = [− 18, 15, 12]")
+    assert points[0]["coordinates"] == [-18.0, 15.0, 12.0]
+    assert points[0]["space"] == "MNI"
+
+
+def test_a_prose_point_without_a_stated_space_leaves_it_open():
+    """`Analysis.coordinate_space` is authoritative; guessing here would compete with it."""
+    points = preprocess.prose_points("the peak was at x = 9 y = −12 z = −6")
+    assert points[0]["space"] is None

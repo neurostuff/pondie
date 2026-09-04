@@ -442,6 +442,16 @@ _CUE_WINDOW = 80
 _AREA_LABEL = re.compile(r"\b(?:BA|Brodmann(?:\s+area)?s?|areas?)\s*$", re.I)
 
 
+#: "[- 18, 15, 12]" is one coordinate, not a positive 18. Typesetting puts a space after
+#: the minus and `_NUM` does not allow one, so the sign is silently dropped and the point
+#: lands in the other hemisphere. `table_parse` normalises the same way for the same reason.
+_LOOSE_SIGN = re.compile(rf"({_MINUS}|\+)\s+(?=[\d.])")
+
+
+def _tighten(sentence: str) -> str:
+    return _LOOSE_SIGN.sub(r"\1", sentence)
+
+
 def coordinates_in(sentence: str) -> list[tuple[float, float, float]]:
     """Every stereotactic triple the sentence states, in either notation.
 
@@ -455,6 +465,7 @@ def coordinates_in(sentence: str) -> list[tuple[float, float, float]]:
     either standard space.
     """
 
+    sentence = _tighten(sentence)
     found: list[tuple[float, float, float]] = []
     for match in _AXIS_TRIPLE.finditer(sentence):
         trip = _triple(match.groups())
@@ -1437,6 +1448,77 @@ def prose_coordinates(
     return out
 
 
+#: How the parse names the statistics it reads off a table, so a prose point and a table
+#: point describe their values the same way.
+_STAT_KIND = {"Z": "z-statistic", "t": "t-statistic", "F": "f-statistic",
+              "beta": "beta", "r": "correlation"}
+
+#: A space named in the sentence. `Analysis.coordinate_space` is authoritative over this,
+#: but a point that knows its space is what lets the query engine compare it with others.
+_SPACE = re.compile(r"\b(MNI(?:152)?|Talairach|ICBM)\b", re.I)
+
+
+def prose_points(sentence: str) -> list[dict]:
+    """Parse-shaped points for one sentence: coordinates, their space, their statistics.
+
+    The statistic is paired to the coordinate it follows, which is how the sentences write
+    it -- "x = 22, y = -3, z = -15, Z = 3.85; x = -16, y = -3 z = -19, Z = 4.01" is two
+    points with one value each, not two points and two loose numbers.
+
+    Statistic matches falling INSIDE a coordinate are dropped: `z = -6` is the third axis
+    and also matches the Z-statistic pattern, and taking it would give every point a
+    z-statistic equal to its own z coordinate.
+    """
+    sentence = _tighten(sentence)
+    spans = _coordinate_spans(sentence)
+    if not spans:
+        return []
+    space = _SPACE.search(sentence)
+    stats = []
+    for name, pattern in _STATISTIC_PATTERNS:
+        kind = _STAT_KIND.get(name)
+        if not kind:
+            continue
+        for match in pattern.finditer(sentence):
+            if any(start <= match.start() < end for _c, start, end in spans):
+                continue
+            numbers = re.findall(_NUM, match.group(0).translate(_COORD_MINUS))
+            if numbers:
+                stats.append((match.start(), kind, float(numbers[-1])))
+
+    points = []
+    for index, (coord, _start, end) in enumerate(spans):
+        following = spans[index + 1][1] if index + 1 < len(spans) else len(sentence)
+        values = [{"value": value, "kind": kind}
+                  for at, kind, value in stats if end <= at < following]
+        points.append({
+            "coordinates": list(coord),
+            "space": space.group(0).upper() if space else None,
+            "values": values,
+        })
+    return points
+
+
+def _coordinate_spans(sentence: str) -> list[tuple[tuple[float, float, float], int, int]]:
+    """Every accepted coordinate with where it sits, so statistics can be paired to it."""
+    out = []
+    for match in _AXIS_TRIPLE.finditer(sentence):
+        trip = _triple(match.groups())
+        if trip:
+            out.append((trip, match.start(), match.end()))
+    for match in _BARE_TRIPLE.finditer(sentence):
+        before = sentence[:match.start()]
+        if _AREA_LABEL.search(before) or _KERNEL_LABEL.search(before):
+            continue
+        near = sentence[max(0, match.start() - _CUE_WINDOW):match.end() + 40]
+        if not _COORDINATE_CUE.search(near):
+            continue
+        trip = _triple(re.findall(_NUM, match.group(0)))
+        if trip and not _runs_on(trip):
+            out.append((trip, match.start(), match.end()))
+    return sorted(out, key=lambda row: row[1])
+
+
 def prose_parse_entries(
     text: str, known: Iterable[tuple[float, float, float]] = ()
 ) -> list[dict]:
@@ -1460,13 +1542,18 @@ def prose_parse_entries(
             "table_caption": sentence[:300],
             "table_footer": "",
             "from_prose": True,
-            "points": [
-                {"coordinates": list(coord), "space": None, "values": [],
-                 "also_in_table": hit}
-                for coord, hit in found
-            ],
+            "points": _mark(prose_points(sentence), found),
         })
     return entries
+
+
+def _mark(points: list[dict], found) -> list[dict]:
+    """Carry the "a table reports this voxel too" flag onto the parse-shaped points."""
+    seen = {tuple(round(v) for v in coord): hit for coord, hit in found}
+    for point in points:
+        key = tuple(round(float(v)) for v in point["coordinates"])
+        point["also_in_table"] = seen.get(key, False)
+    return points
 
 
 def prose_coordinate_block(
