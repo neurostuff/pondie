@@ -128,7 +128,10 @@ def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
 
     taken = {e.get("local_id") for e in record.get(_container(class_name)) or []
              if isinstance(e, Mapping)}
-    local_id = ids.mint(class_name, str(proposal.get("name") or ""), taken)
+    label = str(proposal.get("name") or proposal.get("definition") or "").strip()
+    if not label:
+        return None, f"the proposed {class_name} has no name to build an id from"
+    local_id = ids.mint(class_name, label, taken)
     if local_id is None:
         return None, f"{class_name} ids come from the table parse, not from a proposal"
 

@@ -41,19 +41,19 @@ class Checker(Protocol):
 class MiniCheck:
     """`bespokelabs/minicheck` behind the protocol.
 
-    Two settings are measurements rather than defaults. The batch is small because sixteen
-    claims against a methods-and-results premise exhausts an 8 GB card, and MiniCheck chunks
-    the document per claim, so the batch is the only thing that can shrink. The device is set
-    before construction because MiniCheck takes no device argument -- it loads with
-    `device_map="auto"` and reads the visible devices, which its own logs ask callers to set.
+    The batch is small by measurement, not by default: sixteen claims against a
+    methods-and-results premise exhausts an 8 GB card, and MiniCheck chunks the document per
+    claim, so the batch is the only thing that can shrink.
+
+    It takes no device, and deliberately does not set one. MiniCheck loads with
+    `device_map="auto"` and reads the visible devices, so the only way to place it is
+    `CUDA_VISIBLE_DEVICES` -- which is process-wide. Setting it here restricted the process
+    to one card and the proposer, asked for the second, got "invalid device ordinal".
+    Visibility is the caller's to set, once, before either model loads.
     """
 
     def __init__(self, model_name: str = "flan-t5-large", batch_size: int = 4,
-                 device: str = "", cache_dir: str | None = None) -> None:
-        import os
-
-        if device.startswith("cuda:"):
-            os.environ["CUDA_VISIBLE_DEVICES"] = device.split(":", 1)[1]
+                 cache_dir: str | None = None) -> None:
         from minicheck.minicheck import MiniCheck as _MiniCheck
 
         self._batch = batch_size

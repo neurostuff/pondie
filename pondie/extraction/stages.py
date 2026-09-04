@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import shutil
 from dataclasses import dataclass
 from datetime import date
@@ -25,6 +26,7 @@ from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
 
 from pondie import schema
 from pondie.extraction.llm import Caller, MalformedReply
+from pondie.formats import text_index
 from pondie.extraction.models import (
     Cost,
     EvidenceCounts,
@@ -695,7 +697,12 @@ class Repair(_Base):
             return StageOutcome(stage=self.name, study_id=paper.study_id,
                                 reason="no record to repair; build did not produce one")
         record = json.loads(record_path.read_text())
-        text = paper.text()
+        # `text_index.load`, not `read_text`: every offset in the record is measured against
+        # the normalized text and hashed into `source_text_hash`, so a span this pass writes
+        # against the raw file would address a different string. `Paper.text` is a property
+        # returning a Path -- calling it raised TypeError on the first line of real work,
+        # and the test stub had a `text()` method, so nothing caught it.
+        text, _digest, _sections = text_index.load(paper.text)
 
         proposer = checker = None
         notes: list[str] = []
@@ -706,7 +713,12 @@ class Repair(_Base):
                 from pondie.extraction.evidence.grounding import MiniCheck
                 from pondie.extraction.recall import NuExtract
 
-                checker = MiniCheck(device=settings.checker_device)
+                # Visibility once, for the process, before either model loads: MiniCheck
+                # places itself from `CUDA_VISIBLE_DEVICES` and nothing else, so a per-model
+                # device would restrict the process and hide the proposer's card.
+                if settings.visible_devices:
+                    os.environ["CUDA_VISIBLE_DEVICES"] = settings.visible_devices
+                checker = MiniCheck()
                 proposer = NuExtract(device=settings.proposer_device)
             except Exception as error:  # noqa: BLE001 -- absence is expected, not exceptional
                 notes.append(

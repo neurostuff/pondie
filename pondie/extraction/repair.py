@@ -186,8 +186,10 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
                           '"quote": ...}]}, using the case id verbatim and an empty quote '
                           'for anything unresolved.')),
         paper=study_id, stage="repair")
-    body = getattr(reply, "body", reply)
-    answers = body if isinstance(body, Mapping) else json.loads(str(body))
+    # `payload`, which is what a ModelReply carries. `body` is an attribute of
+    # `MalformedReply` -- the exception -- so a getattr for it fell through to the reply
+    # itself and json.loads got "payload={...} cost=Cost(...)".
+    answers = reply.payload
 
     by_id = {c.id: c for c in cases}
     for row in answers.get("resolutions") or []:
@@ -232,7 +234,15 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     if caller is not None and model:
         adjudicate(record, sch, text, caller, study_id=study_id, model=model, report=report)
 
-    report.introduced = Validator(sch, None).diff(before, record)
+    # The extraction schema, not `sch`. A record is extraction-shaped -- every value in an
+    # `ExtractedValue` wrapper -- while `sch` is storage, where `name` is a plain string.
+    # Validating one against the other reports every wrapper as "must be a string, got dict":
+    # twenty findings on one record, none of them real. Storage is what the pass reasons
+    # with, because that is where `required`, `multivalued` and the vocabularies live.
+    from pondie.extraction.record.validate import EXTRACTION_SCHEMA
+    from pondie.schema import reader
+
+    report.introduced = Validator(reader.load(EXTRACTION_SCHEMA), None).diff(before, record)
     return report
 
 
@@ -329,7 +339,11 @@ def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: A
     """Ask the proposer per class, targets first, and write what survives the guards."""
     from pondie.extraction.recall import CLASS_OF, candidates, sweep_order
 
-    for container in sweep_order(sch, [k for k in CLASS_OF if record.get(k)]):
+    # Every class, not only the populated ones. Sweeping what the record already has asks
+    # the model to improve what was found and never to find what was missed -- and an empty
+    # container is where recall matters most: 16508348 declares no regions at all while four
+    # of its analyses search the hippocampus.
+    for container in sweep_order(sch, list(CLASS_OF)):
         class_name = CLASS_OF[container]
         proposals = proposer.propose(
             sch, class_name, text,

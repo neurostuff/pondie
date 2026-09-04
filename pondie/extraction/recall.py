@@ -22,6 +22,7 @@ deterministic half of a repair is most of its value.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Mapping, Protocol, Sequence
 
 from pondie.schema.reader import Schema
@@ -227,8 +228,24 @@ def sweep_order(sch: Schema, keys: Sequence[str]) -> list[str]:
 
 def candidates(sch: Schema, record: Mapping[str, Any], class_name: str,
                label_of) -> str:
-    """The entities this class may point at, one list per reference slot it declares."""
-    lines = []
+    """What this class may point at, per slot, with what the slot means.
+
+    The candidate list alone is not enough to get a link drawn. The script this replaces
+    added a hand-written sentence per slot -- "name the regions its search space was
+    restricted to, and leave that list empty when it was run over the whole brain" -- and
+    that sentence is what produced the links; without it the model listed entities and
+    connected nothing.
+
+    The sentence does not need writing, because the schema already says it, and says it
+    better: `Analysis.regions` reads "the regions the analysis ran over -- its search space
+    ... Empty for whole-brain and searchlight, where the emptiness asserts that inference was
+    not restricted", and `Group.diagnostic_instrument` reads "naming one here claims it
+    classified this cohort, which is narrower than having been administered to it" -- which
+    is exactly the over-inclusion that put a depression inventory in a PTSD group's
+    diagnostic slot. Using the schema's own prose means a slot whose meaning is sharpened
+    tomorrow is asked for correctly tomorrow.
+    """
+    blocks = []
     for name, slot, kind in sorted(sch.iter_slots(class_name)):
         if kind != "reference" or not isinstance(slot.range, str):
             continue
@@ -237,13 +254,22 @@ def candidates(sch: Schema, record: Mapping[str, Any], class_name: str,
             label for entity in (record.get(key) or []) if isinstance(entity, Mapping)
             for label in [label_of(entity, slot.range)] if label
         )
-        if listed:
-            lines.append(f"- `{name}` may name any of these {slot.range}: {listed}")
-    if not lines:
+        blocks.append(f"- `{name}` ({slot.range}): {_meaning(slot)}\n"
+                      f"  {'already in the record: ' + listed if listed else 'none in the record yet'}")
+    if not blocks:
         return ""
-    return ("## Entities this record already holds\n\n" + "\n".join(lines) +
-            "\n\nName any of these that applies, under the slot that lists it. Name one the "
-            "paper describes even if it is not listed; it will be created.\n\n")
+    return ("## Links this record can carry\n\n" + "\n".join(blocks) +
+            "\n\nName an entity in the slot that describes it, exactly as listed where it is "
+            "listed. Name one the paper describes even if it is not listed. Leave a slot out "
+            "when the paper gives nothing to put there -- an empty slot is a claim in itself "
+            "where the description above says so.\n\n")
+
+
+def _meaning(slot: Any, sentences: int = 2) -> str:
+    """The slot's own description, trimmed to what fits in a prompt."""
+    text = " ".join((getattr(slot, "description", "") or "").split())
+    parts = re.split(r"(?<=[.?!]) ", text)
+    return " ".join(parts[:sentences]) or "an entity of this class"
 
 
 #: Class -> the top-level record list its instances live in, and back. Both directions are

@@ -7,6 +7,8 @@ undone rather than that the case got easier.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from pondie import schema
@@ -216,50 +218,79 @@ def test_references_are_written_before_the_values_that_guard_against_them(sch):
 # ------------------------------------------------------------------------- orchestration
 
 
-def test_repair_runs_by_default_and_can_be_turned_off(tmp_path):
+@pytest.fixture
+def corpus(tmp_path):
+    """A real `Paper` on disk, not a stub.
+
+    The stub this replaces had a `text()` method where `Paper.text` is a property returning a
+    Path, so the stage's `paper.text()` raised TypeError on its first line of real work and
+    the suite stayed green. A fake that duck-types the contract wrongly tests the fake.
+    """
+    from pondie import paths
+    from pondie.extraction.models import Flavour, Paper
+
+    root = tmp_path / "corpus"
+    study = "p"
+    text_path = paths.text(study, Flavour.pubget, root)
+    text_path.parent.mkdir(parents=True, exist_ok=True)
+    text_path.write_text("Images were acquired on a 3 T scanner.\n", encoding="utf-8")
+    records = tmp_path / "records"
+    records.mkdir()
+    # A record carrying a contradiction, so the adjudication path is actually reached: a
+    # whole-brain correction naming the region it was restricted to.
+    (records / f"{study}.extraction.json").write_text(json.dumps({
+        "regions": [{"local_id": "reg_stg", "name": field("superior temporal gyrus"),
+                     "definition_method": field("anatomical_a_priori")}],
+        "inference_settings": [{"local_id": "i1",
+                                "correction_scope": field("whole_brain"),
+                                "correction_regions": ["reg_stg"]}]}))
+    return Paper(study_id=study, root=root), records
+
+
+def test_repair_runs_by_default_and_can_be_turned_off(tmp_path, corpus):
     """On by default, both halves, and independent -- so a machine with no GPU still gets
     the adjudication, and a run that wants neither can say so."""
     from pondie.extraction.models import Settings, StageName
     from pondie.extraction.stages import Repair, sequence
 
-    default = Settings(payloads=tmp_path, records=tmp_path, model="m")
+    paper, records = corpus
+    default = Settings(payloads=tmp_path / "pay", records=records, model="m")
     assert default.repair and default.adjudicate
     assert StageName.repair in [s.name for s in sequence(default)]
 
-    class Stub:
-        study_id = "p"
-
-    off = Settings(payloads=tmp_path, records=tmp_path, model="m",
+    off = Settings(payloads=tmp_path / "pay", records=records, model="m",
                    repair=False, adjudicate=False)
-    outcome = Repair().run(paper=Stub(), settings=off, caller=None)
+    outcome = Repair().run(paper=paper, settings=off, caller=None)
     assert outcome.skipped and "neither" in (outcome.reason or "")
 
 
-def test_a_missing_local_model_is_a_note_rather_than_a_lost_paper(tmp_path, monkeypatch):
-    """On by default only works if absent weights degrade. A record that could not be
-    improved is the record `build` wrote; a record that was never written is a lost paper."""
-    from pondie.extraction.models import Settings
-    from pondie.extraction import stages as stages_module
+def test_the_stage_runs_against_a_real_paper(tmp_path, corpus):
+    """The stage had never been executed: `paper.text()` raised TypeError immediately, the
+    driver swallowed it, and every paper was reported failed."""
+    from pondie.extraction.models import Cost, ModelReply, Settings
+    from pondie.extraction.stages import Repair
 
-    records = tmp_path / "records"
-    records.mkdir()
-    (records / "p.extraction.json").write_text('{"analyses": []}')
+    paper, records = corpus
 
-    class Stub:
-        study_id = "p"
+    asked = []
 
-        def text(self):
-            return "Some methods and results."
+    def caller(call, *, paper, stage):
+        # A real ModelReply. The fake that returned a bare dict hid `reply.payload` being
+        # read as `reply.body` -- an attribute of the MalformedReply exception, not of a
+        # reply.
+        asked.append(call)
+        return ModelReply(payload={"resolutions": [
+            {"id": "inference_settings/i1/correction_scope", "value": "roi",
+             "quote": "Images were acquired on a 3 T scanner."}]}, cost=Cost())
 
-    def explode(*_a, **_k):
-        raise ImportError("no minicheck")
-
-    monkeypatch.setattr("pondie.extraction.evidence.grounding.MiniCheck", explode)
-    settings = Settings(payloads=tmp_path / "payloads", records=records, model="m",
-                        adjudicate=False)
-    outcome = stages_module.Repair().run(paper=Stub(), settings=settings, caller=None)
-    assert outcome.ok
-    assert any("pondie[repair]" in note for note in outcome.notes)
+    settings = Settings(payloads=tmp_path / "pay", records=records, model="m", repair=False)
+    outcome = Repair().run(paper=paper, settings=settings, caller=caller)
+    assert outcome.ok, outcome.reason
+    assert asked, "the contradiction never reached the model"
+    written = json.loads((records / "p.extraction.json").read_text())
+    resolved = written["inference_settings"][0]["correction_scope"]
+    assert values.read(resolved) == "roi"
+    assert resolved["evidence"]["status"] == "present"
 
 
 def test_repair_reports_what_it_introduced(sch, tmp_path):
