@@ -211,3 +211,55 @@ def test_references_are_written_before_the_values_that_guard_against_them(sch):
     assert record["inference_settings"][0]["correction_regions"] == ["reg_stg"]
     assert "correction_scope" not in record["inference_settings"][0]
     assert any(r.slot == "correction_scope" for r in log.refused)
+
+
+# ------------------------------------------------------------------------- orchestration
+
+
+def test_repair_is_in_the_sequence_and_does_nothing_unless_asked(tmp_path):
+    """It wants a GPU for the local models and a call for the adjudication. A run that asks
+    for neither should pay for neither, so being in the sequence has to be free."""
+    from pondie.extraction.models import Settings, StageName
+    from pondie.extraction.stages import Repair, sequence
+
+    settings = Settings(payloads=tmp_path, records=tmp_path, model="m")
+    assert StageName.repair in [s.name for s in sequence(settings)]
+
+    class Stub:
+        study_id = "p"
+
+    outcome = Repair().run(paper=Stub(), settings=settings, caller=None)
+    assert outcome.skipped and "neither" in (outcome.reason or "")
+
+
+def test_repair_reports_what_it_introduced(sch, tmp_path):
+    """A finding the pass caused is a defect in the pass, not in the paper."""
+    from pondie.extraction import repair as repair_pass
+
+    record = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
+    report = repair_pass.run(record, "", sch, study_id="p")
+    assert report.introduced == []
+    assert report.summary().startswith("wrote 0")
+
+
+def test_only_a_settleable_contradiction_reaches_the_model(sch):
+    """A case is adjudicable when it can be put as "choose one of these and quote the
+    sentence". A dangling reference cannot, and is the largest group by count."""
+    from pondie.extraction import repair as repair_pass
+
+    contradictory = {
+        "regions": [{"local_id": "reg_stg", "name": field("superior temporal gyrus"),
+                     "definition_method": field("anatomical_a_priori")}],
+        "inference_settings": [{"local_id": "i1",
+                                "correction_scope": field("whole_brain"),
+                                "correction_regions": ["reg_stg"]}]}
+    cases = repair_pass.contradictions(contradictory, sch)
+    assert len(cases) == 1
+    assert cases[0].slot == "correction_scope"
+    assert "superior temporal gyrus" in cases[0].question
+    assert "roi" in cases[0].options
+
+    consistent = {"inference_settings": [{"local_id": "i1",
+                                          "correction_scope": field("whole_brain"),
+                                          "correction_regions": []}]}
+    assert repair_pass.contradictions(consistent, sch) == []

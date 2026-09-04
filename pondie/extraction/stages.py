@@ -661,6 +661,66 @@ class Build(_Base):
 
 
 #: Named orderings, so a workflow is a name rather than a remembered set of flags.
+@dataclass(frozen=True)
+class Repair(_Base):
+    """Improve a built record, and report anything the attempt broke.
+
+    Runs on the record `build` wrote, not on a payload, so its own artefact is the report:
+    `done()` keys on that rather than on the record, which already exists by the time this
+    starts.
+
+    Skipped unless asked for. The local models want a GPU and the adjudication costs a call,
+    and neither is worth paying for by default -- but they are independent, so a run with no
+    GPU can still resolve what the paper plainly answers.
+    """
+
+    name: StageName = StageName.repair
+
+    def produces(self, paper: Paper, settings: Settings) -> Path:
+        return settings.payloads / paper.study_id / "repair.json"
+
+    def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
+        if not (settings.repair or settings.adjudicate):
+            return self._skip(paper, "neither repair nor adjudicate was asked for")
+        if self.done(paper, settings):
+            return self._skip(paper)
+
+        from pondie.extraction import repair as repair_pass
+        from pondie.schema import reader
+
+        record_path = settings.records / f"{paper.study_id}.extraction.json"
+        if not record_path.is_file():
+            return StageOutcome(stage=self.name, study_id=paper.study_id,
+                                reason="no record to repair; build did not produce one")
+        record = json.loads(record_path.read_text())
+        text = paper.text()
+
+        proposer = checker = None
+        if settings.repair:
+            # Imported here, not at module scope: the weights are an optional dependency and
+            # a run that does not ask for them should not need them installed.
+            from pondie.extraction.evidence.grounding import MiniCheck
+
+            checker = MiniCheck()
+        report = repair_pass.run(
+            record, text, reader.load(schema.STORAGE), study_id=paper.study_id,
+            proposer=proposer, checker=checker,
+            caller=caller if settings.adjudicate else None,
+            model=settings.model if settings.adjudicate else "",
+        )
+        record_path.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
+        self._write(paper, settings, {
+            "written": report.written,
+            "refused": [{"slot": r.slot, "why": r.why} for r in report.refused],
+            "adjudicated": report.adjudicated,
+            "introduced": report.introduced,
+        })
+        # A finding this pass introduced is a defect in the pass, not in the paper, and is
+        # the one thing here worth failing on.
+        return StageOutcome(stage=self.name, study_id=paper.study_id,
+                            notes=tuple(report.introduced) if report.introduced else ())
+
+
 DEMAND_DRIVEN: tuple[Stage, ...] = (
     Tables(),
     SignSplit(),
@@ -668,6 +728,7 @@ DEMAND_DRIVEN: tuple[Stage, ...] = (
     Satisfy(),
     Evidence(),
     Build(),
+    Repair(),
 )
 
 

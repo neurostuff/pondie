@@ -68,6 +68,7 @@ def test_the_implemented_workflow_is_still_accepted(tmp_path):
         "satisfy",
         "evidence",
         "build",
+        "repair",
     ]
 
 

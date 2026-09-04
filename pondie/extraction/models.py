@@ -71,6 +71,10 @@ class StageName(str, Enum):
     satisfy = "satisfy"
     evidence = "evidence"
     build = "build"
+    #: After `build`, on the record rather than on a payload. Off unless asked for: it wants
+    #: a GPU for the local models, or a model call for the adjudication, and a run that
+    #: wants neither should not pay for either.
+    repair = "repair"
 
 
 class Workflow(str, Enum):
@@ -210,6 +214,12 @@ class Settings(Strict):
     #: supporting span -- structurally complete, and unreviewable.
     retrieve_evidence: bool = True
     zero_foci_rule: bool = True
+    #: Ask a local model for the entities and links the extraction missed, and ground its
+    #: proposals before writing them. Needs `pondie[repair]` and a GPU.
+    repair: bool = False
+    #: Put the contradictions nothing else could settle to the extraction model, once per
+    #: record, with the paper. Needs only the gateway, so it is useful without a GPU.
+    adjudicate: bool = False
     redo: bool = False
 
     @model_validator(mode="after")
