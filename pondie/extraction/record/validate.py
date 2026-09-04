@@ -631,6 +631,31 @@ class Validator:
     # -- crossings and the columns that carry them -------------------------
 
 
+    def diff(self, before: Any, after: Any) -> list[str]:
+        """Findings `after` has that `before` did not, most frequent first.
+
+        A record is repaired by editing it, and an edit can damage what it did not touch.
+        Validating only the result cannot separate a defect the pass caused from one it
+        inherited; validating both and subtracting can. Array indices are collapsed so that
+        the same fault on two analyses counts as one kind rather than two.
+
+        Written because the alternative was demonstrated: a repair pass put 665 findings into
+        fifteen records over several weeks and nobody saw it, since every one of those records
+        already had findings of its own.
+        """
+        from collections import Counter
+
+        def kinds(record: Any) -> Counter:
+            checker = Validator(self.schema, self.normalized, self.enums)
+            checker.check_record(record)
+            return Counter(
+                re.sub(r"\[\d+\]", "[]", message)
+                for message in checker.errors + checker.warnings
+            )
+
+        added = kinds(after) - kinds(before)
+        return [f"{count}  {message}" for message, count in added.most_common()]
+
     def check_record(self, record: Any) -> None:
         # Before the walk: a reference can name an entity declared later in the document,
         # so every local_id has to be known before the first one is checked.
