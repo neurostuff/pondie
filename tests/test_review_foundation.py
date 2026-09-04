@@ -879,7 +879,7 @@ def test_the_storage_rules_are_found(classes: dict) -> None:
     never fires, which is the failure this whole section exists to catch."""
 
     found = validate_record.storage_rules()
-    assert sorted(found) == ["Analysis", "Effect"]
+    assert sorted(found) == ["Analysis", "Effect", "InferenceSettings", "Region"]
     assert len(found["Analysis"]) == 2, "the two spatial_scope/regions rules"
     assert len(found["Effect"]) == 1, "cells cannot be empty"
 

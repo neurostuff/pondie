@@ -53,6 +53,7 @@ REFERENCE_SLOTS = frozenset({
     "FactorLevel.regions",
     "FactorLevel.timepoints",
     "Group.arm",
+    "InferenceSettings.correction_regions",
     "Group.diagnostic_instrument",
     "LatentDecompositionDetails.second_block_assessments",
     "MRI.device",

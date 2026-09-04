@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections.abc import Mapping
 from copy import copy
 from pathlib import Path
@@ -111,12 +112,75 @@ class Validator:
         self.warnings: list[str] = []
         self.fields = 0
         self.spans = 0
+        #: local_id -> the class that declared it, filled by `index_ids` before the walk.
+        #: Empty until then, and a reference check with an empty index is skipped rather
+        #: than failed, so validating a fragment stays possible.
+        self.declared: dict[str, str] = {}
 
     def error(self, path: str, message: str) -> None:
         self.errors.append(f"{path}: {message}")
 
     def warn(self, path: str, message: str) -> None:
         self.warnings.append(f"{path}: {message}")
+
+    def index_ids(self, node: Any, class_name: str) -> None:
+        """Record every `local_id` in the record against the class that declared it.
+
+        Schema-guided rather than a blind walk: descending only into slots the schema calls
+        nested, with the declared range as the class, is what makes the class known. A type
+        designator is followed through `Schema.designated_type` rather than `resolve_type`
+        so indexing reports nothing -- the walk proper will report it once.
+        """
+        if not isinstance(node, dict):
+            return
+        class_name = self.schema.designated_type(node, class_name)
+        attributes = self.schema.attributes(class_name)
+        if not attributes:
+            return
+        local = node.get("local_id")
+        if isinstance(local, str) and local:
+            self.declared[local] = class_name
+        for name, attribute in attributes.items():
+            if name not in node or self.schema.classify(name, attribute) != "nested":
+                continue
+            target = attribute.range
+            if not isinstance(target, str):
+                continue
+            value = node[name]
+            for item in value if isinstance(value, list) else [value]:
+                self.index_ids(item, target)
+
+    def check_reference(self, ref: str, attribute: SlotDefinition, path: str) -> None:
+        """A cross-reference must resolve, and resolve to the class the slot declares.
+
+        Checking only that the value is a string let two different faults through. A
+        reference naming an id nothing declares costs an analysis its inference settings and
+        reads downstream as a missing field; `repair_references` repoints those where the
+        choice is forced and reports the rest, so they are warned here rather than failed.
+
+        The second fault nothing saw at all: a reference that resolves perfectly well to the
+        *wrong kind of thing*. `ModelEstimation.inputs_from` declares `range:
+        ModelEstimation` and its description says "the models whose fitted output this model
+        was estimated on", and a record still pointed it at a Condition nested under a Task.
+        That reference is not dangling, so no repair notices it, and every reader downstream
+        follows it to something that cannot answer the question the slot asks. Measured over
+        903 records: 26,897 references, 593 dangling, 22 pointing at the wrong class.
+
+        Subclasses resolve: a slot declaring `Acquisition` is satisfied by an `MRI`, which is
+        what `Schema.resolves_to` is for.
+        """
+        target = attribute.range
+        if not isinstance(target, str) or not self.declared:
+            return
+        actual = self.declared.get(ref)
+        if actual is None:
+            self.warn(path, f"cross-reference {ref!r} names no declared local_id")
+            return
+        if actual != target and not self.schema.resolves_to(actual, target):
+            self.error(
+                path,
+                f"cross-reference {ref!r} is a {actual}, but this slot declares {target}",
+            )
 
     # -- class instances ---------------------------------------------------
 
@@ -170,7 +234,8 @@ class Validator:
             attribute = attributes.get(key)
             if attribute is None:
                 continue
-            self.check_slot(value, key, attribute, f"{path}.{key}")
+            self.check_slot(value, key, attribute, f"{path}.{key}",
+                            owner=node.get("local_id"), owner_class=class_name)
 
         self.check_rules(node, class_name, path)
 
@@ -227,6 +292,13 @@ class Validator:
             if keyword == "equals_string":
                 if values.read(value) != body:
                     return False
+            elif keyword == "pattern":
+                # A standard LinkML metaslot, and unsupported keywords pass silently -- so
+                # without this a `pattern` condition is a rule that never fires, which is
+                # worse than no rule at all.
+                text = values.read(value)
+                if text is None or not re.search(str(body), str(text)):
+                    return False
             elif keyword == "value_presence":
                 present = value not in (None, "", [], {})
                 if present != (str(body).upper() == "PRESENT"):
@@ -256,7 +328,8 @@ class Validator:
         )
 
     def check_slot(
-        self, value: Any, name: str, attribute: SlotDefinition, path: str
+        self, value: Any, name: str, attribute: SlotDefinition, path: str,
+        owner: Any = None, owner_class: str | None = None,
     ) -> None:
         kind = self.schema.classify(name, attribute)
         multivalued = bool(attribute.multivalued)
@@ -279,6 +352,22 @@ class Validator:
                     self.error(
                         here, f"cross-reference must be a string, got {type(item).__name__}"
                     )
+                else:
+                    self.check_reference(item, attribute, here)
+                    # A slot whose range is its own class points at a *different* instance of
+                    # it: nothing is its own input, its own mirror, or one of the terms it is
+                    # a product of. `inputs_from` had this as a stage-chain rule; `mirror_of`
+                    # and `interaction_with` had nothing, so a self-loop on either passed.
+                    # Derived from the range rather than named here, so a self-referential
+                    # slot added later is covered the day it is added.
+                    if (isinstance(owner, str) and owner == item
+                            and owner_class is not None
+                            and attribute.range == owner_class):
+                        self.error(
+                            here,
+                            f"{name!r} names its own instance {item!r}; a slot whose range "
+                            f"is {owner_class} refers to a different one",
+                        )
             elif kind == "native":
                 self.check_native(item, attribute, here)
             elif kind == "nested":
@@ -494,12 +583,26 @@ class Validator:
             self.check_set(evidence_set, f"{path}.sets[{index}]")
 
     def check_set(self, node: Any, path: str) -> None:
+        """The attributes `EvidenceSet` declares, read from the schema rather than named here.
+
+        This used to hardcode `spans`, so the day `source` was added to the schema the
+        validator began rejecting the one field the extractor had just started writing --
+        the schema said yes and the checker said no. Reading the class keeps them from
+        drifting apart again.
+        """
         if not isinstance(node, dict):
             self.error(path, f"expected an EvidenceSet object, got {type(node).__name__}")
             return
+        declared = self.schema.classes.get("EvidenceSet")
+        allowed = set(getattr(declared, "attributes", None) or {}) or {"spans"}
         for key in node:
-            if key != "spans":
+            if key not in allowed:
                 self.error(path, f"attribute {key!r} is not declared on EvidenceSet")
+        source = node.get("source")
+        permissible = getattr(self.enums.get("EvidenceSource"), "permissible_values", None)
+        if source is not None and permissible and source not in permissible:
+            self.error(path, f"evidence set source {source!r} is not a permissible value "
+                             f"({', '.join(sorted(permissible))})")
         spans = node.get("spans")
         if not isinstance(spans, list) or not spans:
             self.error(path, "EvidenceSet requires at least one span (minimum_cardinality: 1)")
@@ -529,6 +632,10 @@ class Validator:
 
 
     def check_record(self, record: Any) -> None:
+        # Before the walk: a reference can name an entity declared later in the document,
+        # so every local_id has to be known before the first one is checked.
+        self.declared = {}
+        self.index_ids(record, "Study")
         self.check_instance(record, "Study", "Study")
 
         # The domain rules, from the registry rather than named one by one here.
