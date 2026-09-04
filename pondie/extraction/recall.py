@@ -25,6 +25,7 @@ from __future__ import annotations
 import re
 from typing import Any, Mapping, Protocol, Sequence
 
+from pondie.extraction.record.edit import label_of
 from pondie.schema.reader import Schema
 
 
@@ -123,7 +124,7 @@ def template_for(sch: Schema, class_name: str) -> dict:
             continue
         fields[name] = [projected] if slot.multivalued and isinstance(projected, str) \
             else projected
-    return {CONTAINER.get(class_name, class_name.lower()): [fields]}
+    return {sch.containers().get(class_name, class_name.lower()): [fields]}
 
 
 class NuExtract:
@@ -204,10 +205,12 @@ def sweep_order(sch: Schema, keys: Sequence[str]) -> list[str]:
     -- `Analysis.mirror_of` and the other two self-referential slots -- means neither side can
     go first, and the caller's order stands for it.
     """
+    containers = sch.containers()
+    class_of = {container: cls for cls, container in containers.items()}
     targets = {
-        key: {CONTAINER.get(slot.range) for _n, slot, kind in sch.iter_slots(CLASS_OF[key])
+        key: {containers.get(slot.range) for _n, slot, kind in sch.iter_slots(class_of[key])
               if kind == "reference" and isinstance(slot.range, str)}
-        for key in keys if key in CLASS_OF
+        for key in keys if key in class_of
     }
     out: list[str] = []
     seen: set[str] = set()
@@ -226,8 +229,7 @@ def sweep_order(sch: Schema, keys: Sequence[str]) -> list[str]:
     return out
 
 
-def candidates(sch: Schema, record: Mapping[str, Any], class_name: str,
-               label_of) -> str:
+def candidates(sch: Schema, record: Mapping[str, Any], class_name: str) -> str:
     """What this class may point at, per slot, with what the slot means.
 
     The candidate list alone is not enough to get a link drawn. The script this replaces
@@ -249,10 +251,10 @@ def candidates(sch: Schema, record: Mapping[str, Any], class_name: str,
     for name, slot, kind in sorted(sch.iter_slots(class_name)):
         if kind != "reference" or not isinstance(slot.range, str):
             continue
-        key = CONTAINER.get(slot.range)
+        key = sch.containers().get(slot.range)
         listed = "; ".join(
             label for entity in (record.get(key) or []) if isinstance(entity, Mapping)
-            for label in [label_of(entity, slot.range)] if label
+            for label in [label_of(entity)] if label
         )
         blocks.append(f"- `{name}` ({slot.range}): {_meaning(slot)}\n"
                       f"  {'already in the record: ' + listed if listed else 'none in the record yet'}")
@@ -272,13 +274,3 @@ def _meaning(slot: Any, sentences: int = 2) -> str:
     return " ".join(parts[:sentences]) or "an entity of this class"
 
 
-#: Class -> the top-level record list its instances live in, and back. Both directions are
-#: needed: the schema names classes and a record is keyed by container.
-CONTAINER: dict[str, str] = {
-    "Analysis": "analyses", "Group": "groups", "Task": "tasks", "Region": "regions",
-    "Measure": "measures", "Acquisition": "acquisitions", "Device": "devices",
-    "Preprocessing": "preprocessings", "ModelEstimation": "model_estimations",
-    "InferenceSettings": "inference_settings", "Table": "tables",
-    "Assessment": "assessments",
-}
-CLASS_OF: dict[str, str] = {container: cls for cls, container in CONTAINER.items()}

@@ -29,7 +29,7 @@ from typing import Any, Mapping, MutableMapping, Sequence
 
 from pondie.extraction.evidence.grounding import Checker, Claim
 from pondie.extraction.record import edit as edit_module
-from pondie.extraction.record import guards
+from pondie.extraction.record.edit import Edit, Refusal, UNRESTRICTED, refusals
 from pondie.extraction.record.validate import Validator
 from pondie.formats import values
 from pondie.schema.reader import Schema
@@ -74,7 +74,7 @@ class Report:
     """What one pass did to one record."""
 
     written: list[str] = field(default_factory=list)
-    refused: list[guards.Refusal] = field(default_factory=list)
+    refused: list[Refusal] = field(default_factory=list)
     adjudicated: list[str] = field(default_factory=list)
     #: What the adjudication spent, so a run can sum it. Every other stage returns its cost
     #: rather than logging it, for the reason `llm.py` gives: a stage that has to scrape its
@@ -165,7 +165,7 @@ def contradictions(record: Mapping[str, Any], sch: Schema) -> list[Case]:
                 continue
             scope = str(values.read(entity.get(scope_slot)) or "").strip().lower()
             regions = entity.get(region_slot) or []
-            if scope not in guards.UNRESTRICTED or not regions:
+            if scope not in UNRESTRICTED or not regions:
                 continue
             named = ", ".join(_label(record, r) for r in regions)
             out.append(Case(
@@ -177,12 +177,6 @@ def contradictions(record: Mapping[str, Any], sch: Schema) -> list[Case]:
                 local_id=str(entity.get("local_id")), slot=scope_slot,
                 clears=region_slot))
     return out
-
-
-def _class_of(container: str) -> str:
-    from pondie.extraction.recall import CLASS_OF
-
-    return CLASS_OF.get(container, container)
 
 
 def _label(record: Mapping[str, Any], local_id: str) -> str:
@@ -248,8 +242,8 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
         # Through the guards, like every other write. Coercing a cited scope to a bare enum
         # is exactly the shape `refuses_losing_the_warrant` exists for, and step 4 was the
         # one path that bypassed it.
-        edit = guards.Edit(sch, record, entity, _class_of(case.container), case.slot, value)
-        if refused := guards.refusals(edit):
+        edit = Edit(record, entity, case.slot, value)
+        if refused := refusals(edit):
             report.refused.extend(refused)
             report.adjudicated.append(f"{case.id}: refused, {refused[0].why}")
             continue
@@ -257,7 +251,7 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
             "extraction_status": "extracted", "value": value, "value_source": "reported",
             "evidence": {"status": "present",
                          "sets": [{"source": "repair_pass", "spans": [span]}]}}
-        if case.clears and value in guards.UNRESTRICTED:
+        if case.clears and value in UNRESTRICTED:
             entity[case.clears] = []
         report.adjudicated.append(f"{case.id}: {value}")
     # Returned, not logged. `llm.py`: "Cost is returned rather than logged, because a stage
@@ -351,7 +345,7 @@ def _prune_evidence(record: MutableMapping[str, Any], sch: Schema, checker: Chec
         evidence["sets"] = [g for g in evidence.get("sets") or [] if g.get("spans")]
         if not evidence["sets"]:
             node["evidence"] = {"status": "not_found"}
-        report.refused.append(guards.Refusal(
+        report.refused.append(Refusal(
             "evidence", f"the span does not support the value ({score:.2f})",
             span.get("text", "")[:80]))
 
@@ -379,7 +373,7 @@ def _grounded(proposals: Sequence[Mapping[str, Any]], class_name: str, premise: 
         if score >= threshold:
             kept.append(proposal)
         else:
-            report.refused.append(guards.Refusal(
+            report.refused.append(Refusal(
                 class_name, f"the paper does not support it ({score:.2f})",
                 proposal.get("name")))
     return kept
@@ -428,17 +422,18 @@ def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: A
            checker: Checker | None, threshold: float, report: Report,
            abbreviations: Any = None) -> None:
     """Ask the proposer per class, targets first, and write what survives the guards."""
-    from pondie.extraction.recall import CLASS_OF, candidates, sweep_order
+    from pondie.extraction.recall import candidates, sweep_order
 
     # Every class, not only the populated ones. Sweeping what the record already has asks
     # the model to improve what was found and never to find what was missed -- and an empty
     # container is where recall matters most: 16508348 declares no regions at all while four
     # of its analyses search the hippocampus.
-    for container in sweep_order(sch, list(CLASS_OF)):
-        class_name = CLASS_OF[container]
+    by_container = {key: cls for cls, key in sch.containers().items()}
+    for container in sweep_order(sch, list(by_container)):
+        class_name = by_container[container]
         proposals = proposer.propose(
             sch, class_name, text,
-            candidates(sch, record, class_name, lambda e, _c="": edit_module.label_of(e)))
+            candidates(sch, record, class_name))
         by_id = {e.get("local_id"): e for e in record.get(container) or []
                  if isinstance(e, Mapping)}
         graded = _grounded(proposals, class_name, text, checker, threshold, report)
@@ -448,7 +443,7 @@ def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: A
                 entity, why = edit_module.create(sch, record, class_name, proposal, text,
                                                  abbreviations)
                 if entity is None:
-                    report.refused.append(guards.Refusal(container, why))
+                    report.refused.append(Refusal(container, why))
                     continue
                 record.setdefault(container, []).append(entity)
                 report.written.append(f"{container}/{entity['local_id']} created")

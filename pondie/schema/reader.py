@@ -165,6 +165,20 @@ class Schema:
         self._attributes[class_name] = MappingProxyType({n: induced[n] for n in order})
         return self._attributes[class_name]
 
+    def containers(self) -> Mapping[str, str]:
+        """Class -> the top-level list of `Study` its instances live in.
+
+        Derived, not listed. A thirteenth entity list added to the schema appears here the
+        day it is added; a hand-kept table is one a new list is silently missing from, and
+        anything keyed on it -- a recall sweep, a reference resolver -- then skips it without
+        saying so.
+        """
+        out: dict[str, str] = {}
+        for name, slot in self.attributes("Study").items():
+            if isinstance(slot.range, str) and slot.range in self.classes and slot.multivalued:
+                out[slot.range] = name
+        return out
+
     def subclasses(self, class_name: str) -> frozenset[str]:
         """Every class inheriting from `class_name`, directly or transitively.
 

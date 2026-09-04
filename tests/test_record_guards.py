@@ -12,7 +12,7 @@ import json
 import pytest
 
 from pondie import schema
-from pondie.extraction.record import guards
+from pondie.extraction.record import edit as edit_module
 from pondie.formats import values
 from pondie.schema import reader
 
@@ -33,8 +33,7 @@ def cited(value, quote):
 
 
 def edit(sch, class_name, entity, slot, value, record=None):
-    return guards.Edit(schema=sch, record=record or {}, entity=entity,
-                       class_name=class_name, slot=slot, value=value)
+    return edit_module.Edit(record=record or {}, entity=entity, slot=slot, value=value)
 
 
 def why(refusals):
@@ -51,7 +50,7 @@ def test_an_edit_that_only_shortens_is_refused(sch):
         "Decreased gray matter volume in PTSD patients compared to traumatized controls.")}
     e = edit(sch, "Analysis", entity, "definition",
              "Decreased gray matter volume in PTSD patients compared to traumatized")
-    assert "shortens" in why(guards.refusals(e))
+    assert "shortens" in why(edit_module.refusals(e))
 
 
 def test_an_edit_that_extends_and_keeps_its_span_is_allowed(sch):
@@ -64,7 +63,7 @@ def test_an_edit_that_extends_and_keeps_its_span_is_allowed(sch):
     e = edit(sch, "Analysis", entity, "definition",
              "Relative to the non-PTSD group, the PTSD group showed reduced gray matter in "
              "the same large cluster comprising the sgACC, caudate, and hypothalamus.")
-    assert guards.refusals(e) == []
+    assert edit_module.refusals(e) == []
 
 
 def test_an_edit_that_drops_the_warrant_is_refused(sch):
@@ -74,14 +73,14 @@ def test_an_edit_that_drops_the_warrant_is_refused(sch):
         "whole volume analyzed and a priori small volumes",
         "Correction was applied to the whole volume analyzed and to a priori small volumes.")}
     e = edit(sch, "InferenceSettings", entity, "correction_scope", "whole_brain")
-    assert "warrant" in why(guards.refusals(e))
+    assert "warrant" in why(edit_module.refusals(e))
 
 
 def test_one_value_does_not_replace_several(sch):
     """16701903 acquires MP-RAGE at TE 4.4 ms and FLASH at TE 5 ms."""
     entity = {"local_id": "acq", "echo_time_seconds": field([0.0044, 0.005])}
     e = edit(sch, "MRI", entity, "echo_time_seconds", 0.0044)
-    assert "several values with one" in why(guards.refusals(e))
+    assert "several values with one" in why(edit_module.refusals(e))
 
 
 # ---------------------------------------------------------------------------- scope pairs
@@ -96,13 +95,13 @@ def test_one_value_does_not_replace_several(sch):
 def test_a_scope_and_the_regions_beside_it_must_agree(sch, scope, regions, refused):
     entity = {"local_id": "i1", "correction_regions": list(regions)}
     e = edit(sch, "InferenceSettings", entity, "correction_scope", scope)
-    assert bool(guards.refusals(e)) is refused
+    assert bool(edit_module.refusals(e)) is refused
 
 
 def test_a_whole_brain_analysis_is_not_given_regions_to_search(sch):
     entity = {"local_id": "a1", "spatial_scope": field("whole_brain"), "regions": []}
     e = edit(sch, "Analysis", entity, "regions", ["reg_sgacc"])
-    assert "not restricted to a region" in why(guards.refusals(e))
+    assert "not restricted to a region" in why(edit_module.refusals(e))
 
 
 # ----------------------------------------------------------------------------- references
@@ -112,7 +111,7 @@ def test_nothing_references_itself(sch):
     """27082610, 19942229: `inputs_from` resolved to the model being edited."""
     entity = {"local_id": "mod_adc"}
     e = edit(sch, "ModelEstimation", entity, "inputs_from", ["mod_adc"])
-    assert "names the entity it is written on" in why(guards.refusals(e))
+    assert "names the entity it is written on" in why(edit_module.refusals(e))
 
 
 def test_repointing_may_not_orphan_the_terms_a_cell_names(sch):
@@ -123,15 +122,16 @@ def test_repointing_may_not_orphan_the_terms_a_cell_names(sch):
     entity = {"local_id": "a1", "model_estimation": "mod_a",
               "effect": {"cells": [{"term": "t_a"}]}}
     away = edit(sch, "Analysis", entity, "model_estimation", "mod_b", record)
-    assert "does not reach" in why(guards.refusals(away))
+    assert "does not reach" in why(edit_module.refusals(away))
     home = edit(sch, "Analysis", entity, "model_estimation", "mod_a", record)
-    assert guards.refusals(home) == []
+    assert edit_module.refusals(home) == []
 
 
-def test_every_guard_is_registered_and_named_once():
-    names = [g.name for g in guards.GUARDS]
-    assert len(names) == len(set(names))
-    assert all(g.what and g.check for g in guards.GUARDS)
+def test_every_guard_is_registered_and_documented():
+    """The list is the specification: a reviewer reads it to know what stops a bad write,
+    and `refusals` runs all of them so one write reports every reason it was rejected."""
+    assert len(edit_module.GUARDS) == len(set(edit_module.GUARDS))
+    assert all(check.__doc__ for check in edit_module.GUARDS)
 
 
 def test_a_repair_that_damages_the_record_is_reported(sch):
