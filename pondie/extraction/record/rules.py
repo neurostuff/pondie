@@ -908,6 +908,48 @@ def check_references_resolve(
             )
             findings.error(path, f"names {local_id!r}, which is not {tail}")
 
+def check_one_protocol_per_acquisition(
+    record: Mapping[str, Any], findings: Findings
+) -> None:
+    """Several echo times and several repetition times is two protocols, not one sequence.
+
+    `echo_time_seconds` is "one value per echo": a multi-echo sequence has several, and one
+    repetition time, because TR belongs to the sequence rather than to an echo. Several of
+    both is two acquisitions written into one entity, and `pulse_sequence_type` -- singular,
+    for one family -- then holds a conjunction to match: "3D MP-RAGE and 3D FLASH".
+
+    Legal LinkML and scientifically wrong, which is what this module reports. It matters
+    because `Acquisition` carries one modality, so a record that fuses a functional EPI with
+    a structural scan (TE [0.04, 0.03], TR [3, 2.25]) cannot say which analysis used which:
+    the analyses point at one id and the two protocols are behind it.
+
+    Seven of 1,022 acquisitions in the neurometabench corpus do this. It is a warning
+    because the values are all present and correctly parsed -- what is wrong is that one
+    entity is standing for two, and splitting it is a judgement about the paper.
+    """
+
+    for index, acquisition in enumerate(record.get("acquisitions") or []):
+        if not isinstance(acquisition, Mapping):
+            continue
+        echoes = values.read(acquisition.get("echo_time_seconds"))
+        repetitions = values.read(acquisition.get("repetition_time_seconds"))
+        if not (isinstance(echoes, list) and len(echoes) > 1):
+            continue
+        if not (isinstance(repetitions, list) and len(repetitions) > 1):
+            continue
+        local = acquisition.get("local_id") or index
+        sequence = values.read(acquisition.get("pulse_sequence_type"))
+        findings.warn(
+            f"acquisitions[{local}]",
+            f"{len(echoes)} echo times and {len(repetitions)} repetition times describe "
+            f"two protocols, not one sequence: a repetition time belongs to the sequence, "
+            f"not to an echo"
+            + (f" -- and pulse_sequence_type reads {sequence!r}" if sequence else "")
+            + ". Split them into one Acquisition each, so an analysis can name the one it "
+            "used",
+        )
+
+
 def check_group_instruments(record: Mapping[str, Any], findings: Findings) -> None:
     """A group's diagnostic instrument must be one of the study's assessments.
 
@@ -1016,6 +1058,7 @@ RULES: tuple[Rule, ...] = (
     Rule("occasion_factors", "a within-subject occasion is a factor, not two analyses", check_occasion_factors),
     Rule("arm_reachability", "a trial's arms are reachable from its analyses", check_arm_reachability),
     Rule("derived_columns", "a derived column says what it was derived from", check_derived_columns),
+    Rule("one_protocol_per_acquisition", "an acquisition describes one sequence, not two", check_one_protocol_per_acquisition),
 )
 
 

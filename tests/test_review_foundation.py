@@ -2078,3 +2078,57 @@ def test_a_header_cell_holding_a_newline_does_not_crash_the_parse() -> None:
     header = [["Region", "Peak\ncoordinates", "Peak\ncoordinates", "Peak\ncoordinates"]]
     body = _body(["L IPL", "-52", "-42", "56"])
     assert tables._axis_columns(header, 4, body) == [1, 2, 3]
+
+
+def test_two_protocols_in_one_acquisition_are_reported() -> None:
+    """A repetition time belongs to the sequence, not to an echo, so several of both is two
+    acquisitions fused into one -- 16701903 acquires MP-RAGE at TE 4.4 ms and FLASH at TE
+    5 ms, and `pulse_sequence_type` reads "3D MP-RAGE and 3D FLASH" to match.
+
+    A multi-echo sequence -- several echoes, one TR -- is the case the list exists for and
+    must not be reported.
+    """
+
+    def field(value: object) -> dict:
+        return {
+            "extraction_status": "extracted",
+            "value": value,
+            "value_source": "reported",
+            "evidence": {"status": "not_found"},
+        }
+
+    class Collected:
+        def __init__(self) -> None:
+            self.messages: list[str] = []
+
+        def error(self, path: str, message: str) -> None:
+            self.messages.append(f"{path}: {message}")
+
+        warn = error
+
+    fused = {
+        "acquisitions": [
+            {
+                "local_id": "acq_mri",
+                "echo_time_seconds": field([0.0044, 0.005]),
+                "repetition_time_seconds": field([0.0114, 0.015]),
+                "pulse_sequence_type": field("3D MP-RAGE and 3D FLASH"),
+            }
+        ]
+    }
+    found = Collected()
+    rules.check_one_protocol_per_acquisition(fused, found)
+    assert found.messages and "two protocols" in found.messages[0]
+
+    multi_echo = {
+        "acquisitions": [
+            {
+                "local_id": "acq_me",
+                "echo_time_seconds": field([0.012, 0.028, 0.045]),
+                "repetition_time_seconds": field([2.0]),
+            }
+        ]
+    }
+    quiet = Collected()
+    rules.check_one_protocol_per_acquisition(multi_echo, quiet)
+    assert quiet.messages == []
