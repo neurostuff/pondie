@@ -727,6 +727,7 @@ class Repair(_Base):
                 notes.append(f"local repair models unavailable: "
                              f"{type(error).__name__}: {error}")
 
+        reply = None
         report = repair_pass.run(
             record, text, reader.load(schema.STORAGE), study_id=paper.study_id,
             proposer=proposer, checker=checker,
@@ -744,8 +745,12 @@ class Repair(_Base):
         }, indent=1) + "\n")
         # A finding this pass introduced is a defect in the pass, not in the paper, and is
         # the one thing here worth failing on.
+        # `cost` only where there was one: an adjudication that found no contradiction makes
+        # no call, and StageOutcome's own default is the empty Cost.
+        spend = {"cost": report.cost} if report.cost is not None else {}
         return StageOutcome(stage=self.name, study_id=paper.study_id,
-                            notes=tuple(notes + report.introduced))
+                            traces=report.traces, notes=tuple(notes + report.introduced),
+                            **spend)
 
 
 DEMAND_DRIVEN: tuple[Stage, ...] = (

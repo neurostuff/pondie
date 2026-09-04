@@ -76,6 +76,11 @@ class Report:
     written: list[str] = field(default_factory=list)
     refused: list[guards.Refusal] = field(default_factory=list)
     adjudicated: list[str] = field(default_factory=list)
+    #: What the adjudication spent, so a run can sum it. Every other stage returns its cost
+    #: rather than logging it, for the reason `llm.py` gives: a stage that has to scrape its
+    #: own spend out of its own logging cannot be summed.
+    cost: Any = None
+    traces: tuple = ()
     #: Findings this pass introduced, from `Validator.diff`. Should be empty.
     introduced: list[str] = field(default_factory=list)
 
@@ -174,6 +179,12 @@ def contradictions(record: Mapping[str, Any], sch: Schema) -> list[Case]:
     return out
 
 
+def _class_of(container: str) -> str:
+    from pondie.extraction.recall import CLASS_OF
+
+    return CLASS_OF.get(container, container)
+
+
 def _label(record: Mapping[str, Any], local_id: str) -> str:
     for entities in record.values():
         if not isinstance(entities, list):
@@ -185,7 +196,7 @@ def _label(record: Mapping[str, Any], local_id: str) -> str:
 
 
 def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller: Any,
-               *, study_id: str, model: str, report: Report) -> None:
+               *, study_id: str, model: str, report: Report) -> Any:
     """Put the unresolved contradictions to the extraction model, once, with the paper.
 
     A resolution is applied only when its quote resolves to a span of this paper, by the same
@@ -198,7 +209,7 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
 
     cases = contradictions(record, sch)
     if not cases:
-        return
+        return None
     listing = "\n\n".join(
         f"case {i + 1} (id {c.id}):\n  {c.question}\n"
         f"  permissible values: {', '.join(c.options)}, or unresolved"
@@ -234,6 +245,14 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
                        if isinstance(e, dict) and e.get("local_id") == case.local_id), None)
         if entity is None:
             continue
+        # Through the guards, like every other write. Coercing a cited scope to a bare enum
+        # is exactly the shape `refuses_losing_the_warrant` exists for, and step 4 was the
+        # one path that bypassed it.
+        edit = guards.Edit(sch, record, entity, _class_of(case.container), case.slot, value)
+        if refused := guards.refusals(edit):
+            report.refused.extend(refused)
+            report.adjudicated.append(f"{case.id}: refused, {refused[0].why}")
+            continue
         entity[case.slot] = {
             "extraction_status": "extracted", "value": value, "value_source": "reported",
             "evidence": {"status": "present",
@@ -241,6 +260,9 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
         if case.clears and value in guards.UNRESTRICTED:
             entity[case.clears] = []
         report.adjudicated.append(f"{case.id}: {value}")
+    # Returned, not logged. `llm.py`: "Cost is returned rather than logged, because a stage
+    # that has to scrape its own spend out of its own logging cannot be summed."
+    return reply
 
 
 def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: str,
@@ -257,12 +279,21 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     # (CAPS)" -- the check exists for that case and was unreachable in production while
     # every caller passed None.
     abbreviations = _abbreviations(text)
+    # Methods and results, not the whole paper. Both models take this as their premise, and
+    # a proposer truncating the first 45,000 characters of a full document sees title,
+    # abstract and introduction before it sees a method. `sectionize` falls back to the whole
+    # text when it finds nothing, which is the honest behaviour for a paper it cannot split.
+    premise = _premise(text)
     if proposer is not None:
-        _sweep(record, text, sch, proposer, checker, threshold, report, abbreviations)
+        _sweep(record, premise, sch, proposer, checker, threshold, report, abbreviations)
     if checker is not None:
         _prune_evidence(record, sch, checker, report)
     if caller is not None and model:
-        adjudicate(record, sch, text, caller, study_id=study_id, model=model, report=report)
+        reply = adjudicate(record, sch, text, caller, study_id=study_id, model=model,
+                           report=report)
+        if reply is not None:
+            report.cost = reply.cost
+            report.traces = ((reply.trace_id, reply.cache_status),) if reply.trace_id else ()
 
     # The extraction schema, not `sch`. A record is extraction-shaped -- every value in an
     # `ExtractedValue` wrapper -- while `sch` is storage, where `name` is a plain string.
@@ -272,7 +303,11 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     from pondie.extraction.record.validate import EXTRACTION_SCHEMA
     from pondie.schema import reader
 
-    report.introduced = Validator(reader.load(EXTRACTION_SCHEMA), None).diff(before, record)
+    # `text`, not None: passing None disables `check_span`'s span verification, which is the
+    # one check that catches a bad offset written by this pass -- switched off inside the
+    # function whose job is to report what the attempt broke.
+    checker_schema = reader.load(EXTRACTION_SCHEMA)
+    report.introduced = Validator(checker_schema, text or None).diff(before, record)
     return report
 
 
@@ -362,6 +397,21 @@ def _describe(class_name: str, proposal: Mapping[str, Any], limit: int = 5) -> s
              if name not in ("name", "local_id") and isinstance(value, str) and value.strip()]
     said = f"The paper describes a {class_name}: {label}."
     return said + (f" It is described as: {'; '.join(parts[:limit])}." if parts else "")
+
+
+#: Sections whose prose describes what was done and what was found. An entity is judged to
+#: exist against these; a paper's introduction describes other people's studies.
+PREMISE_SECTIONS = ("method", "material", "result")
+
+
+def _premise(text: str) -> str:
+    """The methods and results, or the whole text where they cannot be found."""
+    from pondie.extraction.evidence.retrieval import sectionize
+
+    spans = [text[start:end] for start, end, label in sectionize(text)
+             if any(word in label.lower() for word in PREMISE_SECTIONS)]
+    joined = "\n\n".join(spans)
+    return joined if len(joined) >= max(2_000, len(text) // 10) else text
 
 
 def _abbreviations(text: str) -> Any:

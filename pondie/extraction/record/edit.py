@@ -195,8 +195,12 @@ def _nested_defaults(sch: Schema, record: Mapping[str, Any], class_name: str,
         out["details"] = {
             "details_type": "NotStructurableDetails",
             "reason": "insufficient_standard_structure",
+            # `generated`: this sentence is the pass's, not the paper's, and stamping it
+            # `reported` would claim the paper said it -- and would then send it to the
+            # checker as a claim about the paper.
             "explanation": _wrap(
-                "Reported in prose with no table row group to decompose.", text),
+                "Reported in prose with no table row group to decompose.", text,
+                source="generated"),
         }
     return out
 
@@ -262,7 +266,7 @@ def _multivalued(sch: Schema, class_name: str, slot: str) -> bool:
     return bool(attribute is not None and attribute.multivalued)
 
 
-def _wrap(value: Any, text: str) -> dict:
+def _wrap(value: Any, text: str, source: str = "reported") -> dict:
     """A wrapper whose evidence says what was actually established.
 
     `not_found` rather than `not_applicable`: a sentence should exist for a value read off a
@@ -281,4 +285,4 @@ def _wrap(value: Any, text: str) -> dict:
         except Exception:
             pass
     return {"extraction_status": "extracted", "value": value,
-            "value_source": "reported", "evidence": evidence}
+            "value_source": source, "evidence": evidence}
