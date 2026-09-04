@@ -95,6 +95,11 @@ def rendered_value(field: dict) -> str:
     return "" if value in (None, "", []) else str(value)
 
 
+def _flat(text: str) -> str:
+    """Whitespace collapsed, for asking whether two quotes are the same passage."""
+    return re.sub(r"\s+", " ", text or "").strip()
+
+
 def union_span(
     reranker, units, path: str, field: dict, owner: str, quote: str | None
 ) -> str | None:
@@ -116,7 +121,13 @@ def union_span(
         return None
     # `unit.text` and not `unit.rendered`: build_record resolves a quote by exact match,
     # and a table row's rendered sentence appears nowhere in the paper.
-    if quote and (quote in unit.text or unit.text in quote):
+    #
+    # Compared on collapsed whitespace, because the two sides do not agree on it. The model
+    # copies the paper's non-breaking spaces -- "mean\xa0=\xa010.7\xa0months" -- while the
+    # retriever's unit carries ordinary ones, so exact matching called them different strings
+    # and 19914045 kept two sets holding one sentence. A duplicate is not a second warrant,
+    # and one that survives inflates the retriever's apparent contribution.
+    if quote and (_flat(quote) in _flat(unit.text) or _flat(unit.text) in _flat(quote)):
         return None
     return unit.text
 
@@ -151,14 +162,17 @@ def apply_evidence(
             continue
 
         quote = quotes.get(path)
-        sets = [{"quotes": [quote]}] if quote else []
+        # Labelled, not just ordered. The two sets were already two different locators, but
+        # only by position, so nothing downstream could say which warranted a value or count
+        # how often each was right.
+        sets = [{"source": "model_quote", "quotes": [quote]}] if quote else []
         second = (
             union_span(reranker, units, path, field, owner_of.get(path, ""), quote)
             if reranker
             else None
         )
         if second:
-            sets.append({"quotes": [second]})
+            sets.append({"source": "retriever", "quotes": [second]})
             counts["unioned"] += 1
             if not quote:
                 counts["recovered"] += 1

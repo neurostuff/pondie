@@ -289,7 +289,11 @@ def _resolve_field(
         # An EvidenceSet requires at least one span (minimum_cardinality: 1), so a
         # set whose every quote failed to resolve cannot be emitted at all.
         if resolved:
-            rebuilt.append({"spans": resolved})
+            # `source` says which locator found this set. Rebuilding the set without it
+            # would drop the distinction the evidence pass just recorded, leaving the two
+            # locators told apart only by position again.
+            rebuilt.append({"spans": resolved} if not evidence_set.get("source")
+                           else {"source": evidence_set["source"], "spans": resolved})
 
     if rebuilt:
         evidence["sets"] = rebuilt
