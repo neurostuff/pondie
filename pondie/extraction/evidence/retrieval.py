@@ -29,6 +29,7 @@ from dataclasses import dataclass
 
 # One abbreviation list for the repo. `preprocess` owns it because that is where it was
 # measured against scispaCy; importing it is cheaper than the drift of a second copy.
+from pondie.extraction.evidence.grounding import REASONED
 from pondie.extraction.prompt.preprocess import ends_mid_sentence
 
 # --- sections ---------------------------------------------------------------
@@ -571,6 +572,56 @@ def load_reranker(model: str = RERANKER, device: str = "cpu"):
     return None
 
 
+#: The prefilter. Small, and only ever used to choose which units the cross-encoder reads.
+BIENCODER = "sentence-transformers/all-MiniLM-L6-v2"
+
+#: How many units survive the prefilter. Measured across four papers: at 30 the cross-encoder
+#: picks the same unit as it does over the whole paper for 92-100% of fields, at 20 that falls
+#: and at 40 it does not rise. The disagreements are not the prefilter losing the right
+#: sentence -- they are the margin gate, which asks a question about the whole paper.
+PREFILTER_K = 30
+
+
+def index_units(reranker, units: list[Unit]) -> None:
+    """Embed the paper's units once, so `locate` does not re-read them for every field.
+
+    This is the whole point of the prefilter. A cross-encoder must see query and unit
+    together, so it re-encodes all ~300 units for each of ~150 fields -- 45,000 pair
+    encodings per paper. A bi-encoder encodes the units once and each short query once, and
+    the cross-encoder then reads only the shortlist.
+    """
+    if reranker is None or not units:
+        return
+    try:
+        from sentence_transformers import SentenceTransformer
+    except ImportError:
+        return
+    torch = reranker["torch"]
+    model = reranker.get("biencoder")
+    if model is None:
+        model = SentenceTransformer(BIENCODER, device=reranker["device"])
+        if reranker["device"] != "cpu":
+            model = model.half()
+        reranker["biencoder"] = model
+    with torch.no_grad():
+        reranker["unit_matrix"] = model.encode(
+            [u.rendered for u in units], batch_size=128, convert_to_tensor=True,
+            normalize_embeddings=True, show_progress_bar=False)
+
+
+def shortlist(reranker, query: str, units: list[Unit], k: int = PREFILTER_K) -> list[int] | None:
+    """Indices of the `k` units most like `query`, or None when there is no index to use."""
+    matrix = reranker.get("unit_matrix") if reranker else None
+    model = reranker.get("biencoder") if reranker else None
+    if matrix is None or model is None or len(units) <= k or matrix.shape[0] != len(units):
+        return None
+    torch = reranker["torch"]
+    with torch.no_grad():
+        embedded = model.encode([query], convert_to_tensor=True,
+                                normalize_embeddings=True, show_progress_bar=False)
+        return (embedded @ matrix.T).topk(k, dim=1).indices[0].tolist()
+
+
 def score_units(reranker, query: str, units: list[Unit], batch: int = 64) -> list[float]:
     torch = reranker["torch"]
     scores: list[float] = []
@@ -597,11 +648,27 @@ def locate(
 
     if reranker is None or not units or not value:
         return None
-    variants = value_variants(field_path, value)
-    literal = set(literal_hits([u.rendered for u in units], variants))
-    named = set(entity_hits([u.rendered for u in units], entity)) if entity else set()
+    # A reasoned slot has no sentence to find. A paper does not write down that a contrast
+    # `direction` is positive -- it is read off the method -- so the locator was hunting for
+    # a quote that cannot exist, and the best lexical match for "direction positive" in a
+    # methods section is "the number of false positive clusters", which it ranked first over
+    # all 308 units of 16445991 and was kept out of the record only by the margin gate.
+    # `grounding` already exempts these; this is the same list, consulted one stage earlier.
+    if field_path.rsplit(".", 1)[-1].split("[")[0] in REASONED:
+        return None
 
-    base = score_units(reranker, build_query(field_path, value), units)
+    query = build_query(field_path, value)
+    # The shortlist decides what the cross-encoder reads, never what wins: the gate below is
+    # a question about the whole paper, so it is answered against the whole paper.
+    picked = shortlist(reranker, query, units)
+    reading = [units[i] for i in picked] if picked else units
+
+    variants = value_variants(field_path, value)
+    literal = set(literal_hits([u.rendered for u in reading], variants))
+    named = set(entity_hits([u.rendered for u in reading], entity)) if entity else set()
+
+    units = reading
+    base = score_units(reranker, query, units)
     total = [
         score
         + section_prior(field_path, unit.section)

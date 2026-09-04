@@ -574,7 +574,11 @@ class Evidence(_Base):
         if reranker is None:
             return None, ()
         text = paper.text.read_text(encoding="utf-8", errors="replace")
-        return reranker, retrieval.sentence_units(text)
+        units = retrieval.sentence_units(text)
+        # Once per paper, not once per field: this is the saving. `locate` runs for every
+        # extracted field and re-read all ~300 units each time.
+        retrieval.index_units(reranker, units)
+        return reranker, units
 
 
 @dataclass(frozen=True)

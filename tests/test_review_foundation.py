@@ -2168,3 +2168,26 @@ def test_the_reranker_is_half_precision_on_a_card_and_not_on_cpu() -> None:
         on_gpu = retrieval.load_reranker(device="cuda:0")
         if on_gpu is not None and on_gpu["device"] != "cpu":
             assert next(on_gpu["model"].parameters()).dtype is torch.float16
+
+
+def test_a_reasoned_slot_is_not_sent_looking_for_a_quote() -> None:
+    """A paper does not write down that a contrast `direction` is positive -- it is read off
+    the method. Hunting for the sentence anyway ranked "the number of false positive
+    clusters" first over all 308 units of 16445991, and only the margin gate kept it out of
+    the record. `grounding` already exempts these slots; the locator now does too."""
+    from pondie.extraction.evidence import retrieval
+
+    class Loud:
+        """Would score anything highly, so a slot that reaches the model gets a unit."""
+
+    assert retrieval.locate(
+        Loud(), [retrieval.Unit(start=0, end=1, text="x", rendered="x", section="results")],
+        "analyses.effect.cells.direction", "positive") is None
+
+
+def test_the_shortlist_declines_when_there_is_no_index() -> None:
+    """The prefilter is an accelerator, never a requirement: without an embedded index
+    `locate` reads every unit, which is the behaviour it has always had."""
+    from pondie.extraction.evidence import retrieval
+
+    assert retrieval.shortlist({"torch": None}, "q", [], k=30) is None
