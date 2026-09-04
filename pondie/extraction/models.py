@@ -241,6 +241,17 @@ class Settings(Strict):
     #: checker places itself from this and nothing else, so it cannot be given a card of its
     #: own without hiding the proposer's. Empty leaves the environment alone.
     visible_devices: str = ""
+    #: Where the proposer is served. Default because a served proposer decodes under a
+    #: grammar, which ends a failure the in-process one cannot: on 16962339 the free-running
+    #: decoder repeats a completed object until `max_tokens`, unparseable, and under a schema
+    #: the same call answers in 70 tokens. Measured 5.9x over the in-process path on eighteen
+    #: calls. Empty runs in-process instead; an address nothing answers falls back to it,
+    #: saying so, rather than failing the run.
+    proposer_url: str = "http://127.0.0.1:8311/v1"
+
+    #: The name the server was started with (`--served-model-name`).
+    proposer_model: str = "nu"
+
     #: How many papers may be inside the two local models at once. The stages above are
     #: network-bound and run at `workers`; these are 8 GB of card between them and do not
     #: divide. At eight, every full-length paper OOMed down to the proposer's floor and

@@ -66,6 +66,9 @@ continuous covariate.
 worse — so it validates its own output against its own input and reports what it introduced.
 Both of its halves are optional and independent: the local models want a GPU, the final
 adjudication wants only the gateway, and a host with neither still gets a validated record.
+Its proposer runs in-process or against a vLLM server, whichever `Settings.proposer_url`
+finds -- [docs/serving-the-proposer.md](docs/serving-the-proposer.md) covers starting one,
+stopping one without corrupting the compile cache, and why the projected schema is nullable.
 
 A stage is a function of `(paper, settings, caller)`, not a subprocess, so it can be called
 from a test with a fake `Caller` and its cost is returned rather than scraped from logging.

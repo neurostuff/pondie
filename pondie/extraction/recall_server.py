@@ -75,9 +75,27 @@ class NuExtractServer:
                  max_premise_chars: int = 45_000, max_new_tokens: int = 2_048,
                  structured: bool = True, strict: bool = True,
                  timeout: float = 1_800.0) -> None:
-        self._url = base_url.rstrip("/") + "/chat/completions"
+        self._base = base_url.rstrip("/")
+        self._url = self._base + "/chat/completions"
         self._model, self._max_chars, self._max_new = model, max_premise_chars, max_new_tokens
         self._structured, self._strict, self._timeout = structured, strict, timeout
+
+    def reachable(self, timeout: float = 3.0) -> bool:
+        """Whether a server is answering here, asked before a run commits to one.
+
+        Cheap and non-committal: `GET /models` allocates nothing and returns in milliseconds
+        or not at all. The alternative is discovering the server is down on the first paper
+        of a long run, by which point the fallback has already cost a model load.
+        """
+        # Built from the base, not by unpicking the completions URL: `rsplit` left
+        # `/v1/chat/models`, which 404s, so a live server read as absent and the run fell
+        # back to loading five gigabytes it did not need.
+        url = self._base + "/models"
+        try:
+            with urllib.request.urlopen(url, timeout=timeout) as reply:
+                return reply.status == 200
+        except Exception:  # noqa: BLE001 -- any failure to answer means "not there"
+            return False
 
     def propose(self, sch, class_name: str, premise: str,
                 instruction: str) -> Sequence[Mapping[str, Any]]:

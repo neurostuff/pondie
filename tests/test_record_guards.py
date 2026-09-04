@@ -883,3 +883,63 @@ def test_the_server_proposer_asks_for_a_strict_grammar():
     from pondie.extraction.recall_server import NuExtractServer
 
     assert NuExtractServer()._strict is True
+
+
+def test_the_served_proposer_is_the_default(tmp_path):
+    """Chosen for the failure it ends rather than the speed: a free-running decoder that
+    repeats a completed object until `max_tokens` parses to nothing and reads as the model
+    declining to answer, and no prompt change fixes that from inside the process."""
+    from pondie.extraction.models import Settings
+
+    settings = Settings(payloads=tmp_path, records=tmp_path, model="m")
+    assert settings.proposer_url.startswith("http")
+
+
+def test_an_address_nothing_answers_falls_back_and_says_so(monkeypatch, capsys):
+    """A run that quietly used the other proposer produces a different record, and nothing
+    in the output distinguishes the two -- so the fallback is announced, not silent."""
+    from pondie.extraction import repair as repair_pass
+    from pondie.extraction.recall_server import NuExtractServer
+
+    monkeypatch.setattr(NuExtractServer, "reachable", lambda self, timeout=3.0: False)
+    monkeypatch.setattr("pondie.extraction.recall.NuExtract", lambda **kw: "LOCAL")
+    monkeypatch.setattr("pondie.extraction.evidence.grounding.MiniCheck",
+                        lambda *a, **k: "CHECKER")
+
+    repair_pass.models.cache_clear()
+    proposer, checker = repair_pass.models("", 1, "http://127.0.0.1:9/v1", "nu")
+
+    assert proposer == "LOCAL" and checker == "CHECKER"
+    assert "no server at" in capsys.readouterr().err
+    repair_pass.models.cache_clear()
+
+
+def test_a_reachable_server_is_used_without_loading_anything_locally(monkeypatch):
+    """The point of serving it: ~5 GB of weights stay out of every worker."""
+    from pondie.extraction import repair as repair_pass
+    from pondie.extraction.recall_server import NuExtractServer
+
+    monkeypatch.setattr(NuExtractServer, "reachable", lambda self, timeout=3.0: True)
+    monkeypatch.setattr("pondie.extraction.recall.NuExtract",
+                        lambda **kw: pytest.fail("must not load the in-process model"))
+    monkeypatch.setattr("pondie.extraction.evidence.grounding.MiniCheck",
+                        lambda *a, **k: "CHECKER")
+
+    repair_pass.models.cache_clear()
+    proposer, _checker = repair_pass.models("", 1, "http://127.0.0.1:8311/v1", "nu")
+    assert isinstance(proposer, NuExtractServer)
+    repair_pass.models.cache_clear()
+
+
+def test_the_reachability_probe_asks_the_right_address():
+    """`rsplit` on the completions URL left `/v1/chat/models`, which 404s -- so a live server
+    read as absent and the run silently loaded the in-process model instead. The tests above
+    stub `reachable`, so only this one can catch it."""
+    from pondie.extraction.recall_server import NuExtractServer
+
+    server = NuExtractServer(base_url="http://host:8311/v1")
+    assert server._url == "http://host:8311/v1/chat/completions"
+    assert server._base + "/models" == "http://host:8311/v1/models"
+
+    trailing = NuExtractServer(base_url="http://host:8311/v1/")
+    assert trailing._base + "/models" == "http://host:8311/v1/models"

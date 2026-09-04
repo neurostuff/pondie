@@ -26,6 +26,7 @@ import functools
 import json
 import os
 import re
+import sys
 import threading
 from dataclasses import dataclass, field
 from typing import Any, Mapping, MutableMapping, Sequence
@@ -57,7 +58,8 @@ contradiction, so a reviewer can see it; a confident wrong answer removes that."
 
 
 @functools.lru_cache(maxsize=1)
-def models(visible_devices: str, proposer_device: int) -> tuple[Any, Any]:
+def models(visible_devices: str, proposer_device: int,
+           server_url: str = "", server_model: str = "nu") -> tuple[Any, Any]:
     """The two local models, built once per process and shared by every paper.
 
     Cached because they are ~10 GB of weights and the stage runs per paper under a thread
@@ -76,6 +78,21 @@ def models(visible_devices: str, proposer_device: int) -> tuple[Any, Any]:
     from pondie.extraction.evidence.grounding import MiniCheck
     from pondie.extraction.recall import NuExtract
 
+    # A served proposer by default: constrained decoding ends a failure the in-process path
+    # cannot address -- a decoder repeating a completed object until `max_tokens`, which
+    # parses to nothing and reads as the model declining to answer -- and it keeps ~5 GB of
+    # weights out of every worker. Asked first, because discovering the server is down on
+    # paper one of a long run costs a model load to find out.
+    if server_url:
+        from pondie.extraction.recall_server import NuExtractServer
+
+        served = NuExtractServer(base_url=server_url, model=server_model)
+        if served.reachable():
+            return served, MiniCheck()
+        # Said aloud, not silent: a run that quietly used the other proposer produces a
+        # different record, and nothing in the output distinguishes the two.
+        print(f"  proposer: no server at {server_url}; using the in-process model",
+              file=sys.stderr)
     return NuExtract(device=proposer_device), MiniCheck()
 
 

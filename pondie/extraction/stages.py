@@ -721,7 +721,8 @@ class Repair(_Base):
         if settings.repair:
             try:
                 proposer, checker = repair_pass.models(
-                    settings.visible_devices, settings.proposer_device)
+                    settings.visible_devices, settings.proposer_device,
+                    settings.proposer_url, settings.proposer_model)
             except ImportError as error:
                 notes.append(
                     f"no local repair models ({error}); "
