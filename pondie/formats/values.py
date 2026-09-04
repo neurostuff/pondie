@@ -272,6 +272,72 @@ def slot_value(sch: "Schema", class_name: str, entity: Mapping[str, Any], slot: 
     return value_of(entity.get(slot), bool(attribute.multivalued) if attribute else False)
 
 
+#: What a model writes when it means yes or no. Spelled out because the answer arrives as
+#: whatever word the paper used, and `bool("false")` is True.
+_TRUE = frozenset({"true", "yes", "y", "1"})
+_FALSE = frozenset({"false", "no", "n", "0"})
+
+
+def cast(sch: "Schema", class_name: str, slot: str, value: Any) -> Any:
+    """`value` in the type and vocabulary its slot declares, or `None` if it will not fit.
+
+    Models answer in the paper's words and the schema does not: `Group.is_healthy` was
+    given "true" and `Group.acquired_count` "31", each a correct reading of the paper and
+    each a type the wrapper rejects -- `ExtractedBoolean.value must be a boolean, got str`.
+    A closed vocabulary is the same problem one level up: `prespecification` was given
+    "post-hoc", which describes the analysis accurately and is not one of the two values the
+    field holds.
+
+    `None` means *do not write this*, and is the point of the function. Coercing an answer
+    that will not fit is how a type error becomes a wrong value: `int(float("about 20"))`
+    raises, but a `bool()` of anything non-empty does not, and a slot given "mostly" would
+    quietly become True.
+
+    A slot written `any_of: [SomeEnum, string]` is deliberately open -- `region_type` takes
+    "gray matter" when the source says so -- and has no single `range`, so it is left alone.
+    """
+    attribute = sch.attributes(class_name).get(slot)
+    if attribute is None:
+        return None
+    text = str(value).strip()
+    ranges = sch.ranges(attribute)
+    single = ranges[0] if len(ranges) == 1 else None
+
+    if single == "boolean":
+        low = text.lower()
+        return True if low in _TRUE else False if low in _FALSE else None
+    if single == "integer":
+        try:
+            return int(float(text))
+        except ValueError:
+            return None
+    if single == "float":
+        try:
+            return float(text)
+        except ValueError:
+            return None
+    permissible = getattr(sch.enums.get(single or ""), "permissible_values", None)
+    if permissible and text not in permissible:
+        return None
+    return text
+
+
+def shape(sch: "Schema", class_name: str, slot: str, value: Any) -> Any:
+    """`cast`, in the multiplicity the slot declares.
+
+    A cast value still has to arrive in the shape the slot holds: `Task.response_mode` is
+    multivalued, and writing the scalar produced "ExtractedResponseModeList.value must be a
+    list of ResponseMode or string, got str".
+    """
+    result = cast(sch, class_name, slot, value)
+    if result is None:
+        return None
+    attribute = sch.attributes(class_name).get(slot)
+    if attribute is not None and attribute.multivalued and not isinstance(result, list):
+        return [result]
+    return result
+
+
 __all__ = [
     "Evidence",
     "EvidenceStatus",
@@ -288,4 +354,6 @@ __all__ = [
     "NOT_REPORTED",
     "value_of",
     "slot_value",
+    "cast",
+    "shape",
 ]
