@@ -204,7 +204,7 @@ def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: A
     for container in sweep_order(sch, [k for k in CLASS_OF if record.get(k)]):
         class_name = CLASS_OF[container]
         proposals = proposer.propose(
-            class_name, {}, text,
+            sch, class_name, text,
             candidates(sch, record, class_name, lambda e, _c="": edit_module.label_of(e)))
         by_id = {e.get("local_id"): e for e in record.get(container) or []
                  if isinstance(e, Mapping)}

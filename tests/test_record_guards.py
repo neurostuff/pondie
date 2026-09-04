@@ -293,3 +293,37 @@ def test_only_a_settleable_contradiction_reaches_the_model(sch):
                                           "correction_scope": field("whole_brain"),
                                           "correction_regions": []}]}
     assert repair_pass.contradictions(consistent, sch) == []
+
+
+def test_a_template_offers_the_slots_a_class_declares(sch):
+    """`local_id` on every class, not only Analysis: without it the model can name an entity
+    but never address one, so every correction had to be matched by label."""
+    from pondie.extraction.recall import template_for
+
+    template = template_for(sch, "Region")
+    fields = template["regions"][0]
+    assert list(fields)[0] == "local_id"
+    assert "name" in fields
+    # a closed vocabulary reaches the model as its values, not as a free string
+    assert "atlas" in fields["definition_method"]
+    # an open one keeps the enum branch rather than degrading to "string"
+    assert "anatomical" in fields["region_type"]
+
+
+def test_a_reference_slot_is_offered_by_name_not_as_a_nested_record(sch):
+    from pondie.extraction.recall import template_for
+
+    fields = template_for(sch, "Analysis")["analyses"][0]
+    assert fields["regions"] == ["verbatim-string"]
+    assert fields["measure"] == "verbatim-string"
+
+
+def test_the_call_carries_a_directive_naming_what_to_list():
+    """16508348: the same template and premise returned nothing without one, and three
+    correct regions with it. A template says what an answer must look like, not what
+    question it answers."""
+    from pondie.extraction.recall import directive
+
+    assert "brain region" in directive("Region")
+    assert "statistical analysis" in directive("Analysis")
+    assert "tied to an analysis" in directive("Group")

@@ -704,8 +704,10 @@ class Repair(_Base):
             # and on by default only works if absent weights degrade instead of failing.
             try:
                 from pondie.extraction.evidence.grounding import MiniCheck
+                from pondie.extraction.recall import NuExtract
 
-                checker = MiniCheck()
+                checker = MiniCheck(device=settings.checker_device)
+                proposer = NuExtract(device=settings.proposer_device)
             except Exception as error:  # noqa: BLE001 -- absence is expected, not exceptional
                 notes.append(
                     f"no local repair models ({type(error).__name__}); "

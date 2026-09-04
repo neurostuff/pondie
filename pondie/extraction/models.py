@@ -219,6 +219,11 @@ class Settings(Strict):
     #: `pondie[repair]` or a GPU is missing, the stage says so once and carries on with the
     #: adjudication, which needs neither.
     repair: bool = True
+    #: Where the two local models load. They do not share a card unless one card holds both:
+    #: together they are about 9.5 GB, and the response to not fitting is a silent spill to
+    #: CPU rather than a failure.
+    checker_device: str = "cuda:0"
+    proposer_device: int = 1
     #: Put the contradictions nothing else could settle to the extraction model, once per
     #: record, with the paper. Costs one call for a record that has one, and nothing for a
     #: record that does not -- 8 cases across 42 records measured.

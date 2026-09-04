@@ -30,8 +30,170 @@ from pondie.schema.reader import Schema
 class Proposer(Protocol):
     """Returns entities of `class_name` the paper describes, as flat dicts."""
 
-    def propose(self, class_name: str, template: Mapping[str, Any], premise: str,
+    def propose(self, sch: Schema, class_name: str, premise: str,
                 instruction: str) -> Sequence[Mapping[str, Any]]: ...
+
+
+#: LinkML range -> the type NuExtract templates use. Anything unmapped becomes a string,
+#: which is the safe default: NuExtract validates its own output against the template, so a
+#: wrong type costs a field and a wrong *shape* costs the reply.
+_TYPES = {"string": "string", "integer": "integer", "float": "number",
+          "double": "number", "decimal": "number", "boolean": "boolean",
+          "date": "date-time", "datetime": "date-time", "uriorcurie": "string"}
+
+#: Slots a proposal has no business setting. `id` is the schema's identifier and `local_id`
+#: is added back explicitly at the front; the rest are minted by other stages or hold text
+#: this pass cannot check.
+_SKIP = frozenset({"id", "mirror_of", "source_table_analysis", "defines_regions",
+                   "model_representation_notes"})
+
+INSTRUCTION = """\
+`local_id` is an ADDRESS, not a description. To CORRECT an entity already listed, copy its
+`local_id` exactly; the reply is then an edit of that entity rather than a new one. Leave it
+out for an entity you are adding. Never invent an id for one that is not listed.
+
+A cross-reference names another entity. Give the name exactly as listed, or omit the field
+entirely when there is nothing to point at: a reference has no "not reported" form, so an
+empty string or a guess is worse than an absent field.
+
+Do not invent a value to fill a field. If the paper does not state it, leave the field out.
+
+An analysis restricted to a region names that region; one run over the whole brain names
+none. The volume searched and the volume corrected are different claims, and gray or white
+matter masking is not a restriction to a region at all.
+"""
+
+
+#: What each class is called when asking for it. Read from the container name rather than
+#: the class so the phrasing matches the schema's own plural.
+_NOUN = {"Analysis": "statistical analysis", "Region": "brain region",
+         "Group": "participant group", "Task": "task", "Measure": "measured quantity",
+         "Acquisition": "imaging acquisition", "Device": "scanner",
+         "Preprocessing": "preprocessing pipeline", "ModelEstimation": "statistical model",
+         "InferenceSettings": "thresholding and correction scheme",
+         "Table": "table", "Assessment": "assessment instrument"}
+
+
+def directive(class_name: str) -> str:
+    """What to enumerate, which the model will not do unasked.
+
+    Measured, not assumed: on 16508348 the same template and premise returned nothing
+    without this and three correct regions -- hippocampus, parahippocampal, medial temporal
+    lobe -- with it. A template says what the answer must look like and not what question it
+    answers, so the directive is part of the call rather than the caller's business.
+    """
+    noun = _NOUN.get(class_name, class_name.lower())
+    return (f"List every {noun} in this paper that is used by, or reported for, one of its "
+            f"statistical analyses. Ignore anything not tied to an analysis.\n\n")
+
+
+def nu_type(sch: Schema, slot: Any) -> Any:
+    """The template type for one slot, or None for a slot a proposal should not carry."""
+    ranges = sch.ranges(slot)
+    for candidate in ranges:
+        if candidate in sch.enums:
+            # `any_of: [SomeEnum, string]` is how the schema keeps a vocabulary open. Taking
+            # the enum branch keeps the closed values in the template; without it the slot
+            # degrades to a free string and the model stops being told what it may say.
+            permissible = list(getattr(sch.enums[candidate], "permissible_values", {}) or {})
+            return permissible or "string"
+    if any(candidate in sch.classes for candidate in ranges):
+        return None                      # a reference; `candidates` offers those by name
+    return _TYPES.get(str(ranges[0] if ranges else "string").lower(), "string")
+
+
+def template_for(sch: Schema, class_name: str) -> dict:
+    """The NuExtract template for one class, projected from the schema.
+
+    `local_id` first, so the reply reads as an edit list. It is offered on every class and
+    not only on Analysis: without it the model can name an entity but never address one, so
+    every correction to a region or a group had to be matched by label -- the path that
+    minted a second copy of an instrument the record already held.
+    """
+    fields: dict[str, Any] = {"local_id": "string"}
+    for name, slot, kind in sch.iter_slots(class_name):
+        if name in _SKIP or name == "local_id":
+            continue
+        if kind == "reference":
+            fields[name] = ["verbatim-string"] if slot.multivalued else "verbatim-string"
+            continue
+        projected = nu_type(sch, slot)
+        if projected is None:
+            continue
+        fields[name] = [projected] if slot.multivalued and isinstance(projected, str) \
+            else projected
+    return {CONTAINER.get(class_name, class_name.lower()): [fields]}
+
+
+class NuExtract:
+    """NuExtract 3 behind the protocol.
+
+    `device_map={"": device}` and never `"auto"`: auto placed 9.3 GB of weights on the CPU
+    rather than splitting them over two cards, said nothing, and the only symptom was a run
+    that never finished -- which reads as a slow card, not a misplaced model.
+    """
+
+    def __init__(self, model_name: str = "numind/NuExtract3", device: int = 0,
+                 max_premise_chars: int = 45_000, max_new_tokens: int = 2_048,
+                 load_4bit: bool = True) -> None:
+        import torch
+        from transformers import AutoModelForImageTextToText, AutoProcessor
+
+        self._max_chars, self._max_new = max_premise_chars, max_new_tokens
+        self._processor = AutoProcessor.from_pretrained(model_name, trust_remote_code=True)
+        options: dict[str, Any] = {"trust_remote_code": True,
+                                   "device_map": {"": device}}
+        if load_4bit:
+            from transformers import BitsAndBytesConfig
+
+            options["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True, bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True)
+        else:
+            options["dtype"] = torch.bfloat16
+        self._model = AutoModelForImageTextToText.from_pretrained(
+            model_name, **options).eval()
+
+    def propose(self, sch: Schema, class_name: str, premise: str,
+                instruction: str) -> Sequence[Mapping[str, Any]]:
+        import json
+
+        import torch
+
+        template = template_for(sch, class_name)
+        key = next(iter(template))
+        limit = self._max_chars
+        while True:
+            messages = [{"role": "user", "content": [
+                {"type": "text",
+                 "text": directive(class_name) + INSTRUCTION + instruction
+                         + premise[:limit]}]}]
+            inputs = self._processor.apply_chat_template(
+                messages, add_generation_prompt=True, tokenize=True, return_dict=True,
+                return_tensors="pt", template=json.dumps(template, indent=2),
+                enable_thinking=False).to(self._model.device)
+            try:
+                with torch.inference_mode():
+                    ids = self._model.generate(**inputs, max_new_tokens=self._max_new,
+                                               do_sample=False)
+                break
+            except torch.OutOfMemoryError:
+                # Halve and retry rather than drop. A skipped call loses the whole sweep for
+                # that class: one paper lost all ten of its calls and got no entity pass at
+                # all, because the section finder returned the whole document as the premise.
+                del inputs
+                torch.cuda.empty_cache()
+                if limit <= 6_000:
+                    return []
+                limit //= 2
+        text = self._processor.batch_decode(
+            ids[:, inputs.input_ids.shape[1]:], skip_special_tokens=True)[0].strip()
+        try:
+            payload = json.loads(text)
+        except json.JSONDecodeError:
+            return []
+        proposed = payload.get(key) if isinstance(payload, Mapping) else None
+        return [p for p in (proposed or []) if isinstance(p, Mapping)]
 
 
 def sweep_order(sch: Schema, keys: Sequence[str]) -> list[str]:
