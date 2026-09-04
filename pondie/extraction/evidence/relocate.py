@@ -128,9 +128,51 @@ def _evidence(document: str, sentences: Sequence[Any]) -> dict[str, Any] | None:
     return {"status": "present", "sets": [{"spans": located}]}
 
 
+def _retrieved(reranker: Any, units: Sequence[Any], record: Mapping[str, Any],
+               rows: Sequence[Contested], document: str) -> dict[str, dict]:
+    """The local locator's candidate for each contested field, by tag.
+
+    The same question the proposer is asked -- which sentence supports this value -- put to
+    a cross-encoder over the paper's own sentences instead of to a generative model. It used
+    to run in `evidence` and write a second span whenever it cleared its own gate, with no
+    refusal recorded anywhere. Here its answer is a candidate like any other and has to beat
+    the incumbent to be kept, which is the one rule that cannot lower a record's support.
+    """
+    if reranker is None or not units:
+        return {}
+    from pondie.extraction.evidence import retrieval
+
+    found: dict[str, dict] = {}
+    for row in rows:
+        unit = retrieval.locate(reranker, list(units), row.path.split("[")[0],
+                                str(row.value), label_for(record, row.path))
+        if unit is None:
+            continue
+        located = _evidence(document, [unit.text])
+        if located is not None:
+            found[row.tag] = located
+    return found
+
+
+def label_for(record: Mapping[str, Any], path: str) -> str:
+    """The name of the entity a leaf sits on, which the locator scores as a bonus."""
+    from pondie.extraction.record.edit import label_of
+
+    head = path.split(".", 1)[0]
+    name, _, index = head.partition("[")
+    entities = record.get(name)
+    if not isinstance(entities, list) or not index:
+        return ""
+    position = int(index.rstrip("]"))
+    if position >= len(entities):
+        return ""
+    return label_of(entities[position]) or ""
+
+
 def relocate(record: MutableMapping[str, Any], document: str, premise: str,
              weak: Sequence[tuple[str, float]], proposer: Any, checker: Checker,
-             refused: list, abbreviations: Any = None, paper: str = "") -> list[str]:
+             refused: list, abbreviations: Any = None, paper: str = "",
+             reranker: Any = None, units: Sequence[Any] = ()) -> list[str]:
     """Re-cite what `review_spans` doubted. Returns the paths that improved.
 
     A replacement has to beat what it replaces. A field with no span has nothing to be
@@ -140,12 +182,15 @@ def relocate(record: MutableMapping[str, Any], document: str, premise: str,
     rows = contested(record, weak)
     if not rows:
         return []
+    # Two sources of candidate sentences, one acceptance rule. The retriever answers for
+    # every contested field it can place; the proposer answers for the ones it recognises.
+    retrieved = _retrieved(reranker, units, record, rows, document)
 
     from pondie.extraction.recall import Starved
     from pondie.formats.values import iter_fields
 
     replies: list[Mapping[str, Any]] = []
-    for start in range(0, len(rows), BATCH):
+    for start in range(0, len(rows), BATCH) if proposer is not None else ():
         chunk = rows[start:start + BATCH]
         template = {"fields": [{**TEMPLATE["fields"][0],
                                 "field_id": [row.tag for row in chunk]}]}
@@ -172,6 +217,11 @@ def relocate(record: MutableMapping[str, Any], document: str, premise: str,
         if fresh is None:
             continue
         candidates.append((row, node, fresh))
+    for tag, located in retrieved.items():
+        row = by_tag[tag]
+        node = nodes.get(row.path)
+        if node is not None:
+            candidates.append((row, node, located))
     if not candidates:
         return []
 
@@ -186,13 +236,18 @@ def relocate(record: MutableMapping[str, Any], document: str, premise: str,
                             for row, _node, _fresh in candidates])
 
     improved: list[str] = []
+    best: dict[str, float] = {}
     for (row, node, fresh), new, old in zip(candidates, after, before):
         floor = 0.0 if not row.premise else float(old)
-        if float(new) <= floor:
+        # Two candidates may answer for one field. The better one wins, and only if it also
+        # beats what is already there.
+        if float(new) <= max(floor, best.get(row.path, 0.0)):
             refused.append(Refusal(
                 "evidence", f"no better sentence found for {row.path} "
                             f"({new:.2f} against {floor:.2f})"))
             continue
         node["evidence"] = fresh
-        improved.append(row.path)
+        best[row.path] = float(new)
+        if row.path not in improved:
+            improved.append(row.path)
     return improved

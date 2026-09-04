@@ -427,11 +427,16 @@ class Evidence(_Base):
     wrote, and those payloads are rewritten in place. `noev/` is a copy taken first, so the
     stage can be re-run without re-running `satisfy`.
 
-    Two locators, unioned. The model reads the whole paper -- handing it a retrieved
-    shortlist instead was measured and cost 21 points -- and the retriever contributes a
-    second span when it clears its own gate, at no marginal cost because it runs locally.
-    The retriever is optional by design: a host without torch does the quote pass and says
-    so, rather than taking the stage down.
+    Network only. The model reads the whole paper -- handing it a retrieved shortlist
+    instead was measured and cost 21 points -- and what it cannot place is left `not_found`
+    for `repair` to go looking for with the local models.
+
+    The local locator used to run here too, and moving it out is what makes this stage
+    re-runnable in isolation. A stage that spends tokens *and* holds a card can have neither
+    half improved without paying for the other: when the retriever got 5.4x faster mid-run,
+    the 353 papers already extracted could not take the improvement without re-running the
+    quote pass, and the corpus ended up built two ways. Network work and card work now sit in
+    different stages so either can be redone on its own.
     """
 
     name: StageName = StageName.evidence
@@ -445,8 +450,8 @@ class Evidence(_Base):
 
         `noev/` is the pre-evidence backup and is made BEFORE any evidence is, so its
         presence proves only that the stage began. Reading it as "done" cost seventeen
-        papers their evidence: the stage died loading its reranker, the backup was already
-        on disk, and every resume skipped it and built records with no evidence at all.
+        papers their evidence: the stage died early, the backup was already on disk, and
+        every resume skipped it and built records with no evidence at all.
 
         Nor can the payloads answer it. `retrieve_evidence` also selects the prompt rule
         that asks the extraction passes to emit `evidence` inline, so on the default
@@ -506,7 +511,6 @@ class Evidence(_Base):
             for target in targets:
                 shutil.copy(target, backup / target.name)
 
-        reranker, units = self._retriever(paper, settings)
         text = paper.text.read_text(encoding="utf-8", errors="replace")
         cost = Cost()
         traces: list[tuple[str, str]] = []
@@ -546,7 +550,7 @@ class Evidence(_Base):
                 cost = cost + reply.cost
                 traces.append((reply.trace_id, reply.cache_status))
 
-            totals = totals + apply_evidence(payload, quotes, reranker, units)
+            totals = totals + apply_evidence(payload, quotes)
             target.write_text(
                 json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
             )
@@ -560,26 +564,9 @@ class Evidence(_Base):
             produced=tuple(targets),
             notes=(
                 f"{totals.filled} warranted, {totals.unsupported} unsupported, "
-                f"{totals.not_reported} not_reported, {totals.unioned} retrieved",
+                f"{totals.not_reported} not_reported",
             ),
         )
-
-    def _retriever(self, paper: Paper, settings: Settings):
-        """The second locator, or nothing. An enhancement must not take the stage down."""
-        if not settings.union:
-            return None, ()
-        from pondie.extraction.evidence import retrieval
-
-        reranker = retrieval.load_reranker(device=settings.device_for(paper))
-        if reranker is None:
-            return None, ()
-        text = paper.text.read_text(encoding="utf-8", errors="replace")
-        units = retrieval.sentence_units(text)
-        # Once per paper, not once per field: this is the saving. `locate` runs for every
-        # extracted field and re-read all ~300 units each time.
-        retrieval.index_units(reranker, units)
-        return reranker, units
-
 
 @dataclass(frozen=True)
 class Build(_Base):
@@ -695,6 +682,26 @@ class Repair(_Base):
         """
         return settings.payloads.parent / "repairs" / f"{paper.study_id}.json"
 
+    def _retriever(self, paper: Paper, settings: Settings):
+        """The cross-encoder locator and the paper's sentences, or nothing.
+
+        An enhancement must not take the stage down: without `pondie[reranker]` this returns
+        nothing and the pass runs on the proposer alone.
+        """
+        if not settings.union:
+            return None, ()
+        from pondie.extraction.evidence import retrieval
+
+        reranker = retrieval.load_reranker(device=settings.device_for(paper))
+        if reranker is None:
+            return None, ()
+        units = retrieval.sentence_units(
+            paper.text.read_text(encoding="utf-8", errors="replace"))
+        # Once per paper, not once per field: `locate` runs for every contested field and
+        # would otherwise re-read all ~300 units each time.
+        retrieval.index_units(reranker, units)
+        return reranker, units
+
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if not (settings.repair or settings.adjudicate):
             return self._skip(paper, "neither repair nor adjudicate was asked for")
@@ -709,6 +716,9 @@ class Repair(_Base):
             return StageOutcome(stage=self.name, study_id=paper.study_id,
                                 reason="no record to repair; build did not produce one")
         record = json.loads(record_path.read_text())
+        # The local locator, moved here from `evidence` so every card-bound pass sits in one
+        # stage. Optional like the rest: a host without torch repairs without it.
+        reranker, units = self._retriever(paper, settings)
         # `text_index.load`, not `read_text`: every offset in the record is measured against
         # the normalized text and hashed into `source_text_hash`, so a span this pass writes
         # against the raw file would address a different string. `Paper.text` is a property
@@ -744,6 +754,7 @@ class Repair(_Base):
             service_tier=settings.service_tier,
             iterations=settings.repair_iterations,
             gpu_workers=settings.repair_workers,
+            reranker=reranker, units=units,
         )
         record_path.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
         out = self.produces(paper, settings)

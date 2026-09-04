@@ -297,7 +297,8 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
 def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: str,
         proposer: Any = None, checker: Checker | None = None, caller: Any = None,
         model: str = "", threshold: float = 0.5, service_tier: str = "",
-        iterations: int = 2, gpu_workers: int = 1) -> Report:
+        iterations: int = 2, gpu_workers: int = 1,
+        reranker: Any = None, units: Sequence[Any] = ()) -> Report:
     """Repair `record` in place. Returns what happened, including anything it broke."""
     from copy import deepcopy
 
@@ -345,10 +346,10 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
             # Doubt is not a verdict, so it is spent going to look rather than deleting.
             # `review_spans` says which citations are suspect; this asks for better ones and
             # keeps them only when they score higher than what they replace.
-            if proposer is not None:
+            if proposer is not None or reranker is not None:
                 report.recited = relocate.relocate(
                     record, text, premise, report.weak_evidence, proposer, checker,
-                    report.refused, abbreviations, study_id)
+                    report.refused, abbreviations, study_id, reranker, units)
     if caller is not None and model:
         reply = adjudicate(record, sch, text, caller, study_id=study_id, model=model,
                            report=report, service_tier=service_tier)

@@ -1137,3 +1137,73 @@ def test_the_checker_is_still_bounded_when_the_proposer_is_served(sch):
 
     assert seen, "the checker must have been called"
     assert not any(seen), "and it must hold the gate while scoring"
+
+
+def test_the_evidence_stage_asks_for_no_card(sch):
+    """Network in one stage, card in another. A stage that spends tokens *and* holds a card
+    can have neither half improved without paying for the other: when the retriever got 5.4x
+    faster mid-run, 353 already-extracted papers could not take the improvement without
+    re-running the quote pass, and the corpus ended up built two ways."""
+    import inspect
+
+    from pondie.extraction import stages
+
+    source = inspect.getsource(stages.Evidence)
+    assert "_retriever" not in source, "the locator belongs to repair now"
+    assert "reranker" not in source, "and nothing here should touch one"
+    assert "load_reranker" in inspect.getsource(stages.Repair)
+
+
+def test_a_retrieved_sentence_must_also_beat_the_incumbent(sch):
+    """It used to write a second span whenever it cleared its own gate, with no refusal
+    recorded anywhere. As a candidate it obeys the one rule that cannot lower support."""
+    from pondie.extraction.evidence import relocate as relocate_module
+
+    doc = "Methods. Images were acquired on a 3 T Siemens scanner. We thank the department."
+    good = "Images were acquired on a 3 T Siemens scanner."
+
+    class Unit:
+        text = good
+
+    class Reranker:
+        pass
+
+    class Checker:
+        def __init__(self):
+            self.calls = 0
+
+        def score(self, claims):
+            self.calls += 1
+            return [0.9 if self.calls == 1 else 0.04] * len(claims)
+
+    monkey = {"unit": Unit()}
+    relocate_module.retrieval = None  # not used; locate is patched below
+    record = {"acquisitions": [{"local_id": "acq", "name": field("scan"),
+                                "modality": cited("3 T", "We thank the department.")}]}
+
+    import pondie.extraction.evidence.retrieval as retrieval_module
+    original = retrieval_module.locate
+    retrieval_module.locate = lambda *_a, **_k: monkey["unit"]
+    try:
+        refused: list = []
+        improved = relocate_module.relocate(
+            record, doc, doc, [("acquisitions[0].modality", 0.04)],
+            None, Checker(), refused, reranker=Reranker(), units=[Unit()])
+    finally:
+        retrieval_module.locate = original
+
+    assert "acquisitions[0].modality" in improved
+    assert record["acquisitions"][0]["modality"]["evidence"]["sets"][0]["spans"][0]["text"] \
+        == good
+
+
+def test_the_retriever_alone_is_enough_to_run_the_pass(sch):
+    """`relocate` used to require a proposer. With the locator moved into repair, a host
+    with a reranker and no NuExtract still improves evidence."""
+    import inspect
+
+    from pondie.extraction.evidence import relocate as relocate_module
+
+    source = inspect.getsource(relocate_module.relocate)
+    assert "if proposer is not None else ()" in source, \
+        "the proposer loop must be skippable"
