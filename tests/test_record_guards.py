@@ -1385,3 +1385,63 @@ def test_the_doubt_threshold_is_set_where_the_data_puts_it():
 
     assert grounding.DOUBT_BELOW == 0.02
     assert grounding.PRUNE_BELOW == grounding.DOUBT_BELOW, "the old name still resolves"
+
+
+def test_a_minted_id_becomes_a_label_a_paper_could_contain():
+    """`Measure`, `Acquisition`, `Device` and `ModelEstimation` declare no `name`, and only
+    `Device` has no usable fallback either, so `label_of` returned the raw id for 336 of
+    1,032 entities over eighty papers. Nothing matches `dev_siemens_trio` in a paper, so
+    `resolve`, `same_entity` and the locator's entity bonus were all working blind."""
+    from pondie.extraction.record.edit import from_local_id
+
+    assert from_local_id("dev_siemens_trio") == "siemens trio"
+    assert from_local_id("mea_cerebral_blood_flow") == "cerebral blood flow"
+    assert from_local_id("mod_group_regression") == "group regression"
+    assert from_local_id("acq_fmri") == "fmri"
+
+
+def test_a_derived_label_too_short_to_be_a_name_is_refused():
+    """`mea_fa` would offer "fa", which appears inside "factor" and "surface"."""
+    from pondie.extraction.record.edit import from_local_id
+
+    assert from_local_id("mea_fa") == ""
+    assert from_local_id("dev_ge") == ""
+
+
+def test_the_raw_id_survives_when_nothing_can_be_derived():
+    """A label is better than no label for a report, and the id is what it always was."""
+    from pondie.extraction.record.edit import label_of
+
+    assert label_of({"local_id": "mea_fa"}) == "mea_fa"
+
+
+def test_a_declared_name_still_wins_over_the_id():
+    """Derivation is the fourth fallback, not a replacement: `acq_fmri` yields "fmri", the
+    modality rather than what the paper calls that acquisition."""
+    from pondie.extraction.record.edit import label_of
+
+    assert label_of({"local_id": "acq_fmri", "name": field("resting-state scan")}) \
+        == "resting-state scan"
+    assert label_of({"local_id": "mod_glm", "model_type": field("mixed effects")}) \
+        == "mixed effects"
+    assert label_of({"local_id": "dev_siemens_trio"}) == "siemens trio"
+
+
+def test_a_one_word_derived_label_cannot_merge_two_entities():
+    """`same_entity` needs two words in common, so "fmri" and "fmri" never merge two
+    acquisitions on the strength of a modality they share."""
+    from pondie.extraction.record.edit import same_entity
+
+    assert not same_entity("fmri", "fmri")
+    assert same_entity("siemens trio", "siemens trio scanner")
+
+
+def test_a_short_derived_label_does_not_match_inside_a_word():
+    """The locator's entity bonus is word-bounded, which is what makes a derived label safe
+    to hand it at all."""
+    from pondie.extraction.evidence import retrieval
+
+    units = ["A factor analysis of the surface data was performed.",
+             "Images were acquired on a Siemens Trio scanner."]
+    assert retrieval.entity_hits(units, "fa") == []
+    assert retrieval.entity_hits(units, "siemens trio") == [1]
