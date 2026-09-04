@@ -52,3 +52,27 @@ def test_a_multivalued_extracted_value_is_checked_item_by_item():
         "Group.medical_condition",
     )
     assert validator.errors, "a non-string item in a string list must be reported"
+
+
+def test_a_wrapped_type_designator_still_names_the_subclass():
+    """26424424, 19914045 and 22952599 each reported three "attribute is not declared on
+    Acquisition" violations for slots that are declared on `MRI`. An extraction record
+    wraps `acquisition_type` in an ExtractedValue, and the validator read the wrapper as
+    the class name, found a dict where it wanted a string, and fell back to the declared
+    class -- blaming the repair pass for fields it never touched."""
+    sch = reader.load(schema.EXTRACTION)
+    designator = sch.type_designator("Acquisition")
+    node = {
+        "local_id": "acq_mri",
+        designator: {"extraction_status": "extracted", "value": "MRI",
+                     "value_source": "reported", "evidence": {"status": "not_found"}},
+        "magnetic_field_strength_tesla": {
+            "extraction_status": "extracted", "value": 3.0,
+            "value_source": "reported", "evidence": {"status": "not_found"}},
+    }
+    validator = validate.Validator(sch, None)
+    assert validator.resolve_type(node, "Acquisition", "Study.acquisitions[]") == "MRI"
+
+    validator = validate.Validator(sch, None)
+    validator.check_instance(node, "Acquisition", "Study.acquisitions[]")
+    assert not [e for e in validator.errors if "is not declared" in e], validator.errors

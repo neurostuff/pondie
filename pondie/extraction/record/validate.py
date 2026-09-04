@@ -200,7 +200,9 @@ class Validator:
         designator = self.schema.type_designator(class_name)
         if designator is None:
             return class_name
-        named = node.get(designator)
+        # An extraction record wraps the designator in an ExtractedValue, a storage record
+        # states it bare; `values.read` is the one place that difference is handled.
+        named = values.read(node.get(designator))
         if not isinstance(named, str):
             return class_name
         if named not in self.schema:
