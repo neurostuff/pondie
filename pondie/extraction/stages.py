@@ -38,6 +38,7 @@ from pondie.extraction.models import (
 )
 from pondie.extraction.parse import TableParse
 from pondie.extraction.prompt import render
+from pondie.schema import reader
 from pondie.formats import values
 
 #: Written into every record's `extraction_metadata`, so a record says which pipeline made
@@ -400,6 +401,67 @@ class Satisfy(_ModelPass):
         if not demands.is_file():
             return ()
         return json.loads(demands.read_text("utf-8")).get("required_entities") or ()
+
+    def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
+        """The one pass, and then a second over Task and Group if they came back thin.
+
+        Twenty-three entity classes share one call, and the two that every analysis leans on
+        lose out: a cell names a level and a level names a condition or a cohort, so a thin
+        Task or Group is felt by every analysis pointing at it. Measured on 16038771, a later
+        sweep found 132 empty fields the single pass had left -- nine on one Group, three on
+        the only Task, and not one condition described.
+
+        The second call is scoped to four classes instead of twenty-three and merges by
+        filling only what is still empty, so it can add and never overwrite. Skipped
+        entirely when the first pass already filled them, which is the common case worth not
+        paying for.
+
+        Not attempted on resume: `super().run` returns `_skip` once `satisfy.json` exists, so
+        a run interrupted after the first pass keeps the record it has rather than paying for
+        a second opinion on a paper this process never read.
+        """
+        outcome = super().run(paper, settings, caller)
+        if not settings.priority_pass or outcome.reason:
+            return outcome
+        written = self.produces(paper, settings)
+        if not written.is_file():
+            return outcome
+
+        payload = json.loads(written.read_text("utf-8"))
+        sch = reader.load(render.EXTRACTION_SCHEMA)
+        keys = render.priority_keys(sch)
+        if not render.thin(payload, keys):
+            return outcome
+
+        prompt = render.build_prompt(
+            paper.text.read_text(encoding="utf-8", errors="replace"),
+            "priority", settings.retrieve_evidence, render.filled_block(payload, keys))
+        try:
+            reply = caller(
+                ModelCall(model=settings.model, system=prompt.system, prompt=prompt.user,
+                          max_output_tokens=settings.max_output_tokens,
+                          effort=settings.effort, service_tier=settings.service_tier,
+                          attempts=settings.attempts),
+                paper=paper.study_id, stage=f"{self.name.value}:priority")
+            second, _notes = render.normalize(reply.payload, "satisfy")
+            filled, dropped = render.fill_empty(payload, second, keys)
+            self._write(paper, settings, payload)
+        except Exception as error:  # noqa: BLE001 -- a second pass must not lose the first
+            return outcome.model_copy(update={
+                "notes": (*outcome.notes, f"priority pass skipped: {type(error).__name__}")})
+
+        notes = [f"priority pass filled {filled} empty field(s)"]
+        if dropped:
+            # Not padding: every answer under an id the first pass never minted is discarded,
+            # and without this the result reads exactly like a paper that needed nothing.
+            notes.append(f"priority pass dropped {dropped} entity(s) under unmatched local_id")
+        if reply.stop_reason and reply.stop_reason != "stop":
+            notes.append(f"priority pass stopped on {reply.stop_reason}")
+        return outcome.model_copy(update={
+            "cost": outcome.cost + reply.cost,
+            "traces": (*outcome.traces, (reply.trace_id, reply.cache_status)),
+            "notes": (*outcome.notes, *notes),
+        })
 
     def context(self, paper: Paper, settings: Settings) -> str:
         """The shopping list the demands pass wrote, as this pass's contract.

@@ -179,6 +179,18 @@ class Schema:
                 out[slot.range] = name
         return out
 
+    def classes_by_container(self) -> Mapping[str, str]:
+        """Top-level list of `Study` -> the class whose instances live in it.
+
+        The inverse of `containers()`. Three call sites had each written the same dict
+        comprehension to build it, which is three places to miss a renamed list.
+        """
+        return {key: name for name, key in self.containers().items()}
+
+    def class_of(self, container: str) -> str | None:
+        """The class held by one top-level list, or None if the schema has no such list."""
+        return self.classes_by_container().get(container)
+
     def subclasses(self, class_name: str) -> frozenset[str]:
         """Every class inheriting from `class_name`, directly or transitively.
 

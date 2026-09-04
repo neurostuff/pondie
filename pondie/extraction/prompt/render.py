@@ -30,7 +30,7 @@ in neither.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any
 
 from pondie import paths, schema
@@ -40,6 +40,7 @@ from pondie.extraction.models import Prompt
 # deterministic text transforms selected by --preprocess.
 from pondie.extraction.record import builder, ids
 from pondie.formats import parse_keys
+from pondie.formats import values as fields
 from pondie.schema import reader
 from pondie.schema.reader import Schema
 
@@ -97,6 +98,196 @@ def nested_closure(sch: Schema, roots: list[str]) -> set[str]:
     return seen
 
 
+#: The classes a second pass revisits first, if one is made. Chosen because a cell names a
+#: level and a level names a condition or a cohort, so a thin Task or Group is felt by every
+#: analysis that points at it.
+PRIORITY: tuple[str, ...] = ("Task", "Group")
+
+
+
+def priority_keys(sch: Schema) -> list[str]:
+    """The payload keys holding `PRIORITY`'s classes, read from the schema.
+
+    A written-out `("tasks", "groups")` is a second copy of what `containers()` already
+    knows, and the one that rots when a class is renamed.
+    """
+    containers = sch.containers()
+    return [containers[name] for name in PRIORITY if name in containers]
+
+
+def _expected(sch: Schema, class_name: str, node: Any) -> tuple[int, int]:
+    """(slots this class declares that were answered, slots it declares that were not).
+
+    Two ways of counting have already been wrong here. Counting the payload's keys asks "of
+    what the model emitted, how much has a value" -- nearly always all of it -- and over 610
+    papers called 1.1% thin. Counting a `not_reported` wrapper as a hole asks the paper to be
+    exhaustive rather than the model to be diligent: `as_field` drops `value` from any wrapper
+    that is not `extracted`, so a correct "the paper is silent" scored the same as never
+    looking, and a hand-curated gold record came out 42% empty.
+
+    A wrapper of any status is an answer. Only a slot with no wrapper at all is a hole.
+    """
+    if not isinstance(node, Mapping):
+        return 0, 0
+    filled = empty = 0
+    for name, slot, kind in sch.iter_slots(class_name):
+        if kind in ("identifier", "reference"):
+            continue                      # minted, or absent for good reasons
+        value = node.get(name)
+        if kind == "nested":
+            inner = str(sch.ranges(slot)[0] if sch.ranges(slot) else slot.range or "")
+            children = value if isinstance(value, list) else [value]
+            if not children or children == [None]:
+                empty += 1                # a task with no conditions is the hole to find
+                continue
+            for child in children:
+                one, other = _expected(sch, inner, child)
+                filled += one
+                empty += other
+            continue
+        if fields.is_field(value):
+            filled += 1
+        elif value in (None, "", []):
+            empty += 1
+        else:
+            filled += 1
+    return filled, empty
+
+
+def thin(payload: Mapping[str, Any], keys: Sequence[str],
+         threshold: float = 0.5) -> bool:
+    """Did these entities come back with more holes than the schema has slots for?
+
+    Not "any hole": a paper that does not report a group's education leaves a slot empty and
+    nothing is wrong. The question is whether the pass ran out of attention, and the share of
+    declared slots left unanswered is the measure of it.
+    """
+    sch = reader.load(EXTRACTION_SCHEMA)
+    filled = empty = 0
+    for key in keys:
+        class_name = sch.class_of(key)
+        if class_name is None:
+            continue
+        for entity in (payload.get(key) or []):
+            one, other = _expected(sch, class_name, entity)
+            filled += one
+            empty += other
+    total = filled + empty
+    return total > 0 and empty / total > threshold
+
+
+def fill_empty(payload: MutableMapping[str, Any], second: Mapping[str, Any],
+               keys: Sequence[str]) -> tuple[int, int]:
+    """Merge `second` into `payload` for `keys`, filling only what is absent.
+
+    Returns (fields filled, second-pass entities discarded). The second number is not
+    diagnostics padding: an entity is matched by `local_id`, and a pass that answered under
+    ids of its own invention has every answer dropped. Without the count that reads as
+    "filled 0", which is also what a paper needing nothing reports.
+    """
+    landed = dropped = 0
+    for key in keys:
+        have = {str(e.get("local_id") or ""): e for e in (payload.get(key) or [])
+                if isinstance(e, Mapping)}
+        for entity in (second.get(key) or []):
+            if not isinstance(entity, Mapping):
+                continue
+            target = have.get(str(entity.get("local_id") or ""))
+            if target is None:
+                dropped += 1
+                continue
+            landed += _merge_empty(target, entity)
+    return landed, dropped
+
+
+def _merge_empty(target: MutableMapping[str, Any], source: Mapping[str, Any]) -> int:
+    landed = 0
+    for key, value in source.items():
+        if key in ("local_id", "id"):
+            continue
+        current = target.get(key)
+        if fields.is_field(value):
+            # `is_field`, not "has a value": `as_field` drops `value` from a `not_reported`
+            # wrapper, so testing the value would read a positive claim that the paper is
+            # silent as an empty slot and let this pass overwrite it -- the one direction
+            # a second opinion must never move a record.
+            if not fields.is_field(current) and fields.read(value) not in (None, "", []):
+                target[key] = value
+                landed += 1
+            continue
+        if isinstance(value, list) and value and isinstance(value[0], Mapping):
+            landed += _merge_nested(target, key, current, value)
+            continue
+        if current in (None, "", []) and value not in (None, "", []):
+            target[key] = value
+            landed += 1
+    return landed
+
+
+def _merge_nested(target: MutableMapping[str, Any], key: str,
+                  current: Any, items: Sequence[Mapping[str, Any]]) -> int:
+    """Merge a list of nested objects, matched by `local_id`, appending ones that are new.
+
+    Skipped entirely when an item carries no `local_id`. `CategoryDistribution` is the case:
+    keying it by a missing id maps every entry to `""`, so one entry survives the mapping and
+    every source entry looks it up -- writing the male count onto the female entry. A merge
+    that cannot tell two entries apart must not guess which is which.
+    """
+    have = [x for x in (current or []) if isinstance(x, Mapping)]
+    if any(not x.get("local_id") for x in [*have, *items]):
+        return 0
+    by_id = {str(x["local_id"]): x for x in have}
+    landed = 0
+    for item in items:
+        inner = by_id.get(str(item["local_id"]))
+        if inner is not None:
+            landed += _merge_empty(inner, item)
+        else:
+            # A condition the first pass never emitted is the hole the pass exists to fill,
+            # so a new entity is added rather than dropped.
+            have.append(dict(item))
+            landed += 1
+    target[key] = have
+    return landed
+
+
+def filled_block(payload: Mapping[str, Any], keys: Sequence[str]) -> str:
+    """What the first pass answered, as the second pass's contract.
+
+    Built from the payload rather than from the demands list, because SATISFY_NOTE invites
+    the first pass to emit entities beyond what the analyses declared, and those carry ids
+    the demands list never mentions. A second pass shown only the demands answers under ids
+    of its own choosing, and `fill_empty` then discards the lot.
+
+    Names the answered slots as well as the missing ones: `recall.existing` exists because a
+    listing of labels alone added 0 links across three papers where the same model, shown
+    what was already held, added 6, 14 and 3 -- every proposal had looked new.
+    """
+    sch = reader.load(EXTRACTION_SCHEMA)
+    lines: list[str] = []
+    for key in keys:
+        class_name = sch.class_of(key)
+        if class_name is None:
+            continue
+        for entity in (payload.get(key) or []):
+            if not isinstance(entity, Mapping):
+                continue
+            held, missing = [], []
+            for name, _slot, kind in sch.iter_slots(class_name):
+                if kind in ("identifier", "reference"):
+                    continue
+                (held if name in entity else missing).append(name)
+            label = fields.read(entity.get("name")) or entity.get("local_id")
+            lines.append(f"- {key}.{entity.get('local_id')} ({label})")
+            if missing:
+                lines.append(f"    not yet answered: {', '.join(missing)}")
+    if not lines:
+        return ""
+    return ("\n\n# Already extracted\n\n"
+            "Emit these entities under exactly these `local_id` values, adding only the\n"
+            "fields the paper supports.\n\n" + "\n".join(lines))
+
+
 def mode_classes(sch: Schema, mode: str) -> tuple[set[str], list[str]]:
     """(classes to render, Study attributes to keep) for one pass."""
 
@@ -106,6 +297,14 @@ def mode_classes(sch: Schema, mode: str) -> tuple[set[str], list[str]]:
     if mode == "analyses":
         keep = ["analyses"]
         return analysis_side - DETERMINISTIC_CLASSES, keep
+
+    if mode == "priority":
+        # Task and Group, and whatever they nest. One pass over twenty-three classes leaves
+        # these thin -- a repair sweep found 132 empty fields on 16038771, nine of them on
+        # one Group -- and they are the two an analysis leans on hardest: every cell names a
+        # level, and a level names a condition or a cohort.
+        return (nested_closure(sch, list(PRIORITY)) - analysis_side
+                - SCAFFOLDING_CLASSES - DETERMINISTIC_CLASSES), ["tasks", "groups"]
 
     roots: list[str] = []
     keep = []
@@ -532,6 +731,19 @@ group's demographics, an assessment, the scanner -- as usual. The list is a floo
 ceiling.
 """
 
+PRIORITY_NOTE = """
+This is a second pass over a paper already read once, covering the participant groups and
+the task only. What the first pass answered is shown below, under the `local_id` it gave
+each entity.
+
+  * Reuse those `local_id` values exactly. An entity emitted under a new id cannot be
+    matched to the one it describes, and everything said about it is discarded.
+  * A field the first pass left out is not an invitation to guess. Add one only where the
+    paper supports it; where the paper is silent, say so with `not_reported`.
+  * Conditions are the usual omission. A task's conditions are the distinct states a
+    participant was placed in, and each carries a `condition_kind`.
+"""
+
 MODE_NOTE = {
     "entities": """
 This pass extracts the STUDY ENTITIES only. Do NOT emit `analyses` or `tables`: a separate
@@ -634,9 +846,11 @@ def worked_models() -> str:
 #: The demand-driven pair. `demands` renders the analysis side and `satisfy` the entity
 #: side, exactly as `analyses` and `entities` do; what differs is the order they run in and
 #: that the shopping list, not a guess, decides which entities exist.
-MODE_SCHEMA = {"demands": "analyses", "satisfy": "entities"}
+MODE_SCHEMA = {"demands": "analyses", "satisfy": "entities",
+               "priority": "priority"}
 MODE_NOTE["demands"] = DEMANDS_NOTE
 MODE_NOTE["satisfy"] = SATISFY_NOTE
+MODE_NOTE["priority"] = PRIORITY_NOTE
 
 
 def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
@@ -655,6 +869,12 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
     ]
     if mode == "demands":
         payload_keys.append("required_entities")
+    if MODE_SCHEMA.get(mode, mode) == "priority":
+        # Rule 2 tells the model these keys go at the top level. Naming all eleven while
+        # describing only Task and Group asks for lists whose classes this pass never
+        # rendered -- "the model invents the shape", which test_extraction_prompt.py exists
+        # to catch -- and fill_empty discards every one of them regardless.
+        payload_keys = priority_keys(sch)
 
     # Ordering here is not a cache optimisation, and an attempt to make it one failed.
     # Every pass sends the same conventions, worked models and paper -- 29,152 of the

@@ -43,6 +43,8 @@ class Proposer(Protocol):
     twice let a real fault reach a live run here.
     """
 
+    local: bool
+
     def propose(self, sch: Schema, class_name: str, premise: str,
                 instruction: str) -> Sequence[Mapping[str, Any]]: ...
 
@@ -147,6 +149,62 @@ def flat(sch: Schema, class_name: str) -> bool:
     return all(kind != "nested" for _n, _s, kind in sch.iter_slots(class_name))
 
 
+def vocabulary(sch: Schema, class_name: str, limit: int = 1_400) -> str:
+    """What the enum tokens in this class's template mean, for the instruction beside it.
+
+    A NuExtract template is a type skeleton: `condition_kind` arrives as
+    `["task_state", "rest", "fixation", "control_state"]` and the schema's careful prose
+    about each never reaches the model. Asked to classify four picture-viewing conditions
+    from those four words, it answered `fixation` for three of them.
+
+    Follows `template_for` into flat nested classes, and must: `condition_kind` lives on
+    `Condition`, reachable only through `Task.conditions`, so a sweep that skipped nested
+    slots documented every enum except the one this docstring was written about. Across 610
+    papers that slot was filled 0 times out of 1,571.
+
+    Only the enums a class actually offers, first sentence each, and capped -- the
+    instruction shares a context with the paper, and an entity sweep that spends it on
+    documentation has less left for the document.
+    """
+    lines = _vocabulary_lines(sch, class_name, "")
+    if not lines:
+        return ""
+    block, total = [], 0
+    for line in lines:
+        total += len(line) + 1
+        if total > limit:
+            # Said rather than silently cut: the tokens that fall off are still in the
+            # template, and a model that sees four values documented and a fifth not
+            # otherwise reads the omission as the fifth being unavailable.
+            block.append(f"- ... {len(lines) - len(block)} further values not listed here")
+            break
+        block.append(line)
+    return ("\n\nWhat the listed values mean. Choose one only if the paper describes that; "
+            "leave the field out otherwise.\n" + "\n".join(block) + "\n\n")
+
+
+def _vocabulary_lines(sch: Schema, class_name: str, prefix: str) -> list[str]:
+    lines: list[str] = []
+    for name, slot, kind in sch.iter_slots(class_name):
+        if name in _SKIP or kind == "reference":
+            continue
+        if kind == "nested":
+            inner = str(slot.range or "")
+            if slot.multivalued and inner in sch.classes and flat(sch, inner):
+                lines += _vocabulary_lines(sch, inner, f"{prefix}{name}.")
+            continue
+        for candidate in sch.value_ranges(slot):
+            enum = sch.enums.get(candidate)
+            if enum is None:
+                continue
+            for token, value in (getattr(enum, "permissible_values", None) or {}).items():
+                said = " ".join(str(getattr(value, "description", "") or "").split())
+                said = said.split(". ")[0].rstrip(".")
+                if said:
+                    lines.append(f"- `{prefix}{name}` {token}: {said}")
+    return lines
+
+
 def template_for(sch: Schema, class_name: str) -> dict:
     """The NuExtract template for one class, projected from the schema.
 
@@ -179,7 +237,28 @@ def template_for(sch: Schema, class_name: str) -> dict:
     return {sch.containers().get(class_name, class_name.lower()): [fields]}
 
 
-class NuExtract:
+class _Proposes:
+    """`propose` for any proposer that can `ask`.
+
+    The two proposers differ only in transport, and this method was byte-identical between
+    them but for one type annotation. It is the duplication that has already cost something:
+    wiring `vocabulary` into proposing meant making the same edit twice by hand, and a fix
+    applied to one copy and not the other is invisible until a run disagrees with itself.
+    """
+
+    def propose(self, sch: Schema, class_name: str, premise: str,
+                instruction: str) -> Sequence[Mapping[str, Any]]:
+        template = template_for(sch, class_name)
+        key = next(iter(template))
+        # The vocabulary rides with the instruction, not the template: a template is a type
+        # skeleton and has nowhere to say what `fixation` means.
+        payload = self.ask(template, vocabulary(sch, class_name) + instruction, premise,
+                           what=class_name)
+        proposed = payload.get(key) if isinstance(payload, Mapping) else None
+        return [p for p in (proposed or []) if isinstance(p, Mapping)]
+
+
+class NuExtract(_Proposes):
     """NuExtract 3 behind the protocol, in this process and on this card.
 
     `device_map={"": device}` and never `"auto"`: auto placed 9.3 GB of weights on the CPU
@@ -210,14 +289,6 @@ class NuExtract:
             options["dtype"] = torch.bfloat16
         self._model = AutoModelForImageTextToText.from_pretrained(
             model_name, **options).eval()
-
-    def propose(self, sch: Schema, class_name: str, premise: str,
-                instruction: str) -> Sequence[Mapping[str, Any]]:
-        template = template_for(sch, class_name)
-        key = next(iter(template))
-        payload = self.ask(template, instruction, premise, what=class_name)
-        proposed = payload.get(key) if isinstance(payload, Mapping) else None
-        return [p for p in (proposed or []) if isinstance(p, Mapping)]
 
     def ask(self, template: Mapping[str, Any], instruction: str, premise: str,
             what: str = "") -> Mapping[str, Any]:
@@ -275,7 +346,7 @@ def sweep_order(sch: Schema, keys: Sequence[str]) -> list[str]:
     go first, and the caller's order stands for it.
     """
     containers = sch.containers()
-    class_of = {container: cls for cls, container in containers.items()}
+    class_of = sch.classes_by_container()
     targets = {
         key: {containers.get(slot.range) for _n, slot, kind in sch.iter_slots(class_of[key])
               if kind == "reference" and isinstance(slot.range, str)}

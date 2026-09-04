@@ -22,7 +22,8 @@ import urllib.error
 import urllib.request
 from typing import Any, Mapping, Sequence
 
-from pondie.extraction.recall import INSTRUCTION, _NOUN, Starved, directive, template_for
+from pondie.extraction.recall import (
+    INSTRUCTION, _NOUN, Starved, _Proposes, directive, template_for, vocabulary)
 
 _KNOWN = {"string", "verbatim-string", "integer", "number", "boolean", "date-time"}
 _PRIM = {"string": "string", "verbatim-string": "string", "integer": "integer",
@@ -76,7 +77,7 @@ class EngineDied(RuntimeError):
 _DEAD = ("EngineCore encountered an issue", "EngineDeadError", "Engine core")
 
 
-class NuExtractServer:
+class NuExtractServer(_Proposes):
     """The proposer, over HTTP.
 
     `strict` is on. It was off while the invention above was blamed on it; the schema was
@@ -137,14 +138,6 @@ class NuExtractServer:
                 return True
             time.sleep(10.0)
         return False
-
-    def propose(self, sch, class_name: str, premise: str,
-                instruction: str) -> Sequence[Mapping[str, Any]]:
-        template = template_for(sch, class_name)
-        key = next(iter(template))
-        payload = self.ask(template, instruction, premise, what=class_name)
-        proposed = payload.get(key) if isinstance(payload, Mapping) else None
-        return [p for p in (proposed or []) if isinstance(p, Mapping)]
 
     def ask(self, template: Mapping[str, Any], instruction: str, premise: str,
             what: str = "") -> Mapping[str, Any]:

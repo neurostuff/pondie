@@ -241,6 +241,11 @@ class Settings(Strict):
     #: checker places itself from this and nothing else, so it cannot be given a card of its
     #: own without hiding the proposer's. Empty leaves the environment alone.
     visible_devices: str = ""
+    #: A second `satisfy` call over Task and Group when the first leaves them thin. On by
+    #: default: one call covers twenty-three entity classes and the two every analysis leans
+    #: on lose out, which a later sweep then has to find -- 132 empty fields on one paper.
+    priority_pass: bool = True
+
     #: Where the proposer is served. Default because a served proposer decodes under a
     #: grammar, which ends a failure the in-process one cannot: on 16962339 the free-running
     #: decoder repeats a completed object until `max_tokens`, unparseable, and under a schema

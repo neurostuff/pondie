@@ -432,7 +432,7 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
     # the model to improve what was found and never to find what was missed -- and an empty
     # container is where recall matters most: 16508348 declares no regions at all while four
     # of its analyses search the hippocampus.
-    by_container = {key: cls for cls, key in sch.containers().items()}
+    by_container = sch.classes_by_container()
     for container in sweep_order(sch, list(by_container)):
         class_name = by_container[container]
         try:
