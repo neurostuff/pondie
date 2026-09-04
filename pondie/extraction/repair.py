@@ -196,6 +196,49 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     return report
 
 
+def _grounded(proposals: Sequence[Mapping[str, Any]], class_name: str, premise: str,
+              checker: Checker | None, threshold: float,
+              report: Report) -> list[Mapping[str, Any]]:
+    """Proposals the paper is judged to support, or all of them when nothing can judge.
+
+    An entity is scored by what it *is*, not by its name alone: "The paper fits this
+    statistical model: group VBM t-tests" was scored unsupported for a paper whose methods
+    say "t-tests with statistical parametric mapping (SPM5)" and "Total brain volume was
+    treated as a confounding variable". The phrase was the extractor's, not the paper's, so
+    judging the entity by it judged the wrong thing.
+
+    With no checker every proposal passes, which is honest: the pass is then proposing
+    without grounding and says so by writing what it was given.
+    """
+    if checker is None:
+        return list(proposals)
+    claims = [Claim(claim=_describe(class_name, proposal), premise=premise)
+              for proposal in proposals]
+    kept = []
+    for proposal, score in zip(proposals, checker.score(claims)):
+        if score >= threshold:
+            kept.append(proposal)
+        else:
+            report.refused.append(guards.Refusal(
+                class_name, f"the paper does not support it ({score:.2f})",
+                proposal.get("name")))
+    return kept
+
+
+def _describe(class_name: str, proposal: Mapping[str, Any], limit: int = 5) -> str:
+    """The proposal as a sentence, its own field values included.
+
+    A label alone is a thin thing to ask a checker about, and the fields are what say which
+    thing is meant.
+    """
+    label = str(proposal.get("name") or proposal.get("definition") or "").strip()
+    parts = [f"{name.replace('_', ' ')} {value}"
+             for name, value in proposal.items()
+             if name not in ("name", "local_id") and isinstance(value, str) and value.strip()]
+    said = f"The paper describes a {class_name}: {label}."
+    return said + (f" It is described as: {'; '.join(parts[:limit])}." if parts else "")
+
+
 def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: Any,
            checker: Checker | None, threshold: float, report: Report) -> None:
     """Ask the proposer per class, targets first, and write what survives the guards."""
@@ -208,7 +251,8 @@ def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: A
             candidates(sch, record, class_name, lambda e, _c="": edit_module.label_of(e)))
         by_id = {e.get("local_id"): e for e in record.get(container) or []
                  if isinstance(e, Mapping)}
-        for proposal in proposals:
+        graded = _grounded(proposals, class_name, text, checker, threshold, report)
+        for proposal in graded:
             entity = by_id.get(str(proposal.get("local_id") or "").strip())
             if entity is None:
                 entity, why = edit_module.create(sch, record, class_name, proposal, text)

@@ -376,3 +376,38 @@ def test_the_prompt_and_the_repair_pass_share_one_id_convention():
     table = ids.prefix_table()
     assert "reg_   Region" in table and "asm_   Assessment" in table
     assert all(prefix in table for prefix in ids.PREFIX.values())
+
+
+def test_a_proposal_the_paper_does_not_support_is_not_written(sch):
+    """Step 2 of the pass, which was documented and not wired: the checker was threaded
+    through and never called, so proposals were written ungrounded."""
+    from pondie.extraction import repair as repair_pass
+
+    class Reject:
+        def score(self, claims):
+            return [0.02] * len(claims)
+
+    class Accept:
+        def score(self, claims):
+            return [0.95] * len(claims)
+
+    proposals = [{"name": "hippocampus", "definition_method": "anatomical_a_priori"}]
+    report = repair_pass.Report()
+    assert repair_pass._grounded(proposals, "Region", "text", Reject(), 0.5, report) == []
+    assert report.refused and "does not support" in report.refused[0].why
+
+    kept = repair_pass._grounded(proposals, "Region", "text", Accept(), 0.5,
+                                 repair_pass.Report())
+    assert kept == proposals
+
+
+def test_an_entity_is_judged_by_what_it_is_not_by_its_name_alone(sch):
+    """"group VBM t-tests" was scored unsupported for a paper saying "t-tests with
+    statistical parametric mapping (SPM5)" -- the phrase was the extractor's, not the
+    paper's."""
+    from pondie.extraction import repair as repair_pass
+
+    said = repair_pass._describe("ModelEstimation", {
+        "name": "group VBM t-tests", "model_family": "glm", "software": "SPM5"})
+    assert "group VBM t-tests" in said
+    assert "SPM5" in said and "glm" in said
