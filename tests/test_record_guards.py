@@ -858,8 +858,15 @@ def test_every_leaf_of_a_projected_template_admits_nothing():
                 bad.append(f"{path}: required {node['required']}")
             for name, child in (node.get("properties") or {}).items():
                 leaves(child, f"{path}.{name}", bad)
-        for child in node.get("anyOf") or []:
-            leaves(child, path, bad)
+        branches = node.get("anyOf") or []
+        if branches:
+            # A multivalued enum projects as `anyOf: [enum+null, array of enum]`. Emptiness
+            # for the array branch is `[]`, not a null element, so it is enough that one
+            # branch admits nothing -- requiring it of the item enum asks for a null member
+            # of a list, which means nothing.
+            if not any(None in (b.get("enum") or []) for b in branches):
+                for child in branches:
+                    leaves(child, path, bad)
         if isinstance(node.get("items"), dict):
             leaves(node["items"], f"{path}[]", bad)
         return bad
@@ -1557,3 +1564,52 @@ def test_a_numeric_field_is_not_contested(sch):
     rows = relocate_module.contested(record, weak=[("preprocessings[0].smoothing_fwhm_mm",
                                                     0.01)])
     assert rows == [], "a number cannot be judged by entailment, so it is not contested"
+
+
+def test_a_paper_that_enumerates_its_regions_is_checked_against_the_record():
+    """26424424 defines ten regions of interest and the record holds six. The four absent
+    ones are exactly those with no significant finding, so the extractor kept the regions
+    that appear in the results and dropped the ones that appear only in the definition --
+    and nothing said so, because a missing entity leaves no trace to check.
+
+    Asking the proposer does not recover them: given the defining sentence in its premise
+    and the six it already has, it returns those six and nothing else."""
+    from pondie.extraction.evidence import completeness
+
+    text = ("Methods. The regions included bilateral anterior piriform cortex (aPC), "
+            "lateral amygdala (AMYG), head of the hippocampus (HPC), anterior insula "
+            "(aINS), and orbitofrontal cortex (OFC). Each ROI was created in MARSBAR as a "
+            "5 mm-radius sphere centered around the published coordinates.")
+    record = {"regions": [{"local_id": "r", "name": field(n)} for n in
+                          ("left aINS", "right aINS", "left AMYG", "left aPC",
+                           "right aPC", "right OFC")]}
+
+    found = completeness.missing_regions(record, text)
+    joined = " | ".join(found)
+    assert "HPC" in joined, found
+    assert "AMYG" in joined and "right" in joined, found
+    assert "OFC" in joined and "left" in joined, found
+
+
+def test_a_results_sentence_is_not_an_enumeration_of_definitions():
+    """"regions were activated in cocaine users" opens a list, and every clause of the
+    paragraph after it became a missing region -- seventeen false findings on one paper,
+    which is worse than saying nothing."""
+    from pondie.extraction.evidence import completeness
+
+    text = ("Results. The regions were activated in cocaine users and comparison subjects "
+            "when they viewed the sex film, in the prefrontal, dorsolateral and limbic "
+            "areas, with coordinates reported in Table 2.")
+    record = {"regions": []}
+    assert completeness.missing_regions(record, text) == []
+
+
+def test_a_region_name_does_not_keep_the_preposition_in_front_of_it():
+    """A finding that says 'located in the right superior frontal gyrus' reads as a parsing
+    failure even when the gap it reports is real."""
+    from pondie.extraction.evidence import completeness
+
+    items = completeness.named("located in the right superior frontal gyrus, "
+                               "left inferior parietal lobule")
+    assert [name for name, _both in items] == ["right superior frontal gyrus",
+                                               "left inferior parietal lobule"]

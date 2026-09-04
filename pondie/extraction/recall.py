@@ -122,6 +122,20 @@ def directive(class_name: str) -> str:
 def nu_type(sch: Schema, slot: Any) -> Any:
     """The template type for one slot, or None for a slot a proposal should not carry."""
     ranges = sch.ranges(slot)
+    # An `ExtractedValue` subclass is a wrapper, not a reference. `Region.name` declares
+    # range `ExtractedString`, which is a class, so every native slot on every class read as
+    # a reference and dropped out -- leaving a template of `{"local_id": "string"}` and
+    # nothing else. The proposer could then only ever name an entity that already existed:
+    # it could not offer a value, and `create` could not mint anything, because the required
+    # slots it checks for were not in the template to begin with.
+    unwrapped: list[str] = []
+    for candidate in ranges:
+        inner = sch.attributes(candidate).get("value") if candidate in sch.classes else None
+        if inner is not None and sch.resolves_to(candidate, "ExtractedValue"):
+            unwrapped += sch.ranges(inner)
+        else:
+            unwrapped.append(candidate)
+    ranges = list(dict.fromkeys(unwrapped))
     for candidate in ranges:
         if candidate in sch.enums:
             # `any_of: [SomeEnum, string]` is how the schema keeps a vocabulary open. Taking
@@ -132,6 +146,16 @@ def nu_type(sch: Schema, slot: Any) -> Any:
     if any(candidate in sch.classes for candidate in ranges):
         return None                      # a reference; `candidates` offers those by name
     return _TYPES.get(str(ranges[0] if ranges else "string").lower(), "string")
+
+
+def flat(sch: Schema, class_name: str) -> bool:
+    """Is every slot of this class a leaf, so a template can carry a list of them?
+
+    `Analysis.effect` nests a structure a flat reply cannot express, which is why nested
+    slots are skipped at all. `Task.conditions` is not that: a Condition is an id, a name, a
+    kind and a description, and a list of those is as expressible as a list of regions.
+    """
+    return all(kind != "nested" for _n, _s, kind in sch.iter_slots(class_name))
 
 
 def template_for(sch: Schema, class_name: str) -> dict:
@@ -148,6 +172,15 @@ def template_for(sch: Schema, class_name: str) -> dict:
             continue
         if kind == "reference":
             fields[name] = ["verbatim-string"] if slot.multivalued else "verbatim-string"
+            continue
+        if kind == "nested":
+            # A nested class whose own slots are all leaves projects as a list of objects.
+            # `Task.conditions` is the case that matters: the condition's kind and
+            # description were unreachable, so the one field that says a state was a control
+            # or a rest could only ever be filled by the extraction pass.
+            inner = str(slot.range or "")
+            if slot.multivalued and inner in sch.classes and flat(sch, inner):
+                fields[name] = [dict(template_for(sch, inner).popitem()[1][0])]
             continue
         projected = nu_type(sch, slot)
         if projected is None:
