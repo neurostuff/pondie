@@ -824,3 +824,62 @@ def test_a_field_with_no_citation_is_contested_even_though_it_scored_nothing(sch
     rows = relocate.contested(record, weak=[])
     assert [r.path for r in rows] == ["acquisitions[0].modality"]
     assert rows[0].premise == ""
+
+
+def test_every_leaf_of_a_projected_template_admits_nothing():
+    """A grammar with no way to say "nothing here" does not decline -- it emits the best
+    string it can. On 16759342, a paper declaring no arms whose every group the extractor
+    left empty, a non-nullable schema filled `Group.arm` with 'smoking' and 'non-smoking'
+    under `strict: true` AND `strict: false` alike; nullable answers null under both."""
+    from pondie.extraction.recall import template_for
+    from pondie.extraction.recall_server import json_schema_for
+    from pondie.extraction.record.validate import EXTRACTION_SCHEMA
+
+    # The extraction schema, because that is what the proposer projects. The storage schema
+    # declares slots the extraction one does not, and a template built from it is not the
+    # template a run sends.
+    sch = reader.load(EXTRACTION_SCHEMA)
+
+    def leaves(node, path="", bad=None):
+        bad = [] if bad is None else bad
+        if not isinstance(node, dict):
+            return bad
+        if "enum" in node:
+            if None not in node["enum"]:
+                bad.append(f"{path}: closed enum cannot express nothing")
+            return bad
+        kind = node.get("type")
+        if isinstance(kind, str) and kind not in ("object", "array"):
+            bad.append(f"{path}: {kind!r} is not nullable")
+        if kind == "object":
+            if node.get("required"):
+                bad.append(f"{path}: required {node['required']}")
+            for name, child in (node.get("properties") or {}).items():
+                leaves(child, f"{path}.{name}", bad)
+        for child in node.get("anyOf") or []:
+            leaves(child, path, bad)
+        if isinstance(node.get("items"), dict):
+            leaves(node["items"], f"{path}[]", bad)
+        return bad
+
+    for class_name in ("Group", "Analysis", "Region", "InferenceSettings"):
+        schema = json_schema_for(template_for(sch, class_name))
+        assert leaves(schema, class_name) == [], leaves(schema, class_name)
+
+
+def test_an_enum_carries_null_inside_itself(sch):
+    """A type union cannot widen a closed `enum`, so nullability there is a second
+    mechanism -- and one an enum branch that forgets it would silently lose."""
+    from pondie.extraction.recall_server import json_schema_for
+
+    schema = json_schema_for(["whole_brain", "roi"])
+    assert None in schema["anyOf"][0]["enum"]
+
+
+def test_the_server_proposer_asks_for_a_strict_grammar():
+    """Strict was off while the invention above was blamed on it. The schema was the cause;
+    a strict grammar over a nullable schema both guarantees parseable output and lets the
+    model answer nothing."""
+    from pondie.extraction.recall_server import NuExtractServer
+
+    assert NuExtractServer()._strict is True
