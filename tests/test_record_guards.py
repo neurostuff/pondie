@@ -1054,3 +1054,86 @@ def test_a_bad_request_is_still_not_a_dead_engine(monkeypatch):
     with pytest.raises(RuntimeError) as caught:
         server._post({"model": "nu"})
     assert not isinstance(caught.value, EngineDied)
+
+
+def test_a_served_proposer_is_not_throttled_by_the_local_gate(sch):
+    """The gate bounds this process's card. Holding it across a sweep that waits on the
+    network serialises eight workers over a card the proposer never touches."""
+    from pondie.extraction import repair as repair_pass
+
+    held = []
+
+    class Served:
+        local = False
+
+        def propose(self, *_a, **_k):
+            held.append(repair_pass.gate(1).acquire(blocking=False))
+            if held[-1]:
+                repair_pass.gate(1).release()
+            return []
+
+        def ask(self, *_a, **_k):
+            return {}
+
+    record = {"analyses": [{"local_id": "an", "name": field("a contrast")}]}
+    repair_pass.run(record, "Methods. A contrast.", sch, study_id="p", proposer=Served())
+
+    assert held, "the sweep must have run"
+    assert all(held), "the gate must be free while a served proposer is working"
+
+
+def test_an_in_process_proposer_still_holds_the_gate(sch):
+    """Unchanged where it matters: two of these in one card is the contention the gate was
+    added for."""
+    from pondie.extraction import repair as repair_pass
+
+    held = []
+
+    class Local:
+        local = True
+
+        def propose(self, *_a, **_k):
+            got = repair_pass.gate(1).acquire(blocking=False)
+            held.append(got)
+            if got:
+                repair_pass.gate(1).release()
+            return []
+
+        def ask(self, *_a, **_k):
+            return {}
+
+    record = {"analyses": [{"local_id": "an", "name": field("a contrast")}]}
+    repair_pass.run(record, "Methods. A contrast.", sch, study_id="p2", proposer=Local())
+
+    assert held, "the sweep must have run"
+    assert not any(held), "an in-process proposer must hold the gate for the whole pass"
+
+
+def test_the_checker_is_still_bounded_when_the_proposer_is_served(sch):
+    """It is then the only thing in this process on a card, so it is what the gate is for."""
+    from pondie.extraction import repair as repair_pass
+
+    seen = []
+
+    class Checker:
+        def score(self, claims):
+            seen.append(repair_pass.gate(1).acquire(blocking=False))
+            if seen[-1]:
+                repair_pass.gate(1).release()
+            return [0.9] * len(claims)
+
+    class Served:
+        local = False
+
+        def propose(self, *_a, **_k):
+            return [{"local_id": "an", "name": "a better contrast"}]
+
+        def ask(self, *_a, **_k):
+            return {}
+
+    record = {"analyses": [{"local_id": "an", "name": cited("a contrast", "A contrast.")}]}
+    repair_pass.run(record, "Methods. A contrast was computed.", sch, study_id="p3",
+                    proposer=Served(), checker=Checker())
+
+    assert seen, "the checker must have been called"
+    assert not any(seen), "and it must hold the gate while scoring"

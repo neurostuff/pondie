@@ -33,6 +33,10 @@ from pondie.schema.reader import Schema
 class Proposer(Protocol):
     """Returns entities of `class_name` the paper describes, as flat dicts.
 
+    `local` says whether proposing occupies this process's GPU. `repair` bounds concurrency
+    over the local models, and a served proposer belongs outside that bound: throttling it
+    serialises a wait on the network for the sake of a card it never touches.
+
     `ask` is on the protocol and not an implementation detail of `NuExtract`, because
     `evidence.relocate` calls it with its own template. A stub carrying only `propose`
     satisfied the type and then failed at the second caller -- the shape of stub that has
@@ -154,12 +158,15 @@ def template_for(sch: Schema, class_name: str) -> dict:
 
 
 class NuExtract:
-    """NuExtract 3 behind the protocol.
+    """NuExtract 3 behind the protocol, in this process and on this card.
 
     `device_map={"": device}` and never `"auto"`: auto placed 9.3 GB of weights on the CPU
     rather than splitting them over two cards, said nothing, and the only symptom was a run
     that never finished -- which reads as a slow card, not a misplaced model.
     """
+
+    #: Weights in this process, on this card. See `Proposer.local`.
+    local = True
 
     def __init__(self, model_name: str = "numind/NuExtract3", device: int = 0,
                  max_premise_chars: int = 45_000, max_new_tokens: int = 2_048,

@@ -105,6 +105,22 @@ def models(visible_devices: str, proposer_device: int, server_url: str = "",
 POISON: set[str] = set()
 
 
+def _bounded(checker: Checker, limit: int) -> Checker:
+    """`checker`, with its scoring behind the gate.
+
+    For a served proposer the checker is the only thing in this process holding a card, so
+    it is the only thing that needs bounding -- and bounding it at its own call lets the
+    rest of the sweep run at the width the caller asked for.
+    """
+
+    class Bounded:
+        def score(self, claims):
+            with gate(limit):
+                return checker.score(claims)
+
+    return Bounded()
+
+
 @functools.lru_cache(maxsize=None)
 def gate(limit: int) -> threading.Semaphore:
     """Bounds how many papers may be inside the local models at once, per process.
@@ -298,18 +314,25 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     # abstract and introduction before it sees a method. `sectionize` falls back to the whole
     # text when it finds nothing, which is the honest behaviour for a paper it cannot split.
     premise = _premise(text)
-    # One gate over both models and both passes. Acquiring per call would let eight workers
-    # interleave inside one card, which is the contention this exists to prevent; the LLM
-    # stages above stay at full width because they wait on the network, not on 8 GB.
+    # The gate bounds work on *this process's* card and nothing else. With the proposer in
+    # this process that is the whole pass, so one gate covers it: acquiring per call would
+    # let eight workers interleave inside one card, which is the contention it exists to
+    # prevent. With the proposer served, the sweep is mostly a wait on the network, and
+    # holding the gate across it would serialise eight workers over a card the proposer
+    # never touches -- so only the checker is bounded, at its own call.
     if study_id in POISON and proposer is not None:
         # Already killed the engine once this run. The grounding half still runs.
         report.refused.append(Refusal(
             "proposer", f"{study_id} killed the proposer engine earlier in this run; "
                         f"repaired without it"))
         proposer = None
-    local = gate(gpu_workers) if (proposer is not None or checker is not None) \
+    served = proposer is not None and not getattr(proposer, "local", True)
+    if served and checker is not None:
+        checker = _bounded(checker, gpu_workers)
+    held = gate(gpu_workers) if (not served and (proposer is not None
+                                                 or checker is not None)) \
         else contextlib.nullcontext()
-    with local:
+    with held:
         for _pass in range(iterations if proposer is not None else 0):
             before_pass = len(report.written)
             _sweep(record, premise, text, sch, proposer, checker, threshold, report,

@@ -84,6 +84,9 @@ class NuExtractServer:
     guarantees parseable output and lets the model answer nothing.
     """
 
+    #: The weights are the server's, not ours. See `Proposer.local`.
+    local = False
+
     def __init__(self, base_url: str = "http://127.0.0.1:8311/v1", model: str = "nu",
                  max_premise_chars: int = 45_000, max_new_tokens: int = 2_048,
                  structured: bool = True, strict: bool = True,
