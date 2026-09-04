@@ -442,6 +442,11 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
     # subclass -- written against the base class it is an attribute `Acquisition` does not
     # have. `Validator` resolves the designator for the same reason.
     class_name = sch.designated_type(entity, class_name)
+    # `class_name` was resolved from the designator, so every other slot in this proposal is
+    # checked against that subclass. Writing the designator would re-type the entity after
+    # the fact, and it is declared a plain string -- the wrap below put a dict where the
+    # schema wants "MRI", which then read back as no subclass at all.
+    designator = sch.type_designator(class_name)
     kinds = {name: kind for name, _slot, kind in sch.iter_slots(class_name)}
     ranges = {name: slot.range for name, slot, _kind in sch.iter_slots(class_name)}
 
@@ -449,7 +454,7 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
     # the guard has run is a sibling the guard did not see.
     ordered = sorted(proposal, key=lambda name: kinds.get(name) != "reference")
     for name in ordered:
-        if name in ("local_id", "id") or name not in kinds:
+        if name in ("local_id", "id", designator) or name not in kinds:
             continue
         proposed = proposal[name]
         if proposed in (None, "", []):

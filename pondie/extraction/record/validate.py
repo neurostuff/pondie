@@ -200,8 +200,10 @@ class Validator:
         designator = self.schema.type_designator(class_name)
         if designator is None:
             return class_name
-        # An extraction record wraps the designator in an ExtractedValue, a storage record
-        # states it bare; `values.read` is the one place that difference is handled.
+        # The designator is declared a plain string and every well-formed record states it
+        # bare. Read it through `values.read` anyway: when something upstream has wrapped
+        # it, resolving to the base class turns one real violation into a bogus "not
+        # declared" for every slot the subclass adds.
         named = values.read(node.get(designator))
         if not isinstance(named, str):
             return class_name

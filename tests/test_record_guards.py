@@ -640,3 +640,19 @@ def test_an_edit_to_an_existing_entity_is_not_asked_to_justify_its_existence(sch
     report = repair_pass.run(record, "", sch, study_id="p",
                              proposer=Proposer(), checker=RejectEverything())
     assert record["analyses"][0]["regions"] == ["r_ains"], report.refused
+
+
+def test_the_type_designator_is_never_rewritten(sch):
+    """19914045: the repair wrote `acquisition_type` through the ExtractedValue wrapper that
+    every other native slot gets, leaving a dict in a slot declared `string`. The class was
+    already resolved from that designator, so rewriting it re-types the entity after every
+    other slot in the same proposal has been checked against the old class."""
+    from pondie.extraction.record import edit as edit_module
+
+    designator = sch.type_designator("Acquisition")
+    entity = {"local_id": "acq", designator: "MRI", "name": field("structural scan")}
+    record = {"acquisitions": [entity]}
+    edit_module.apply(sch, record, "Acquisition", entity,
+                      {designator: "PET", "magnetic_field_strength_tesla": "3"})
+    assert entity[designator] == "MRI", "the designator must survive the edit untouched"
+    assert "magnetic_field_strength_tesla" in entity, "the subclass slot must still land"

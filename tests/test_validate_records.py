@@ -56,10 +56,11 @@ def test_a_multivalued_extracted_value_is_checked_item_by_item():
 
 def test_a_wrapped_type_designator_still_names_the_subclass():
     """26424424, 19914045 and 22952599 each reported three "attribute is not declared on
-    Acquisition" violations for slots that are declared on `MRI`. An extraction record
-    wraps `acquisition_type` in an ExtractedValue, and the validator read the wrapper as
-    the class name, found a dict where it wanted a string, and fell back to the declared
-    class -- blaming the repair pass for fields it never touched."""
+    Acquisition" violations for slots that are declared on `MRI`. The repair pass had
+    wrapped `acquisition_type`, which is declared a plain string; the validator then read a
+    dict where it wanted a class name and fell back to the declared class, so one real
+    violation became four. `edit.apply` no longer writes the designator -- this is the
+    second line of defence, so a bad write is reported as itself and not as a cascade."""
     sch = reader.load(schema.EXTRACTION)
     designator = sch.type_designator("Acquisition")
     node = {
