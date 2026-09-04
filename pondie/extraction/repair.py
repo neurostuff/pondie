@@ -36,6 +36,10 @@ from pondie.extraction.record.validate import Validator
 from pondie.formats import values
 from pondie.schema.reader import Schema
 
+#: Stamped on a record this pass changed. Bump it when a change would make two repaired
+#: records incomparable, which is the rule `EXTRACTOR_VERSION` states for the extractor.
+REPAIRER = "pondie-repair-1"
+
 ADJUDICATION_SYSTEM = """\
 You resolve contradictions in a structured record extracted from a neuroimaging paper.
 
@@ -268,6 +272,12 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     # function whose job is to report what the attempt broke.
     checker_schema = reader.load(EXTRACTION_SCHEMA)
     report.introduced = Validator(checker_schema, text or None).diff(before, record)
+    if report.written or report.adjudicated:
+        # A repaired record is not the record the extractor produced, and saying otherwise
+        # makes two records that differ look comparable. `tools/adjudicate` re-stamps for the
+        # same reason -- "so the corrected record is honestly a different extractor's output
+        # rather than a doctored copy of the model's".
+        record.setdefault("extraction_metadata", {})["repaired_by"] = REPAIRER
     return report
 
 

@@ -571,3 +571,30 @@ def test_the_analysis_directive_is_not_circular():
     assert "tied to an analysis" not in said
     assert "tested comparison" in said
     assert "tied to an analysis" in directive("Region")
+
+
+def test_a_repaired_record_says_it_was_repaired(sch):
+    """A repaired record is not the record the extractor produced, and leaving the extractor
+    metadata alone makes two records that differ look comparable."""
+    from pondie.extraction import repair as repair_pass
+
+    untouched = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
+    repair_pass.run(untouched, "", sch, study_id="p")
+    assert "repaired_by" not in untouched.get("extraction_metadata", {})
+
+    changed = {
+        "regions": [{"local_id": "reg_stg", "name": field("superior temporal gyrus"),
+                     "definition_method": field("anatomical_a_priori")}],
+        "inference_settings": [{"local_id": "i1", "correction_scope": field("whole_brain"),
+                                "correction_regions": ["reg_stg"]}]}
+
+    class Caller:
+        def __call__(self, call, *, paper, stage):
+            from pondie.extraction.models import Cost, ModelReply
+            return ModelReply(payload={"resolutions": [
+                {"id": "inference_settings/i1/correction_scope", "value": "roi",
+                 "quote": "A region of interest analysis was performed."}]}, cost=Cost())
+
+    repair_pass.run(changed, "A region of interest analysis was performed.", sch,
+                    study_id="p", caller=Caller(), model="m")
+    assert changed["extraction_metadata"]["repaired_by"] == repair_pass.REPAIRER
