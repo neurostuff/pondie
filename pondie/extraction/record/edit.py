@@ -44,7 +44,41 @@ def label_of(entity: Mapping[str, Any], _class_name: str = "") -> str:
     return str(entity.get("local_id") or "")
 
 
-def resolve(record: Mapping[str, Any], sch: Schema, target_class: str, named: Any) -> list[str]:
+def same_entity(one: str, other: str, abbreviations: Any = None) -> bool:
+    """Do two labels name one thing, once the paper's abbreviations are spelled out?
+
+    "CAPS total score" and "clinician-administered PTSD scale (CAPS)" are one instrument
+    written twice, and normalized equality alone minted a second copy of it that analyses
+    then linked to. Expansion is repeated because an expansion can itself contain an
+    abbreviation, and compared as word sets because expanding duplicates text.
+
+    One name containing the other's words is enough; "PTSD checklist" and "PTSD symptom
+    scale" share their expansion and still differ on the rest, so they stay two instruments.
+    That discrimination is what a hand-kept list of "generic" acronyms was standing in for,
+    and got right only by being told PTSD in advance.
+    """
+    left, right = _words(one, abbreviations), _words(other, abbreviations)
+    small, large = (left, right) if len(left) <= len(right) else (right, left)
+    # Two words at least: "scale" alone is a subset of half the instruments in any paper.
+    return len(small) >= 2 and small <= large
+
+
+def _words(label: str, abbreviations: Any, rounds: int = 3) -> set[str]:
+    text = label or ""
+    for _ in range(rounds):
+        expanded, grew = [], False
+        for token in re.findall(r"[A-Za-z0-9-]+", text):
+            full = abbreviations.expand(token) if abbreviations and token.isupper() else None
+            expanded.append(full or token)
+            grew |= bool(full)
+        text = " ".join(expanded)
+        if not grew:
+            break
+    return set(re.sub(r"[^a-z0-9]+", " ", text.lower()).split())
+
+
+def resolve(record: Mapping[str, Any], sch: Schema, target_class: str, named: Any,
+            abbreviations: Any = None) -> list[str]:
     """Names the model gave -> local_ids of that class, dropping what does not resolve.
 
     Matching is on the label because a name is what the paper prints and a local_id is not.
@@ -65,6 +99,9 @@ def resolve(record: Mapping[str, Any], sch: Schema, target_class: str, named: An
         hit = raw if raw in pool else next(
             (lid for lid, label in pool.items()
              if re.sub(r"[^a-z0-9]+", " ", label.lower()).strip() == want), None)
+        if hit is None:
+            hit = next((lid for lid, label in pool.items()
+                        if same_entity(label, raw, abbreviations)), None)
         if hit and hit not in out:
             out.append(hit)
     return out
@@ -103,12 +140,51 @@ def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
         if value is not None:
             entity[name] = _wrap(value, text)
 
+    entity.update(_nested_defaults(sch, record, class_name, proposal, text))
+
     required = {name for name, slot, _kind in sch.iter_slots(class_name)
                 if slot.required and name not in ("local_id", "id")}
-    missing = sorted(required - set(entity))
+    missing = sorted(required - set(entity) - _referenced_slots(sch, class_name))
     if missing:
         return None, f"{class_name} would be missing {', '.join(missing)}"
     return entity, ""
+
+
+def _referenced_slots(sch: Schema, class_name: str) -> set[str]:
+    """Required slots that are references, which `apply` fills afterwards from the proposal."""
+    return {name for name, _slot, kind in sch.iter_slots(class_name) if kind == "reference"}
+
+
+def _nested_defaults(sch: Schema, record: Mapping[str, Any], class_name: str,
+                     proposal: Mapping[str, Any], text: str) -> dict:
+    """The nested required slots a proposal can honestly supply.
+
+    Only two, and only for Analysis. `groups` is a list of AnalysisGroup, each of which needs
+    nothing but the Group it names -- so an analysis that says which groups it compared can
+    have them. `details` has a declared escape hatch: `NotStructurableDetails` is what the
+    schema provides for an analysis whose method has no stable structured decomposition, and
+    a contrast reported in a sentence is exactly that.
+
+    `effect` is not here and is not invented. A Cell needs a ModelTerm to point at and a
+    direction, and a flat template carries neither; guessing them would put a fabricated
+    contrast structure in the record, which is worse than not recording the analysis.
+    """
+    if class_name != "Analysis":
+        return {}
+    out: dict[str, Any] = {}
+    named = proposal.get("groups") or proposal.get("groups_compared")
+    if named:
+        ids_named = resolve(record, sch, "Group", named)
+        if ids_named:
+            out["groups"] = [{"group": gid} for gid in ids_named]
+    if proposal.get("definition"):
+        out["details"] = {
+            "details_type": "NotStructurableDetails",
+            "reason": "insufficient_standard_structure",
+            "explanation": _wrap(
+                "Reported in prose with no table row group to decompose.", text),
+        }
+    return out
 
 
 def _container(class_name: str) -> str:

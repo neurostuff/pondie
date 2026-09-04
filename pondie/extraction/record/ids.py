@@ -23,11 +23,19 @@ PREFIX: dict[str, str] = {
     "Assessment": "asm_", "Measure": "mea_", "InferenceSettings": "inf_",
     "Region": "reg_", "Arm": "arm_", "Timepoint": "tp_",
     "Device": "dev_", "ExternalDataset": "ext_",
+    #: Only for an analysis with no row group; see `DERIVED`.
+    "Analysis": "ana_",
 }
 
 #: Classes whose ids nobody chooses: they are derived from the table parse, and an id
-#: invented for one would not match the analysis the parse produced.
-DERIVED: frozenset[str] = frozenset({"Analysis", "Table"})
+#: invented for one would not match the row group the parse produced.
+#:
+#: `Analysis` is not among them. An analysis reported only in prose has no row group to
+#: derive from -- 16038682 reports three peaks in a sentence and has no coordinate table at
+#: all -- and refusing to name one is refusing to record it. The convention still holds
+#: where a parse exists: an analysis built from a row group keeps the id the parse gave it,
+#: and only one with no parse behind it is minted here.
+DERIVED: frozenset[str] = frozenset({"Table"})
 
 
 def prefix_table(width: int = 3) -> str:

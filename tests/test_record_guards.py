@@ -359,11 +359,11 @@ def test_an_entity_that_could_not_be_valid_is_refused_by_the_slots_it_lacks(sch)
 
 
 def test_ids_nobody_chooses_are_not_chosen(sch):
-    """`Analysis` and `Table` ids come from the table parse; an invented one would not match
-    the analysis the parse produced."""
+    """A Table id comes from the parse, so an invented one would not match the table the
+    parse produced. An Analysis id is minted only where there is no parse to take one
+    from -- see `test_an_analysis_reported_only_in_prose_can_be_named`."""
     from pondie.extraction.record import ids
 
-    assert ids.mint("Analysis", "PTSD < controls", set()) is None
     assert ids.mint("Table", "Table 2", set()) is None
     assert ids.mint("Region", "left amygdala", set()) == "reg_left_amygdala"
     assert ids.mint("Region", "left amygdala", {"reg_left_amygdala"}) == "reg_left_amygdala_2"
@@ -411,3 +411,82 @@ def test_an_entity_is_judged_by_what_it_is_not_by_its_name_alone(sch):
         "name": "group VBM t-tests", "model_family": "glm", "software": "SPM5"})
     assert "group VBM t-tests" in said
     assert "SPM5" in said and "glm" in said
+
+
+# ------------------------------------------------------------------- grounding what can be
+
+
+@pytest.mark.parametrize("slot,node,expected", [
+    ("magnetic_strength", {"value": "3 T", "value_source": "reported"}, True),
+    ("recruitment_method", {"value": "a clinic", "value_source": "reported"}, True),
+    # a judgement about the method, not a thing the paper says
+    ("spatial_scope", {"value": "whole_brain", "value_source": "reported"}, False),
+    ("prespecification", {"value": "exploratory", "value_source": "reported"}, False),
+    ("direction", {"value": "negative", "value_source": "reported"}, False),
+    # the record's own marker for a value it produced rather than read
+    ("definition", {"value": "a contrast", "value_source": "generated"}, False),
+    # an address; the paper never says "reg_hippocampus"
+    ("local_id", {"value": "reg_hippocampus", "value_source": "reported"}, False),
+])
+def test_only_a_field_a_sentence_could_support_is_grounded(slot, node, expected):
+    from pondie.extraction import repair as repair_pass
+
+    assert repair_pass.groundable(slot, node) is expected
+
+
+def test_a_span_that_supports_something_else_is_dropped_and_the_value_kept(sch):
+    """Only the span. The value stays and its evidence becomes `not_found`, which is the
+    honest state -- removing the value too would delete a reading because a citation was
+    wrong about it."""
+    from pondie.extraction import repair as repair_pass
+
+    class Reject:
+        def score(self, claims):
+            return [0.04] * len(claims)
+
+    record = {"acquisitions": [{"local_id": "acq", "magnetic_strength": cited(
+        "3 T", "The authors thank the Dipartimento per i Rapporti Internazionali.")}]}
+    report = repair_pass.Report()
+    repair_pass._prune_evidence(record, sch, Reject(), report)
+
+    node = record["acquisitions"][0]["magnetic_strength"]
+    assert values.read(node) == "3 T"
+    assert node["evidence"]["status"] == "not_found"
+    assert any("does not support" in r.why for r in report.refused)
+
+
+def test_a_span_that_does_support_its_value_is_left_alone(sch):
+    from pondie.extraction import repair as repair_pass
+
+    class Accept:
+        def score(self, claims):
+            return [0.93] * len(claims)
+
+    record = {"acquisitions": [{"local_id": "acq", "magnetic_strength": cited(
+        "3 T", "Images were acquired on a 3 T scanner.")}]}
+    repair_pass._prune_evidence(record, sch, Accept(), repair_pass.Report())
+    assert record["acquisitions"][0]["magnetic_strength"]["evidence"]["status"] == "present"
+
+
+def test_one_instrument_under_two_names_is_not_created_twice(sch):
+    """12853571: "clinician-administered PTSD scale (CAPS)" minted a second copy of
+    `asm_caps` ("CAPS total score"), and analyses then linked to the copy."""
+    from pondie.extraction.record import edit as edit_module
+
+    class Abbrev:
+        def expand(self, short):
+            return {"CAPS": "clinician-administered PTSD scale",
+                    "PTSD": "posttraumatic stress disorder"}.get(short)
+
+    assert edit_module.same_entity(
+        "CAPS total score", "clinician-administered PTSD scale (CAPS)", Abbrev())
+    assert not edit_module.same_entity("PTSD checklist", "PTSD symptom scale", Abbrev())
+
+
+def test_an_analysis_reported_only_in_prose_can_be_named(sch):
+    """16038682 reports three peaks in a sentence and has no coordinate table at all.
+    Refusing to name such an analysis is refusing to record it."""
+    from pondie.extraction.record import ids
+
+    assert ids.mint("Analysis", "PTSD < controls", set()) == "ana_ptsd_controls"
+    assert ids.mint("Table", "Table 2", set()) is None
