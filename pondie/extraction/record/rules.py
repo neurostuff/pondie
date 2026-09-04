@@ -1044,6 +1044,165 @@ def check_acquisition_devices(record: Mapping[str, Any], findings: Findings) -> 
 #: the record and later ones read what earlier ones wrote; these mutate nothing and read no
 #: shared state, measured. An ordering constraint written here would assert a dependency
 #: that does not exist, and the next person would maintain it.
+def check_value_source_honesty(record: Mapping[str, Any], findings: Findings) -> None:
+    """A value the paper reported has a sentence, or it is not `reported`.
+
+    `value_source: reported` asserts the source said this; `evidence.status: not_found`
+    admits no sentence was ever located for it. Both at once is a contradiction the record
+    makes about itself, and the schema already offers the honest alternative: `generated`,
+    for a value the pipeline reasoned to rather than read.
+
+    It is the shape of every wrong value found by hand on this corpus. 11549754 -- a paper
+    whose corpus text is a PMC landing page -- carries `measures.family` =
+    `electrophysiology`, reported, not_found, on a BOLD fMRI study whose own identifiers
+    read `mod_fmri` and `mea_neural_response`. On 11515754 the same pairing holds
+    `spatial_scope` = `roi`, `definition_method` = `functional_localizer` and
+    `correction_scope` = `roi`, none of them stated anywhere in the source.
+
+    A warning and not an error: the reading may well be right, and downgrading it to
+    `generated` is a judgement this cannot make. What it can do is stop the two kinds of
+    value being indistinguishable in the output.
+    """
+    from pondie.extraction.evidence.grounding import IDENTIFIERS
+    from pondie.formats.values import iter_fields
+
+    for path, node in iter_fields(record):
+        if not isinstance(node, Mapping):
+            continue
+        if node.get("extraction_status") != "extracted":
+            continue
+        if node.get("value_source") != "reported":
+            continue
+        if (node.get("evidence") or {}).get("status") != "not_found":
+            continue
+        # Only what could have come from prose. Unfiltered this fired 1,978 times over 200
+        # records, half of it on `caption`, `table_number` and `footer` -- literals copied
+        # from the table manifest -- and on `source_table_analysis`, which is an address
+        # inside the record rather than a claim about the paper.
+        #
+        # A `REASONED` slot is deliberately kept. `grounding` exempts those from *scoring*
+        # because a paper does not write down that a scope was `roi`, and that is exactly
+        # why one asserted as `reported` with no sentence is worth seeing: it is a
+        # conclusion wearing the label of a quotation. All four wrong values found by hand
+        # on this corpus were of that shape -- `family` = electrophysiology,
+        # `spatial_scope` = roi, `definition_method` = functional_localizer,
+        # `correction_scope` = roi.
+        slot = path.rsplit(".", 1)[-1].split("[")[0]
+        if path.startswith("tables[") or slot in IDENTIFIERS:
+            continue
+        findings.warn(
+            path,
+            "value_source is 'reported' but no supporting sentence was found. Either cite "
+            "one, or set value_source to 'generated' to say the pipeline reasoned to it",
+        )
+
+
+#: What a measure may be, given how the data were acquired. Only the pairings a modality
+#: makes impossible are listed; anything unlisted is unconstrained.
+_MODALITY_FAMILIES: dict[str, frozenset[str]] = {
+    "MRI": frozenset({"electrophysiology", "electrophysiological_amplitude"}),
+    "fMRI": frozenset({"electrophysiology", "electrophysiological_amplitude"}),
+    "PET": frozenset({"electrophysiology", "electrophysiological_amplitude"}),
+    "sMRI": frozenset({"electrophysiology", "electrophysiological_amplitude"}),
+    "dMRI": frozenset({"electrophysiology", "electrophysiological_amplitude"}),
+    "EEG": frozenset({"functional_bold", "bold_response", "structural_morphometry",
+                      "perfusion", "diffusion", "molecular_imaging"}),
+}
+
+
+def check_modality_measures(record: Mapping[str, Any], findings: Findings) -> None:
+    """A measure the acquisition could not have produced.
+
+    Nothing related these two, so `measures.family` = `electrophysiology` sat beside an
+    `acquisitions.modality` of fMRI without complaint -- on a paper that measured BOLD.
+    A reviewer reading either field alone sees nothing wrong; the error is only in the pair.
+    """
+    from pondie.formats import values as value_tools
+
+    modalities = {
+        str(value_tools.read(a.get("modality")) or "").strip()
+        for a in record.get("acquisitions") or []
+        if isinstance(a, Mapping)
+    }
+    known = [m for m in modalities if m in _MODALITY_FAMILIES]
+    if not known:
+        return
+    # Forbidden by *every* modality present, not by any one of them. A study with both an
+    # sMRI and an fMRI acquisition produces both structural and BOLD measures, and a union
+    # would reject each for belonging to the other.
+    forbidden = set.intersection(*(set(_MODALITY_FAMILIES[m]) for m in known))
+    if not forbidden:
+        return
+    for index, measure in enumerate(record.get("measures") or []):
+        if not isinstance(measure, Mapping):
+            continue
+        for slot in ("family", "type"):
+            named = str(value_tools.read(measure.get(slot)) or "").strip()
+            if named and named in forbidden:
+                findings.warn(
+                    f"measures[{index}].{slot}",
+                    f"{named!r} is not something a {'/'.join(sorted(known))} "
+                    f"acquisition produces. Either the modality or the measure is wrong",
+                )
+
+
+def check_counts_add_up(record: Mapping[str, Any], findings: Findings) -> None:
+    """Arithmetic no model can be trusted with, and none is needed for.
+
+    Two invariants the schema states about itself. A `CategoryDistribution` carries its own
+    `denominator`, so its counts sum to that or one of them was misread -- checked against
+    the record's own declared total rather than a guessed one. And the enrolment counts are
+    a funnel by definition: approached, then those who consented, then those enrolled after
+    screening, then those whose data were acquired. Each is a subset of the one before, so
+    the sequence cannot increase.
+
+    Warnings, not errors. A paper may omit a category, or report a count this pipeline maps
+    to the wrong rung of the funnel, and both are worth a reviewer's eye rather than a
+    rejected record.
+    """
+    from pondie.formats import values as value_tools
+
+    def whole(node: Any) -> int | None:
+        read = value_tools.read(node)
+        if isinstance(read, bool) or not isinstance(read, (int, float)):
+            return None
+        return int(read) if float(read).is_integer() else None
+
+    #: In the order the schema defines them, each a subset of the one before.
+    funnel = ("approached_count", "consented_count", "enrolled_count", "acquired_count")
+
+    for index, group in enumerate(record.get("groups") or []):
+        if not isinstance(group, Mapping):
+            continue
+
+        for slot in ("sex_distribution", "race_distribution"):
+            entries = [e for e in (group.get(slot) or []) if isinstance(e, Mapping)]
+            if not entries:
+                continue
+            counted = [whole(e.get("count")) for e in entries]
+            declared = {whole(e.get("denominator")) for e in entries}
+            declared.discard(None)
+            if any(c is None for c in counted) or len(declared) != 1:
+                continue
+            total, got = declared.pop(), sum(c for c in counted if c is not None)
+            if got != total:
+                findings.warn(
+                    f"groups[{index}].{slot}",
+                    f"the counts sum to {got} but the entries give a denominator "
+                    f"of {total}",
+                )
+
+        seen = [(slot, whole(group.get(slot))) for slot in funnel]
+        stated = [(slot, value) for slot, value in seen if value is not None]
+        for (earlier, before), (later, after) in zip(stated, stated[1:]):
+            if after > before:
+                findings.warn(
+                    f"groups[{index}].{later}",
+                    f"{later} is {after} but {earlier} is {before}, and each of these is a "
+                    f"subset of the one before it",
+                )
+
+
 RULES: tuple[Rule, ...] = (
     Rule("cell_terms", "every cell names a term its analysis's model can reach", check_cell_terms),
     Rule("model_stages", "a stage chain is acyclic and names each column once", check_model_stages),
@@ -1059,6 +1218,9 @@ RULES: tuple[Rule, ...] = (
     Rule("arm_reachability", "a trial's arms are reachable from its analyses", check_arm_reachability),
     Rule("derived_columns", "a derived column says what it was derived from", check_derived_columns),
     Rule("one_protocol_per_acquisition", "an acquisition describes one sequence, not two", check_one_protocol_per_acquisition),
+    Rule("value_source_honesty", "a value said to be reported has a sentence", check_value_source_honesty),
+    Rule("modality_measures", "a measure the acquisition could have produced", check_modality_measures),
+    Rule("counts_add_up", "a breakdown sums to the group it breaks down", check_counts_add_up),
 )
 
 

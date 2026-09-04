@@ -1207,3 +1207,165 @@ def test_the_retriever_alone_is_enough_to_run_the_pass(sch):
     source = inspect.getsource(relocate_module.relocate)
     assert "if proposer is not None else ()" in source, \
         "the proposer loop must be skippable"
+
+
+class _Findings:
+    def __init__(self):
+        self.errors, self.warnings = [], []
+
+    def error(self, path, message):
+        self.errors.append((path, message))
+
+    def warn(self, path, message):
+        self.warnings.append((path, message))
+
+
+def test_a_value_said_to_be_reported_needs_a_sentence():
+    """11549754 carries `measures.family` = electrophysiology, reported, not_found -- on a
+    BOLD fMRI study whose own identifiers read `mod_fmri` and `mea_neural_response`. The
+    record contradicts itself and nothing said so."""
+    from pondie.extraction.record import rules
+
+    record = {"measures": [{"local_id": "m", "family": {
+        "extraction_status": "extracted", "value": "electrophysiology",
+        "value_source": "reported", "evidence": {"status": "not_found"}}}]}
+    found = _Findings()
+    rules.check_value_source_honesty(record, found)
+
+    assert len(found.warnings) == 1, found.warnings
+    assert "generated" in found.warnings[0][1]
+    assert found.errors == [], "a reading may be right; this is a warning"
+
+
+def test_a_generated_value_without_a_sentence_is_fine():
+    """`generated` is the schema's own word for a value the pipeline reasoned to. Saying so
+    is the fix, so it must not then be flagged."""
+    from pondie.extraction.record import rules
+
+    record = {"measures": [{"local_id": "m", "family": {
+        "extraction_status": "extracted", "value": "electrophysiology",
+        "value_source": "generated", "evidence": {"status": "not_found"}}}]}
+    found = _Findings()
+    rules.check_value_source_honesty(record, found)
+    assert found.warnings == []
+
+
+def test_a_field_that_could_never_have_had_a_sentence_is_not_flagged():
+    """Unfiltered this fired 1,978 times over 200 records, on table literals, on record
+    addresses, and on values read off the method. `groundable` already knows all three."""
+    from pondie.extraction.record import rules
+
+    def claimed(value):
+        return {"extraction_status": "extracted", "value": value,
+                "value_source": "reported", "evidence": {"status": "not_found"}}
+
+    found = _Findings()
+    rules.check_value_source_honesty(
+        {"tables": [{"local_id": "t", "caption": claimed("Table 1. Peaks"),
+                     "source_table_analysis": claimed("3#1")}]},
+        found)
+    assert found.warnings == [], found.warnings
+
+
+def test_a_reasoned_value_claimed_as_reported_is_flagged():
+    """`grounding` exempts these from scoring because a paper does not write down that a
+    scope was `roi`. That is exactly why one asserted as `reported` with no sentence is
+    worth seeing -- a conclusion wearing the label of a quotation. All four wrong values
+    found by hand on this corpus were of that shape."""
+    from pondie.extraction.record import rules
+
+    def claimed(value):
+        return {"extraction_status": "extracted", "value": value,
+                "value_source": "reported", "evidence": {"status": "not_found"}}
+
+    found = _Findings()
+    rules.check_value_source_honesty(
+        {"analyses": [{"local_id": "a", "spatial_scope": claimed("roi")}]}, found)
+    assert len(found.warnings) == 1, found.warnings
+
+
+def test_a_measure_the_scanner_could_not_have_produced():
+    """The error is only in the pair: either field alone reads fine."""
+    from pondie.extraction.record import rules
+
+    record = {
+        "acquisitions": [{"local_id": "a", "modality": field("fMRI")}],
+        "measures": [{"local_id": "m", "family": field("electrophysiology")}],
+    }
+    found = _Findings()
+    rules.check_modality_measures(record, found)
+    assert len(found.warnings) == 1
+    assert "electrophysiology" in found.warnings[0][1]
+
+    ok = {
+        "acquisitions": [{"local_id": "a", "modality": field("fMRI")}],
+        "measures": [{"local_id": "m", "family": field("functional_bold")}],
+    }
+    clean = _Findings()
+    rules.check_modality_measures(ok, clean)
+    assert clean.warnings == []
+
+
+def test_two_modalities_do_not_forbid_each_other_s_measures():
+    """A study with both an sMRI and an fMRI acquisition produces both structural and BOLD
+    measures. Unioning the forbidden sets would reject each for belonging to the other."""
+    from pondie.extraction.record import rules
+
+    record = {
+        "acquisitions": [{"local_id": "a1", "modality": field("fMRI")},
+                         {"local_id": "a2", "modality": field("sMRI")}],
+        "measures": [{"local_id": "m1", "family": field("functional_bold")},
+                     {"local_id": "m2", "family": field("structural_morphometry")}],
+    }
+    found = _Findings()
+    rules.check_modality_measures(record, found)
+    assert found.warnings == [], found.warnings
+
+
+def test_a_breakdown_that_does_not_sum_to_its_own_denominator():
+    """Checked against the denominator the entries themselves declare -- `Group` has no `n`,
+    which is what an earlier version of this rule assumed, so it could never fire."""
+    from pondie.extraction.record import rules
+
+    def entry(count, denominator):
+        return {"count": field(count), "denominator": field(denominator)}
+
+    record = {"groups": [{"local_id": "g",
+                          "sex_distribution": [entry(12, 20), entry(6, 20)]}]}
+    found = _Findings()
+    rules.check_counts_add_up(record, found)
+    assert len(found.warnings) == 1
+    assert "sum to 18" in found.warnings[0][1] and "denominator of 20" in found.warnings[0][1]
+
+    ok = {"groups": [{"local_id": "g",
+                      "sex_distribution": [entry(12, 20), entry(8, 20)]}]}
+    clean = _Findings()
+    rules.check_counts_add_up(ok, clean)
+    assert clean.warnings == []
+
+
+def test_an_enrolment_funnel_that_grows():
+    """approached, consented, enrolled, acquired -- each a subset of the one before, by the
+    schema's own definitions, so the sequence cannot increase."""
+    from pondie.extraction.record import rules
+
+    record = {"groups": [{"local_id": "g", "enrolled_count": field(20),
+                          "acquired_count": field(24)}]}
+    found = _Findings()
+    rules.check_counts_add_up(record, found)
+    assert len(found.warnings) == 1
+    assert "subset of the one before" in found.warnings[0][1]
+
+    ok = {"groups": [{"local_id": "g", "approached_count": field(40),
+                      "enrolled_count": field(24), "acquired_count": field(20)}]}
+    clean = _Findings()
+    rules.check_counts_add_up(ok, clean)
+    assert clean.warnings == []
+
+
+def test_the_new_rules_are_registered():
+    """A rule not in `RULES` runs nowhere."""
+    from pondie.extraction.record import rules
+
+    names = {rule.name for rule in rules.RULES}
+    assert {"value_source_honesty", "modality_measures", "counts_add_up"} <= names
