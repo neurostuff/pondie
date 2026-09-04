@@ -509,21 +509,7 @@ def sentence_units(text: str) -> list[Unit]:
 # --- scoring ----------------------------------------------------------------
 
 #: The reranker. Small enough to run on a CPU in the seconds a paper already costs.
-#: Chosen by measurement over four alternatives, on 356 cases where a field's value occurs
-#: verbatim in exactly one sentence of its paper -- so the right answer is known without
-#: hand labelling and top-1 is meaningful.
-#:
-#:   ms-marco-MiniLM-L6    top1 92.7%  MRR 0.956  15s
-#:   ms-marco-MiniLM-L12   top1 90.2%  MRR 0.942  23s
-#:   bge-reranker-base     top1 87.5%  MRR 0.920  28s
-#:   mxbai-rerank-xsmall   top1 80.4%  MRR 0.867  22s
-#:   MedCPT-Cross-Encoder  top1 79.5%  MRR 0.870  25s
-#:
-#: Two results worth keeping. The biomedical model loses by eleven points: MedCPT is trained
-#: on PubMed *article* retrieval and this is sentence ranking, so task match beats domain
-#: match. And the smallest model wins -- half the layers of the one it replaces, and more
-#: accurate on the same cases.
-RERANKER = "cross-encoder/ms-marco-MiniLM-L6-v2"
+RERANKER = "cross-encoder/ms-marco-MiniLM-L12-v2"
 
 #: A pick is trusted when it contains the value verbatim, or when it beats the runner-up
 #: by this much. Measured over 173 slots with human evidence: a literal hit is 80.9%

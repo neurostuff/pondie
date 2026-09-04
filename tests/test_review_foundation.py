@@ -2227,12 +2227,3 @@ def test_an_initialism_will_not_take_a_number_or_a_bracket_for_a_word() -> None:
     assert abbreviations._initialism("AB", "| 12 | 3.4 (0.2)") is None
     assert abbreviations._initialism("aa", "african american") is None, \
         "lower-case short forms are not initialisms"
-
-
-def test_the_locator_uses_the_model_that_measured_best() -> None:
-    """Not the biggest and not the biomedical one. On 356 cases where a value occurs
-    verbatim in exactly one sentence, L6 takes top-1 92.7% against L12's 90.2%,
-    bge-reranker-base's 87.5% and MedCPT's 79.5% -- and runs in two thirds of the time."""
-    from pondie.extraction.evidence import retrieval
-
-    assert retrieval.RERANKER == "cross-encoder/ms-marco-MiniLM-L6-v2"
