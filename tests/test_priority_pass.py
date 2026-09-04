@@ -172,3 +172,26 @@ def test_both_proposers_share_one_propose():
     same edit twice by hand -- and a fix applied to one copy is invisible until a run
     disagrees with itself."""
     assert recall.NuExtract.propose is recall_server.NuExtractServer.propose
+
+
+def test_a_half_emitted_entity_is_a_postcondition_failure():
+    """A list holding a bare string is an object the model started and abandoned.
+
+    On 21118656 `analyses` came back as one good analysis followed by 'model_vbm_ptsd_ntc'
+    and 'name {' -- the local_id and first key of the whole-brain VBM analysis the paper
+    reports as tested and null. Non-emptiness passed the post-condition, so nothing retried,
+    and the analysis that decided whether the paper qualified was dropped downstream. The
+    check has to be that entries are objects, not that the list has length.
+    """
+    payload = {"analyses": [{"local_id": "an_roi"}, "model_vbm_ptsd_ntc", "name {"],
+               "required_entities": [{"local_id": "grp", "kind": "Group"}]}
+    failures = render.postcondition_failures(payload, "demands")
+    assert any("not objects" in f for f in failures), failures
+
+
+def test_a_well_formed_payload_has_no_such_failure():
+    """The guard must not fire on the shape it is meant to allow."""
+    payload = {"analyses": [{"local_id": "an_roi"}],
+               "required_entities": [{"local_id": "grp", "kind": "Group"}]}
+    assert not [f for f in render.postcondition_failures(payload, "demands")
+                if "not objects" in f]

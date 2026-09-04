@@ -926,6 +926,22 @@ def postcondition_failures(
     """
 
     failures: list[str] = []
+    # An entity list holding a bare string is a half-emitted object: on 21118656 the
+    # `analyses` list came back as one good analysis followed by 'model_vbm_ptsd_ntc' and
+    # 'name {' -- the local_id and the first key of the whole-brain VBM analysis, which the
+    # paper reports as tested and null. Non-emptiness passed, so nothing retried, and the
+    # one analysis that decided the paper's inclusion was dropped downstream as unparseable.
+    for key in ("analyses", "required_entities", *ENTITY_LISTS):
+        entries = payload.get(key)
+        if not isinstance(entries, list):
+            continue
+        loose = [e for e in entries if not isinstance(e, Mapping)]
+        if loose:
+            failures.append(
+                f"{len(loose)} entry(s) in {key!r} are not objects "
+                f"({', '.join(repr(str(e)[:40]) for e in loose[:3])}): an entity emitted as "
+                "a bare string has lost every field but the fragment shown"
+            )
     if MODE_SCHEMA.get(mode, mode) == "analyses":
         if not payload.get("analyses"):
             failures.append("no analyses were emitted")
