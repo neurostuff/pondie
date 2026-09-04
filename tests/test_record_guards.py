@@ -327,3 +327,52 @@ def test_the_call_carries_a_directive_naming_what_to_list():
     assert "brain region" in directive("Region")
     assert "statistical analysis" in directive("Analysis")
     assert "tied to an analysis" in directive("Group")
+
+
+# -------------------------------------------------------------------------------- creation
+
+
+def test_a_region_the_proposal_fully_specifies_is_created(sch):
+    """The live proposer returns definition_method with the name, so a Region is
+    constructible as valid -- hippocampus, on 16508348."""
+    from pondie.extraction.record import edit as edit_module
+
+    record = {"regions": []}
+    entity, why = edit_module.create(sch, record, "Region", {
+        "name": "hippocampus", "definition_method": "anatomical_a_priori",
+        "region_type": "anatomical"})
+    assert entity is not None, why
+    assert entity["local_id"] == "reg_hippocampus"
+    assert values.read(entity["definition_method"]) == "anatomical_a_priori"
+
+
+def test_an_entity_that_could_not_be_valid_is_refused_by_the_slots_it_lacks(sch):
+    """Analysis requires eight slots including `effect`, a nested structure no flat template
+    carries. The refusal names them, so making analyses creatable is a matter of supplying
+    what the message asks for rather than of changing a policy."""
+    from pondie.extraction.record import edit as edit_module
+
+    entity, why = edit_module.create(sch, {"analyses": []}, "Analysis",
+                                     {"name": "PTSD < controls", "definition": "a contrast"})
+    assert entity is None
+    assert "table parse" in why or "effect" in why
+
+
+def test_ids_nobody_chooses_are_not_chosen(sch):
+    """`Analysis` and `Table` ids come from the table parse; an invented one would not match
+    the analysis the parse produced."""
+    from pondie.extraction.record import ids
+
+    assert ids.mint("Analysis", "PTSD < controls", set()) is None
+    assert ids.mint("Table", "Table 2", set()) is None
+    assert ids.mint("Region", "left amygdala", set()) == "reg_left_amygdala"
+    assert ids.mint("Region", "left amygdala", {"reg_left_amygdala"}) == "reg_left_amygdala_2"
+
+
+def test_the_prompt_and_the_repair_pass_share_one_id_convention():
+    """Two copies of a convention is one copy and one drift."""
+    from pondie.extraction.record import ids
+
+    table = ids.prefix_table()
+    assert "reg_   Region" in table and "asm_   Assessment" in table
+    assert all(prefix in table for prefix in ids.PREFIX.values())

@@ -38,7 +38,7 @@ from pondie.extraction.models import Prompt
 
 # `builder` for the payload contract (see ENTITY_LISTS); `preprocess` for the
 # deterministic text transforms selected by --preprocess.
-from pondie.extraction.record import builder
+from pondie.extraction.record import builder, ids
 from pondie.formats import parse_keys
 from pondie.schema import reader
 from pondie.schema.reader import Schema
@@ -422,11 +422,7 @@ Rules that decide whether a record is usable:
    class and then the shortest thing the PAPER fixes -- an enum value it states, an
    abbreviation it defines -- never a phrase you compose:
 
-     grp_   Group              acq_   Acquisition        mod_   ModelEstimation
-     tsk_   Task               prp_   Preprocessing      trm_   ModelTerm
-     asm_   Assessment         mea_   Measure            inf_   InferenceSettings
-     reg_   Region             arm_   Arm                tp_    Timepoint
-     dev_   Device             ext_   ExternalDataset
+{id_prefixes}
 
    Use `acq_fmri`, not `acquisition_resting_state_bold`; use `asm_madrs`, not
    `assessment_montgomery_asberg_depression_rating_scale`; `grp_schizophrenia` and not
@@ -670,6 +666,9 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
     system = (
         SYSTEM_HEAD.format(
             lists=", ".join(sorted(payload_keys)),
+            # From `record/ids.py`, so the convention the model is told and the convention
+            # the repair pass mints by cannot drift apart.
+            id_prefixes=ids.prefix_table(),
             value_rule=VALUE_RULE_EVIDENCE if evidence else VALUE_RULE_NO_EVIDENCE,
             absent_evidence=', "evidence": {"status": "not_applicable"}' if evidence else "",
         )

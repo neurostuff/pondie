@@ -70,6 +70,53 @@ def resolve(record: Mapping[str, Any], sch: Schema, target_class: str, named: An
     return out
 
 
+def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
+           proposal: Mapping[str, Any], text: str = "") -> tuple[dict | None, str]:
+    """A new entity from `proposal`, or `(None, why not)`.
+
+    Two conditions, both read from the schema rather than chosen here.
+
+    An entity must be constructible as *valid*: every required slot the class declares has
+    to be fillable from the proposal. A Region needs `definition_method`, which the template
+    asks for and the model answers; an Analysis needs eight slots including `effect`, a
+    nested structure no flat template can carry, so an Analysis proposal is refused. That is
+    a derivation, not a policy -- and it is reported by slot, so making analyses creatable
+    is a matter of supplying what the message names.
+
+    And an id must be one this pass may choose. `ids.DERIVED` says Analysis and Table ids
+    come from the table parse, so an invented one would not match the analysis the parse
+    produced.
+    """
+    from pondie.extraction.record import ids
+
+    taken = {e.get("local_id") for e in record.get(_container(class_name)) or []
+             if isinstance(e, Mapping)}
+    local_id = ids.mint(class_name, str(proposal.get("name") or ""), taken)
+    if local_id is None:
+        return None, f"{class_name} ids come from the table parse, not from a proposal"
+
+    entity: dict[str, Any] = {"local_id": local_id}
+    for name, _slot, kind in sch.iter_slots(class_name):
+        if name in ("local_id", "id") or name not in proposal or kind == "reference":
+            continue
+        value = values.shape(sch, class_name, name, proposal[name])
+        if value is not None:
+            entity[name] = _wrap(value, text)
+
+    required = {name for name, slot, _kind in sch.iter_slots(class_name)
+                if slot.required and name not in ("local_id", "id")}
+    missing = sorted(required - set(entity))
+    if missing:
+        return None, f"{class_name} would be missing {', '.join(missing)}"
+    return entity, ""
+
+
+def _container(class_name: str) -> str:
+    from pondie.extraction.recall import CONTAINER
+
+    return CONTAINER.get(class_name, class_name.lower())
+
+
 def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
           entity: MutableMapping[str, Any], proposal: Mapping[str, Any],
           text: str = "") -> EditLog:

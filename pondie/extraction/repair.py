@@ -210,8 +210,13 @@ def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: A
                  if isinstance(e, Mapping)}
         for proposal in proposals:
             entity = by_id.get(str(proposal.get("local_id") or "").strip())
-            if entity is None:            # creation is a separate question; see the design
-                continue
+            if entity is None:
+                entity, why = edit_module.create(sch, record, class_name, proposal, text)
+                if entity is None:
+                    report.refused.append(guards.Refusal(container, why))
+                    continue
+                record.setdefault(container, []).append(entity)
+                report.written.append(f"{container}/{entity['local_id']} created")
             log = edit_module.apply(sch, record, class_name, entity, proposal, text)
             report.written += [f"{container}/{entity['local_id']}.{s}" for s, _v in log.written]
             report.refused += log.refused
