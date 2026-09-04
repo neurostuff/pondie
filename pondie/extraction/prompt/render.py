@@ -434,6 +434,29 @@ def render_schema(sch: Schema, names: set[str], study_keep: list[str]) -> str:
 # ---------------------------------------------------------------- pass-2 context
 
 
+#: The `table_id` prose-derived parse entries carry. Not a real table, and rendered under
+#: its own heading because the rules for a table entry do not hold for one.
+PROSE_TABLE_ID = "prose"
+
+PROSE_GROUP_NOTE = """
+Reported in PROSE and in no table — proposals, not parse output
+
+  Each entry below is one sentence that states a coordinate, found by a cue sweep rather
+  than read off a table. Confirm each against the paper before emitting an analysis for
+  it, and emit nothing for the ones the paper does not support: some are results this
+  paper reports only in the text, others are a seed or sphere centre, an ROI from an
+  atlas, or a peak quoted from another study to compare against.
+
+  These entries have NO table. OMIT `tables` for an analysis you emit from one -- there
+  is nothing to point at, and a made-up id dangles. `source_table_analysis` is still
+  REQUIRED and is what carries the sentence's coordinates back to your analysis.
+
+  A coordinate marked `[in a table]` is reported by a parsed table as well. That does not
+  make the sentence a duplicate: a table lists one contrast's peaks, and a sentence naming
+  the same voxel for a DIFFERENT comparison is a second analysis. Read which contrast the
+  sentence names before deciding.
+"""
+
 ZERO_FOCI_RULE = """
 A "0 foci" entry is a TESTED EFFECT THAT FOUND NOTHING, and it is emitted like any other.
 It is not one of the OMIT cases above. The contrast was run, the paper reports its result,
@@ -529,11 +552,18 @@ def stage1_block(
         lines.append(ZERO_FOCI_RULE)
     for table_id, entries in grouped.items():
         first = entries[0][1]
-        label = first.get("table_label") or f"Table {first.get('table_number')}"
-        caption = _wrap(first.get("table_caption") or "")[:160]
-        lines.append(
-            f'{label} — "{caption}"   [table local_id: {table_ids.get(table_id, table_id)}]'
-        )
+        if table_id == PROSE_TABLE_ID:
+            # No table to point at, so the `tables` requirement above cannot apply and
+            # saying otherwise would buy a dangling reference. `source_table_analysis`
+            # still does: it is what carries the coordinates back to the analysis.
+            lines.append(PROSE_GROUP_NOTE)
+        else:
+            label = first.get("table_label") or f"Table {first.get('table_number')}"
+            caption = _wrap(first.get("table_caption") or "")[:160]
+            lines.append(
+                f'{label} — "{caption}"'
+                f'   [table local_id: {table_ids.get(table_id, table_id)}]'
+            )
         for number, analysis in entries:
             points = analysis.get("points") or []
             spaces = sorted({p.get("space") for p in points if p.get("space")})

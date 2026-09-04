@@ -172,6 +172,54 @@ class Tables(_Base):
 
 
 @dataclass(frozen=True)
+class ProseFoci(_Base):
+    """Append coordinates the paper states in prose and no table reports, to the parse.
+
+    The schema stores no coordinates: `Analysis.source_table_analysis` addresses the parse
+    and that is the only route from an analysis to its foci. A coordinate found in prose
+    therefore has to become a parse entry, or the analysis that reports it can be extracted
+    and its location cannot be stored anywhere.
+
+    Runs before `SignSplit`, which rewrites the whole document, so the splitter owns the
+    final shape and there is one writer of the analyses list at a time.
+
+    Its artefact is the parse it appended to, so `done` cannot be the file existing.
+    """
+
+    name: StageName = StageName.prose_foci
+
+    def produces(self, paper: Paper, settings: Settings) -> Path:
+        return paper.parse
+
+    def done(self, paper: Paper, settings: Settings) -> bool:
+        if settings.redo or not paper.parse.is_file():
+            return False
+        return bool(TableParse.load(paper.parse).document.get("prose_foci_applied"))
+
+    def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
+        if self.done(paper, settings):
+            return self._skip(paper)
+        if not paper.parse.is_file():
+            return self._skip(paper, "no parse to append to")
+        parse = TableParse.load(paper.parse)
+        before = parse.document.get("analyses") or []
+        entries = preprocess.prose_parse_entries(
+            paper.text.read_text(encoding="utf-8", errors="replace"),
+            _parsed_points({"analyses": before}),
+        )
+        parse.document["analyses"] = [*before, *entries]
+        parse.document["prose_foci_applied"] = True
+        parse.save()
+        return StageOutcome(
+            stage=self.name,
+            study_id=paper.study_id,
+            produced=(paper.parse,),
+            notes=(f"{len(entries)} prose coordinate sentence(s) appended "
+                   f"to {len(before)} parsed",),
+        )
+
+
+@dataclass(frozen=True)
 class SignSplit(_Base):
     """Partition a parse that reports both signs, and withhold the reversed half.
 
@@ -884,6 +932,7 @@ class Repair(_Base):
 
 DEMAND_DRIVEN: tuple[Stage, ...] = (
     Tables(),
+    ProseFoci(),
     SignSplit(),
     Demands(),
     Satisfy(),

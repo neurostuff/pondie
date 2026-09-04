@@ -606,3 +606,26 @@ def test_a_coordinate_no_table_carries_is_unmarked():
         "The peak was at x = 9 y = −12 z = −6.", known=[(40, 40, 40)])
     (_sentence, found), = rows
     assert found == [((9.0, -12.0, -6.0), False)]
+
+
+def test_prose_entries_share_the_parse_address_space_without_shifting_it():
+    """A prose coordinate has to become a parse entry or it has nowhere to be stored.
+
+    `Analysis.source_table_analysis` is the only route from an analysis to its foci and it
+    addresses the parse; the schema stores no coordinates itself. So prose entries take
+    keys in the same `<table_id>#<ordinal>` space -- and must not renumber the table
+    entries, because a key that exists but is wrong attaches an analysis to another
+    contrast's coordinates, which is worse than one that is missing.
+    """
+    from pondie.formats import parse_keys
+
+    parsed = [{"table_id": "tbl1"}, {"table_id": "tbl1"}, {"table_id": "tbl2"}]
+    entries = preprocess.prose_parse_entries(
+        "The peak was at x = 9 y = −12 z = −6 for heroin versus neutral.")
+    assert entries and entries[0]["table_id"] == "prose"
+    assert entries[0]["points"][0]["coordinates"] == [9.0, -12.0, -6.0]
+
+    before = parse_keys.parse_keys(parsed)
+    after = parse_keys.parse_keys([*parsed, *entries])
+    assert after[:len(before)] == before, "appending prose renumbered the table entries"
+    assert after[len(before):] == ["prose#1"]

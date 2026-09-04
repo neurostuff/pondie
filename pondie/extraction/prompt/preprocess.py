@@ -1437,6 +1437,38 @@ def prose_coordinates(
     return out
 
 
+def prose_parse_entries(
+    text: str, known: Iterable[tuple[float, float, float]] = ()
+) -> list[dict]:
+    """Prose coordinate sentences, shaped as parse entries so they share one address space.
+
+    The schema stores no coordinates -- `Analysis.source_table_analysis` is the only route
+    from an analysis to its foci, and it addresses the parse. So a coordinate found in prose
+    has to become a parse entry or it has nowhere to be stored: adding a coordinate field to
+    the schema for prose alone would give the same fact two homes.
+
+    `table_id` is "prose", which makes the keys `prose#1`, `prose#2` under the existing
+    `<table_id>#<ordinal>` format, distinct from any real table's.
+    """
+    entries = []
+    for sentence, found in prose_coordinates(text, known):
+        entries.append({
+            "name": "",                   # named by the extraction pass, from the sentence
+            "description": sentence,
+            "table_id": "prose",
+            "table_number": None,
+            "table_caption": sentence[:300],
+            "table_footer": "",
+            "from_prose": True,
+            "points": [
+                {"coordinates": list(coord), "space": None, "values": [],
+                 "also_in_table": hit}
+                for coord, hit in found
+            ],
+        })
+    return entries
+
+
 def prose_coordinate_block(
     text: str, known: Iterable[tuple[float, float, float]] = ()
 ) -> str:

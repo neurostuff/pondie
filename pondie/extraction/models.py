@@ -66,6 +66,10 @@ class StageName(str, Enum):
     #: `sign_split`, not `split`: on a `str` Enum a member named `split` shadows
     #: `str.split` on the class. The wire value stays "split" -- it is what
     #: `--stages` takes and what a payload filename is named after.
+    #: Coordinates stated in prose and in no table, appended to the parse so they share
+    #: `source_table_analysis`'s address space. Before `sign_split`, which owns the
+    #: document's final shape.
+    prose_foci = "prose"
     sign_split = "split"
     demands = "demands"
     satisfy = "satisfy"

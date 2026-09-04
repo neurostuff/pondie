@@ -63,6 +63,9 @@ def test_the_implemented_workflow_is_still_accepted(tmp_path):
     assert settings.workflow is Workflow.demand_driven
     assert [stage.name.value for stage in sequence(settings)] == [
         "tables",
+        # Appends prose-stated coordinates to the parse. Before "split", which rewrites
+        # the whole document, so one stage owns the analyses list at a time.
+        "prose",
         "split",
         "demands",
         "satisfy",
