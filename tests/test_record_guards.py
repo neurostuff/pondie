@@ -560,3 +560,14 @@ def test_a_nested_slot_is_not_stringified(sch):
     edit_module.apply(sch, record, "Analysis", record["analyses"][0],
                       {"groups": [{"group": "grp_ptsd"}]})
     assert "groups" not in record["analyses"][0]
+
+
+def test_the_analysis_directive_is_not_circular():
+    """"List every statistical analysis ... used by one of its statistical analyses" asks
+    the sweep to find analyses by their relation to analyses."""
+    from pondie.extraction.recall import directive
+
+    said = directive("Analysis")
+    assert "tied to an analysis" not in said
+    assert "tested comparison" in said
+    assert "tied to an analysis" in directive("Region")

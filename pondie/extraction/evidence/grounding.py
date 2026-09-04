@@ -79,6 +79,13 @@ class MiniCheck:
         return out
 
 
+#: A stopgap, and named as one. The durable answer is `value_source: generated` -- the
+#: schema's own vocabulary for a value the pipeline reasoned to rather than read -- and where
+#: a pass stamps that correctly, `groundable` already exempts the field for free and this
+#: list is unnecessary. Until every writer does, these are matched by bare slot name, which
+#: catches `Measure.type` and `ModelEstimation.stage` alongside the ones meant. A LinkML
+#: subset on the slot would say it beside the definition instead of here.
+#:
 #: Slots whose value is a conclusion rather than a quotation. A paper states its scanner and
 #: its sample size; it does not state that an analysis was `exploratory`, that a contrast
 #: `direction` is negative, or that a scope is `whole_brain` -- those are read off the method
@@ -93,9 +100,12 @@ REASONED = frozenset({
 })
 
 
-#: Addresses, not claims. A local_id is how the record refers to something internally; the
-#: paper never says "reg_hippocampus", so a checker asked whether it does will always say no
-#: and a pass that prunes on that answer deletes every citation on an identifier.
+#: Addresses, not claims. A local_id is how the record refers to something internally, so a
+#: checker asked whether the paper says "reg_hippocampus" always says no.
+#:
+#: `local_id` and `id` are here for completeness rather than reach: `iter_fields` yields only
+#: `ExtractedValue` wrappers, and those two are plain strings that never appear as one. The
+#: slots that do reach here are the reference-shaped ones a projection wraps.
 IDENTIFIERS = frozenset({"local_id", "id", "source_table_analysis", "table_id"})
 
 

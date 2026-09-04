@@ -85,6 +85,12 @@ def directive(class_name: str) -> str:
     answers, so the directive is part of the call rather than the caller's business.
     """
     noun = _NOUN.get(class_name, class_name.lower())
+    if class_name == "Analysis":
+        # Not "used by one of its statistical analyses", which is circular for this sweep.
+        return ("List every statistical analysis this paper reports on brain data. An "
+                "analysis is one tested comparison or association that produces a "
+                "statistical map or a set of regional results -- not a method or a piece "
+                "of software.\n\n")
     return (f"List every {noun} in this paper that is used by, or reported for, one of its "
             f"statistical analyses. Ignore anything not tied to an analysis.\n\n")
 
