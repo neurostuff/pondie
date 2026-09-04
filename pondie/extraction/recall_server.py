@@ -63,6 +63,19 @@ class TooLong(RuntimeError):
     """The server refused the prompt as longer than its context."""
 
 
+class EngineDied(RuntimeError):
+    """The server is up but its engine is gone, so every later request will 500 too.
+
+    Distinguished from a refused request because the remedy is different: this one needs the
+    server restarted, and until it is, nothing else will succeed. An engine that dies at
+    paper 300 would otherwise fail every paper after it.
+    """
+
+
+#: What vLLM says when the engine process is gone rather than the request being bad.
+_DEAD = ("EngineCore encountered an issue", "EngineDeadError", "Engine core")
+
+
 class NuExtractServer:
     """The proposer, over HTTP.
 
@@ -74,11 +87,16 @@ class NuExtractServer:
     def __init__(self, base_url: str = "http://127.0.0.1:8311/v1", model: str = "nu",
                  max_premise_chars: int = 45_000, max_new_tokens: int = 2_048,
                  structured: bool = True, strict: bool = True,
-                 timeout: float = 1_800.0) -> None:
+                 timeout: float = 1_800.0, restart: str = "",
+                 restart_wait: float = 420.0) -> None:
         self._base = base_url.rstrip("/")
         self._url = self._base + "/chat/completions"
         self._model, self._max_chars, self._max_new = model, max_premise_chars, max_new_tokens
         self._structured, self._strict, self._timeout = structured, strict, timeout
+        #: A shell command that brings the server back, and how long to wait for it. The
+        #: default waits without launching anything, which is right when something else
+        #: supervises the process; give a command and this restarts it itself.
+        self._restart, self._restart_wait = restart, restart_wait
 
     def reachable(self, timeout: float = 3.0) -> bool:
         """Whether a server is answering here, asked before a run commits to one.
@@ -97,6 +115,26 @@ class NuExtractServer:
         except Exception:  # noqa: BLE001 -- any failure to answer means "not there"
             return False
 
+    def recover(self) -> bool:
+        """Bring the server back, or wait for whoever else will. True if it answers again.
+
+        A cold start after the compile cache is cleared is about five minutes, so the wait is
+        generous by default -- a run that gave up after thirty seconds would fall back to the
+        in-process model for the rest of a long pass and produce a record built two ways.
+        """
+        import subprocess
+        import time
+
+        if self._restart:
+            subprocess.Popen(self._restart, shell=True, start_new_session=True,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        deadline = time.time() + self._restart_wait
+        while time.time() < deadline:
+            if self.reachable():
+                return True
+            time.sleep(10.0)
+        return False
+
     def propose(self, sch, class_name: str, premise: str,
                 instruction: str) -> Sequence[Mapping[str, Any]]:
         template = template_for(sch, class_name)
@@ -107,7 +145,7 @@ class NuExtractServer:
 
     def ask(self, template: Mapping[str, Any], instruction: str, premise: str,
             what: str = "") -> Mapping[str, Any]:
-        limit = self._max_chars
+        limit, recovered = self._max_chars, False
         while True:
             body = ((directive(what) if what in _NOUN or what == "Analysis" else "")
                     + INSTRUCTION + instruction + premise[:limit])
@@ -126,6 +164,13 @@ class NuExtractServer:
             try:
                 text = self._post(request)
                 break
+            except EngineDied:
+                # One recovery per call. A second death on the same request is the request's
+                # fault, not the server's, and the caller quarantines the paper.
+                if recovered or not self.recover():
+                    raise
+                recovered = True
+                continue
             except TooLong:
                 # Halving mirrors what the in-process proposer does on a CUDA OOM: a skipped
                 # call loses the whole sweep for that class, which reads in the report as a
@@ -152,5 +197,14 @@ class NuExtractServer:
             detail = error.read().decode()[:500]
             if "maximum context length" in detail or "longer than the maximum" in detail:
                 raise TooLong(detail) from None
+            if error.code >= 500 and any(marker in detail for marker in _DEAD):
+                raise EngineDied(detail) from None
             raise RuntimeError(f"vLLM {error.code}: {detail}") from None
+        except (urllib.error.URLError, OSError) as error:
+            # A server whose engine died answers 500; one that died outright refuses the
+            # connection. Both mean the same thing to a caller and want the same remedy, and
+            # only the first was caught -- so a killed server produced `URLError: Connection
+            # refused`, no recovery was attempted, and the paper failed. `HTTPError` is a
+            # subclass of `URLError`, so this must stay below the clause above.
+            raise EngineDied(f"{type(error).__name__}: {error}") from None
         return body["choices"][0]["message"]["content"].strip()

@@ -249,6 +249,11 @@ class Settings(Strict):
     #: saying so, rather than failing the run.
     proposer_url: str = "http://127.0.0.1:8311/v1"
 
+    #: A shell command that brings the proposer's server back after its engine dies. Empty
+    #: waits for whoever else supervises it; either way a paper that kills the engine twice
+    #: is repaired without a proposer rather than retried, and named in the report.
+    proposer_restart: str = ""
+
     #: The name the server was started with (`--served-model-name`).
     proposer_model: str = "nu"
 

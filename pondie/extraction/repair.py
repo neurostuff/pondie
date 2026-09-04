@@ -32,6 +32,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, MutableMapping, Sequence
 
 from pondie.extraction import recall
+from pondie.extraction import recall_server
 from pondie.extraction.evidence import grounding
 from pondie.extraction.evidence import relocate
 from pondie.extraction.evidence.grounding import Checker
@@ -58,8 +59,8 @@ contradiction, so a reviewer can see it; a confident wrong answer removes that."
 
 
 @functools.lru_cache(maxsize=1)
-def models(visible_devices: str, proposer_device: int,
-           server_url: str = "", server_model: str = "nu") -> tuple[Any, Any]:
+def models(visible_devices: str, proposer_device: int, server_url: str = "",
+           server_model: str = "nu", server_restart: str = "") -> tuple[Any, Any]:
     """The two local models, built once per process and shared by every paper.
 
     Cached because they are ~10 GB of weights and the stage runs per paper under a thread
@@ -86,7 +87,8 @@ def models(visible_devices: str, proposer_device: int,
     if server_url:
         from pondie.extraction.recall_server import NuExtractServer
 
-        served = NuExtractServer(base_url=server_url, model=server_model)
+        served = NuExtractServer(base_url=server_url, model=server_model,
+                                 restart=server_restart)
         if served.reachable():
             return served, MiniCheck()
         # Said aloud, not silent: a run that quietly used the other proposer produces a
@@ -94,6 +96,13 @@ def models(visible_devices: str, proposer_device: int,
         print(f"  proposer: no server at {server_url}; using the in-process model",
               file=sys.stderr)
     return NuExtract(device=proposer_device), MiniCheck()
+
+
+#: Studies that killed the proposer's engine. A paper here is repaired without a proposer
+#: rather than retried: the engine took the whole server down once already, and every other
+#: paper in the run pays for a second attempt at it. Held per process, which is the life of
+#: a run -- the stage writes its report either way, so a resume does not revisit it.
+POISON: set[str] = set()
 
 
 @functools.lru_cache(maxsize=None)
@@ -292,13 +301,19 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     # One gate over both models and both passes. Acquiring per call would let eight workers
     # interleave inside one card, which is the contention this exists to prevent; the LLM
     # stages above stay at full width because they wait on the network, not on 8 GB.
+    if study_id in POISON and proposer is not None:
+        # Already killed the engine once this run. The grounding half still runs.
+        report.refused.append(Refusal(
+            "proposer", f"{study_id} killed the proposer engine earlier in this run; "
+                        f"repaired without it"))
+        proposer = None
     local = gate(gpu_workers) if (proposer is not None or checker is not None) \
         else contextlib.nullcontext()
     with local:
         for _pass in range(iterations if proposer is not None else 0):
             before_pass = len(report.written)
             _sweep(record, premise, text, sch, proposer, checker, threshold, report,
-                   abbreviations)
+                   abbreviations, study_id)
             if len(report.written) == before_pass:
                 break                   # nothing changed, so a further pass sees the same
         if checker is not None:
@@ -377,7 +392,7 @@ def _abbreviations(text: str) -> Any:
 
 def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: Schema,
            proposer: Any, checker: Checker | None, threshold: float, report: Report,
-           abbreviations: Any = None) -> None:
+           abbreviations: Any = None, study_id: str = "") -> None:
     """Ask the proposer per class, targets first, and write what survives the guards.
 
     Two texts, and conflating them writes spans that address the wrong string. The models see
@@ -403,6 +418,15 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
         except recall.Starved as starved:
             report.refused.append(Refusal(container, str(starved)))
             continue
+        except recall_server.EngineDied as died:
+            # Nothing after this can succeed until the server is back, and `ask` has already
+            # tried once to bring it back. Abandon the sweep, name the paper, carry on with
+            # the rest of the record -- the deterministic half of the pass still runs.
+            POISON.add(study_id)
+            report.refused.append(Refusal(
+                container, f"proposer engine died on this paper; "
+                           f"skipped its remaining classes ({str(died)[:120]})"))
+            return
         by_id = {e.get("local_id"): e for e in record.get(container) or []
                  if isinstance(e, Mapping)}
         # Only what would be created is asked to justify its existence. A proposal naming an

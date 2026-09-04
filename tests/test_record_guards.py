@@ -943,3 +943,114 @@ def test_the_reachability_probe_asks_the_right_address():
 
     trailing = NuExtractServer(base_url="http://host:8311/v1/")
     assert trailing._base + "/models" == "http://host:8311/v1/models"
+
+
+class _DeadEngine:
+    """A server whose engine has gone, then comes back after a restart."""
+
+    def __init__(self, deaths=1):
+        self.deaths, self.calls, self.restarts = deaths, 0, 0
+
+    def post(self, _request):
+        self.calls += 1
+        if self.calls <= self.deaths:
+            from pondie.extraction.recall_server import EngineDied
+            raise EngineDied("EngineCore encountered an issue")
+        return '{"groups": [{"local_id": "g1"}]}'
+
+
+def _served(monkeypatch, engine, recovers=True):
+    from pondie.extraction.recall_server import NuExtractServer
+
+    server = NuExtractServer()
+    monkeypatch.setattr(server, "_post", engine.post)
+    def recover():
+        engine.restarts += 1
+        return recovers
+    monkeypatch.setattr(server, "recover", recover)
+    return server
+
+
+def test_a_dead_engine_is_restarted_and_the_call_retried(monkeypatch):
+    """An engine that dies at paper 300 would otherwise fail every paper after it."""
+    engine = _DeadEngine(deaths=1)
+    server = _served(monkeypatch, engine)
+
+    payload = server.ask({"groups": [{"local_id": "string"}]}, "find groups", "Methods.")
+
+    assert engine.restarts == 1, "must try to bring the server back"
+    assert payload == {"groups": [{"local_id": "g1"}]}, "and retry the call"
+
+
+def test_a_second_death_on_one_call_is_not_retried_again(monkeypatch):
+    """Once is the server; twice on the same request is the request. Retrying further just
+    takes the server down for every other paper in the run."""
+    from pondie.extraction.recall_server import EngineDied
+
+    engine = _DeadEngine(deaths=2)
+    server = _served(monkeypatch, engine)
+
+    with pytest.raises(EngineDied):
+        server.ask({"groups": [{"local_id": "string"}]}, "find groups", "Methods.")
+    assert engine.restarts == 1, "one recovery per call, not a loop"
+
+
+def test_a_paper_that_killed_the_engine_is_named_and_skipped(sch, monkeypatch):
+    """Logged and skipped: the record still gets the deterministic half of the pass, and the
+    run does not spend another engine on it."""
+    from pondie.extraction import repair as repair_pass
+    from pondie.extraction.recall_server import EngineDied
+
+    class Killer:
+        def propose(self, *_a, **_k):
+            raise EngineDied("EngineCore encountered an issue")
+
+        def ask(self, *_a, **_k):
+            raise EngineDied("EngineCore encountered an issue")
+
+    repair_pass.POISON.discard("p_dead")
+    record = {"analyses": [{"local_id": "an", "name": field("a contrast")}]}
+    first = repair_pass.run(record, "Methods. A contrast.", sch, study_id="p_dead",
+                            proposer=Killer())
+    assert "p_dead" in repair_pass.POISON
+    assert any("engine died" in r.why for r in first.refused)
+
+    second = repair_pass.run(record, "Methods. A contrast.", sch, study_id="p_dead",
+                             proposer=Killer())
+    assert any("killed the proposer engine earlier" in r.why for r in second.refused)
+    repair_pass.POISON.discard("p_dead")
+
+
+def test_a_server_that_is_gone_counts_as_a_dead_engine(monkeypatch):
+    """A server whose engine died answers 500; one that died outright refuses the
+    connection. Only the first was caught, so killing the server produced `URLError:
+    Connection refused`, no recovery was attempted, and the paper failed. `HTTPError`
+    subclasses `URLError`, so the order of the clauses matters."""
+    import urllib.error
+
+    from pondie.extraction.recall_server import EngineDied, NuExtractServer
+
+    server = NuExtractServer()
+    monkeypatch.setattr("urllib.request.urlopen",
+                        lambda *_a, **_k: (_ for _ in ()).throw(
+                            urllib.error.URLError("[Errno 111] Connection refused")))
+    with pytest.raises(EngineDied):
+        server._post({"model": "nu"})
+
+
+def test_a_bad_request_is_still_not_a_dead_engine(monkeypatch):
+    """A 400 must not trigger a restart: the server is fine and the request is not."""
+    import io
+    import urllib.error
+
+    from pondie.extraction.recall_server import EngineDied, NuExtractServer
+
+    def refuse(*_a, **_k):
+        raise urllib.error.HTTPError("u", 400, "Bad Request", {},
+                                     io.BytesIO(b'{"error":"malformed"}'))
+
+    server = NuExtractServer()
+    monkeypatch.setattr("urllib.request.urlopen", refuse)
+    with pytest.raises(RuntimeError) as caught:
+        server._post({"model": "nu"})
+    assert not isinstance(caught.value, EngineDied)

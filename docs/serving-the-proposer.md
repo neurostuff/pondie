@@ -20,7 +20,7 @@ share one card.
 ## Starting it
 
 ```bash
-CUDA_VISIBLE_DEVICES=3 PATH=/path/to/vllm-venv/bin:$PATH \
+CUDA_VISIBLE_DEVICES=3 VLLM_DISABLE_COMPILE_CACHE=1 PATH=/path/to/vllm-venv/bin:$PATH \
 vllm serve numind/NuExtract3-W4A16 \
   --served-model-name nu --port 8311 \
   --max-model-len 16384 --max-num-seqs 16 \
@@ -45,50 +45,84 @@ Startup is ~35 s warm and ~2.5 min cold; the first start after clearing the comp
 ~5 min. `Application startup complete` in the log means ready -- `NuExtractServer.reachable`
 returning true is a real signal, not an optimistic one.
 
-## Stopping it
+## Never reuse the compile cache
 
-**Send `SIGTERM`. Never `kill -9` a server that may be compiling.**
-
-vLLM caches its inductor-compiled graph under `~/.cache/vllm/torch_compile_cache/`. Killing
-the process partway through compilation leaves the graph cached but its Triton cubins
-missing, and every subsequent start reloads that broken cache and dies on the first request:
+**`VLLM_DISABLE_COMPILE_CACHE=1` is not optional here.** Without it the server starts, reports
+a healthy KV cache, and then dies on its very first request:
 
 ```
-RuntimeError: ('Cubin file saved by TritonBundler not found at %s', '.../....cubin')
-Failed to reload cubin file statically launchable autotuner
-  triton_red_fused__to_copy_add_fused_add_rms_norm_marlin_gemm_2
-...
-buf6 = torch.ops._C.marlin_gemm.default(...)
+buf6 = torch.ops._C.marlin_gemm.default(..., s72, 18432, 2560, True, False, True, False)
 RuntimeError: torch_call_dispatcher("aten::empty", ...) failed at torch/csrc/stable/ops.h:631
 EngineDeadError
 ```
 
-The message names `marlin_gemm` and `aten::empty`, so it reads as a quantisation-kernel bug
-or an allocation failure. It is neither. The kernel is fine and memory is fine -- the cubin
-was never loaded, and the error surfaces two frames after the real fault. Diagnosing this by
-the last line costs hours; the `TritonBundler` warning above it is the actual cause.
+The frame above it is always the same generated file under
+`~/.cache/vllm/torch_compile_cache/torch_aot_compile/<hash>/inductor_cache/`. A start that
+*compiles* is fine; a start that *reloads* that cache is not. Measured four times with
+identical flags, and it separates cleanly:
 
-Recovery:
+| compiled how | KV at startup | 18-call sweep |
+|---|---|---|
+| reloaded cache | 2.31 GiB | died on call 1 |
+| reloaded cache | 2.46 GiB | died on call 1 |
+| fresh, after `rm -rf` of the cache | 1.45 GiB | 57.9 s, no deaths |
+| fresh, `VLLM_DISABLE_COMPILE_CACHE=1`, cache still on disk | 1.45 GiB | 58.0 s, no deaths |
 
-```bash
-pkill -TERM -f NuExtract3-W4A16          # or kill the pid; give it time to exit
-rm -rf ~/.cache/vllm/torch_compile_cache
-```
+The last row is the control: the cache is present and merely unused, so it is reuse that
+breaks and not the directory existing.
 
-Then start again and accept the ~5 min recompile. `--enforce-eager` also avoids the crash,
-because eager mode never touches that cache -- but it is treating the symptom, and it costs
-roughly 45% of the throughput (18 calls: 58.2 s compiled against 104.6 s eager).
+Three things this is *not*, each of which cost time to rule out:
 
-Two smaller traps, both of which cost time here:
+* **Not memory.** The two runs that worked had the least KV of the four.
+* **Not `strict: true`.** Constrained and free-form decoding die and survive together; the
+  measured difference between them is under half a percent.
+* **Not an sm_86 quantisation-kernel bug.** The kernel named in the error is fine — it is
+  reached through a compiled graph that failed to load, and the error surfaces two frames
+  past the fault. Diagnosing this from the last line leads nowhere.
+
+A missing-cubin warning (`Cubin file saved by TritonBundler not found`) sometimes appears
+above it and sometimes does not. It is one way the reload fails, not the reason.
+
+Cost: every start compiles, so ~5-7 minutes instead of ~35 seconds. That is the price of the
+compiled path, and it is worth paying — `--enforce-eager` also avoids the crash, by never
+touching the cache, but gives back most of the speed: 104.6 s against 58.0 s over the same
+eighteen calls.
+
+## Stopping it
+
+Send `SIGTERM` and give it time to exit. `kill -9` is survivable now that the cache is never
+reused, but it still leaves the port and the engine in a state worth checking.
+
+Two traps, both of which cost real time here:
 
 * `pkill -f "vllm serve"` matches *the shell running that very command*, killing your own ssh
-  session and leaving the server up. Match on something the kill command does not itself
-  contain, e.g. `pgrep -f "NuExtract3-W4A1[6]"`.
+  session and leaving the server up. A bracketed pattern (`pgrep -f "NuExtract3-W4A1[6]"`)
+  protects against matching the pattern string, but **not** against a command that also
+  contains the literal model name somewhere else -- a combined kill-and-relaunch one-liner
+  will still kill itself. Kill and launch in separate commands.
 * Killing only the API server leaves `VLLM::EngineCore` holding the card. Check
-  `nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader` and, if the port
-  frees but the memory does not, kill the EngineCore pid too. A half-dead server that still
-  holds port 8311 makes the next start fail with `Address already in use`, which then looks
-  like a startup bug rather than a cleanup one.
+  `nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader`; if the port frees
+  but the memory does not, kill that pid too. A half-dead server that still holds port 8311
+  makes the next start fail with `Address already in use`, which reads as a startup bug
+  rather than a cleanup one.
+
+## When the engine dies anyway
+
+`NuExtractServer` treats both shapes of death as the same event: an HTTP 5xx carrying vLLM's
+engine markers, and a refused connection from a server that is gone entirely. The second was
+missed at first, so a killed server produced `URLError: Connection refused`, no recovery was
+attempted, and the paper failed -- `HTTPError` subclasses `URLError`, so the clauses must
+stay in that order.
+
+On either, `recover()` runs `Settings.proposer_restart` if one is set and polls until the
+server answers, up to seven minutes -- generous because a start now always compiles. Verified
+against a real killed server: back and answering in 41 s.
+
+One recovery per call. Dying once is the server; dying twice on the same request is the
+request, and the study goes into `repair.POISON`: its sweep is abandoned, the report says so,
+and any later attempt in that run repairs it without a proposer rather than spending another
+engine on it. The deterministic guards and the grounding pass still run, so the record is
+still improved.
 
 ## The schema, and why `strict` is on
 
