@@ -328,7 +328,7 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
     the premise to both put offsets into the slice: "span text disagrees with source at
     2180-2225" on three of three spot-checked papers.
     """
-    from pondie.extraction.recall import candidates, sweep_order
+    from pondie.extraction.recall import candidates, existing, sweep_order
 
     # Every class, not only the populated ones. Sweeping what the record already has asks
     # the model to improve what was found and never to find what was missed -- and an empty
@@ -339,7 +339,7 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
         class_name = by_container[container]
         proposals = proposer.propose(
             sch, class_name, premise,
-            candidates(sch, record, class_name))
+            existing(sch, record, class_name) + candidates(sch, record, class_name))
         by_id = {e.get("local_id"): e for e in record.get(container) or []
                  if isinstance(e, Mapping)}
         graded = grounding.supported(proposals, class_name, premise, checker, threshold,

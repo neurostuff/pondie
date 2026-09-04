@@ -437,6 +437,11 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
           text: str = "", abbreviations: Any = None) -> EditLog:
     """Write the slots of `proposal` this entity may take. Returns what happened."""
     log = EditLog()
+    # The class the entity says it is, not the one its container declares. An acquisition is
+    # an `MRI` by type designator, and `magnetic_field_strength_tesla` is a slot of that
+    # subclass -- written against the base class it is an attribute `Acquisition` does not
+    # have. `Validator` resolves the designator for the same reason.
+    class_name = sch.designated_type(entity, class_name)
     kinds = {name: kind for name, _slot, kind in sch.iter_slots(class_name)}
     ranges = {name: slot.range for name, slot, _kind in sch.iter_slots(class_name)}
 

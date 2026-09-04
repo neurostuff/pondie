@@ -26,6 +26,7 @@ import re
 from typing import Any, Mapping, Protocol, Sequence
 
 from pondie.extraction.record.edit import label_of
+from pondie.formats import values
 from pondie.schema.reader import Schema
 
 
@@ -233,6 +234,53 @@ def sweep_order(sch: Schema, keys: Sequence[str]) -> list[str]:
     for key in keys:
         visit(key, frozenset())
     return out
+
+
+def existing(sch: Schema, record: Mapping[str, Any], class_name: str) -> str:
+    """The entities of this class already held, with their ids and current values.
+
+    Without the ids the sweep is append-only: the model can propose something new but has no
+    handle on what is there, so nothing can be corrected and nothing can be linked to. That
+    is not a prediction -- a version listing labels alone added 0 links across three papers
+    where the same models under the same thresholds added 6, 14 and 3, and created entities
+    instead, because every proposal looked new.
+
+    The current values go with the id for the same reason: a model asked to correct a value
+    it cannot see will either repeat it or invent one.
+    """
+    container = sch.containers().get(class_name)
+    held = [e for e in (record.get(container) or []) if isinstance(e, Mapping)]
+    head = f"## {class_name} already extracted\n\n"
+    if not held:
+        return head + "NONE.\n\n"
+    lines = []
+    for entity in held:
+        lines.append(f"- local_id `{entity.get('local_id')}` -- {label_of(entity)}")
+        summary = _slot_summary(sch, entity, class_name)
+        if summary:
+            lines.append(f"    current values: {summary}")
+    return (head + "\n".join(lines) + "\n\n"
+            "Return the COMPLETE list. To correct one of these, reuse its `local_id` and "
+            "give only the values the paper contradicts. For one the paper describes that "
+            "is missing above, leave `local_id` out.\n\n")
+
+
+def _slot_summary(sch: Schema, entity: Mapping[str, Any], class_name: str,
+                  limit: int = 6) -> str:
+    """A few of the entity's filled slots, so a correction has something to correct."""
+    parts = []
+    for name, _slot, kind in sch.iter_slots(class_name):
+        if name in ("local_id", "name") or kind == "nested" or len(parts) >= limit:
+            continue
+        # `is_field`, not the schema's kind: the schema here is storage, where a slot holds
+        # a plain value, while the record is extraction-shaped and wraps it. Classifying
+        # against the wrong one printed whole `ExtractedValue` dicts, evidence spans and all,
+        # into a prompt meant to show the model a value.
+        raw = entity.get(name)
+        value = values.read(raw) if values.is_field(raw) else raw
+        if value not in (None, "", []) and not isinstance(value, (dict, list)):
+            parts.append(f"{name}={value}")
+    return "; ".join(parts)
 
 
 def candidates(sch: Schema, record: Mapping[str, Any], class_name: str) -> str:

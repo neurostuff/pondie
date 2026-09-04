@@ -598,3 +598,17 @@ def test_a_repaired_record_says_it_was_repaired(sch):
     repair_pass.run(changed, "A region of interest analysis was performed.", sch,
                     study_id="p", caller=Caller(), model="m")
     assert changed["extraction_metadata"]["repaired_by"] == repair_pass.REPAIRER
+
+
+def test_a_slot_of_a_subclass_is_written_against_that_subclass(sch):
+    """An acquisition is an `MRI` by type designator, and `magnetic_field_strength_tesla` is
+    a slot of that subclass. Written against the container's declared class it is an
+    attribute `Acquisition` does not have -- three of three spot-checked papers."""
+    from pondie.extraction.record import edit as edit_module
+
+    designator = sch.type_designator("Acquisition")
+    record = {"acquisitions": [{"local_id": "acq", designator: "MRI",
+                                "name": field("structural scan")}]}
+    edit_module.apply(sch, record, "Acquisition", record["acquisitions"][0],
+                      {"magnetic_field_strength_tesla": "3"})
+    assert "magnetic_field_strength_tesla" in record["acquisitions"][0]
