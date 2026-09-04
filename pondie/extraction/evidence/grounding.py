@@ -45,27 +45,56 @@ class Checker(Protocol):
 class MiniCheck:
     """`bespokelabs/minicheck` behind the protocol.
 
-    The batch is small by measurement, not by default: sixteen claims against a
-    methods-and-results premise exhausts an 8 GB card, and MiniCheck chunks the document per
-    claim, so the batch is the only thing that can shrink.
+    Two departures from the package's own entry point, both measured.
 
-    It takes no device, and deliberately does not set one. MiniCheck loads with
-    `device_map="auto"` and reads the visible devices, so the only way to place it is
-    `CUDA_VISIBLE_DEVICES` -- which is process-wide. Setting it here restricted the process
-    to one card and the proposer, asked for the second, got "invalid device ordinal".
-    Visibility is the caller's to set, once, before either model loads.
+    It scores through `Inferencer.inference`, not `MiniCheck.score`. The latter routes to
+    `inference_example_batch`, which loops one (premise, claim) pair at a time -- its
+    `batch_size` batches *chunks within* a pair, so with a one-sentence premise every pair is
+    a separate forward pass of a 770M encoder-decoder and the batch size does nothing.
+    `inference` chunks the list of pairs instead and returns one probability per pair, in
+    order. Safe here because `batch_tokenize` truncates at `max_model_len` rather than
+    chunking, and an evidence span is a sentence; a premise long enough to truncate would
+    lose its tail, which is why `LONG` falls back to the per-example path.
+
+    It loads in bfloat16, never float16. The checkpoint is float32 and MiniCheck passes no
+    dtype. T5 was trained in bfloat16 and overflows float16's range in `T5DenseReluDense`,
+    which is a decade-old class of NaN reports; Ampere has native bf16, so this halves both
+    the footprint and the work with no such risk.
     """
 
-    def __init__(self, model_name: str = "flan-t5-large", batch_size: int = 4,
+    #: Characters beyond which a premise may truncate at `max_model_len` and needs the
+    #: package's own chunk-and-max path. A sentence is far below this.
+    LONG = 1_200
+
+    def __init__(self, model_name: str = "flan-t5-large", batch_size: int = 64,
                  cache_dir: str | None = None) -> None:
+        import torch
         from minicheck.minicheck import MiniCheck as _MiniCheck
 
         self._batch = batch_size
         self._model = _MiniCheck(model_name=model_name, enable_prefix_caching=False,
                                  batch_size=batch_size, cache_dir=cache_dir)
+        inner = getattr(self._model, "model", None)
+        weights = getattr(inner, "model", None)
+        if weights is not None and torch.cuda.is_available():
+            inner.model = weights.to(torch.bfloat16)
+            # The package does `label_probs[:, 1].cpu().numpy()`, and numpy has no bfloat16.
+            # Upcasting at the head rather than after softmax keeps the whole encoder in
+            # bf16 and hands the library the float32 it expects.
+            inner.model.lm_head.register_forward_hook(
+                lambda _module, _inputs, output: output.float())
 
     def score(self, claims: Sequence[Claim]) -> Sequence[float]:
-        """Scored in slices, freeing between them, so one long premise cannot end a run."""
+        if not claims:
+            return []
+        inner = getattr(self._model, "model", None)
+        if inner is None or any(len(c.premise) > self.LONG for c in claims):
+            return self._per_example(claims)
+        out = inner.inference([c.premise for c in claims], [c.claim for c in claims])
+        return [float(x) for x in out["support_prob_per_chunk"]]
+
+    def _per_example(self, claims: Sequence[Claim]) -> Sequence[float]:
+        """The package's own path, for premises long enough that truncation would bite."""
         import torch
 
         out: list[float] = []
