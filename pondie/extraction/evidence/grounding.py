@@ -225,12 +225,33 @@ def _abbreviations(text: str) -> Any:
         return None
 
 
-#: Below this a span is not weak evidence, it is evidence for something else. Set low on
-#: purpose: the checker rejected an acknowledgements sentence offered as a warrant at 0.041
-#: and a sentence naming the wrong model term at 0.025, while accepting real ones at 0.92 and
-#: 0.95. Anything between is a judgement call, and a repair pass should not be making those
-#: -- it should be removing the citations that are plainly about something else.
-PRUNE_BELOW = 0.2
+#: Below this a citation is worth a second look. Nothing is removed on it -- `review_spans`
+#: reports and `relocate` compares -- because the score cannot support a verdict at any
+#: threshold, and this is what that looks like. Measured over 2,025 sentences the extraction
+#: model chose as a warrant and 2,025 it did not, from the same papers:
+#:
+#:     cut   keeps true   drops false
+#:    0.02       89%          34%
+#:    0.05       66%          69%
+#:    0.10       52%          84%
+#:    0.20       42%          90%
+#:    0.50       31%          96%
+#:
+#: Removing 90% of the bad citations costs 58% of the good ones, and keeping 90% of the good
+#: ones means keeping two thirds of the bad. The distributions overlap that far -- AUC 0.75,
+#: and 0.747 on the cases where the value appears nowhere in the sentence, so it is not a
+#: paraphrase problem but a uniformly weak signal. Three alternatives measured worse:
+#: deberta-v3-large-mnli-fever at 0.676, nli-deberta-v3-base at 0.658.
+#:
+#: 0.02 rather than the 0.2 first chosen from three hand-read examples, because this now
+#: only decides what to *report*: at 0.02 three quarters of what it flags is genuinely
+#: unsupported, against three fifths at 0.2, and it flags a quarter as many things. A
+#: reviewer can read 20 doubts per paper; 83 of them, 58% of which are correct citations,
+#: is a list nobody opens.
+DOUBT_BELOW = 0.02
+
+#: The old name, kept because nothing prunes on it any more and the new one says so.
+PRUNE_BELOW = DOUBT_BELOW
 
 
 #: A normalized number reads as unsupported against prose that states it differently:
@@ -357,7 +378,7 @@ def review_spans(record: MutableMapping[str, Any], checker: Checker, refused: li
         return []
     weak = []
     for (path, span, _claim), score in zip(scored, checker.score([c for *_x, c in scored])):
-        if score >= PRUNE_BELOW:
+        if score >= DOUBT_BELOW:
             continue
         weak.append((path, float(score)))
         refused.append(Refusal(

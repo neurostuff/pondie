@@ -475,8 +475,10 @@ def test_a_span_that_supports_something_else_is_dropped_and_the_value_kept(sch):
     from pondie.extraction.evidence import grounding
 
     class Reject:
+        # Below `DOUBT_BELOW`, which the calibration put at 0.02: at the 0.2 first chosen
+        # from three hand-read examples, 58% of true citations were flagged too.
         def score(self, claims):
-            return [0.04] * len(claims)
+            return [0.005] * len(claims)
 
     quote = "The authors thank the Dipartimento per i Rapporti Internazionali."
     record = {"acquisitions": [{"local_id": "acq", "magnetic_strength": cited("3 T", quote)}]}
@@ -487,7 +489,7 @@ def test_a_span_that_supports_something_else_is_dropped_and_the_value_kept(sch):
     assert values.read(node) == "3 T"
     assert node["evidence"]["status"] == "present", "the citation must survive the doubt"
     assert node["evidence"]["sets"][0]["spans"][0]["text"] == quote
-    assert weak and weak[0][1] == 0.04
+    assert weak and weak[0][1] == 0.005
     assert any("left in place" in r.why for r in refused)
 
 
@@ -1369,3 +1371,17 @@ def test_the_new_rules_are_registered():
 
     names = {rule.name for rule in rules.RULES}
     assert {"value_source_honesty", "modality_measures", "counts_add_up"} <= names
+
+
+def test_the_doubt_threshold_is_set_where_the_data_puts_it():
+    """0.2 was chosen from three hand-read examples. Over 2,025 sentences the extraction
+    model chose as a warrant and 2,025 it did not, it flags 58% of the true ones -- 83 on a
+    single paper, a list nobody opens. At 0.02 three quarters of what it flags is genuinely
+    unsupported and there is a quarter as much of it.
+
+    Nothing is removed on this score at any threshold: dropping 90% of bad citations costs
+    58% of good ones, and keeping 90% of good ones keeps two thirds of the bad."""
+    from pondie.extraction.evidence import grounding
+
+    assert grounding.DOUBT_BELOW == 0.02
+    assert grounding.PRUNE_BELOW == grounding.DOUBT_BELOW, "the old name still resolves"
