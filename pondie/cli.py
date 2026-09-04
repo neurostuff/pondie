@@ -55,6 +55,7 @@ def _extract(args: argparse.Namespace) -> int:
         workflow=Workflow(args.workflow),
         stages=tuple(StageName(s) for s in args.stages) if args.stages else tuple(StageName),
         effort=args.effort,
+        service_tier=args.service_tier,
         retrieve_evidence=not args.no_evidence,
         redo=args.redo,
     )
@@ -140,6 +141,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     ex.add_argument("--stages", nargs="*", choices=[s.value for s in StageName])
     ex.add_argument("--effort", default="low", choices=["minimal", "low", "medium", "high"])
+    ex.add_argument("--service-tier", default="", choices=["", "flex", "default", "priority"],
+                    help="the provider's service tier. `flex` trades latency for price on an "
+                         "offline run; unset leaves the provider's own default")
     ex.add_argument(
         "--no-evidence",
         action="store_true",

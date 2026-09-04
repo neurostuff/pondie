@@ -177,6 +177,18 @@ class ModelCall(Strict):
     #: same rate as parallel ones. Retrying cannot fix a 5-in-6 fault, which is why a run
     #: over 89 papers lost 25 of them with all three attempts spent.
     json_object: bool = True
+    #: The provider's service tier, passed through the gateway. Empty leaves it unset, which
+    #: is the provider's own default.
+    #:
+    #: `flex` trades latency for price on an offline run. Verified against the gateway rather
+    #: than assumed: a reply to a `flex` request echoes `service_tier: "flex"`, a `default`
+    #: one echoes `default`, and an invented tier is refused -- so the field reaches the
+    #: provider instead of being swallowed by the proxy, which is the failure a parameter
+    #: that is merely *accepted* hides.
+    #:
+    #: Off by default because it is slower and can be refused for capacity, and a stage that
+    #: silently took longer would be indistinguishable from a stage that hung.
+    service_tier: Literal["", "flex", "default", "priority"] = ""
 
 
 class ModelReply(Strict):
@@ -214,6 +226,8 @@ class Settings(Strict):
     #: supporting span -- structurally complete, and unreviewable.
     retrieve_evidence: bool = True
     zero_foci_rule: bool = True
+    #: Passed to every call this run makes. See `ModelCall.service_tier`; off by default.
+    service_tier: Literal["", "flex", "default", "priority"] = ""
     #: Ask a local model for the entities and links the extraction missed, and ground its
     #: proposals before writing them. On by default, and degrades rather than fails: where
     #: `pondie[repair]` or a GPU is missing, the stage says so once and carries on with the

@@ -97,6 +97,7 @@ class GatewayCaller:
                     max_completion_tokens=call.max_output_tokens,
                     reasoning_effort=call.effort,
                     **({"response_format": {"type": "json_object"}} if constrain else {}),
+                    **({"service_tier": call.service_tier} if call.service_tier else {}),
                 )
                 response = raw.parse()
             except Exception as error:  # noqa: BLE001 -- retried, then surfaced

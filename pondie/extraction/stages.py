@@ -286,6 +286,7 @@ class _ModelPass(_Base):
                         prompt=user,
                         max_output_tokens=settings.max_output_tokens,
                         effort=settings.effort,
+                        service_tier=settings.service_tier,
                         # One network attempt per post-condition attempt: the two retries
                         # answer different questions, and multiplying them spends the
                         # budget twice.
@@ -535,6 +536,7 @@ class Evidence(_Base):
                         "Return the JSON object mapping each id to its quote now.",
                         max_output_tokens=settings.max_output_tokens,
                         effort=settings.effort,
+                        service_tier=settings.service_tier,
                         attempts=settings.attempts,
                     ),
                     paper=paper.study_id,
@@ -733,6 +735,7 @@ class Repair(_Base):
             proposer=proposer, checker=checker,
             caller=caller if settings.adjudicate else None,
             model=settings.model if settings.adjudicate else "",
+            service_tier=settings.service_tier,
         )
         record_path.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
         out = self.produces(paper, settings)

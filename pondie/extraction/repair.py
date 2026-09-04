@@ -158,7 +158,8 @@ def _label(record: Mapping[str, Any], local_id: str) -> str:
 
 
 def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller: Any,
-               *, study_id: str, model: str, report: Report) -> Any:
+               *, study_id: str, model: str, report: Report,
+               service_tier: str = "") -> Any:
     """Put the unresolved contradictions to the extraction model, once, with the paper.
 
     A resolution is applied only when its quote resolves to a span of this paper, by the same
@@ -178,7 +179,7 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
         for i, c in enumerate(cases))
     reply = caller(
         ModelCall(model=model, system=ADJUDICATION_SYSTEM, effort="low",
-                  max_output_tokens=4_000,
+                  max_output_tokens=4_000, service_tier=service_tier,
                   prompt=(f"## Paper\n\n{text}\n\n## Cases\n\n{listing}\n\n"
                           'Reply as {"resolutions": [{"id": ..., "value": ..., '
                           '"quote": ...}]}, using the case id verbatim and an empty quote '
@@ -229,7 +230,7 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
 
 def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: str,
         proposer: Any = None, checker: Checker | None = None, caller: Any = None,
-        model: str = "", threshold: float = 0.5) -> Report:
+        model: str = "", threshold: float = 0.5, service_tier: str = "") -> Report:
     """Repair `record` in place. Returns what happened, including anything it broke."""
     from copy import deepcopy
 
@@ -252,7 +253,7 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
         grounding.drop_unsupported_spans(record, checker, report.refused)
     if caller is not None and model:
         reply = adjudicate(record, sch, text, caller, study_id=study_id, model=model,
-                           report=report)
+                           report=report, service_tier=service_tier)
         if reply is not None:
             report.cost = reply.cost
             report.traces = ((reply.trace_id, reply.cache_status),) if reply.trace_id else ()
