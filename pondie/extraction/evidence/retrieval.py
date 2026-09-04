@@ -552,6 +552,14 @@ def load_reranker(model: str = RERANKER, device: str = "cpu"):
             scorer = (
                 AutoModelForSequenceClassification.from_pretrained(model).to(attempt).eval()
             )
+            # Half precision on a card, never on CPU where it is emulated and slower. Safe
+            # here in a way it is not for T5: this is a BERT-style encoder with no
+            # activation large enough to overflow. Measured over 260 units of a real paper,
+            # 0.343s -> 0.252s with the top ten unchanged and a worst score delta of 0.0065
+            # -- and the locator runs once per extracted field, so it is a real share of
+            # each paper rather than a rounding error.
+            if attempt != "cpu":
+                scorer = scorer.half()
         except Exception as error:  # noqa: BLE001 -- any failure means "run without it"
             print(
                 f"  reranker on {attempt}: unavailable ({type(error).__name__}); "
