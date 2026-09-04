@@ -299,6 +299,12 @@ def cast(sch: "Schema", class_name: str, slot: str, value: Any) -> Any:
     attribute = sch.attributes(class_name).get(slot)
     if attribute is None:
         return None
+    if isinstance(value, list):
+        # Element-wise, and all or nothing. `str()` of a list is the list's repr, so a
+        # multivalued slot given ["a", "b"] took the single string "['a', 'b']" -- one bogus
+        # value where two belong, and legal enough that the validator passed it.
+        cast_items = [cast(sch, class_name, slot, item) for item in value]
+        return None if any(item is None for item in cast_items) else cast_items
     text = str(value).strip()
     ranges = sch.ranges(attribute)
     single = ranges[0] if len(ranges) == 1 else None

@@ -20,7 +20,9 @@ able to resolve what the paper plainly answers.
 
 from __future__ import annotations
 
+import functools
 import json
+import os
 import re
 from dataclasses import dataclass, field
 from typing import Any, Mapping, MutableMapping, Sequence
@@ -42,6 +44,29 @@ shows it. Copy the sentence exactly; do not paraphrase, join, or trim it.
 Answer "unresolved" whenever the paper does not settle the case -- when it is silent,
 ambiguous, or describes something the options do not cover. The record already reports the
 contradiction, so a reviewer can see it; a confident wrong answer removes that."""
+
+
+@functools.lru_cache(maxsize=1)
+def models(visible_devices: str, proposer_device: int) -> tuple[Any, Any]:
+    """The two local models, built once per process and shared by every paper.
+
+    Cached because they are ~10 GB of weights and the stage runs per paper under a thread
+    pool: constructing them in `run` loaded and freed them for each of 52 papers, and two
+    workers put two proposers on one card. `schema.reader` caches the same way and for the
+    same reason -- the objects are immutable readers, not mutable state.
+
+    Visibility is set here, before either import, because MiniCheck places itself from
+    `CUDA_VISIBLE_DEVICES` and takes no device argument. It has to happen before torch
+    initialises CUDA, which an earlier stage may already have done -- so a run that wants a
+    specific placement sets it in the environment, and this is the fallback rather than the
+    mechanism.
+    """
+    if visible_devices and "CUDA_VISIBLE_DEVICES" not in os.environ:
+        os.environ["CUDA_VISIBLE_DEVICES"] = visible_devices
+    from pondie.extraction.evidence.grounding import MiniCheck
+    from pondie.extraction.recall import NuExtract
+
+    return NuExtract(device=proposer_device), MiniCheck()
 
 
 @dataclass
@@ -227,8 +252,13 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     before = deepcopy(record)
     report = Report()
 
+    # The paper's own abbreviation table, built once. Without it `same_entity` has nothing
+    # to expand and cannot tell "CAPS total score" from "clinician-administered PTSD scale
+    # (CAPS)" -- the check exists for that case and was unreachable in production while
+    # every caller passed None.
+    abbreviations = _abbreviations(text)
     if proposer is not None:
-        _sweep(record, text, sch, proposer, checker, threshold, report)
+        _sweep(record, text, sch, proposer, checker, threshold, report, abbreviations)
     if checker is not None:
         _prune_evidence(record, sch, checker, report)
     if caller is not None and model:
@@ -334,8 +364,19 @@ def _describe(class_name: str, proposal: Mapping[str, Any], limit: int = 5) -> s
     return said + (f" It is described as: {'; '.join(parts[:limit])}." if parts else "")
 
 
+def _abbreviations(text: str) -> Any:
+    """The paper's own expansions, or None where the vocabulary package is unavailable."""
+    try:
+        from pondie.vocabularies.abbreviations import Abbreviations
+
+        return Abbreviations.load().for_paper(text)
+    except Exception:  # noqa: BLE001 -- an optional vocabulary, not a failure
+        return None
+
+
 def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: Any,
-           checker: Checker | None, threshold: float, report: Report) -> None:
+           checker: Checker | None, threshold: float, report: Report,
+           abbreviations: Any = None) -> None:
     """Ask the proposer per class, targets first, and write what survives the guards."""
     from pondie.extraction.recall import CLASS_OF, candidates, sweep_order
 
@@ -354,12 +395,14 @@ def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: A
         for proposal in graded:
             entity = by_id.get(str(proposal.get("local_id") or "").strip())
             if entity is None:
-                entity, why = edit_module.create(sch, record, class_name, proposal, text)
+                entity, why = edit_module.create(sch, record, class_name, proposal, text,
+                                                 abbreviations)
                 if entity is None:
                     report.refused.append(guards.Refusal(container, why))
                     continue
                 record.setdefault(container, []).append(entity)
                 report.written.append(f"{container}/{entity['local_id']} created")
-            log = edit_module.apply(sch, record, class_name, entity, proposal, text)
+            log = edit_module.apply(sch, record, class_name, entity, proposal, text,
+                                    abbreviations)
             report.written += [f"{container}/{entity['local_id']}.{s}" for s, _v in log.written]
             report.refused += log.refused

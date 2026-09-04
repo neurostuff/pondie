@@ -108,7 +108,8 @@ def resolve(record: Mapping[str, Any], sch: Schema, target_class: str, named: An
 
 
 def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
-           proposal: Mapping[str, Any], text: str = "") -> tuple[dict | None, str]:
+           proposal: Mapping[str, Any], text: str = "",
+           abbreviations: Any = None) -> tuple[dict | None, str]:
     """A new entity from `proposal`, or `(None, why not)`.
 
     Two conditions, both read from the schema rather than chosen here.
@@ -131,6 +132,15 @@ def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
     label = str(proposal.get("name") or proposal.get("definition") or "").strip()
     if not label:
         return None, f"the proposed {class_name} has no name to build an id from"
+    # Before minting, not after: id stems differ where labels agree, so "CAPS total score"
+    # and "clinician-administered PTSD scale (CAPS)" collided nowhere and became two records
+    # that analyses then linked to separately.
+    existing = next((e for e in record.get(_container(class_name)) or []
+                     if isinstance(e, Mapping)
+                     and same_entity(label_of(e), label, abbreviations)), None)
+    if existing is not None:
+        return None, (f"the record already holds this {class_name} as "
+                      f"{existing.get('local_id')!r}")
     local_id = ids.mint(class_name, label, taken)
     if local_id is None:
         return None, f"{class_name} ids come from the table parse, not from a proposal"
@@ -168,18 +178,19 @@ def _nested_defaults(sch: Schema, record: Mapping[str, Any], class_name: str,
     schema provides for an analysis whose method has no stable structured decomposition, and
     a contrast reported in a sentence is exactly that.
 
-    `effect` is not here and is not invented. A Cell needs a ModelTerm to point at and a
-    direction, and a flat template carries neither; guessing them would put a fabricated
-    contrast structure in the record, which is worse than not recording the analysis.
+    `effect` and `groups` are not here and are not invented. A Cell needs a ModelTerm to
+    point at and a direction, and an AnalysisGroup needs the Group it names; a flat template
+    carries neither, and guessing would put a fabricated contrast structure in the record.
+    So an Analysis proposal is refused today, by name -- which is what turns "should the pass
+    write analyses" into "have the proposer return cells and groups, and it will".
     """
     if class_name != "Analysis":
         return {}
     out: dict[str, Any] = {}
-    named = proposal.get("groups") or proposal.get("groups_compared")
-    if named:
-        ids_named = resolve(record, sch, "Group", named)
-        if ids_named:
-            out["groups"] = [{"group": gid} for gid in ids_named]
+    # `groups` is not built here. It is a nested AnalysisGroup list, so `nu_type` never asks
+    # for it and a proposal cannot carry it -- an earlier version read a key the proposer
+    # cannot emit, which made this branch dead and the refusal below the only real outcome.
+    # Filling it needs the proposer to return cells and groups, which a flat template cannot.
     if proposal.get("definition"):
         out["details"] = {
             "details_type": "NotStructurableDetails",
@@ -198,7 +209,7 @@ def _container(class_name: str) -> str:
 
 def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
           entity: MutableMapping[str, Any], proposal: Mapping[str, Any],
-          text: str = "") -> EditLog:
+          text: str = "", abbreviations: Any = None) -> EditLog:
     """Write the slots of `proposal` this entity may take. Returns what happened."""
     log = EditLog()
     kinds = {name: kind for name, _slot, kind in sch.iter_slots(class_name)}
@@ -213,8 +224,13 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
         proposed = proposal[name]
         if proposed in (None, "", []):
             continue
+        if kinds[name] == "nested":
+            # A nested slot holds objects with their own fields -- AnalysisGroup, Cell,
+            # ModelTerm. `cast` would stringify one, so it is left to whatever builds it.
+            continue
         if kinds[name] == "reference":
-            resolved = resolve(record, sch, str(ranges.get(name) or ""), proposed)
+            resolved = resolve(record, sch, str(ranges.get(name) or ""), proposed,
+                               abbreviations)
             if not resolved:
                 continue
             existing = entity.get(name) or []

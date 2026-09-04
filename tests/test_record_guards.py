@@ -521,3 +521,41 @@ def test_an_analysis_reported_only_in_prose_can_be_named(sch):
 
     assert ids.mint("Analysis", "PTSD < controls", set()) == "ana_ptsd_controls"
     assert ids.mint("Table", "Table 2", set()) is None
+
+
+def test_a_multivalued_slot_keeps_its_values_separate(sch):
+    """`str()` of a list is the list's repr, so a slot given ["a", "b"] took the single
+    string "['a', 'b']" -- one bogus value where two belong, legal enough to pass the
+    validator."""
+    assert values.cast(sch, "Group", "inclusion_criteria", ["right-handed", "aged 25-45"]) \
+        == ["right-handed", "aged 25-45"]
+    # all or nothing: one element that will not cast refuses the whole list
+    assert values.cast(sch, "Group", "medications", ["fluoxetine", 42]) == ["fluoxetine", "42"]
+
+
+def test_an_instrument_already_in_the_record_is_not_minted_again(sch):
+    """The dedupe has to run before the id is minted: stems differ where labels agree, so
+    "CAPS total score" and "clinician-administered PTSD scale (CAPS)" collided nowhere."""
+    from pondie.extraction.record import edit as edit_module
+
+    class Abbrev:
+        def expand(self, short):
+            return {"CAPS": "clinician-administered PTSD scale",
+                    "PTSD": "posttraumatic stress disorder"}.get(short)
+
+    record = {"assessments": [{"local_id": "asm_caps", "name": field("CAPS total score")}]}
+    entity, why = edit_module.create(
+        sch, record, "Assessment",
+        {"name": "clinician-administered PTSD scale (CAPS)"}, "", Abbrev())
+    assert entity is None
+    assert "already holds" in why and "asm_caps" in why
+
+
+def test_a_nested_slot_is_not_stringified(sch):
+    """`Analysis.groups` holds AnalysisGroup objects; casting one would make it a string."""
+    from pondie.extraction.record import edit as edit_module
+
+    record = {"analyses": [{"local_id": "a1", "name": field("contrast")}]}
+    edit_module.apply(sch, record, "Analysis", record["analyses"][0],
+                      {"groups": [{"group": "grp_ptsd"}]})
+    assert "groups" not in record["analyses"][0]

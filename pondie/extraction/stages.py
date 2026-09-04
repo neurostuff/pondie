@@ -681,7 +681,13 @@ class Repair(_Base):
     name: StageName = StageName.repair
 
     def produces(self, paper: Paper, settings: Settings) -> Path:
-        return settings.payloads / paper.study_id / "repair.json"
+        """Beside the payloads, not among them.
+
+        `merge_payloads` globs `<payload_dir>/*.json`, so a report written there is merged
+        into the next build as four unexpected payload keys -- and those land in the very
+        report line added to catch an entity list going missing silently.
+        """
+        return settings.payloads.parent / "repairs" / f"{paper.study_id}.json"
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if not (settings.repair or settings.adjudicate):
@@ -707,24 +713,20 @@ class Repair(_Base):
         proposer = checker = None
         notes: list[str] = []
         if settings.repair:
-            # Imported here, not at module scope: the weights are an optional dependency,
-            # and on by default only works if absent weights degrade instead of failing.
             try:
-                from pondie.extraction.evidence.grounding import MiniCheck
-                from pondie.extraction.recall import NuExtract
-
-                # Visibility once, for the process, before either model loads: MiniCheck
-                # places itself from `CUDA_VISIBLE_DEVICES` and nothing else, so a per-model
-                # device would restrict the process and hide the proposer's card.
-                if settings.visible_devices:
-                    os.environ["CUDA_VISIBLE_DEVICES"] = settings.visible_devices
-                checker = MiniCheck()
-                proposer = NuExtract(device=settings.proposer_device)
-            except Exception as error:  # noqa: BLE001 -- absence is expected, not exceptional
+                proposer, checker = repair_pass.models(
+                    settings.visible_devices, settings.proposer_device)
+            except ImportError as error:
                 notes.append(
-                    f"no local repair models ({type(error).__name__}); "
-                    f"install pondie[repair] for entity recall and grounding"
-                )
+                    f"no local repair models ({error}); "
+                    f"install pondie[repair] for entity recall and grounding")
+            except Exception as error:  # noqa: BLE001 -- a device or download fault
+                # Distinguished from a missing package on purpose: "install pondie[repair]"
+                # is the wrong advice for an invalid device ordinal or an OOM, and telling a
+                # user to reinstall a package they have is how a real fault gets ignored.
+                notes.append(f"local repair models unavailable: "
+                             f"{type(error).__name__}: {error}")
+
         report = repair_pass.run(
             record, text, reader.load(schema.STORAGE), study_id=paper.study_id,
             proposer=proposer, checker=checker,
@@ -732,12 +734,14 @@ class Repair(_Base):
             model=settings.model if settings.adjudicate else "",
         )
         record_path.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
-        self._write(paper, settings, {
+        out = self.produces(paper, settings)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps({
             "written": report.written,
             "refused": [{"slot": r.slot, "why": r.why} for r in report.refused],
             "adjudicated": report.adjudicated,
             "introduced": report.introduced,
-        })
+        }, indent=1) + "\n")
         # A finding this pass introduced is a defect in the pass, not in the paper, and is
         # the one thing here worth failing on.
         return StageOutcome(stage=self.name, study_id=paper.study_id,
