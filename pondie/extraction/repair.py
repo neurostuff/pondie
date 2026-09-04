@@ -21,13 +21,16 @@ able to resolve what the paper plainly answers.
 
 from __future__ import annotations
 
+import contextlib
 import functools
 import json
 import os
 import re
+import threading
 from dataclasses import dataclass, field
 from typing import Any, Mapping, MutableMapping, Sequence
 
+from pondie.extraction import recall
 from pondie.extraction.evidence import grounding
 from pondie.extraction.evidence.grounding import Checker
 from pondie.extraction.record import edit as edit_module
@@ -73,6 +76,20 @@ def models(visible_devices: str, proposer_device: int) -> tuple[Any, Any]:
     from pondie.extraction.recall import NuExtract
 
     return NuExtract(device=proposer_device), MiniCheck()
+
+
+@functools.lru_cache(maxsize=None)
+def gate(limit: int) -> threading.Semaphore:
+    """Bounds how many papers may be inside the local models at once, per process.
+
+    The stages above this are network-bound and want every worker they can get; the two
+    local models are 8 GB of card between them and want far fewer. Eight workers sharing one
+    proposer OOMed their way down the halving ladder on every full-length paper and returned
+    nothing, while the stubs -- whose premises were already under the floor -- sailed
+    through. Cached per limit so every thread waits on the same semaphore, for the reason
+    `models` is cached: one object, many workers.
+    """
+    return threading.BoundedSemaphore(max(1, limit))
 
 
 @dataclass
@@ -231,7 +248,7 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
 def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: str,
         proposer: Any = None, checker: Checker | None = None, caller: Any = None,
         model: str = "", threshold: float = 0.5, service_tier: str = "",
-        iterations: int = 2) -> Report:
+        iterations: int = 2, gpu_workers: int = 1) -> Report:
     """Repair `record` in place. Returns what happened, including anything it broke."""
     from copy import deepcopy
 
@@ -248,14 +265,20 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     # abstract and introduction before it sees a method. `sectionize` falls back to the whole
     # text when it finds nothing, which is the honest behaviour for a paper it cannot split.
     premise = _premise(text)
-    for _pass in range(iterations if proposer is not None else 0):
-        before_pass = len(report.written)
-        _sweep(record, premise, text, sch, proposer, checker, threshold, report,
-               abbreviations)
-        if len(report.written) == before_pass:
-            break                       # nothing changed, so a further pass sees the same
-    if checker is not None:
-        grounding.drop_unsupported_spans(record, checker, report.refused)
+    # One gate over both models and both passes. Acquiring per call would let eight workers
+    # interleave inside one card, which is the contention this exists to prevent; the LLM
+    # stages above stay at full width because they wait on the network, not on 8 GB.
+    local = gate(gpu_workers) if (proposer is not None or checker is not None) \
+        else contextlib.nullcontext()
+    with local:
+        for _pass in range(iterations if proposer is not None else 0):
+            before_pass = len(report.written)
+            _sweep(record, premise, text, sch, proposer, checker, threshold, report,
+                   abbreviations)
+            if len(report.written) == before_pass:
+                break                   # nothing changed, so a further pass sees the same
+        if checker is not None:
+            grounding.drop_unsupported_spans(record, checker, report.refused)
     if caller is not None and model:
         reply = adjudicate(record, sch, text, caller, study_id=study_id, model=model,
                            report=report, service_tier=service_tier)
@@ -341,9 +364,13 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
     by_container = {key: cls for cls, key in sch.containers().items()}
     for container in sweep_order(sch, list(by_container)):
         class_name = by_container[container]
-        proposals = proposer.propose(
-            sch, class_name, premise,
-            existing(sch, record, class_name) + candidates(sch, record, class_name))
+        try:
+            proposals = proposer.propose(
+                sch, class_name, premise,
+                existing(sch, record, class_name) + candidates(sch, record, class_name))
+        except recall.Starved as starved:
+            report.refused.append(Refusal(container, str(starved)))
+            continue
         by_id = {e.get("local_id"): e for e in record.get(container) or []
                  if isinstance(e, Mapping)}
         # Only what would be created is asked to justify its existence. A proposal naming an

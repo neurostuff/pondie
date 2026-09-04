@@ -241,6 +241,12 @@ class Settings(Strict):
     #: checker places itself from this and nothing else, so it cannot be given a card of its
     #: own without hiding the proposer's. Empty leaves the environment alone.
     visible_devices: str = ""
+    #: How many papers may be inside the two local models at once. The stages above are
+    #: network-bound and run at `workers`; these are 8 GB of card between them and do not
+    #: divide. At eight, every full-length paper OOMed down to the proposer's floor and
+    #: returned nothing, which a report cannot distinguish from having nothing to add.
+    repair_workers: Annotated[int, Field(ge=1)] = 1
+
     #: The proposer's card, indexed within `visible_devices`. The two models do not share one
     #: unless it holds both: together they are about 9.5 GB, and the response to not fitting
     #: is a silent spill to CPU rather than a failure.

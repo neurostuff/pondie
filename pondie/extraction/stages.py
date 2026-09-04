@@ -737,6 +737,7 @@ class Repair(_Base):
             model=settings.model if settings.adjudicate else "",
             service_tier=settings.service_tier,
             iterations=settings.repair_iterations,
+            gpu_workers=settings.repair_workers,
         )
         record_path.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
         out = self.produces(paper, settings)

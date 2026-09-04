@@ -37,6 +37,16 @@ class Proposer(Protocol):
                 instruction: str) -> Sequence[Mapping[str, Any]]: ...
 
 
+class Starved(RuntimeError):
+    """The proposer ran out of memory at the smallest premise it is willing to send.
+
+    Raised rather than returning nothing, because the two are indistinguishable in a report:
+    eight workers sharing one card starved every sweep on every full-length paper for an
+    hour, and each of those papers recorded `0 written, 0 refused` -- which reads as a pass
+    with nothing to do. Whoever catches this turns it into a refusal a reviewer can see.
+    """
+
+
 #: LinkML range -> the type NuExtract templates use. Anything unmapped becomes a string,
 #: which is the safe default: NuExtract validates its own output against the template, so a
 #: wrong type costs a field and a wrong *shape* costs the reply.
@@ -193,7 +203,9 @@ class NuExtract:
                 del inputs
                 torch.cuda.empty_cache()
                 if limit <= 6_000:
-                    return []
+                    raise Starved(
+                        f"{class_name}: out of memory at a {limit}-character premise, "
+                        f"the smallest this pass will try")
                 limit //= 2
         text = self._processor.batch_decode(
             ids[:, inputs.input_ids.shape[1]:], skip_special_tokens=True)[0].strip()

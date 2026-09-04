@@ -656,3 +656,44 @@ def test_the_type_designator_is_never_rewritten(sch):
                       {designator: "PET", "magnetic_field_strength_tesla": "3"})
     assert entity[designator] == "MRI", "the designator must survive the edit untouched"
     assert "magnetic_field_strength_tesla" in entity, "the subclass slot must still land"
+
+
+def test_a_starved_proposer_is_reported_not_silently_empty(sch):
+    """Eight workers sharing one card OOMed every sweep on every full-length paper for an
+    hour. Each recorded `0 written, 0 refused`, which reads as a pass with nothing to do --
+    the stubs, whose premises were already under the floor, were the only ones that worked."""
+    from pondie.extraction import recall
+    from pondie.extraction import repair as repair_pass
+
+    class Starving:
+        def propose(self, sch, class_name, premise, instruction):
+            raise recall.Starved(f"{class_name}: out of memory at a 6000-character premise")
+
+    record = {"analyses": [{"local_id": "an", "name": field("a contrast")}]}
+    report = repair_pass.run(record, "Methods. A contrast was computed.", sch,
+                             study_id="p", proposer=Starving())
+    assert report.refused, "a starved sweep must leave a trace a reviewer can see"
+    assert any("out of memory" in r.why for r in report.refused)
+    assert not report.written
+
+
+def test_the_local_models_take_fewer_workers_than_the_stages_above(sch):
+    """The gate is per process and per limit, so every worker thread waits on the same one.
+    A gate built per call would let eight workers interleave inside one card."""
+    from pondie.extraction import repair as repair_pass
+
+    assert repair_pass.gate(2) is repair_pass.gate(2), "one semaphore per limit, per process"
+    assert repair_pass.gate(2) is not repair_pass.gate(3)
+
+    gate = repair_pass.gate(2)
+    assert gate.acquire(blocking=False) and gate.acquire(blocking=False)
+    assert not gate.acquire(blocking=False), "the third paper must wait"
+    gate.release(), gate.release()
+
+
+def test_the_default_is_one_paper_in_the_models_at_a_time(tmp_path):
+    """Settings has to be right on beast without being told: the failure it prevents is
+    silent, so a run that forgets the flag looks like a run with nothing to repair."""
+    from pondie.extraction.models import Settings
+
+    assert Settings(payloads=tmp_path, records=tmp_path, model="m").repair_workers == 1
