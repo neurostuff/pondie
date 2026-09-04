@@ -17,12 +17,17 @@ The directory is the journey a paper takes, so where a thing lives says when it 
 and the modules beside them are what every stage needs:
 
     models      the pydantic contracts that cross a boundary
-    values      the `ExtractedValue` wrapper: what one is, how to read one, how to make one
     parse       the stage-1 parse document
     llm         the one place a prompt becomes a network call
-    stages      the six steps, in order
+    stages      the seven steps, in order
     driver      sequencing, parallelism and accounting
-    usage       per-call token accounting
+    recall      asking a second model for what the first missed
+    repair      improving a built record, and reporting what the attempt broke
+
+`pondie.formats.values` holds the `ExtractedValue` wrapper. It sits at the top of the
+package rather than here because every consumer of a record needs it -- the query engine,
+normalization, the benchmark and the schema reader -- and importing the extraction package
+to read a record closed a cycle.
 
 Every boundary is a named type. Two of the bugs found while writing them down were invisible
 without one: a stage unpacking `build_prompt`'s two halves in the wrong order sent the model
@@ -37,6 +42,7 @@ from pondie.extraction.stages import (
     Build,
     Demands,
     Evidence,
+    Repair,
     Satisfy,
     SignSplit,
     Stage,
@@ -60,5 +66,6 @@ __all__ = [
     "Satisfy",
     "Evidence",
     "Build",
+    "Repair",
     "DEMAND_DRIVEN",
 ]

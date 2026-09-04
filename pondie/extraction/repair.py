@@ -7,10 +7,11 @@ narrowing at each one:
      class at a time, with the entities it may point at listed per reference slot.
   2. **ground** -- a local entailment model scores each proposal against the passage offered
      for it, so a proposal with no warrant is not written.
-  3. **guard** -- `record.edit.apply` refuses the writes that would damage the record, and
-     says why.
+  3. **guard** -- `record.edit` refuses the writes that would damage the record, and says
+     why. Every write goes past it, step 4 included.
   4. **adjudicate** -- what is left is a contradiction the record cannot settle from its own
-     contents. That goes to the extraction model, once, with the paper.
+     contents. That goes to the extraction model, once, with the paper, and its answer is
+     written through the same guards as everything else.
 
 Every step is optional. With no proposer and no checker there is nothing to propose and
 nothing to ground, and the stage does only step 4; with `adjudicate` off it does nothing at
@@ -27,7 +28,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Mapping, MutableMapping, Sequence
 
-from pondie.extraction.evidence.grounding import Checker, Claim
+from pondie.extraction.evidence import grounding
+from pondie.extraction.evidence.grounding import Checker
 from pondie.extraction.record import edit as edit_module
 from pondie.extraction.record.edit import Edit, Refusal, UNRESTRICTED, refusals
 from pondie.extraction.record.validate import Validator
@@ -87,44 +89,6 @@ class Report:
     def summary(self) -> str:
         return (f"wrote {len(self.written)}, refused {len(self.refused)}, "
                 f"adjudicated {len(self.adjudicated)}, introduced {len(self.introduced)}")
-
-
-#: Slots whose value is a conclusion rather than a quotation. A paper states its scanner and
-#: its sample size; it does not state that an analysis was `exploratory`, that a contrast
-#: `direction` is negative, or that a scope is `whole_brain` -- those are read off the method
-#: by whoever encodes it. Asking a checker for the sentence that supports one is asking for a
-#: sentence that does not exist, and scoring its absence as unsupported marks a correct
-#: reading wrong.
-REASONED = frozenset({
-    "spatial_scope", "correction_scope", "prespecification", "direction", "variation_level",
-    "assignment_structure", "allocation", "blinding", "stage", "spatial_unit", "family",
-    "inference_level", "region_type", "definition_method", "acquisition_type",
-    "details_type", "value_source", "is_healthy", "type",
-})
-
-
-#: Addresses, not claims. A local_id is how the record refers to something internally; the
-#: paper never says "reg_hippocampus", so a checker asked whether it does will always say no
-#: and a pass that prunes on that answer deletes every citation on an identifier.
-IDENTIFIERS = frozenset({"local_id", "id", "source_table_analysis", "table_id"})
-
-
-def groundable(slot: str, node: Mapping[str, Any]) -> bool:
-    """Whether a sentence could support this field at all.
-
-    Three exclusions. `value_source: generated` is the record's own: it marks a value the
-    extraction system produced rather than read -- a mirrored contrast, a derived direction
-    -- so there is no sentence behind it by construction. `REASONED` slots hold a judgement
-    about the method rather than a thing the paper says. `IDENTIFIERS` hold an address.
-
-    Getting this wrong is not neutral: a field wrongly called ungroundable keeps a bad
-    citation, and a field wrongly called groundable loses a good one.
-    """
-    if values.read(node) is None:
-        return False
-    if (node or {}).get("value_source") == "generated":
-        return False
-    return slot not in REASONED and slot not in IDENTIFIERS
 
 
 @dataclass(frozen=True)
@@ -281,7 +245,7 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     if proposer is not None:
         _sweep(record, premise, sch, proposer, checker, threshold, report, abbreviations)
     if checker is not None:
-        _prune_evidence(record, sch, checker, report)
+        grounding.drop_unsupported_spans(record, checker, report.refused)
     if caller is not None and model:
         reply = adjudicate(record, sch, text, caller, study_id=study_id, model=model,
                            report=report)
@@ -291,9 +255,11 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
 
     # The extraction schema, not `sch`. A record is extraction-shaped -- every value in an
     # `ExtractedValue` wrapper -- while `sch` is storage, where `name` is a plain string.
-    # Validating one against the other reports every wrapper as "must be a string, got dict":
-    # twenty findings on one record, none of them real. Storage is what the pass reasons
-    # with, because that is where `required`, `multivalued` and the vocabularies live.
+    # Validating one against the other reported every wrapper as "must be a string, got
+    # dict": twenty findings on one record, none of them real.
+    #
+    # (The pass itself reasons with storage, because that is where `required`, `multivalued`
+    # and the vocabularies live. Only the validation needs the projection.)
     from pondie.extraction.record.validate import EXTRACTION_SCHEMA
     from pondie.schema import reader
 
@@ -305,101 +271,17 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     return report
 
 
-#: Below this a span is not weak evidence, it is evidence for something else. Set low on
-#: purpose: the checker rejected an acknowledgements sentence offered as a warrant at 0.041
-#: and a sentence naming the wrong model term at 0.025, while accepting real ones at 0.92 and
-#: 0.95. Anything between is a judgement call, and a repair pass should not be making those
-#: -- it should be removing the citations that are plainly about something else.
-PRUNE_BELOW = 0.2
-
-
-def _prune_evidence(record: MutableMapping[str, Any], sch: Schema, checker: Checker,
-                    report: Report) -> None:
-    """Drop a span that does not support what it is cited for.
-
-    Only the span. The value stays and its evidence becomes `not_found`, which is the honest
-    state: something was extracted and no sentence has been found for it. Removing the value
-    too would be deleting a reading on the strength of a citation being wrong about it.
-    """
-    from pondie.formats.values import iter_fields
-
-    scored: list[tuple[dict, dict, Claim]] = []
-    for path, node in iter_fields(record):
-        slot = path.rsplit(".", 1)[-1]
-        if not groundable(slot, node):
-            continue
-        for group in (node.get("evidence") or {}).get("sets") or []:
-            for span in group.get("spans") or []:
-                if span.get("text"):
-                    scored.append((node, span, Claim(
-                        claim=f"{slot.replace('_', ' ')} is {values.read(node)}.",
-                        premise=span["text"])))
-    if not scored:
-        return
-    for (node, span, _claim), score in zip(scored, checker.score([c for *_x, c in scored])):
-        if score >= PRUNE_BELOW:
-            continue
-        evidence = node.get("evidence") or {}
-        for group in evidence.get("sets") or []:
-            group["spans"] = [s for s in group.get("spans") or [] if s is not span]
-        evidence["sets"] = [g for g in evidence.get("sets") or [] if g.get("spans")]
-        if not evidence["sets"]:
-            node["evidence"] = {"status": "not_found"}
-        report.refused.append(Refusal(
-            "evidence", f"the span does not support the value ({score:.2f})",
-            span.get("text", "")[:80]))
-
-
-def _grounded(proposals: Sequence[Mapping[str, Any]], class_name: str, premise: str,
-              checker: Checker | None, threshold: float,
-              report: Report) -> list[Mapping[str, Any]]:
-    """Proposals the paper is judged to support, or all of them when nothing can judge.
-
-    An entity is scored by what it *is*, not by its name alone: "The paper fits this
-    statistical model: group VBM t-tests" was scored unsupported for a paper whose methods
-    say "t-tests with statistical parametric mapping (SPM5)" and "Total brain volume was
-    treated as a confounding variable". The phrase was the extractor's, not the paper's, so
-    judging the entity by it judged the wrong thing.
-
-    With no checker every proposal passes, which is honest: the pass is then proposing
-    without grounding and says so by writing what it was given.
-    """
-    if checker is None:
-        return list(proposals)
-    claims = [Claim(claim=_describe(class_name, proposal), premise=premise)
-              for proposal in proposals]
-    kept = []
-    for proposal, score in zip(proposals, checker.score(claims)):
-        if score >= threshold:
-            kept.append(proposal)
-        else:
-            report.refused.append(Refusal(
-                class_name, f"the paper does not support it ({score:.2f})",
-                proposal.get("name")))
-    return kept
-
-
-def _describe(class_name: str, proposal: Mapping[str, Any], limit: int = 5) -> str:
-    """The proposal as a sentence, its own field values included.
-
-    A label alone is a thin thing to ask a checker about, and the fields are what say which
-    thing is meant.
-    """
-    label = str(proposal.get("name") or proposal.get("definition") or "").strip()
-    parts = [f"{name.replace('_', ' ')} {value}"
-             for name, value in proposal.items()
-             if name not in ("name", "local_id") and isinstance(value, str) and value.strip()]
-    said = f"The paper describes a {class_name}: {label}."
-    return said + (f" It is described as: {'; '.join(parts[:limit])}." if parts else "")
-
-
 #: Sections whose prose describes what was done and what was found. An entity is judged to
 #: exist against these; a paper's introduction describes other people's studies.
 PREMISE_SECTIONS = ("method", "material", "result")
 
 
 def _premise(text: str) -> str:
-    """The methods and results, or the whole text where they cannot be found."""
+    """The methods and results, or the whole text where they cannot be found.
+
+    Measured over 40 papers: 30 slice, 10 fall back because the sectioniser finds no method
+    heading in them -- which is the honest answer for those, and why the fallback exists.
+    """
     from pondie.extraction.evidence.retrieval import sectionize
 
     spans = [text[start:end] for start, end, label in sectionize(text)
@@ -409,7 +291,11 @@ def _premise(text: str) -> str:
 
 
 def _abbreviations(text: str) -> Any:
-    """The paper's own expansions, or None where the vocabulary package is unavailable."""
+    """The paper's own expansions, or None where the vocabulary package is unavailable.
+
+    Without it `same_entity` has nothing to expand and cannot tell "CAPS total score" from
+    "clinician-administered PTSD scale (CAPS)".
+    """
     try:
         from pondie.vocabularies.abbreviations import Abbreviations
 
@@ -436,7 +322,8 @@ def _sweep(record: MutableMapping[str, Any], text: str, sch: Schema, proposer: A
             candidates(sch, record, class_name))
         by_id = {e.get("local_id"): e for e in record.get(container) or []
                  if isinstance(e, Mapping)}
-        graded = _grounded(proposals, class_name, text, checker, threshold, report)
+        graded = grounding.supported(proposals, class_name, text, checker, threshold,
+                                     report.refused)
         for proposal in graded:
             entity = by_id.get(str(proposal.get("local_id") or "").strip())
             if entity is None:

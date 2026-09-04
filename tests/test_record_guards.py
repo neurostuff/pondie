@@ -297,6 +297,8 @@ def test_repair_reports_what_it_introduced(sch, tmp_path):
     """A finding the pass caused is a defect in the pass, not in the paper."""
     from pondie.extraction import repair as repair_pass
 
+    from pondie.extraction import repair as repair_pass
+
     record = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
     report = repair_pass.run(record, "", sch, study_id="p")
     assert report.introduced == []
@@ -412,7 +414,7 @@ def test_the_prompt_and_the_repair_pass_share_one_id_convention():
 def test_a_proposal_the_paper_does_not_support_is_not_written(sch):
     """Step 2 of the pass, which was documented and not wired: the checker was threaded
     through and never called, so proposals were written ungrounded."""
-    from pondie.extraction import repair as repair_pass
+    from pondie.extraction.evidence import grounding
 
     class Reject:
         def score(self, claims):
@@ -423,12 +425,11 @@ def test_a_proposal_the_paper_does_not_support_is_not_written(sch):
             return [0.95] * len(claims)
 
     proposals = [{"name": "hippocampus", "definition_method": "anatomical_a_priori"}]
-    report = repair_pass.Report()
-    assert repair_pass._grounded(proposals, "Region", "text", Reject(), 0.5, report) == []
-    assert report.refused and "does not support" in report.refused[0].why
+    refused: list = []
+    assert grounding.supported(proposals, "Region", "text", Reject(), 0.5, refused) == []
+    assert refused and "does not support" in refused[0].why
 
-    kept = repair_pass._grounded(proposals, "Region", "text", Accept(), 0.5,
-                                 repair_pass.Report())
+    kept = grounding.supported(proposals, "Region", "text", Accept(), 0.5, [])
     assert kept == proposals
 
 
@@ -436,9 +437,9 @@ def test_an_entity_is_judged_by_what_it_is_not_by_its_name_alone(sch):
     """"group VBM t-tests" was scored unsupported for a paper saying "t-tests with
     statistical parametric mapping (SPM5)" -- the phrase was the extractor's, not the
     paper's."""
-    from pondie.extraction import repair as repair_pass
+    from pondie.extraction.evidence import grounding
 
-    said = repair_pass._describe("ModelEstimation", {
+    said = grounding.describe("ModelEstimation", {
         "name": "group VBM t-tests", "model_family": "glm", "software": "SPM5"})
     assert "group VBM t-tests" in said
     assert "SPM5" in said and "glm" in said
@@ -460,16 +461,16 @@ def test_an_entity_is_judged_by_what_it_is_not_by_its_name_alone(sch):
     ("local_id", {"value": "reg_hippocampus", "value_source": "reported"}, False),
 ])
 def test_only_a_field_a_sentence_could_support_is_grounded(slot, node, expected):
-    from pondie.extraction import repair as repair_pass
+    from pondie.extraction.evidence import grounding
 
-    assert repair_pass.groundable(slot, node) is expected
+    assert grounding.groundable(slot, node) is expected
 
 
 def test_a_span_that_supports_something_else_is_dropped_and_the_value_kept(sch):
     """Only the span. The value stays and its evidence becomes `not_found`, which is the
     honest state -- removing the value too would delete a reading because a citation was
     wrong about it."""
-    from pondie.extraction import repair as repair_pass
+    from pondie.extraction.evidence import grounding
 
     class Reject:
         def score(self, claims):
@@ -477,17 +478,17 @@ def test_a_span_that_supports_something_else_is_dropped_and_the_value_kept(sch):
 
     record = {"acquisitions": [{"local_id": "acq", "magnetic_strength": cited(
         "3 T", "The authors thank the Dipartimento per i Rapporti Internazionali.")}]}
-    report = repair_pass.Report()
-    repair_pass._prune_evidence(record, sch, Reject(), report)
+    refused: list = []
+    grounding.drop_unsupported_spans(record, Reject(), refused)
 
     node = record["acquisitions"][0]["magnetic_strength"]
     assert values.read(node) == "3 T"
     assert node["evidence"]["status"] == "not_found"
-    assert any("does not support" in r.why for r in report.refused)
+    assert any("does not support" in r.why for r in refused)
 
 
 def test_a_span_that_does_support_its_value_is_left_alone(sch):
-    from pondie.extraction import repair as repair_pass
+    from pondie.extraction.evidence import grounding
 
     class Accept:
         def score(self, claims):
@@ -495,7 +496,7 @@ def test_a_span_that_does_support_its_value_is_left_alone(sch):
 
     record = {"acquisitions": [{"local_id": "acq", "magnetic_strength": cited(
         "3 T", "Images were acquired on a 3 T scanner.")}]}
-    repair_pass._prune_evidence(record, sch, Accept(), repair_pass.Report())
+    grounding.drop_unsupported_spans(record, Accept(), [])
     assert record["acquisitions"][0]["magnetic_strength"]["evidence"]["status"] == "present"
 
 

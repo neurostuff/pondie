@@ -743,8 +743,10 @@ class Repair(_Base):
             "adjudicated": report.adjudicated,
             "introduced": report.introduced,
         }, indent=1) + "\n")
-        # A finding this pass introduced is a defect in the pass, not in the paper, and is
-        # the one thing here worth failing on.
+        # A finding this pass introduced is a defect in the pass rather than in the paper.
+        # It is a note and not a `reason`, for the same reason `build` treats its findings
+        # that way: the repaired record is still better than no record, and failing the
+        # paper would discard the whole extraction over a field a reviewer can see.
         # `cost` only where there was one: an adjudication that found no contradiction makes
         # no call, and StageOutcome's own default is the empty Cost.
         spend = {"cost": report.cost} if report.cost is not None else {}
