@@ -72,11 +72,19 @@ def _matches(short: str, long: str) -> str | None:
         if not char.isalnum():
             s -= 1
             continue
-        while l >= 0 and long_folded[l] != char:
+        while True:
+            while l >= 0 and long_folded[l] != char:
+                l -= 1
+            if l < 0:
+                return None
+            # The first character has the extra duty of starting a word -- but landing
+            # inside one is the wrong occurrence, not a failure, and the search has to keep
+            # going left. Returning None here cost `CAPS` its definition in every paper that
+            # writes "clinician-administered PTSD scale (CAPS)": the final `c` matches inside
+            # `clinician` before it reaches the `c` that begins it.
+            if s > 0 or l == 0 or not long_folded[l - 1].isalnum():
+                break
             l -= 1
-        # The first character has the extra duty of starting a word.
-        if l < 0 or (s == 0 and l > 0 and long_folded[l - 1].isalnum()):
-            return None
         s -= 1
         l -= 1
     start = l + 1
