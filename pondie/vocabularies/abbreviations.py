@@ -51,6 +51,34 @@ def _words_before(text: str, at: int, count: int) -> str:
     return " ".join(words[-count:]) if words else ""
 
 
+def _initialism(short: str, window: str) -> str | None:
+    """The last words of `window` whose initials spell `short`, or None.
+
+    Schwartz & Hearst returns the *shortest* suffix that satisfies it, which is right for
+    "clinician-administered PTSD scale (CAPS)" and wrong for "African American (AA)": there
+    the shortest valid answer is "American", whose leading `a` starts the word and whose
+    second `a` sits inside it. Expanding `AA` to "American" is worse than not expanding it,
+    and it is what made grounding score `African American` at 0.016 against a sentence that
+    said only `AA`.
+
+    Tried first and only for an all-capital short form, which is the shape that is nearly
+    always an initialism. Anything else falls through to Schwartz & Hearst, so
+    `CAPS`, `FWHM` and `MP-RAGE` keep the expansions they already had.
+    """
+    letters = [c.lower() for c in short if c.isalnum()]
+    if len(letters) < 2 or not short.replace(".", "").replace("-", "").isupper():
+        return None
+    words = window.split()
+    if len(words) < len(letters):
+        return None
+    tail = words[-len(letters):]
+    if [w[0].lower() for w in tail if w] != letters:
+        return None
+    if any(not w[0].isalpha() for w in tail):
+        return None
+    return " ".join(tail).strip(" ,;:()")
+
+
 def _matches(short: str, long: str) -> str | None:
     """The shortest suffix of `long` that `short` abbreviates, or None.
 
@@ -163,7 +191,7 @@ def mine_builtin(text: str) -> dict[str, str]:
         if short.isdigit() or not any(c.isupper() for c in short):
             continue
         window = _words_before(text, match.start(), min(len(short) + 5, 12))
-        long = _matches(short, window)
+        long = _initialism(short, window) or _matches(short, window)
         if long and long.lower() != short.lower():
             found.setdefault(short, long)
     return found

@@ -2191,3 +2191,39 @@ def test_the_shortlist_declines_when_there_is_no_index() -> None:
     from pondie.extraction.evidence import retrieval
 
     assert retrieval.shortlist({"torch": None}, "q", [], k=30) is None
+
+
+def test_an_initialism_expands_to_all_of_its_words() -> None:
+    """Schwartz & Hearst returns the shortest valid suffix, which for "African American
+    (AA)" is "American" -- leading `a` at a word start, second `a` inside the same word.
+    Expanding `AA` to "American" is worse than not expanding it, and it is what had
+    grounding score `African American` at 0.016 against a sentence saying only `AA`."""
+    from pondie.vocabularies import abbreviations
+
+    mined = abbreviations.mine_builtin(
+        "prevalence rates for certain segments of the population, e.g. African American "
+        "(AA) men, Native Americans, and those of low income.")
+    assert mined.get("AA") == "African American"
+
+
+def test_schwartz_hearst_still_owns_the_shapes_it_had_right() -> None:
+    """The initialism reading is tried first and only for an all-capital short form, so a
+    hyphenated or multi-word expansion keeps the answer it already had."""
+    from pondie.vocabularies import abbreviations
+
+    caps = abbreviations.mine_builtin(
+        "assessed with the clinician-administered PTSD scale (CAPS) at baseline.")
+    assert "clinician-administered PTSD scale" in (caps.get("CAPS") or "")
+
+    fwhm = abbreviations.mine_builtin("smoothed at full-width-at-half-maximum (FWHM) 6 mm.")
+    assert fwhm.get("FWHM") == "full-width-at-half-maximum"
+
+
+def test_an_initialism_will_not_take_a_number_or_a_bracket_for_a_word() -> None:
+    """The window is raw text, so the words before a short form can be punctuation or a
+    table cell. An expansion built from those is noise dressed as a definition."""
+    from pondie.vocabularies import abbreviations
+
+    assert abbreviations._initialism("AB", "| 12 | 3.4 (0.2)") is None
+    assert abbreviations._initialism("aa", "african american") is None, \
+        "lower-case short forms are not initialisms"
