@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import math
 import re
+from collections.abc import Iterable
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -362,7 +363,7 @@ _NUM = rf"{_MINUS}?\d+(?:\.\d+)?"
 #: Three comma-separated numbers. Guarded by `_COORDINATE_CUE` below, because pubget
 #: renders a citation list as "( 14 , 15 , 34 , 35 )", which is this shape and is not a
 #: location.
-_BARE_TRIPLE = re.compile(rf"(?<![\d.]){_NUM}\s*,\s*{_NUM}\s*,\s*{_NUM}(?![\d.])")
+_BARE_TRIPLE = re.compile(rf"(?<![\w.]){_NUM}\s*,\s*{_NUM}\s*,\s*{_NUM}(?![\w.])")
 
 _STATISTIC_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("t", re.compile(rf"\bt\s*\(\s*\d+(?:\.\d+)?\s*\)\s*[=<>]\s*{_NUM}")),
@@ -407,7 +408,7 @@ _STATISTIC_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 #: What has to be in the sentence before a comma-separated number triple is read as a
 #: location. Prose that gives a coordinate says so; a reference list does not.
 _COORDINATE_CUE = re.compile(
-    r"\b(?:MNI|Talairach|ICBM|coordinate|co-ordinate|\bx\s*,\s*y\s*,\s*z\b|"
+    r"\b(?:MNI|Talairach|ICBM|coordinates?\b|co-ordinates?\b|\bx\s*,\s*y\s*,\s*z\b|"
     r"peak|maxim(?:um|a)|centre of mass|center of mass|voxel|cluster|"
     r"located at|centred? (?:at|on)|centered? (?:at|on))",
     re.I,
@@ -423,6 +424,16 @@ _AXIS_TRIPLE = re.compile(
     rf"\bx\s*[=:]?\s*({_NUM})[\s,;]+y\s*[=:]?\s*({_NUM})[\s,;]+z\s*[=:]?\s*({_NUM})",
     re.I,
 )
+
+#: A smoothing kernel is three numbers in millimetres and is not a place.
+#: `FWHM(mm)=15.7, 15.7, 13.7` was matched as a location in the wider corpus.
+_KERNEL_LABEL = re.compile(
+    r"\b(?:FWHM|kernel|smooth(?:ed|ing)?|voxel siz\w+|resolution)\b[^.;]{0,24}$", re.I)
+
+#: How near the cue has to sit. "coordinated neural activity ... (104, 105, 106, 107)"
+#: put a cue and a citation list in one sentence, and the whole-sentence test read them
+#: as related. Measured over 600 studies outside the cue_reactivity corpus.
+_CUE_WINDOW = 80
 
 #: A bare triple straight after a Brodmann label is a list of areas, not a location.
 #: `(BA 6, 8, 9, 10)` and `(BA 29, 30, 31)` are the commonest false positive in the corpus
@@ -449,14 +460,28 @@ def coordinates_in(sentence: str) -> list[tuple[float, float, float]]:
         trip = _triple(match.groups())
         if trip:
             found.append(trip)
-    if _COORDINATE_CUE.search(sentence):
-        for match in _BARE_TRIPLE.finditer(sentence):
-            if _AREA_LABEL.search(sentence[:match.start()]):
-                continue
-            trip = _triple(re.findall(_NUM, match.group(0)))
-            if trip:
-                found.append(trip)
+    for match in _BARE_TRIPLE.finditer(sentence):
+        before = sentence[:match.start()]
+        if _AREA_LABEL.search(before) or _KERNEL_LABEL.search(before):
+            continue
+        near = sentence[max(0, match.start() - _CUE_WINDOW):match.end() + 40]
+        if not _COORDINATE_CUE.search(near):
+            continue
+        trip = _triple(re.findall(_NUM, match.group(0)))
+        if trip and not _runs_on(trip):
+            found.append(trip)
     return found
+
+
+def _runs_on(values: tuple[float, float, float]) -> bool:
+    """Three consecutive integers: a citation list, a session index, a Brodmann run.
+
+    `[ 34 , 35 , 36 ]`, `proposed39,40,41`, `(104, 105, 106, 107)`, `NF session 1,2,3`.
+    A real location can be three consecutive integers, and the corpus holds none -- the
+    ratio of citation lists to (10, 11, 12) is not close.
+    """
+    return (all(float(v).is_integer() for v in values)
+            and values[1] - values[0] == 1 and values[2] - values[1] == 1)
 
 
 def _triple(parts) -> tuple[float, float, float] | None:
@@ -1311,6 +1336,7 @@ def _block(title: str, body: str) -> str:
 #: `tests/test_prompt_leakage.py` has to enumerate every string that reaches a prompt
 #: without varying with the paper, and an f-string buried in a function is invisible to it.
 ABBREV_TITLE = "Abbreviations defined in this paper"
+PROSE_COORD_TITLE = "Possible analyses reported only in prose"
 STATS_TITLE = "Sentences reporting a statistic"
 CONTRAST_TITLE = "Candidate tested comparisons"
 METHOD_TITLE = "Method parameters found in the Methods section"
@@ -1322,6 +1348,24 @@ ABBREV_NOTE = (
     "form occurs. Where a field wants a name, prefer the paper's own wording; where two\n"
     "passes must agree on one entity, this is what they should agree on."
 )
+PROSE_COORD_NOTE = (
+    "Each sentence below states a coordinate that NO parsed result table carries. A cue\n"
+    "sweep found them, not a parse, so every one is a PROPOSAL and not a finding. Decide\n"
+    "each against the sentence, and emit nothing for the ones it does not support.\n"
+    "\n"
+    "Some are a result this paper reports in the text and in no table -- the case the\n"
+    "table parse cannot reach, and the reason this list exists. Others are not results at\n"
+    "all: a seed or sphere centre, an ROI taken from an atlas, or a peak quoted from\n"
+    "another study to compare against. A coordinate this paper did not find is not this\n"
+    "paper's analysis. Emit one only where the sentence says THIS study tested something\n"
+    "and this is where it found it.\n"
+    "\n"
+    "`[in a table]` means a parsed table already reports that voxel. It does NOT mean the\n"
+    "sentence is a duplicate: a table lists one contrast's peaks, and a sentence naming\n"
+    "the same voxel for a DIFFERENT comparison is a second analysis, not a repeat of the\n"
+    "first. Check which contrast the sentence names before deciding."
+)
+
 STATS_NOTE = (
     "Every sentence carrying a test statistic, a p-value, a coordinate triple or a\n"
     "cluster extent. A result reported only in prose appears here and in no coordinate\n"
@@ -1367,6 +1411,46 @@ def abbreviation_block(text: str) -> str:
         f"  {short:<12} {long_form}   [{count}x]" for short, long_form, count in rows[:40]
     )
     return _block(ABBREV_TITLE, ABBREV_NOTE + "\n\n" + body)
+
+
+def prose_coordinates(
+    text: str, known: Iterable[tuple[float, float, float]] = ()
+) -> list[tuple[str, list[tuple[tuple[float, float, float], bool]]]]:
+    """(sentence, [(coordinate, is it already in a parsed table)]) for locating sentences.
+
+    A coordinate a table already carries is MARKED and not dropped. Dropping it discarded
+    the case this exists for: 18823721 reports "right STN activation ... when contrasting
+    heroin stimuli to neutral stimuli (x = 9 y = -12 z = -6)", and that voxel is in the
+    Heroin>BL table under a different contrast. What the sentence adds is the comparison,
+    not the number, and filtering on the number threw the comparison away.
+    """
+    seen = {tuple(round(float(v)) for v in k) for k in known}
+    out = []
+    for section in split_sections(text):
+        if section.zone in ("back", "intro"):
+            continue
+        for sentence in sentences(section.text):
+            found = [(c, tuple(round(v) for v in c) in seen)
+                     for c in coordinates_in(sentence)]
+            if found:
+                out.append((" ".join(sentence.split()), found))
+    return out
+
+
+def prose_coordinate_block(
+    text: str, known: Iterable[tuple[float, float, float]] = ()
+) -> str:
+    rows = prose_coordinates(text, known)
+    if not rows:
+        return ""
+    lines = []
+    for sentence, found in rows[:30]:
+        shown = "; ".join(
+            "(" + ", ".join(f"{v:g}" for v in coord) + ")" + (" [in a table]" if hit else "")
+            for coord, hit in found
+        )
+        lines.append(f"  {shown}\n      {sentence[:400]}")
+    return _block(PROSE_COORD_TITLE, PROSE_COORD_NOTE + "\n\n" + "\n".join(lines))
 
 
 def statistic_block(text: str) -> str:
@@ -1651,6 +1735,8 @@ PROMPT_LITERALS = (
     ORPHAN_NOTE,
     ABBREV_TITLE,
     ABBREV_NOTE,
+    PROSE_COORD_TITLE,
+    PROSE_COORD_NOTE,
     STATS_TITLE,
     STATS_NOTE,
     CONTRAST_TITLE,

@@ -37,7 +37,7 @@ from pondie.extraction.models import (
     StageOutcome,
 )
 from pondie.extraction.parse import TableParse
-from pondie.extraction.prompt import render
+from pondie.extraction.prompt import preprocess, render
 from pondie.schema import reader
 from pondie.formats import values
 
@@ -377,16 +377,41 @@ class Demands(_ModelPass):
         the zero-foci rule, which is worth **+16 points** paired with this ordering and
         **-25** on its own. None of that survives being serialised back to JSON.
         """
-        if not paper.parse.is_file():
-            return ""
-        table_ids = (
-            json.loads(paper.table_map.read_text("utf-8")) if paper.table_map.is_file() else {}
+        parsed: dict[str, Any] = {}
+        block = ""
+        if paper.parse.is_file():
+            parsed = json.loads(paper.parse.read_text("utf-8"))
+            table_ids = (
+                json.loads(paper.table_map.read_text("utf-8"))
+                if paper.table_map.is_file() else {}
+            )
+            block = render.stage1_block(
+                parsed, table_ids, zero_foci_rule=settings.zero_foci_rule,
+            )
+        # Offered as proposals the pass confirms or drops, and offered whether or not a
+        # parse exists: of the 88 cue_reactivity papers stating a Results coordinate no
+        # table carries, 49 have no parsed table at all, and returning early on a missing
+        # parse would withhold the list from exactly those.
+        return block + preprocess.prose_coordinate_block(
+            paper.text.read_text(encoding="utf-8", errors="replace"),
+            _parsed_points(parsed),
         )
-        return render.stage1_block(
-            json.loads(paper.parse.read_text("utf-8")),
-            table_ids,
-            zero_foci_rule=settings.zero_foci_rule,
-        )
+
+
+def _parsed_points(parsed: Mapping[str, Any]) -> list[tuple[float, float, float]]:
+    """Every coordinate the stage-1 parse already holds, so prose does not repeat it."""
+    out = []
+    for analysis in (parsed.get("analyses") or []):
+        for point in (analysis.get("points") or []):
+            coords = point.get("coordinates")
+            if isinstance(coords, Mapping):
+                coords = [coords.get("x"), coords.get("y"), coords.get("z")]
+            if isinstance(coords, (list, tuple)) and len(coords) == 3:
+                try:
+                    out.append(tuple(float(v) for v in coords))
+                except (TypeError, ValueError):
+                    continue
+    return out
 
 
 @dataclass(frozen=True)

@@ -387,7 +387,7 @@ def test_every_digest_preamble_is_a_named_literal():
 
     source = Path(preprocess.__file__).read_text(encoding="utf-8")
     calls = re.findall(r"return _block\((.*?)\)\n", source, re.DOTALL)
-    assert len(calls) == 6, f"expected six digest blocks, found {len(calls)}"
+    assert len(calls) == 7, f"expected seven digest blocks, found {len(calls)}"
     # A separator like "\n\n" is not prompt text. A literal containing a letter is.
     inline = [call for call in calls
               if re.search(r"[\"'](?:[^\"'\\]|\\.)*[A-Za-z]{2,}(?:[^\"'\\]|\\.)*[\"']", call)]
@@ -545,3 +545,64 @@ def test_a_bare_triple_still_needs_one():
     """Without the guard a citation list is a coordinate, which is why the guard exists."""
     assert not preprocess.coordinates_in("as shown previously ( 14 , 15 , 34 )")
     assert preprocess.coordinates_in("the peak voxel ( 14 , 15 , 34 )")
+
+
+#: Found by running the extractor over ~800 studies from the 39,273-study ns-pond corpus,
+#: across the ace, pubget and elsevier renderings, scanning whole documents rather than
+#: Results alone. cue_reactivity showed none of these: a corpus of one topic, read only in
+#: its Results sections, is not where a three-number pattern goes wrong.
+WIDE_CORPUS_CASES = [
+    # ACE flattens superscript citation markers into the word before them, so the digits
+    # are glued to a letter and a `(?<![\d.])` lookbehind lets them through.
+    ("nonlocal algorithms that operate on a single voxel were proposed39,40,41,42,43.", False),
+    ("deterministic tractography16,23,24, a method that fits a tensor at each voxel", False),
+    # "coordinated" satisfied a cue that meant to say "coordinate".
+    ("a modulatory effect on coordinated neural activity (104, 105, 106, 107).", False),
+    ("registered to anatomical images (FLIRT, registration [ 34 , 35 , 36 ]), smoothed voxel",
+     False),
+    ("increased connectivity (FWHM(mm)=15.7, 15.7, 13.7, volume=48619 voxels)", False),
+    ("the 3rd NF run minus the 1st NF run of NF session 1,2,3; cluster corrected", False),
+    # Must still be found: the cue sits well before the numbers in real reporting.
+    ("Peak activation at left SMG −56, −50, 26, right AG 48, −62, 26", True),
+    ("the local maximum nearest the group FFA maximum (42, -51, -20)", True),
+    ("Talairach coordinates: 0, 40, 0) and presented in neurological convention", True),
+]
+
+
+@pytest.mark.parametrize("sentence,is_location", WIDE_CORPUS_CASES)
+def test_the_wider_corpus_false_positives_stay_rejected(sentence, is_location):
+    """Every negative here was matched as a coordinate before its guard existed.
+
+    Auditing 30 ACE matches found 7 wrong, which is the rate a prose anchor would have
+    carried into the record. The guards took ACE from 282 matches over 300 studies to 222,
+    and the audited error rate from roughly a quarter to under a tenth.
+    """
+    assert bool(preprocess.coordinates_in(sentence)) is is_location
+
+
+def test_three_consecutive_integers_are_a_list_not_a_place():
+    """`[ 34 , 35 , 36 ]`, `proposed39,40,41`, `session 1,2,3`. A location can be three
+    consecutive integers and the corpus holds none; citation lists are everywhere."""
+    assert not preprocess.coordinates_in("peak voxel references [ 34 , 35 , 36 ]")
+    assert preprocess.coordinates_in("peak voxel at [ 34 , 35 , 40 ]")
+
+
+def test_a_coordinate_a_table_carries_is_marked_not_dropped():
+    """18823721 is why. It reports "right STN activation ... when contrasting heroin
+    stimuli to neutral stimuli (x = 9 y = -12 z = -6)", and that voxel is also in the
+    Heroin>BL table under a different contrast. Dropping the sentence because the number
+    was already known discarded the comparison, which is the only thing it added -- and
+    that comparison is the paper's sole qualifying cue>control contrast."""
+    sentence = ("In opioid-dependent subjects, right STN activation was also observed when "
+                "contrasting heroin stimuli to neutral stimuli ( x = 9 y = −12 z = −6).")
+    rows = preprocess.prose_coordinates(sentence, known=[(9, -12, -6)])
+    assert rows, "the sentence was dropped because a table already held its coordinate"
+    (_sentence, found), = rows
+    assert found == [((9.0, -12.0, -6.0), True)], "the overlap must be marked, not silent"
+
+
+def test_a_coordinate_no_table_carries_is_unmarked():
+    rows = preprocess.prose_coordinates(
+        "The peak was at x = 9 y = −12 z = −6.", known=[(40, 40, 40)])
+    (_sentence, found), = rows
+    assert found == [((9.0, -12.0, -6.0), False)]
