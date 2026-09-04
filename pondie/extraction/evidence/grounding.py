@@ -288,7 +288,22 @@ _INDEX = re.compile(r"^([a-z_]+)(?:\[(\d+)\])?$")
 
 
 def is_numeric(value: Any) -> bool:
-    """A value that is only digits and separators, however the paper chose to write it."""
+    """A value that is only digits and separators, however the paper chose to write it.
+
+    A list of numbers counts. `str([6, 6, 6])` is "[6, 6, 6]", whose brackets fail the
+    pattern, so a smoothing kernel, a voxel size and an echo-time pair all read as prose and
+    went to a checker that cannot judge a number. On 26424424 that cost the one citation
+    that stated the value -- "smoothing of normalized gray matter (GM) tissue maps with a
+    6 mm 3 FWHM Gaussian filter." -- replaced on score noise by "Data were preprocessed
+    according to default toolbox settings: bias correction;", which does not mention
+    smoothing at all.
+    """
+    if isinstance(value, (list, tuple)):
+        return bool(value) and all(is_numeric(item) for item in value)
+    if isinstance(value, bool):
+        return False
+    if isinstance(value, (int, float)):
+        return True
     return bool(NUMERIC.match(str(value).strip()))
 
 

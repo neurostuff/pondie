@@ -21,7 +21,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping, MutableMapping, Sequence
 
-from pondie.extraction.evidence.grounding import Claim, Checker, expand, groundable
+from pondie.extraction.evidence.grounding import (
+    Checker, Claim, expand, groundable, is_numeric)
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record.edit import Refusal
 from pondie.formats import values
@@ -70,6 +71,12 @@ def contested(record: Mapping[str, Any], weak: Sequence[tuple[str, float]]) -> l
     for path, node in iter_fields(record):
         slot = path.rsplit(".", 1)[-1]
         if not groundable(slot, node):
+            continue
+        # A number is not contested either. `review_spans` already declines to score one,
+        # because "smoothing fwhm mm is [6, 6, 6]" cannot be entailed from any sentence a
+        # paper writes -- and contesting it anyway put a citation that stated the value up
+        # against one that did not, judged by a score that means nothing here.
+        if is_numeric(values.read(node)):
             continue
         quoted = [sp.get("text", "")
                   for s in ((node.get("evidence") or {}).get("sets") or [])

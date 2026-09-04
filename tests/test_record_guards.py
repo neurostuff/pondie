@@ -1516,3 +1516,37 @@ def test_a_genuinely_different_sentence_still_replaces(sch):
         record, doc, doc, [("acquisitions[0].modality", 0.02)],
         Proposer(), Checker(), refused)
     assert improved == ["acquisitions[0].modality"]
+
+
+def test_a_list_of_numbers_is_a_number():
+    """`str([6, 6, 6])` is "[6, 6, 6]", whose brackets fail the pattern, so a smoothing
+    kernel, a voxel size and an echo-time pair all read as prose and were sent to a checker
+    that cannot judge a number."""
+    from pondie.extraction.evidence.grounding import is_numeric
+
+    assert is_numeric([6, 6, 6])
+    assert is_numeric([2.1, 2.1, 7])
+    assert is_numeric("0.005")
+    assert is_numeric(3)
+    assert not is_numeric(["left aINS", "right OFC"])
+    assert not is_numeric("6 mm FWHM")
+    assert not is_numeric([])
+    assert not is_numeric(True), "a flag is not a measurement"
+
+
+def test_a_numeric_field_is_not_contested(sch):
+    """On 26424424 the one citation that stated the value -- "smoothing of normalized gray
+    matter (GM) tissue maps with a 6 mm 3 FWHM Gaussian filter." -- was replaced on score
+    noise by "Data were preprocessed according to default toolbox settings: bias
+    correction;", which does not mention smoothing at all."""
+    from pondie.extraction.evidence import relocate as relocate_module
+
+    stated = ("smoothing of normalized gray matter (GM) tissue maps with a "
+              "6 mm 3 FWHM Gaussian filter.")
+    record = {"preprocessings": [{"local_id": "prp", "smoothing_fwhm_mm": {
+        "extraction_status": "extracted", "value": [6, 6, 6], "value_source": "reported",
+        "evidence": {"status": "present", "sets": [{"spans": [{"text": stated}]}]}}}]}
+
+    rows = relocate_module.contested(record, weak=[("preprocessings[0].smoothing_fwhm_mm",
+                                                    0.01)])
+    assert rows == [], "a number cannot be judged by entailment, so it is not contested"
