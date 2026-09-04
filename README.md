@@ -46,7 +46,7 @@ pondie extract --pmids papers.pmids --run v3 --model <model> --env .env
 pondie extract --pmids papers.pmids --run v3 --model <model> --plan   # spend nothing
 ```
 
-Six stages, and the order is the design:
+Seven stages, and the order is the design:
 
 | stage | model | what it does |
 |---|---|---|
@@ -56,10 +56,16 @@ Six stages, and the order is the design:
 | `satisfy` | yes | builds exactly those entities and nothing else |
 | `evidence` | yes | a supporting quote for every value — **45% of input tokens** |
 | `build` | no | merge, repair, resolve quotes to offsets, write the record |
+| `repair` | optional | a second model proposes what the first missed, a third judges whether the paper supports it, and what neither settles goes back to the extraction model once |
 
 `demands` precedes `satisfy` because a cell cannot be righter than the term it points at:
 asked to guess an inventory first, the entity pass modelled a crossover's condition as a
 continuous covariate.
+
+`repair` runs on the record rather than on a payload, and is the only stage that can make one
+worse — so it validates its own output against its own input and reports what it introduced.
+Both of its halves are optional and independent: the local models want a GPU, the final
+adjudication wants only the gateway, and a host with neither still gets a validated record.
 
 A stage is a function of `(paper, settings, caller)`, not a subprocess, so it can be called
 from a test with a fake `Caller` and its cost is returned rather than scraped from logging.
@@ -87,12 +93,13 @@ says when it happens:
 pondie/extraction/
   corpus/     getting the paper on disk. An INPUT: a run reads it, never writes it
   prompt/     what the model is asked, and what the paper looks like when it is asked
-  evidence/   which characters of the paper warrant each value
-  record/     turning the payloads into a record: assemble, repair, check
+  evidence/   which characters of the paper warrant each value, and whether they do
+  record/     turning the payloads into a record: assemble, repair, check, edit
   tools/      things done to records afterwards; none of them runs inside a pipeline
   models.py   the pydantic contracts that cross a boundary
-  values.py   the ExtractedValue wrapper: what one is, how to read one, how to make one
-  stages.py driver.py llm.py parse.py usage.py
+  recall.py   asking a second model for the entities and links the first missed
+  repair.py   improving a built record, and reporting what the attempt broke
+  stages.py driver.py llm.py parse.py
 ```
 
 Every boundary is a named type, and writing them down found two bugs that were invisible
