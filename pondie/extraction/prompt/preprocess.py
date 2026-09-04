@@ -359,6 +359,11 @@ _NUM = rf"{_MINUS}?\d+(?:\.\d+)?"
 #: p), plus the neuroimaging-specific ones it has no reason to: a coordinate triple, a
 #: cluster extent, a corrected threshold. The last three are what say an analysis
 #: happened at all.
+#: Three comma-separated numbers. Guarded by `_COORDINATE_CUE` below, because pubget
+#: renders a citation list as "( 14 , 15 , 34 , 35 )", which is this shape and is not a
+#: location.
+_BARE_TRIPLE = re.compile(rf"(?<![\d.]){_NUM}\s*,\s*{_NUM}\s*,\s*{_NUM}(?![\d.])")
+
 _STATISTIC_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("t", re.compile(rf"\bt\s*\(\s*\d+(?:\.\d+)?\s*\)\s*[=<>]\s*{_NUM}")),
     ("F", re.compile(rf"\bF\s*\(\s*\d+(?:\.\d+)?\s*,\s*\d+(?:\.\d+)?\s*\)\s*[=<>]\s*{_NUM}")),
@@ -378,7 +383,7 @@ _STATISTIC_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("CI", re.compile(rf"\d+\s*%\s*CI[^.;]{{0,40}}{_NUM}")),
     # Guarded by _COORDINATE_CUE below. pubget renders a citation list as "( 14 , 15 ,
     # 34 , 35 )", which is three comma-separated numbers and is not a location.
-    ("coordinate", re.compile(rf"(?<![\d.]){_NUM}\s*,\s*{_NUM}\s*,\s*{_NUM}(?![\d.])")),
+    ("coordinate", _BARE_TRIPLE),
     (
         "cluster",
         re.compile(
@@ -409,6 +414,69 @@ _COORDINATE_CUE = re.compile(
 )
 
 
+#: `x = 9 y = -12 z = -6`, and the notations the corpus actually writes it in: with or
+#: without `=`, with `:`, with thin spaces, upper or lower case. Measured over 610 papers,
+#: 151 Results-prose matches and no false positive in an audited sample -- naming the axes
+#: is itself the cue, so this form needs no `_COORDINATE_CUE` guard. The bare-comma form
+#: cannot match it: `x = -42, y = 14, z = 8` has ", y = " between the numbers.
+_AXIS_TRIPLE = re.compile(
+    rf"\bx\s*[=:]?\s*({_NUM})[\s,;]+y\s*[=:]?\s*({_NUM})[\s,;]+z\s*[=:]?\s*({_NUM})",
+    re.I,
+)
+
+#: A bare triple straight after a Brodmann label is a list of areas, not a location.
+#: `(BA 6, 8, 9, 10)` and `(BA 29, 30, 31)` are the commonest false positive in the corpus
+#: -- but `BA = 46; -42, 17, 25` is a real coordinate, so the guard has to look at what
+#: sits immediately before the numbers rather than anywhere in the sentence.
+_AREA_LABEL = re.compile(r"\b(?:BA|Brodmann(?:\s+area)?s?|areas?)\s*$", re.I)
+
+
+def coordinates_in(sentence: str) -> list[tuple[float, float, float]]:
+    """Every stereotactic triple the sentence states, in either notation.
+
+    Returns the values and not a boolean because an anchor needs the numbers: a prose
+    coordinate is only interesting when no parsed table carries it, and that is a
+    comparison against the table's points.
+
+    Three rejections, each one a class measured in the corpus rather than imagined:
+    a triple of probabilities or effect sizes (`p < 0.01, 0.001, 0.05`), a Brodmann area
+    list (`BA 6, 8, 9`), and anything outside the bounding box a human brain occupies in
+    either standard space.
+    """
+
+    found: list[tuple[float, float, float]] = []
+    for match in _AXIS_TRIPLE.finditer(sentence):
+        trip = _triple(match.groups())
+        if trip:
+            found.append(trip)
+    if _COORDINATE_CUE.search(sentence):
+        for match in _BARE_TRIPLE.finditer(sentence):
+            if _AREA_LABEL.search(sentence[:match.start()]):
+                continue
+            trip = _triple(re.findall(_NUM, match.group(0)))
+            if trip:
+                found.append(trip)
+    return found
+
+
+def _triple(parts) -> tuple[float, float, float] | None:
+    try:
+        values = tuple(float(str(p).translate(_COORD_MINUS)) for p in parts)
+    except (TypeError, ValueError):
+        return None
+    if len(values) != 3:
+        return None
+    if all(abs(v) < 1 for v in values):
+        return None                       # p-values and effect sizes, not a location
+    if any(abs(v) > 120 for v in values):
+        return None                       # outside either standard space
+    return values
+
+
+#: The unicode dashes a typeset paper uses for a minus sign, which `float` will not read.
+_COORD_MINUS = {ord(c): "-" for c in "\u2010\u2011\u2012\u2013\u2014\u2212"}
+
+
 def statistic_sentences(text: str) -> list[tuple[str, list[str]]]:
     """(sentence, kinds of statistic in it) for every sentence reporting a number.
 
@@ -420,8 +488,14 @@ def statistic_sentences(text: str) -> list[tuple[str, list[str]]]:
     out = []
     for sentence in sentences(text):
         kinds = [name for name, pattern in _STATISTIC_PATTERNS if pattern.search(sentence)]
-        if "coordinate" in kinds and not _COORDINATE_CUE.search(sentence):
-            kinds.remove("coordinate")
+        # `coordinates_in` decides this one: it applies the cue guard, rejects the area
+        # lists and probability triples the bare pattern also matches, and sees the
+        # axis-labelled form the bare pattern cannot.
+        if bool(coordinates_in(sentence)) != ("coordinate" in kinds):
+            if "coordinate" in kinds:
+                kinds.remove("coordinate")
+            else:
+                kinds.append("coordinate")
         # A bare correction keyword is a Methods threshold, not a reported result. It is
         # kept only when a number sits beside it, or the digest fills with boilerplate.
         if kinds and kinds != ["correction"]:

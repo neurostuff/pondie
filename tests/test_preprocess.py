@@ -495,3 +495,53 @@ def test_the_unambiguous_vendors_are_untouched():
     assert {"Siemens", "Magnetom", "Trio"} <= _scanner_hits(
         "using a Siemens Magnetom Trio 3T scanner"
     )
+
+
+# ------------------------------------------------------------------ prose coordinates
+
+#: (sentence, does it state a location). The positives are the notations the corpus
+#: actually writes, the negatives are the three things that share the shape. Every one is
+#: copied from a cue_reactivity paper rather than invented, because the false positives
+#: worth guarding against are the ones that occur.
+COORDINATE_CASES = [
+    # 18823721: the contrast that cost a gold inclusion. Axis-labelled, no commas between
+    # the pairs, so the bare three-comma pattern cannot see it.
+    ("right STN activation when contrasting heroin stimuli to neutral stimuli "
+     "(x = 9 y = \u221212 z = \u22126; Z = 3.31)", True),
+    # 32541652 writes thin spaces around the equals signs.
+    ("the OFC (x \u2009=\u2009\u221235, y \u2009=\u200932, z \u2009=\u2009\u22126)", True),
+    ("center of mass at ( X \u221244, Y \u221220, Z 32)", True),      # 16123763: no equals
+    ("right NAcc ([x:16, y:8, z:\u221210]; Z = 3.35)", True),          # 31113931: colons
+    ("MNI coordinates of the maximum voxel = [\u2212 18, 15, 12], z = 3.66", True),
+    # A Brodmann label carrying its own number, then a real coordinate. The area guard
+    # must look at what precedes the numbers, not for "BA" anywhere in the sentence.
+    ("DLPFC (BA = 46; \u221242, 32, 17) peak voxel", True),
+    ("as reported previously ( 14 , 15 , 34 )", False),                # pubget citation list
+    ("These included the frontal (BA 6, 8, 9, 10), anterior cingulate", False),
+    ("the anterior cingulate (BA 29, 30, 31), temporal (BA 20, 21, 22)", False),
+    ("significantly higher levels ( P < 0.01, 0.001, 0.05, respectively)", False),
+    ("effect sizes: d = 0.42, 0.37, 0.53, respectively", False),
+    ("clusters at 300, 400, 500 mm", False),                           # outside either space
+]
+
+
+@pytest.mark.parametrize("sentence,is_location", COORDINATE_CASES)
+def test_a_prose_coordinate_is_told_from_the_numbers_that_look_like_one(
+    sentence, is_location
+):
+    """The table parse cannot see a result reported only in prose, and 18823721 lost a
+    gold inclusion to one. Reading them back means telling a location from a citation
+    list, a Brodmann enumeration and a row of p-values, all of which are three numbers."""
+    assert bool(preprocess.coordinates_in(sentence)) is is_location
+
+
+def test_the_axis_form_needs_no_cue_word():
+    """Naming the axes is the cue. Requiring MNI/peak/voxel as well would drop the
+    18823721 sentence, which says only "contrasting heroin stimuli to neutral stimuli"."""
+    assert preprocess.coordinates_in("activation at x = 9 y = \u221212 z = \u22126")
+
+
+def test_a_bare_triple_still_needs_one():
+    """Without the guard a citation list is a coordinate, which is why the guard exists."""
+    assert not preprocess.coordinates_in("as shown previously ( 14 , 15 , 34 )")
+    assert preprocess.coordinates_in("the peak voxel ( 14 , 15 , 34 )")
