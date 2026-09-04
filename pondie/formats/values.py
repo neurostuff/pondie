@@ -306,7 +306,10 @@ def cast(sch: "Schema", class_name: str, slot: str, value: Any) -> Any:
         cast_items = [cast(sch, class_name, slot, item) for item in value]
         return None if any(item is None for item in cast_items) else cast_items
     text = str(value).strip()
-    ranges = sch.ranges(attribute)
+    # Through the wrapper: `is_healthy` declares `ExtractedBoolean`, so reading `range`
+    # directly gave "ExtractedBoolean" and never "boolean", and the branch below -- written
+    # for exactly the error in this docstring -- was unreachable.
+    ranges = sch.value_ranges(attribute)
     single = ranges[0] if len(ranges) == 1 else None
 
     if single == "boolean":

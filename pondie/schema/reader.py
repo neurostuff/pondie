@@ -217,6 +217,27 @@ class Schema:
             seen.setdefault(str(name), None)
         return list(seen)
 
+    def value_ranges(self, slot: SlotDefinition) -> list[str]:
+        """`ranges`, with any `ExtractedValue` wrapper resolved to what it wraps.
+
+        Every field on every class declares a wrapper -- `Group.is_healthy` is
+        `ExtractedBoolean` -- so a consumer reading `range` sees a class and concludes
+        "reference". Two did, independently, and each failed in its own way: `nu_type`
+        offered the model nothing but `local_id` for every class, and `cast` skipped the
+        coercion branch its own docstring names, writing "31" into an integer slot.
+        """
+        out: list[str] = []
+        for candidate in self.ranges(slot):
+            inner = self.attributes(candidate).get("value") if candidate in self else None
+            if inner is not None and self.resolves_to(candidate, "ExtractedValue"):
+                # `Any` comes from the base `ExtractedValue.value`; a subclass narrows it
+                # through `slot_usage`, and carrying the base range forward would make every
+                # wrapper look like an open vocabulary.
+                out += [r for r in self.ranges(inner) if r != "Any"] or ["string"]
+            else:
+                out.append(candidate)
+        return list(dict.fromkeys(out))
+
     def classify(self, name: str, slot: SlotDefinition) -> SlotKind:
         """Classify one slot by how a reviewer must treat it.
 

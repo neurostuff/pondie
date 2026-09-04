@@ -709,6 +709,7 @@ class Repair(_Base):
             return self._skip(paper)
 
         from pondie.extraction import repair as repair_pass
+        from pondie.extraction.record.validate import EXTRACTION_SCHEMA
         from pondie.schema import reader
 
         record_path = settings.records / f"{paper.study_id}.extraction.json"
@@ -756,7 +757,12 @@ class Repair(_Base):
 
         reply = None
         report = repair_pass.run(
-            record, text, reader.load(schema.STORAGE), study_id=paper.study_id,
+            # The schema this validates against, not the storage one. They differ --
+            # `Table.coordinate_space` exists in storage and not in extraction -- so
+            # editing against one and checking against the other offered the proposer
+            # slots the record may not carry. Harmless while every template held only
+            # `local_id`; four invalid writes on the first paper once they did not.
+            record, text, reader.load(EXTRACTION_SCHEMA), study_id=paper.study_id,
             proposer=proposer, checker=checker,
             caller=caller if settings.adjudicate else None,
             model=settings.model if settings.adjudicate else "",

@@ -121,21 +121,10 @@ def directive(class_name: str) -> str:
 
 def nu_type(sch: Schema, slot: Any) -> Any:
     """The template type for one slot, or None for a slot a proposal should not carry."""
-    ranges = sch.ranges(slot)
-    # An `ExtractedValue` subclass is a wrapper, not a reference. `Region.name` declares
-    # range `ExtractedString`, which is a class, so every native slot on every class read as
-    # a reference and dropped out -- leaving a template of `{"local_id": "string"}` and
-    # nothing else. The proposer could then only ever name an entity that already existed:
-    # it could not offer a value, and `create` could not mint anything, because the required
-    # slots it checks for were not in the template to begin with.
-    unwrapped: list[str] = []
-    for candidate in ranges:
-        inner = sch.attributes(candidate).get("value") if candidate in sch.classes else None
-        if inner is not None and sch.resolves_to(candidate, "ExtractedValue"):
-            unwrapped += sch.ranges(inner)
-        else:
-            unwrapped.append(candidate)
-    ranges = list(dict.fromkeys(unwrapped))
+    # Through the wrapper. `Region.name` declares `ExtractedString`, which is a class, so
+    # every native slot read as a reference and dropped out -- leaving a template of
+    # `{"local_id": "string"}` and a proposer that could only ever echo an id.
+    ranges = sch.value_ranges(slot)
     for candidate in ranges:
         if candidate in sch.enums:
             # `any_of: [SomeEnum, string]` is how the schema keeps a vocabulary open. Taking

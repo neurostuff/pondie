@@ -498,8 +498,19 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
         if proposed in (None, "", []):
             continue
         if kinds[name] == "nested":
-            # A nested slot holds objects with their own fields -- AnalysisGroup, Cell,
-            # ModelTerm. `cast` would stringify one, so it is left to whatever builds it.
+            # A nested slot holds objects with their own fields. Most are structures a flat
+            # reply cannot express -- `Analysis.effect` carries cells carrying statistics --
+            # and `cast` would stringify one, so those are still left to whatever builds
+            # them. `Task.conditions` is not that: a Condition is an id, a name, a kind and
+            # a description, and `recall.flat` says which classes are of that shape.
+            #
+            # Reached late. The template began offering conditions before this could write
+            # them, so the proposer was asked and its answer discarded -- and the one field
+            # that says a state was a control could still only come from the extraction pass.
+            written = _nested(sch, str(ranges.get(name) or ""), entity, name, proposed,
+                              text, log)
+            if written:
+                log.written.append((name, written))
             continue
         if kinds[name] == "reference":
             resolved = resolve(record, sch, str(ranges.get(name) or ""), proposed,
@@ -534,6 +545,69 @@ def _multivalued(sch: Schema, class_name: str, slot: str) -> bool:
     return bool(attribute is not None and attribute.multivalued)
 
 
+def _nested(sch: Schema, inner: str, entity: MutableMapping[str, Any], slot: str,
+            proposed: Any, text: str, log: Log) -> int:
+    """Merge a list of nested objects into `entity[slot]`. Returns how many fields landed.
+
+    Merge and never replace, for the reason the reference path unions rather than assigns: a
+    model returning three conditions is not a model saying the fourth was wrong. An object
+    already present is matched by `local_id`, then by label, and only its *empty* fields are
+    filled -- an extracted value with a sentence behind it outranks a proposal without one,
+    and that ordering is what stops a second pass quietly rewriting the first.
+    """
+    from pondie.extraction.recall import flat
+
+    if not inner or inner not in sch or not flat(sch, inner):
+        return 0
+    items = proposed if isinstance(proposed, list) else [proposed]
+    items = [x for x in items if isinstance(x, Mapping)]
+    if not items:
+        return 0
+
+    current = entity.get(slot)
+    current = list(current) if isinstance(current, list) else []
+    by_id = {str(x.get("local_id") or ""): x for x in current if isinstance(x, Mapping)}
+    by_label = {label_of(x).lower(): x for x in current if isinstance(x, Mapping)}
+
+    landed = 0
+    for item in items:
+        local_id = str(item.get("local_id") or "").strip()
+        named = str(values.read(item.get("name")) or "").strip()
+        target = by_id.get(local_id) or by_label.get(named.lower())
+        if target is None:
+            # A nested object is created only where the record has none of that name. The
+            # sweep's job here is to complete what `satisfy` left thin, not to invent a
+            # condition the paper never ran.
+            continue
+        for field_name, raw in item.items():
+            if field_name in ("local_id", "id") or raw in (None, "", []):
+                continue
+            if values.read(target.get(field_name)) not in (None, "", []):
+                continue                      # what is already there, with its evidence
+            value = values.shape(sch, inner, field_name, raw)
+            if value is None:
+                log.refused.append(Refusal(f"{slot}.{field_name}",
+                                           "will not fit the slot", raw))
+                continue
+            written = _wrap(value, text)
+            # A nested field has to be placeable in the paper, which in practice admits
+            # prose and refuses classifications: an enum term is vocabulary, not a quote, and
+            # `_wrap` will not even look for one under twenty characters. That is the line
+            # this should draw. `satisfy` classifies, having read the whole document -- it
+            # got `Neutral` right on 16038771 -- and this sweep, asked the same question from
+            # a template, answered `fixation` for three picture-viewing conditions. Honestly
+            # labelled `generated` with no sentence, and wrong three times in four.
+            if written["evidence"]["status"] != "present":
+                log.refused.append(Refusal(
+                    f"{slot}.{field_name}",
+                    "nothing in the paper places this value, and a nested guess is not "
+                    "worth the risk of being wrong", value))
+                continue
+            target[field_name] = written
+            landed += 1
+    return landed
+
+
 def _wrap(value: Any, text: str, source: str = "reported") -> dict:
     """A wrapper whose evidence says what was actually established.
 
@@ -552,5 +626,11 @@ def _wrap(value: Any, text: str, source: str = "reported") -> dict:
                         "sets": [{"source": "repair_pass", "spans": [span]}]}
         except Exception:
             pass
+    # A value this pass could not place in the paper is one it reasoned to, and the schema
+    # has a word for that. Marked `reported` regardless, it asserted the source said things
+    # the source may not have: nine of thirteen findings on the first paper where the
+    # proposer could write values at all were exactly that pairing -- `groups[].species`,
+    # `recruitment_method`, `is_healthy`, `spatial_scope`, each `reported` with no sentence.
+    honest = source if evidence["status"] == "present" else "generated"
     return {"extraction_status": "extracted", "value": value,
-            "value_source": source, "evidence": evidence}
+            "value_source": honest, "evidence": evidence}

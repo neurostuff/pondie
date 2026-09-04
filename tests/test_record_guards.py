@@ -1613,3 +1613,164 @@ def test_a_region_name_does_not_keep_the_preposition_in_front_of_it():
                                "left inferior parietal lobule")
     assert [name for name, _both in items] == ["right superior frontal gyrus",
                                                "left inferior parietal lobule"]
+
+
+def test_a_value_the_pass_could_not_place_is_marked_generated(sch):
+    """Marked `reported` regardless, the pass asserted the source said things it may not
+    have. Nine of thirteen findings on the first paper where the proposer could write values
+    at all were that pairing -- species, recruitment_method, is_healthy, spatial_scope, each
+    `reported` with no sentence, which is the shape `check_value_source_honesty` exists to
+    catch and which repair was producing itself."""
+    from pondie.extraction.record import edit as edit_module
+
+    record = {"groups": [{"local_id": "g", "name": field("patients")}]}
+    entity = record["groups"][0]
+    edit_module.apply(sch, record, "Group", entity,
+                      {"recruitment_method": "recruited by advertisement"},
+                      text="Methods. Nothing here says how anyone was recruited.")
+
+    written = entity["recruitment_method"]
+    assert written["evidence"]["status"] == "not_found"
+    assert written["value_source"] == "generated", "no sentence, so not reported"
+
+
+def test_a_value_the_pass_did_place_stays_reported(sch):
+    """The label follows the evidence, so a value with a span keeps its provenance."""
+    from pondie.extraction.record import edit as edit_module
+
+    quote = "Participants were recruited by newspaper advertisement in the local area."
+    record = {"groups": [{"local_id": "g", "name": field("patients")}]}
+    entity = record["groups"][0]
+    edit_module.apply(sch, record, "Group", entity,
+                      {"recruitment_method": quote}, text=f"Methods. {quote}")
+
+    written = entity["recruitment_method"]
+    assert written["evidence"]["status"] == "present"
+    assert written["value_source"] == "reported"
+
+
+def test_the_repair_stage_edits_against_the_schema_it_checks_against():
+    """`Table.coordinate_space` exists in storage and not in extraction, so editing against
+    one and validating against the other offered the proposer slots the record may not
+    carry. Harmless while every template held only `local_id`; four invalid writes on the
+    first paper once they did not."""
+    import inspect
+
+    from pondie.extraction import stages
+
+    source = inspect.getsource(stages.Repair.run)
+    assert "reader.load(EXTRACTION_SCHEMA)" in source
+    assert "schema.STORAGE" not in source
+
+
+def test_a_wrapper_is_resolved_to_what_it_wraps(sch):
+    """`Group.is_healthy` declares `ExtractedBoolean`, so reading `range` directly gives a
+    class name and concludes "reference". Two consumers did that independently: `nu_type`
+    offered nothing but `local_id` for every class, and `cast` skipped the coercion branch
+    its own docstring names."""
+    from pondie.extraction.record.validate import EXTRACTION_SCHEMA
+    from pondie.schema import reader
+
+    schema = reader.load(EXTRACTION_SCHEMA)
+    assert schema.value_ranges(schema.attributes("Group")["is_healthy"]) == ["boolean"]
+    assert schema.value_ranges(schema.attributes("Group")["acquired_count"]) == ["integer"]
+    assert schema.value_ranges(schema.attributes("Region")["name"]) == ["string"]
+    # An open vocabulary keeps both branches.
+    assert set(schema.value_ranges(
+        schema.attributes("Condition")["condition_kind"])) == {"ConditionKind", "string"}
+
+
+def test_a_string_answer_lands_in_the_type_its_slot_declares(sch):
+    """The model answers in the paper's words: "true" for a boolean, "31" for a count. Eight
+    of eleven findings on the first paper where the proposer could write values were this --
+    `ExtractedBoolean.value must be a boolean, got str`."""
+    from pondie.extraction.record.validate import EXTRACTION_SCHEMA
+    from pondie.formats import values as value_tools
+    from pondie.schema import reader
+
+    schema = reader.load(EXTRACTION_SCHEMA)
+    assert value_tools.cast(schema, "Group", "is_healthy", "true") is True
+    assert value_tools.cast(schema, "Group", "acquired_count", "31") == 31
+    assert value_tools.cast(schema, "Group", "age_mean", "24.6") == 24.6
+    # And an answer that will not fit is still refused rather than coerced.
+    assert value_tools.cast(schema, "Group", "acquired_count", "about twenty") is None
+    assert value_tools.cast(schema, "Group", "is_healthy", "mostly") is None
+
+
+def test_a_nested_object_gains_prose_it_was_missing(sch):
+    """The template began offering `Task.conditions` before `apply` could write them, so the
+    proposer was asked and its answer discarded. Prose it can place in the paper lands."""
+    from pondie.extraction.record import edit as edit_module
+
+    said = "the neutral condition showed household objects matched for visual complexity"
+    record = {"tasks": [{"local_id": "tsk", "name": field("picture viewing"),
+                         "conditions": [{"local_id": "c1", "name": field("Neutral")}]}]}
+    entity = record["tasks"][0]
+    edit_module.apply(sch, record, "Task", entity,
+                      {"conditions": [{"local_id": "c1", "description": said}]},
+                      text=f"Methods. In this study {said}, presented in blocks.")
+
+    written = entity["conditions"][0]["description"]
+    assert values.read(written) == said
+    assert written["evidence"]["status"] == "present"
+
+
+def test_a_nested_classification_is_left_to_the_pass_that_read_the_paper(sch):
+    """An enum term is vocabulary, not a quote, so it can never be placed -- which is the
+    line to draw. `satisfy` classifies, having read the whole document, and got `Neutral`
+    right on 16038771; this sweep, asked the same from a template, answered `fixation` for
+    three picture-viewing conditions."""
+    from pondie.extraction.record import edit as edit_module
+
+    record = {"tasks": [{"local_id": "tsk", "name": field("picture viewing"),
+                         "conditions": [{"local_id": "c2", "name": field("Disgust")}]}]}
+    entity = record["tasks"][0]
+    log = edit_module.apply(
+        sch, record, "Task", entity,
+        {"conditions": [{"local_id": "c2", "condition_kind": "fixation"}]},
+        text="Methods. Disgust pictures were shown in thirty-second blocks.")
+
+    assert values.read(entity["conditions"][0].get("condition_kind")) is None
+    assert any("nothing in the paper places this value" in r.why for r in log.refused)
+
+
+def test_a_nested_object_keeps_what_it_already_had(sch):
+    """An extracted value with a sentence behind it outranks a proposal without one, which
+    is what stops a second pass quietly rewriting the first."""
+    from pondie.extraction.record import edit as edit_module
+
+    kept = cited("control_state", "a neutral condition served as the comparison")
+    record = {"tasks": [{"local_id": "tsk", "name": field("picture viewing"),
+                         "conditions": [{"local_id": "c1", "name": field("Neutral"),
+                                         "condition_kind": kept}]}]}
+    entity = record["tasks"][0]
+    edit_module.apply(sch, record, "Task", entity,
+                      {"conditions": [{"local_id": "c1", "condition_kind": "task_state"}]},
+                      text="Methods. Something else entirely.")
+
+    assert values.read(entity["conditions"][0]["condition_kind"]) == "control_state"
+
+
+def test_a_nested_object_the_record_does_not_have_is_not_invented(sch):
+    """Completing what `satisfy` left thin is not the same as adding a condition the paper
+    never ran, and this pass is in no position to tell the difference."""
+    from pondie.extraction.record import edit as edit_module
+
+    record = {"tasks": [{"local_id": "tsk", "name": field("picture viewing"),
+                         "conditions": [{"local_id": "c1", "name": field("Neutral")}]}]}
+    entity = record["tasks"][0]
+    edit_module.apply(sch, record, "Task", entity,
+                      {"conditions": [{"local_id": "c9", "name": "Fixation",
+                                       "condition_kind": "fixation"}]},
+                      text="Methods. A fixation cross was shown between blocks.")
+
+    assert [values.read(c["name"]) for c in entity["conditions"]] == ["Neutral"]
+
+
+def test_a_structure_a_flat_reply_cannot_carry_is_still_left_alone(sch):
+    """`Analysis.effect` nests cells nesting statistics. `recall.flat` is what separates the
+    two cases, and it must keep saying no to this one."""
+    from pondie.extraction.recall import flat
+
+    assert flat(sch, "Condition")
+    assert not flat(sch, "Effect")
