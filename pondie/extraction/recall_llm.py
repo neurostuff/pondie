@@ -21,6 +21,7 @@ from `_Proposes` and the only variable between arms is which model answers.
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -91,9 +92,18 @@ class ModelProposer(_Proposes):
 
     #: How many calls one sweep costs. The per-class sweep sent the paper once per entity
     #: class -- 28 calls a paper measured, 116k input tokens -- and the premise is the same
-    #: 40k characters every time. Two groups mirror the extraction passes' own split, so a
-    #: sweep is 2 calls and a two-iteration repair is 4.
-    GROUPS = 2
+    #: 40k characters every time.
+    #:
+    #: One, because the whole record is small: the values of all twenty-three classes render
+    #: to ~4,300 tokens where the record file is 111k characters, since the evidence spans
+    #: are what make it big and none of them helps a proposal. Record and paper together are
+    #: ~14,400 tokens, so a two-iteration repair is two calls.
+    #:
+    #: And the whole record is the point, not a saving. Every misattribution this pass makes
+    #: is a fact stated for one entity written onto another; asked only about `Group`, the
+    #: model cannot see that the number in front of it was given for an excluded participant
+    #: or already belongs to the other cohort. Asked about the record at once, it can.
+    GROUPS = int(os.environ.get("PONDIE_PROPOSER_GROUPS", "1"))
 
     def propose_many(self, sch: Any, class_names: Sequence[str], premise: str,
                      instructions: Mapping[str, str]) -> dict[str, list]:
