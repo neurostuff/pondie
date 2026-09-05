@@ -100,8 +100,8 @@ def test_a_list_slot_is_written_as_a_list(sch):
     it raw wrote bare strings into four list slots -- four of the five findings the pass
     introduced on 18823721."""
     entity = {"local_id": "grp_a"}
-    edit.apply(sch, {"groups": [entity]}, "Group", entity,
-               {"medications": "methadone"}, PAPER)
+    edit.apply(sch, {"groups": [entity]}, "Group", entity, {"medications": "methadone"},
+               PAPER + " All were maintained on methadone.")
     assert entity["medications"]["value"] == ["methadone"]
 
 

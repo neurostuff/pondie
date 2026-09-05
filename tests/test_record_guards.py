@@ -1620,18 +1620,41 @@ def test_a_value_the_pass_could_not_place_is_marked_generated(sch):
     have. Nine of thirteen findings on the first paper where the proposer could write values
     at all were that pairing -- species, recruitment_method, is_healthy, spatial_scope, each
     `reported` with no sentence, which is the shape `check_value_source_honesty` exists to
-    catch and which repair was producing itself."""
+    catch and which repair was producing itself.
+
+    A value the locator could not cite but the paper plainly contains is still written --
+    that is a locator failure, not an invention -- and it is still honestly `generated`.
+    "advertisement" is under `_wrap`'s twenty-character floor, so no span is even looked
+    for, which is exactly the case the document check has to keep.
+    """
     from pondie.extraction.record import edit as edit_module
 
     record = {"groups": [{"local_id": "g", "name": field("patients")}]}
     entity = record["groups"][0]
     edit_module.apply(sch, record, "Group", entity,
-                      {"recruitment_method": "recruited by advertisement"},
-                      text="Methods. Nothing here says how anyone was recruited.")
+                      {"recruitment_method": "advertisement"},
+                      text="Methods. Participants answered an advertisement.")
 
     written = entity["recruitment_method"]
     assert written["evidence"]["status"] == "not_found"
     assert written["value_source"] == "generated", "no sentence, so not reported"
+
+
+def test_a_value_the_paper_does_not_contain_is_not_written_at_all(sch):
+    """The other half of the same rule, and the reason it exists. Over 21 changed writes on
+    four hand-read papers, 72% of what the pass could not ground was wrong or invented,
+    against 33% of what it could. `_nested` has refused on this basis since it was written;
+    the top-level path wrote them anyway."""
+    from pondie.extraction.record import edit as edit_module
+
+    record = {"groups": [{"local_id": "g", "name": field("patients")}]}
+    entity = record["groups"][0]
+    log = edit_module.apply(sch, record, "Group", entity,
+                            {"recruitment_method": "recruited by advertisement"},
+                            text="Methods. Nothing here says how anyone was recruited.")
+
+    assert "recruitment_method" not in entity
+    assert any("nothing in the paper places" in r.why for r in log.refused)
 
 
 def test_a_value_the_pass_did_place_stays_reported(sch):

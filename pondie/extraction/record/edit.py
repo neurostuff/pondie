@@ -593,6 +593,24 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             written = _wrap(value, text)
             if (kept := _inherited(current, value)) is not None:
                 written["evidence"], written["value_source"] = kept
+            elif text and written["evidence"]["status"] != "present" \
+                    and not _in_document(value, text):
+                # Measured over 21 changed writes on four hand-read papers: of the writes
+                # this pass could not ground, 11 of 18 were inventions and 72% were wrong
+                # or invented, against 33% of the grounded ones. `_nested` has refused on
+                # this basis since it was written; the top-level path never did.
+                #
+                # Gated on having the paper at all: with no document there is no evidence
+                # either way, and refusing everything would make the pass a no-op rather
+                # than a careful one.
+                #
+                # The carve-out is what makes it affordable. A value the locator failed to
+                # place but which the document plainly contains -- "SPM2", "SPM99" -- is a
+                # locator failure, not an invention, and refusing those was most of the
+                # cost of this rule.
+                log.refused.append(Refusal(
+                    name, "nothing in the paper places this value", value))
+                continue
             entity[name] = written
         log.written.append((name, value))
     return log
@@ -728,6 +746,14 @@ def _inherited(current: Any, value: Any) -> tuple[dict, str] | None:
     wanted = value if isinstance(value, list) else [value]
     if not wanted:
         return None
+    held = values.read(current)
+    if isinstance(value, list) and isinstance(held, list) and held \
+            and all(item in value for item in held):
+        # A strict superset removes nothing, so whatever warranted the old elements still
+        # does. Asking the new ones to appear in the *same* span refuses most real
+        # extensions -- a second value is usually named in a second sentence -- which
+        # would leave `template_for`'s list templates unable to show any yield at all.
+        return current["evidence"], str(current.get("value_source") or "reported")
     texts = [str(span.get("text", ""))
              for group in (current.get("evidence") or {}).get("sets") or []
              for span in group.get("spans") or []]
@@ -737,6 +763,20 @@ def _inherited(current: Any, value: Any) -> tuple[dict, str] | None:
 
 
 _NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
+
+
+def _in_document(value: Any, text: str) -> bool:
+    """Whether the paper states this value somewhere, span or no span.
+
+    The locator answers "is there a sentence I can cite for this field", which is a harder
+    question than "does the paper say this", and it fails on values the document plainly
+    contains. Separating the two is what lets an ungrounded write be refused without
+    throwing away the software names and field strengths the retriever merely missed.
+    """
+    if not text:
+        return False
+    return all(_warrants(text, item)
+               for item in (value if isinstance(value, list) else [value]))
 
 
 def _warrants(text: str, value: Any) -> bool:
