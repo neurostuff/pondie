@@ -1417,3 +1417,151 @@ slot whose correct answer is "nothing" far more often than the pass believes, an
 for it is the quote rule from round 6: **a link needs a sentence naming both the group and
 the instrument in the act of diagnosing, and if the model cannot produce one, the link is
 refused.** That kills all six.
+
+---
+
+# Round 8: adjudicating the inclusion list
+
+## Rule A: include, but narrowed to closed vocabularies
+
+Include it. Not as it stands -- **narrowed to slots whose value range is a closed enum**,
+which on every number I have keeps all of the benefit and drops all of the measured cost.
+
+First, what Rule A is actually buying. The pre arm's 56 introduced findings over 12 papers,
+attributed to the change that removes each:
+
+    40   is_multivalued (a scalar in a list slot)
+    16   non_analysis_content  <- Rule A
+    ---
+    56
+
+So Rule A is worth **16 findings, 1.3 per paper** -- the last mile to M3 == 0, and not a
+rounding error. Against that, the measured cost from round 5: two correct `is_healthy`
+writes on 16038771, which turned that paper pass -> fail, plus two `correction_scope`
+inferences and the paraphrase and unit-conversion classes from round 4.
+
+Now the 139 refusals in `repair-post2`, by what kind of value the slot holds:
+
+| slot kind | refusals | notable slots |
+|---|---|---|
+| **enum** | **77** | non_analysis_content 46, prespecification 8, correction_scope 6, species 4, definition_method 4, model_family 3 |
+| text | 52 | description 21, inclusion_criteria 6, exclusion_criteria 5, stimuli 4, model_settings 4 |
+| boolean | 6 | is_healthy 6 |
+| number | 4 | acquisition_duration_seconds 4 |
+
+Restricting Rule A to the enum row:
+
+* **keeps all 46 `non_analysis_content` refusals**, so the full 16-finding M3 gain survives
+  intact;
+* **drops the 6 `is_healthy` refusals** -- which recovers the two correct writes on
+  16038771 and takes that paper from 4/3/1 fail back to 6/3/3 **pass**, exactly the pre-arm
+  score. The regression that made this a hard call disappears;
+* **drops the text row**, which is where round 4's paraphrase losses live --
+  `model_settings`, `description`, `stimuli`: sentences that *are* in the paper, reworded, so
+  the verbatim test missed them;
+* **drops the number row**, which is the unit-conversion loss --
+  `acquisition_duration_seconds = 450.0` for "7.5 minutes".
+
+That is not a compromise between the two positions. It is strictly better than the current
+rule on every measurement in this document, and it has a reason the codebase already states.
+`_nested`'s docstring: *"an enum term is vocabulary, not a quote"*. A closed-vocabulary token
+is chosen from a list rather than read off a page, so "the paper does not contain this string"
+is a sound test for it. Free text and numbers are things the paper states in its own words,
+which a pass may legitimately paraphrase or convert, and the same test is unsound for them.
+
+**Answer to your framing:** it does not have to be a wash plus an M3 gain. Narrowed, it is an
+M3 gain of 16 findings with no measured content cost at all, and no paper regresses.
+
+## `EXCLUSIVE`: hold it. Your "no observed false positives" is falsified
+
+I found firings you had not, in `runs/repair-luna-15`, and checked each against the record it
+acted on. Three distinct papers, and they are not all right.
+
+**14679386 -- correct.** `asm_ciwar` refused for `grp_social_drinkers`, which has no
+`medical_condition` at all. A withdrawal-severity scale cannot have established a condition a
+group does not have.
+
+**15127179 -- a false positive, and a structural one.** The record holds four groups:
+
+    grp_alcoholics              medical_condition ['alcohol dependence']  <- got the SCID
+    grp_healthy_controls        medical_condition None                    <- got the SCID
+    grp_relapsers               medical_condition ['alcohol dependence']  <- REFUSED
+    grp_subsequent_abstainers   medical_condition ['alcohol dependence']  <- REFUSED
+
+`grp_relapsers` and `grp_subsequent_abstainers` are **subgroups of the alcoholics**, carrying
+the same diagnosis, established by the same interview. One instrument legitimately diagnoses a
+cohort and its subgroups; the guard cannot tell a sibling from a nested group and blocked two
+correct links. Worse, it let the SCID through to `grp_healthy_controls` -- defensible under
+the schema's *"or for a healthy group its confirmed absence"*, but it means the guard admitted
+the write it had least reason to and refused the two it had most.
+
+**16038771 -- fired and prevented nothing.** Both `grp_nonsm` and `grp_sm` end up holding
+`asm_sadomasochistic_preferences`; the refusal landed on a third proposal after both writes
+had gone in. Four arms, four firings, zero effect.
+
+So the record across roughly forty paper-runs is **two correct preventions, one false positive
+blocking two correct links, and one no-op** -- on a guard whose motivating case I got wrong in
+round 5 (repair had not written those overlapping lists; the extractor had). That is not
+enough to justify silently dropping links, and the failure it has is not tunable: telling a
+sibling group from a subgroup needs nesting the record does not express in any form the guard
+reads.
+
+**Hold it as a refusal. Keep it as a report** -- `repair_references.py` already counts
+`exclusive_shared` and prints the offending target lists, which gives a reviewer the visibility
+with none of the risk. If it comes back, it needs a group-nesting signal first.
+
+## `analyses.mirror_of`: not a defect, and the rate proves it
+
+Measured across every run: **83 of 83 mirrored analyses have a target unnamed in the paper.
+100%, with no exceptions.** For comparison, on the same records:
+
+| label source | kind | named | unnamed | % unnamed |
+|---|---|---|---|---|
+| table-derived | original | 1921 | 440 | 19% |
+| prose-derived | original | 1683 | 1470 | 47% |
+| table-derived | **mirror** | 0 | 61 | **100%** |
+| prose-derived | **mirror** | 0 | 22 | **100%** |
+
+A defect is intermittent. A rate of exactly 100% over 83 cases across two different label
+sources is a structural property, and the definition of the entity says which: a mirrored
+analysis is *the direction the paper did not report*, synthesised by `direction.mirror_
+analysis` so the record states both. Its definition is the original's with the direction
+reversed -- "negative correlations between mesencephalon drug cue responsivity and ..." where
+the paper wrote "positive". **If a mirror's label were verbatim in the paper it would not be a
+mirror.** Nothing to fix.
+
+## The same mistake, four times, and it is worth a rule
+
+`mirror_of` is the fourth instance of one category error in this review:
+
+    round 3  "Intera appears 9 times"                  -- case-insensitive match inside
+                                                          "interaction"
+    round 7  three Luna writes flagged as fabrication  -- the model's paraphrase of an
+                                                          instrument named four times
+    round 8  the link quote rule (yours)               -- 82% of targets have no label to
+                                                          quote
+    round 8  mirror_of at 10% unnamed (yours)          -- a synthesised label, by definition
+                                                          not in the paper
+
+Every one is "is this string in the paper?" asked of something that is not a quotation. The
+rule that would have caught all four: **a verbatim test is only valid against a value the
+paper is supposed to have printed.** It is unsound for a minted id, a derived label, a
+model's paraphrase, a table row-group header, and a synthesised mirror. Both of my confirmed
+findings that survive -- 58% of changed values wrong, all of it grounded, and the link-choice
+result -- were established against hand-read truth, not against string presence, and that is
+why they held.
+
+## The rest of the inclusion list
+
+No argument with 1-5 or 7; every one is measured over 13-15 papers and the numbers are in this
+document. On **6 (`ModelProposer` + batching, defaulted off)**: include, and the default is the
+right call, but the docstring and the `proposer_kind` comment currently assert 58% as a
+property of the pass. It is 11 of 19, Wilson [36%, 77%]. Say "wrong on most of what it
+changes" and cite the interval, or a reader will treat a point estimate from nineteen
+observations as a specification.
+
+Your two-way death of the whole-record hypothesis is right and worth recording as you put it:
+per-class Luna leaves 45 of 65 NuExtract-changed fields untouched against whole-record's 48,
+so the abstention is the model and not the context -- and that 65-field figure is an agreement
+measure, not truth-scored. The truth-scored claim is the 10-field paired result: nine left
+empty, one fixed, none re-written wrongly.
