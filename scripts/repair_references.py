@@ -184,6 +184,55 @@ def matches(entity_key: str, entity_label: str, patterns: Iterable[str]) -> bool
     return any(p.lower() in haystack for p in patterns)
 
 
+def score_links(pmid: str, before: Mapping[str, Any], after: Mapping[str, Any],
+                sch) -> list[dict]:
+    """Every link this pass ADDED, scored against `links` in the truth file.
+
+    Per target and per write, because they answer different questions. A write is right only
+    if every target it names is; a target is one entity chosen. The first is what a reader
+    sees, the second is what the pass actually decided, and on 18823721 one wrong write
+    carries four wrong targets while one right write carries one right target -- so quoting
+    either alone flatters or damns the pass by a factor of four.
+    """
+    truth = truth_for(pmid)
+    if truth is None:
+        return []
+    wanted = truth.get("links") or []
+    if not wanted:
+        return []
+    patterns = {e["key"]: e.get("match") or [] for e in truth["entities"]}
+    result = diff(before, after, sch)
+    out: list[dict] = []
+    for change in result["changes"]:
+        if not change["added"]:
+            continue
+        here = f"{change['container']}/{change['local_id']}"
+        label = label_of_id(after, change["local_id"])
+        spec = next((l for l in wanted
+                     if l["slot"] == change["slot"]
+                     and matches(here, label, patterns.get(l["entity"], []))), None)
+        if spec is None:
+            out.append({"pmid": pmid, "path": change["path"], "verdict": "unverifiable",
+                        "targets": change["added"], "allowed": None, "quote": "",
+                        "note": "no truth link for this entity and slot"})
+            continue
+        allowed = spec.get("targets") or []
+        good, bad = [], []
+        for target in change["added"]:
+            name = f"{target} {label_of_id(after, target)}".lower()
+            (good if any(a.lower() in name for a in allowed) else bad).append(target)
+        out.append({"pmid": pmid, "path": change["path"],
+                    "verdict": "correct" if not bad else "wrong",
+                    "targets": change["added"], "right": good, "wrong": bad,
+                    "allowed": allowed, "support": spec.get("support"),
+                    "note": (spec.get("note") or "")[:200]})
+    return out
+
+
+def label_of_id(record: Mapping[str, Any], local_id: str) -> str:
+    return label(record, local_id)
+
+
 def score(pmid: str, after: Mapping[str, Any], sch) -> list[dict]:
     """Reference slots of the ground truth, scored against the repaired record.
 
@@ -262,7 +311,7 @@ def main() -> int:
         ap.error("a run directory is required unless --explain")
 
     sch = reader.load(schema.EXTRACTION)
-    rows, all_shared, all_verdicts = [], [], []
+    rows, all_shared, all_verdicts, all_links = [], [], [], []
     for pmid, before_path, after_path in pairs(args.run):
         before = json.loads(before_path.read_text())
         after = json.loads(after_path.read_text())
@@ -284,6 +333,7 @@ def main() -> int:
         for entry in result["shared"]:
             all_shared.append((pmid, entry))
         all_verdicts += score(pmid, after, sch)
+        all_links += score_links(pmid, before, after, sch)
         if args.detail:
             for change in result["changes"]:
                 print(f"  {pmid} {change['path']}: {change['before']} -> {change['after']}")
@@ -319,6 +369,25 @@ def main() -> int:
     else:
         print("\nR5 on reference slots: no ground truth for these papers "
               f"(have: {sorted(p.stem for p in TRUTH.glob('*.json'))})")
+
+    scored = [v for v in all_links if v["verdict"] != "unverifiable"]
+    if scored:
+        writes_bad = sum(1 for v in scored if v["verdict"] == "wrong")
+        targets = sum(len(v["targets"]) for v in scored)
+        targets_bad = sum(len(v["wrong"]) for v in scored)
+        print(f"\nR5 on LINKS: {len(scored)} link writes scored "
+              f"({len(all_links) - len(scored)} unverifiable)")
+        print(f"  writes  : {len(scored) - writes_bad} right, {writes_bad} wrong "
+              f"({writes_bad / len(scored):.0%} wrong)")
+        print(f"  targets : {targets - targets_bad} right, {targets_bad} wrong "
+              f"({targets_bad / max(1, targets):.0%} wrong)")
+        for v in scored:
+            if v["verdict"] == "wrong":
+                print(f"  WRONG {v['pmid']} {v['path']}")
+                print(f"      wrote {v['wrong']}, truth allows {v['allowed'] or 'nothing'}")
+                print(f"      {v['note']}")
+    elif all_links:
+        print(f"\nR5 on LINKS: {len(all_links)} writes, none matched a truth link")
 
     print(f"\n{len(rows)} record(s). R4 gate: exclusive_shared == 0 "
           f"(shared-target and suspect are reported, not gated).")

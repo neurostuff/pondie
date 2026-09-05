@@ -7,7 +7,8 @@
   "support": "stated = the paper says it; inferred = an expert reading would agree but the paper does not say it; absent = the paper does not report it and `value` is null",
   "also_acceptable": "other values a careful reader could defend; a write matching one of these scores correct, not wrong",
   "entity keys": "chosen by the reviewer from the article, not from any record; `identified_by` says how to match a record entity to it",
-  "match": "substrings that identify this entity in a record, taken from the article's own words; matched against the entity's local_id and label so scoring does not inherit the record's idea of what an entity is"
+  "match": "substrings that identify this entity in a record, taken from the article's own words; matched against the entity's local_id and label so scoring does not inherit the record's idea of what an entity is",
+  "links": "links: which entities this one legitimately points at, judged against the SLOT's own schema description rather than against whether the paper mentions both. `targets` are label substrings; an empty list with support 'absent' means the slot should hold nothing, and a link written there is invented. Read from the article and the schema; no record was consulted for a judgement."
  },
  "entities": [
   {
@@ -564,6 +565,62 @@
      "note": "THIRD FAILURE CASE. The rows are peak coordinates with Z-values, so this is an analysis table. The word \"seed\" occurs 0 times in this paper (`grep -c -i seed` = 0) and \"connectiv\" 0 times; \"co-activation\" occurs once, in this caption."
     }
    }
+  }
+ ],
+ "links": [
+  {
+   "entity": "patients",
+   "slot": "diagnostic_instrument",
+   "targets": [],
+   "support": "absent",
+   "quote": "All opioid-dependent subjects were recruited from inpatient facilities in the Netherlands where they were pre-screened by the treatment staff and interviewed for the verification of inclusion and exclusion criteria.",
+   "note": "The slot is \"The study assessment that established this group's defining condition ... narrower than having been administered to it\". ASI grades drug-use history, OCDUS and DDQ measure craving, SHAPS measures anhedonia; the diagnosis came from a staff interview the paper does not name as an instrument. All four are correctly `Assessment` entities and none of them belongs here."
+  },
+  {
+   "entity": "controls",
+   "slot": "diagnostic_instrument",
+   "targets": [],
+   "support": "absent",
+   "quote": "Two measures of craving were used in all opioid-dependent subjects.",
+   "note": "Worse than for the patients: OCDUS and DDQ were not administered to this group at all."
+  },
+  {
+   "entity": "first_and_second_level",
+   "slot": "preprocessing",
+   "targets": [
+    "fmri",
+    "prp"
+   ],
+   "support": "stated",
+   "quote": "Imaging data were analyzed using SPM2 (Statistical Parametric Mapping; Wellcome Department of Cognitive Neurology, London, United Kingdom).",
+   "note": "One preprocessing stream in the paper and one model fitted to it, so the link is forced by the record's own shape rather than read off a sentence. Scored correct, but it is not evidence that the pass can choose a target."
+  },
+  {
+   "entity": "cue_exposure",
+   "slot": "acquisitions",
+   "targets": [
+    "fmri",
+    "acq"
+   ],
+   "support": "stated",
+   "quote": "During the fMRI session, 18 affectively neutral pictures (mean valence = 5.0, S.D. = 0.31; mean arousal = 2.8, S.D. = 0.73), 18 affectively positive (pleasant) pictures (mean valence = 7.3, S.D. = 0.9; mean arousal = 5.9, S.D. = 1.4) from the International Affective Picture System (IAPS; ), and 18 heroin-related stimuli ( ) were presented to all subjects.",
+   "note": "The slot excludes structural scans, so the T1 is not a target. Also forced: one functional acquisition."
+  },
+  {
+   "entity": "interaction",
+   "slot": "correction_regions",
+   "targets": [],
+   "support": "absent",
+   "quote": "Group by stimulus interaction effects are reported at p < 0.001 masked inclusively with the appropriate main effect.",
+   "note": "The slot is \"The regions correction was restricted to ... Empty for a whole-brain correction. Not the analysis's search space.\" The mask here is the main-effect map. The STN is what this contrast FOUND."
+  },
+  {
+   "entity": "stn_coactivation",
+   "slot": "correction_regions",
+   "targets": [],
+   "support": "absent",
+   "quote": "Brain regions that show co-activation with the subthalamic nucleus (STN) in opiate-dependent subjects",
+   "note": "The Methods never describe this analysis, so no restriction is stated. If the STN were anything here it would be a seed, and the schema says seeds live in `ConnectivityDetails.seed_regions`, explicitly not in a region slot: \"a whole-brain seed-based analysis has a seed and no search-space region, so putting one here says the opposite of what it did\"."
   }
  ]
 }

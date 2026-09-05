@@ -377,9 +377,58 @@
      "note": "The paper never enumerates the ROIs in the Methods; it defers to a citation and to the Introduction. So a record naming specific regions here has gone beyond what the paper states."
     }
    }
+  },
+  {
+   "kind": "Analysis",
+   "key": "table3_contrasts",
+   "identified_by": "the Disgust <> Neutral and Erotic <> Neutral contrasts reported in Table 3",
+   "match": [
+    "tbl3",
+    "table 3",
+    "disgust",
+    "erotic"
+   ],
+   "fields": {}
   }
  ],
  "conventions": {
-  "match": "substrings that identify this entity in a record, taken from the article's own words; matched against the entity's local_id and label so scoring does not inherit the record's idea of what an entity is"
- }
+  "match": "substrings that identify this entity in a record, taken from the article's own words; matched against the entity's local_id and label so scoring does not inherit the record's idea of what an entity is",
+  "links": "links: which entities this one legitimately points at, judged against the SLOT's own schema description rather than against whether the paper mentions both. `targets` are label substrings; an empty list with support 'absent' means the slot should hold nothing, and a link written there is invented. Read from the article and the schema; no record was consulted for a judgement."
+ },
+ "links": [
+  {
+   "entity": "glm",
+   "slot": "preprocessing",
+   "targets": [
+    "fmri",
+    "prp",
+    "spm"
+   ],
+   "support": "stated",
+   "quote": "For the preprocessing and statistical analyses, the statistical parametric mapping software package (SPM99, Wellcome Department of Cognitive Neurology, London) implemented in Matlab (Mathworks, Inc., Natick, MA, USA, release 12) was used, which is based on the general linear model (GLM) approach.",
+   "note": "One sentence names one package for both, so one stream and one model. Forced."
+  },
+  {
+   "entity": "table3_contrasts",
+   "slot": "assessments",
+   "targets": [
+    "sadomasochistic",
+    "sm"
+   ],
+   "support": "stated",
+   "quote": "The classification was initially made on the basis of replies to a short screening question (“Are you interested in sadomasochistic sexual activities?”).",
+   "note": "CORRECT, and not obviously so. The slot is \"Assessments whose measurements were used in or SELECTED THE SAMPLE for this analysis\". Table 3 is panelled by group -- its rows are headed `nonSM` and `SM` -- and the questionnaire is what assigns that membership. Judged against the paper alone I would have called this wrong; judged against the slot it is right."
+  },
+  {
+   "entity": "table3_contrasts",
+   "slot": "tables",
+   "targets": [
+    "tbl3",
+    "table 3"
+   ],
+   "support": "stated",
+   "quote": "Activations of the contrast Disgust <> Neutral (upper panel) and for the contrast Erotic <> Neutral (lower panel)",
+   "note": "The slot is \"The source tables reporting results for this analysis\". Table 3 and nothing else: Table 4 reports Erotic <> Disgust, Table 5 reports Sm <> Neutral, Table 6 reports Sm <> Disgust and Sm <> Erotic, and Tables 1 and 2 are questionnaire and rating means with no coordinates at all."
+  }
+ ]
 }

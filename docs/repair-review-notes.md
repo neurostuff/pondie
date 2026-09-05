@@ -1060,3 +1060,210 @@ Two things must go in the summary rather than be discovered later:
 
 The one measured regression -- Rule A costing two correct inferences on 16038771 -- is worth
 accepting for the M3 collapse it bought, but it should be named, not netted away.
+
+---
+
+# Round 6: links, and template arms for the residue
+
+## Link ground truth, and your prediction falsified
+
+`benchmarks/repair_truth/*.json` now carry a `links` array: for each entity, which targets
+the slot may legitimately hold, judged **against the slot's own schema description** rather
+than against whether the paper mentions both ends. `verify_quotes.py` checks link quotes too;
+209 quotes, all verbatim.
+
+That distinction changed an answer. 16038771 writes `asm_sadomasochistic_preferences` onto
+four Table 3 analyses, and read against the paper alone I would have called it wrong -- the
+questionnaire assigns group membership, it is not a covariate. Read against the slot --
+"Assessments whose measurements were used in **or selected the sample for**this analysis" --
+it is right, and Table 3 is panelled `nonSM` / `SM`, so the sample was selected by it. Four
+writes flipped from wrong to correct on the strength of one clause.
+
+Scored:
+
+| arm | link writes | writes wrong | targets | targets wrong |
+|---|---|---|---|---|
+| pre | 14 | 6 (**43%**) | 28 | 20 (**71%**) |
+| post | 11 | 3 (**27%**) | 14 | 6 (**43%**) |
+
+**Your prediction -- "the link damage rate is worse than 58%" -- is falsified by write in
+both arms and by target in the post arm.** It survives only as pre-arm targets, 71%.
+
+## But the rate is an artifact, and this is the finding
+
+For every scored link I counted how many candidates of the target class the record actually
+held. A link to the only entity of its class is not a choice.
+
+| | correct | wrong |
+|---|---|---|
+| pre: the record held one candidate | **8** | 2 |
+| pre: the record held several | **0** | 4 |
+| post: the record held one candidate | **8** | 2 |
+| post: the record held several | **0** | 1 |
+
+**Every correct link write in both arms is to the only entity of its class in the record.
+The pass has never been observed to choose a link correctly.** Three `ModelEstimation.
+preprocessing`, one `Task.acquisitions` and four copies of one `Analysis.assessments`
+decision -- eight writes, zero choices. And "forced" does not mean safe: the two
+`correction_regions <- reg_stn` writes on 18823721 are forced *and* wrong, because the record
+held one Region and the right answer was to write nothing.
+
+Counting only the writes that required a judgement -- five choices among candidates, plus
+four forced writes whose correct answer was "no link" -- the pass scored **0 of 9 across both
+arms**. The aggregate 27% looks respectable because forced links dilute it by 8.
+
+So your prediction was wrong as stated and right underneath it: links are not 58% wrong, they
+are 100% wrong wherever a decision is involved, and the schema's forced links are carrying
+the average.
+
+## Junk targets: one signal fails, one works, and neither is a link guard
+
+15127179 mints twelve `Assessment` entities -- the unrepaired record has zero -- and four are
+not assessments: `statistical parametric mapping`, `STATISTICA`, `Pearson's linear
+correlation coefficient`, `Spearman's correlation coefficient`. `asm_statistical_parametric_
+mappi` carries `evidence: present`, so grounding does not see it either.
+
+**The signal I expected does not work.** I hypothesised that a junk Assessment's name would
+collide with a `software` value elsewhere in the same record. Measured over all 2,019
+`Assessment` entities in every run: **5 collisions, and the only non-trivial one is a
+substring artefact** -- `asm_r` ("R") inside "matlabr2006a". The paper writes "statistical
+parametric mapping" in prose and "SPM99" in the software slot, so they never match. Do not
+build it.
+
+**The signal that works is the record telling you itself.** The junk entities announce what
+they are in `assessment_type`:
+
+    asm_statistical_parametric_mappi   type='fMRI analysis'
+    asm_statistica                     type='regression analysis'
+    asm_pearson_s_linear               type='correlation'
+    asm_spearman_s_correlation         type='correlation'
+
+against `questionnaire`, `clinical scale`, `diagnostic interview` for the eight real ones.
+Across the corpus `assessment_type` is an **open string with 211 distinct values over 2,019
+entities, 118 of them singletons**, while five values cover 66%. Roughly 31 entities declare
+themselves software or statistics.
+
+My call: **not a link guard.** Refusing the link leaves the junk entity in the record for
+something else to link to, and it is the second error, not the first. Two options at the
+right place, which is minting:
+
+* **now, cheap:** `create` refuses an `Assessment` whose `assessment_type` is one of about
+  eight strings -- `statistical software`, `statistical package`, `fmri analysis`,
+  `regression analysis`, `correlation`. Deterministic, ~1.5% of entities, and it is a
+  deny-list, which is the brittleness you flagged;
+* **durable:** close the vocabulary. The machinery exists -- `values.cast` already refuses a
+  value outside an enum's permissible values and `create` already refuses an entity it cannot
+  build validly -- and the distribution supports it. The risk is the one `region_type` is
+  written for: a closed vocabulary drops a legitimate long tail, so it wants `any_of: [Enum,
+  string]` and a rule that the open branch is not a licence for "fMRI analysis".
+
+## Quote-carrying helps links *more* than values, and the cases say why
+
+This is the one place I think structure clearly wins, and it is a stronger case than the
+value case -- your point 3 is right and it is worth more than you claimed.
+
+A link's quote is checkable by a rule that needs no schema knowledge: **the quote must name
+the target.** Against the three wrong post-arm link writes:
+
+    diagnostic_instrument <- [DDQ, SHAPS, ASI, OCDUS]   needs a sentence saying these four
+                                                        established the diagnosis. None
+                                                        exists; `spans.verify` kills it.
+    correction_regions <- reg_stn  (x2)                 needs a sentence saying the
+                                                        correction was restricted to the
+                                                        STN. None exists.
+
+All three die. Whereas for *values* the same rule does almost nothing: `haloperidol` has a
+real quote naming it, and so does `age_mean 28.2`. For a value the quote only helps through a
+second rule -- does the sentence name this entity, is there an exclusion cue in it -- and for
+a link the target-naming rule is direct and complete.
+
+## The template arms, and my argument with your ordering
+
+Implemented in `recall.py` behind `PONDIE_TEMPLATE`, a comma-separated set of `described`,
+`quoted`, `scoped`. Empty is the shape every measurement in this document was taken with. An
+environment variable and not a `Settings` field on purpose: these are arms, and the winner
+should become the only shape rather than a fifth setting. 845 tests pass.
+
+**I disagree with the ordering, and with the premise under it.** You wrote that "every one of
+your 11 residual errors is a value belonging to a different entity in the same paper". I said
+"the wrong entity **or the wrong slot**", and the split matters:
+
+    wrong entity   3 of 11   haloperidol, age_mean 28.2 (x2)
+    wrong slot     8 of 11   enrolled vs acquired count (x2), diagnostic_instrument,
+                             correction_regions (x2), hrf_model on a model with no HRF,
+                             spatial_unit, inference_level
+
+Entity-scoping addresses the minority. So my ordering is:
+
+1. **`described` -- ship the schema's own slot descriptions.** Free, no extra calls, and it
+   targets the 8 wrong-slot errors head on. **Seven of the eleven residual errors have their
+   fix written in the schema already and never shown to the model:**
+
+       enrolled_count         Number enrolled after screening and before acquisition
+       acquired_count         Number for whom data were acquired or who were scanned
+       diagnostic_instrument  The study assessment that established this group's defining
+                              condition
+       correction_regions     The regions correction was restricted to
+       hrf_model              The haemodynamic response basis the design matrix was built
+                              with
+       medications            The drugs or other agents this cohort was taking
+
+   The template says `{"enrolled_count": "integer", "acquired_count": "integer"}` and nothing
+   else. `vocabulary` already ships enum descriptions for exactly this reason; this ships the
+   slots'. Adds 2,814 characters on `Group`, the largest class, against a premise of tens of
+   thousands.
+2. **`quoted`** -- for the link argument above, and because it unblocks everything else: the
+   span-sharing refusal, Rule A's paraphrase and unit-conversion carve-outs, and a
+   negation-cue refusal all need the candidate sentence at write time. Costs a doubled
+   template (1,785 -> 3,774 characters on `Group`), which is a real risk for a 3B model and
+   is itself worth measuring.
+3. **`scoped`** -- the rule that a value belongs to the entity its `local_id` names. Targets
+   the remaining 3.
+4. **single-slot** -- only if 1-3 do not move it. It is the same information at N times the
+   cost, and 1 is the cheap version of the same idea.
+
+**`quoted` does nothing until `edit.py` changes, and `edit.py` is yours.** `recall.unquote`
+parks citations under `proposal["_quotes"]`, a key no class declares, so `apply` skips it
+today. What it needs:
+
+    apply(...)          quotes = proposal.get(recall.QUOTES) or {}
+    the value branch    written = _wrap(value, text, quote=quotes.get(name))
+    _wrap(...)          when `quote` is given, resolve it with `spans.resolve`/`verify`
+                        against `text` and use that span, rather than searching for the
+                        value; keep the 20-character search as the fallback
+
+That is the change that retires the 20-character floor and the failed locator both: the span
+becomes the model's own sentence, verified, exactly as `adjudicate` already does it.
+
+## A confound in the Luna arm
+
+`ModelProposer.SHAPE` tells the network model "A value belongs to the entity named by its
+`local_id` and to no other. A number stated for a subgroup, an excluded participant or
+another cohort is not this entity's value". NuExtract is told none of that. **So the two arms
+differ in prompt as well as in model, and a lower Luna damage rate would not separate them.**
+That instruction is now `recall.SCOPED`, assembled in `_Proposes.propose` so both arms get
+it under `PONDIE_TEMPLATE=scoped` -- run the Luna arm with it, or take the sentence out of
+`SHAPE`, but do not run one arm with it and one without.
+
+## The sixth thing we are fooling ourselves about
+
+It is mine, and it is that I have been quoting **58%** as though it were a measurement rather
+than a fraction.
+
+It is 11 of 19. The Wilson 95% interval on 11/19 is **36% to 77%**. Every damage rate in this
+document has that shape: the link rate is 3 of 11, the per-paper rates are 5 of 9 and 3 of 5
+and 3 of 4 and 1 of 1. I wrote "58%" into a docstring in `recall_llm.py` and into the
+`Settings` comment for `proposer_kind`, and it will be read as a property of the pass.
+
+What the evidence supports is the *direction* and the *kind*: repair is wrong on more of what
+it changes than it is right, and the errors are real facts in the wrong place rather than
+inventions. What it does not support is any comparison of two arms that differ by less than
+about twenty points -- which includes the Luna comparison as designed. **If Luna comes back
+at 45%, that is not a fall; it is inside the interval.** Four papers cannot separate 58% from
+45%, and by my own round-3 estimate we need eight papers per arm for a 30-point difference
+and more than that for anything smaller.
+
+So: run Luna over the fifteen papers, not the four. It is the same code, the arms already
+share inputs, and the cost is linear where the statistics are not. If the budget only covers
+four, then the honest output of that arm is a direction and not a rate, and it should be
+written down as one.

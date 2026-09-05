@@ -39,16 +39,19 @@ def main(root: str | None = None) -> int:
         pmid = os.path.basename(path)[:-5]
         text = article(pmid, root)
         truth = json.load(open(path, encoding="utf-8"))
-        for entity in truth["entities"]:
-            for slot, spec in entity["fields"].items():
-                total += 1
-                quote = spec.get("quote")
-                if not quote:
-                    print(f"MISSING QUOTE  {pmid} {entity['key']}.{slot}")
-                    bad += 1
-                elif norm(quote) not in text:
-                    print(f"NOT VERBATIM   {pmid} {entity['key']}.{slot}: {norm(quote)[:100]!r}")
-                    bad += 1
+        claims = [(f"{e['key']}.{slot}", spec)
+                  for e in truth["entities"] for slot, spec in e["fields"].items()]
+        claims += [(f"{l['entity']}.{l['slot']} (link)", l)
+                   for l in truth.get("links") or []]
+        for where, spec in claims:
+            total += 1
+            quote = spec.get("quote")
+            if not quote:
+                print(f"MISSING QUOTE  {pmid} {where}")
+                bad += 1
+            elif norm(quote) not in text:
+                print(f"NOT VERBATIM   {pmid} {where}: {norm(quote)[:100]!r}")
+                bad += 1
     print(f"{total} quotes checked, {bad} not verbatim")
     return 1 if bad else 0
 

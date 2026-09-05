@@ -501,6 +501,8 @@
   }
  ],
  "conventions": {
-  "match": "substrings that identify this entity in a record, taken from the article's own words; matched against the entity's local_id and label so scoring does not inherit the record's idea of what an entity is"
- }
+  "match": "substrings that identify this entity in a record, taken from the article's own words; matched against the entity's local_id and label so scoring does not inherit the record's idea of what an entity is",
+  "links": "links: which entities this one legitimately points at, judged against the SLOT's own schema description rather than against whether the paper mentions both. `targets` are label substrings; an empty list with support 'absent' means the slot should hold nothing, and a link written there is invented. Read from the article and the schema; no record was consulted for a judgement."
+ },
+ "links": []
 }
