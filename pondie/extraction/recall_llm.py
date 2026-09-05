@@ -24,7 +24,7 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from pondie.extraction.models import ModelCall
+from pondie.extraction.models import Cost, ModelCall
 from pondie.extraction.recall import INSTRUCTION, _NOUN, _Proposes, directive
 
 #: What a served or local NuExtract gets from its chat template and a chat model does not:
@@ -61,6 +61,11 @@ class ModelProposer(_Proposes):
         self._service_tier = service_tier
         self._effort = effort
         self._max_chars = max_chars
+        #: What this proposer spent. A local proposer costs a card and nothing a ledger can
+        #: see, so `repair` only ever recorded the adjudication's cost -- and a network
+        #: proposer put its whole spend outside the run's accounting. The first Luna arm
+        #: reported 0 calls and 0 tokens for a stage that had made hundreds.
+        self.cost = Cost()
 
     def ask(self, template: Mapping[str, Any], instruction: str, premise: str,
             what: str = "") -> Mapping[str, Any]:
@@ -77,5 +82,6 @@ class ModelProposer(_Proposes):
                       max_output_tokens=8_000, effort=self._effort,
                       service_tier=self._service_tier, attempts=2),
             paper=self._study_id, stage=f"repair:propose:{what or 'any'}")
+        self.cost = self.cost + reply.cost
         payload = getattr(reply, "payload", None)
         return payload if isinstance(payload, Mapping) else {}
