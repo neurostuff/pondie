@@ -598,3 +598,161 @@ which papers you picked.
   and where three of the four known failure cases live.
 * The three code changes above: shape-aware `_inherited`, length-based
   `refuses_shortening_a_list`, and `is_multivalued` in `recall.template_for`.
+
+---
+
+# Round 3: review of ec3db6d, and the `EXCLUSIVE` refusal
+
+## The warrant test, measured over the whole corpus
+
+Not on the four papers -- on every grounded value in every pre-repair record available,
+**7,664 of them**, old `_bare` containment against the committed `_warrants`:
+
+| value kind | n | old `_bare` | new | old only |
+|---|---|---|---|---|
+| bool | 135 | 22 | **0** | 22 |
+| list | 962 | 447 | **555** | 4 |
+| number | 1098 | 923 | 867 | 56 |
+| short string (<4) | 583 | 449 | 360 | 89 |
+| string | 4886 | 3022 | 3022 | 0 |
+| **total** | **7664** | **4863** | **4804** | **171** |
+
+171 warrant claims removed, 112 added, and the composition is the whole argument. The
+additions are all in `list`, which is H. The removals are concentrated exactly where the
+false positives were, and I checked rather than assumed:
+
+* **All 22 boolean matches were false.** `is_healthy: False` matched "corrected for multiple
+  comparisons using the **false** discovery rate"; `is_healthy: True` matched "This was
+  **true** even if there was a similar...". Every one is a discussion sentence or a method
+  sentence that says nothing about the cohort. The blanket `False` for booleans is right,
+  and it costs nothing.
+* The 56 numbers and 89 short strings are the `12`-contains-`1` and `heroin`-contains-`roi`
+  classes.
+* Strings of four characters or more are untouched, which is why nothing real moved.
+
+**One correction: the commit says 216 of 218; the committed code gives 215.** The third loss
+is `education_summary` on 21118656, a pipeline-written summary sentence longer than the span
+it cites. All three losses are cases where the harness re-proposes the *identical* value,
+which `_same` now intercepts before `_inherited` is reached, so the production consequence is
+still zero -- but the number in the message should be 215.
+
+## Attacks on F/G/H
+
+F, G and H are closed; I re-ran all three against the committed code and they behave as
+advertised. Four probes at the new edges; one lands.
+
+**Your word-boundary question: it reintroduces nothing, and I looked for it specifically.**
+Case is handled (`text.lower()` both sides). Punctuation and unicode dashes never reach the
+boundary path, because anything with a dash in it is four or more bare characters and takes
+the `_bare` route -- `DSM-IV`, `MPRage`, `3-D` all still match. The one hazard I could
+construct is this corpus's own tokenisation: it prints `T 1 -weighted`, `T 2 *`, `3 T`, so
+`\bt1\b` cannot match `T 1`. **But it does not occur.** Of the 583 grounded short values in
+the corpus, allowing interior whitespace (`\bt\s*1\b`) recovers **zero** additional ones. The
+223 the boundary rejects are vocabulary tokens the extractor derived rather than quoted --
+`roi`, `glm`, `TAL` -- where the paper writes "region of interest", "general linear model",
+"Talairach". `_bare` did not match those either. So there is nothing to fix here.
+
+**K2 (lands). A partial list extension is refused wholesale.** `["SPM2"] -> ["SPM2",
+"MarsBaR"]`, where MarsBaR is in the paper but not in *this field's* span, is refused as
+"loses the span that warranted the value it replaces". `_inherited` requires every element to
+be warranted by the existing spans, and `refuses_losing_the_warrant` refuses when it is not.
+
+This matters more now than it did an hour ago, because you have just made the proposer able
+to return lists (`is_multivalued` in `template_for`). Most extensions it proposes will name a
+second value from a second sentence, and this refuses all of them -- so the template fix
+cannot show up as yield. The edit is a strict superset of a warranted value, which is not a
+loss of anything: it should be written with the old spans kept and `value_source` dropped to
+`generated`. `refuses_shortening_a_list` and `refuses_truncation` already cover the case
+where content is actually removed, so `refuses_losing_the_warrant` does not need to.
+
+**Not defects, but caps worth knowing.** A unit-converted numeric can never inherit --
+`echo_time_seconds: 0.028` against "TE = 28 ms" compares 0.028 to 28. And a grounded boolean
+can never be corrected, only left alone; `_same` keeps the no-op case safe, so this costs
+nothing today.
+
+**builder.py:70/75/595 -- you are right, I withdraw it.** Those read the attribute on a
+container or a nested/reference list, where multiplicity is on the attribute in both schemas
+and no `Extracted*` wrapper intervenes. `is_multivalued` would return the same answer more
+slowly. The one that mattered was `template_for`, and that is landed.
+
+## `EXCLUSIVE` implemented
+
+In `edit.py` and `repair._sweep`, as specified.
+
+* `EXCLUSIVE_REFERENCES: frozenset[tuple[str, str]]` holds `("Group",
+  "diagnostic_instrument")` and nothing else, with the fifteen-correct-writes evidence in
+  the comment so the next reader does not generalise it.
+* `apply` takes `claimed`, a caller's dict keyed `(class_name, slot, sorted added targets)`
+  and valued with the `local_id` that took them first. `_refuses_a_claimed_target` refuses a
+  later, different entity. It is not a `Check` and cannot be one: a `Check` judges one edit
+  against the record, this judges an edit against what the same sweep already wrote, and the
+  first write is legitimate.
+* `_sweep` builds one `claimed` per class sweep and threads it through. Across the two
+  iterations nothing double-fires, because pass two sees pass one's write as `existing` and
+  `added` is then empty.
+* Keyed on what is **added**, not on the whole slot: an entity that already held a target is
+  not claiming it again.
+* Two tests: the 18823721 shape is refused, and two model estimations sharing one
+  preprocessing are still written.
+
+`831 passed, 17 skipped` on a clean copy of the branch (829 plus the two new).
+
+## Q4: the smallest change with the best effect on yield-vs-damage
+
+Measured, not argued. Every value repair changed or created on the four truth papers,
+cross-tabulated against whether the pass could ground it. **21 changed writes, of which 18
+are ungrounded, and 72% of those are wrong or invented:**
+
+| | correct | inferred | wrong | invented | total | bad |
+|---|---|---|---|---|---|---|
+| grounded | 2 | 0 | 0 | 1 | 3 | 33% |
+| ungrounded | 4 | 1 | 2 | 11 | 18 | **72%** |
+
+Restricting to value slots -- reference slots are the `EXCLUSIVE` guard's job now -- there
+are 16 changed writes, 7 good and 9 bad, and two candidate rules:
+
+| rule | kept (good/bad) | refused (good/bad) | yield | damage | passes `yield >= damage` |
+|---|---|---|---|---|---|
+| today | 16 (7/9) | 0 | 7 | 9 | no |
+| **A** refuse every ungrounded write | 3 (2/1) | 13 (5/8) | 2 | 1 | yes |
+| **B** refuse an ungrounded write whose value is not in the document | 14 (7/7) | 2 (0/2) | 7 | 7 | exactly |
+
+**A is the lever and it is cheaper than D3 feared.** Your D3 warning -- "any rule of the form
+drop what cannot be grounded would discard correct data" -- is right in kind and wrong in
+size. It costs exactly five values across four papers, and all five are recognisable:
+
+    SPM2 / SPM99 / SPM5   preprocessings/model_estimations.software -- named verbatim in
+                          every one of those papers; the locator simply missed them
+    excluded_count = 7    24 enrolled minus 17 analysed, both already in the record
+    correction_scope      whole_brain, inferred from a whole-brain acquisition
+
+The first two have obvious carve-outs -- allow an ungrounded write whose value occurs in the
+document, and allow a count the record's own arithmetic produces -- and with those A costs
+one value and removes eight errors. **That is the smallest change with the best effect: A
+plus the document-presence carve-out.** B on its own is nearly free and nearly useless: it
+removes 2 of 9, because most of the wrong values *are* in the document.
+
+**What neither rule touches is the residue, and it is all D4.** Every one is a correct value
+in the wrong place:
+
+    haloperidol                          a patient who was excluded
+    no current psychotropic medication   a criterion, and the other group's too
+    age_mean 28.2                        the 19 students, across both groups
+    enrolled_count 17                    the analysed count in the enrolled slot
+    beta distribution as hrf_model       a model that has no HRF
+
+The rule I would expect to catch these is the span-sharing refusal (R8i): refuse a write
+whose warrant is a sentence already cited by another field -- the same slot on a sibling
+entity (28.2, medications) or a different slot on the same entity (enrolled vs acquired).
+**I have not measured it**, because only 3 of the 16 writes are grounded and the candidate
+span of an ungrounded write cannot be reconstructed after the fact. It needs instrumenting at
+write time, and I would do that before building it.
+
+## Still outstanding
+
+* **`runs/repair-final` has not started** (0 of 15). Task 3 -- R5 damage and yield, fixed
+  versus baseline, on all four truth papers -- is not done and I will not estimate it. Say
+  the word when it lands and I will run `repair_delta`, `repair_references` and
+  `repair_score` across both arms.
+* `refuses_losing_the_warrant` should allow a strict superset (K2 above).
+* The 216 in ec3db6d's message should be 215.

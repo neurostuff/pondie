@@ -139,3 +139,58 @@ def test_shortening_a_list_is_refused_whatever_shape_it_arrives_in(sch):
                      {"software": ["SPM2"]}, "Analysis used SPM2 and FSL.")
     assert entity["software"]["value"] == ["SPM2", "FSL"]
     assert any("drops values" in r.why for r in log.refused)
+
+
+def test_an_exclusive_reference_is_not_copied_to_a_second_entity(sch):
+    """One target set belongs to one entity on an exclusive slot; the second copy is refused.
+
+    18823721: the pass wrote the same four questionnaires -- ASI, OCDUS, DDQ and SHAPS -- to
+    both groups as `diagnostic_instrument`, the slot the schema describes as the assessment
+    that established THIS group's condition. Two of the four were administered to the
+    patients only, and none of them established a diagnosis.
+    """
+    record = {
+        "groups": [{"local_id": "grp_patients", "name": _named("patients")},
+                   {"local_id": "grp_controls", "name": _named("controls")}],
+        "assessments": [{"local_id": "asm_caps", "name": _named("CAPS")}],
+    }
+    claimed: dict = {}
+    first = edit.apply(
+        sch, record, "Group", record["groups"][0],
+        {"local_id": "grp_patients", "diagnostic_instrument": ["CAPS"]},
+        PAPER, None, claimed)
+    second = edit.apply(
+        sch, record, "Group", record["groups"][1],
+        {"local_id": "grp_controls", "diagnostic_instrument": ["CAPS"]},
+        PAPER, None, claimed)
+    assert record["groups"][0]["diagnostic_instrument"] == ["asm_caps"]
+    assert "diagnostic_instrument" not in record["groups"][1]
+    assert [s for s, _v in first.written] == ["diagnostic_instrument"]
+    assert not second.written
+    assert "the same targets were just written to grp_patients" in second.refused[0].why
+
+
+def test_a_shared_reference_on_an_ordinary_slot_is_still_written(sch):
+    """Sharing is how the other reference slots work, and refusing it would break them.
+
+    Over twelve papers the pass made fifteen shared-target writes -- six analyses on one
+    SCID, three on one cue task, two model estimations on one preprocessing -- and every one
+    is correct. Only the slots in `EXCLUSIVE_REFERENCES` are refused.
+    """
+    record = {
+        "model_estimations": [{"local_id": "mod_one", "name": _named("first level")},
+                              {"local_id": "mod_two", "name": _named("second level")}],
+        "preprocessings": [{"local_id": "prp_fmri", "name": _named("fmri preprocessing")}],
+    }
+    claimed: dict = {}
+    for entity, local_id in zip(record["model_estimations"], ("mod_one", "mod_two")):
+        edit.apply(sch, record, "ModelEstimation", entity,
+                   {"local_id": local_id, "preprocessing": ["fmri preprocessing"]},
+                   PAPER, None, claimed)
+    assert record["model_estimations"][0]["preprocessing"] == ["prp_fmri"]
+    assert record["model_estimations"][1]["preprocessing"] == ["prp_fmri"]
+
+
+def _named(label):
+    return {"extraction_status": "extracted", "value": label, "value_source": "reported",
+            "evidence": {"status": "not_found"}}

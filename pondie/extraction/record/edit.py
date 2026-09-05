@@ -84,6 +84,24 @@ def _scope_pair(slot: str) -> str:
 UNRESTRICTED = frozenset({"whole_brain", "whole brain", "searchlight"})
 
 
+#: Reference slots where one target belongs to one entity, so the same list arriving on a
+#: second entity of the class in one sweep is a copy rather than a reading.
+#:
+#: Named rather than derived, because what makes a slot exclusive is what its description
+#: says and no rule reads that. `Group.diagnostic_instrument` is "The study assessment that
+#: established THIS group's defining condition" -- on 18823721 the pass wrote the same four
+#: questionnaires to the patients and the controls, and two of the four were administered to
+#: the patients only.
+#:
+#: Sharing is the normal case everywhere else and must stay legal: over twelve papers the
+#: pass made fifteen shared-target writes -- six analyses on one SCID, three on one cue task,
+#: two model estimations on one preprocessing -- and every one of them is correct. A blanket
+#: rule would have refused all fifteen and caught neither of the two real errors.
+EXCLUSIVE_REFERENCES: frozenset[tuple[str, str]] = frozenset({
+    ("Group", "diagnostic_instrument"),
+})
+
+
 # -------------------------------------------------------------------------------- guards
 
 
@@ -480,8 +498,17 @@ def _container(sch: Schema, class_name: str) -> str:
 
 def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
           entity: MutableMapping[str, Any], proposal: Mapping[str, Any],
-          text: str = "", abbreviations: Any = None) -> EditLog:
-    """Write the slots of `proposal` this entity may take. Returns what happened."""
+          text: str = "", abbreviations: Any = None,
+          claimed: MutableMapping[tuple[str, str, tuple[str, ...]], str] | None = None
+          ) -> EditLog:
+    """Write the slots of `proposal` this entity may take. Returns what happened.
+
+    `claimed` is the sweep's memory of which entity already took a set of targets on an
+    `EXCLUSIVE_REFERENCES` slot. It is a caller's dict rather than state here because the
+    thing being refused is a property of the sweep and not of the edit: a `Check` sees one
+    entity and one value, and what is wrong with the second write is only visible beside the
+    first. `repair._sweep` holds one per class.
+    """
     log = EditLog()
     # The class the entity says it is, not the one its container declares. An acquisition is
     # an `MRI` by type designator, and `magnetic_field_strength_tesla` is a slot of that
@@ -534,6 +561,13 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             value: Any = merged if _multivalued(sch, class_name, name) else merged[0]
             if value == entity.get(name):
                 continue
+            # On what is added, not on the whole slot: an entity that already held a target
+            # is not claiming it again, and the copy this refuses is a set of ids arriving
+            # for the first time on a second entity.
+            added = tuple(sorted(r for r in resolved if r not in existing))
+            if refused := _refuses_a_claimed_target(class_name, name, added, entity, claimed):
+                log.refused.append(refused)
+                continue
         else:
             value = values.shape(sch, class_name, name, proposed)
             if value is None:
@@ -553,6 +587,8 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             continue
         if kinds[name] == "reference":
             entity[name] = value
+            if claimed is not None and (class_name, name) in EXCLUSIVE_REFERENCES and added:
+                claimed[(class_name, name, added)] = str(entity.get("local_id") or "")
         else:
             written = _wrap(value, text)
             if (kept := _inherited(current, value)) is not None:
@@ -560,6 +596,26 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             entity[name] = written
         log.written.append((name, value))
     return log
+
+
+def _refuses_a_claimed_target(class_name: str, slot: str, added: tuple[str, ...],
+                              entity: Mapping[str, Any],
+                              claimed: Mapping[tuple[str, str, tuple[str, ...]], str] | None
+                              ) -> Refusal | None:
+    """One exclusive target set belongs to one entity, so the second copy is not a reading.
+
+    Not a `Check`: the guards judge one edit against the record, and this judges an edit
+    against what the same sweep already wrote. The first write is legitimate and the second
+    is the one to refuse, which needs the caller's memory rather than the record.
+    """
+    if claimed is None or not added or (class_name, slot) not in EXCLUSIVE_REFERENCES:
+        return None
+    first = claimed.get((class_name, slot, added))
+    own = str(entity.get("local_id") or "")
+    if first is None or first == own:
+        return None
+    return Refusal(slot, f"the same targets were just written to {first}, and this slot "
+                         f"names what belongs to one entity", list(added))
 
 
 def _multivalued(sch: Schema, class_name: str, slot: str) -> bool:

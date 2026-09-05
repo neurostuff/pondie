@@ -453,6 +453,14 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
             return
         by_id = {e.get("local_id"): e for e in record.get(container) or []
                  if isinstance(e, Mapping)}
+        # One per class sweep, and passed to every `apply` in it. An exclusive reference
+        # slot names what belongs to one entity, so the same target list arriving on a
+        # second entity of this class is a copy: on 18823721 the pass wrote the same four
+        # questionnaires to `grp_opioid_patients` and `grp_controls` as their
+        # `diagnostic_instrument`, and two of the four were administered to the patients
+        # only. Held here rather than in `edit` because the first write is right and only
+        # the second is wrong, which nothing looking at one edit can see.
+        claimed: dict[tuple[str, str, tuple[str, ...]], str] = {}
         # Only what would be created is asked to justify its existence. A proposal naming an
         # entity the record already holds is an *edit*, and the extractor established that
         # entity already -- re-asking whether the paper describes it rejects corrections to
@@ -473,6 +481,6 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
                 record.setdefault(container, []).append(entity)
                 report.written.append(f"{container}/{entity['local_id']} created")
             log = edit_module.apply(sch, record, class_name, entity, proposal, document,
-                                    abbreviations)
+                                    abbreviations, claimed)
             report.written += [f"{container}/{entity['local_id']}.{s}" for s, _v in log.written]
             report.refused += log.refused
