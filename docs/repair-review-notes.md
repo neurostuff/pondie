@@ -1267,3 +1267,153 @@ So: run Luna over the fifteen papers, not the four. It is the same code, the arm
 share inputs, and the cost is linear where the statistics are not. If the budget only covers
 four, then the honest output of that arm is a direction and not a rate, and it should be
 written down as one.
+
+---
+
+# Round 7: four proposers, one question, and an answer the damage rate cannot show
+
+Four arms, four papers, byte-identical inputs (verified with `cmp` on all sixteen pairs).
+
+## R5, per paper and per arm
+
+| arm | 18823721 | 11058476 | 16038771 | 21118656 | gate |
+|---|---|---|---|---|---|
+| pre (no fix) | 13/9/4 fail | 3/2/1 fail | 6/3/3 **pass** | 0/0/0 pass | 2 of 4 |
+| NuExtract per class | 9/5/4 fail | 5/3/2 fail | 4/3/1 fail | 1/0/0 pass | 1 of 4 |
+| Luna per class | 3/1/2 **pass** | 4/1/3 **pass** | 7/4/3 fail | 6/6/0 fail | 2 of 4 |
+| Luna 2 batches | 2/0/2 **pass** | 1/0/1 **pass** | 5/4/1 fail | 5/5/0 fail | 2 of 4 |
+| Luna whole record | 2/0/2 **pass** | 2/0/2 **pass** | 6/4/2 fail | 5/5/0 fail | 2 of 4 |
+
+(changed / wrong+invented / yield)
+
+| arm | changed | bad | yield | damage | 95% Wilson |
+|---|---|---|---|---|---|
+| pre | 22 | 14 | 8 | 64% | [43%, 80%] |
+| NuExtract per class | 19 | 11 | 7 | **58%** | [36%, 77%] |
+| Luna per class | 20 | 12 | 8 | 60% | [39%, 78%] |
+| Luna 2 batches | 13 | 9 | 4 | 69% | [42%, 87%] |
+| Luna whole record | 15 | 9 | 6 | 60% | [36%, 80%] |
+
+**Every pairwise comparison is indistinguishable.** Ten comparisons, largest |z| = 0.65.
+NuExtract against whole-record Luna is z = 0.12. No arm beats the *pre* arm on the gate.
+
+## Your hypothesis, plainly: the damage rate does not fall
+
+**It does not.** 58% -> 60%, z = 0.12. On the metric you asked me to use, giving the model
+the whole record in one call changes nothing, and neither does batching, and neither does
+changing the model. If that is the whole question, the answer is no.
+
+**But the metric cannot see what happened, and something large did.** I took the ten fields
+NuExtract got wrong and asked what each arm put in them:
+
+| arm | fixed | left empty | still wrong |
+|---|---|---|---|
+| NuExtract per class | 0 | 0 | 10 |
+| Luna per class | 1 | 7 | 2 |
+| Luna 2 batches | **1** | **9** | **0** |
+| Luna whole record | **1** | **9** | **0** |
+
+Not one of the ten survives into the batched or whole-record arms. `haloperidol`, the four
+craving questionnaires as a diagnostic instrument, the STN as a correction region twice, the
+analysed count in the enrolled slot twice, the students' 28.2 as a group's mean age, `beta
+distribution` as an HRF -- every misattribution this review has been chasing since round one
+stops.
+
+**And it stops by abstention, not by attribution.** Nine of the ten are left empty; exactly
+one is corrected (`mod_glm.spatial_unit: 'roi' -> ['voxel']`). The model did not see that the
+number belonged to another cohort and pick the right one. It declined to answer.
+
+That is worth having -- an empty field is honest and a wrong one is not, and `missed` rises
+from 19 to 23 while `wrong + invented` falls -- but it is not what the hypothesis predicted,
+and it should not be written up as though it were. **Cross-entity context is a lever for
+silence, not for correct attribution.**
+
+Paired on those ten fields, the effect is not marginal: ten fields move from wrong to
+not-wrong and none moves the other way, sign-test p ≈ 0.002 on four papers. **The abstention
+result is established; the rate difference is not.** That is a fact about the two
+measurements rather than about the arms -- a paired comparison on the same fields is
+enormously more efficient than comparing two marginal rates, and I should have proposed it
+three rounds ago.
+
+## What the Luna arms acquired instead
+
+The residue does not shrink, it moves. By slot:
+
+    NuExtract per class   correction_regions 2, enrolled_count 2, age_mean 2, medications 1,
+                          diagnostic_instrument 1, inference_level 1, hrf_model 1,
+                          spatial_unit 1                                  -- 8 slots
+    Luna whole record     diagnostic_instrument 6, diagnostic_system 2,
+                          medical_condition 1                             -- 3 slots
+
+Eight of the whole-record arm's nine errors are the pass attaching a diagnostic instrument or
+a diagnostic system to a group that does not have one -- on 21118656, where NuExtract changed
+one field and got it right, Luna changes five and gets all five wrong. **That is the
+link-choice failure from round 6, and it is not a context problem.** Round 6 measured the
+pass at 0 for 9 on link writes that required a judgement; giving it more context made it
+willing to make more of those judgements, and they are still wrong.
+
+`EXCLUSIVE` fired once in each Luna arm, on 16038771 (`already belongs to grp_nonsm`) -- the
+first production evidence for it outside 18823721. It does not touch the six remaining
+errors, because those give *different* instruments to different groups, so no target is
+claimed twice.
+
+## The link comparison is not usable, and I will not report it as though it were
+
+| arm | reference slots changed | targets added | scored against truth | unverifiable |
+|---|---|---|---|---|
+| NuExtract per class | 11 | 14 | 11 | 0 |
+| Luna per class | 61 | 117 | 15 | 42 |
+| Luna 2 batches | 61 | 87 | 15 | 44 |
+| Luna whole record | 43 | 43 | 15 | 26 |
+
+**Luna writes four to six times as many links as NuExtract on the same four papers**, and my
+link ground truth covers 15 of them. The Luna arms score 0% wrong on that 15 -- and quoting
+that as "Luna links are perfect" would be reporting 25-35% coverage as a result. The papers
+where the Luna link errors concentrate (21118656) have no link truth at all; the field-side
+scorer catches them because `diagnostic_instrument` is in `entities[].fields`, and the
+link scorer cannot see them because that file's `links` array is empty. **Extending link
+truth to 21118656 and 11058476 is the cheapest thing that would make the next comparison
+mean something.**
+
+## What the intervals permit
+
+With 13 to 22 changed writes per arm, the narrowest 95% interval is ±20 points. Concretely:
+
+* four papers cannot separate 58% from 40%. They cannot separate 58% from 69%.
+* the whole-record arm produces 3.75 changed writes per paper, so **15 papers gives about 56
+  changed writes** -- enough to detect a fall from 58% to 28% at 80% power, not enough for
+  58% to 43%.
+* so: **run the whole-record arm over the fifteen, and expect it to settle a 30-point
+  question and nothing finer.** At 3.8 calls and $0.05 per four papers that is about $0.19,
+  which is not a reason to hesitate.
+* and run the paired comparison alongside it. The ten-field result above needed four papers
+  and reached p ≈ 0.002. Ask "what did this arm put in the fields the other arm got wrong"
+  rather than "what are the two rates".
+
+## A correction to myself, the seventh
+
+I nearly reported that the Luna arms reintroduce invention -- three writes flagged
+`NOT-IN-PAPER` where every NuExtract error was a real fact misplaced. They do not. My scorer
+tests reference targets by the entity's **label**, and Luna composes labels: the instrument
+is called `sadomasochistic preference screening and questionnaire`, which is not verbatim
+anywhere, while "sadomasochistic preferences" appears four times. I was measuring the model's
+paraphrase and reading it as a fabrication. Fixed to test content words; with that fix **every
+bad write in every arm is a real fact from the paper in the wrong place, 9 or 12 of 9 or 12,
+in all five arms.** The finding this whole exercise turns on survives the correction, and it
+is the second time a naive string test has nearly made me claim a fabrication that was not
+one -- the first was `Intera` in round 4.
+
+## Where I would put the next effort
+
+Not on the proposer. Four proposers and three context regimes moved the damage rate by less
+than the noise, and the one large effect they produced -- abstention -- is available more
+cheaply and more predictably from a refusal than from a model's reticence.
+
+The residue is now one slot family. Six of nine remaining errors are `diagnostic_instrument`,
+which the schema already rules out in words the model is given and ignores: *"Naming one here
+claims it classified this cohort, which is narrower than having been administered to it."*
+That is not a context problem, not a model problem, and not a template problem -- it is a
+slot whose correct answer is "nothing" far more often than the pass believes, and the check
+for it is the quote rule from round 6: **a link needs a sentence naming both the group and
+the instrument in the act of diagnosing, and if the model cannot produce one, the link is
+refused.** That kills all six.
