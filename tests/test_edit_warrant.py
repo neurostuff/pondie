@@ -103,3 +103,39 @@ def test_a_list_slot_is_written_as_a_list(sch):
     edit.apply(sch, {"groups": [entity]}, "Group", entity,
                {"medications": "methadone"}, PAPER)
     assert entity["medications"]["value"] == ["methadone"]
+
+
+def test_a_digit_inside_a_number_is_not_a_warrant(sch):
+    """`acquired_count: 12 -> 1` inherited "consisted of 12 opioid-dependent patients",
+    because "1" is inside "12". The span said the opposite of the value it was made to
+    warrant, and the edit passed every gate. Numbers are compared as numbers."""
+    entity = {"local_id": "grp_a",
+              "acquired_count": cited(12, "consisted of 12 opioid-dependent patients")}
+    edit.apply(sch, {"groups": [entity]}, "Group", entity, {"acquired_count": 1}, PAPER)
+    node = entity["acquired_count"]
+    if node["value"] == 1:
+        assert node["evidence"]["status"] == "not_found", "a digit substring bought a span"
+
+
+def test_extending_a_grounded_list_is_allowed(sch):
+    """`["SPM2"] -> ["SPM2", "FSL"]` with both named in the paper is the edit this pass
+    exists for. `_bare` stringified the list repr, so extension looked unwarranted while
+    dropping a value looked fine -- exactly backwards."""
+    text = "Analysis used SPM2 and FSL."
+    entity = {"local_id": "prp", "software": cited(["SPM2"], "Analysis used SPM2 and FSL.")}
+    edit.apply(sch, {"preprocessings": [entity]}, "Preprocessing", entity,
+               {"software": ["SPM2", "FSL"]}, text)
+    assert entity["software"]["value"] == ["SPM2", "FSL"]
+    assert entity["software"]["evidence"]["status"] == "present"
+
+
+def test_shortening_a_list_is_refused_whatever_shape_it_arrives_in(sch):
+    """`shape` resolves multiplicity through the wrapper now, so the new value is always a
+    list and the old `isinstance` test never fired -- switching the guard off on the very
+    slot it was written for."""
+    entity = {"local_id": "prp",
+              "software": cited(["SPM2", "FSL"], "Analysis used SPM2 and FSL.")}
+    log = edit.apply(sch, {"preprocessings": [entity]}, "Preprocessing", entity,
+                     {"software": ["SPM2"]}, "Analysis used SPM2 and FSL.")
+    assert entity["software"]["value"] == ["SPM2", "FSL"]
+    assert any("drops values" in r.why for r in log.refused)

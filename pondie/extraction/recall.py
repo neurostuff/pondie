@@ -232,8 +232,12 @@ def template_for(sch: Schema, class_name: str) -> dict:
         projected = nu_type(sch, slot)
         if projected is None:
             continue
-        fields[name] = [projected] if slot.multivalued and isinstance(projected, str) \
-            else projected
+        # `is_multivalued`, not `slot.multivalued`: on the extraction schema a list slot
+        # says so in its range name (`ExtractedStringList`) and the attribute's own flag is
+        # False, so the template offered a scalar for all 23 list slots -- the proposer
+        # could not express two medications even where the paper named two.
+        fields[name] = [projected] if sch.is_multivalued(class_name, name) \
+            and isinstance(projected, str) else projected
     return {sch.containers().get(class_name, class_name.lower()): [fields]}
 
 

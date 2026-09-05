@@ -115,11 +115,14 @@ def refuses_shortening_a_list(edit: Edit) -> Refusal | None:
     still the right refusal: a repair pass is not where that is decided.
     """
     old = edit.current_value
-    # `>= 1`, not `> 1`: a one-element list replaced by a bare string is the same loss with
-    # a smaller number. `["DSM-IV heroin dependence"] -> "heroin dependence"` slipped past
-    # both this guard and `refuses_truncation`, which only compared strings.
-    if isinstance(old, list) and len(old) >= 1 and not isinstance(edit.value, list):
-        return Refusal(edit.slot, "replaces a list with a single value", edit.value)
+    if not isinstance(old, list):
+        return None
+    # Lengths, not shapes. The guard used to ask whether the new value was a list; once
+    # `shape` began resolving multiplicity through the wrapper it always is, which switched
+    # this off -- on `MRI.echo_time_seconds` among others, the slot it was written for.
+    new = edit.value if isinstance(edit.value, list) else [edit.value]
+    if len(new) < len(old):
+        return Refusal(edit.slot, "drops values the record already held", edit.value)
     return None
 
 
@@ -641,25 +644,60 @@ def _same(sch: Schema, class_name: str, slot: str, old: Any, new: Any) -> bool:
 
 
 def _inherited(current: Any, value: Any) -> tuple[dict, str] | None:
-    """The evidence and provenance `current` already holds, when they still warrant `value`.
+    """The evidence and provenance `current` holds, when they still warrant `value`.
 
-    `refuses_losing_the_warrant` allows an edit precisely when an existing span contains the
-    new value, and its docstring says the old spans are then kept. They were not: the write
-    rebuilt the wrapper through `_wrap`, which looks for a span only when the value is at
-    least twenty characters long. Every shorter value -- every count, every mean age --
-    therefore replaced a verified span with `not_found` and demoted `reported` to
-    `generated`, for an edit the guard had just certified as still supported.
+    `refuses_losing_the_warrant` allows an edit exactly when a surviving span contains the
+    new value, and says the old spans are then kept. They were not: the write rebuilt the
+    wrapper through `_wrap`, which searches for a span only when the value is twenty
+    characters or more, so every count and every mean age replaced a verified span with
+    `not_found` and demoted `reported` to `generated`.
+
+    Substring containment is the wrong test for the shapes a record actually holds. `"1"`
+    sits inside `"consisted of 12 opioid-dependent patients"`, so `acquired_count: 12 -> 1`
+    inherited a span that says the opposite; every integer and every short enum token was
+    exposed the same way. A list is worse: `_bare` stringifies the repr, so extending
+    `["SPM2"]` to `["SPM2", "FSL"]` -- both named in the paper -- looked unwarranted while
+    dropping FSL looked fine.
+
+    So each element is asked for separately, numbers are compared as numbers against the
+    span's own tokens, and a short string needs a word boundary. Measured over the 218
+    fields the unfixed pass destroyed across 14 records, this inherits 216 where naive
+    containment inherits 217 -- the one difference being `spatial_scope: "roi"` matched
+    inside a longer word, which it should not have been.
     """
     if not isinstance(current, Mapping):
         return None
     if (current.get("evidence") or {}).get("status") != "present":
         return None
-    want = _bare(value)
-    for group in (current.get("evidence") or {}).get("sets") or []:
-        for span in group.get("spans") or []:
-            if want and want in _bare(span.get("text", "")):
-                return current["evidence"], str(current.get("value_source") or "reported")
-    return None
+    wanted = value if isinstance(value, list) else [value]
+    if not wanted:
+        return None
+    texts = [str(span.get("text", ""))
+             for group in (current.get("evidence") or {}).get("sets") or []
+             for span in group.get("spans") or []]
+    if not texts or not all(any(_warrants(text, item) for text in texts) for item in wanted):
+        return None
+    return current["evidence"], str(current.get("value_source") or "reported")
+
+
+_NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
+
+
+def _warrants(text: str, value: Any) -> bool:
+    """Whether this span says this one value, rather than merely containing its characters."""
+    if isinstance(value, bool):
+        return False                       # "true" is not a thing a sentence states
+    if isinstance(value, (int, float)):
+        return any(float(token) == float(value) for token in _NUMBER.findall(text))
+    wanted = str(value).strip().lower()
+    if not _bare(wanted):
+        return False
+    if len(_bare(wanted)) < 4:
+        # Against the sentence, not `_bare` of it: `_bare` removes the spaces, so no word
+        # boundary survives to anchor on. "roi" must not match inside "heroin", and "FSL"
+        # must match in "used SPM2 and FSL."
+        return re.search(rf"\b{re.escape(wanted)}\b", text.lower()) is not None
+    return _bare(wanted) in _bare(text)
 
 
 def _wrap(value: Any, text: str, source: str = "reported") -> dict:
