@@ -433,12 +433,27 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
     # container is where recall matters most: 16508348 declares no regions at all while four
     # of its analyses search the hippocampus.
     by_container = sch.classes_by_container()
-    for container in sweep_order(sch, list(by_container)):
+    order = sweep_order(sch, list(by_container))
+    context = {by_container[c]: existing(sch, record, by_container[c])
+               + candidates(sch, record, by_container[c]) for c in order}
+    # A proposer that can answer about several classes at once is asked once rather than
+    # per class: the premise is the same paper every time, and a network proposer paid to
+    # read it twenty-eight times a paper.
+    batched: dict[str, list] | None = None
+    if hasattr(proposer, "propose_many"):
+        try:
+            batched = proposer.propose_many(
+                sch, [by_container[c] for c in order], premise, context)
+        except Exception as error:  # noqa: BLE001 -- fall back to the per-class sweep
+            report.refused.append(Refusal(
+                "sweep", f"batched proposal failed ({type(error).__name__}); "
+                         f"asked class by class instead"))
+    for container in order:
         class_name = by_container[container]
         try:
-            proposals = proposer.propose(
-                sch, class_name, premise,
-                existing(sch, record, class_name) + candidates(sch, record, class_name))
+            proposals = (batched.get(class_name, []) if batched is not None
+                         else proposer.propose(sch, class_name, premise,
+                                               context[class_name]))
         except recall.Starved as starved:
             report.refused.append(Refusal(container, str(starved)))
             continue

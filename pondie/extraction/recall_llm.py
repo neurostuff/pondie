@@ -21,11 +21,12 @@ from `_Proposes` and the only variable between arms is which model answers.
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from pondie.extraction.models import Cost, ModelCall
-from pondie.extraction.recall import INSTRUCTION, _NOUN, _Proposes, directive
+from pondie.extraction.recall import (
+    INSTRUCTION, _NOUN, _Proposes, directive, template_for)
 
 #: What a served or local NuExtract gets from its chat template and a chat model does not:
 #: the template is the shape of the answer, not an example of one.
@@ -80,9 +81,44 @@ class ModelProposer(_Proposes):
         )
         reply = self._caller(
             ModelCall(model=self._model, system=SHAPE, prompt=prompt,
-                      max_output_tokens=8_000, effort=self._effort,
+                      max_output_tokens=24_000, effort=self._effort,
                       service_tier=self._service_tier, attempts=2),
             paper=self._study_id, stage=f"repair:propose:{what or 'any'}")
         self.cost = self.cost + reply.cost
         payload = getattr(reply, "payload", None)
         return payload if isinstance(payload, Mapping) else {}
+
+
+    #: How many calls one sweep costs. The per-class sweep sent the paper once per entity
+    #: class -- 28 calls a paper measured, 116k input tokens -- and the premise is the same
+    #: 40k characters every time. Two groups mirror the extraction passes' own split, so a
+    #: sweep is 2 calls and a two-iteration repair is 4.
+    GROUPS = 2
+
+    def propose_many(self, sch: Any, class_names: Sequence[str], premise: str,
+                     instructions: Mapping[str, str]) -> dict[str, list]:
+        """Every class in a couple of calls, rather than one call per class.
+
+        Cheaper for the obvious reason and possibly better for a less obvious one: asked
+        about one class at a time, the model cannot see that a number it is about to give a
+        cohort was stated for a different cohort in the same sentence. Every misattribution
+        measured on this pass is of that shape, and a per-class question is what removes the
+        context that would settle it.
+        """
+        names = list(class_names)
+        size = max(1, (len(names) + self.GROUPS - 1) // self.GROUPS)
+        out: dict[str, list] = {}
+        for start in range(0, len(names), size):
+            group = names[start:start + size]
+            template: dict[str, Any] = {}
+            for name in group:
+                template.update(template_for(sch, name))
+            instruction = "\n\n".join(instructions.get(name, "") for name in group)
+            payload = self.ask(template, instruction, premise, what=", ".join(group))
+            if not isinstance(payload, Mapping):
+                continue
+            for name in group:
+                key = next(iter(template_for(sch, name)))
+                found = payload.get(key)
+                out[name] = [p for p in (found or []) if isinstance(p, Mapping)]
+        return out
