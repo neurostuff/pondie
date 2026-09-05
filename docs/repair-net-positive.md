@@ -160,3 +160,60 @@ Two things the metrics could not see at all:
    noise, given repair touches ~150 fields per record?
 4. D4 (misattribution) is invisible to every automatic check proposed here. Is there a
    deterministic guard, or does it need the ground truth to catch at all?
+
+## Results
+
+Two arms over the same pristine records, production `pondie.extraction.repair`.
+Deterministic measures, 13 papers whose pre-repair record is byte-identical in both arms:
+
+| | before | after |
+|---|---:|---:|
+| spans destroyed | 227 | **2** |
+| provenance downgrades | 141 | **0** |
+| findings introduced | 54 | 1 |
+| fields filled | 316 | 257 |
+| papers failing a gate | 11 of 13 | 1 of 13 |
+
+**The pass no longer subtracts.** That was the whole of the first three rounds and it is done.
+
+### It does not pass the gate
+
+`yield >= wrong + invented`, scored against hand-read truth, **fails on all four papers in
+the after arm**. On 18823721 -- the one controlled paper with enough writes to read
+anything into -- bad writes fall 9 -> 5 with yield unchanged at 4, and correct fields rise
+40 -> 44 while filling ten fewer. Real movement, and still short by one write.
+
+### Four corrections to numbers this document previously carried
+
+* **Introduced findings are 1, not 0.** `tasks[].conditions ... got dict` on 12860777
+  survives in the artifact, because the fix postdates the run. `M3 == 0` is a claim no run
+  has demonstrated, and it should not be repeated until one has.
+* **The before arm is 54 findings, not 61.** The earlier figure was measured with a
+  different validator, so 61 -> 0 compared two rulers.
+* **The fill drop is 59, not 16.** 285 -> 269 compared twelve papers against fifteen.
+* **Only two of the four truth papers are controlled.** `16038771` and `21118656` start
+  from different pre-repair records in the two arms, so a delta on those is the
+  extractor's, not repair's.
+
+### What the 59 fewer fills cost
+
+67 given up, 8 gained. Eighteen are `non_analysis_content`, the most-invented slot in the
+corpus and the source of ten of the before arm's findings -- refusing those is the point.
+The rest divides into three classes, and only one is invention: **paraphrase**
+(`model_settings` on 18823721 is in the paper, reworded, and the document test looks for
+the words), **unit conversion** (`450.0` seconds for "7.5 minutes"), and inference.
+So yes: damage was traded for yield, and the trade is not free.
+
+Rule A's cost is smaller than the fill drop suggests. Of what it refused, every
+adjudicable case on 18823721 is correct, and the only possible losses across all four
+papers are four values the truth set marks `support: inferred`. **It refused nothing the
+paper states.**
+
+### Residual risk
+
+The record is now honest about what it does not know and no longer destroys what it knew.
+What it still does is state, with a citation, a fact belonging to a different entity in
+the same paper -- `haloperidol` from an excluded patient, an age from a subgroup, a
+criterion read as an observation. That is about one changed write in two, and **no gate in
+this document can see it**. Catching it needs the candidate span recorded at write time,
+which is separate work.
