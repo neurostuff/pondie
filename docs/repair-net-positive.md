@@ -217,3 +217,31 @@ the same paper -- `haloperidol` from an excluded patient, an age from a subgroup
 criterion read as an observation. That is about one changed write in two, and **no gate in
 this document can see it**. Catching it needs the candidate span recorded at write time,
 which is separate work.
+
+## A rule this review learned the hard way, four times
+
+Four separate findings in this work were the same mistake: **a verbatim test applied to a
+value the paper was never supposed to have printed.**
+
+* `Intera` "absent" -- `grep -ci` matched it inside "interaction"; case-sensitively it is
+  the scanner, once.
+* three Luna writes flagged as fabrication -- the scorer tested a reference target by the
+  entity's *label*, and the model paraphrases: `sadomasochistic preference screening and
+  questionnaire` for a paper that says "sadomasochistic preferences".
+* the link quote rule -- refused 3 of 6 correct links, and at corpus scale is inapplicable
+  to 82% of them, because `Measure`, `ModelEstimation`, `Acquisition` and `Table` have no
+  name for a sentence to contain.
+* `mirror_of` at 10% "never named" -- 83 of 83 mirrored analyses have an unnamed target,
+  which is not a defect: a mirror is the direction the paper did NOT report, synthesised
+  from the original with the sign flipped. If its label were in the paper it would not be
+  a mirror.
+
+**A verbatim test is only valid against a value the paper was supposed to have printed.**
+That is why `Rule A` is asked of the value and not of the slot: a vocabulary term is chosen
+from a list and is either in the source or invented; a duration, a definition, a minted id,
+a derived label and a synthesised mirror are none of them quotations, and the same test on
+them measures the record's vocabulary rather than the paper's content.
+
+Both findings that survived this review were established against hand-read truth rather
+than against string presence -- that the pass is wrong about most of what it changes, and
+that every link it chose between candidates was wrong.

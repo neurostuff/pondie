@@ -1640,22 +1640,39 @@ def test_a_value_the_pass_could_not_place_is_marked_generated(sch):
     assert written["value_source"] == "generated", "no sentence, so not reported"
 
 
-def test_a_value_the_paper_does_not_contain_is_not_written_at_all(sch):
-    """The other half of the same rule, and the reason it exists. Over 21 changed writes on
-    four hand-read papers, 72% of what the pass could not ground was wrong or invented,
-    against 33% of what it could. `_nested` has refused on this basis since it was written;
-    the top-level path wrote them anyway."""
+def test_a_vocabulary_term_the_paper_does_not_contain_is_not_written(sch):
+    """A closed vocabulary is a list to choose from, so "not in the paper" decides it.
+
+    Over 139 refusals the 46 on `non_analysis_content` carried the whole gain -- 16 of the
+    56 findings the pass introduced -- and that slot is an enum: a table either says it
+    reports connectivity seeds or it does not.
+    """
+    from pondie.extraction.record import edit as edit_module
+
+    record = {"tables": [{"local_id": "tbl1", "title": field("Table 1")}]}
+    entity = record["tables"][0]
+    log = edit_module.apply(sch, record, "Table", entity,
+                            {"non_analysis_content": "connectivity_seeds"},
+                            text="Results. Table 1 lists the peaks of each contrast.")
+
+    assert "non_analysis_content" not in entity
+    assert any("vocabulary term" in r.why for r in log.refused)
+
+
+def test_free_text_the_locator_missed_is_still_written(sch):
+    """And the complement, which is why the rule is narrowed to vocabularies. A paper says
+    a duration in its own words -- "7.5 minutes" for 450 seconds -- and a definition can be
+    reworded; refusing those cost real values and prevented no findings."""
     from pondie.extraction.record import edit as edit_module
 
     record = {"groups": [{"local_id": "g", "name": field("patients")}]}
     entity = record["groups"][0]
-    log = edit_module.apply(sch, record, "Group", entity,
-                            {"recruitment_method": "recruited by advertisement"},
-                            text="Methods. Nothing here says how anyone was recruited.")
+    edit_module.apply(sch, record, "Group", entity,
+                      {"recruitment_method": "recruited by advertisement"},
+                      text="Methods. Nothing here says how anyone was recruited.")
 
-    assert "recruitment_method" not in entity
-    assert any("nothing in the paper places" in r.why for r in log.refused)
-
+    assert entity["recruitment_method"]["value"] == "recruited by advertisement"
+    assert entity["recruitment_method"]["value_source"] == "generated"
 
 def test_a_value_the_pass_did_place_stays_reported(sch):
     """The label follows the evidence, so a value with a span keeps its provenance."""
