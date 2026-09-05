@@ -532,10 +532,24 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
                 log.refused.append(Refusal(name, "will not fit the slot", proposed))
                 continue
 
+        current = entity.get(name)
+        if kinds[name] != "reference" and values.is_field(current) \
+                and str(values.read(current)) == str(value):
+            # Re-proposing what is already there is not an edit. Writing it anyway rebuilt
+            # the wrapper and lost its warrant: 26 fields on 18823721 kept their value and
+            # went `present` -> `not_found`, `reported` -> `generated`.
+            log.refused.append(Refusal(name, "already recorded with this value", value))
+            continue
         if refused := refusals(Edit(record, entity, name, value)):
             log.refused.extend(refused)
             continue
-        entity[name] = value if kinds[name] == "reference" else _wrap(value, text)
+        if kinds[name] == "reference":
+            entity[name] = value
+        else:
+            written = _wrap(value, text)
+            if (kept := _inherited(current, value)) is not None:
+                written["evidence"], written["value_source"] = kept
+            entity[name] = written
         log.written.append((name, value))
     return log
 
@@ -606,6 +620,28 @@ def _nested(sch: Schema, inner: str, entity: MutableMapping[str, Any], slot: str
             target[field_name] = written
             landed += 1
     return landed
+
+
+def _inherited(current: Any, value: Any) -> tuple[dict, str] | None:
+    """The evidence and provenance `current` already holds, when they still warrant `value`.
+
+    `refuses_losing_the_warrant` allows an edit precisely when an existing span contains the
+    new value, and its docstring says the old spans are then kept. They were not: the write
+    rebuilt the wrapper through `_wrap`, which looks for a span only when the value is at
+    least twenty characters long. Every shorter value -- every count, every mean age --
+    therefore replaced a verified span with `not_found` and demoted `reported` to
+    `generated`, for an edit the guard had just certified as still supported.
+    """
+    if not isinstance(current, Mapping):
+        return None
+    if (current.get("evidence") or {}).get("status") != "present":
+        return None
+    want = _bare(value)
+    for group in (current.get("evidence") or {}).get("sets") or []:
+        for span in group.get("spans") or []:
+            if want and want in _bare(span.get("text", "")):
+                return current["evidence"], str(current.get("value_source") or "reported")
+    return None
 
 
 def _wrap(value: Any, text: str, source: str = "reported") -> dict:
