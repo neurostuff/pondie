@@ -415,3 +415,186 @@ Output at 2a7638c:
     C medical_condition 'heroin dependence' reported present
 
 B and C should be refusals. All three should be tests.
+
+---
+
+# Round 2: review of 8e22ad2, and R4 implemented
+
+## Attacks on the new code
+
+A, B and C are closed. Five new probes; three land.
+
+**F. Wrong numbers can still inherit a warrant — the F2 case.** `_inherited` tests
+`_bare(value) in _bare(span_text)`, which for a short value is substring matching on
+digits. Verified against the committed code:
+
+    acquired_count: 12 -> 1     span "consisted of 12 opioid-dependent patients"
+    result: written, value=1, src=reported, evidence=present
+
+"1" is inside "12", so the corrupted count inherits the correct value's citation and comes
+out `reported` + `present`. It passes R1, R2 and R3 and the record now says one patient. The
+float case survives by luck (`_bare(39.0)` is "390", which the span happens not to contain);
+every integer and every one- or two-character enum token is exposed.
+
+**G. The `is_multivalued` fix disabled `refuses_shortening_a_list`.** The guard reads
+`not isinstance(edit.value, list)`. `shape` now returns a list for these slots, so the
+proposal is always a list and the guard can never fire:
+
+    software: ["SPM2", "FSL"] -> ["SPM2"]
+    result: written, FSL dropped, src=reported, evidence=present
+
+That is 16701903's two echo times, the case the guard's own docstring was written for, and
+`is_multivalued` newly makes `MRI.echo_time_seconds` and `Preprocessing.smoothing_fwhm_mm`
+multivalued under the extraction schema — so the guard was switched off precisely on the
+slots it was for. Compare lengths, not shapes: `len(new) < len(old)`.
+
+**H. A legitimate list extension is refused.** `["SPM2"] -> ["SPM2", "FSL"]`, both named in
+the paper, is refused as "loses the span that warranted the value it replaces", because
+`_bare(["SPM2","FSL"])` is "spm2fsl" and no span contains that. So on a grounded list slot
+the pass can now *shorten* a list and cannot *extend* one. Both come from `_bare` being
+applied to a list's `repr`.
+
+**One change fixes F, G's laundering half and H: make `_inherited` match by value shape.**
+
+    list    every element must match
+    number  numerically equal to some numeric token in the span text
+    string  `_bare` containment at >= 4 characters, word-boundary match below that
+
+Measured on every destroyed field in all four repaired runs available — **218 fields over 14
+papers**: `_bare` containment inherits 217, the shape-aware match inherits 216. The single
+difference is `spatial_scope: 'roi'` on 14667419, where `_bare` found "roi" inside a longer
+word. So the tightening costs **nothing real** and closes F and H. It does not close G;
+`refuses_shortening_a_list` has to compare lengths.
+
+**Is `Schema.is_multivalued` right?** Yes, and I checked rather than reasoned. Over every
+class in both schemas: **0 disagreements** between extraction and storage after the change,
+**0 slots with `any_of`** (so the multi-range case does not arise), and 23 extraction slots
+where it correctly overrides the raw flag. The storage path is unchanged because
+`attribute.multivalued` short-circuits first.
+
+**But the fix is half-landed.** `recall.template_for` (recall.py:235) still reads
+`slot.multivalued` raw, so the proposer template offers `"medications": "verbatim-string"`
+rather than a list on all 23 slots. The pass cannot propose two medications, two software
+packages or two echo times; `shape` now wraps whatever single value it gets. Same raw read
+at builder.py:70/75/595. `is_multivalued` should be used there too, or list slots stay
+capped at one element by construction.
+
+**Does `_same` silently suppress a real edit?** Not in the reachable paths, and I looked for
+the `None == None` case specifically: `apply` refuses a proposal whose `shape` is `None`
+before `_same` runs, so the new side is never `None`, and `None == value` is False. `shape`
+is idempotent on every branch (`float`, `int`, enum, list-wrap), so double-shaping the
+stored side is safe. The one collapse it does perform is deliberate: in an integer slot
+`12` and `12.7` are one value, and declining to rewrite one with the other is right.
+
+## R4 implemented
+
+`scripts/repair_references.py` (mine; `repair_delta.py` untouched). Reference accounting,
+the shared-target signal, and truth-based scoring of the reference slots.
+
+**Your instinct to make the shared-target rule a refusal in `edit.py` is wrong as a blanket
+rule, and the data says so.** Over `runs/repair-baseline`, 12 papers, the pass made **15
+shared-target writes and all 15 are correct**:
+
+    11296095 analyses.assessments -> [asm_scid]              6 analyses, one interview
+    12860777 analyses.tasks -> [tsk_alcoholic_beverage_...]  2 analyses, one task
+    14667419 analyses.tasks -> [tsk_alcohol_cue_reactivity]  3 analyses, one task
+    14667419 analyses.tables -> [tbl1, tbl2, tbl4]           2 analyses, three tables
+    14679386 model_estimations.preprocessing -> [prp_fmri]   2 models, one stream
+
+A paper with one task and six contrasts is the normal case. Refusing on the pattern would
+have blocked every one of those and caught nothing. What discriminates is the **slot**: the
+script therefore splits shared-target writes into `EXCLUSIVE` (gated), `SUSPECT` (reported)
+and normal (reported). `EXCLUSIVE` holds one slot today, `groups.diagnostic_instrument`,
+because the schema describes it as the assessment that established *this* group's condition.
+On 18823721 that gate fires on both groups; on the 12 baseline papers it fires zero times.
+
+So: **put it in `edit.py`, for `EXCLUSIVE` slots only.** It cannot be a `GUARDS` entry — a
+`Check` sees one edit and this is a property of the sweep, and it is the *second* write that
+must be refused. `_sweep` already iterates one class at a time; the home is a per-class set
+of `(slot, tuple(sorted(targets)))` already written, passed to `apply`. `--explain` prints
+this argument with the counts.
+
+R4 results:
+
+| run | ref slots changed | targets + | shared-target | exclusive | suspect |
+|---|---|---|---|---|---|
+| 18823721 (pre-fix) | 6 | 12 | 4 | **2** | **2** |
+| repair-baseline (12) | 27 | 44 | 15 | 0 | 0 |
+| repair-fixed (6 done) | 15 | 16 | 8 | 0 | 0 |
+
+## R5 implemented, and the A/B result you will not like
+
+`scripts/repair_score.py`. Five verdicts — I added **`inferred`** between correct and
+invented, for a field the paper is silent on filled with a value the truth lists as
+defensible (`correction_scope: whole_brain` on a whole-brain acquisition). Scoring that as
+invention punishes the pass for being right; scoring it as correct hides that it must be
+stamped `generated`.
+
+Pre-fix, on the four truth papers:
+
+| pmid | scored | correct | inferred | wrong | invented | missed | changed | damage | yield |
+|---|---|---|---|---|---|---|---|---|---|
+| 18823721 | 55 | 40 | 1 | 0 | 9 | 5 | 13 | 69% | 4 |
+| 11058476 | 50 | 37 | 0 | 6 | 1 | 6 | 3 | 67% | 1 |
+| 16038771 | 44 | 38 | 0 | 0 | 2 | 4 | 6 | 33% | 4 |
+| 21118656 | 52 | 36 | 1 | 8 | 5 | 2 | 2 | 50% | 1 |
+
+`wrong` counts the record's state, `changed` counts what this pass did, and only the
+intersection is repair's fault — most of 21118656's 8 wrongs are the extractor's. Damage
+rate is computed on `changed` only.
+
+**The A/B on 11058476, the one truth paper the fixed run has reached, is identical:**
+correct 37, wrong 6, invented 1, changed 3, damage 67%, yield 1 — in both arms. The warrant
+fix changes how writes are *stamped*, not what they *say*. It makes the pass non-destructive;
+it does not make it net positive.
+
+The deterministic half of the same A/B, on the 6 papers `runs/repair-fixed` has finished:
+
+| | destroyed | M2 | M3 | M5 filled |
+|---|---|---|---|---|
+| baseline (same 6) | 92 | 59 | 29 | 156 |
+| fixed | **1** | **0** | 10 | **156** |
+
+Yield is bit-identical, which is the answer to "did the fix cost anything": no. And the M3
+residue has changed *class* — 12 kinds of introduced finding became 2, and every list-type
+one is gone:
+
+    baseline  tables[].non_analysis_content 10, medical_condition 7, inclusion_criteria 6,
+              exclusion_criteria 5, response_mode 5, performance_measures 5, software 5,
+              medications 2, +4 more
+    fixed     tables[].non_analysis_content 3, tasks[].conditions 1
+
+Everything `is_multivalued` was meant to fix is fixed. What is left is the misattribution
+class -- a table declared non-analysis while an analysis names it -- which is D4, which is
+what R4 and R5 exist for.
+
+## Q1 and Q3, with numbers
+
+**Q1 — the M5 floor that stops a do-nothing pass.** Do not pick a floor; state the
+break-even, because the data now supplies both sides. Over the four truth papers the pass
+made **24 changed-value writes**, of which 10 were correct or defensibly inferred and **14
+were wrong or invented**. Per paper: **yield 2.5, damage 3.5.** A pass that writes nothing
+scores 0 and 0, so on this evidence **the do-nothing pass is ahead**. The honest gate is
+
+    R1 == 0  and  R3 == 0  and  R4(exclusive) == 0  and  yield >= wrong + invented
+
+per record, which is one stated trade-off rather than two thresholds pulled from the air. On
+the truth papers repair fails the fourth clause today on three of four (4 vs 9, 1 vs 7, 4 vs
+2 — 16038771 is the one that passes).
+
+**Q3 — how many papers.** Measured, not guessed: repair changes or creates **6 values per
+paper** within the truth field set (13, 3, 6, 2). Separating a damage rate of 60% from 30%
+at 80% power and α = 0.05 needs ~43 changed writes per arm, so **8 papers per arm** at the
+current 50-field truth set. Two caveats. The set covers ~50 of the 120-240 fields in a
+record, so it sees roughly a quarter of what the pass touches; widening the field set on the
+same 8 papers buys the same power more cheaply than adding papers. And the four papers here
+range from 33% to 69% damage, so a 4-paper read cannot distinguish a real improvement from
+which papers you picked.
+
+## What I still need from you
+
+* `runs/repair-fixed` covers 1 of my 4 truth papers. For a real R5 A/B, run the fix over
+  **18823721, 16038771 and 21118656** as well -- those are where the truth set is densest
+  and where three of the four known failure cases live.
+* The three code changes above: shape-aware `_inherited`, length-based
+  `refuses_shortening_a_list`, and `is_multivalued` in `recall.template_for`.

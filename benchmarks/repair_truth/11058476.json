@@ -9,194 +9,469 @@
    "kind": "Group",
    "key": "cocaine_users",
    "identified_by": "the experienced cocaine (freebase/crack) users",
+   "match": [
+    "cocaine",
+    "user",
+    "crack"
+   ],
    "fields": {
-    "is_healthy": {"value": false, "support": "stated",
-     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."},
-    "enrolled_count": {"value": 24, "support": "stated",
-     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."},
-    "acquired_count": {"value": 17, "also_acceptable": [24], "support": "inferred",
+    "is_healthy": {
+     "value": false,
+     "support": "stated",
+     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."
+    },
+    "enrolled_count": {
+     "value": 24,
+     "support": "stated",
+     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."
+    },
+    "acquired_count": {
+     "value": 17,
+     "also_acceptable": [
+      24
+     ],
+     "support": "inferred",
      "quote": "Seventeen cocaine users (14 men and three women; mean age=34 years, age range=27–44) and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses.",
-     "note": "17 is the analysed sample. Per-film analysed counts are smaller still and live only in Table 1, which the extracted text does not carry: \"In total, 47% of the cocaine users' films and 57% of the comparison subjects' films were analyzable.\""},
-    "excluded_count": {"value": 7, "support": "inferred",
+     "note": "17 is the analysed sample. Per-film analysed counts are smaller still and live only in Table 1, which the extracted text does not carry: \"In total, 47% of the cocaine users' films and 57% of the comparison subjects' films were analyzable.\""
+    },
+    "excluded_count": {
+     "value": 7,
+     "support": "inferred",
      "quote": "Seventeen cocaine users (14 men and three women; mean age=34 years, age range=27–44) and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses.",
-     "note": "24 - 17; the paper never prints the difference."},
-    "age_mean": {"value": 34, "support": "stated",
-     "quote": "Seventeen cocaine users (14 men and three women; mean age=34 years, age range=27–44) and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses."},
-    "age_standard_deviation": {"value": null, "support": "absent",
+     "note": "24 - 17; the paper never prints the difference."
+    },
+    "age_mean": {
+     "value": 34,
+     "support": "stated",
+     "quote": "Seventeen cocaine users (14 men and three women; mean age=34 years, age range=27–44) and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses."
+    },
+    "age_standard_deviation": {
+     "value": null,
+     "support": "absent",
      "quote": "Seventeen cocaine users (14 men and three women; mean age=34 years, age range=27–44) and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses.",
-     "note": "A range is reported, never an SD. A repair that writes an SD here has invented one; the range endpoints 27 and 44 are the tempting wrong answers."},
-    "medications": {"value": null, "support": "absent",
+     "note": "A range is reported, never an SD. A repair that writes an SD here has invented one; the range endpoints 27 and 44 are the tempting wrong answers."
+    },
+    "medications": {
+     "value": null,
+     "support": "absent",
      "quote": "All of the cocaine users included in the critical cocaine film analyses were current users, and none were receiving treatment.",
-     "note": "No agent is named. \"cocaine\" is a drug of abuse, not a medication this cohort was prescribed; the slot is \"The drugs or other agents this cohort was taking\" and \"benzocaine\" -- which appears in this paper as the fake crack in the film prop -- is the fabrication trap here."},
-    "medical_condition": {"value": ["cocaine dependence"], "also_acceptable": [["cocaine abuse or dependence"], ["cocaine abuse"], ["cocaine dependence", "cocaine abuse"]], "support": "inferred",
+     "note": "No agent is named. \"cocaine\" is a drug of abuse, not a medication this cohort was prescribed; the slot is \"The drugs or other agents this cohort was taking\" and \"benzocaine\" -- which appears in this paper as the fake crack in the film prop -- is the fabrication trap here."
+    },
+    "medical_condition": {
+     "value": [
+      "cocaine dependence"
+     ],
+     "also_acceptable": [
+      [
+       "cocaine abuse or dependence"
+      ],
+      [
+       "cocaine abuse"
+      ],
+      [
+       "cocaine dependence",
+       "cocaine abuse"
+      ]
+     ],
+     "support": "inferred",
      "quote": "No subject met criteria for any axis I psychiatric condition other than cocaine abuse or dependence.",
-     "note": "The paper never says the users were diagnosed; it says only that no other axis I condition was present. The condition is recoverable but the diagnosis statement is not."},
-    "diagnostic_system": {"value": null, "also_acceptable": ["DSM"], "support": "absent",
+     "note": "The paper never says the users were diagnosed; it says only that no other axis I condition was present. The condition is recoverable but the diagnosis statement is not."
+    },
+    "diagnostic_system": {
+     "value": null,
+     "also_acceptable": [
+      "DSM"
+     ],
+     "support": "absent",
      "quote": "No subject met criteria for any axis I psychiatric condition other than cocaine abuse or dependence.",
-     "note": "\"axis I\" implies DSM but no edition is named anywhere in the paper."},
-    "diagnostic_instrument": {"value": null, "support": "absent",
+     "note": "\"axis I\" implies DSM but no edition is named anywhere in the paper."
+    },
+    "diagnostic_instrument": {
+     "value": null,
+     "support": "absent",
      "quote": "The cocaine users were screened so that only those whose primary method of cocaine administration was through freebase (crack) smoking were included.",
-     "note": "No instrument is named. The only questionnaire in the paper is the post-film Likert self-report, which measures craving, not diagnosis."}
+     "note": "No instrument is named. The only questionnaire in the paper is the post-film Likert self-report, which measures craving, not diagnosis."
+    }
    }
   },
   {
    "kind": "Group",
    "key": "comparison_subjects",
    "identified_by": "the healthy comparison subjects",
+   "match": [
+    "comparison",
+    "control",
+    "healthy"
+   ],
    "fields": {
-    "is_healthy": {"value": true, "support": "stated",
-     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."},
-    "enrolled_count": {"value": 18, "support": "stated",
-     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."},
-    "acquired_count": {"value": 14, "also_acceptable": [18], "support": "inferred",
-     "quote": "Seventeen cocaine users (14 men and three women; mean age=34 years, age range=27–44) and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses."},
-    "excluded_count": {"value": 4, "support": "inferred",
+    "is_healthy": {
+     "value": true,
+     "support": "stated",
+     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."
+    },
+    "enrolled_count": {
+     "value": 18,
+     "support": "stated",
+     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."
+    },
+    "acquired_count": {
+     "value": 14,
+     "also_acceptable": [
+      18
+     ],
+     "support": "inferred",
+     "quote": "Seventeen cocaine users (14 men and three women; mean age=34 years, age range=27–44) and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses."
+    },
+    "excluded_count": {
+     "value": 4,
+     "support": "inferred",
      "quote": "Seventeen cocaine users (14 men and three women; mean age=34 years, age range=27–44) and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses.",
-     "note": "18 - 14."},
-    "age_mean": {"value": 26, "support": "stated",
-     "quote": "and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses"},
-    "age_standard_deviation": {"value": null, "support": "absent",
-     "quote": "and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses"},
-    "medications": {"value": null, "support": "absent",
-     "quote": "The comparison subjects reported no history of cocaine use."},
-    "medical_condition": {"value": null, "support": "absent",
-     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."},
-    "diagnostic_system": {"value": null, "support": "absent",
-     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."},
-    "diagnostic_instrument": {"value": null, "support": "absent",
-     "quote": "The subjects were recruited through local newspaper advertisements and were paid for their participation."}
+     "note": "18 - 14."
+    },
+    "age_mean": {
+     "value": 26,
+     "support": "stated",
+     "quote": "and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses"
+    },
+    "age_standard_deviation": {
+     "value": null,
+     "support": "absent",
+     "quote": "and 14 comparison subjects (nine men and five women; mean age=26 years, age range=19–39) passed all exclusionary criteria and were included in the fMRI analyses"
+    },
+    "medications": {
+     "value": null,
+     "support": "absent",
+     "quote": "The comparison subjects reported no history of cocaine use."
+    },
+    "medical_condition": {
+     "value": null,
+     "support": "absent",
+     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."
+    },
+    "diagnostic_system": {
+     "value": null,
+     "support": "absent",
+     "quote": "In total, 24 experienced cocaine users and 18 healthy comparison subjects participated in this study."
+    },
+    "diagnostic_instrument": {
+     "value": null,
+     "support": "absent",
+     "quote": "The subjects were recruited through local newspaper advertisements and were paid for their participation."
+    }
    }
   },
   {
    "kind": "Task",
    "key": "film_viewing",
    "identified_by": "the cocaine / sex / nature film viewing blocks",
+   "match": [
+    "film",
+    "video",
+    "cue"
+   ],
    "fields": {
-    "response_mode": {"value": ["none"], "support": "inferred",
+    "response_mode": {
+     "value": [
+      "none"
+     ],
+     "support": "inferred",
      "quote": "Each film was 4 minutes in duration, and each was preceded by a 3-minute blank blue screen.",
-     "note": "Nothing is required of the subject during a film; the self-report ratings come afterwards (\"After the working memory trials that followed each film, subjects completed retrospective self-report measures\"). The paper never says \"passively view\", so this is inferred."},
-    "instructions": {"value": null, "support": "absent",
+     "note": "Nothing is required of the subject during a film; the self-report ratings come afterwards (\"After the working memory trials that followed each film, subjects completed retrospective self-report measures\"). The paper never says \"passively view\", so this is inferred."
+    },
+    "instructions": {
+     "value": null,
+     "support": "absent",
      "quote": "Upon arrival at the MRI unit, each subject completed consent forms and received instructions for, and practiced on, a working memory task that would be performed during the scanning session.",
-     "note": "The only instruction sentence in the paper is about the working-memory distracter task, not about the films. Attaching it to the film task is the misattribution trap here."},
-    "design_type": {"value": "blocked", "support": "inferred",
-     "quote": "Thus, each scanning run consisted of a 3-minute rest period, a 4-minute film, and a 5-minute working memory task."}
+     "note": "The only instruction sentence in the paper is about the working-memory distracter task, not about the films. Attaching it to the film task is the misattribution trap here."
+    },
+    "design_type": {
+     "value": "blocked",
+     "support": "inferred",
+     "quote": "Thus, each scanning run consisted of a 3-minute rest period, a 4-minute film, and a 5-minute working memory task."
+    }
    }
   },
   {
    "kind": "Task",
    "key": "working_memory",
    "identified_by": "the visuospatial working memory distracter task",
+   "match": [
+    "working memory",
+    "workingmemory",
+    "wm"
+   ],
    "fields": {
-    "response_mode": {"value": null, "also_acceptable": ["button_press"], "support": "absent",
+    "response_mode": {
+     "value": null,
+     "also_acceptable": [
+      "button_press"
+     ],
+     "support": "absent",
      "quote": "Immediately after each film, subjects performed a visuospatial working memory task for 5 minutes.",
-     "note": "No response device is described anywhere in the paper."},
-    "instructions": {"value": null, "support": "absent",
+     "note": "No response device is described anywhere in the paper."
+    },
+    "instructions": {
+     "value": null,
+     "support": "absent",
      "quote": "Upon arrival at the MRI unit, each subject completed consent forms and received instructions for, and practiced on, a working memory task that would be performed during the scanning session.",
-     "note": "The paper says instructions were given, never what they were."}
+     "note": "The paper says instructions were given, never what they were."
+    }
    }
   },
   {
    "kind": "Acquisition",
    "key": "fmri",
    "identified_by": "the blipped gradient-echo EPI functional acquisition",
+   "match": [
+    "fmri",
+    "functional",
+    "epi"
+   ],
    "fields": {
-    "modality": {"value": "fMRI", "support": "stated",
-     "quote": "Contiguous 7-mm sagittal slices covering the entire brain were collected by using a blipped gradient-echo, echo-planar pulse sequence (TE=40 msec; TR=6000 msec; field of view=24 cm; 64 × 64 matrix; in-plane resolution=3.75 × 3.75 mm)."},
-    "magnetic_field_strength_tesla": {"value": 1.5, "support": "stated",
-     "quote": "All scanning was conducted on a 1.5-T Signa scanner (GE Medical Systems, Milwaukee) equipped with a 30.5-cm internal diameter three-axis local gradient coil and an end-capped quadrature birdcage radio frequency head coil (21) ."},
-    "repetition_time_seconds": {"value": 6.0, "also_acceptable": [6000], "support": "stated",
-     "quote": "echo-planar pulse sequence (TE=40 msec; TR=6000 msec; field of view=24 cm; 64 × 64 matrix; in-plane resolution=3.75 × 3.75 mm)"},
-    "echo_time_seconds": {"value": 0.04, "also_acceptable": [40], "support": "stated",
-     "quote": "echo-planar pulse sequence (TE=40 msec; TR=6000 msec; field of view=24 cm; 64 × 64 matrix; in-plane resolution=3.75 × 3.75 mm)"}
+    "modality": {
+     "value": "fMRI",
+     "support": "stated",
+     "quote": "Contiguous 7-mm sagittal slices covering the entire brain were collected by using a blipped gradient-echo, echo-planar pulse sequence (TE=40 msec; TR=6000 msec; field of view=24 cm; 64 × 64 matrix; in-plane resolution=3.75 × 3.75 mm)."
+    },
+    "magnetic_field_strength_tesla": {
+     "value": 1.5,
+     "support": "stated",
+     "quote": "All scanning was conducted on a 1.5-T Signa scanner (GE Medical Systems, Milwaukee) equipped with a 30.5-cm internal diameter three-axis local gradient coil and an end-capped quadrature birdcage radio frequency head coil (21) ."
+    },
+    "repetition_time_seconds": {
+     "value": 6.0,
+     "also_acceptable": [
+      6000
+     ],
+     "support": "stated",
+     "quote": "echo-planar pulse sequence (TE=40 msec; TR=6000 msec; field of view=24 cm; 64 × 64 matrix; in-plane resolution=3.75 × 3.75 mm)"
+    },
+    "echo_time_seconds": {
+     "value": 0.04,
+     "also_acceptable": [
+      40
+     ],
+     "support": "stated",
+     "quote": "echo-planar pulse sequence (TE=40 msec; TR=6000 msec; field of view=24 cm; 64 × 64 matrix; in-plane resolution=3.75 × 3.75 mm)"
+    }
    }
   },
   {
    "kind": "Acquisition",
    "key": "anatomical",
    "identified_by": "the high-resolution SPGR structural scan",
+   "match": [
+    "anat",
+    "spgr",
+    "structural"
+   ],
    "fields": {
-    "modality": {"value": "sMRI", "also_acceptable": ["MRI", "T1"], "support": "stated",
-     "quote": "High-resolution radio frequency spoiled gradient recalled acquisition in the steady state anatomic images were acquired before functional imaging to allow subsequent anatomical localization of functional activation."},
-    "magnetic_field_strength_tesla": {"value": 1.5, "support": "inferred",
+    "modality": {
+     "value": "sMRI",
+     "also_acceptable": [
+      "MRI",
+      "T1"
+     ],
+     "support": "stated",
+     "quote": "High-resolution radio frequency spoiled gradient recalled acquisition in the steady state anatomic images were acquired before functional imaging to allow subsequent anatomical localization of functional activation."
+    },
+    "magnetic_field_strength_tesla": {
+     "value": 1.5,
+     "support": "inferred",
      "quote": "All scanning was conducted on a 1.5-T Signa scanner (GE Medical Systems, Milwaukee) equipped with a 30.5-cm internal diameter three-axis local gradient coil and an end-capped quadrature birdcage radio frequency head coil (21) .",
-     "note": "\"All scanning\" settles it."}
+     "note": "\"All scanning\" settles it."
+    }
    }
   },
   {
    "kind": "Device",
    "key": "scanner",
    "identified_by": "the MRI scanner",
+   "match": [
+    "signa",
+    "ge",
+    "scanner"
+   ],
    "fields": {
-    "manufacturer": {"value": "GE Medical Systems", "also_acceptable": ["GE", "General Electric"], "support": "stated",
-     "quote": "All scanning was conducted on a 1.5-T Signa scanner (GE Medical Systems, Milwaukee) equipped with a 30.5-cm internal diameter three-axis local gradient coil and an end-capped quadrature birdcage radio frequency head coil (21) ."},
-    "model": {"value": "Signa", "support": "stated",
-     "quote": "All scanning was conducted on a 1.5-T Signa scanner (GE Medical Systems, Milwaukee) equipped with a 30.5-cm internal diameter three-axis local gradient coil and an end-capped quadrature birdcage radio frequency head coil (21) ."}
+    "manufacturer": {
+     "value": "GE Medical Systems",
+     "also_acceptable": [
+      "GE",
+      "General Electric"
+     ],
+     "support": "stated",
+     "quote": "All scanning was conducted on a 1.5-T Signa scanner (GE Medical Systems, Milwaukee) equipped with a 30.5-cm internal diameter three-axis local gradient coil and an end-capped quadrature birdcage radio frequency head coil (21) ."
+    },
+    "model": {
+     "value": "Signa",
+     "support": "stated",
+     "quote": "All scanning was conducted on a 1.5-T Signa scanner (GE Medical Systems, Milwaukee) equipped with a 30.5-cm internal diameter three-axis local gradient coil and an end-capped quadrature birdcage radio frequency head coil (21) ."
+    }
    }
   },
   {
    "kind": "Preprocessing",
    "key": "fmri_preprocessing",
    "identified_by": "motion correction, stereotaxic conversion, spatial blurring",
+   "match": [
+    "preproc",
+    "afni"
+   ],
    "fields": {
-    "software": {"value": ["AFNI"], "also_acceptable": [["AFNI version 2.2"], ["AFNI 2.2"]], "support": "stated",
-     "quote": "All data processing was conducted with the software package AFNI version 2.2 (22) ."},
-    "smoothing_fwhm_mm": {"value": 4.2, "support": "stated",
-     "quote": "The percentage of the area under the curve functional images were converted to a standard stereotaxic coordinate system (24) and spatially blurred by using a 4.2-mm full width at half maximum isotropic gaussian filter."},
-    "coordinate_space": {"value": null, "also_acceptable": ["Talairach"], "support": "absent",
+    "software": {
+     "value": [
+      "AFNI"
+     ],
+     "also_acceptable": [
+      [
+       "AFNI version 2.2"
+      ],
+      [
+       "AFNI 2.2"
+      ]
+     ],
+     "support": "stated",
+     "quote": "All data processing was conducted with the software package AFNI version 2.2 (22) ."
+    },
+    "smoothing_fwhm_mm": {
+     "value": 4.2,
+     "support": "stated",
+     "quote": "The percentage of the area under the curve functional images were converted to a standard stereotaxic coordinate system (24) and spatially blurred by using a 4.2-mm full width at half maximum isotropic gaussian filter."
+    },
+    "coordinate_space": {
+     "value": null,
+     "also_acceptable": [
+      "Talairach"
+     ],
+     "support": "absent",
      "quote": "The percentage of the area under the curve functional images were converted to a standard stereotaxic coordinate system (24) and spatially blurred by using a 4.2-mm full width at half maximum isotropic gaussian filter.",
-     "note": "The space is named only by a citation. \"Talairach\" occurs 0 times and \"MNI\" 0 times in this paper; writing either is a guess, and writing MNI would be wrong for a 2000 AFNI study."}
+     "note": "The space is named only by a citation. \"Talairach\" occurs 0 times and \"MNI\" 0 times in this paper; writing either is a guess, and writing MNI would be wrong for a 2000 AFNI study."
+    }
    }
   },
   {
    "kind": "ModelEstimation",
    "key": "voxelwise_beta_model",
    "identified_by": "the per-voxel nonlinear beta-distribution fit",
+   "match": [
+    "beta",
+    "afni",
+    "model",
+    "nonlinear"
+   ],
    "fields": {
-    "software": {"value": "AFNI", "also_acceptable": ["AFNI version 2.2"], "support": "stated",
-     "quote": "All data processing was conducted with the software package AFNI version 2.2 (22) ."},
-    "model_family": {"value": "nonlinear_regression", "also_acceptable": ["nonlinear regression", "other"], "support": "stated",
+    "software": {
+     "value": "AFNI",
+     "also_acceptable": [
+      "AFNI version 2.2"
+     ],
+     "support": "stated",
+     "quote": "All data processing was conducted with the software package AFNI version 2.2 (22) ."
+    },
+    "model_family": {
+     "value": "nonlinear_regression",
+     "also_acceptable": [
+      "nonlinear regression",
+      "other"
+     ],
+     "support": "stated",
      "quote": "To characterize a voxel’s response, fMRI signals acquired over this 7.5-minute period were modeled with beta distributions on a per-voxel basis by using a nonlinear regression technique (23) ( Figure 1 ).",
-     "note": "THE TRAP FIELD ON THIS PAPER. This is not a GLM and the phrase \"general linear model\" never appears; \"SPM\" occurs 0 times. Any write of general_linear_model here is wrong, and it is the value a template-driven proposer will default to."},
-    "hrf_model": {"value": null, "support": "absent",
+     "note": "THE TRAP FIELD ON THIS PAPER. This is not a GLM and the phrase \"general linear model\" never appears; \"SPM\" occurs 0 times. Any write of general_linear_model here is wrong, and it is the value a template-driven proposer will default to."
+    },
+    "hrf_model": {
+     "value": null,
+     "support": "absent",
      "quote": "The beta distribution was chosen on empirical grounds, given the wide range of different time series that it can model.",
-     "note": "No haemodynamic response function is used; the response shape is the fitted beta distribution."},
-    "spatial_unit": {"value": "voxel", "support": "stated",
-     "quote": "To characterize a voxel’s response, fMRI signals acquired over this 7.5-minute period were modeled with beta distributions on a per-voxel basis by using a nonlinear regression technique (23) ( Figure 1 )."}
+     "note": "No haemodynamic response function is used; the response shape is the fitted beta distribution."
+    },
+    "spatial_unit": {
+     "value": "voxel",
+     "support": "stated",
+     "quote": "To characterize a voxel’s response, fMRI signals acquired over this 7.5-minute period were modeled with beta distributions on a per-voxel basis by using a nonlinear regression technique (23) ( Figure 1 )."
+    }
    }
   },
   {
    "kind": "InferenceSettings",
    "key": "cocaine_film_one_sample",
    "identified_by": "the one-sample t test defining the functional ROIs",
+   "match": [
+    "one sample",
+    "onesample",
+    "cocaine",
+    "cluster"
+   ],
    "fields": {
-    "height_threshold_type": {"value": "p", "support": "stated",
-     "quote": "This t test, thresholded with a voxel-wise p value of 0.0025 and a criterion that each significant voxel be part of a larger 100-μl cluster of contiguous significant voxels (roughly equal to the size of the originally acquired voxels), identified voxels that showed a response to the cocaine film in cocaine users."},
-    "height_threshold_value": {"value": 0.0025, "support": "stated",
-     "quote": "This t test, thresholded with a voxel-wise p value of 0.0025 and a criterion that each significant voxel be part of a larger 100-μl cluster of contiguous significant voxels (roughly equal to the size of the originally acquired voxels), identified voxels that showed a response to the cocaine film in cocaine users."},
-    "multiple_comparison_method": {"value": "cluster_size_threshold", "also_acceptable": ["cluster", "cluster extent", "cluster-size threshold"], "support": "stated",
+    "height_threshold_type": {
+     "value": "p",
+     "support": "stated",
+     "quote": "This t test, thresholded with a voxel-wise p value of 0.0025 and a criterion that each significant voxel be part of a larger 100-μl cluster of contiguous significant voxels (roughly equal to the size of the originally acquired voxels), identified voxels that showed a response to the cocaine film in cocaine users."
+    },
+    "height_threshold_value": {
+     "value": 0.0025,
+     "support": "stated",
+     "quote": "This t test, thresholded with a voxel-wise p value of 0.0025 and a criterion that each significant voxel be part of a larger 100-μl cluster of contiguous significant voxels (roughly equal to the size of the originally acquired voxels), identified voxels that showed a response to the cocaine film in cocaine users."
+    },
+    "multiple_comparison_method": {
+     "value": "cluster_size_threshold",
+     "also_acceptable": [
+      "cluster",
+      "cluster extent",
+      "cluster-size threshold"
+     ],
+     "support": "stated",
      "quote": "The advantages of combining a voxel-wise threshold with a minimum cluster size have been described elsewhere (25) .",
-     "note": "Neither FDR nor Bonferroni is used for this test. FDR occurs 0 times in the paper; Bonferroni occurs once and belongs to the sex-film analysis below."},
-    "inference_level": {"value": "cluster", "also_acceptable": ["voxel"], "support": "inferred",
-     "quote": "This t test, thresholded with a voxel-wise p value of 0.0025 and a criterion that each significant voxel be part of a larger 100-μl cluster of contiguous significant voxels (roughly equal to the size of the originally acquired voxels), identified voxels that showed a response to the cocaine film in cocaine users."},
-    "correction_scope": {"value": "whole_brain", "support": "inferred",
-     "quote": "Contiguous 7-mm sagittal slices covering the entire brain were collected by using a blipped gradient-echo, echo-planar pulse sequence (TE=40 msec; TR=6000 msec; field of view=24 cm; 64 × 64 matrix; in-plane resolution=3.75 × 3.75 mm)."},
-    "correction_regions": {"value": null, "support": "absent",
+     "note": "Neither FDR nor Bonferroni is used for this test. FDR occurs 0 times in the paper; Bonferroni occurs once and belongs to the sex-film analysis below."
+    },
+    "inference_level": {
+     "value": "cluster",
+     "also_acceptable": [
+      "voxel"
+     ],
+     "support": "inferred",
+     "quote": "This t test, thresholded with a voxel-wise p value of 0.0025 and a criterion that each significant voxel be part of a larger 100-μl cluster of contiguous significant voxels (roughly equal to the size of the originally acquired voxels), identified voxels that showed a response to the cocaine film in cocaine users."
+    },
+    "correction_scope": {
+     "value": "whole_brain",
+     "support": "inferred",
+     "quote": "Contiguous 7-mm sagittal slices covering the entire brain were collected by using a blipped gradient-echo, echo-planar pulse sequence (TE=40 msec; TR=6000 msec; field of view=24 cm; 64 × 64 matrix; in-plane resolution=3.75 × 3.75 mm)."
+    },
+    "correction_regions": {
+     "value": null,
+     "support": "absent",
      "quote": "The clusters of activation that survived these criteria defined functional regions of interest for the following set of comparisons.",
-     "note": "The ROIs are an OUTPUT of this test, not a restriction on it. This is the paper's own version of the STN trap on 18823721: the words \"regions of interest\" are all over the Methods and every one of them names a result."}
+     "note": "The ROIs are an OUTPUT of this test, not a restriction on it. This is the paper's own version of the STN trap on 18823721: the words \"regions of interest\" are all over the Methods and every one of them names a result."
+    }
    }
   },
   {
    "kind": "InferenceSettings",
    "key": "sex_film_between_group",
    "identified_by": "the Bonferroni-corrected two-sample cluster comparison for the sex film",
+   "match": [
+    "sex",
+    "bonferroni"
+   ],
    "fields": {
-    "multiple_comparison_method": {"value": "Bonferroni", "support": "stated",
-     "quote": "A Bonferroni correction (p≤0.001), warranted given the high number of separate statistical tests, reduced the number of significant differences to 10."},
-    "alpha_level": {"value": 0.001, "support": "stated",
-     "quote": "A Bonferroni correction (p≤0.001), warranted given the high number of separate statistical tests, reduced the number of significant differences to 10."},
-    "inference_level": {"value": "cluster", "support": "stated",
-     "quote": "The activated clusters of both groups were combined and t tests were performed that compared the two groups on the mean activation values of each of the combined clusters."}
+    "multiple_comparison_method": {
+     "value": "Bonferroni",
+     "support": "stated",
+     "quote": "A Bonferroni correction (p≤0.001), warranted given the high number of separate statistical tests, reduced the number of significant differences to 10."
+    },
+    "alpha_level": {
+     "value": 0.001,
+     "support": "stated",
+     "quote": "A Bonferroni correction (p≤0.001), warranted given the high number of separate statistical tests, reduced the number of significant differences to 10."
+    },
+    "inference_level": {
+     "value": "cluster",
+     "support": "stated",
+     "quote": "The activated clusters of both groups were combined and t tests were performed that compared the two groups on the mean activation values of each of the combined clusters."
+    }
    }
   }
- ]
+ ],
+ "conventions": {
+  "match": "substrings that identify this entity in a record, taken from the article's own words; matched against the entity's local_id and label so scoring does not inherit the record's idea of what an entity is"
+ }
 }
