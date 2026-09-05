@@ -37,12 +37,13 @@ Below is a JSON template and a paper. Return ONE JSON object matching the templa
     not state; a wrong one is a fact it contradicts.
   * `local_id` addresses an entity the record already holds. Copy one you were shown under
     "Already extracted"; do not invent one.
-
-Deliberately says nothing about which entity a value belongs to. That instruction exists as
-`recall.SCOPED` and is added to BOTH proposers by `PONDIE_TEMPLATE=scoped` or to neither:
-carried here it would have made this arm differ from the local one in prompt as well as in
-model, and the arm exists to vary the model alone.
 """
+# Says nothing about which entity a value belongs to, deliberately. That instruction is
+# `recall.SCOPED`, added to BOTH proposers by `PONDIE_TEMPLATE=scoped` or to neither:
+# carried here it would make this arm differ from the local one in prompt as well as in
+# model, and the arm exists to vary the model alone. Kept as a comment and not as part of
+# the literal -- written inside it once, and the model was sent our reasoning about the
+# experiment along with its instructions.
 
 
 class ModelProposer(_Proposes):
