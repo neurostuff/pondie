@@ -517,6 +517,11 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
     first. `repair._sweep` holds one per class.
     """
     log = EditLog()
+    from pondie.extraction import recall
+
+    quotes = proposal.get(recall.QUOTES) or {}
+    if not isinstance(quotes, Mapping):
+        quotes = {}
     # The class the entity says it is, not the one its container declares. An acquisition is
     # an `MRI` by type designator, and `magnetic_field_strength_tesla` is a slot of that
     # subclass -- written against the base class it is an attribute `Acquisition` does not
@@ -534,8 +539,9 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
     # the guard has run is a sibling the guard did not see.
     ordered = sorted(proposal, key=lambda name: kinds.get(name) != "reference")
     for name in ordered:
-        if name in ("local_id", "id", designator) or name not in kinds:
+        if name in ("local_id", "id", designator, recall.QUOTES) or name not in kinds:
             continue
+        cited = str(quotes.get(name) or "")
         proposed = proposal[name]
         if proposed in (None, "", []):
             continue
@@ -602,12 +608,22 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             log.refused.extend(refused)
             continue
         if kinds[name] == "reference":
+            if cited and (stray := _unnamed_targets(record, sch, name, ranges, value, cited)):
+                # A link needs two entities to be right where a value needs one, and the
+                # pass has never been observed to choose one correctly: over four hand-read
+                # papers every link it got right was to the only entity of its class, and
+                # of the nine that required a judgement, none. A citation that never names
+                # the target is the one check that needs no schema knowledge, and all three
+                # link errors in the measured arm fail it.
+                log.refused.append(Refusal(
+                    name, f"the cited sentence does not name {', '.join(stray)}", value))
+                continue
             entity[name] = value
             if claimed is not None and (class_name, name) in EXCLUSIVE_REFERENCES:
                 for target in added:
                     claimed[(class_name, name, target)] = str(entity.get("local_id") or "")
         else:
-            written = _wrap(value, text)
+            written = _wrap(value, text, quote=cited)
             if (kept := _inherited(current, value)) is not None:
                 written["evidence"], written["value_source"] = kept
             elif text and written["evidence"]["status"] != "present" \
@@ -658,6 +674,23 @@ def _unclaimed(class_name: str, slot: str, added: tuple[str, ...],
     taken = tuple(t for t in added
                   if claimed.get((class_name, slot, t)) not in (None, own))
     return tuple(t for t in added if t not in taken), taken
+
+
+def _unnamed_targets(record: Mapping[str, Any], sch: Schema, slot: str,
+                     ranges: Mapping[str, Any], value: Any, cited: str) -> list[str]:
+    """Targets of this link whose label the cited sentence never mentions."""
+    target_class = str(ranges.get(slot) or "")
+    container = _container(sch, target_class) if target_class else ""
+    held = {str(values.read(e.get("local_id"))): e
+            for e in (record.get(container) or []) if isinstance(e, Mapping)}
+    within = _bare(cited)
+    stray = []
+    for target in (value if isinstance(value, list) else [value]):
+        entity = held.get(str(target))
+        label = _bare(label_of(entity)) if entity is not None else ""
+        if label and label not in within:
+            stray.append(str(target))
+    return stray
 
 
 def _multivalued(sch: Schema, class_name: str, slot: str) -> bool:
@@ -820,7 +853,7 @@ def _warrants(text: str, value: Any) -> bool:
     return _bare(wanted) in _bare(text)
 
 
-def _wrap(value: Any, text: str, source: str = "reported") -> dict:
+def _wrap(value: Any, text: str, source: str = "reported", quote: str = "") -> dict:
     """A wrapper whose evidence says what was actually established.
 
     `not_found` rather than `not_applicable`: a sentence should exist for a value read off a
@@ -829,7 +862,10 @@ def _wrap(value: Any, text: str, source: str = "reported") -> dict:
     from pondie.extraction.record import spans as span_tools
 
     evidence: dict[str, Any] = {"status": "not_found"}
-    quote = str(value)
+    # The proposer's own citation when it gave one, the value itself otherwise. A cited
+    # sentence retires the twenty-character floor, which exists only because a bare value
+    # is too short to search for safely -- and it is what makes a numeric groundable at all.
+    quote = str(quote or value)
     if text and len(quote) >= 20:
         try:
             span = span_tools.resolve(text, quote).as_record()

@@ -258,3 +258,55 @@ def test_the_part_of_a_claim_that_is_still_free_is_written(sch):
     assert record["groups"][1]["diagnostic_instrument"] == ["asm_scid"]
     assert [s for s, _v in log.written] == ["diagnostic_instrument"]
     assert "asm_caps already belongs to grp_a" in log.refused[0].why
+
+
+def test_a_cited_quote_grounds_a_value_too_short_to_search_for(sch):
+    """`_wrap` looks for a span only when the value is twenty characters or more, which is
+    why no count or mean age it wrote was ever grounded. A proposer that returns the
+    sentence it read the value from retires the floor: the search is for the sentence."""
+    from pondie.extraction import recall
+
+    text = "Participants were 12 opioid-dependent patients recruited from a detox unit."
+    entity = {"local_id": "grp_a"}
+    edit.apply(sch, {"groups": [entity]}, "Group", entity,
+               {"acquired_count": 12,
+                recall.QUOTES: {"acquired_count": "12 opioid-dependent patients recruited"}},
+               text)
+    node = entity["acquired_count"]
+    assert node["value"] == 12
+    assert node["evidence"]["status"] == "present", "the cited sentence was not used"
+
+
+def test_a_link_whose_quote_never_names_its_target_is_refused(sch):
+    """A link needs two entities to be right where a value needs one, and over four
+    hand-read papers every link the pass got right was to the only entity of its class --
+    of the nine that required a judgement, none. The quote must name what it points at;
+    that check needs no schema knowledge and all three measured link errors fail it."""
+    from pondie.extraction import recall
+
+    text = "The SCID established the diagnosis. Craving was rated on the DDQ."
+    record = {"groups": [{"local_id": "grp_a", "name": cited("patients", "patients")}],
+              "assessments": [{"local_id": "asm_ddq", "name": cited("DDQ", "DDQ")},
+                              {"local_id": "asm_scid", "name": cited("SCID", "SCID")}]}
+    entity = record["groups"][0]
+    log = edit.apply(sch, record, "Group", entity,
+                     {"diagnostic_instrument": ["asm_ddq"],
+                      recall.QUOTES: {"diagnostic_instrument":
+                                      "The SCID established the diagnosis."}}, text)
+    assert "diagnostic_instrument" not in entity
+    assert any("does not name" in r.why for r in log.refused)
+
+
+def test_a_link_its_quote_does_name_is_written(sch):
+    """The rule must not refuse the link it exists to admit."""
+    from pondie.extraction import recall
+
+    text = "The SCID established the diagnosis."
+    record = {"groups": [{"local_id": "grp_a", "name": cited("patients", "patients")}],
+              "assessments": [{"local_id": "asm_scid", "name": cited("SCID", "SCID")}]}
+    entity = record["groups"][0]
+    edit.apply(sch, record, "Group", entity,
+               {"diagnostic_instrument": ["asm_scid"],
+                recall.QUOTES: {"diagnostic_instrument":
+                                "The SCID established the diagnosis."}}, text)
+    assert entity.get("diagnostic_instrument") == ["asm_scid"]
