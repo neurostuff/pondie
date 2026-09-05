@@ -569,12 +569,21 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             if value == entity.get(name):
                 continue
             # On what is added, not on the whole slot: an entity that already held a target
-            # is not claiming it again, and the copy this refuses is a set of ids arriving
-            # for the first time on a second entity.
+            # is not claiming it again, and the copy this refuses is an id arriving for the
+            # first time on a second entity.
             added = tuple(sorted(r for r in resolved if r not in existing))
-            if refused := _refuses_a_claimed_target(class_name, name, added, entity, claimed):
-                log.refused.append(refused)
-                continue
+            added, taken = _unclaimed(class_name, name, added, entity, claimed)
+            if taken:
+                log.refused.append(Refusal(
+                    name, f"{', '.join(taken)} already belongs to "
+                          f"{', '.join(sorted({claimed[(class_name, name, t)] for t in taken}))}"
+                          f", and this slot names what belongs to one entity", list(taken)))
+                merged = [r for r in merged if r not in taken]
+                if not merged:
+                    continue
+                value = merged if _multivalued(sch, class_name, name) else merged[0]
+                if value == entity.get(name):
+                    continue
         else:
             value = values.shape(sch, class_name, name, proposed)
             if value is None:
@@ -594,8 +603,9 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             continue
         if kinds[name] == "reference":
             entity[name] = value
-            if claimed is not None and (class_name, name) in EXCLUSIVE_REFERENCES and added:
-                claimed[(class_name, name, added)] = str(entity.get("local_id") or "")
+            if claimed is not None and (class_name, name) in EXCLUSIVE_REFERENCES:
+                for target in added:
+                    claimed[(class_name, name, target)] = str(entity.get("local_id") or "")
         else:
             written = _wrap(value, text)
             if (kept := _inherited(current, value)) is not None:
@@ -623,24 +633,31 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
     return log
 
 
-def _refuses_a_claimed_target(class_name: str, slot: str, added: tuple[str, ...],
-                              entity: Mapping[str, Any],
-                              claimed: Mapping[tuple[str, str, tuple[str, ...]], str] | None
-                              ) -> Refusal | None:
-    """One exclusive target set belongs to one entity, so the second copy is not a reading.
+def _unclaimed(class_name: str, slot: str, added: tuple[str, ...],
+               entity: Mapping[str, Any],
+               claimed: Mapping[tuple[str, str, str], str] | None
+               ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """`added`, split into what this entity may take and what already belongs elsewhere.
 
     Not a `Check`: the guards judge one edit against the record, and this judges an edit
-    against what the same sweep already wrote. The first write is legitimate and the second
-    is the one to refuse, which needs the caller's memory rather than the record.
+    against what the same sweep already wrote. The first write is legitimate and only the
+    later one is a copy, which needs the caller's memory rather than the record.
+
+    Per target rather than per list, because the copy does not arrive as a copy. On 21118656
+    three groups took overlapping subsets of the same three interviews -- [CAPS, MINI, vivo],
+    [CAPS, MINI], [MINI] -- and a rule keyed on the whole list saw three different lists and
+    let all three through. On 18823721, where the list was identical, it fired.
+
+    The unclaimed part is still written rather than the whole write refused: whichever entity
+    the sweep happens to reach first takes the shared target, and refusing everything after
+    it would cost a correct link for an accident of ordering.
     """
     if claimed is None or not added or (class_name, slot) not in EXCLUSIVE_REFERENCES:
-        return None
-    first = claimed.get((class_name, slot, added))
+        return added, ()
     own = str(entity.get("local_id") or "")
-    if first is None or first == own:
-        return None
-    return Refusal(slot, f"the same targets were just written to {first}, and this slot "
-                         f"names what belongs to one entity", list(added))
+    taken = tuple(t for t in added
+                  if claimed.get((class_name, slot, t)) not in (None, own))
+    return tuple(t for t in added if t not in taken), taken
 
 
 def _multivalued(sch: Schema, class_name: str, slot: str) -> bool:

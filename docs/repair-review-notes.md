@@ -756,3 +756,159 @@ write time, and I would do that before building it.
   `repair_score` across both arms.
 * `refuses_losing_the_warrant` should allow a strict superset (K2 above).
 * The 216 in ec3db6d's message should be 215.
+
+---
+
+# Round 4: the final measurement
+
+`runs/repair-final` (15) against `runs/repair-baseline` (12) and
+`runs/pondie-prose-18823721`. Everything below is measured with one build of the code, on
+the artifacts as they stand.
+
+## First: what is actually a controlled comparison
+
+**13 of the 15 papers start from a byte-identical pre-repair record. Two do not.**
+`repair-final/unrepaired/16038771` and `.../21118656` differ from the copies in
+`pondie-newtpl` and `pondie-21118656` (55,216 vs 59,979 and 68,659 vs 69,114 bytes), so any
+delta on those two is confounded by the extractor and is not attributable to repair. That
+leaves **two** truth papers in a controlled A/B -- 18823721 and 11058476 -- and 13 papers for
+the deterministic half.
+
+## Deterministic half, on the 13 controlled papers
+
+| | pre | post |
+|---|---|---|
+| spans destroyed | 227 | **2** |
+| provenance downgrades (R1/M2) | 141 | **0** |
+| findings introduced (M3) | 54 | **1** |
+| fields filled (M5) | 316 | 257 |
+| papers failing a deterministic gate | 11 of 13 | **1 of 13** |
+
+That is the result. Three corrections to the numbers in your message.
+
+**M3 is 1, not 0.** The survivor is `Study.tasks[].conditions: 'conditions' is multivalued
+but got dict` on 12860777 -- the nested-slot bug f8f0998 fixes. f8f0998 fixes the *code*; the
+run predates it, and the record still carries the finding. Re-measuring with current code
+still reports it, because the defect is in the artifact. **M3 == 0 is a claim about code that
+no run has yet demonstrated.** Re-run 12860777 and it is earned.
+
+**The baseline M3 is 49, not 61.** 61 was measured before `repaired_by` was declared on
+`ExtractionMetadata`; with the current validator the same baseline records score 49. Quoting
+61 -> 0 compares two validators. The honest pair over the 13 controlled papers is 54 -> 1.
+
+**The fill drop is 59, not 16.** 285 -> 269 compares twelve papers to fifteen. On the 13
+controlled papers it is 316 -> 257: 67 fills given up, 8 newly gained, net **-59 (-19%)**.
+
+## R4
+
+The gate `exclusive_shared == 0` passes on all 15, and the guard did work: on 18823721
+`grp_controls.diagnostic_instrument` is gone, taking that paper's invented reference writes
+from 4 to 3.
+
+**But 21118656 exposes a hole in the guard, and it is mine.** Three groups took *overlapping
+subsets* of the same three interviews:
+
+    grp_ptsd                     [CAPS, MINI, vivo Checklist]
+    grp_traumatized_controls     [CAPS, MINI]
+    grp_nontraumatized_controls  [MINI]
+
+Keyed on the whole target tuple, those are three different lists, so nothing collided and all
+three were written -- two of them onto control groups that have no condition for an
+instrument to have established. The copy does not arrive as a copy. Fixed here: the claim is
+made **per target**, and the part of a later write that is still free is written rather than
+the whole write refused, so an unlucky sweep order cannot cost a correct link. Two tests.
+**The effect on 21118656 is predicted, not measured** -- it needs a re-run.
+
+## R5, and the gate clause
+
+| paper | controlled | pre changed / bad / yield | post changed / bad / yield | gate pre | gate post |
+|---|---|---|---|---|---|
+| 18823721 | yes | 13 / 9 / 4 | 9 / **5** / 4 | fail | fail |
+| 11058476 | yes | 3 / 2 / 1 | 5 / 3 / 2 | fail | fail |
+| 16038771 | no | 6 / 2 / 4 | 4 / 3 / 1 | pass | fail |
+| 21118656 | no | 2 / 1 / 1 | 1 / 1 / 0 | pass | fail |
+
+**`yield >= wrong + invented` fails on all four papers in the post arm.** Plainly: repair is
+not yet net positive by the gate we agreed.
+
+The two rows that mean anything are the controlled ones, and only 18823721 has enough writes
+to carry an inference. There it is real progress: **bad writes 9 -> 5 with yield unchanged at
+4, and correct fields 40 -> 44 while filling ten fewer.** It fails 4 < 5 by one write. On
+11058476 both sides rose by one. The two uncontrolled rows moved from pass to fail, and I
+will not attribute that to the fix, because their starting records changed.
+
+## Q2: did Rule A cost anything real?
+
+139 refusals reading "nothing in the paper places this value", across 13 papers. Against the
+truth set:
+
+* **18823721 -- all five adjudicable refusals are right.** Three `non_analysis_content`
+  (including `connectivity_seeds`, the flagship fabrication) and two `correction_scope: roi`,
+  where the truth records the paper as silent and "region of interest", "small volume" and
+  word-boundary ROI occur zero times.
+* **11058476 -- two `correction_scope`** and **16038771 -- two `is_healthy`**, where the
+  truth carries a value with `support: inferred`.
+
+So the measured cost is **at most four values, and all four are inferences rather than
+statements**: `whole_brain` reasoned from a whole-brain acquisition, `true` reasoned from the
+absence of any clinical claim. Rule A refusing those is the rule working, not failing. **It
+refused nothing the paper states.** My round-3 prediction of "one value" was low by three,
+and the direction was right.
+
+## Q3: the 59, and whether damage was traded for yield
+
+Yes, materially, and the 16 hid it. The 67 given-up fills by slot:
+
+    18  non_analysis_content        the most-invented slot in the corpus, and the source of
+                                    10 of the baseline's 49 introduced findings
+    18  free text                   description 9, stimuli 2, model_settings 2,
+                                    inclusion_criteria 2, exclusion_criteria 2,
+                                    recruitment_method 1
+    31  everything else             correction_scope 4, species 2, is_healthy 2,
+                                    model_family 2, coordinate_space 2, medications 2, ...
+
+Of the 15 I can adjudicate against the truth set, roughly half are right refusals and half
+are values a reader would keep -- and **the losses fall into three recognisable classes**:
+
+    paraphrase        model_estimations.model_settings = "Contrasts: (1) neutral vs.
+                      low-level baseline; ..." -- the sentence IS in 18823721, reworded, so
+                      the document test misses it. Same for two assessment `description`s
+                      and 11058476's `stimuli`.
+    unit conversion   acquisitions.acquisition_duration_seconds = 450.0, which the paper
+                      reports as "7.5 minutes". 450 is not a token in the document.
+    inference         is_healthy, correction_scope: whole_brain (Q2 above).
+
+So no, the 59 is not all inventions. Two of the three classes have cheap carve-outs; the
+third is Rule A doing its job.
+
+## Q4: are we done?
+
+**No, but non-destructiveness is done and that is the larger half.** The record repair now
+produces destroys no warrant, downgrades no provenance, introduces no type error and (once
+the per-target claim lands in a run) duplicates no exclusive reference. Everything the first
+diagnosis was about is closed.
+
+What remains is that the pass still writes roughly one wrong-or-invented value per two
+changed writes, and the gate fails on every truth paper. Three things, in order of expected
+effect per unit of work:
+
+1. **Re-run.** Two of the four claims above are about code that no artifact demonstrates:
+   M3 == 0 and the per-target exclusive claim. And a re-run of the *pre* records for
+   16038771 and 21118656 would take the controlled truth set from two papers to four, which
+   is the difference between a result and an anecdote.
+2. **Two carve-outs to Rule A**, both small, both recovering measured losses without
+   weakening it: allow a numeric that equals a document token under a unit factor
+   (`450 s` <-> `7.5 minutes`), and allow a free-text value -- honestly `generated` -- when a
+   majority of its content words occur in the document. Together those address 20 of the 67
+   given-up fills, which is the cheapest available movement on the `yield` side of the gate.
+3. **The span-sharing refusal for D4**, which is still where the residue lives: `haloperidol`
+   on a patient who was excluded, `age_mean 28.2` belonging to the 19 students across both
+   groups, `enrolled_count 17` which is the analysed count. **Separate piece of work.** It
+   needs the candidate span recorded at write time before it can be measured at all, which is
+   an instrumentation change to `apply` plus a run, and I would not fold it into this branch.
+
+**Residual risk if this ships as is:** the record is honest about what it does not know and
+no longer destroys what it knew, so a reviewer reading provenance can trust it. What it still
+does is state, with a citation, facts that belong to a different entity in the same paper --
+and no gate in this document can see that. The four truth papers say that is about one write
+in two. Anyone consuming repaired fields at face value should know that number.
