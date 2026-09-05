@@ -1,0 +1,201 @@
+{
+ "pmid": "21118656",
+ "title": "Structural alterations in lateral prefrontal, parietal and posterior midline regions of men with chronic posttraumatic stress disorder",
+ "source": "/data/james/pondie-vs-fulltext/corpus/21118656/processed/local/text.tables.txt",
+ "read_from": "article text only; no pondie record consulted for any value",
+ "must_not_exist": [
+  {"kind": "Task", "why": "A structural MRI study with no in-scanner task. \"High-resolution, whole-brain, 3-dimensional (3-D) structural MRI scans were acquired on a 3 T Siemens MAGNETOM Trio scanner with an 8-channel phased-array head coil using a T 1 -weighted 3D–magnetization prepared rapid acquisition gradient echo (MPRAGE) sequence in sagittal orientation (echo time [TE] 4.77 ms, repetition time [TR] 2500 ms, TI 1100 ms, flip angle 7°, bandwidth 140 Hz/pixel, matrix 256 × 256 × 192, field of view [FOV] 256 mm, isometric voxel size 1.0 mm 3 ). Any Task, Condition, response_mode or instructions on this record is invented."},
+  {"kind": "Acquisition[modality=fMRI]", "why": "Only one sequence is acquired and it is the MPRAGE above. \"fMRI\" occurs 0 times in this paper; \"functional\" occurs 9 times and every one is in the introduction or the reference list."}
+ ],
+ "entities": [
+  {
+   "kind": "Group",
+   "key": "ptsd",
+   "identified_by": "the refugees who currently had PTSD",
+   "fields": {
+    "is_healthy": {"value": false, "support": "stated",
+     "quote": "Fifty-two refugees were included in the study: 20 currently had PTSD, 19 did not have PTSD but had repeatedly experienced traumatic stress (traumatized controls) and 13 non-traumatized controls had not experienced severe traumatic stressors."},
+    "enrolled_count": {"value": 20, "support": "stated",
+     "quote": "Fifty-two refugees were included in the study: 20 currently had PTSD, 19 did not have PTSD but had repeatedly experienced traumatic stress (traumatized controls) and 13 non-traumatized controls had not experienced severe traumatic stressors."},
+    "acquired_count": {"value": 20, "support": "inferred",
+     "quote": "Fifty-two refugees were included in the study: 20 currently had PTSD, 19 did not have PTSD but had repeatedly experienced traumatic stress (traumatized controls) and 13 non-traumatized controls had not experienced severe traumatic stressors.",
+     "note": "No exclusions after inclusion are reported."},
+    "age_mean": {"value": 36, "support": "stated",
+     "quote": "Participants’ mean age was 36 years in the PTSD group (standard deviation [SD] 7.7, range 23–55 yr), 34 years in traumatized controls (SD 9.9, range 21–53 yr) and 29 years in nontraumatized controls (SD 7.2, range 18–48 yr)."},
+    "age_standard_deviation": {"value": 7.7, "support": "stated",
+     "quote": "Participants’ mean age was 36 years in the PTSD group (standard deviation [SD] 7.7, range 23–55 yr), 34 years in traumatized controls (SD 9.9, range 21–53 yr) and 29 years in nontraumatized controls (SD 7.2, range 18–48 yr).",
+     "note": "One sentence carries three means and three SDs. Any pass that grabs the first number after \"SD\" will attach 7.7 to all three groups, and the span it cites will be correct for all three."},
+    "medications": {"value": null, "also_acceptable": [["antidepressant"]], "support": "absent",
+     "quote": "One participant in the PTSD group had taken antidepressant medication on an irregular basis (maximally once a week). Twenty-nine participants were smokers: 9 nontraumatized controls (mean 18.00, SD 6.40 cigarettes/d), 10 traumatized controls (mean 22.18, SD 13.66 cigarettes/d) and 10 patients with PTSD (mean 23.10, SD 16.04 cigarettes/d).",
+     "note": "The slot says \"Names only\". No antidepressant is named, and the cohort as a whole took nothing: \"Other than that, none of the participants consumed any psychoactive drugs or medication.\" A bare \"antidepressant\" is defensible; a named drug is invention."},
+    "medical_condition": {"value": ["posttraumatic stress disorder"], "also_acceptable": [["PTSD"], ["posttraumatic stress disorder", "major depression"]], "support": "stated",
+     "quote": "Fifty-two refugees were included in the study: 20 currently had PTSD, 19 did not have PTSD but had repeatedly experienced traumatic stress (traumatized controls) and 13 non-traumatized controls had not experienced severe traumatic stressors.",
+     "note": "Comorbid major depression is present in this group by design: \"In all participants, major depression had developed as a secondary, comorbid disease, and some fulfilled criteria for major depression according to DSM-IV.\""},
+    "diagnostic_system": {"value": "DSM-IV", "support": "stated",
+     "quote": "This 30-item, structured interview corresponds to PTSD criteria according to DSM-IV 28 and allows a quantification of the 3 clusters of PTSD symptoms (intrusions, avoidance and hyperarousal)."},
+    "diagnostic_instrument": {"value": ["Clinician Administered PTSD Scale"], "also_acceptable": [["CAPS"], ["Clinician Administered PTSD Scale", "Mini-International Neuropsychiatric Interview"]], "support": "stated",
+     "quote": "We assessed current and lifetime PTSD symptoms with the Clinician Administered PTSD Scale (CAPS 32 ).",
+     "note": "The one non-null diagnostic_instrument in this whole ground-truth set. The MINI establishes the comorbid depression, not the defining condition: \"The diagnosis of major depression, suicidal ideations and alcohol or substance dependency or abuse according to DSM-IV 28 was based on the corresponding sections of the Mini-International Neuropsychiatric Interview (MINI). 33\" The vivo Checklist measures exposure, not diagnosis, and is the wrong answer here."}
+   }
+  },
+  {
+   "kind": "Group",
+   "key": "traumatized_controls",
+   "identified_by": "refugees with repeated traumatic stress but no PTSD",
+   "fields": {
+    "is_healthy": {"value": true, "support": "stated",
+     "quote": "Participants were included if they were healthy refugees between the ages of 18 and 55 years."},
+    "enrolled_count": {"value": 19, "support": "stated",
+     "quote": "Fifty-two refugees were included in the study: 20 currently had PTSD, 19 did not have PTSD but had repeatedly experienced traumatic stress (traumatized controls) and 13 non-traumatized controls had not experienced severe traumatic stressors."},
+    "acquired_count": {"value": 19, "support": "inferred",
+     "quote": "Fifty-two refugees were included in the study: 20 currently had PTSD, 19 did not have PTSD but had repeatedly experienced traumatic stress (traumatized controls) and 13 non-traumatized controls had not experienced severe traumatic stressors."},
+    "age_mean": {"value": 34, "support": "stated",
+     "quote": "Participants’ mean age was 36 years in the PTSD group (standard deviation [SD] 7.7, range 23–55 yr), 34 years in traumatized controls (SD 9.9, range 21–53 yr) and 29 years in nontraumatized controls (SD 7.2, range 18–48 yr)."},
+    "age_standard_deviation": {"value": 9.9, "support": "stated",
+     "quote": "Participants’ mean age was 36 years in the PTSD group (standard deviation [SD] 7.7, range 23–55 yr), 34 years in traumatized controls (SD 9.9, range 21–53 yr) and 29 years in nontraumatized controls (SD 7.2, range 18–48 yr)."},
+    "medications": {"value": null, "support": "absent",
+     "quote": "Other than that, none of the participants consumed any psychoactive drugs or medication."},
+    "medical_condition": {"value": null, "support": "absent",
+     "quote": "Fifty-two refugees were included in the study: 20 currently had PTSD, 19 did not have PTSD but had repeatedly experienced traumatic stress (traumatized controls) and 13 non-traumatized controls had not experienced severe traumatic stressors.",
+     "note": "Three of them had a remitted earlier PTSD episode -- \"In 3 of the traumatized controls, an earlier episode of PTSD had remitted\" -- which does not make PTSD this group's defining condition."},
+    "diagnostic_system": {"value": null, "support": "absent",
+     "quote": "Fifty-two refugees were included in the study: 20 currently had PTSD, 19 did not have PTSD but had repeatedly experienced traumatic stress (traumatized controls) and 13 non-traumatized controls had not experienced severe traumatic stressors."},
+    "diagnostic_instrument": {"value": null, "support": "absent",
+     "quote": "We assessed current and lifetime PTSD symptoms with the Clinician Administered PTSD Scale (CAPS 32 ).",
+     "note": "CAPS was administered to everyone -- that is how these subjects were shown NOT to have PTSD -- but it established no condition for this group. A pass that copies the PTSD group's diagnostic_instrument across all three groups is wrong twice."}
+   }
+  },
+  {
+   "kind": "Group",
+   "key": "nontraumatized_controls",
+   "identified_by": "refugees who had not experienced severe traumatic stressors",
+   "fields": {
+    "is_healthy": {"value": true, "support": "stated",
+     "quote": "Participants were included if they were healthy refugees between the ages of 18 and 55 years."},
+    "enrolled_count": {"value": 13, "support": "stated",
+     "quote": "Fifty-two refugees were included in the study: 20 currently had PTSD, 19 did not have PTSD but had repeatedly experienced traumatic stress (traumatized controls) and 13 non-traumatized controls had not experienced severe traumatic stressors."},
+    "acquired_count": {"value": 13, "support": "inferred",
+     "quote": "Fifty-two refugees were included in the study: 20 currently had PTSD, 19 did not have PTSD but had repeatedly experienced traumatic stress (traumatized controls) and 13 non-traumatized controls had not experienced severe traumatic stressors."},
+    "age_mean": {"value": 29, "support": "stated",
+     "quote": "Participants’ mean age was 36 years in the PTSD group (standard deviation [SD] 7.7, range 23–55 yr), 34 years in traumatized controls (SD 9.9, range 21–53 yr) and 29 years in nontraumatized controls (SD 7.2, range 18–48 yr)."},
+    "age_standard_deviation": {"value": 7.2, "support": "stated",
+     "quote": "Participants’ mean age was 36 years in the PTSD group (standard deviation [SD] 7.7, range 23–55 yr), 34 years in traumatized controls (SD 9.9, range 21–53 yr) and 29 years in nontraumatized controls (SD 7.2, range 18–48 yr)."},
+    "medications": {"value": null, "support": "absent",
+     "quote": "Other than that, none of the participants consumed any psychoactive drugs or medication."},
+    "medical_condition": {"value": null, "support": "absent",
+     "quote": "Participants were included if they were healthy refugees between the ages of 18 and 55 years."},
+    "diagnostic_system": {"value": null, "support": "absent",
+     "quote": "Participants were included if they were healthy refugees between the ages of 18 and 55 years."},
+    "diagnostic_instrument": {"value": null, "support": "absent",
+     "quote": "Participants were included if they were healthy refugees between the ages of 18 and 55 years."}
+   }
+  },
+  {
+   "kind": "Acquisition",
+   "key": "structural",
+   "identified_by": "the T1-weighted MPRAGE structural scan, the only acquisition in the study",
+   "fields": {
+    "modality": {"value": "sMRI", "also_acceptable": ["MRI", "T1", "structural MRI"], "support": "stated",
+     "quote": "High-resolution, whole-brain, 3-dimensional (3-D) structural MRI scans were acquired on a 3 T Siemens MAGNETOM Trio scanner with an 8-channel phased-array head coil using a T 1 -weighted 3D–magnetization prepared rapid acquisition gradient echo (MPRAGE) sequence in sagittal orientation (echo time [TE] 4.77 ms, repetition time [TR] 2500 ms, TI 1100 ms, flip angle 7°, bandwidth 140 Hz/pixel, matrix 256 × 256 × 192, field of view [FOV] 256 mm, isometric voxel size 1.0 mm 3 ).",
+     "note": "fMRI is wrong here and is the default a template-driven proposer reaches for."},
+    "magnetic_field_strength_tesla": {"value": 3, "support": "stated",
+     "quote": "High-resolution, whole-brain, 3-dimensional (3-D) structural MRI scans were acquired on a 3 T Siemens MAGNETOM Trio scanner with an 8-channel phased-array head coil using a T 1 -weighted 3D–magnetization prepared rapid acquisition gradient echo (MPRAGE) sequence in sagittal orientation (echo time [TE] 4.77 ms, repetition time [TR] 2500 ms, TI 1100 ms, flip angle 7°, bandwidth 140 Hz/pixel, matrix 256 × 256 × 192, field of view [FOV] 256 mm, isometric voxel size 1.0 mm 3 )."},
+    "repetition_time_seconds": {"value": 2.5, "also_acceptable": [2500], "support": "stated",
+     "quote": "(echo time [TE] 4.77 ms, repetition time [TR] 2500 ms, TI 1100 ms, flip angle 7°, bandwidth 140 Hz/pixel, matrix 256 × 256 × 192, field of view [FOV] 256 mm, isometric voxel size 1.0 mm 3 )"},
+    "echo_time_seconds": {"value": 0.00477, "also_acceptable": [4.77], "support": "stated",
+     "quote": "(echo time [TE] 4.77 ms, repetition time [TR] 2500 ms, TI 1100 ms, flip angle 7°, bandwidth 140 Hz/pixel, matrix 256 × 256 × 192, field of view [FOV] 256 mm, isometric voxel size 1.0 mm 3 )"}
+   }
+  },
+  {
+   "kind": "Device",
+   "key": "scanner",
+   "identified_by": "the MRI scanner",
+   "fields": {
+    "manufacturer": {"value": "Siemens", "support": "stated",
+     "quote": "High-resolution, whole-brain, 3-dimensional (3-D) structural MRI scans were acquired on a 3 T Siemens MAGNETOM Trio scanner with an 8-channel phased-array head coil using a T 1 -weighted 3D–magnetization prepared rapid acquisition gradient echo (MPRAGE) sequence in sagittal orientation (echo time [TE] 4.77 ms, repetition time [TR] 2500 ms, TI 1100 ms, flip angle 7°, bandwidth 140 Hz/pixel, matrix 256 × 256 × 192, field of view [FOV] 256 mm, isometric voxel size 1.0 mm 3 )."},
+    "model": {"value": "MAGNETOM Trio", "also_acceptable": ["Trio", "Magnetom Trio"], "support": "stated",
+     "quote": "High-resolution, whole-brain, 3-dimensional (3-D) structural MRI scans were acquired on a 3 T Siemens MAGNETOM Trio scanner with an 8-channel phased-array head coil using a T 1 -weighted 3D–magnetization prepared rapid acquisition gradient echo (MPRAGE) sequence in sagittal orientation (echo time [TE] 4.77 ms, repetition time [TR] 2500 ms, TI 1100 ms, flip angle 7°, bandwidth 140 Hz/pixel, matrix 256 × 256 × 192, field of view [FOV] 256 mm, isometric voxel size 1.0 mm 3 )."}
+   }
+  },
+  {
+   "kind": "Preprocessing",
+   "key": "freesurfer_parcellation",
+   "identified_by": "the FreeSurfer cortical reconstruction and parcellation stream",
+   "fields": {
+    "software": {"value": ["FreeSurfer"], "support": "stated",
+     "quote": "We performed cortical reconstruction and volumetric segmentation with the FreeSurfer software package ( http://surfer.nmr.mgh.harvard.edu/ )."},
+    "coordinate_space": {"value": "Talairach", "support": "stated",
+     "quote": "In short, each scan is registered into Talairach space, intensity-corrected and skull-stripped.",
+     "note": "MNI is also in this paper -- \"Bilateral ROIs were created based on an average participant (the so-called Bert) provided by FreeSurfer and were then normalized in Montreal Neurological Institute (MNI) space\" -- but that belongs to the VBM stream below, not to this one. Two preprocessing streams, two spaces; collapsing them is the misattribution trap here."},
+    "smoothing_fwhm_mm": {"value": null, "support": "absent",
+     "quote": "All procedures with FreeSurfer are conducted in native space.",
+     "note": "The 12 mm kernel belongs to the VBM stream."}
+   }
+  },
+  {
+   "kind": "Preprocessing",
+   "key": "vbm_preprocessing",
+   "identified_by": "the BET2/SPM5 VBM stream",
+   "fields": {
+    "software": {"value": ["BET2", "SPM5"], "also_acceptable": [["SPM5"], ["SPM5", "BET2"], ["FSL", "SPM5"]], "support": "stated",
+     "quote": "As specific preprocessing steps may enhance the accuracy of VBM, 37 MRI scans were skull-stripped with BET2 38 and bias-corrected 39 before analyses. Subsequent VBM analyses were performed using SPM5 (Wellcome Department of Cognitive Neurology, Institute of Neurology, London) running in MAT-LAB R2006a (Mathworks)."},
+    "smoothing_fwhm_mm": {"value": 12, "support": "stated",
+     "quote": "To keep our analysis comparable to previous VBM in patients with PTSD, 5 – 7 we smoothed the images with a 12-mm full-width at half-maximum isotropic Gaussian kernel."},
+    "coordinate_space": {"value": "MNI", "support": "stated",
+     "quote": "Bilateral ROIs were created based on an average participant (the so-called Bert) provided by FreeSurfer and were then normalized in Montreal Neurological Institute (MNI) space and smoothed with the identical parameters as the participants’ MRI scans."}
+   }
+  },
+  {
+   "kind": "ModelEstimation",
+   "key": "vbm_full_factorial",
+   "identified_by": "the SPM5 full factorial VBM model",
+   "fields": {
+    "software": {"value": "SPM5", "support": "stated",
+     "quote": "We initially explored group differences in SPM5, applying a full factorial model with age and intracranial volume as covariates."},
+    "model_family": {"value": "general_linear_model", "also_acceptable": ["GLM", "full factorial", "ANCOVA"], "support": "inferred",
+     "quote": "We initially explored group differences in SPM5, applying a full factorial model with age and intracranial volume as covariates.",
+     "note": "\"general linear model\" never appears in this paper; the phrase used is \"full factorial model\"."},
+    "spatial_unit": {"value": "voxel", "support": "stated",
+     "quote": "The corresponding SPM(t) values were transformed to the normal distribution (SPM(z)) and thresholded at p < 0.005 (uncorrected) with a minimum cluster size of 25 voxels."},
+    "hrf_model": {"value": null, "support": "absent",
+     "quote": "We initially explored group differences in SPM5, applying a full factorial model with age and intracranial volume as covariates.",
+     "note": "There is no timeseries and therefore no HRF. Any value here is invented."}
+   }
+  },
+  {
+   "kind": "ModelEstimation",
+   "key": "parcellation_mixed_effects",
+   "identified_by": "the linear mixed-effects models on the FreeSurfer volumes, fitted in R",
+   "fields": {
+    "software": {"value": "R", "also_acceptable": ["R (version 2.7.1)", "R, nlme"], "support": "stated",
+     "quote": "We performed all analyses (except the exploration of VBM group differences in SPM5) using the statistical program R (version 2.7.1 44 ) with the additional package nlme (version 3.1–90 45 )."},
+    "model_family": {"value": "linear_mixed_effects", "also_acceptable": ["linear mixed-effects model", "mixed effects"], "support": "stated",
+     "quote": "Volumetric group differences were analyzed with linear mixed-effects models, in which hemisphere was included as a within-group factor."},
+    "spatial_unit": {"value": "region", "also_acceptable": ["roi", "parcel"], "support": "inferred",
+     "quote": "Volumetric group differences were analyzed with linear mixed-effects models, in which hemisphere was included as a within-group factor.",
+     "note": "The units are FreeSurfer parcels, not voxels: \"the cerebral cortex is parcellated into units based on its gyral and sulcal structure\"."}
+   }
+  },
+  {
+   "kind": "InferenceSettings",
+   "key": "vbm_threshold",
+   "identified_by": "the VBM group-difference threshold",
+   "fields": {
+    "height_threshold_type": {"value": "p", "support": "stated",
+     "quote": "The corresponding SPM(t) values were transformed to the normal distribution (SPM(z)) and thresholded at p < 0.005 (uncorrected) with a minimum cluster size of 25 voxels."},
+    "height_threshold_value": {"value": 0.005, "support": "stated",
+     "quote": "The corresponding SPM(t) values were transformed to the normal distribution (SPM(z)) and thresholded at p < 0.005 (uncorrected) with a minimum cluster size of 25 voxels."},
+    "multiple_comparison_method": {"value": "none", "also_acceptable": [null, "uncorrected"], "support": "stated",
+     "quote": "The corresponding SPM(t) values were transformed to the normal distribution (SPM(z)) and thresholded at p < 0.005 (uncorrected) with a minimum cluster size of 25 voxels.",
+     "note": "The paper says uncorrected. \"Hommel\" is the only correction named anywhere and it belongs to the behavioural post-hoc tests: \"Post-hoc tests were corrected for multiple comparisons according to Hommel. 42\" Writing Hommel onto the imaging inference is grounded and wrong."},
+    "correction_scope": {"value": "roi", "support": "stated",
+     "quote": "Subsequent statistical VBM analyses were masked for the ROIs under investigation."},
+    "correction_regions": {"value": ["prefrontal cortex", "posterior midline structures", "lateral parietal cortex"], "support": "stated",
+     "quote": "As the VBM analysis further aimed to replicate the previous cortical parcellation analysis, we focused on the ROIs that have been included in the cortical parcellation analysis.",
+     "note": "The three families are enumerated earlier: \"prefrontal cortex (superior frontal cortex, rostral middle frontal cortex, inferior frontal cortex, orbitofrontal cortex and ACC),\" and \"posterior midline structures (posterior cingulate cortex, isthmus of the cingulate, precuneus), and\" and \"lateral parietal cortex (superior parietal cortex, inferior parietal cortex and supramarginal cortex).\" A record naming the sub-regions individually is also right."},
+    "inference_level": {"value": "voxel", "also_acceptable": ["cluster"], "support": "stated",
+     "quote": "The corresponding SPM(t) values were transformed to the normal distribution (SPM(z)) and thresholded at p < 0.005 (uncorrected) with a minimum cluster size of 25 voxels."}
+   }
+  }
+ ]
+}

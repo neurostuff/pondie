@@ -1,0 +1,233 @@
+{
+ "pmid": "18823721",
+ "title": "Neurobiological substrates of cue-elicited craving and anhedonia in recently abstinent opioid-dependent males",
+ "source": "/data/james/pondie-vs-fulltext/corpus/18823721/processed/local/text.tables.txt",
+ "read_from": "article text only; no pondie record consulted for any value",
+ "conventions": {
+  "support": "stated = the paper says it; inferred = an expert reading would agree but the paper does not say it; absent = the paper does not report it and `value` is null",
+  "also_acceptable": "other values a careful reader could defend; a write matching one of these scores correct, not wrong",
+  "entity keys": "chosen by the reviewer from the article, not from any record; `identified_by` says how to match a record entity to it"
+ },
+ "entities": [
+  {
+   "kind": "Group",
+   "key": "patients",
+   "identified_by": "the opioid/heroin-dependent cohort",
+   "fields": {
+    "is_healthy": {"value": false, "support": "stated",
+     "quote": "Sixteen abstinent male opioid-dependent patients (mean age = 42.8 years, S.D. = 5.2, range = 30–52) and 18 healthy control subjects (mean age = 40.4 years, S.D. = 10, range = 23–54) were included."},
+    "enrolled_count": {"value": 16, "support": "stated",
+     "quote": "Sixteen abstinent male opioid-dependent patients (mean age = 42.8 years, S.D. = 5.2, range = 30–52) and 18 healthy control subjects (mean age = 40.4 years, S.D. = 10, range = 23–54) were included."},
+    "acquired_count": {"value": 12, "also_acceptable": [13, 16], "support": "inferred",
+     "quote": "As a consequence, the final sample consisted of 12 opioid-dependent patients (mean age = 44.5 years, S.D. = 3.9, range = 39–53) and 17 healthy controls (mean age = 40.0 years, S.D. = 10.1, range = 23–54) (n.s.).",
+     "note": "The paper reports 16 included and 12 analysed and never states how many were scanned. Three were dropped for missing fMRI data (acquisition failed) and one for haloperidol use (scanned, then excluded), so `acquired` is strictly 13 by the slot's own definition. 12 is what a reader will write; 13 and 16 are defensible."},
+    "excluded_count": {"value": 4, "support": "inferred",
+     "quote": "One patient was excluded from data analysis because of haloperidol use the day before the fMRI scanning procedure took place. In addition, one control subject and three patients were excluded, because no complete fMRI data were available due to technical failures.",
+     "note": "1 + 3; the paper never prints the sum."},
+    "age_mean": {"value": 44.5, "also_acceptable": [42.8], "support": "stated",
+     "quote": "As a consequence, the final sample consisted of 12 opioid-dependent patients (mean age = 44.5 years, S.D. = 3.9, range = 39–53) and 17 healthy controls (mean age = 40.0 years, S.D. = 10.1, range = 23–54) (n.s.).",
+     "note": "The paper reports two means: 42.8 for the 16 included, 44.5 for the 12 analysed. 44.5 is the one that goes with acquired_count 12."},
+    "age_standard_deviation": {"value": 3.9, "also_acceptable": [5.2], "support": "stated",
+     "quote": "the final sample consisted of 12 opioid-dependent patients (mean age = 44.5 years, S.D. = 3.9, range = 39–53)"},
+    "medications": {"value": null, "support": "absent",
+     "quote": "Inclusion criteria were (a) male, (b) age 18–55 years, (c) absence of major internal, neurological and psychiatric disorders (d) diagnosed with DSM-IV heroin dependence, (e) heroin as primary drug of abuse, (f) inhalation as primary route of administration, (g) smoking cigarettes, and (h) no current psychotropic medication.",
+     "note": "THE FAILURE CASE. The analysed cohort took no psychotropic medication by inclusion criterion (h). `haloperidol` appears once in the paper -- \"One patient was excluded from data analysis because of haloperidol use the day before the fMRI scanning procedure took place\" -- and names a person removed from this group. The slot says \"The drugs or other agents this cohort was taking\", so both null and an explicit empty list are right and `haloperidol` is wrong. \"no current psychotropic medication\" is also wrong here: the slot says \"Names only\", and that string is a criterion, not an agent."},
+    "medical_condition": {"value": ["heroin dependence"], "also_acceptable": [["opioid dependence"], ["DSM-IV heroin dependence"]], "support": "stated",
+     "quote": "(d) diagnosed with DSM-IV heroin dependence"},
+    "diagnostic_system": {"value": "DSM-IV", "support": "stated",
+     "quote": "(d) diagnosed with DSM-IV heroin dependence"},
+    "diagnostic_instrument": {"value": null, "support": "absent",
+     "quote": "All opioid-dependent subjects were recruited from inpatient facilities in the Netherlands where they were pre-screened by the treatment staff and interviewed for the verification of inclusion and exclusion criteria.",
+     "note": "No named diagnostic instrument. ASI, OCDUS, DDQ and SHAPS are administered in this study but the paper assigns them to drug-use history, craving and anhedonia, never to establishing the diagnosis: \"The alcohol and drug section of the Addiction Severity Index (ASI) was used to evaluate each participant's drug use and drug use history\"."}
+   }
+  },
+  {
+   "kind": "Group",
+   "key": "controls",
+   "identified_by": "the healthy male control cohort",
+   "fields": {
+    "is_healthy": {"value": true, "support": "stated",
+     "quote": "Sixteen abstinent male opioid-dependent patients (mean age = 42.8 years, S.D. = 5.2, range = 30–52) and 18 healthy control subjects (mean age = 40.4 years, S.D. = 10, range = 23–54) were included."},
+    "enrolled_count": {"value": 18, "support": "stated",
+     "quote": "18 healthy control subjects (mean age = 40.4 years, S.D. = 10, range = 23–54) were included"},
+    "acquired_count": {"value": 17, "also_acceptable": [18], "support": "inferred",
+     "quote": "the final sample consisted of 12 opioid-dependent patients (mean age = 44.5 years, S.D. = 3.9, range = 39–53) and 17 healthy controls (mean age = 40.0 years, S.D. = 10.1, range = 23–54)"},
+    "excluded_count": {"value": 1, "support": "stated",
+     "quote": "In addition, one control subject and three patients were excluded, because no complete fMRI data were available due to technical failures."},
+    "age_mean": {"value": 40.0, "also_acceptable": [40.4], "support": "stated",
+     "quote": "and 17 healthy controls (mean age = 40.0 years, S.D. = 10.1, range = 23–54) (n.s.)"},
+    "age_standard_deviation": {"value": 10.1, "also_acceptable": [10], "support": "stated",
+     "quote": "and 17 healthy controls (mean age = 40.0 years, S.D. = 10.1, range = 23–54) (n.s.)"},
+    "medications": {"value": null, "support": "absent",
+     "quote": "Inclusion criteria were: (a) male, (b) age 18–55 years, (c) absence of major internal, neurological or psychiatric disorders (past or present), (d) absence of substance abuse or dependence, (e) smoking cigarettes, and (f) no current psychotropic medication.",
+     "note": "Same criterion as the patients, worded the same way. Any rule that makes \"no current psychotropic medication\" a correct value here makes it correct for the patients too."},
+    "medical_condition": {"value": null, "support": "absent",
+     "quote": "(c) absence of major internal, neurological or psychiatric disorders (past or present), (d) absence of substance abuse or dependence"},
+    "diagnostic_system": {"value": null, "support": "absent",
+     "quote": "Control subjects were recruited through monthly advertisements in a local newspaper.",
+     "note": "No condition, so no system."},
+    "diagnostic_instrument": {"value": null, "support": "absent",
+     "quote": "Two measures of craving were used in all opioid-dependent subjects.",
+     "note": "OCDUS and DDQ were given to the patients only, so attaching them to this group is wrong twice over."}
+   }
+  },
+  {
+   "kind": "Task",
+   "key": "cue_exposure",
+   "identified_by": "the block-design picture viewing task (neutral / pleasant / heroin)",
+   "fields": {
+    "response_mode": {"value": ["none"], "support": "stated",
+     "quote": "The subjects were instructed to watch and attend to the stimuli, because behavioural tasks (both binary decision tasks and stimulus ratings) may affect BOLD-responses to affective stimuli ( )."},
+    "instructions": {"value": "The subjects were instructed to watch and attend to the stimuli.", "support": "stated",
+     "quote": "The subjects were instructed to watch and attend to the stimuli, because behavioural tasks (both binary decision tasks and stimulus ratings) may affect BOLD-responses to affective stimuli ( )."},
+    "design_type": {"value": "blocked", "support": "stated",
+     "quote": "Stimuli were presented in a quasi-randomized block design (three pictures per category, 6 s per picture, inter-stimulus interval 2 s, 22 s per block, 18 s inter-block interval)."}
+   }
+  },
+  {
+   "kind": "Acquisition",
+   "key": "fmri",
+   "identified_by": "the T2*-weighted gradient-echo EPI functional acquisition",
+   "fields": {
+    "modality": {"value": "fMRI", "support": "stated",
+     "quote": "For fMRI, axial multislice T2*-weighted images were obtained with a gradient-echo planar sequence (TE = 28 ms, TR = 2.7 s, 64 × 64 matrix, FOV 220 × 220, flip angle 90°), creating transversal whole-brain acquisitions (34 slices, 3 mm × 3 mm in-plane resolution, slice thickness 3 mm, no interslice gap) covering the entire cerebrum."},
+    "magnetic_field_strength_tesla": {"value": 3, "support": "stated",
+     "quote": "Imaging was performed using a 3T MRI scanner (Philips Intera, Best, The Netherlands) equipped with a standard receiver head-coil."},
+    "repetition_time_seconds": {"value": 2.7, "support": "stated",
+     "quote": "with a gradient-echo planar sequence (TE = 28 ms, TR = 2.7 s, 64 × 64 matrix, FOV 220 × 220, flip angle 90°)"},
+    "echo_time_seconds": {"value": 0.028, "also_acceptable": [28], "support": "stated",
+     "quote": "with a gradient-echo planar sequence (TE = 28 ms, TR = 2.7 s, 64 × 64 matrix, FOV 220 × 220, flip angle 90°)"}
+   }
+  },
+  {
+   "kind": "Acquisition",
+   "key": "anatomical",
+   "identified_by": "the T1-weighted high-resolution structural scan",
+   "fields": {
+    "modality": {"value": "sMRI", "also_acceptable": ["MRI", "T1"], "support": "stated",
+     "quote": "In addition, a T1-weighted high-resolution gradient-echo MR scan (256 × 256 pixels, voxel size = 1.2 mm × 1.2 mm × 1.2 mm, 182 slices) was performed for anatomical overlays of the functional data.",
+     "note": "A second acquisition the record may or may not carry; recorded so a repair that invents a third can be scored."},
+    "magnetic_field_strength_tesla": {"value": 3, "support": "inferred",
+     "quote": "Imaging was performed using a 3T MRI scanner (Philips Intera, Best, The Netherlands) equipped with a standard receiver head-coil.",
+     "note": "One scanner, stated once, for both sequences."}
+   }
+  },
+  {
+   "kind": "Device",
+   "key": "scanner",
+   "identified_by": "the MRI scanner",
+   "fields": {
+    "manufacturer": {"value": "Philips", "support": "stated",
+     "quote": "Imaging was performed using a 3T MRI scanner (Philips Intera, Best, The Netherlands) equipped with a standard receiver head-coil."},
+    "model": {"value": "Intera", "support": "stated",
+     "quote": "Imaging was performed using a 3T MRI scanner (Philips Intera, Best, The Netherlands) equipped with a standard receiver head-coil.",
+     "note": "Case matters. `grep -ci intera` returns 9 on this paper because it matches \"interaction\", \"inter-block\" and \"inter-stimulus\"; case-sensitively there is exactly one occurrence, the one quoted."}
+   }
+  },
+  {
+   "kind": "Preprocessing",
+   "key": "fmri_preprocessing",
+   "identified_by": "realignment, coregistration, normalisation, smoothing",
+   "fields": {
+    "software": {"value": ["SPM2"], "also_acceptable": [["SPM"], ["SPM2 (Statistical Parametric Mapping)"]], "support": "inferred",
+     "quote": "Imaging data were analyzed using SPM2 (Statistical Parametric Mapping; Wellcome Department of Cognitive Neurology, London, United Kingdom).",
+     "note": "The paper names SPM2 for the imaging analysis as a whole and does not separately name a preprocessing package; the SPM EPI template is named for normalisation, which settles it."},
+    "smoothing_fwhm_mm": {"value": 8, "support": "stated",
+     "quote": "Spatial smoothing was performed using an 8-mm full-width-at-half maximum Gaussian kernel."},
+    "coordinate_space": {"value": "MNI", "support": "stated",
+     "quote": "Next, the images were normalized to Montreal Neurological Institute (MNI) space using a SPM EPI template (using 12 linear parameters and a set of nonlinear cosine basis functions)."}
+   }
+  },
+  {
+   "kind": "ModelEstimation",
+   "key": "first_and_second_level",
+   "identified_by": "the SPM2 subject-level model and the random-effects group model",
+   "fields": {
+    "software": {"value": "SPM2", "also_acceptable": ["SPM", "SPM2 (Statistical Parametric Mapping), Wellcome Department of Cognitive Neurology"], "support": "stated",
+     "quote": "Imaging data were analyzed using SPM2 (Statistical Parametric Mapping; Wellcome Department of Cognitive Neurology, London, United Kingdom)."},
+    "model_family": {"value": "general_linear_model", "also_acceptable": ["GLM", "mass_univariate"], "support": "inferred",
+     "quote": "The three event types; neutral, pleasant and heroin stimuli were modeled using delta functions convolved with a canonical hemodynamic response function. Movement parameters were also included in the model as regressors of no interest.",
+     "note": "The phrase \"general linear model\" never appears. This is an inference from SPM2 plus a design-matrix description, and a write here should be `generated`, not `reported`."},
+    "hrf_model": {"value": "canonical", "support": "stated",
+     "quote": "The three event types; neutral, pleasant and heroin stimuli were modeled using delta functions convolved with a canonical hemodynamic response function."},
+    "spatial_unit": {"value": "voxel", "support": "inferred",
+     "quote": "Main effects are reported at p < 0.05 corrected for multiple comparisons using the false discovery rate (FDR) method ( ).",
+     "note": "Never stated; SPM2 mass-univariate analysis is voxelwise."}
+   }
+  },
+  {
+   "kind": "InferenceSettings",
+   "key": "main_effects",
+   "identified_by": "the FDR-corrected main effects",
+   "fields": {
+    "multiple_comparison_method": {"value": "FDR", "also_acceptable": ["false discovery rate", "fdr"], "support": "stated",
+     "quote": "Main effects are reported at p < 0.05 corrected for multiple comparisons using the false discovery rate (FDR) method ( )."},
+    "alpha_level": {"value": 0.05, "support": "stated",
+     "quote": "Main effects are reported at p < 0.05 corrected for multiple comparisons using the false discovery rate (FDR) method ( )."},
+    "correction_scope": {"value": null, "also_acceptable": ["whole_brain"], "support": "absent",
+     "quote": "Main effects are reported at p < 0.05 corrected for multiple comparisons using the false discovery rate (FDR) method ( ).",
+     "note": "No scope is stated. The functional acquisition is whole-brain (\"creating transversal whole-brain acquisitions ... covering the entire cerebrum\"), so whole_brain is defensible as an inference; ROI/small-volume is not -- the strings \"region of interest\", \"small volume\" and the word ROI (word-boundary) occur zero times in this paper."},
+    "correction_regions": {"value": null, "support": "absent",
+     "quote": "Main effects are reported at p < 0.05 corrected for multiple comparisons using the false discovery rate (FDR) method ( ).",
+     "note": "No region restricts any correction anywhere in this paper."},
+    "inference_level": {"value": null, "also_acceptable": ["voxel"], "support": "absent",
+     "quote": "Main effects are reported at p < 0.05 corrected for multiple comparisons using the false discovery rate (FDR) method ( ).",
+     "note": "Voxel vs cluster is never said; no extent threshold is reported either."}
+   }
+  },
+  {
+   "kind": "InferenceSettings",
+   "key": "interaction",
+   "identified_by": "the group x stimulus interaction, inclusively masked",
+   "fields": {
+    "height_threshold_type": {"value": "p", "support": "stated",
+     "quote": "Group by stimulus interaction effects are reported at p < 0.001 masked inclusively with the appropriate main effect."},
+    "height_threshold_value": {"value": 0.001, "support": "stated",
+     "quote": "Group by stimulus interaction effects are reported at p < 0.001 masked inclusively with the appropriate main effect."},
+    "multiple_comparison_method": {"value": null, "also_acceptable": ["none", "uncorrected"], "support": "absent",
+     "quote": "Group by stimulus interaction effects are reported at p < 0.001 masked inclusively with the appropriate main effect.",
+     "note": "Inclusive masking with the main effect is not a multiple-comparison correction and the paper claims none here."},
+    "correction_regions": {"value": null, "support": "absent",
+     "quote": "Group by stimulus interaction effects are reported at p < 0.001 masked inclusively with the appropriate main effect.",
+     "note": "SECOND FAILURE CASE. The mask is the main-effect map, not a named region. The subthalamic nucleus is a *result* of this contrast -- \"a significant group × stimulus interaction effect for the subthalamic nucleus (STN)\" -- so writing the STN as a correction region turns a finding into a method."}
+   }
+  },
+  {
+   "kind": "InferenceSettings",
+   "key": "regressions",
+   "identified_by": "the craving/anhedonia regression analyses",
+   "fields": {
+    "height_threshold_type": {"value": "p", "support": "stated",
+     "quote": "Finally, results from simple regression analyses between self-reported craving and anhedonia and BOLD responses are reported at p < 0.001 uncorrected."},
+    "height_threshold_value": {"value": 0.001, "support": "stated",
+     "quote": "Finally, results from simple regression analyses between self-reported craving and anhedonia and BOLD responses are reported at p < 0.001 uncorrected."},
+    "multiple_comparison_method": {"value": "none", "also_acceptable": [null, "uncorrected"], "support": "stated",
+     "quote": "Finally, results from simple regression analyses between self-reported craving and anhedonia and BOLD responses are reported at p < 0.001 uncorrected."}
+   }
+  },
+  {
+   "kind": "Table",
+   "key": "table_1",
+   "identified_by": "Table 1",
+   "fields": {
+    "title": {"value": "Main effects in opiate-dependent ( n = 12) and control subjects ( n = 17) for heroin, pleasant and neutral stimuli vs. baseline", "support": "stated",
+     "quote": "Main effects in opiate-dependent ( n = 12) and control subjects ( n = 17) for heroin, pleasant and neutral stimuli vs. baseline"},
+    "non_analysis_content": {"value": null, "support": "absent",
+     "quote": "Main effects in opiate-dependent ( n = 12) and control subjects ( n = 17) for heroin, pleasant and neutral stimuli vs. baseline",
+     "note": "A coordinate table for the reported contrasts, so it reports an effect and this slot does not apply."}
+   }
+  },
+  {
+   "kind": "Table",
+   "key": "table_2",
+   "identified_by": "Table 2",
+   "fields": {
+    "title": {"value": "Brain regions that show co-activation with the subthalamic nucleus (STN) in opiate-dependent subjects", "support": "stated",
+     "quote": "Brain regions that show co-activation with the subthalamic nucleus (STN) in opiate-dependent subjects"},
+    "non_analysis_content": {"value": null, "support": "absent",
+     "quote": "Brain regions that show co-activation with the subthalamic nucleus (STN) in opiate-dependent subjects",
+     "note": "THIRD FAILURE CASE. The rows are peak coordinates with Z-values, so this is an analysis table. The word \"seed\" occurs 0 times in this paper (`grep -c -i seed` = 0) and \"connectiv\" 0 times; \"co-activation\" occurs once, in this caption."}
+   }
+  }
+ ]
+}
