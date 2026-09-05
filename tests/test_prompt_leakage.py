@@ -23,6 +23,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 GOLD = ROOT / "benchmarks" / "gold"
+from pondie.extraction import recall, recall_llm
 from pondie.extraction.prompt import preprocess
 from pondie.extraction.prompt import render as er
 from pondie.schema import reader
@@ -73,6 +74,12 @@ def static_prompt_sources() -> dict[str, str]:
         # and so are input, but the headings and cautions around them are as static as
         # SYSTEM_HEAD and a gold phrase written into one would leak the same way.
         "preprocess.py prompt literals": "\n".join(preprocess.PROMPT_LITERALS),
+        # The repair proposers' static halves. Neither was listed here, and an explanation
+        # of the experiment written inside `SHAPE`'s literal rather than beside it was sent
+        # to the model as part of its instructions before anything noticed.
+        "recall.INSTRUCTION": recall.INSTRUCTION,
+        "recall.SCOPED": recall.SCOPED,
+        "recall_llm.SHAPE": recall_llm.SHAPE,
     }
     sources.update({f"MODE_NOTE[{name}]": note for name, note in er.MODE_NOTE.items()})
 

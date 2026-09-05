@@ -1,0 +1,434 @@
+{
+ "pmid": "16038771",
+ "title": "Erotic and disgust-inducing pictures—Differences in the hemodynamic responses of the brain",
+ "source": "/data/james/pondie-vs-fulltext/corpus/16038771/processed/local/text.tables.txt",
+ "read_from": "article text only; no pondie record consulted for any value",
+ "entities": [
+  {
+   "kind": "Group",
+   "key": "sm_group",
+   "identified_by": "the sadomasochistically interested subjects (SM group)",
+   "match": [
+    "sm",
+    "sadomasoch"
+   ],
+   "fields": {
+    "is_healthy": {
+     "value": true,
+     "support": "inferred",
+     "quote": "Twenty-four right-handed subjects (12 female) participated in the study.",
+     "note": "No clinical condition is claimed for either group; SM interest is the grouping variable, not a diagnosis. The paper never uses the words \"patient\", \"healthy\" or \"control\" of these subjects."
+    },
+    "enrolled_count": {
+     "value": 12,
+     "support": "stated",
+     "quote": "Twelve of them (6 males and 6 females) were assigned to the SM group."
+    },
+    "acquired_count": {
+     "value": 12,
+     "support": "inferred",
+     "quote": "Twelve of them (6 males and 6 females) were assigned to the SM group.",
+     "note": "No exclusions or dropouts are reported anywhere in the paper."
+    },
+    "excluded_count": {
+     "value": null,
+     "also_acceptable": [
+      0
+     ],
+     "support": "absent",
+     "quote": "Twenty-four right-handed subjects (12 female) participated in the study."
+    },
+    "age_mean": {
+     "value": null,
+     "support": "absent",
+     "quote": "The majority of the participants (19) were students at the University of Giessen (mean age: 28.2 years; range: 20–40 years).",
+     "note": "THE TRAP FIELD ON THIS PAPER. 28.2 is the mean age of the 19 participants who were students, across BOTH groups. It is not the SM group's mean age and the paper reports no per-group age. Writing 28.2 onto either group is misattribution of exactly the kind that no grounding check can catch: the number is in the paper, in a sentence a locator will happily cite."
+    },
+    "age_standard_deviation": {
+     "value": null,
+     "support": "absent",
+     "quote": "The majority of the participants (19) were students at the University of Giessen (mean age: 28.2 years; range: 20–40 years).",
+     "note": "A range, not an SD."
+    },
+    "medications": {
+     "value": null,
+     "support": "absent",
+     "quote": "No subject was taking regular medication."
+    },
+    "medical_condition": {
+     "value": null,
+     "support": "absent",
+     "quote": "The classification was initially made on the basis of replies to a short screening question (“Are you interested in sadomasochistic sexual activities?”)."
+    },
+    "diagnostic_system": {
+     "value": null,
+     "support": "absent",
+     "quote": "The classification was initially made on the basis of replies to a short screening question (“Are you interested in sadomasochistic sexual activities?”)."
+    },
+    "diagnostic_instrument": {
+     "value": null,
+     "support": "absent",
+     "quote": "This was later confirmed by a list of eight items requesting information about their sexual orientation (“heterosexual”, “homosexual” or “bisexual”), sadomasochistic self definition and experiences (“I describe myself as a sadomasochist”, “I like sadomasochistic presentations”, “I have sadomasochistic experiences”, “I would like to have sadomasochistic experiences”, “I describe myself as masochistic/devotee?”, “I describe myself as sadistic/dominant”, “I describe myself as a switcher”).",
+     "note": "The eight-item list assigns the group but establishes no medical condition, so this slot -- \"The study assessment that established this group's defining condition\" -- has nothing to hold. The Edinburgh Inventory of Handedness is a screening instrument, not a diagnostic one."
+    }
+   }
+  },
+  {
+   "kind": "Group",
+   "key": "nonsm_group",
+   "identified_by": "the non-sadomasochistic subjects (nonSM group)",
+   "match": [
+    "nonsm",
+    "non-sm",
+    "control"
+   ],
+   "fields": {
+    "is_healthy": {
+     "value": true,
+     "support": "inferred",
+     "quote": "All members of the nonSM group described themselves as not at all sadomasochistically interested or experienced (all ratings below 3)."
+    },
+    "enrolled_count": {
+     "value": 12,
+     "support": "inferred",
+     "quote": "Twenty-four right-handed subjects (12 female) participated in the study.",
+     "note": "24 total minus the 12 assigned to the SM group; the paper never prints 12 for this group."
+    },
+    "acquired_count": {
+     "value": 12,
+     "support": "inferred",
+     "quote": "Twenty-four right-handed subjects (12 female) participated in the study."
+    },
+    "age_mean": {
+     "value": null,
+     "support": "absent",
+     "quote": "The majority of the participants (19) were students at the University of Giessen (mean age: 28.2 years; range: 20–40 years).",
+     "note": "Same trap as the SM group."
+    },
+    "medications": {
+     "value": null,
+     "support": "absent",
+     "quote": "No subject was taking regular medication."
+    },
+    "medical_condition": {
+     "value": null,
+     "support": "absent",
+     "quote": "All members of the nonSM group described themselves as not at all sadomasochistically interested or experienced (all ratings below 3)."
+    },
+    "diagnostic_system": {
+     "value": null,
+     "support": "absent",
+     "quote": "All members of the nonSM group described themselves as not at all sadomasochistically interested or experienced (all ratings below 3)."
+    },
+    "diagnostic_instrument": {
+     "value": null,
+     "support": "absent",
+     "quote": "All members of the nonSM group described themselves as not at all sadomasochistically interested or experienced (all ratings below 3)."
+    }
+   }
+  },
+  {
+   "kind": "Task",
+   "key": "picture_viewing",
+   "identified_by": "the blocked presentation of Neutral / Disgust / Erotic / Sm pictures",
+   "match": [
+    "picture",
+    "emotion",
+    "stimul"
+   ],
+   "fields": {
+    "response_mode": {
+     "value": [
+      "none"
+     ],
+     "support": "stated",
+     "quote": "The task for the subjects was to look at the pictures with the instruction: “let the pictures affect you”.",
+     "note": "Ratings were collected after the scan, on paper: \"Following the fMRI experiment, the subjects filled in the questionnaires mentioned above and rated the pictures: all 40 pictures were presented together on an A4 sheet.\""
+    },
+    "instructions": {
+     "value": "let the pictures affect you",
+     "also_acceptable": [
+      "The task for the subjects was to look at the pictures with the instruction: “let the pictures affect you”."
+     ],
+     "support": "stated",
+     "quote": "The task for the subjects was to look at the pictures with the instruction: “let the pictures affect you”."
+    },
+    "design_type": {
+     "value": "blocked",
+     "support": "stated",
+     "quote": "The pictures of an emotional condition (‘Neutral’, ‘Disgust’, ‘Erotic’ and ‘Sm’) were presented in a block design."
+    }
+   }
+  },
+  {
+   "kind": "Acquisition",
+   "key": "fmri",
+   "identified_by": "the T2*-weighted EPI functional acquisition",
+   "match": [
+    "fmri",
+    "functional",
+    "epi"
+   ],
+   "fields": {
+    "modality": {
+     "value": "fMRI",
+     "support": "stated",
+     "quote": "For functional imaging a total of 505 volumes were registered using a T 2 *-weighted gradient echo-planar imaging sequence (EPI) with 30 slices covering the whole brain (slice thickness = 5 mm; no gap; interleaved; TA = 100 ms; TE = 60 ms; flip angle = 30°; field of view = 192 mm × 192 mm; matrix size = 64 × 64)."
+    },
+    "magnetic_field_strength_tesla": {
+     "value": 1.5,
+     "support": "stated",
+     "quote": "Brain images were acquired using a 1.5 Tesla whole-body tomograph (Siemens Symphony) with a standard head coil."
+    },
+    "echo_time_seconds": {
+     "value": 0.06,
+     "also_acceptable": [
+      60
+     ],
+     "support": "stated",
+     "quote": "TA = 100 ms; TE = 60 ms; flip angle = 30°; field of view = 192 mm × 192 mm; matrix size = 64 × 64"
+    },
+    "repetition_time_seconds": {
+     "value": null,
+     "also_acceptable": [
+      3.0
+     ],
+     "support": "absent",
+     "quote": "with 30 slices covering the whole brain (slice thickness = 5 mm; no gap; interleaved; TA = 100 ms; TE = 60 ms; flip angle = 30°; field of view = 192 mm × 192 mm; matrix size = 64 × 64)",
+     "note": "SECOND TRAP FIELD. The paper reports TA (acquisition time per slice), not TR. TR is derivable as 30 x 100 ms = 3 s but is never stated, and 0.1 s -- reading TA as TR -- is the wrong answer a value-copying pass will produce."
+    }
+   }
+  },
+  {
+   "kind": "Acquisition",
+   "key": "anatomical",
+   "identified_by": "the T1-weighted MPRage structural scan",
+   "match": [
+    "anat",
+    "mprage",
+    "structural",
+    "t1"
+   ],
+   "fields": {
+    "modality": {
+     "value": "sMRI",
+     "also_acceptable": [
+      "MRI",
+      "T1"
+     ],
+     "support": "stated",
+     "quote": "Structural image acquisition consisted of 160 T 1 -weighted sagittal images (MPRage, 1 mm slice thickness)."
+    },
+    "magnetic_field_strength_tesla": {
+     "value": 1.5,
+     "support": "inferred",
+     "quote": "Brain images were acquired using a 1.5 Tesla whole-body tomograph (Siemens Symphony) with a standard head coil."
+    }
+   }
+  },
+  {
+   "kind": "Device",
+   "key": "scanner",
+   "identified_by": "the MRI scanner",
+   "match": [
+    "siemens",
+    "symphony",
+    "scanner"
+   ],
+   "fields": {
+    "manufacturer": {
+     "value": "Siemens",
+     "support": "stated",
+     "quote": "Brain images were acquired using a 1.5 Tesla whole-body tomograph (Siemens Symphony) with a standard head coil."
+    },
+    "model": {
+     "value": "Symphony",
+     "support": "stated",
+     "quote": "Brain images were acquired using a 1.5 Tesla whole-body tomograph (Siemens Symphony) with a standard head coil.",
+     "note": "The other proper noun in this paper's equipment list is \"EPSON EMP-7250\", the stimulus projector: \"For visual stimulation inside the scanner, a LCD-projector (model EPSON EMP-7250) was used\". A device slot filled with EPSON is grounded and wrong."
+    }
+   }
+  },
+  {
+   "kind": "Preprocessing",
+   "key": "fmri_preprocessing",
+   "identified_by": "slice timing, realignment, normalisation, smoothing",
+   "match": [
+    "preproc",
+    "spm"
+   ],
+   "fields": {
+    "software": {
+     "value": [
+      "SPM99"
+     ],
+     "also_acceptable": [
+      [
+       "SPM"
+      ],
+      [
+       "SPM99",
+       "Matlab"
+      ]
+     ],
+     "support": "stated",
+     "quote": "For the preprocessing and statistical analyses, the statistical parametric mapping software package (SPM99, Wellcome Department of Cognitive Neurology, London) implemented in Matlab (Mathworks, Inc., Natick, MA, USA, release 12) was used, which is based on the general linear model (GLM) approach."
+    },
+    "smoothing_fwhm_mm": {
+     "value": 6,
+     "support": "stated",
+     "quote": "Smoothing was executed with an isotropic three-dimensional Gaussian filter with a full width at half maximum (FWHM) of 6 mm."
+    },
+    "coordinate_space": {
+     "value": "MNI",
+     "support": "stated",
+     "quote": "Slice time correction, realignment (sinc interpolation), and normalization to the standard space of the Montreal Neurological Institute brain (MNI-brain) were performed."
+    }
+   }
+  },
+  {
+   "kind": "ModelEstimation",
+   "key": "glm",
+   "identified_by": "the first-level GLM and the second-level random-effects analysis",
+   "match": [
+    "glm",
+    "spm",
+    "model"
+   ],
+   "fields": {
+    "software": {
+     "value": "SPM99",
+     "also_acceptable": [
+      "SPM"
+     ],
+     "support": "stated",
+     "quote": "For the preprocessing and statistical analyses, the statistical parametric mapping software package (SPM99, Wellcome Department of Cognitive Neurology, London) implemented in Matlab (Mathworks, Inc., Natick, MA, USA, release 12) was used, which is based on the general linear model (GLM) approach."
+    },
+    "model_family": {
+     "value": "general_linear_model",
+     "also_acceptable": [
+      "GLM"
+     ],
+     "support": "stated",
+     "quote": "For the preprocessing and statistical analyses, the statistical parametric mapping software package (SPM99, Wellcome Department of Cognitive Neurology, London) implemented in Matlab (Mathworks, Inc., Natick, MA, USA, release 12) was used, which is based on the general linear model (GLM) approach.",
+     "note": "Contrast with 11058476, where the same slot must be filled with a nonlinear model and the paper never mentions SPM."
+    },
+    "hrf_model": {
+     "value": "canonical",
+     "also_acceptable": [
+      "hemodynamic response function"
+     ],
+     "support": "inferred",
+     "quote": "The four experimental conditions Disgust, Neutral, Erotic, and Sm were modeled by a box-car function convolved with a hemodynamic response function in the GLM.",
+     "note": "\"a hemodynamic response function\", unqualified; \"canonical\" is the SPM default but the paper does not say it."
+    },
+    "spatial_unit": {
+     "value": "voxel",
+     "support": "stated",
+     "quote": "For all analyses the significance threshold was set to α = .05 on voxel-level, corrected for multiple testing and cluster sizes >10."
+    }
+   }
+  },
+  {
+   "kind": "InferenceSettings",
+   "key": "roi_and_wholebrain",
+   "identified_by": "the ROI analyses and the exploratory whole-brain analyses",
+   "match": [
+    "roi",
+    "whole",
+    "inference",
+    "corrected"
+   ],
+   "fields": {
+    "alpha_level": {
+     "value": 0.05,
+     "support": "stated",
+     "quote": "For all analyses the significance threshold was set to α = .05 on voxel-level, corrected for multiple testing and cluster sizes >10."
+    },
+    "inference_level": {
+     "value": "voxel",
+     "support": "stated",
+     "quote": "For all analyses the significance threshold was set to α = .05 on voxel-level, corrected for multiple testing and cluster sizes >10."
+    },
+    "multiple_comparison_method": {
+     "value": null,
+     "also_acceptable": [
+      "FWE"
+     ],
+     "support": "absent",
+     "quote": "For all analyses the significance threshold was set to α = .05 on voxel-level, corrected for multiple testing and cluster sizes >10.",
+     "note": "\"corrected for multiple testing\" names no method. FWE is the SPM99 default and is a defensible inference; FDR is not -- \"false discovery\" occurs 0 times in this paper. \"Bonferroni\" DOES occur once, but it belongs to the post-hoc tests on the behavioural ratings: \"Post hoc comparisons of the ratings for the different picture categories were performed using the Bonferroni adjustment for multiple comparisons.\" Writing Bonferroni onto the imaging inference is a grounded misattribution."
+    },
+    "correction_scope": {
+     "value": "roi",
+     "also_acceptable": [
+      "whole_brain"
+     ],
+     "support": "stated",
+     "quote": "For the statistical analyses we focused on regions of interest (ROI) for which a role in emotional processing has been demonstrated before (see Section or e.g. ).",
+     "note": "The paper runs both: ROI analyses and, separately, \"Besides the ROI analyses, explorative analyses were performed for the whole brain.\" A record with one InferenceSettings has to pick one; a record with two should have one of each, and correction_regions must be non-empty on the ROI one and empty on the whole-brain one."
+    },
+    "correction_regions": {
+     "value": [
+      "anatomically parcellated emotion-processing ROIs"
+     ],
+     "support": "stated",
+     "quote": "Most of the ROIs were defined by the anatomical parcellation of the normalized brain (single-subject high-resolution T 1 volume of the Montreal Neurological Institute) as described by .",
+     "note": "The paper never enumerates the ROIs in the Methods; it defers to a citation and to the Introduction. So a record naming specific regions here has gone beyond what the paper states."
+    }
+   }
+  },
+  {
+   "kind": "Analysis",
+   "key": "table3_contrasts",
+   "identified_by": "the Disgust <> Neutral and Erotic <> Neutral contrasts reported in Table 3",
+   "match": [
+    "tbl3",
+    "table 3",
+    "disgust",
+    "erotic"
+   ],
+   "fields": {}
+  }
+ ],
+ "conventions": {
+  "match": "substrings that identify this entity in a record, taken from the article's own words; matched against the entity's local_id and label so scoring does not inherit the record's idea of what an entity is",
+  "links": "links: which entities this one legitimately points at, judged against the SLOT's own schema description rather than against whether the paper mentions both. `targets` are label substrings; an empty list with support 'absent' means the slot should hold nothing, and a link written there is invented. Read from the article and the schema; no record was consulted for a judgement."
+ },
+ "links": [
+  {
+   "entity": "glm",
+   "slot": "preprocessing",
+   "targets": [
+    "fmri",
+    "prp",
+    "spm"
+   ],
+   "support": "stated",
+   "quote": "For the preprocessing and statistical analyses, the statistical parametric mapping software package (SPM99, Wellcome Department of Cognitive Neurology, London) implemented in Matlab (Mathworks, Inc., Natick, MA, USA, release 12) was used, which is based on the general linear model (GLM) approach.",
+   "note": "One sentence names one package for both, so one stream and one model. Forced."
+  },
+  {
+   "entity": "table3_contrasts",
+   "slot": "assessments",
+   "targets": [
+    "sadomasochistic",
+    "sm"
+   ],
+   "support": "stated",
+   "quote": "The classification was initially made on the basis of replies to a short screening question (“Are you interested in sadomasochistic sexual activities?”).",
+   "note": "CORRECT, and not obviously so. The slot is \"Assessments whose measurements were used in or SELECTED THE SAMPLE for this analysis\". Table 3 is panelled by group -- its rows are headed `nonSM` and `SM` -- and the questionnaire is what assigns that membership. Judged against the paper alone I would have called this wrong; judged against the slot it is right."
+  },
+  {
+   "entity": "table3_contrasts",
+   "slot": "tables",
+   "targets": [
+    "tbl3",
+    "table 3"
+   ],
+   "support": "stated",
+   "quote": "Activations of the contrast Disgust <> Neutral (upper panel) and for the contrast Erotic <> Neutral (lower panel)",
+   "note": "The slot is \"The source tables reporting results for this analysis\". Table 3 and nothing else: Table 4 reports Erotic <> Disgust, Table 5 reports Sm <> Neutral, Table 6 reports Sm <> Disgust and Sm <> Erotic, and Tables 1 and 2 are questionnaire and rating means with no coordinates at all."
+  }
+ ]
+}

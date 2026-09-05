@@ -84,6 +84,24 @@ def _scope_pair(slot: str) -> str:
 UNRESTRICTED = frozenset({"whole_brain", "whole brain", "searchlight"})
 
 
+#: Reference slots where one target belongs to one entity, so the same list arriving on a
+#: second entity of the class in one sweep is a copy rather than a reading.
+#:
+#: Named rather than derived, because what makes a slot exclusive is what its description
+#: says and no rule reads that. `Group.diagnostic_instrument` is "The study assessment that
+#: established THIS group's defining condition" -- on 18823721 the pass wrote the same four
+#: questionnaires to the patients and the controls, and two of the four were administered to
+#: the patients only.
+#:
+#: Sharing is the normal case everywhere else and must stay legal: over twelve papers the
+#: pass made fifteen shared-target writes -- six analyses on one SCID, three on one cue task,
+#: two model estimations on one preprocessing -- and every one of them is correct. A blanket
+#: rule would have refused all fifteen and caught neither of the two real errors.
+EXCLUSIVE_REFERENCES: frozenset[tuple[str, str]] = frozenset({
+    ("Group", "diagnostic_instrument"),
+})
+
+
 # -------------------------------------------------------------------------------- guards
 
 
@@ -95,7 +113,7 @@ def refuses_truncation(edit: Edit) -> Refusal | None:
     definition on 23021615, so the direction is what distinguishes them -- an edit has to
     add something.
     """
-    old, new = edit.current_value, edit.value
+    old, new = _one(edit.current_value), _one(edit.value)
     if not isinstance(old, str) or not isinstance(new, str):
         return None
     if _bare(new) and _bare(new) in _bare(old) and _bare(new) != _bare(old):
@@ -115,9 +133,20 @@ def refuses_shortening_a_list(edit: Edit) -> Refusal | None:
     still the right refusal: a repair pass is not where that is decided.
     """
     old = edit.current_value
-    if isinstance(old, list) and len(old) > 1 and not isinstance(edit.value, list):
-        return Refusal(edit.slot, "replaces several values with one", edit.value)
+    if not isinstance(old, list):
+        return None
+    # Lengths, not shapes. The guard used to ask whether the new value was a list; once
+    # `shape` began resolving multiplicity through the wrapper it always is, which switched
+    # this off -- on `MRI.echo_time_seconds` among others, the slot it was written for.
+    new = edit.value if isinstance(edit.value, list) else [edit.value]
+    if len(new) < len(old):
+        return Refusal(edit.slot, "drops values the record already held", edit.value)
     return None
+
+
+def _one(value: Any) -> Any:
+    """A one-element list unwrapped, so a list/string comparison is still a comparison."""
+    return value[0] if isinstance(value, list) and len(value) == 1 else value
 
 
 def refuses_losing_the_warrant(edit: Edit) -> Refusal | None:
@@ -131,16 +160,13 @@ def refuses_losing_the_warrant(edit: Edit) -> Refusal | None:
     The old spans are kept when they still contain the new value, which is what lets a
     genuine extension through: on 23021615 the restored full sentence was already the span.
     """
+    if _inherited(edit.current, edit.value) is not None:
+        return None
     node = edit.current
     if not isinstance(node, Mapping):
         return None
     if (node.get("evidence") or {}).get("status") != "present":
         return None
-    want = _bare(edit.value)
-    for group in (node.get("evidence") or {}).get("sets") or []:
-        for span in group.get("spans") or []:
-            if want and want in _bare(span.get("text", "")):
-                return None
     return Refusal(edit.slot, "loses the span that warranted the value it replaces",
                    edit.value)
 
@@ -408,7 +434,14 @@ def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
 
     entity: dict[str, Any] = {"local_id": local_id}
     for name, _slot, kind in sch.iter_slots(class_name):
-        if name in ("local_id", "id") or name not in proposal or kind == "reference":
+        # `nested` alongside `reference`: a nested slot holds objects, and `shape` renders
+        # one as its own repr. A Task minted on 12860777 came out with `conditions` as a
+        # wrapper whose value was a list of stringified dicts -- valid JSON, nothing the
+        # schema declares, and the one finding repair still introduced across fifteen
+        # records. `_nested_defaults` supplies the two nested slots a proposal can honestly
+        # fill, and `apply` writes the rest through `_nested` once the entity exists.
+        if name in ("local_id", "id") or name not in proposal \
+                or kind in ("reference", "nested"):
             continue
         value = values.shape(sch, class_name, name, proposal[name])
         if value is not None:
@@ -472,9 +505,23 @@ def _container(sch: Schema, class_name: str) -> str:
 
 def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
           entity: MutableMapping[str, Any], proposal: Mapping[str, Any],
-          text: str = "", abbreviations: Any = None) -> EditLog:
-    """Write the slots of `proposal` this entity may take. Returns what happened."""
+          text: str = "", abbreviations: Any = None,
+          claimed: MutableMapping[tuple[str, str, tuple[str, ...]], str] | None = None
+          ) -> EditLog:
+    """Write the slots of `proposal` this entity may take. Returns what happened.
+
+    `claimed` is the sweep's memory of which entity already took a set of targets on an
+    `EXCLUSIVE_REFERENCES` slot. It is a caller's dict rather than state here because the
+    thing being refused is a property of the sweep and not of the edit: a `Check` sees one
+    entity and one value, and what is wrong with the second write is only visible beside the
+    first. `repair._sweep` holds one per class.
+    """
     log = EditLog()
+    from pondie.extraction import recall
+
+    quotes = proposal.get(recall.QUOTES) or {}
+    if not isinstance(quotes, Mapping):
+        quotes = {}
     # The class the entity says it is, not the one its container declares. An acquisition is
     # an `MRI` by type designator, and `magnetic_field_strength_tesla` is a slot of that
     # subclass -- written against the base class it is an attribute `Acquisition` does not
@@ -492,8 +539,9 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
     # the guard has run is a sibling the guard did not see.
     ordered = sorted(proposal, key=lambda name: kinds.get(name) != "reference")
     for name in ordered:
-        if name in ("local_id", "id", designator) or name not in kinds:
+        if name in ("local_id", "id", designator, recall.QUOTES) or name not in kinds:
             continue
+        cited = str(quotes.get(name) or "")
         proposed = proposal[name]
         if proposed in (None, "", []):
             continue
@@ -526,23 +574,100 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             value: Any = merged if _multivalued(sch, class_name, name) else merged[0]
             if value == entity.get(name):
                 continue
+            # On what is added, not on the whole slot: an entity that already held a target
+            # is not claiming it again, and the copy this refuses is an id arriving for the
+            # first time on a second entity.
+            added = tuple(sorted(r for r in resolved if r not in existing))
+            added, taken = _unclaimed(class_name, name, added, entity, claimed)
+            if taken:
+                log.refused.append(Refusal(
+                    name, f"{', '.join(taken)} already belongs to "
+                          f"{', '.join(sorted({claimed[(class_name, name, t)] for t in taken}))}"
+                          f", and this slot names what belongs to one entity", list(taken)))
+                merged = [r for r in merged if r not in taken]
+                if not merged:
+                    continue
+                value = merged if _multivalued(sch, class_name, name) else merged[0]
+                if value == entity.get(name):
+                    continue
         else:
             value = values.shape(sch, class_name, name, proposed)
             if value is None:
                 log.refused.append(Refusal(name, "will not fit the slot", proposed))
                 continue
 
+        current = entity.get(name)
+        if kinds[name] != "reference" and values.is_field(current) \
+                and _same(sch, class_name, name, values.read(current), value):
+            # Re-proposing what is already there is not an edit. Writing it anyway rebuilt
+            # the wrapper and lost its warrant: 26 fields on 18823721 kept their value and
+            # went `present` -> `not_found`, `reported` -> `generated`.
+            log.refused.append(Refusal(name, "already recorded with this value", value))
+            continue
         if refused := refusals(Edit(record, entity, name, value)):
             log.refused.extend(refused)
             continue
-        entity[name] = value if kinds[name] == "reference" else _wrap(value, text)
+        if kinds[name] == "reference":
+            entity[name] = value
+            if claimed is not None and (class_name, name) in EXCLUSIVE_REFERENCES:
+                for target in added:
+                    claimed[(class_name, name, target)] = str(entity.get("local_id") or "")
+        else:
+            written = _wrap(value, text, quote=cited)
+            if (kept := _inherited(current, value)) is not None:
+                written["evidence"], written["value_source"] = kept
+            elif text and written["evidence"]["status"] != "present" \
+                    and not _in_document(value, text):
+                # Measured over 21 changed writes on four hand-read papers: of the writes
+                # this pass could not ground, 11 of 18 were inventions and 72% were wrong
+                # or invented, against 33% of the grounded ones. `_nested` has refused on
+                # this basis since it was written; the top-level path never did.
+                #
+                # Gated on having the paper at all: with no document there is no evidence
+                # either way, and refusing everything would make the pass a no-op rather
+                # than a careful one.
+                #
+                # The carve-out is what makes it affordable. A value the locator failed to
+                # place but which the document plainly contains -- "SPM2", "SPM99" -- is a
+                # locator failure, not an invention, and refusing those was most of the
+                # cost of this rule.
+                log.refused.append(Refusal(
+                    name, "nothing in the paper places this value", value))
+                continue
+            entity[name] = written
         log.written.append((name, value))
     return log
 
 
+def _unclaimed(class_name: str, slot: str, added: tuple[str, ...],
+               entity: Mapping[str, Any],
+               claimed: Mapping[tuple[str, str, str], str] | None
+               ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """`added`, split into what this entity may take and what already belongs elsewhere.
+
+    Not a `Check`: the guards judge one edit against the record, and this judges an edit
+    against what the same sweep already wrote. The first write is legitimate and only the
+    later one is a copy, which needs the caller's memory rather than the record.
+
+    Per target rather than per list, because the copy does not arrive as a copy. On 21118656
+    three groups took overlapping subsets of the same three interviews -- [CAPS, MINI, vivo],
+    [CAPS, MINI], [MINI] -- and a rule keyed on the whole list saw three different lists and
+    let all three through. On 18823721, where the list was identical, it fired.
+
+    The unclaimed part is still written rather than the whole write refused: whichever entity
+    the sweep happens to reach first takes the shared target, and refusing everything after
+    it would cost a correct link for an accident of ordering.
+    """
+    if claimed is None or not added or (class_name, slot) not in EXCLUSIVE_REFERENCES:
+        return added, ()
+    own = str(entity.get("local_id") or "")
+    taken = tuple(t for t in added
+                  if claimed.get((class_name, slot, t)) not in (None, own))
+    return tuple(t for t in added if t not in taken), taken
+
+
 def _multivalued(sch: Schema, class_name: str, slot: str) -> bool:
-    attribute = sch.attributes(class_name).get(slot)
-    return bool(attribute is not None and attribute.multivalued)
+    return sch.is_multivalued(class_name, slot)
 
 
 def _nested(sch: Schema, inner: str, entity: MutableMapping[str, Any], slot: str,
@@ -608,7 +733,100 @@ def _nested(sch: Schema, inner: str, entity: MutableMapping[str, Any], slot: str
     return landed
 
 
-def _wrap(value: Any, text: str, source: str = "reported") -> dict:
+def _same(sch: Schema, class_name: str, slot: str, old: Any, new: Any) -> bool:
+    """Whether these are the same value for this slot, not the same repr.
+
+    `40` and `40.0` are one value in a float slot and two different strings, so a raw
+    string comparison let an int-for-float rewrite through -- and a rewrite is what loses
+    the warrant. Both sides go through `shape`, which is what the write itself would do.
+    """
+    try:
+        return values.shape(sch, class_name, slot, old) == \
+            values.shape(sch, class_name, slot, new)
+    except Exception:                     # a value that will not shape is not the same one
+        return False
+
+
+def _inherited(current: Any, value: Any) -> tuple[dict, str] | None:
+    """The evidence and provenance `current` holds, when they still warrant `value`.
+
+    `refuses_losing_the_warrant` allows an edit exactly when a surviving span contains the
+    new value, and says the old spans are then kept. They were not: the write rebuilt the
+    wrapper through `_wrap`, which searches for a span only when the value is twenty
+    characters or more, so every count and every mean age replaced a verified span with
+    `not_found` and demoted `reported` to `generated`.
+
+    Substring containment is the wrong test for the shapes a record actually holds. `"1"`
+    sits inside `"consisted of 12 opioid-dependent patients"`, so `acquired_count: 12 -> 1`
+    inherited a span that says the opposite; every integer and every short enum token was
+    exposed the same way. A list is worse: `_bare` stringifies the repr, so extending
+    `["SPM2"]` to `["SPM2", "FSL"]` -- both named in the paper -- looked unwarranted while
+    dropping FSL looked fine.
+
+    So each element is asked for separately, numbers are compared as numbers against the
+    span's own tokens, and a short string needs a word boundary. Measured over the 218
+    fields the unfixed pass destroyed across 14 records, this inherits 216 where naive
+    containment inherits 217 -- the one difference being `spatial_scope: "roi"` matched
+    inside a longer word, which it should not have been.
+    """
+    if not isinstance(current, Mapping):
+        return None
+    if (current.get("evidence") or {}).get("status") != "present":
+        return None
+    wanted = value if isinstance(value, list) else [value]
+    if not wanted:
+        return None
+    held = values.read(current)
+    if isinstance(value, list) and isinstance(held, list) and held \
+            and all(item in value for item in held):
+        # A strict superset removes nothing, so whatever warranted the old elements still
+        # does. Asking the new ones to appear in the *same* span refuses most real
+        # extensions -- a second value is usually named in a second sentence -- which
+        # would leave `template_for`'s list templates unable to show any yield at all.
+        return current["evidence"], str(current.get("value_source") or "reported")
+    texts = [str(span.get("text", ""))
+             for group in (current.get("evidence") or {}).get("sets") or []
+             for span in group.get("spans") or []]
+    if not texts or not all(any(_warrants(text, item) for text in texts) for item in wanted):
+        return None
+    return current["evidence"], str(current.get("value_source") or "reported")
+
+
+_NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
+
+
+def _in_document(value: Any, text: str) -> bool:
+    """Whether the paper states this value somewhere, span or no span.
+
+    The locator answers "is there a sentence I can cite for this field", which is a harder
+    question than "does the paper say this", and it fails on values the document plainly
+    contains. Separating the two is what lets an ungrounded write be refused without
+    throwing away the software names and field strengths the retriever merely missed.
+    """
+    if not text:
+        return False
+    return all(_warrants(text, item)
+               for item in (value if isinstance(value, list) else [value]))
+
+
+def _warrants(text: str, value: Any) -> bool:
+    """Whether this span says this one value, rather than merely containing its characters."""
+    if isinstance(value, bool):
+        return False                       # "true" is not a thing a sentence states
+    if isinstance(value, (int, float)):
+        return any(float(token) == float(value) for token in _NUMBER.findall(text))
+    wanted = str(value).strip().lower()
+    if not _bare(wanted):
+        return False
+    if len(_bare(wanted)) < 4:
+        # Against the sentence, not `_bare` of it: `_bare` removes the spaces, so no word
+        # boundary survives to anchor on. "roi" must not match inside "heroin", and "FSL"
+        # must match in "used SPM2 and FSL."
+        return re.search(rf"\b{re.escape(wanted)}\b", text.lower()) is not None
+    return _bare(wanted) in _bare(text)
+
+
+def _wrap(value: Any, text: str, source: str = "reported", quote: str = "") -> dict:
     """A wrapper whose evidence says what was actually established.
 
     `not_found` rather than `not_applicable`: a sentence should exist for a value read off a
@@ -617,7 +835,10 @@ def _wrap(value: Any, text: str, source: str = "reported") -> dict:
     from pondie.extraction.record import spans as span_tools
 
     evidence: dict[str, Any] = {"status": "not_found"}
-    quote = str(value)
+    # The proposer's own citation when it gave one, the value itself otherwise. A cited
+    # sentence retires the twenty-character floor, which exists only because a bare value
+    # is too short to search for safely -- and it is what makes a numeric groundable at all.
+    quote = str(quote or value)
     if text and len(quote) >= 20:
         try:
             span = span_tools.resolve(text, quote).as_record()

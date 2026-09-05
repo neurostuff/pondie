@@ -250,6 +250,30 @@ class Schema:
                 out.append(candidate)
         return list(dict.fromkeys(out))
 
+    def is_multivalued(self, class_name: str, slot: str) -> bool:
+        """Whether this slot holds several values, read through its wrapper.
+
+        A storage-schema slot says so on the attribute. An extraction-schema slot says it in
+        the range name -- `ExtractedStringList` -- and its own `multivalued` is False, so
+        reading the attribute raw makes a list slot look single-valued. `values.shape` did
+        exactly that and wrote bare strings into `medications`, `medical_condition`,
+        `response_mode` and `preprocessings[].software`: four of the five findings one repair
+        pass introduced on 18823721.
+
+        The same resolution `value_ranges` performs, for the same reason.
+        """
+        attribute = self.attributes(class_name).get(slot)
+        if attribute is None:
+            return False
+        if attribute.multivalued:
+            return True
+        for candidate in self.ranges(attribute):
+            inner = self.attributes(candidate).get("value") if candidate in self else None
+            if inner is not None and self.resolves_to(candidate, "ExtractedValue") \
+                    and inner.multivalued:
+                return True
+        return False
+
     def classify(self, name: str, slot: SlotDefinition) -> SlotKind:
         """Classify one slot by how a reviewer must treat it.
 

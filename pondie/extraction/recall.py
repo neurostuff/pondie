@@ -75,6 +75,40 @@ _TYPES = {"string": "string", "integer": "integer", "float": "number",
 _SKIP = frozenset({"id", "mirror_of", "source_table_analysis", "defines_regions",
                    "model_representation_notes"})
 
+#: Which template variants are in play, from `PONDIE_TEMPLATE` -- a comma-separated set of
+#: `described`, `quoted`, `scoped`. Empty is the shape every measurement in
+#: `docs/repair-review-notes.md` was taken with.
+#:
+#: An environment variable and not a `Settings` field, deliberately and temporarily: these
+#: are arms of an experiment, not configuration anyone should carry, and the one that wins
+#: should become the only shape rather than a fifth setting. Read per call so a test can set
+#: it without reloading the module.
+def styles() -> frozenset[str]:
+    """The template variants asked for, as a set."""
+    import os
+
+    return frozenset(part.strip() for part in os.environ.get("PONDIE_TEMPLATE", "").split(",")
+                     if part.strip())
+
+
+#: The rule the residue needs stated. Of the eleven wrong values left after the warrant fix,
+#: every one is a fact the paper genuinely contains, put on the wrong entity or in the wrong
+#: slot -- an excluded patient's drug as the cohort's medication, a subgroup's mean age as a
+#: group's. Nothing in the template or the instruction says a value has to belong to the
+#: entity it is written on.
+SCOPED = """\
+A value belongs to the entity its `local_id` names and to no other. A number or a name the
+paper states for a subgroup, for an excluded participant, for a different cohort, or for
+another analysis is not this entity's value, however plainly the paper states it. If the
+paper does not state this field FOR THIS ENTITY, leave it out.
+
+"""
+
+#: The key a quote-carrying proposal parks its citations under. Not a slot of any class, so
+#: `apply` skips it on the way past and only the code that wants it looks.
+QUOTES = "_quotes"
+
+
 INSTRUCTION = """\
 `local_id` is an ADDRESS, not a description. To CORRECT an entity already listed, copy its
 `local_id` exactly; the reply is then an edit of that entity rather than a new one. Leave it
@@ -147,6 +181,59 @@ def flat(sch: Schema, class_name: str) -> bool:
     kind and a description, and a list of those is as expressible as a list of regions.
     """
     return all(kind != "nested" for _n, _s, kind in sch.iter_slots(class_name))
+
+
+def descriptions(sch: Schema, class_name: str, limit: int = 3_000) -> str:
+    """What each slot of this class means, for the instruction beside the template.
+
+    A template gives a name and a type. `enrolled_count` and `acquired_count` are both
+    integers on the same class, and nothing in `{"enrolled_count": "integer",
+    "acquired_count": "integer"}` says which is which -- so the pass wrote the analysed count
+    into the enrolled slot on both groups of 11058476, and the paper genuinely contains both
+    numbers.
+
+    The schema already draws every one of these distinctions and none of them reached the
+    model:
+
+        enrolled_count         Number enrolled after screening and before acquisition
+        acquired_count         Number for whom data were acquired or who were scanned
+        diagnostic_instrument  The study assessment that established this group's defining
+                               condition
+        correction_regions     The regions correction was restricted to
+        hrf_model              The haemodynamic response basis the design matrix was built
+                               with
+        medications            The drugs or other agents this cohort was taking
+
+    Seven of the eleven errors left after the warrant fix are answered by a sentence in that
+    list. `vocabulary` ships enum descriptions for the same reason; this ships the slots'.
+
+    First sentence each and capped, because the instruction shares a context with the paper.
+    The cap is 3,000: the largest class is `Group` at 2,814 characters and it is also the one
+    with the most residual errors, so a smaller cap dropped `diagnostic_instrument` -- one of
+    the slots this function exists for -- off the end in `iter_slots` order. Nothing is cut
+    today, and a class that grows past the cap says so rather than being quietly shortened.
+    """
+    lines: list[str] = []
+    for name, slot, kind in sch.iter_slots(class_name):
+        if name in _SKIP or name == "local_id" or kind == "nested":
+            continue
+        said = " ".join(str(getattr(slot, "description", "") or "").split())
+        said = said.split(". ")[0].rstrip(".")
+        if said:
+            lines.append(f"- `{name}`: {said}")
+    if not lines:
+        return ""
+    block, total = [], 0
+    for line in lines:
+        total += len(line) + 1
+        if total > limit:
+            # Said, not silent: the fields that fall off are still in the template, and a
+            # model shown twenty documented and a twenty-first not should know which.
+            block.append(f"- ({len(lines) - len(block)} further fields are not described "
+                         f"here; do not guess at them)")
+            break
+        block.append(line)
+    return "What each field means:\n" + "\n".join(block) + "\n\n"
 
 
 def vocabulary(sch: Schema, class_name: str, limit: int = 1_400) -> str:
@@ -232,9 +319,44 @@ def template_for(sch: Schema, class_name: str) -> dict:
         projected = nu_type(sch, slot)
         if projected is None:
             continue
-        fields[name] = [projected] if slot.multivalued and isinstance(projected, str) \
-            else projected
+        # `is_multivalued`, not `slot.multivalued`: on the extraction schema a list slot
+        # says so in its range name (`ExtractedStringList`) and the attribute's own flag is
+        # False, so the template offered a scalar for all 23 list slots -- the proposer
+        # could not express two medications even where the paper named two.
+        shaped = [projected] if sch.is_multivalued(class_name, name) \
+            and isinstance(projected, str) else projected
+        fields[name] = {"value": shaped, "quote": "verbatim-string"} \
+            if "quoted" in styles() else shaped
     return {sch.containers().get(class_name, class_name.lower()): [fields]}
+
+
+def unquote(proposal: Mapping[str, Any]) -> dict[str, Any]:
+    """A quote-carrying reply split back into values, with the citations under `QUOTES`.
+
+    The write path takes a value per slot; the quote rides alongside so `_wrap` can resolve
+    a span from the model's own sentence instead of hunting for one. That is the whole point
+    of asking for it: `_wrap` looks for a value in the paper only when it is twenty
+    characters or longer, so no count and no mean age could ever carry a citation, and a
+    quote returned beside the value makes the claim checkable rather than merely typed.
+
+    Tolerant of a reply that answers in the old shape, because a model asked for an object
+    sometimes returns the scalar and a half-migrated reply should still be usable.
+    """
+    # Not `values`: this file imports the module of that name, and a local that shadows it
+    # is the shape `test_no_module_shadowing` exists to catch.
+    flat_values: dict[str, Any] = {}
+    quotes: dict[str, str] = {}
+    for name, given in proposal.items():
+        if isinstance(given, Mapping) and "value" in given and set(given) <= {"value", "quote"}:
+            flat_values[name] = given["value"]
+            quote = given.get("quote")
+            if isinstance(quote, str) and quote.strip():
+                quotes[name] = quote.strip()
+        else:
+            flat_values[name] = given
+    if quotes:
+        flat_values[QUOTES] = quotes
+    return flat_values
 
 
 class _Proposes:
@@ -251,11 +373,17 @@ class _Proposes:
         template = template_for(sch, class_name)
         key = next(iter(template))
         # The vocabulary rides with the instruction, not the template: a template is a type
-        # skeleton and has nowhere to say what `fixation` means.
-        payload = self.ask(template, vocabulary(sch, class_name) + instruction, premise,
-                           what=class_name)
+        # skeleton and has nowhere to say what `fixation` means. `descriptions` is there for
+        # the same reason one level up -- it has nowhere to say what `enrolled_count` means
+        # either, and the schema does.
+        chosen = styles()
+        said = descriptions(sch, class_name) if "described" in chosen else ""
+        scope = SCOPED if "scoped" in chosen else ""
+        payload = self.ask(template, scope + said + vocabulary(sch, class_name) + instruction,
+                           premise, what=class_name)
         proposed = payload.get(key) if isinstance(payload, Mapping) else None
-        return [p for p in (proposed or []) if isinstance(p, Mapping)]
+        found = [p for p in (proposed or []) if isinstance(p, Mapping)]
+        return [unquote(p) for p in found] if "quoted" in chosen else found
 
 
 class NuExtract(_Proposes):

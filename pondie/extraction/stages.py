@@ -889,6 +889,15 @@ class Repair(_Base):
                 # user to reinstall a package they have is how a real fault gets ignored.
                 notes.append(f"local repair models unavailable: "
                              f"{type(error).__name__}: {error}")
+            if settings.proposer_kind == "model":
+                # The checker stays local -- it grounds what the proposer says and is not
+                # the variable under test. Only the proposer changes between arms.
+                from pondie.extraction.recall_llm import ModelProposer
+
+                proposer = ModelProposer(
+                    caller, settings.model, study_id=paper.study_id,
+                    service_tier=settings.service_tier, effort=settings.effort)
+                notes.append(f"proposer: {settings.model} over the network")
 
         reply = None
         report = repair_pass.run(
@@ -924,7 +933,15 @@ class Repair(_Base):
         # paper would discard the whole extraction over a field a reviewer can see.
         # `cost` only where there was one: an adjudication that found no contradiction makes
         # no call, and StageOutcome's own default is the empty Cost.
-        spend = {"cost": report.cost} if report.cost is not None else {}
+        # The proposer's spend as well as the adjudication's. A local proposer costs a card
+        # and nothing a ledger can see, which is why only the adjudication was ever summed;
+        # a network proposer bills per class per paper, and the first arm to use one
+        # reported 0 calls for a stage that had made hundreds.
+        spent = report.cost
+        proposed = getattr(proposer, "cost", None)
+        if proposed is not None:
+            spent = proposed if spent is None else spent + proposed
+        spend = {"cost": spent} if spent is not None else {}
         return StageOutcome(stage=self.name, study_id=paper.study_id,
                             traces=report.traces, notes=tuple(notes + report.introduced),
                             **spend)

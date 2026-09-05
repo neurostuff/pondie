@@ -265,6 +265,14 @@ class Settings(Strict):
 
     #: The name the server was started with (`--served-model-name`).
     proposer_model: str = "nu"
+    #: Which model answers the repair sweep. `local` is NuExtract on a card; `model` is the
+    #: extraction model over the network, which exists to separate the design from the
+    #: proposer: on four hand-read papers repair was wrong about 11 of the 19 fields it
+    #: changed, and every one of those errors was a real fact from the paper in the wrong
+    #: place. That is either a 3B model's limit or a property of the question, and the two
+    #: have different fixes. A fraction of nineteen, not a rate -- the Wilson interval runs
+    #: 36% to 77%, which is wider than most of what this could move.
+    proposer_kind: Literal["local", "model"] = "local"
 
     #: How many papers may be inside the two local models at once. The stages above are
     #: network-bound and run at `workers`; these are 8 GB of card between them and do not
