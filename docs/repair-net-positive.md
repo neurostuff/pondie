@@ -119,6 +119,37 @@ Start with 18823721 (already read closely) plus papers drawn from the cue_reacti
 cohort. Record as `benchmarks/repair_truth/<pmid>.json`, one file per paper, with a
 `quote` beside each value so a disagreement can be adjudicated against the text.
 
+## Corrections from review (round 1)
+
+The reviewer checked every claim above. Five were wrong or mis-scoped:
+
+* **"156 fields written" is 83 paths written twice.** `iterations=2` re-writes everything,
+  so the break at `repair.py:341` is dead code and every write count in this doc was 2x.
+* **M2 was 27, not 26**, and is **22** under R2, which counts a downgrade only where there
+  was a warrant to withdraw. `build` can emit `reported` with `not_found`; a pass
+  relabelling that to `generated` corrects the record. `M2 == 0` would have forbidden it.
+* **My textual evidence for D3 was itself the grep trap.** `grep -ci intera` returns 9
+  because it matches "interaction"; case-sensitively it is 1, the scanner. `grep -ci ROI`
+  returns 20, all inside "heroin". The conclusion survives -- the values are supported --
+  but not by the counts I quoted. `seed` = 0 is confirmed.
+* **D4's example was scored backwards.** `grp_controls.medications = "no current
+  psychotropic medication"` is not a correct fill: the slot asks for the drugs a cohort
+  was taking, names only, and the criterion is worded identically for both groups. The
+  right value is null for both. I had counted a wrong write as the pass's best moment.
+* **D5's root cause is not in `edit.py`.** `repair.run` is handed the *extraction* schema,
+  where multiplicity lives in the range name (`ExtractedStringList`) and the attribute's
+  own `multivalued` is False. `values.shape` read it raw. Fixed by `Schema.is_multivalued`.
+
+Two things the metrics could not see at all:
+
+* **Reference slots.** Repair made 6 on 18823721 -- both groups' `diagnostic_instrument`
+  and both `correction_regions` -- of which at least 4 are wrong, and none is visible to
+  M1/M2/M3/M5 because a reference carries no wrapper and the walk yields wrappers only.
+  This needs its own gate (R4).
+* **M1 is gameable upward.** 7 of the 10 spans gained on 18823721 are table captions and
+  titles, which are trivially locatable because they *are* the text being searched. A
+  netted span count rewards that. R1 replaces it with per-field warrant preservation.
+
 ## Open questions for review
 
 1. Is M1 the right primary? It is gameable by a pass that writes nothing. M5 is the
