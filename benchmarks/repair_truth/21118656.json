@@ -71,11 +71,15 @@
       [
        "posttraumatic stress disorder",
        "major depression"
+      ],
+      [
+       "PTSD",
+       "major depression"
       ]
      ],
      "support": "stated",
      "quote": "Fifty-two refugees were included in the study: 20 currently had PTSD, 19 did not have PTSD but had repeatedly experienced traumatic stress (traumatized controls) and 13 non-traumatized controls had not experienced severe traumatic stressors.",
-     "note": "Comorbid major depression is present in this group by design: \"In all participants, major depression had developed as a secondary, comorbid disease, and some fulfilled criteria for major depression according to DSM-IV.\""
+     "note": "Comorbid major depression is present in this group by design: \"In all participants, major depression had developed as a secondary, comorbid disease, and some fulfilled criteria for major depression according to DSM-IV.\" The scorer matches on normalised substrings, so \"PTSD\" and \"posttraumatic stress disorder\" do not match each other; both spellings are listed rather than teaching the scorer this paper's abbreviations."
     },
     "diagnostic_system": {
      "value": "DSM-IV",

@@ -912,3 +912,151 @@ no longer destroys what it knew, so a reviewer reading provenance can trust it. 
 does is state, with a citation, facts that belong to a different entity in the same paper --
 and no gate in this document can see that. The four truth papers say that is about one write
 in two. Anyone consuming repaired fields at face value should know that number.
+
+---
+
+# Round 5: the controlled measurement, and what it settles
+
+All four truth papers now start from byte-identical pre-repair records; I verified each pair
+with `cmp` rather than taking it on report. `repair-pre2` is genuinely pre-fix -- zero
+occurrences of "already recorded with this value", "nothing in the paper places this value"
+or "drops values the record already held" in its provenance, against 127/28/n in `post2` for
+the same papers. **This section supersedes round 4's R5 table, which had two uncontrolled
+rows.**
+
+## Deterministic half, 15 controlled papers
+
+| | pre | post |
+|---|---|---|
+| spans destroyed | 241 | **2** |
+| provenance downgrades | 151 | **0** |
+| findings introduced | 58 | **0** |
+| fields filled | 341 | 268 |
+| papers failing a deterministic gate | **13 of 15** | **0 of 15** |
+
+M3 == 0 now has an artifact behind it; in round 4 it did not. Fill drop is **-73 (-21%)** on
+the controlled set.
+
+## R5: the controlled A/B
+
+| paper | pre changed / bad / yield | gate | post changed / bad / yield | gate |
+|---|---|---|---|---|
+| 18823721 | 13 / **9** / 4 | fail | 9 / **5** / 4 | fail |
+| 11058476 | 3 / 2 / 1 | fail | 5 / 3 / 2 | fail |
+| 16038771 | 6 / 3 / **3** | **pass** | 4 / 3 / **1** | **fail** |
+| 21118656 | 0 / 0 / 0 | pass (vacuous) | 1 / 0 / 0 | pass (vacuous) |
+| **total** | **22 / 14 / 8** | 2 of 4 | **19 / 11 / 7** | 1 of 4 |
+
+Damage rate **64% -> 58%**. Yield 8 -> 7. `yield >= wrong + invented` is **not passed**, and
+the branch does not make it pass.
+
+Paper by paper, because the total hides three different stories:
+
+* **18823721 is the clean win: 9 bad writes -> 5, yield unchanged at 4.** Four inventions
+  removed at no cost -- `grp_controls.medications`, `grp_controls.diagnostic_instrument`,
+  `inf_stn.correction_scope: roi`, and `tables[tbl2].non_analysis_content:
+  connectivity_seeds`, the fabrication this whole review opened on.
+* **16038771 got worse, and it is the fix's doing.** Bad unchanged at 3; yield 3 -> 1,
+  because Rule A refused two correct `is_healthy: True` writes. Nothing was gained on that
+  paper and the gate went from pass to fail. This is exactly the cost I flagged in round 4's
+  Q2 as "at most four values, all inferences"; two of the four are now measured, on a
+  controlled pair.
+* **11058476** does more of both: bad 2 -> 3, yield 1 -> 2. The new bad write is
+  `grp_comparison_subjects.enrolled_count = 14`, the same shape as the one already there.
+* **21118656** is neutral. Its one changed write replaces
+  `['posttraumatic stress disorder', 'major depression']` with `['PTSD', 'major depression']`
+  -- a correct value for a correct value.
+
+**A correction to my own ground truth, found while doing this.** That last write scored
+`wrong` until I looked at it: my `also_acceptable` list did not contain the abbreviated
+spelling, and the scorer matches on normalised substrings, under which "PTSD" and
+"posttraumatic stress disorder" do not match. Fixed in `21118656.json`, which moves the post
+total from 12 bad to 11 and that paper from fail to pass. A truth set is a measuring
+instrument and this one was reading one write short.
+
+## The residual, measured
+
+For every wrong or invented write, I asked whether the value it states occurs in the paper at
+all -- the same `_warrants` test the pass uses, against the whole document:
+
+| | bad writes | value IS in the paper | value is not |
+|---|---|---|---|
+| pre | 14 | 12 | 2 |
+| **post** | **11** | **11** | **0** |
+
+**Every remaining wrong or invented value in the repaired records is a value the paper
+genuinely contains, attached to the wrong entity or the wrong slot.** The residue is D4 and
+nothing else. The two writes that stated something the paper does not contain are precisely
+the two Rule A removed. So the headline of this exercise, as a measurement rather than an
+estimate:
+
+> On the fields it changes, repair is wrong or invents about **58%** of the time
+> (11 of 19 changed writes over four hand-read papers), and **100% of those errors are a real
+> fact from the paper put in the wrong place** -- an excluded patient's drug recorded as the
+> cohort's medication, a students' mean age recorded as a group's, an analysed count recorded
+> as the enrolled count, a result region recorded as a correction region.
+
+No grounding check can catch any of it, because every one of them is grounded.
+
+## Did the per-target `EXCLUSIVE` fix work? No -- and I was wrong to claim it was needed
+
+`post2` has zero "already belongs to" refusals on 21118656 and the three overlapping
+`diagnostic_instrument` lists are unchanged. The reason is that **repair never wrote them**:
+all three are already in `repair-post2/unrepaired/21118656`, so the extractor wrote them and
+the guard correctly did nothing.
+
+Round 4 said "21118656 exposes a hole in the guard, and it is mine". That was wrong. I read
+the post record, saw three overlapping lists, and attributed them to the pass without
+checking the pre record -- the same mistake in kind as the grep that started this review. The
+overlapping-subset hole is real *as code* and the unit tests demonstrate the tuple key would
+miss it, but **no run demonstrates it**, and the tuple key already handled the only case
+repair actually produces in this corpus.
+
+The guard itself is measured working, on 18823721: `grp_controls.diagnostic_instrument` went
+from a four-item copy of the patients' list to absent. One invented reference write removed,
+under a controlled comparison.
+
+## Rule A, honestly
+
+On the truth field set Rule A is a **wash: it removed 2 bad writes and cost 2 good ones.**
+Its demonstrated value is elsewhere and the field set cannot see it -- 46 of its 139 refusals
+are `non_analysis_content`, the slot that produced 10 of the pre arm's 58 introduced
+findings, and M3 going to 0 is largely its doing. Judge it on M3, not on M4.
+
+## The next lever, for follow-up rather than now
+
+Two carve-outs to Rule A, both recovering measured losses without weakening it:
+
+* a numeric equal to a document token under a unit factor -- `acquisition_duration_seconds =
+  450.0` where the paper says "7.5 minutes";
+* a free-text value, honestly `generated`, when a majority of its content words occur in the
+  document -- `model_settings`, `description`, `stimuli`, which the pass rewords so the
+  verbatim test misses text that is in the paper.
+
+Together they address roughly **20 of the 67 given-up fills**. They will not move the gate on
+their own, because the gate fails on the damage side and the damage is all D4.
+
+After those, the span-sharing refusal, which is a separate piece of work: it needs the
+candidate span recorded at write time before it can be measured, and every one of the 11
+residual errors would be a test case for it.
+
+## Recommendation
+
+**Ship it.**
+
+The branch is a large, controlled, unambiguous win on destructiveness -- 241 destroyed spans
+to 2, 151 downgrades to 0, 58 introduced findings to 0, 13 of 15 papers failing a gate to 0 --
+and roughly a wash on content: damage 64% to 58%, yield 8 to 7, the gate still failed. The
+alternative is leaving in production a pass that provably subtracts from the record, which is
+worse than one that is honest and unhelpful.
+
+Two things must go in the summary rather than be discovered later:
+
+1. **`yield >= wrong + invented` is not met**, on any controlled paper with writes to score.
+   Repair is non-destructive, not net positive.
+2. **58% of what repair changes is wrong, and all of it is grounded.** Anything downstream
+   that reads a repaired field at face value should know that number. `repaired_by` in
+   `extraction_metadata` is what makes those fields findable.
+
+The one measured regression -- Rule A costing two correct inferences on 16038771 -- is worth
+accepting for the M3 collapse it bought, but it should be named, not netted away.
