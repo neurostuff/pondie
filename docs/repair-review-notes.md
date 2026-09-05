@@ -342,7 +342,7 @@ Method and judgement calls:
   `hrf_model`, `spatial_unit`, Device `manufacturer`/`model`. The two reference slots
   (`diagnostic_instrument`, `correction_regions`) are the point: they are where the errors
   are and where no current measure looks.
-* **73 of the 196 fields are `null`.** That is deliberate. A pass that fills them is
+* **53 of the 196 fields are `null`.** That is deliberate. A pass that fills them is
   inventing, and a metric that only scores filled fields cannot see it.
 * **Traps recorded on purpose,** each a grounded-but-wrong value a locator will happily cite:
   - 18823721: `haloperidol` (the patient it names was excluded); `connectivity_seeds` on a
