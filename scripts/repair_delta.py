@@ -25,12 +25,34 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter
+from collections.abc import Mapping
 from pathlib import Path
 
 from pondie import schema
 from pondie.extraction.record.validate import Validator
 from pondie.formats import values
 from pondie.schema import reader
+
+
+def fields(node, path: str = ""):
+    """Every wrapper, keyed by `local_id` rather than by list index.
+
+    `values.iter_fields` numbers list entries positionally, so a pass that reorders
+    `groups` makes every field of every group look changed. The record addresses entities
+    by `local_id` everywhere else; the measurement has to as well or it will one day report
+    a large delta for a no-op.
+    """
+    if isinstance(node, Mapping):
+        if values.MARKER in node:
+            yield path, node
+            return
+        for key, value in node.items():
+            yield from fields(value, f"{path}.{key}" if path else str(key))
+    elif isinstance(node, list):
+        for index, item in enumerate(node):
+            label = str(values.read(item.get("local_id"))) if isinstance(item, Mapping) \
+                and item.get("local_id") is not None else str(index)
+            yield from fields(item, f"{path}[{label}]")
 
 
 def spans(node: dict) -> int:
@@ -48,8 +70,8 @@ def empty(node: dict) -> bool:
 
 def measure(before: dict, after: dict, sch, text: str | None) -> Counter:
     """One record's M1, M2, M3, M5, keyed for a table."""
-    was = dict(values.iter_fields(before))
-    now = dict(values.iter_fields(after))
+    was = dict(fields(before))
+    now = dict(fields(after))
     out: Counter = Counter()
 
     for path, node in now.items():
@@ -66,8 +88,12 @@ def measure(before: dict, after: dict, sch, text: str | None) -> Counter:
         out["spans_destroyed"] += max(0, lost - gained)
         # A downgrade is only a downgrade when the pass kept the value: replacing a wrong
         # value with a better-sourced one may legitimately lose the old citation.
+        # Only a downgrade when there was a warrant to withdraw. `build` can emit
+        # `reported` with `not_found`, which is already dishonest, and a pass relabelling
+        # that to `generated` is correcting the record rather than damaging it.
         same = str(values.read(old)) == str(values.read(node))
-        if same and old.get("value_source") == "reported" \
+        if same and status(old) == "present" \
+                and old.get("value_source") == "reported" \
                 and node.get("value_source") == "generated":
             out["provenance_downgrade"] += 1
         if empty(old) and not empty(node):

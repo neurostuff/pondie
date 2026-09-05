@@ -95,7 +95,7 @@ def refuses_truncation(edit: Edit) -> Refusal | None:
     definition on 23021615, so the direction is what distinguishes them -- an edit has to
     add something.
     """
-    old, new = edit.current_value, edit.value
+    old, new = _one(edit.current_value), _one(edit.value)
     if not isinstance(old, str) or not isinstance(new, str):
         return None
     if _bare(new) and _bare(new) in _bare(old) and _bare(new) != _bare(old):
@@ -115,9 +115,17 @@ def refuses_shortening_a_list(edit: Edit) -> Refusal | None:
     still the right refusal: a repair pass is not where that is decided.
     """
     old = edit.current_value
-    if isinstance(old, list) and len(old) > 1 and not isinstance(edit.value, list):
-        return Refusal(edit.slot, "replaces several values with one", edit.value)
+    # `>= 1`, not `> 1`: a one-element list replaced by a bare string is the same loss with
+    # a smaller number. `["DSM-IV heroin dependence"] -> "heroin dependence"` slipped past
+    # both this guard and `refuses_truncation`, which only compared strings.
+    if isinstance(old, list) and len(old) >= 1 and not isinstance(edit.value, list):
+        return Refusal(edit.slot, "replaces a list with a single value", edit.value)
     return None
+
+
+def _one(value: Any) -> Any:
+    """A one-element list unwrapped, so a list/string comparison is still a comparison."""
+    return value[0] if isinstance(value, list) and len(value) == 1 else value
 
 
 def refuses_losing_the_warrant(edit: Edit) -> Refusal | None:
@@ -131,16 +139,13 @@ def refuses_losing_the_warrant(edit: Edit) -> Refusal | None:
     The old spans are kept when they still contain the new value, which is what lets a
     genuine extension through: on 23021615 the restored full sentence was already the span.
     """
+    if _inherited(edit.current, edit.value) is not None:
+        return None
     node = edit.current
     if not isinstance(node, Mapping):
         return None
     if (node.get("evidence") or {}).get("status") != "present":
         return None
-    want = _bare(edit.value)
-    for group in (node.get("evidence") or {}).get("sets") or []:
-        for span in group.get("spans") or []:
-            if want and want in _bare(span.get("text", "")):
-                return None
     return Refusal(edit.slot, "loses the span that warranted the value it replaces",
                    edit.value)
 
@@ -534,7 +539,7 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
 
         current = entity.get(name)
         if kinds[name] != "reference" and values.is_field(current) \
-                and str(values.read(current)) == str(value):
+                and _same(sch, class_name, name, values.read(current), value):
             # Re-proposing what is already there is not an edit. Writing it anyway rebuilt
             # the wrapper and lost its warrant: 26 fields on 18823721 kept their value and
             # went `present` -> `not_found`, `reported` -> `generated`.
@@ -555,8 +560,7 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
 
 
 def _multivalued(sch: Schema, class_name: str, slot: str) -> bool:
-    attribute = sch.attributes(class_name).get(slot)
-    return bool(attribute is not None and attribute.multivalued)
+    return sch.is_multivalued(class_name, slot)
 
 
 def _nested(sch: Schema, inner: str, entity: MutableMapping[str, Any], slot: str,
@@ -620,6 +624,20 @@ def _nested(sch: Schema, inner: str, entity: MutableMapping[str, Any], slot: str
             target[field_name] = written
             landed += 1
     return landed
+
+
+def _same(sch: Schema, class_name: str, slot: str, old: Any, new: Any) -> bool:
+    """Whether these are the same value for this slot, not the same repr.
+
+    `40` and `40.0` are one value in a float slot and two different strings, so a raw
+    string comparison let an int-for-float rewrite through -- and a rewrite is what loses
+    the warrant. Both sides go through `shape`, which is what the write itself would do.
+    """
+    try:
+        return values.shape(sch, class_name, slot, old) == \
+            values.shape(sch, class_name, slot, new)
+    except Exception:                     # a value that will not shape is not the same one
+        return False
 
 
 def _inherited(current: Any, value: Any) -> tuple[dict, str] | None:

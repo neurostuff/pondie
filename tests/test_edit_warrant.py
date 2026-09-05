@@ -77,3 +77,29 @@ def test_an_absent_field_is_still_filled(sch):
     log = edit.apply(sch, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER)
     assert entity["age_mean"]["value"] == 44.5
     assert log.written
+
+
+def test_a_one_element_list_is_still_a_list(sch):
+    """`["DSM-IV heroin dependence"] -> "heroin dependence"` on 18823721 dropped both the
+    diagnostic system and the list type. `refuses_truncation` compared strings and saw a
+    list; `refuses_shortening_a_list` required more than one element. It passed both, and
+    with evidence inheritance it would have passed the warrant gate too -- a record made
+    worse while every check reported green."""
+    entity = {"local_id": "grp_a",
+              "medical_condition": cited(["DSM-IV heroin dependence"],
+                                         "diagnosed with DSM-IV heroin dependence")}
+    log = edit.apply(sch, {"groups": [entity]}, "Group", entity,
+                     {"medical_condition": "heroin dependence"}, PAPER)
+    assert entity["medical_condition"]["value"] == ["DSM-IV heroin dependence"]
+    assert not log.written
+
+
+def test_a_list_slot_is_written_as_a_list(sch):
+    """Multiplicity on the extraction schema lives in the range name, not on the attribute:
+    `medications` ranges on `ExtractedStringList`, whose own `multivalued` is False. Reading
+    it raw wrote bare strings into four list slots -- four of the five findings the pass
+    introduced on 18823721."""
+    entity = {"local_id": "grp_a"}
+    edit.apply(sch, {"groups": [entity]}, "Group", entity,
+               {"medications": "methadone"}, PAPER)
+    assert entity["medications"]["value"] == ["methadone"]

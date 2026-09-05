@@ -341,8 +341,7 @@ def shape(sch: "Schema", class_name: str, slot: str, value: Any) -> Any:
     result = cast(sch, class_name, slot, value)
     if result is None:
         return None
-    attribute = sch.attributes(class_name).get(slot)
-    if attribute is not None and attribute.multivalued and not isinstance(result, list):
+    if sch.is_multivalued(class_name, slot) and not isinstance(result, list):
         return [result]
     return result
 

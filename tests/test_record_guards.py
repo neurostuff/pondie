@@ -80,7 +80,7 @@ def test_one_value_does_not_replace_several(sch):
     """16701903 acquires MP-RAGE at TE 4.4 ms and FLASH at TE 5 ms."""
     entity = {"local_id": "acq", "echo_time_seconds": field([0.0044, 0.005])}
     e = edit(sch, "MRI", entity, "echo_time_seconds", 0.0044)
-    assert "several values with one" in why(edit_module.refusals(e))
+    assert "replaces a list" in why(edit_module.refusals(e))
 
 
 # ---------------------------------------------------------------------------- scope pairs
