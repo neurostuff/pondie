@@ -194,3 +194,17 @@ def test_a_shared_reference_on_an_ordinary_slot_is_still_written(sch):
 def _named(label):
     return {"extraction_status": "extracted", "value": label, "value_source": "reported",
             "evidence": {"status": "not_found"}}
+
+
+def test_a_minted_entity_does_not_stringify_its_nested_slots(sch):
+    """A Task minted on 12860777 came out with `conditions` as a wrapper whose value was a
+    list of stringified dicts. `shape` renders an object as its repr, and entity creation
+    skipped only reference slots -- so a nested one took the scalar path. Valid JSON,
+    nothing the schema declares, and the last finding repair introduced across 15 records."""
+    entity, why = edit.create(
+        sch, {"tasks": []}, "Task",
+        {"name": "alcohol picture viewing", "description": "viewing alcohol pictures",
+         "conditions": [{"local_id": "c1", "name": "alcohol pictures"}]},
+        PAPER)
+    assert entity is not None, why
+    assert "conditions" not in entity or isinstance(entity["conditions"], list)

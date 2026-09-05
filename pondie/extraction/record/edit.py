@@ -434,7 +434,14 @@ def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
 
     entity: dict[str, Any] = {"local_id": local_id}
     for name, _slot, kind in sch.iter_slots(class_name):
-        if name in ("local_id", "id") or name not in proposal or kind == "reference":
+        # `nested` alongside `reference`: a nested slot holds objects, and `shape` renders
+        # one as its own repr. A Task minted on 12860777 came out with `conditions` as a
+        # wrapper whose value was a list of stringified dicts -- valid JSON, nothing the
+        # schema declares, and the one finding repair still introduced across fifteen
+        # records. `_nested_defaults` supplies the two nested slots a proposal can honestly
+        # fill, and `apply` writes the rest through `_nested` once the entity exists.
+        if name in ("local_id", "id") or name not in proposal \
+                or kind in ("reference", "nested"):
             continue
         value = values.shape(sch, class_name, name, proposal[name])
         if value is not None:
