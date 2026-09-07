@@ -616,23 +616,6 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             written = _wrap(value, text, quote=cited)
             if (kept := _inherited(current, value)) is not None:
                 written["evidence"], written["value_source"] = kept
-            elif text and _closed_vocabulary(sch, class_name, name, value) \
-                    and written["evidence"]["status"] != "present" \
-                    and not _in_document(value, text):
-                # Only where the slot holds a closed vocabulary. Measured over 139 refusals:
-                # the 46 on `non_analysis_content` carry the whole gain -- 16 of the pass's
-                # 56 introduced findings -- while the free-text and numeric refusals cost
-                # real values and no findings, and the six on `is_healthy` cost two correct
-                # writes and took a paper from passing to failing.
-                #
-                # The distinction is the one `_nested` already draws: an enum term is
-                # vocabulary, not a quote. A token chosen from a list is either in the paper
-                # or invented, so "not in the document" decides it. A number and a sentence
-                # are things the paper says in its own words -- "7.5 minutes" for 450
-                # seconds, a definition reworded -- and the same test is unsound for them.
-                log.refused.append(Refusal(
-                    name, "nothing in the paper places this vocabulary term", value))
-                continue
             entity[name] = written
         log.written.append((name, value))
     return log
@@ -792,31 +775,6 @@ def _inherited(current: Any, value: Any) -> tuple[dict, str] | None:
 
 
 _NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
-
-
-def _closed_vocabulary(sch: Schema, class_name: str, slot: str, value: Any = None) -> bool:
-    """Whether this WRITE is a vocabulary term rather than something the paper worded.
-
-    Asked of the value and not of the slot. `non_analysis_content` is
-    `any_of: [TableContent, string]` -- deliberately open, so the source can say something
-    the vocabulary has no token for -- and it carries 46 of the 139 refusals and the whole
-    of their gain. A slot-level test excludes it and keeps the slots that cost values.
-
-    A term chosen from the list is either in the paper or invented, so "not in the document"
-    decides it. The paper's own wording is not: it can be a paraphrase of what the source
-    said, or a unit conversion of it.
-    """
-    attribute = sch.attributes(class_name).get(slot)
-    if attribute is None:
-        return False
-    terms = {str(token).lower()
-             for candidate in sch.value_ranges(attribute)
-             for token in ((sch.enums[candidate].permissible_values or {})
-                           if candidate in sch.enums else {})}
-    if not terms:
-        return False
-    written = value if isinstance(value, list) else [value]
-    return bool(written) and all(str(v).lower() in terms for v in written)
 
 
 def _in_document(value: Any, text: str) -> bool:

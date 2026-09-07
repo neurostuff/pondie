@@ -103,6 +103,11 @@ def build_sequence() -> tuple[Repair, ...]:
             after="wrappers",
         ),
         Repair(
+            "table_effects",
+            "mark a table an analysis cites as reporting that analysis's effect",
+            lambda body, ctx: br.derive_table_effects(body),
+        ),
+        Repair(
             "denominators",
             "fill a distribution's denominator from its count and percentage",
             lambda body, ctx: br.derive_denominators(body),

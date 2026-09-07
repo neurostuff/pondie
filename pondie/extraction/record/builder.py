@@ -441,6 +441,49 @@ def apply_aliases(body: dict[str, Any], sch: Schema, aliases: dict[str, str]) ->
     return rewrites
 
 
+def derive_table_effects(body: dict[str, Any]) -> list[str]:
+    """Mark a table an analysis cites as reporting that analysis's effect.
+
+    `Table.non_analysis_content` says what a table's rows are *when they are not the foci of
+    a reported effect*, and absence used to mean both "it reports results" and "nothing
+    decided". A model shown eight kinds of non-analysis and no way to say "it is an
+    analysis" answers with the nearest one: over twelve papers a repair pass marked 18 of 19
+    tables, and 16 of those 18 were cited by an analysis, which makes the mark wrong by the
+    slot's own definition.
+
+    The join settles it without a model. A table named in `Analysis.tables` reports that
+    analysis's result, so it takes `reported_effect` and the eight other kinds cannot apply.
+    `generated`, because the record states this and the paper does not.
+    """
+    from pondie.formats import values as value_tools
+
+    cited: set[str] = set()
+    for analysis in (body.get("analyses") or []):
+        if not isinstance(analysis, dict):
+            continue
+        for target in (analysis.get("tables") or []):
+            if isinstance(target, str):
+                cited.add(target)
+
+    filled: list[str] = []
+    for index, table in enumerate(body.get("tables") or []):
+        if not isinstance(table, dict):
+            continue
+        local_id = str(value_tools.read(table.get("local_id")) or "")
+        if local_id not in cited:
+            continue
+        held = value_tools.read(table.get("non_analysis_content"))
+        if held == "reported_effect":
+            continue
+        # An analysis cites it, so any other kind contradicts the record rather than
+        # describing it -- which is the contradiction `check_table_content` reports.
+        table["non_analysis_content"] = value_tools.wrap(
+            "reported_effect", source="generated", evidence="not_applicable")
+        filled.append(f"tables[{index}].non_analysis_content"
+                      + (f": was {held!r}" if held else ""))
+    return filled
+
+
 def derive_denominators(body: dict[str, Any]) -> list[str]:
     """Fill `CategoryDistribution.denominator` from the count and the percentage.
 

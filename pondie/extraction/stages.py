@@ -889,7 +889,13 @@ class Repair(_Base):
                 # user to reinstall a package they have is how a real fault gets ignored.
                 notes.append(f"local repair models unavailable: "
                              f"{type(error).__name__}: {error}")
-            if settings.proposer_kind == "model":
+            if settings.proposer_kind == "model" and caller is None:
+                # No caller, no network proposer. The local path degrades rather than
+                # failing when its models are missing, and this must too -- constructed
+                # anyway it raises on the first proposal, which reads as a broken stage
+                # rather than as an unavailable one.
+                notes.append("no caller for the model proposer; using the local one")
+            elif settings.proposer_kind == "model":
                 # The checker stays local -- it grounds what the proposer says and is not
                 # the variable under test. Only the proposer changes between arms.
                 from pondie.extraction.recall_llm import ModelProposer

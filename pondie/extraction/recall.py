@@ -73,7 +73,13 @@ _TYPES = {"string": "string", "integer": "integer", "float": "number",
 #: is added back explicitly at the front; the rest are minted by other stages or hold text
 #: this pass cannot check.
 _SKIP = frozenset({"id", "mirror_of", "source_table_analysis", "defines_regions",
-                   "model_representation_notes"})
+                   "model_representation_notes",
+                   # Derived from the `Analysis.tables` join by `derive_table_effects`, and
+                   # unanswerable from a template: the slot's correct value is usually
+                   # absent, the vocabulary has no token for "this is an analysis", and a
+                   # proposer shown a key with eight choices picks one. It marked 18 of 19
+                   # tables over twelve papers, 16 of them cited by an analysis.
+                   "non_analysis_content"})
 
 #: Which template variants are in play, from `PONDIE_TEMPLATE` -- a comma-separated set of
 #: `described`, `quoted`, `scoped`. Empty is the shape every measurement in
