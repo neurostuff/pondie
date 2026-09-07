@@ -16,8 +16,10 @@ Four measures, all from diffing the pre- and post-repair records, none needing a
   M5  fill yield            absent-or-empty -> a value. The counterweight to M1: a pass
                             that writes nothing scores perfectly on M1 and zero here.
 
-M4 -- whether the values are RIGHT -- cannot be computed from the record alone and lives in
-`.agent/repair/truth/`.
+Whether the values are RIGHT is a fifth question none of these answers. It cannot be
+computed from the record alone -- it needs the paper read by hand -- so a pass can score
+perfectly here and still be wrong about most of what it wrote. It was, when this was
+written.
 """
 
 from __future__ import annotations

@@ -12,12 +12,15 @@ Why the repair pass was rewritten, and what it still gets wrong.
 |---|---|
 | `investigation.md` | the diagnosis, the metrics, the results, and the corrections to all three |
 | `review-notes.md` | the adversarial review's own record, including where it corrected itself |
-| `truth/` | four papers read by hand, 209 quotes verified verbatim by `truth/verify_quotes.py` |
 | `delta.py` | what a repair pass did to a record: spans, provenance, findings, fills |
 | `references.py` | the reference slots, which carry no wrapper and which `delta.py` cannot see |
-| `score.py` | writes scored against `truth/`, the only measure that says whether a pass HELPED |
 
-Run the first two against any run directory holding `records/` and `unrepaired/`.
+Both run against a run directory holding `records/` and `unrepaired/`.
+
+Both measure whether the pass DAMAGED the record. Neither can say whether it HELPED: that
+needs papers read by hand, and the four this work used are not in the repository. The
+content numbers quoted below and in `investigation.md` came from them and cannot be
+reproduced here -- treat them as recorded findings, not as a suite you can re-run.
 
 ## The one thing worth reading before changing anything here
 

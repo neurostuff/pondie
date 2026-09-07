@@ -26,11 +26,15 @@ Two things here, and they are different jobs:
     it is *not* a general error signal: 15 of 15 shared-target writes there are analyses
     sharing the paper's one task, six analyses sharing its one diagnostic interview, and two
     model estimations sharing its one preprocessing -- all correct. What discriminates is
-    the slot, not the pattern, so only slots whose schema description ties the target to the
-    entity are gated. See `EXCLUSIVE` and `--explain`.
+    the slot, not the pattern, so the pattern is reported and never refused. A rule narrowed
+    to `Group.diagnostic_instrument` was tried and withdrawn: on 15127179 it blocked the SCID
+    for two SUBGROUPS of the alcoholics, correctly diagnosed by it, while admitting the SCID
+    to the healthy controls.
 
-With `.agent/repair/truth/` present the reference slots recorded there are scored
-correct / wrong / invented, which is the half of R5 that applies to references.
+Whether a link points at the RIGHT entity is not answered here. It was measured once against
+papers read by hand, and the finding is in `investigation.md`: every link the pass chose
+between candidates was wrong, and every one it got right was to the only entity of its
+class.
 """
 
 from __future__ import annotations

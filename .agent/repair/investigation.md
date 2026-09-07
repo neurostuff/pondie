@@ -1,3 +1,9 @@
+> The hand-read truth set and its scorer are not in this repository. Every content
+> number below -- damage rates, yields, per-field verdicts -- came from four papers
+> read by hand and is recorded here rather than reproducible. The deterministic
+> measures (spans, provenance, findings, fills) are reproducible with
+> `.agent/repair/delta.py` and `references.py`.
+
 # Making the repair pass net positive
 
 ## Why this exists
