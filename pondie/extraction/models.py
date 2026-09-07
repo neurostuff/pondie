@@ -272,7 +272,7 @@ class Settings(Strict):
     #: place. That is either a 3B model's limit or a property of the question, and the two
     #: have different fixes. A fraction of nineteen, not a rate -- the Wilson interval runs
     #: 36% to 77%, which is wider than most of what this could move.
-    proposer_kind: Literal["local", "model"] = "model"
+    proposer_kind: Literal["local", "model"] = "local"
 
     #: How many papers may be inside the two local models at once. The stages above are
     #: network-bound and run at `workers`; these are 8 GB of card between them and do not
