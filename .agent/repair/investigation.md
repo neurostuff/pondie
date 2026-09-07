@@ -116,7 +116,7 @@ touched them and they are checkable in a few minutes per paper:
     tables[].non_analysis_content
 
 Start with 18823721 (already read closely) plus papers drawn from the cue_reactivity
-cohort. Record as `benchmarks/repair_truth/<pmid>.json`, one file per paper, with a
+cohort. Record as `.agent/repair/truth/<pmid>.json`, one file per paper, with a
 `quote` beside each value so a disagreement can be adjudicated against the text.
 
 ## Corrections from review (round 1)

@@ -1,4 +1,4 @@
-"""R5: is what repair wrote RIGHT? Scored against `benchmarks/repair_truth/`.
+"""R5: is what repair wrote RIGHT? Scored against `.agent/repair/truth/`.
 
 M1-M3 and R1-R4 say whether the pass damaged the record. None of them can say it helped.
 This one can, and only for the papers someone has read.

@@ -17,7 +17,7 @@ Four measures, all from diffing the pre- and post-repair records, none needing a
                             that writes nothing scores perfectly on M1 and zero here.
 
 M4 -- whether the values are RIGHT -- cannot be computed from the record alone and lives in
-`benchmarks/repair_truth/`.
+`.agent/repair/truth/`.
 """
 
 from __future__ import annotations

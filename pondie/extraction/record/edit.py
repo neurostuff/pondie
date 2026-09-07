@@ -96,11 +96,11 @@ UNRESTRICTED = frozenset({"whole_brain", "whole brain", "searchlight"})
 #: Sharing is the normal case everywhere else and must stay legal: over twelve papers the
 #: pass made fifteen shared-target writes -- six analyses on one SCID, three on one cue task,
 #: two model estimations on one preprocessing -- and every one of them is correct. A blanket
-#: rule would have refused all fifteen and caught neither of the two real errors.
-EXCLUSIVE_REFERENCES: frozenset[tuple[str, str]] = frozenset({
-    ("Group", "diagnostic_instrument"),
-})
-
+#: rule would have refused all fifteen and caught neither of the two real errors. A rule
+#: narrowed to `Group.diagnostic_instrument` was tried too and withdrawn: on 15127179 it
+#: blocked the SCID for two SUBGROUPS of the alcoholics, correctly diagnosed by it, while
+#: admitting the SCID to the healthy controls. Telling a sibling from a subgroup needs
+#: nesting the record does not express. `.agent/repair/references.py` reports it instead.
 
 # -------------------------------------------------------------------------------- guards
 
@@ -505,17 +505,9 @@ def _container(sch: Schema, class_name: str) -> str:
 
 def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
           entity: MutableMapping[str, Any], proposal: Mapping[str, Any],
-          text: str = "", abbreviations: Any = None,
-          claimed: MutableMapping[tuple[str, str, tuple[str, ...]], str] | None = None
+          text: str = "", abbreviations: Any = None
           ) -> EditLog:
-    """Write the slots of `proposal` this entity may take. Returns what happened.
-
-    `claimed` is the sweep's memory of which entity already took a set of targets on an
-    `EXCLUSIVE_REFERENCES` slot. It is a caller's dict rather than state here because the
-    thing being refused is a property of the sweep and not of the edit: a `Check` sees one
-    entity and one value, and what is wrong with the second write is only visible beside the
-    first. `repair._sweep` holds one per class.
-    """
+    """Write the slots of `proposal` this entity may take. Returns what happened."""
     log = EditLog()
     from pondie.extraction import recall
 
@@ -574,22 +566,6 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             value: Any = merged if _multivalued(sch, class_name, name) else merged[0]
             if value == entity.get(name):
                 continue
-            # On what is added, not on the whole slot: an entity that already held a target
-            # is not claiming it again, and the copy this refuses is an id arriving for the
-            # first time on a second entity.
-            added = tuple(sorted(r for r in resolved if r not in existing))
-            added, taken = _unclaimed(class_name, name, added, entity, claimed)
-            if taken:
-                log.refused.append(Refusal(
-                    name, f"{', '.join(taken)} already belongs to "
-                          f"{', '.join(sorted({claimed[(class_name, name, t)] for t in taken}))}"
-                          f", and this slot names what belongs to one entity", list(taken)))
-                merged = [r for r in merged if r not in taken]
-                if not merged:
-                    continue
-                value = merged if _multivalued(sch, class_name, name) else merged[0]
-                if value == entity.get(name):
-                    continue
         else:
             value = values.shape(sch, class_name, name, proposed)
             if value is None:
@@ -609,9 +585,6 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             continue
         if kinds[name] == "reference":
             entity[name] = value
-            if claimed is not None and (class_name, name) in EXCLUSIVE_REFERENCES:
-                for target in added:
-                    claimed[(class_name, name, target)] = str(entity.get("local_id") or "")
         else:
             written = _wrap(value, text, quote=cited)
             if (kept := _inherited(current, value)) is not None:
@@ -619,33 +592,6 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             entity[name] = written
         log.written.append((name, value))
     return log
-
-
-def _unclaimed(class_name: str, slot: str, added: tuple[str, ...],
-               entity: Mapping[str, Any],
-               claimed: Mapping[tuple[str, str, str], str] | None
-               ) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """`added`, split into what this entity may take and what already belongs elsewhere.
-
-    Not a `Check`: the guards judge one edit against the record, and this judges an edit
-    against what the same sweep already wrote. The first write is legitimate and only the
-    later one is a copy, which needs the caller's memory rather than the record.
-
-    Per target rather than per list, because the copy does not arrive as a copy. On 21118656
-    three groups took overlapping subsets of the same three interviews -- [CAPS, MINI, vivo],
-    [CAPS, MINI], [MINI] -- and a rule keyed on the whole list saw three different lists and
-    let all three through. On 18823721, where the list was identical, it fired.
-
-    The unclaimed part is still written rather than the whole write refused: whichever entity
-    the sweep happens to reach first takes the shared target, and refusing everything after
-    it would cost a correct link for an accident of ordering.
-    """
-    if claimed is None or not added or (class_name, slot) not in EXCLUSIVE_REFERENCES:
-        return added, ()
-    own = str(entity.get("local_id") or "")
-    taken = tuple(t for t in added
-                  if claimed.get((class_name, slot, t)) not in (None, own))
-    return tuple(t for t in added if t not in taken), taken
 
 
 def _multivalued(sch: Schema, class_name: str, slot: str) -> bool:

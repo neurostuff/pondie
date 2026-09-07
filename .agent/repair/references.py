@@ -1,6 +1,6 @@
 """R4: what a repair pass did to the reference slots, which no other measure can see.
 
-`scripts/repair_delta.py` walks `ExtractedValue` wrappers. A reference slot does not hold
+`.agent/repair/delta.py` walks `ExtractedValue` wrappers. A reference slot does not hold
 one -- it holds a bare list of `local_id` -- so it carries no evidence, no `value_source`
 and nothing a span metric can count. Every write to one is invisible to M1, M2, M3 and M5.
 
@@ -29,7 +29,7 @@ Two things here, and they are different jobs:
     the slot, not the pattern, so only slots whose schema description ties the target to the
     entity are gated. See `EXCLUSIVE` and `--explain`.
 
-With `benchmarks/repair_truth/` present the reference slots recorded there are scored
+With `.agent/repair/truth/` present the reference slots recorded there are scored
 correct / wrong / invented, which is the half of R5 that applies to references.
 """
 

@@ -4,7 +4,7 @@
 The quote is what makes a disagreement adjudicable, so a quote that is not in the paper
 makes the file worse than useless -- it looks checkable and is not. Run this after any edit:
 
-    python benchmarks/repair_truth/verify_quotes.py [CORPUS_ROOT]
+    python .agent/repair/truth/verify_quotes.py [CORPUS_ROOT]
 
 CORPUS_ROOT defaults to the location the files name in `source`; pass a directory of
 `<pmid>.txt` instead when working off a local copy.

@@ -104,7 +104,7 @@ made 6 reference-slot writes on 18823721:
     model_estimations/mod_fmri_glm.preprocessing         <- [prp_fmri]
     tasks/tsk_cue.acquisitions                           <- [acq_fmri]
 
-By the ground truth in `benchmarks/repair_truth/18823721.json`, the first four are wrong.
+By the ground truth in `.agent/repair/truth/18823721.json`, the first four are wrong.
 `diagnostic_instrument` is "The study assessment that established this group's defining
 condition"; ASI, OCDUS, DDQ and SHAPS measure drug-use history, craving and anhedonia, and
 two of them were given to the patients only ("Two measures of craving were used in all
@@ -114,7 +114,7 @@ zero times in the paper.
 
 **None of these six writes is visible to M1, M2, M3 or M5.** A reference slot holds a bare
 list of local_ids with no `ExtractedValue` wrapper, and `values.iter_fields` -- which
-`scripts/repair_delta.py` walks -- yields wrappers only. The measurement harness cannot see
+`.agent/repair/delta.py` walks -- yields wrappers only. The measurement harness cannot see
 the half of the pass where the worst errors are.
 
 ## D5 -- confirmed, and the root cause is not in `edit.py`
@@ -292,7 +292,7 @@ grounding. Three cheap refusals, each of which catches a case in the ground-trut
     antipsychotic.
 None of the three needs a model. What is left after them does need the ground truth.
 
-### On the measurement harness (`scripts/repair_delta.py`)
+### On the measurement harness (`.agent/repair/delta.py`)
 
 Its arithmetic reproduces exactly (I re-derived -16 / 26 / 10 / 26 / 31 without importing
 pondie). Three changes:
@@ -307,8 +307,8 @@ pondie). Three changes:
 
 ## Ground truth
 
-`benchmarks/repair_truth/{18823721,11058476,16038771,21118656}.json` -- 4 papers, 196 fields,
-every one carrying a verbatim quote. `benchmarks/repair_truth/verify_quotes.py` checks that
+`.agent/repair/truth/{18823721,11058476,16038771,21118656}.json` -- 4 papers, 196 fields,
+every one carrying a verbatim quote. `.agent/repair/truth/verify_quotes.py` checks that
 every quote appears in the article text; it passes 196/196. Run it after any edit.
 
 Method and judgement calls:
@@ -488,7 +488,7 @@ stored side is safe. The one collapse it does perform is deliberate: in an integ
 
 ## R4 implemented
 
-`scripts/repair_references.py` (mine; `repair_delta.py` untouched). Reference accounting,
+`.agent/repair/references.py` (mine; `repair_delta.py` untouched). Reference accounting,
 the shared-target signal, and truth-based scoring of the reference slots.
 
 **Your instinct to make the shared-target rule a refusal in `edit.py` is wrong as a blanket
@@ -524,7 +524,7 @@ R4 results:
 
 ## R5 implemented, and the A/B result you will not like
 
-`scripts/repair_score.py`. Five verdicts — I added **`inferred`** between correct and
+`.agent/repair/score.py`. Five verdicts — I added **`inferred`** between correct and
 invented, for a field the paper is silent on filled with a value the truth lists as
 defensible (`correction_scope: whole_brain` on a whole-brain acquisition). Scoring that as
 invention punishes the pass for being right; scoring it as correct hides that it must be
@@ -1067,7 +1067,7 @@ accepting for the M3 collapse it bought, but it should be named, not netted away
 
 ## Link ground truth, and your prediction falsified
 
-`benchmarks/repair_truth/*.json` now carry a `links` array: for each entity, which targets
+`.agent/repair/truth/*.json` now carry a `links` array: for each entity, which targets
 the slot may legitimately hold, judged **against the slot's own schema description** rather
 than against whether the paper mentions both ends. `verify_quotes.py` checks link quotes too;
 209 quotes, all verbatim.

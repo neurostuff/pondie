@@ -141,56 +141,6 @@ def test_shortening_a_list_is_refused_whatever_shape_it_arrives_in(sch):
     assert any("drops values" in r.why for r in log.refused)
 
 
-def test_an_exclusive_reference_is_not_copied_to_a_second_entity(sch):
-    """One target set belongs to one entity on an exclusive slot; the second copy is refused.
-
-    18823721: the pass wrote the same four questionnaires -- ASI, OCDUS, DDQ and SHAPS -- to
-    both groups as `diagnostic_instrument`, the slot the schema describes as the assessment
-    that established THIS group's condition. Two of the four were administered to the
-    patients only, and none of them established a diagnosis.
-    """
-    record = {
-        "groups": [{"local_id": "grp_patients", "name": _named("patients")},
-                   {"local_id": "grp_controls", "name": _named("controls")}],
-        "assessments": [{"local_id": "asm_caps", "name": _named("CAPS")}],
-    }
-    claimed: dict = {}
-    first = edit.apply(
-        sch, record, "Group", record["groups"][0],
-        {"local_id": "grp_patients", "diagnostic_instrument": ["CAPS"]},
-        PAPER, None, claimed)
-    second = edit.apply(
-        sch, record, "Group", record["groups"][1],
-        {"local_id": "grp_controls", "diagnostic_instrument": ["CAPS"]},
-        PAPER, None, claimed)
-    assert record["groups"][0]["diagnostic_instrument"] == ["asm_caps"]
-    assert "diagnostic_instrument" not in record["groups"][1]
-    assert [s for s, _v in first.written] == ["diagnostic_instrument"]
-    assert not second.written
-    assert "already belongs to grp_patients" in second.refused[0].why
-
-
-def test_a_shared_reference_on_an_ordinary_slot_is_still_written(sch):
-    """Sharing is how the other reference slots work, and refusing it would break them.
-
-    Over twelve papers the pass made fifteen shared-target writes -- six analyses on one
-    SCID, three on one cue task, two model estimations on one preprocessing -- and every one
-    is correct. Only the slots in `EXCLUSIVE_REFERENCES` are refused.
-    """
-    record = {
-        "model_estimations": [{"local_id": "mod_one", "name": _named("first level")},
-                              {"local_id": "mod_two", "name": _named("second level")}],
-        "preprocessings": [{"local_id": "prp_fmri", "name": _named("fmri preprocessing")}],
-    }
-    claimed: dict = {}
-    for entity, local_id in zip(record["model_estimations"], ("mod_one", "mod_two")):
-        edit.apply(sch, record, "ModelEstimation", entity,
-                   {"local_id": local_id, "preprocessing": ["fmri preprocessing"]},
-                   PAPER, None, claimed)
-    assert record["model_estimations"][0]["preprocessing"] == ["prp_fmri"]
-    assert record["model_estimations"][1]["preprocessing"] == ["prp_fmri"]
-
-
 def _named(label):
     return {"extraction_status": "extracted", "value": label, "value_source": "reported",
             "evidence": {"status": "not_found"}}
@@ -208,56 +158,6 @@ def test_a_minted_entity_does_not_stringify_its_nested_slots(sch):
         PAPER)
     assert entity is not None, why
     assert "conditions" not in entity or isinstance(entity["conditions"], list)
-
-
-def test_an_overlapping_subset_is_claimed_target_by_target(sch):
-    """The copy does not arrive as a copy.
-
-    21118656: three groups took overlapping subsets of the same interviews -- [CAPS, MINI,
-    vivo], [CAPS, MINI], [MINI]. A rule keyed on the whole list saw three different lists and
-    let all three through, so two control groups were given a diagnostic instrument for a
-    condition they do not have. Claimed per target, the second and third keep only what is
-    still free, which here is nothing.
-    """
-    record = {
-        "groups": [{"local_id": "grp_ptsd", "name": _named("PTSD")},
-                   {"local_id": "grp_controls", "name": _named("traumatized controls")}],
-        "assessments": [{"local_id": "asm_caps", "name": _named("CAPS")},
-                        {"local_id": "asm_mini", "name": _named("MINI interview")}],
-    }
-    claimed: dict = {}
-    edit.apply(sch, record, "Group", record["groups"][0],
-               {"local_id": "grp_ptsd",
-                "diagnostic_instrument": ["CAPS", "MINI interview"]}, PAPER, None, claimed)
-    log = edit.apply(sch, record, "Group", record["groups"][1],
-                     {"local_id": "grp_controls",
-                      "diagnostic_instrument": ["CAPS", "MINI interview"]},
-                     PAPER, None, claimed)
-    assert record["groups"][0]["diagnostic_instrument"] == ["asm_caps", "asm_mini"]
-    assert "diagnostic_instrument" not in record["groups"][1]
-    assert not log.written
-    assert "already belongs to grp_ptsd" in log.refused[0].why
-
-
-def test_the_part_of_a_claim_that_is_still_free_is_written(sch):
-    """Only the taken targets are withheld: refusing the whole write would cost a correct
-    link whenever the sweep happens to reach the wrong entity first."""
-    record = {
-        "groups": [{"local_id": "grp_a", "name": _named("first")},
-                   {"local_id": "grp_b", "name": _named("second")}],
-        "assessments": [{"local_id": "asm_caps", "name": _named("CAPS")},
-                        {"local_id": "asm_scid", "name": _named("SCID interview")}],
-    }
-    claimed: dict = {}
-    edit.apply(sch, record, "Group", record["groups"][0],
-               {"local_id": "grp_a", "diagnostic_instrument": ["CAPS"]}, PAPER, None, claimed)
-    log = edit.apply(sch, record, "Group", record["groups"][1],
-                     {"local_id": "grp_b",
-                      "diagnostic_instrument": ["CAPS", "SCID interview"]},
-                     PAPER, None, claimed)
-    assert record["groups"][1]["diagnostic_instrument"] == ["asm_scid"]
-    assert [s for s, _v in log.written] == ["diagnostic_instrument"]
-    assert "asm_caps already belongs to grp_a" in log.refused[0].why
 
 
 def test_a_cited_quote_grounds_a_value_too_short_to_search_for(sch):
