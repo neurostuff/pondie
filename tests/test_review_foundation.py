@@ -1727,7 +1727,7 @@ def test_normalize_number_closes_the_sign_digit_gap() -> None:
 
 # -- a coordinate table that is not an analysis -----------------------------
 #
-# `Table.non_analysis_content` is the only field that can say a table's rows are locations
+# `Table.purpose` is the only field that can say a table's rows are locations
 # rather than findings. Without it, a table deliberately not encoded and a table the
 # extraction missed are the same silence -- and `6oTrCJA43Jcd`'s ICA component peaks were
 # encoded as an analysis with a fabricated cell rather than left unowned.
@@ -1756,14 +1756,14 @@ def test_a_table_nobody_names_and_nothing_explains_is_flagged(classes: dict) -> 
 
 def test_a_table_that_says_what_it_reports_is_accepted(classes: dict) -> None:
     record = {"tables": [{"local_id": "tbl4",
-                          "non_analysis_content": _text("component_peaks")}],
+                          "purpose": _text("component_peaks")}],
               "analyses": []}
     assert _purpose_flags(record, classes) == ([], [])
 
 
 def test_a_table_cannot_both_be_an_analysis_and_not_one(classes: dict) -> None:
     record = {"tables": [{"local_id": "tbl4",
-                          "non_analysis_content": _text("component_peaks")}],
+                          "purpose": _text("component_peaks")}],
               "analyses": [{"local_id": "a1", "tables": ["tbl4"]}]}
     errors, warnings = _purpose_flags(record, classes)
     assert warnings == []
@@ -1772,13 +1772,13 @@ def test_a_table_cannot_both_be_an_analysis_and_not_one(classes: dict) -> None:
 
 def test_the_purpose_vocabulary_is_open(classes: dict, enums: dict) -> None:
     """An unanticipated purpose is written down rather than forced into the nearest value,
-    which is what `any_of: [TableContent, string]` buys."""
+    which is what `any_of: [TablePurpose, string]` buys."""
 
     validator = validate_record.Validator(classes, None, enums)
     validator.check_field(
         {"extraction_status": "extracted", "value": "a genotyping panel",
          "value_source": "reported", "evidence": {"status": "not_found"}},
-        "ExtractedTableContent", "Study.tables[0].non_analysis_content")
+        "ExtractedTablePurpose", "Study.tables[0].purpose")
     assert validator.errors == [], "an open vocabulary must not reject a free-text answer"
     assert any("open vocabulary" in w for w in validator.warnings), (
         "and it must still be reported, because off-vocabulary answers accumulating are "

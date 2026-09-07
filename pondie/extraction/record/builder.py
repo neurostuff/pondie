@@ -444,7 +444,7 @@ def apply_aliases(body: dict[str, Any], sch: Schema, aliases: dict[str, str]) ->
 def derive_table_effects(body: dict[str, Any]) -> list[str]:
     """Mark a table an analysis cites as reporting that analysis's effect.
 
-    `Table.non_analysis_content` says what a table's rows are *when they are not the foci of
+    `Table.purpose` says what a table's rows are *when they are not the foci of
     a reported effect*, and absence used to mean both "it reports results" and "nothing
     decided". A model shown eight kinds of non-analysis and no way to say "it is an
     analysis" answers with the nearest one: over twelve papers a repair pass marked 18 of 19
@@ -472,14 +472,14 @@ def derive_table_effects(body: dict[str, Any]) -> list[str]:
         local_id = str(value_tools.read(table.get("local_id")) or "")
         if local_id not in cited:
             continue
-        held = value_tools.read(table.get("non_analysis_content"))
+        held = value_tools.read(table.get("purpose"))
         if held == "reported_effect":
             continue
         # An analysis cites it, so any other kind contradicts the record rather than
         # describing it -- which is the contradiction `check_table_content` reports.
-        table["non_analysis_content"] = value_tools.wrap(
+        table["purpose"] = value_tools.wrap(
             "reported_effect", source="generated", evidence="not_applicable")
-        filled.append(f"tables[{index}].non_analysis_content"
+        filled.append(f"tables[{index}].purpose"
                       + (f": was {held!r}" if held else ""))
     return filled
 

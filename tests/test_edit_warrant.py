@@ -180,7 +180,7 @@ def test_a_cited_quote_grounds_a_value_too_short_to_search_for(sch):
 
 
 def test_a_table_an_analysis_cites_reports_that_analysis_effect():
-    """`non_analysis_content` says what a table's rows are when they are NOT the foci of a
+    """`purpose` says what a table's rows are when they are NOT the foci of a
     reported effect, and absence meant both "it reports results" and "nothing decided". A
     proposer shown eight kinds of non-analysis and no way to say "it is an analysis" picks
     the nearest: over twelve papers it marked 18 of 19 tables, and 16 of those were cited by
@@ -192,16 +192,16 @@ def test_a_table_an_analysis_cites_reports_that_analysis_effect():
         "analyses": [{"local_id": "a1", "tables": ["tbl1"]}],
         "tables": [{"local_id": "tbl1"},
                    {"local_id": "tbl2",
-                    "non_analysis_content": {"extraction_status": "extracted",
+                    "purpose": {"extraction_status": "extracted",
                                              "value": "demographics",
                                              "value_source": "reported",
                                              "evidence": {"status": "present"}}}],
     }
     filled = builder.derive_table_effects(body)
-    assert values.read(body["tables"][0]["non_analysis_content"]) == "reported_effect"
-    assert body["tables"][0]["non_analysis_content"]["value_source"] == "generated"
+    assert values.read(body["tables"][0]["purpose"]) == "reported_effect"
+    assert body["tables"][0]["purpose"]["value_source"] == "generated"
     # tbl2 is cited by nothing, so its own answer stands
-    assert values.read(body["tables"][1]["non_analysis_content"]) == "demographics"
+    assert values.read(body["tables"][1]["purpose"]) == "demographics"
     assert filled
 
 
@@ -210,4 +210,4 @@ def test_the_proposer_is_not_asked_for_a_derived_table_kind():
     almost every table it was shown, and the right answer is usually to say nothing."""
     from pondie.extraction import recall
 
-    assert "non_analysis_content" in recall._SKIP
+    assert "purpose" in recall._SKIP

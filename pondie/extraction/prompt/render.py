@@ -528,7 +528,7 @@ def stage1_block(
         "demographics, descriptive means with no test. Such a table has no comparison, so",
         "`Effect.cells` cannot be filled honestly, and inventing a cell to satisfy it is worse",
         "than emitting no analysis. Say what the table is in that Table's",
-        "`non_analysis_content` instead, and put the coordinates on the entity they locate --",
+        "`purpose` instead, and put the coordinates on the entity they locate --",
         "a Region's `description` -- rather than on a contrast that never produced them.",
         "Omitting is not for an effect that is merely awkward to encode: an effect the paper",
         "tested belongs in `analyses` however hard its shape.",

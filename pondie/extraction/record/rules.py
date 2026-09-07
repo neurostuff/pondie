@@ -826,7 +826,7 @@ def _chain_terms(model_id: Any,
 def check_table_purpose(record: Mapping[str, Any], findings: Findings) -> None:
     """A coordinate table either reports an analysis or says what it does instead.
 
-    `Table.non_analysis_content` is the only field that can say a table's rows are
+    `Table.purpose` is the only field that can say a table's rows are
     locations rather than findings -- ROI definitions, atlas parcels, the peaks of an
     ICA's components. Two things follow, and the second is the one worth having:
 
@@ -854,17 +854,17 @@ def check_table_purpose(record: Mapping[str, Any], findings: Findings) -> None:
             continue
         local_id = table.get("local_id")
         path = f"tables[{index}]"
-        marked = values.read(table.get("non_analysis_content"))
+        marked = values.read(table.get("purpose"))
         if marked and local_id in referenced:
             findings.error(
-                f"{path}.non_analysis_content",
+                f"{path}.purpose",
                 f"says this table reports {marked!r} rather than an effect, but an "
                 "analysis names it in `tables`",
             )
         elif not marked and local_id not in referenced:
             findings.warn(
                 path,
-                "no analysis names this table and non_analysis_content is empty, so "
+                "no analysis names this table and purpose is empty, so "
                 "nothing says whether it was deliberately not encoded or missed",
             )
 

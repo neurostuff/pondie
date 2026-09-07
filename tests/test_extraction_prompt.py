@@ -200,7 +200,7 @@ def test_the_analyses_pass_may_split_and_decline_a_stage_one_entry() -> None:
     )
     assert "SPLIT" in block and "OMIT" in block
     assert "do not drop any" not in block, "the instruction that forbade both must be gone"
-    assert "non_analysis_content" in block, "a declined table has somewhere to say what it is"
+    assert "purpose" in block, "a declined table has somewhere to say what it is"
 
 
 def test_the_stage_one_block_requires_the_table_local_id() -> None:

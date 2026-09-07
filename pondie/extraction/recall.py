@@ -79,7 +79,7 @@ _SKIP = frozenset({"id", "mirror_of", "source_table_analysis", "defines_regions"
                    # absent, the vocabulary has no token for "this is an analysis", and a
                    # proposer shown a key with eight choices picks one. It marked 18 of 19
                    # tables over twelve papers, 16 of them cited by an analysis.
-                   "non_analysis_content"})
+                   "purpose"})
 
 #: Which template variants are in play, from `PONDIE_TEMPLATE` -- a comma-separated set of
 #: `described`, `quoted`, `scoped`. Empty is the shape every measurement in
