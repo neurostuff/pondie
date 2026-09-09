@@ -106,7 +106,16 @@ class Stamp:
 
     @staticmethod
     def path_for(output: Path) -> Path:
-        return output.with_name(output.name + ".stamp.json")
+        """A `.stamps/` subdirectory, not a sibling file.
+
+        `builder.merge_payloads` globs `<payload_dir>/*.json` and merges everything it
+        finds, which the `Tables` and `Repair` docstrings both record as a trap already
+        sprung once -- a report written there arrived in the next build as unexpected
+        payload keys. A stamp named `demands.json.stamp.json` walks into it. The glob is not
+        recursive, so a subdirectory is invisible to it, and the stamp stays next to what it
+        describes rather than in a directory of its own somewhere else.
+        """
+        return output.parent / ".stamps" / (output.name + ".json")
 
     @classmethod
     def read(cls, output: Path) -> "Stamp | None":

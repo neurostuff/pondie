@@ -251,3 +251,13 @@ def test_the_summary_counts_items_rather_than_outcomes(tmp_path):
 
 def test_an_empty_run_is_not_an_error(tmp_path):
     assert execute([], [], progress=False).tally() == {}
+
+
+def test_a_stamp_is_invisible_to_a_glob_of_the_output_directory(tmp_path):
+    """`builder.merge_payloads` globs `<payload_dir>/*.json` and merges what it finds. A
+    stamp beside the payload is a file that glob picks up -- the trap the `Tables` and
+    `Repair` docstrings each record having been caught by once."""
+    w = Work(tmp_path)
+    run([1], [w.step()])
+    assert Stamp.read(w.produces(1)) is not None, "the stamp must still be findable"
+    assert sorted(p.name for p in tmp_path.glob("*.json")) == ["1.json"]
