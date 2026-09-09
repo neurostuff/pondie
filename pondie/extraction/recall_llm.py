@@ -47,7 +47,7 @@ Below is a JSON template and a paper. Return ONE JSON object matching the templa
 
 
 class ModelProposer(_Proposes):
-    """The `Proposer`, backed by the same served model the extraction passes use."""
+    """The proposer: the same served model the extraction passes use."""
 
     def __init__(
         self,

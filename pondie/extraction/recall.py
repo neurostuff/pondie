@@ -16,42 +16,21 @@ entities it may point at. Two properties of that are load-bearing:
     `diagnostic_instrument` targets an Assessment -- offered no assessments, and the model
     named the instrument in prose instead. A second copy of it was then created.
 
-`Proposer` is a protocol and the pass takes `None`: the weights are optional, and the
-deterministic half of a repair is most of its value.
+The pass takes no proposer at all when it is given none, and the deterministic half of a
+repair is most of its value. `recall_llm.ModelProposer` is the only one; the `Proposer`
+protocol that once said what a second implementation would have to satisfy went with the
+local models, having outlived the arm it was written for.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Any, Mapping, Protocol, Sequence
+from typing import Any, Mapping, Sequence
 
 from pondie.extraction.record.edit import label_of
 from pondie.formats import values
 from pondie.schema.reader import Schema
 
-
-class Proposer(Protocol):
-    """Returns entities of `class_name` the paper describes, as flat dicts.
-
-    `ask` is on the protocol and not an implementation detail of the one proposer, because
-    a caller may want a template of its own. A stub carrying only `propose` satisfied the
-    type and then failed at the second caller -- the shape of stub that has twice let a real
-    fault reach a live run here.
-
-    One implementer since the local models went: `recall_llm.ModelProposer`.
-    """
-
-    def propose(
-        self, sch: Schema, class_name: str, premise: str, instruction: str
-    ) -> Sequence[Mapping[str, Any]]: ...
-
-    def ask(
-        self, template: Mapping[str, Any], instruction: str, premise: str, what: str = ""
-    ) -> Mapping[str, Any]: ...
-
-
-#: LinkML range -> the type a template declares. Anything unmapped becomes a string, which
-#: is the safe default: a wrong type costs a field and a wrong *shape* costs the reply.
 _TYPES = {
     "string": "string",
     "integer": "integer",
