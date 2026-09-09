@@ -33,17 +33,13 @@ from pondie.schema.reader import Schema
 class Proposer(Protocol):
     """Returns entities of `class_name` the paper describes, as flat dicts.
 
-    `local` says whether proposing occupies this process's GPU. `repair` bounds concurrency
-    over the local models, and a served proposer belongs outside that bound: throttling it
-    serialises a wait on the network for the sake of a card it never touches.
+    `ask` is on the protocol and not an implementation detail of the one proposer, because
+    a caller may want a template of its own. A stub carrying only `propose` satisfied the
+    type and then failed at the second caller -- the shape of stub that has twice let a real
+    fault reach a live run here.
 
-    `ask` is on the protocol and not an implementation detail of `NuExtract`, because
-    `evidence.relocate` calls it with its own template. A stub carrying only `propose`
-    satisfied the type and then failed at the second caller -- the shape of stub that has
-    twice let a real fault reach a live run here.
+    One implementer since the local models went: `recall_llm.ModelProposer`.
     """
-
-    local: bool
 
     def propose(
         self, sch: Schema, class_name: str, premise: str, instruction: str
@@ -54,9 +50,8 @@ class Proposer(Protocol):
     ) -> Mapping[str, Any]: ...
 
 
-#: LinkML range -> the type NuExtract templates use. Anything unmapped becomes a string,
-#: which is the safe default: NuExtract validates its own output against the template, so a
-#: wrong type costs a field and a wrong *shape* costs the reply.
+#: LinkML range -> the type a template declares. Anything unmapped becomes a string, which
+#: is the safe default: a wrong type costs a field and a wrong *shape* costs the reply.
 _TYPES = {
     "string": "string",
     "integer": "integer",
@@ -190,7 +185,7 @@ def vocabulary(sch: Schema, class_name: str) -> str:
     limit = 1_400
     """What the enum tokens in this class's template mean, for the instruction beside it.
 
-    A NuExtract template is a type skeleton: `condition_kind` arrives as
+    A template is a type skeleton: `condition_kind` arrives as
     `["task_state", "rest", "fixation", "control_state"]` and the schema's careful prose
     about each never reaches the model. Asked to classify four picture-viewing conditions
     from those four words, it answered `fixation` for three of them.
@@ -246,7 +241,7 @@ def _vocabulary_lines(sch: Schema, class_name: str, prefix: str) -> list[str]:
 
 
 def template_for(sch: Schema, class_name: str) -> dict:
-    """The NuExtract template for one class, projected from the schema.
+    """The template for one class, projected from the schema.
 
     `local_id` first, so the reply reads as an edit list. It is offered on every class and
     not only on Analysis: without it the model can name an entity but never address one, so

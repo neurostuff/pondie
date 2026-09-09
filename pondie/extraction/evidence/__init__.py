@@ -1,10 +1,11 @@
 """Warranting a value: which characters of the paper say so.
 
     quote      ask the model for a supporting quote, and put a block on every field
-    retrieval  a second locator that runs locally, unioned with the first
+    retrieval  sentence and section machinery; only `sectionize` still has callers
 
-Two locators rather than one because they fail differently, and the union was measured:
-handing the model a retrieved shortlist instead of the whole paper cost 21 points. The
-retriever is an enhancement and stays optional -- a host without torch does the quote pass
-and says so, rather than taking the stage down. See docs/evidence-union-design.md.
+`quote` is the locator. There was a second one that ranked sentences locally and was unioned
+with it -- handing the model a retrieved shortlist instead of the whole paper cost 21 points,
+so the union was the measured answer. It went with the local models, and what is left of
+`retrieval` is the text-splitting `repair` and `grounding` still use.
+See docs/evidence-union-design.md.
 """

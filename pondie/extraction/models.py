@@ -53,9 +53,8 @@ class StageName(str, Enum):
     fill = "fill"
     evidence = "evidence"
     build = "build"
-    #: After `build`, on the record rather than on a payload. Off unless asked for: it wants
-    #: a GPU for the local models, or a model call for the adjudication, and a run that
-    #: wants neither should not pay for either.
+    #: After `build`, on the record rather than on a payload. It costs model calls for the
+    #: proposal sweep and the adjudication, so a run that wants neither turns it off.
     repair = "repair"
 
 
@@ -184,10 +183,9 @@ class Settings(Strict):
     zero_foci_rule: bool = True
     #: Passed to every call this run makes. See `ModelCall.service_tier`; off by default.
     service_tier: Literal["", "flex", "default", "priority"] = ""
-    #: Ask a local model for the entities and links the extraction missed, and ground its
-    #: proposals before writing them. On by default, and degrades rather than fails: where
-    #: `pondie[repair]` or a GPU is missing, the stage says so once and carries on with the
-    #: adjudication, which needs neither.
+    #: Ask the model for the entities and links the extraction missed. On by default, and
+    #: degrades rather than fails: with no caller the stage says so once and runs the
+    #: deterministic half, which needs none.
     repair: bool = True
     #: Sweeps over the record. Two, because the first pass creates the entities the second
     #: can link to: a region proposed in pass one is a candidate an analysis can name in pass

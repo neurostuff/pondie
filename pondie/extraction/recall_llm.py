@@ -14,8 +14,9 @@ the extraction pass itself uses.
 Read it for direction, not for a difference: four papers cannot separate two arms less than
 about twenty points apart, which is most of the range this could plausibly move.
 
-Deliberately the same `ask` contract as `NuExtract`, so `propose` is inherited unchanged
-from `_Proposes` and the only variable between arms is which model answers.
+The same `ask` contract the protocol declares, so `propose` is inherited unchanged from
+`_Proposes`. It was written as one arm of a comparison against a local NuExtract; that arm
+is gone, and this is now the only proposer.
 """
 
 from __future__ import annotations
@@ -28,7 +29,7 @@ from typing import Any
 from pondie.extraction.models import Cost, ModelCall
 from pondie.extraction.recall import _NOUN, INSTRUCTION, _Proposes, directive, template_for
 
-#: What a served or local NuExtract gets from its chat template and a chat model does not:
+#: What a template-native model gets from its chat template and a chat model does not:
 #: the template is the shape of the answer, not an example of one.
 SHAPE = """\
 Below is a JSON template and a paper. Return ONE JSON object matching the template exactly.
@@ -39,20 +40,14 @@ Below is a JSON template and a paper. Return ONE JSON object matching the templa
   * `local_id` addresses an entity the record already holds. Copy one you were shown under
     "Already extracted"; do not invent one.
 """
-# Says nothing about which entity a value belongs to, deliberately. That instruction is
-# `recall.SCOPED`, added to BOTH proposers by `PONDIE_TEMPLATE=scoped` or to neither:
-# carried here it would make this arm differ from the local one in prompt as well as in
-# model, and the arm exists to vary the model alone. Kept as a comment and not as part of
-# the literal -- written inside it once, and the model was sent our reasoning about the
-# experiment along with its instructions.
+# Says nothing about which entity a value belongs to. There was an instruction that did --
+# `recall.SCOPED`, behind `PONDIE_TEMPLATE=scoped` -- and it went with the experiment it was
+# an arm of. Note it here rather than in the literal: written inside it once, and the model
+# was sent our reasoning about the experiment along with its instructions.
 
 
 class ModelProposer(_Proposes):
-    """A `Proposer` backed by the network model rather than by weights on a card."""
-
-    #: Not local: `repair` bounds concurrency over the cards, and throttling this one would
-    #: serialise a wait on the network for a GPU it never touches. See `Proposer.local`.
-    local = False
+    """The `Proposer`, backed by the same served model the extraction passes use."""
 
     def __init__(
         self,
@@ -70,7 +65,7 @@ class ModelProposer(_Proposes):
         self._service_tier = service_tier
         self._effort = effort
         self._max_chars = max_chars
-        #: What this proposer spent. A local proposer costs a card and nothing a ledger can
+        #: What this proposer spent. A local proposer cost a card and nothing a ledger can
         #: see, so `repair` only ever recorded the adjudication's cost -- and a network
         #: proposer put its whole spend outside the run's accounting. The first Luna arm
         #: reported 0 calls and 0 tokens for a stage that had made hundreds.
@@ -79,7 +74,7 @@ class ModelProposer(_Proposes):
     def ask(
         self, template: Mapping[str, Any], instruction: str, premise: str, what: str = ""
     ) -> Mapping[str, Any]:
-        """One templated generation. Same contract as `NuExtract.ask`, different transport."""
+        """One templated generation, against the served model."""
         prompt = (
             (directive(what) if what in _NOUN or what == "Analysis" else "")
             + INSTRUCTION

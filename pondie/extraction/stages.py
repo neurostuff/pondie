@@ -658,16 +658,15 @@ class Evidence(_Base):
     wrote, and those payloads are rewritten in place. `noev/` is a copy taken first, so the
     stage can be re-run without re-running `satisfy`.
 
-    Network only. The model reads the whole paper -- handing it a retrieved shortlist
-    instead was measured and cost 21 points -- and what it cannot place is left `not_found`
-    for `repair` to go looking for with the local models.
+    The model reads the whole paper -- handing it a retrieved shortlist instead was measured
+    and cost 21 points -- and what it cannot place is left `not_found` for `repair` to go
+    looking for.
 
-    The local locator used to run here too, and moving it out is what makes this stage
-    re-runnable in isolation. A stage that spends tokens *and* holds a card can have neither
-    half improved without paying for the other: when the retriever got 5.4x faster mid-run,
-    the 353 papers already extracted could not take the improvement without re-running the
-    quote pass, and the corpus ended up built two ways. Network work and card work now sit in
-    different stages so either can be redone on its own.
+    A second, local locator used to run here and was unioned with this one. It is gone, but
+    the reason it was moved out first still holds: a stage that spends tokens *and* holds a
+    card can have neither half improved without paying for the other. When the retriever got
+    5.4x faster mid-run, the 353 papers already extracted could not take the improvement
+    without re-running the quote pass, and the corpus ended up built two ways.
     """
 
     name: StageName = StageName.evidence
@@ -929,11 +928,11 @@ class Repair(_Base):
     `done()` keys on that rather than on the record, which already exists by the time this
     starts.
 
-    Both halves are on by default and they are independent, so a run without a GPU still
-    resolves what the paper plainly answers. The local models are an optional dependency, and
-    a missing one is a note rather than a failure: a record that could not be improved is the
-    record `build` wrote, which is a worse outcome than repairing it and a much better one
-    than losing the paper.
+    Both halves -- the proposal sweep and the adjudication -- are on by default and
+    independent, so a run given no caller still applies the deterministic repairs. A missing
+    half is a note rather than a failure: a record that could not be improved is the record
+    `build` wrote, which is a worse outcome than repairing it and a much better one than
+    losing the paper.
     """
 
     name: StageName = StageName.repair
@@ -974,8 +973,6 @@ class Repair(_Base):
         if not kept.is_file():
             kept.parent.mkdir(parents=True, exist_ok=True)
             kept.write_text(record_path.read_text(), encoding="utf-8")
-        # The local locator, moved here from `evidence` so every card-bound pass sits in one
-        # stage. Optional like the rest: a host without torch repairs without it.
         # `text_index.load`, not `read_text`: every offset in the record is measured against
         # the normalized text and hashed into `source_text_hash`, so a span this pass writes
         # against the raw file would address a different string. `Paper.text` is a property
@@ -1040,9 +1037,9 @@ class Repair(_Base):
         # paper would discard the whole extraction over a field a reviewer can see.
         # `cost` only where there was one: an adjudication that found no contradiction makes
         # no call, and StageOutcome's own default is the empty Cost.
-        # The proposer's spend as well as the adjudication's. A local proposer costs a card
-        # and nothing a ledger can see, which is why only the adjudication was ever summed;
-        # a network proposer bills per class per paper, and the first arm to use one
+        # The proposer's spend as well as the adjudication's. The local proposer this
+        # replaced cost a card and nothing a ledger could see, which is why only the
+        # adjudication was ever summed; a served proposer bills per class per paper, and
         # reported 0 calls for a stage that had made hundreds.
         spent = report.cost
         proposed = getattr(proposer, "cost", None)

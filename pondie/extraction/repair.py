@@ -3,20 +3,21 @@
 Runs after `build`, on a record that already exists, and changes it in place. Four steps,
 narrowing at each one:
 
-  1. **propose** -- a local model reads the methods and results and returns entities of one
+  1. **propose** -- the model reads the methods and results and returns entities of one
      class at a time, with the entities it may point at listed per reference slot.
-  2. **ground** -- a local entailment model scores each proposal against the passage offered
-     for it, so a proposal with no warrant is not written.
-  3. **guard** -- `record.edit` refuses the writes that would damage the record, and says
-     why. Every write goes past it, step 4 included.
-  4. **adjudicate** -- what is left is a contradiction the record cannot settle from its own
-     contents. That goes to the extraction model, once, with the paper, and its answer is
-     written through the same guards as everything else.
+  2. **guard** -- `record.edit` refuses the writes that would damage the record, and says
+     why. Every write goes past it, step 3 included.
+  3. **adjudicate** -- what is left is a contradiction the record cannot settle from its own
+     contents. That goes to the model, once, with the paper, and its answer is written
+     through the same guards as everything else.
 
-Every step is optional. With no proposer there is nothing to propose and
-nothing to ground, and the stage does only step 4; with `adjudicate` off it does nothing at
-all. This is deliberate: the local models want a GPU, and a run without one should still be
-able to resolve what the paper plainly answers.
+There used to be a **ground** step between 1 and 2: a local entailment model scored each
+proposal against the passage offered for it. It went with the local models, and the guards
+are now the only thing standing between a proposal and the record -- which is why
+`refuses_an_unwarranted_replacement` exists.
+
+Both steps are optional. With no proposer there is nothing to propose and the stage does
+only the adjudication; with `adjudicate` off it does neither.
 """
 
 from __future__ import annotations
@@ -274,7 +275,7 @@ def run(
     # text when it finds nothing, which is the honest behaviour for a paper it cannot split.
     premise = _premise(text)
     # No gate: the proposer answers over the network, so the sweep is a wait rather than
-    # work on a card this process holds. It was a semaphore around a local model.
+    # work this process does. This was a semaphore back when the proposer held a card.
     for _pass in range(iterations if proposer is not None else 0):
         before_pass = len(report.written)
         _sweep(record, premise, text, sch, proposer, report, abbreviations, study_id)
