@@ -487,3 +487,32 @@ def test_a_derived_id_already_taken_leaves_both_alone():
     notes = br.derive_analysis_ids(body)
     assert body["analyses"][1]["local_id"] == "a_other"
     assert notes and "already taken" in notes[0]
+
+
+def test_every_repair_names_a_stage_that_runs():
+    """A repair with no group never runs, and nothing would say so: `apply_all` filters by
+    stage and a typo simply matches nothing."""
+    from pondie.extraction.record import repairs as r
+
+    groups = set(r.AFTER_DEMANDS) | set(r.AFTER_SATISFY) | set(r.AFTER_FILL) | set(r.AT_MERGE)
+    for repair in r.build_sequence():
+        assert repair.stage in groups, f"{repair.name} is tagged {repair.stage!r}, which no group runs"
+
+
+def test_each_repair_runs_exactly_once_across_the_stages():
+    """The groups partition the sequence apart from `shape`, which is idempotent and runs
+    wherever a pass has written. `mirrored` appends the reversed half with no existence
+    check, so a repair running twice would duplicate analyses -- measured: 6 -> 9 -> 12 on
+    347jHLHiWNjT."""
+    from collections import Counter
+    from pondie.extraction.record import repairs as r
+
+    ran = Counter()
+    for group in (r.AFTER_DEMANDS, r.AFTER_SATISFY, r.AFTER_FILL, r.AT_MERGE):
+        for repair in r.build_sequence():
+            if repair.stage in group:
+                ran[repair.name] += 1
+    once = {n: c for n, c in ran.items() if c != 1}
+    shape = {repair.name for repair in r.build_sequence() if repair.stage == "shape"}
+    assert set(once) <= shape, f"a non-idempotent repair runs more than once: {once}"
+    assert ran["mirrored"] == 1, "mirrored appends and must run exactly once"

@@ -1579,8 +1579,14 @@ def build(
     # The order and its constraints live in `record/repairs.py` as data, and are
     # checked before anything runs. They were nine consecutive statements with the
     # constraints in comments beside them, which states an ordering without enforcing it.
+    #
+    # `AT_MERGE` and not everything: a repair reading one payload has already run beside the
+    # pass that wrote it, so what is left here is the group that needs analyses, entities and
+    # tables together. Running the earlier groups again would be harmless for the idempotent
+    # ones and wrong for `mirrored`, which appends.
     log = repairs.apply_all(
-        body, repairs.Context(schema=sch, stage1=stage1, table_map=table_map)
+        body, repairs.Context(schema=sch, stage1=stage1, table_map=table_map),
+        stage=repairs.AT_MERGE,
     )
     report.repair_log = log
 

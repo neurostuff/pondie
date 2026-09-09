@@ -284,6 +284,12 @@ class _ModelPass(_Base):
     """A stage whose work is one model call. Subclasses supply the prompt mode."""
 
     mode: str = ""
+    #: The deterministic repairs whose inputs this pass's own payload holds, run on it
+    #: before it is written. They used to wait for the merge at `build`, two stages after
+    #: `fill` asks a model about the very slots they fill: over 15 papers, 215 of the 1,774
+    #: slots offered were repairable, 100 of them `source_table_analysis` -- a join key read
+    #: off the stage-1 parse, which a model can only guess at.
+    repair_stage: tuple[str, ...] = ()
 
     def context(self, paper: Paper, settings: Settings) -> str:
         return ""
@@ -397,6 +403,8 @@ class _ModelPass(_Base):
         # re-ask a model about.
         outcome_notes += [f"suspect: {w}" for w in render.design_model_mismatch(payload)]
 
+        outcome_notes += self._repair(paper, payload)
+
         return StageOutcome(
             stage=self.name,
             study_id=paper.study_id,
@@ -406,6 +414,23 @@ class _ModelPass(_Base):
             produced=(self._write(paper, settings, payload),),
         )
 
+    def _repair(self, paper: Paper, payload: dict) -> list[str]:
+        """The payload-local repairs, run where their inputs are rather than at the merge."""
+        if not self.repair_stage:
+            return []
+        from pondie.extraction.record import repairs
+
+        log = repairs.apply_all(
+            payload,
+            repairs.Context(
+                schema=reader.load(schema.STORAGE),
+                stage1=paper.parse if paper.parse.is_file() else None,
+                table_map=paper.table_map if paper.table_map.is_file() else None,
+            ),
+            stage=self.repair_stage,
+        )
+        return [f"repaired {name}: {len(lines)}" for name, lines in log.entries if lines]
+
 
 @dataclass(frozen=True)
 class Demands(_ModelPass):
@@ -413,6 +438,7 @@ class Demands(_ModelPass):
 
     name: StageName = StageName.demands
     mode: str = "demands"
+    repair_stage: tuple[str, ...] = ("shape", "demands")
 
     def context(self, paper: Paper, settings: Settings) -> str:
         """The stage-1 parse, rendered as instructions rather than dumped as JSON.
@@ -476,6 +502,7 @@ class Satisfy(_ModelPass):
 
     name: StageName = StageName.satisfy
     mode: str = "satisfy"
+    repair_stage: tuple[str, ...] = ("shape", "satisfy")
 
     def declared(self, paper: Paper, settings: Settings) -> Sequence[Mapping[str, Any]]:
         demands = Demands().produces(paper, settings)
@@ -585,6 +612,17 @@ class Fill(_Base):
                 if reply.stop_reason and reply.stop_reason != "stop":
                     notes.append(f"{target.name} round {round_number} stopped on "
                                  f"{reply.stop_reason}")
+                # Shape only, and after each round: the loop writes values from a model
+                # reply, so a numeric string or a lone scalar in a multivalued slot arrives
+                # here exactly as it does from `satisfy`. These are idempotent, which is
+                # what lets them run per round rather than once.
+                from pondie.extraction.record import repairs as _repairs
+
+                _repairs.apply_all(
+                    payload,
+                    _repairs.Context(schema=reader.load(schema.STORAGE)),
+                    stage=_repairs.AFTER_FILL,
+                )
                 target.write_text(
                     json.dumps(payload, indent=1, ensure_ascii=False) + "\n",
                     encoding="utf-8")
