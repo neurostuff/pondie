@@ -47,6 +47,95 @@ Rules:
    from, not a sentence containing the term."""
 
 
+#: Sentence enders, for lifting the clause a value sits in out of the document.
+_BREAK = re.compile(r"(?<=[.!?])\s|\n")
+
+#: A value is worth searching for only if it has some substance. A one-character value
+#: is a token that occurs everywhere; a boolean is a classification the paper never
+#: spells, and rule 5 of SYSTEM is about exactly that case.
+_TRIVIAL = frozenset({"true", "false", "none", "null", "0", "1", "yes", "no"})
+
+
+def _anchored(value: str) -> re.Pattern[str] | None:
+    """`value` as a pattern that will not match inside a longer token.
+
+    `spans._tolerant_pattern` joins tokens with `\\s+` and anchors nothing, which is
+    right for a model's quote -- a long span whose edges are already unambiguous -- and
+    wrong here. Searching for a bare `3` with it hits the `3` in `13`, `0.35` and
+    `Figure 3b`, so a value could look unique while matching something else entirely.
+    The boundary goes on only where the edge character can carry one: a value starting
+    `(` has no word boundary to its left.
+    """
+    tokens = [re.escape(t) for t in str(value).split()]
+    if not tokens:
+        return None
+    body = r"\s+".join(tokens)
+    left = r"\b" if re.match(r"\w", str(value)[0]) else ""
+    right = r"\b" if re.search(r"\w$", str(value)) else ""
+    try:
+        return re.compile(left + body + right, re.IGNORECASE)
+    except re.error:
+        return None
+
+
+def _clause(text: str, start: int, end: int, cap: int = 400) -> str:
+    """The sentence `text[start:end]` sits in, clipped to `cap` characters."""
+    lo = 0
+    for m in _BREAK.finditer(text, max(0, start - cap), start):
+        lo = m.end()
+    hi = len(text)
+    m = _BREAK.search(text, end, min(len(text), end + cap))
+    if m:
+        hi = m.start()
+    return text[max(lo, start - cap):min(hi, end + cap)].strip()
+
+
+def literal_quotes(payload: dict[str, Any], text: str) -> dict[str, str]:
+    """Quotes for the fields whose own value occurs exactly once in the paper.
+
+    The Evidence pass asks a model to copy a supporting sentence for every extracted
+    field. For a value that appears once and only once in the document, that sentence is
+    determined -- there is nothing to judge, and a call spent on it buys a slower copy of
+    what `str.find` returns. Measured over the 89 records of `depression-full`, a sixth of
+    all model-placed spans are on values of exactly this kind.
+
+    Uniqueness is the safety condition, and it replaces the twenty-character floor
+    `record/edit.py:_wrap` uses. That floor exists because a *bare short value* cannot be
+    searched for safely; it is the wrong test, because it rejects `3 T` and `SPM12`, which
+    are short and perfectly locatable, while admitting any long string that happens to
+    repeat. What has to be unambiguous is the span this returns, not the value that found
+    it -- so the value is matched on word boundaries, must occur once, and the clause
+    lifted around it must itself be long enough for `build_record` to resolve.
+
+    Silent on anything it cannot settle. A value that is absent, repeated, listed, or
+    trivial is simply left out, and the caller sends it to the model as before.
+    """
+    out: dict[str, str] = {}
+    for path, field in iter_fields(payload):
+        if field.get("extraction_status") != "extracted":
+            continue
+        value = field.get("value")
+        # A list is one wrapper over many facts and no single clause carries them all.
+        if isinstance(value, (list, dict, bool)) or value is None:
+            continue
+        rendered = str(value).strip()
+        if len(rendered) < 2 or rendered.casefold() in _TRIVIAL:
+            continue
+        pattern = _anchored(rendered)
+        if pattern is None:
+            continue
+        found = list(pattern.finditer(text))
+        if len(found) != 1:
+            continue
+        quote = _clause(text, found[0].start(), found[0].end())
+        # Short clauses go to the model. `build_record` locates a quote by matching it in
+        # the document, so a fragment that is itself ambiguous trades one guess for another.
+        if len(quote) < 20 or text.count(quote) != 1:
+            continue
+        out[path] = quote
+    return out
+
+
 def iter_fields(node: Any, path: str = ""):
     """Every ExtractedValue in a payload, with the dotted path build_record reports."""
 
@@ -137,6 +226,7 @@ def apply_evidence(
     quotes: dict[str, str],
     reranker: Any = None,
     units: Sequence[str] = (),
+    literal: frozenset[str] | set[str] = frozenset(),
 ) -> EvidenceCounts:
     """Put an evidence block on every field of a payload, in place.
 
@@ -164,8 +254,12 @@ def apply_evidence(
         quote = quotes.get(path)
         # Labelled, not just ordered. The two sets were already two different locators, but
         # only by position, so nothing downstream could say which warranted a value or count
-        # how often each was right.
-        sets = [{"source": "model_quote", "quotes": [quote]}] if quote else []
+        # how often each was right. `literal` names the paths `literal_quotes` settled
+        # before the model was asked: calling those `model_quote` would claim a reading
+        # that never happened, on the one field whose whole purpose is telling the
+        # locators apart.
+        source = "literal_match" if path in literal else "model_quote"
+        sets = [{"source": source, "quotes": [quote]}] if quote else []
         second = (
             union_span(reranker, units, path, field, owner_of.get(path, ""), quote)
             if reranker
