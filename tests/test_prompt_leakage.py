@@ -73,7 +73,8 @@ def static_prompt_sources() -> dict[str, str]:
         # The preprocessing digests' preambles. Their bodies are derived from the paper
         # and so are input, but the headings and cautions around them are as static as
         # SYSTEM_HEAD and a gold phrase written into one would leak the same way.
-        "preprocess.py prompt literals": "\n".join(preprocess.PROMPT_LITERALS),
+        "preprocess.PROSE_COORD_TITLE": preprocess.PROSE_COORD_TITLE,
+        "preprocess.PROSE_COORD_NOTE": preprocess.PROSE_COORD_NOTE,
         # The repair proposers' static halves. Neither was listed here, and an explanation
         # of the experiment written inside `SHAPE`'s literal rather than beside it was sent
         # to the model as part of its instructions before anything noticed.

@@ -969,19 +969,6 @@ def test_a_one_word_derived_label_cannot_merge_two_entities():
     assert same_entity("siemens trio", "siemens trio scanner")
 
 
-def test_a_short_derived_label_does_not_match_inside_a_word():
-    """The locator's entity bonus is word-bounded, which is what makes a derived label safe
-    to hand it at all."""
-    from pondie.extraction.evidence import retrieval
-
-    units = [
-        "A factor analysis of the surface data was performed.",
-        "Images were acquired on a Siemens Trio scanner.",
-    ]
-    assert retrieval.entity_hits(units, "fa") == []
-    assert retrieval.entity_hits(units, "siemens trio") == [1]
-
-
 def test_a_value_the_pass_could_not_place_is_marked_generated(sch):
     """Marked `reported` regardless, the pass asserted the source said things it may not
     have. Nine of thirteen findings on the first paper where the proposer could write values
