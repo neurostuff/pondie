@@ -13,7 +13,7 @@ narrowing at each one:
      contents. That goes to the extraction model, once, with the paper, and its answer is
      written through the same guards as everything else.
 
-Every step is optional. With no proposer and no checker there is nothing to propose and
+Every step is optional. With no proposer there is nothing to propose and
 nothing to ground, and the stage does only step 4; with `adjudicate` off it does nothing at
 all. This is deliberate: the local models want a GPU, and a run without one should still be
 able to resolve what the paper plainly answers.
@@ -33,8 +33,6 @@ from typing import Any, Mapping, MutableMapping, Sequence
 
 from pondie.extraction import recall
 from pondie.extraction.evidence import grounding
-from pondie.extraction.evidence import relocate
-from pondie.extraction.evidence.grounding import Checker
 from pondie.extraction.record import edit as edit_module
 from pondie.extraction.record.edit import Edit, Refusal, UNRESTRICTED, refusals
 from pondie.extraction.record.validate import Validator
@@ -78,11 +76,6 @@ class Report:
 
     written: list[str] = field(default_factory=list)
     refused: list[Refusal] = field(default_factory=list)
-    #: (path, score) for citations the checker doubts. Never acted on directly: see
-    #: `grounding.review_spans` for what acting on them cost.
-    weak_evidence: list[tuple[str, float]] = field(default_factory=list)
-    #: Paths whose citation was replaced by a better-scoring one.
-    recited: list[str] = field(default_factory=list)
     adjudicated: list[str] = field(default_factory=list)
     #: What the adjudication spent, so a run can sum it. Every other stage returns its cost
     #: rather than logging it, for the reason `llm.py` gives: a stage that has to scrape its
@@ -93,7 +86,7 @@ class Report:
     introduced: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
-        return (f"wrote {len(self.written)}, recited {len(self.recited)}, "
+        return (f"wrote {len(self.written)}, "
                 f"refused {len(self.refused)}, adjudicated {len(self.adjudicated)}, "
                 f"introduced {len(self.introduced)}")
 
@@ -232,8 +225,8 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
 
 
 def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: str,
-        proposer: Any = None, checker: Checker | None = None, caller: Any = None,
-        model: str = "", threshold: float = 0.5, service_tier: str = "",
+        proposer: Any = None, caller: Any = None,
+        model: str = "", service_tier: str = "",
         iterations: int = 2, gpu_workers: int = 1,
         ) -> Report:
     """Repair `record` in place. Returns what happened, including anything it broke."""
@@ -256,20 +249,10 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     # work on a card this process holds. It was a semaphore around a local model.
     for _pass in range(iterations if proposer is not None else 0):
         before_pass = len(report.written)
-        _sweep(record, premise, text, sch, proposer, checker, threshold, report,
+        _sweep(record, premise, text, sch, proposer, report,
                abbreviations, study_id)
         if len(report.written) == before_pass:
             break                   # nothing changed, so a further pass sees the same
-    if checker is not None:
-        report.weak_evidence = grounding.review_spans(
-            record, checker, report.refused, abbreviations, study_id)
-        # Doubt is not a verdict, so it is spent going to look rather than deleting.
-        # `review_spans` says which citations are suspect; this asks for better ones and
-        # keeps them only when they score higher than what they replace.
-        if proposer is not None:
-            report.recited = relocate.relocate(
-                record, text, premise, report.weak_evidence, proposer, checker,
-                report.refused, abbreviations, study_id)
     if caller is not None and model:
         reply = adjudicate(record, sch, text, caller, study_id=study_id, model=model,
                            report=report, service_tier=service_tier)
@@ -335,7 +318,7 @@ def _abbreviations(text: str) -> Any:
 
 
 def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: Schema,
-           proposer: Any, checker: Checker | None, threshold: float, report: Report,
+           proposer: Any, report: Report,
            abbreviations: Any = None, study_id: str = "") -> None:
     """Ask the proposer per class, targets first, and write what survives the guards.
 
@@ -394,8 +377,7 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
         # and the existence gate threw the proposals away before the edit was attempted.
         edits = [p for p in proposals if str(p.get("local_id") or "").strip() in by_id]
         news = [p for p in proposals if p not in edits]
-        for proposal in edits + grounding.supported(news, class_name, premise, checker,
-                                                    threshold, report.refused):
+        for proposal in edits + news:
             entity = by_id.get(str(proposal.get("local_id") or "").strip())
             if entity is None:
                 entity, why = edit_module.create(sch, record, class_name, proposal,

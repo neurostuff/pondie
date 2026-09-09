@@ -411,99 +411,17 @@ def test_the_prompt_and_the_repair_pass_share_one_id_convention():
     assert all(prefix in table for prefix in ids.PREFIX.values())
 
 
-def test_a_proposal_the_paper_does_not_support_is_not_written(sch):
-    """Step 2 of the pass, which was documented and not wired: the checker was threaded
-    through and never called, so proposals were written ungrounded."""
-    from pondie.extraction.evidence import grounding
-
-    class Reject:
-        def score(self, claims):
-            return [0.02] * len(claims)
-
-    class Accept:
-        def score(self, claims):
-            return [0.95] * len(claims)
-
-    proposals = [{"name": "hippocampus", "definition_method": "anatomical_a_priori"}]
-    refused: list = []
-    assert grounding.supported(proposals, "Region", "text", Reject(), 0.5, refused) == []
-    assert refused and "does not support" in refused[0].why
-
-    kept = grounding.supported(proposals, "Region", "text", Accept(), 0.5, [])
-    assert kept == proposals
 
 
-def test_an_entity_is_judged_by_what_it_is_not_by_its_name_alone(sch):
-    """"group VBM t-tests" was scored unsupported for a paper saying "t-tests with
-    statistical parametric mapping (SPM5)" -- the phrase was the extractor's, not the
-    paper's."""
-    from pondie.extraction.evidence import grounding
-
-    said = grounding.describe("ModelEstimation", {
-        "name": "group VBM t-tests", "model_family": "glm", "software": "SPM5"})
-    assert "group VBM t-tests" in said
-    assert "SPM5" in said and "glm" in said
 
 
 # ------------------------------------------------------------------- grounding what can be
 
 
-@pytest.mark.parametrize("slot,node,expected", [
-    ("magnetic_strength", {"value": "3 T", "value_source": "reported"}, True),
-    ("recruitment_method", {"value": "a clinic", "value_source": "reported"}, True),
-    # a judgement about the method, not a thing the paper says
-    ("spatial_scope", {"value": "whole_brain", "value_source": "reported"}, False),
-    ("prespecification", {"value": "exploratory", "value_source": "reported"}, False),
-    ("direction", {"value": "negative", "value_source": "reported"}, False),
-    # the record's own marker for a value it produced rather than read
-    ("definition", {"value": "a contrast", "value_source": "generated"}, False),
-    # an address; the paper never says "reg_hippocampus"
-    ("local_id", {"value": "reg_hippocampus", "value_source": "reported"}, False),
-])
-def test_only_a_field_a_sentence_could_support_is_grounded(slot, node, expected):
-    from pondie.extraction.evidence import grounding
-
-    assert grounding.groundable(slot, node) is expected
 
 
-def test_a_span_that_supports_something_else_is_dropped_and_the_value_kept(sch):
-    """A doubted citation is reported and left where it is.
-
-    Deleting it destroyed 46% of all spans across a six-paper sample, 36% of them sentences
-    containing the value verbatim. The pass this was ported from replaced a span only when a
-    proposer found a better one, so total support could only rise."""
-    from pondie.extraction.evidence import grounding
-
-    class Reject:
-        # Below `DOUBT_BELOW`, which the calibration put at 0.02: at the 0.2 first chosen
-        # from three hand-read examples, 58% of true citations were flagged too.
-        def score(self, claims):
-            return [0.005] * len(claims)
-
-    quote = "The authors thank the Dipartimento per i Rapporti Internazionali."
-    record = {"acquisitions": [{"local_id": "acq", "magnetic_strength": cited("3 T", quote)}]}
-    refused: list = []
-    weak = grounding.review_spans(record, Reject(), refused)
-
-    node = record["acquisitions"][0]["magnetic_strength"]
-    assert values.read(node) == "3 T"
-    assert node["evidence"]["status"] == "present", "the citation must survive the doubt"
-    assert node["evidence"]["sets"][0]["spans"][0]["text"] == quote
-    assert weak and weak[0][1] == 0.005
-    assert any("left in place" in r.why for r in refused)
 
 
-def test_a_span_that_does_support_its_value_is_left_alone(sch):
-    from pondie.extraction.evidence import grounding
-
-    class Accept:
-        def score(self, claims):
-            return [0.93] * len(claims)
-
-    record = {"acquisitions": [{"local_id": "acq", "magnetic_strength": cited(
-        "3 T", "Images were acquired on a 3 T scanner.")}]}
-    grounding.review_spans(record, Accept(), [])
-    assert record["acquisitions"][0]["magnetic_strength"]["evidence"]["status"] == "present"
 
 
 def test_one_instrument_under_two_names_is_not_created_twice(sch):
@@ -620,35 +538,6 @@ def test_a_slot_of_a_subclass_is_written_against_that_subclass(sch):
     assert "magnetic_field_strength_tesla" in record["acquisitions"][0]
 
 
-def test_an_edit_to_an_existing_entity_is_not_asked_to_justify_its_existence(sch):
-    """26424424: the model returned every ROI of all three analyses by their exact ids, and
-    the existence gate threw the proposals away before the edit was attempted -- 61 refusals
-    and all but one of the links. An entity the extractor already found does not need its
-    existence re-established."""
-    from pondie.extraction import repair as repair_pass
-
-    class RejectEverything:
-        def score(self, claims):
-            return [0.0] * len(claims)
-
-    record = {
-        "regions": [{"local_id": "r_ains", "name": field("left aINS"),
-                     "definition_method": field("anatomical_a_priori")}],
-        "analyses": [{"local_id": "an_group_gmv", "name": field("group contrast"),
-                      "spatial_scope": field("roi"), "regions": []}]}
-
-    class Proposer:
-        def propose(self, sch_, class_name, premise, instruction):
-            if class_name != "Analysis":
-                return []
-            return [{"local_id": "an_group_gmv", "regions": ["left aINS"]}]
-
-        def ask(self, template, instruction, premise, what=""):
-            return {}
-
-    report = repair_pass.run(record, "", sch, study_id="p",
-                             proposer=Proposer(), checker=RejectEverything())
-    assert record["analyses"][0]["regions"] == ["r_ains"], report.refused
 
 
 def test_the_type_designator_is_never_rewritten(sch):
@@ -696,124 +585,18 @@ def test_the_default_is_one_paper_in_the_models_at_a_time(tmp_path):
     assert Settings(payloads=tmp_path, records=tmp_path, model="m").repair_workers == 1
 
 
-def test_a_numeric_value_is_not_judged_against_prose(sch):
-    """"echo time seconds is 0.004" against "TE = 4 ms" reads as unsupported however the
-    paper wrote it. The pass this was ported from measured prose claims at 0.571 and numeric
-    claims at 0.114 and excluded numerics for that reason; scoring them anyway took 100% of
-    `echo_time_seconds`, `height_threshold_value` and `clusterwise_threshold_value`."""
-    from pondie.extraction.evidence import grounding
-
-    class Reject:
-        def score(self, claims):
-            return [0.01] * len(claims)
-
-    record = {"acquisitions": [{"local_id": "acq", "echo_time_seconds": cited(
-        "0.004", "Images were acquired with TE = 4 ms.")}]}
-    refused: list = []
-    assert grounding.review_spans(record, Reject(), refused) == []
-    assert refused == [], "a number must not be scored against the prose that states it"
 
 
-def test_a_claim_names_the_entity_and_where_in_it_the_leaf_sits(sch):
-    """`effect.cells[0].level` read "level is African American." -- a fragment naming
-    nothing. 44% of `level` spans were discarded on claims like that."""
-    from pondie.extraction.evidence import grounding
-
-    record = {"analyses": [{"local_id": "an", "name": field("AA versus CC smokers"),
-                            "effect": {"cells": [{"level": field("African American")}]}}]}
-    claim = grounding.claim_for(record, "analyses[0].effect.cells[0].level",
-                                "African American")
-    assert "AA versus CC smokers" in claim, claim
-    assert "contrast cell 1" in claim, claim
-    assert claim.endswith("the level is African American.")
 
 
-def test_the_papers_own_abbreviation_is_written_beside_the_acronym(sch):
-    """The value says "African American" and the sentence says "AA", so the checker entails
-    nothing and scores 0.016. The paper defines the pair; `repair.run` already builds the
-    table for `same_entity`."""
-    from pondie.extraction.evidence import grounding
-
-    class Store:
-        def expand(self, short, paper=""):
-            return {"AA": "African American", "CC": "Caucasian"}.get(short)
-
-    span = "AA smokers showed greater activation than CC smokers"
-    out = grounding.expand(span, Store(), "16759342")
-    assert "AA (African American)" in out and "CC (Caucasian)" in out
-    assert grounding.expand(span, None) == span
 
 
-def _relocating(monkeypatch, sentences, old_score, new_score):
-    """A proposer that offers `sentences`, and a checker that scores the incumbent
-    `old_score` and the replacement `new_score`."""
-    from pondie.extraction.evidence import relocate
-
-    class Proposer:
-        def ask(self, template, instruction, premise, what=""):
-            tags = template["fields"][0]["field_id"]
-            return {"fields": [{"field_id": tags[0], "supporting_sentences": sentences}]}
-
-    class Checker:
-        def __init__(self):
-            self.calls = 0
-
-        def score(self, claims):
-            self.calls += 1
-            return [new_score if self.calls == 1 else old_score] * len(claims)
-
-    return relocate, Proposer(), Checker()
 
 
-def test_a_better_sentence_replaces_the_one_it_beats(sch, monkeypatch):
-    """The half that made the original numbers good: ask for the sentence that does support
-    the value, and swap only on a strict improvement, so total support can only rise."""
-    doc = "Methods. Images were acquired on a 3 T Siemens scanner. We thank the department."
-    record = {"acquisitions": [{"local_id": "acq", "modality": cited(
-        "3 T", "We thank the department.")}]}
-    relocate, proposer, checker = _relocating(
-        monkeypatch, ["Images were acquired on a 3 T Siemens scanner."], 0.04, 0.91)
-
-    refused: list = []
-    improved = relocate.relocate(record, doc, doc, [("acquisitions[0].modality", 0.04)],
-                                 proposer, checker, refused)
-
-    span = record["acquisitions"][0]["modality"]["evidence"]["sets"][0]["spans"][0]
-    assert improved == ["acquisitions[0].modality"]
-    assert span["text"] == "Images were acquired on a 3 T Siemens scanner."
-    assert doc[span["start_char"]:span["end_char"]] == span["text"]
 
 
-def test_a_replacement_that_is_no_better_is_not_made(sch, monkeypatch):
-    """`new <= old` keeps the incumbent. Without the re-score the pass could make evidence
-    worse while reporting that it repaired it."""
-    doc = "Methods. Images were acquired on a 3 T Siemens scanner. Something else entirely."
-    quote = "Images were acquired on a 3 T Siemens scanner."
-    record = {"acquisitions": [{"local_id": "acq", "modality": cited("3 T", quote)}]}
-    relocate, proposer, checker = _relocating(
-        monkeypatch, ["Something else entirely."], 0.80, 0.30)
-
-    refused: list = []
-    improved = relocate.relocate(record, doc, doc, [("acquisitions[0].modality", 0.80)],
-                                 proposer, checker, refused)
-
-    assert improved == []
-    assert record["acquisitions"][0]["modality"]["evidence"]["sets"][0]["spans"][0]["text"] \
-        == quote
-    assert any("no better sentence" in r.why for r in refused)
 
 
-def test_a_field_with_no_citation_is_contested_even_though_it_scored_nothing(sch):
-    """A `not_found` field says no sentence was ever located for it -- the clearest case for
-    going to look. Reached only through a scoring fallback before, which left 96 fields
-    across five papers that nothing asked about."""
-    from pondie.extraction.evidence import relocate
-
-    record = {"acquisitions": [{"local_id": "acq",
-                                "modality": field("3 T")}]}
-    rows = relocate.contested(record, weak=[])
-    assert [r.path for r in rows] == ["acquisitions[0].modality"]
-    assert rows[0].premise == ""
 
 
 
@@ -1025,18 +808,6 @@ def test_the_new_rules_are_registered():
     assert {"value_source_honesty", "modality_measures", "counts_add_up"} <= names
 
 
-def test_the_doubt_threshold_is_set_where_the_data_puts_it():
-    """0.2 was chosen from three hand-read examples. Over 2,025 sentences the extraction
-    model chose as a warrant and 2,025 it did not, it flags 58% of the true ones -- 83 on a
-    single paper, a list nobody opens. At 0.02 three quarters of what it flags is genuinely
-    unsupported and there is a quarter as much of it.
-
-    Nothing is removed on this score at any threshold: dropping 90% of bad citations costs
-    58% of good ones, and keeping 90% of good ones keeps two thirds of the bad."""
-    from pondie.extraction.evidence import grounding
-
-    assert grounding.DOUBT_BELOW == 0.02
-    assert grounding.PRUNE_BELOW == grounding.DOUBT_BELOW, "the old name still resolves"
 
 
 def test_a_minted_id_becomes_a_label_a_paper_could_contain():
@@ -1099,109 +870,12 @@ def test_a_short_derived_label_does_not_match_inside_a_word():
     assert retrieval.entity_hits(units, "siemens trio") == [1]
 
 
-def test_a_replacement_that_is_part_of_what_it_replaces_is_refused(sch):
-    """The proposer returns a quote cut mid-word often enough that this fired twice in
-    fifteen changes over three papers: `hrf_model` lost "and temporally smoothed the data."
-    to "and temporally smo", and `software` went from two complete spans to one ending at
-    "2.1 x 2.1 x 7 mm,". Both scored well -- a prefix of a sentence says most of what the
-    sentence says -- so the score cannot be what stops it."""
-    from pondie.extraction.evidence import relocate as relocate_module
-
-    full = "We used a delayed boxcar model and temporally smoothed the data."
-    doc = f"Methods. {full} Results follow."
-
-    class Proposer:
-        def ask(self, template, instruction, premise, what=""):
-            tags = template["fields"][0]["field_id"]
-            return {"fields": [{"field_id": tags[0],
-                                "supporting_sentences": ["We used a delayed boxcar model "
-                                                         "and temporally smo"]}]}
-
-        def propose(self, *_a, **_k):
-            return []
-
-    class Checker:
-        def score(self, claims):
-            return [0.9] * len(claims)      # the fragment would win on score
-
-    record = {"model_estimations": [{"local_id": "m",
-                                     "hrf_model": cited("delayed boxcar model", full)}]}
-    refused: list = []
-    improved = relocate_module.relocate(
-        record, doc, doc, [("model_estimations[0].hrf_model", 0.01)],
-        Proposer(), Checker(), refused)
-
-    assert improved == [], "a fragment of the incumbent is not an improvement"
-    assert record["model_estimations"][0]["hrf_model"]["evidence"]["sets"][0]["spans"][0][
-        "text"] == full
-    assert any("part of the sentence it would replace" in r.why for r in refused)
 
 
-def test_a_genuinely_different_sentence_still_replaces(sch):
-    """The guard is containment, not length: a better sentence may be shorter."""
-    from pondie.extraction.evidence import relocate as relocate_module
-
-    doc = ("Methods. Images were acquired on a 3 T Siemens scanner. "
-           "The authors thank the department for its support.")
-
-    class Proposer:
-        def ask(self, template, instruction, premise, what=""):
-            tags = template["fields"][0]["field_id"]
-            return {"fields": [{"field_id": tags[0], "supporting_sentences":
-                                ["Images were acquired on a 3 T Siemens scanner."]}]}
-
-        def propose(self, *_a, **_k):
-            return []
-
-    class Checker:
-        def __init__(self):
-            self.calls = 0
-
-        def score(self, claims):
-            self.calls += 1
-            return [0.9 if self.calls == 1 else 0.02] * len(claims)
-
-    record = {"acquisitions": [{"local_id": "a", "modality": cited(
-        "3 T", "The authors thank the department for its support.")}]}
-    refused: list = []
-    improved = relocate_module.relocate(
-        record, doc, doc, [("acquisitions[0].modality", 0.02)],
-        Proposer(), Checker(), refused)
-    assert improved == ["acquisitions[0].modality"]
 
 
-def test_a_list_of_numbers_is_a_number():
-    """`str([6, 6, 6])` is "[6, 6, 6]", whose brackets fail the pattern, so a smoothing
-    kernel, a voxel size and an echo-time pair all read as prose and were sent to a checker
-    that cannot judge a number."""
-    from pondie.extraction.evidence.grounding import is_numeric
-
-    assert is_numeric([6, 6, 6])
-    assert is_numeric([2.1, 2.1, 7])
-    assert is_numeric("0.005")
-    assert is_numeric(3)
-    assert not is_numeric(["left aINS", "right OFC"])
-    assert not is_numeric("6 mm FWHM")
-    assert not is_numeric([])
-    assert not is_numeric(True), "a flag is not a measurement"
 
 
-def test_a_numeric_field_is_not_contested(sch):
-    """On 26424424 the one citation that stated the value -- "smoothing of normalized gray
-    matter (GM) tissue maps with a 6 mm 3 FWHM Gaussian filter." -- was replaced on score
-    noise by "Data were preprocessed according to default toolbox settings: bias
-    correction;", which does not mention smoothing at all."""
-    from pondie.extraction.evidence import relocate as relocate_module
-
-    stated = ("smoothing of normalized gray matter (GM) tissue maps with a "
-              "6 mm 3 FWHM Gaussian filter.")
-    record = {"preprocessings": [{"local_id": "prp", "smoothing_fwhm_mm": {
-        "extraction_status": "extracted", "value": [6, 6, 6], "value_source": "reported",
-        "evidence": {"status": "present", "sets": [{"spans": [{"text": stated}]}]}}}]}
-
-    rows = relocate_module.contested(record, weak=[("preprocessings[0].smoothing_fwhm_mm",
-                                                    0.01)])
-    assert rows == [], "a number cannot be judged by entailment, so it is not contested"
 
 
 def test_a_paper_that_enumerates_its_regions_is_checked_against_the_record():

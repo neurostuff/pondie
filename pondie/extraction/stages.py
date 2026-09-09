@@ -944,7 +944,7 @@ class Repair(_Base):
         # and the test stub had a `text()` method, so nothing caught it.
         text, _digest, _sections = text_index.load(paper.text)
 
-        proposer = checker = None
+        proposer = None
         notes: list[str] = []
         if settings.repair:
             if caller is None:
@@ -968,7 +968,7 @@ class Repair(_Base):
             # slots the record may not carry. Harmless while every template held only
             # `local_id`; four invalid writes on the first paper once they did not.
             record, text, reader.load(EXTRACTION_SCHEMA), study_id=paper.study_id,
-            proposer=proposer, checker=checker,
+            proposer=proposer,
             caller=caller if settings.adjudicate else None,
             model=settings.model if settings.adjudicate else "",
             service_tier=settings.service_tier,
@@ -982,9 +982,6 @@ class Repair(_Base):
             "written": report.written,
             "refused": [{"slot": r.slot, "why": r.why} for r in report.refused],
             "adjudicated": report.adjudicated,
-            "recited": report.recited,
-            "weak_evidence": [{"path": p, "score": round(s, 3)}
-                              for p, s in report.weak_evidence],
             "introduced": report.introduced,
         }, indent=1) + "\n")
         # A finding this pass introduced is a defect in the pass rather than in the paper.
