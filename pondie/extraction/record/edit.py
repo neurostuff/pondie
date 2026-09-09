@@ -39,6 +39,11 @@ class Edit:
     #: What the pass wants to put there: a scalar for a value slot, a list of local_ids for
     #: a reference slot.
     value: Any
+    #: The paper, and the proposer's citation for this slot. A guard that asks whether the
+    #: source says a thing needs both; the ones that only compare old against new do not,
+    #: so they default and every existing construction of an `Edit` still stands.
+    text: str = ""
+    quote: str = ""
 
     @property
     def current(self) -> Any:
@@ -76,9 +81,12 @@ def _scope_pair(slot: str) -> str:
     it was restricted to; `InferenceSettings.correction_scope` and `correction_regions` say
     the same about the correction. Each pair is meaningless one half at a time.
     """
-    return {"spatial_scope": "regions", "regions": "spatial_scope",
-            "correction_scope": "correction_regions",
-            "correction_regions": "correction_scope"}.get(slot, "")
+    return {
+        "spatial_scope": "regions",
+        "regions": "spatial_scope",
+        "correction_scope": "correction_regions",
+        "correction_regions": "correction_scope",
+    }.get(slot, "")
 
 
 UNRESTRICTED = frozenset({"whole_brain", "whole brain", "searchlight"})
@@ -167,8 +175,67 @@ def refuses_losing_the_warrant(edit: Edit) -> Refusal | None:
         return None
     if (node.get("evidence") or {}).get("status") != "present":
         return None
-    return Refusal(edit.slot, "loses the span that warranted the value it replaces",
-                   edit.value)
+    return Refusal(
+        edit.slot, "loses the span that warranted the value it replaces", edit.value
+    )
+
+
+def _extends(old: Any, new: Any) -> bool:
+    """Does `new` say everything `old` said and more?
+
+    Structural, and deliberately not `_inherited`: that one answers whether a *span* still
+    warrants the new value and gives up when there is no span, which is the exact case this
+    guard exists for.
+    """
+    if old is None or old == [] or old == "":
+        return True
+    if isinstance(old, list) or isinstance(new, list):
+        before = {_bare(v) for v in (old if isinstance(old, list) else [old])}
+        after = {_bare(v) for v in (new if isinstance(new, list) else [new])}
+        return before < after or (before == after and before != set())
+    if isinstance(old, str) and isinstance(new, str):
+        return _bare(old) in _bare(new)
+    return _bare(old) == _bare(new)
+
+
+def refuses_an_unwarranted_replacement(edit: Edit) -> Refusal | None:
+    """Overwriting a stated value takes a sentence, not just a better-sounding answer.
+
+    `refuses_losing_the_warrant` only fires when the value being replaced *has* a span, so a
+    slot holding an inferred one -- `value_source: generated`, `evidence: not_found` -- was
+    unprotected: anything could overwrite it and nothing looked at the paper. 110 of the 230
+    replacements in the fifteen-paper repair run landed on such a slot, and that is where
+    84rGLhCbUJTh's `me-symptom-correlation.model_family` went from `glm` to
+    `robust_regression` -- a family the paper never names, which contradicts the same
+    entity's own `Pearson partial correlation` estimator, and which arrived with no evidence
+    of its own.
+
+    Adding is not replacing. An edit that says everything the old value said and more goes
+    through untouched, which is what the six model-derived improvements in that run all
+    were: a `model_family` gaining `ancova`, a measure `family` gaining
+    `structural_morphometry`, a preprocessing list gaining the paper's DARTEL smoothing.
+    """
+    current = edit.current
+    if not isinstance(current, Mapping):
+        return None
+    if current.get("extraction_status") != "extracted":
+        return None
+    if (current.get("evidence") or {}).get("status") == "present":
+        return None  # `refuses_losing_the_warrant` owns this one
+    old, new = _one(edit.current_value), _one(edit.value)
+    # One value for one value. A multi-element list changes for reasons this cannot read --
+    # kzMj26hGWacQ's preprocessing gained the paper's DARTEL smoothing in the same write that
+    # reworded a neighbouring step, so it is neither a superset nor locatable as a whole, and
+    # judging it here refused a correct recovery. `refuses_shortening_a_list` owns that shape.
+    if isinstance(old, list) or isinstance(new, list):
+        return None
+    if _extends(old, new):
+        return None
+    if _placed(new, edit.text, edit.quote) is not None:
+        return None
+    return Refusal(
+        edit.slot, "replaces a value with one no sentence in the paper places", edit.value
+    )
 
 
 def refuses_an_unrestricted_scope_beside_regions(edit: Edit) -> Refusal | None:
@@ -186,8 +253,9 @@ def refuses_an_unrestricted_scope_beside_regions(edit: Edit) -> Refusal | None:
         if scope in UNRESTRICTED and regions:
             return Refusal(edit.slot, f"{other} is not empty", edit.value)
         if scope in {"roi", "region of interest"} and not regions:
-            return Refusal(edit.slot, f"{other} is empty, so the restriction is unnamed",
-                           edit.value)
+            return Refusal(
+                edit.slot, f"{other} is empty, so the restriction is unnamed", edit.value
+            )
         return None
     # The regions side reads the *scope* slot, not its own: what makes naming a region
     # wrong is the scope beside it saying the search was not restricted.
@@ -221,21 +289,29 @@ def refuses_orphaning_cell_terms(edit: Edit) -> Refusal | None:
     if edit.slot != "model_estimation" or not edit.value:
         return None
     target = edit.value[0] if isinstance(edit.value, list) else edit.value
-    named = {cell.get("term")
-             for cell in ((edit.entity.get("effect") or {}).get("cells") or [])
-             if isinstance(cell, Mapping) and isinstance(cell.get("term"), str)}
+    named = {
+        cell.get("term")
+        for cell in ((edit.entity.get("effect") or {}).get("cells") or [])
+        if isinstance(cell, Mapping) and isinstance(cell.get("term"), str)
+    }
     if not named:
         return None
     from pondie.extraction.record.effect import terms_in_scope
 
-    models = {m.get("local_id"): m for m in edit.record.get("model_estimations") or []
-              if isinstance(m, Mapping) and m.get("local_id")}
+    models = {
+        m.get("local_id"): m
+        for m in edit.record.get("model_estimations") or []
+        if isinstance(m, Mapping) and m.get("local_id")
+    }
     reachable = set(terms_in_scope(target, models))
     missing = named - reachable
     if missing:
-        return Refusal(edit.slot,
-                       f"would leave cells naming {', '.join(sorted(missing))}, which this "
-                       f"model does not reach", target)
+        return Refusal(
+            edit.slot,
+            f"would leave cells naming {', '.join(sorted(missing))}, which this "
+            f"model does not reach",
+            target,
+        )
     return None
 
 
@@ -247,6 +323,7 @@ GUARDS: tuple[Check, ...] = (
     refuses_truncation,
     refuses_shortening_a_list,
     refuses_losing_the_warrant,
+    refuses_an_unwarranted_replacement,
     refuses_an_unrestricted_scope_beside_regions,
     refuses_a_self_reference,
     refuses_orphaning_cell_terms,
@@ -277,8 +354,7 @@ def ADDRESSABLE() -> frozenset[str]:
     from pondie.schema import reader
 
     schema = reader.load(EXTRACTION_SCHEMA)
-    return frozenset(name for name in schema.classes
-                     if "local_id" in schema.attributes(name))
+    return frozenset(name for name in schema.classes if "local_id" in schema.attributes(name))
 
 
 #: Below this a derived label is a fragment, not a name. `mea_fa` would otherwise offer "fa",
@@ -306,7 +382,7 @@ def from_local_id(local_id: str) -> str:
     text = local_id.strip()
     for prefix in sorted(PREFIX.values(), key=len, reverse=True):
         if text.startswith(prefix):
-            text = text[len(prefix):]
+            text = text[len(prefix) :]
             break
     text = re.sub(r"[_\-]+", " ", text).strip()
     return text if len(text) >= _SHORTEST_DERIVED else ""
@@ -362,8 +438,13 @@ def _words(label: str, abbreviations: Any) -> set[str]:
     return set(re.sub(r"[^a-z0-9]+", " ", text.lower()).split())
 
 
-def resolve(record: Mapping[str, Any], sch: Schema, target_class: str, named: Any,
-            abbreviations: Any = None) -> list[str]:
+def resolve(
+    record: Mapping[str, Any],
+    sch: Schema,
+    target_class: str,
+    named: Any,
+    abbreviations: Any = None,
+) -> list[str]:
     """Names the model gave -> local_ids of that class, dropping what does not resolve.
 
     Matching is on the label because a name is what the paper prints and a local_id is not.
@@ -372,27 +453,46 @@ def resolve(record: Mapping[str, Any], sch: Schema, target_class: str, named: An
     and a type-violating link is worse than a missing one.
     """
     container = sch.containers().get(target_class, "")
-    pool = {entity.get("local_id"): label_of(entity)
-            for entity in record.get(container) or [] if isinstance(entity, Mapping)}
+    pool = {
+        entity.get("local_id"): label_of(entity)
+        for entity in record.get(container) or []
+        if isinstance(entity, Mapping)
+    }
     out: list[str] = []
     for raw in (named if isinstance(named, list) else [named]):
         if not isinstance(raw, str) or not raw.strip():
             continue
         want = re.sub(r"[^a-z0-9]+", " ", raw.lower()).strip()
-        hit = raw if raw in pool else next(
-            (lid for lid, label in pool.items()
-             if re.sub(r"[^a-z0-9]+", " ", label.lower()).strip() == want), None)
+        hit = (
+            raw
+            if raw in pool
+            else next(
+                (
+                    lid
+                    for lid, label in pool.items()
+                    if re.sub(r"[^a-z0-9]+", " ", label.lower()).strip() == want
+                ),
+                None,
+            )
+        )
         if hit is None:
-            hit = next((lid for lid, label in pool.items()
-                        if same_entity(label, raw, abbreviations)), None)
+            hit = next(
+                (lid for lid, label in pool.items() if same_entity(label, raw, abbreviations)),
+                None,
+            )
         if hit and hit not in out:
             out.append(hit)
     return out
 
 
-def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
-           proposal: Mapping[str, Any], text: str = "",
-           abbreviations: Any = None) -> tuple[dict | None, str]:
+def create(
+    sch: Schema,
+    record: MutableMapping[str, Any],
+    class_name: str,
+    proposal: Mapping[str, Any],
+    text: str = "",
+    abbreviations: Any = None,
+) -> tuple[dict | None, str]:
     """A new entity from `proposal`, or `(None, why not)`.
 
     Two conditions, both read from the schema rather than chosen here.
@@ -410,8 +510,11 @@ def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
     """
     from pondie.extraction.record import ids
 
-    taken = {e.get("local_id") for e in record.get(_container(sch, class_name)) or []
-             if isinstance(e, Mapping)}
+    taken = {
+        e.get("local_id")
+        for e in record.get(_container(sch, class_name)) or []
+        if isinstance(e, Mapping)
+    }
     if class_name not in ADDRESSABLE():
         # `local_id` is the extraction projection's, not storage's, so the question is asked
         # of the schema a record is written against. `ExternalDataset` has no local_id there,
@@ -423,12 +526,18 @@ def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
     # Before minting, not after: id stems differ where labels agree, so "CAPS total score"
     # and "clinician-administered PTSD scale (CAPS)" collided nowhere and became two records
     # that analyses then linked to separately.
-    existing = next((e for e in record.get(_container(sch, class_name)) or []
-                     if isinstance(e, Mapping)
-                     and same_entity(label_of(e), label, abbreviations)), None)
+    existing = next(
+        (
+            e
+            for e in record.get(_container(sch, class_name)) or []
+            if isinstance(e, Mapping) and same_entity(label_of(e), label, abbreviations)
+        ),
+        None,
+    )
     if existing is not None:
-        return None, (f"the record already holds this {class_name} as "
-                      f"{existing.get('local_id')!r}")
+        return None, (
+            f"the record already holds this {class_name} as " f"{existing.get('local_id')!r}"
+        )
     local_id = ids.mint(class_name, label, taken)
     if local_id is None:
         return None, f"{class_name} ids come from the table parse, not from a proposal"
@@ -441,8 +550,11 @@ def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
         # schema declares, and the one finding repair still introduced across fifteen
         # records. `_nested_defaults` supplies the two nested slots a proposal can honestly
         # fill, and `apply` writes the rest through `_nested` once the entity exists.
-        if name in ("local_id", "id") or name not in proposal \
-                or kind in ("reference", "nested"):
+        if (
+            name in ("local_id", "id")
+            or name not in proposal
+            or kind in ("reference", "nested")
+        ):
             continue
         value = values.shape(sch, class_name, name, proposal[name])
         if value is not None:
@@ -450,8 +562,11 @@ def create(sch: Schema, record: MutableMapping[str, Any], class_name: str,
 
     entity.update(_nested_defaults(sch, record, class_name, proposal, text))
 
-    required = {name for name, slot, _kind in sch.iter_slots(class_name)
-                if slot.required and name not in ("local_id", "id")}
+    required = {
+        name
+        for name, slot, _kind in sch.iter_slots(class_name)
+        if slot.required and name not in ("local_id", "id")
+    }
     missing = sorted(required - set(entity) - _referenced_slots(sch, class_name))
     if missing:
         return None, f"{class_name} would be missing {', '.join(missing)}"
@@ -463,8 +578,13 @@ def _referenced_slots(sch: Schema, class_name: str) -> set[str]:
     return {name for name, _slot, kind in sch.iter_slots(class_name) if kind == "reference"}
 
 
-def _nested_defaults(sch: Schema, record: Mapping[str, Any], class_name: str,
-                     proposal: Mapping[str, Any], text: str) -> dict:
+def _nested_defaults(
+    sch: Schema,
+    record: Mapping[str, Any],
+    class_name: str,
+    proposal: Mapping[str, Any],
+    text: str,
+) -> dict:
     """The nested required slots a proposal can honestly supply.
 
     Only two, and only for Analysis. `groups` is a list of AnalysisGroup, each of which needs
@@ -494,8 +614,10 @@ def _nested_defaults(sch: Schema, record: Mapping[str, Any], class_name: str,
             # `reported` would claim the paper said it -- and would then send it to the
             # checker as a claim about the paper.
             "explanation": _wrap(
-                "Reported in prose with no table row group to decompose.", text,
-                source="generated"),
+                "Reported in prose with no table row group to decompose.",
+                text,
+                source="generated",
+            ),
         }
     return out
 
@@ -504,10 +626,15 @@ def _container(sch: Schema, class_name: str) -> str:
     return sch.containers().get(class_name, class_name.lower())
 
 
-def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
-          entity: MutableMapping[str, Any], proposal: Mapping[str, Any],
-          text: str = "", abbreviations: Any = None
-          ) -> EditLog:
+def apply(
+    sch: Schema,
+    record: MutableMapping[str, Any],
+    class_name: str,
+    entity: MutableMapping[str, Any],
+    proposal: Mapping[str, Any],
+    text: str = "",
+    abbreviations: Any = None,
+) -> EditLog:
     """Write the slots of `proposal` this entity may take. Returns what happened."""
     log = EditLog()
     from pondie.extraction import recall
@@ -548,14 +675,16 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
             # Reached late. The template began offering conditions before this could write
             # them, so the proposer was asked and its answer discarded -- and the one field
             # that says a state was a control could still only come from the extraction pass.
-            written = _nested(sch, str(ranges.get(name) or ""), entity, name, proposed,
-                              text, log)
+            written = _nested(
+                sch, str(ranges.get(name) or ""), entity, name, proposed, text, log
+            )
             if written:
                 log.written.append((name, written))
             continue
         if kinds[name] == "reference":
-            resolved = resolve(record, sch, str(ranges.get(name) or ""), proposed,
-                               abbreviations)
+            resolved = resolve(
+                record, sch, str(ranges.get(name) or ""), proposed, abbreviations
+            )
             if not resolved:
                 continue
             existing = entity.get(name) or []
@@ -574,14 +703,17 @@ def apply(sch: Schema, record: MutableMapping[str, Any], class_name: str,
                 continue
 
         current = entity.get(name)
-        if kinds[name] != "reference" and values.is_field(current) \
-                and _same(sch, class_name, name, values.read(current), value):
+        if (
+            kinds[name] != "reference"
+            and values.is_field(current)
+            and _same(sch, class_name, name, values.read(current), value)
+        ):
             # Re-proposing what is already there is not an edit. Writing it anyway rebuilt
             # the wrapper and lost its warrant: 26 fields on 18823721 kept their value and
             # went `present` -> `not_found`, `reported` -> `generated`.
             log.refused.append(Refusal(name, "already recorded with this value", value))
             continue
-        if refused := refusals(Edit(record, entity, name, value)):
+        if refused := refusals(Edit(record, entity, name, value, text, cited)):
             log.refused.extend(refused)
             continue
         if kinds[name] == "reference":
@@ -599,8 +731,15 @@ def _multivalued(sch: Schema, class_name: str, slot: str) -> bool:
     return sch.is_multivalued(class_name, slot)
 
 
-def _nested(sch: Schema, inner: str, entity: MutableMapping[str, Any], slot: str,
-            proposed: Any, text: str, log: Log) -> int:
+def _nested(
+    sch: Schema,
+    inner: str,
+    entity: MutableMapping[str, Any],
+    slot: str,
+    proposed: Any,
+    text: str,
+    log: EditLog,
+) -> int:
     """Merge a list of nested objects into `entity[slot]`. Returns how many fields landed.
 
     Merge and never replace, for the reason the reference path unions rather than assigns: a
@@ -637,11 +776,12 @@ def _nested(sch: Schema, inner: str, entity: MutableMapping[str, Any], slot: str
             if field_name in ("local_id", "id") or raw in (None, "", []):
                 continue
             if values.read(target.get(field_name)) not in (None, "", []):
-                continue                      # what is already there, with its evidence
+                continue  # what is already there, with its evidence
             value = values.shape(sch, inner, field_name, raw)
             if value is None:
-                log.refused.append(Refusal(f"{slot}.{field_name}",
-                                           "will not fit the slot", raw))
+                log.refused.append(
+                    Refusal(f"{slot}.{field_name}", "will not fit the slot", raw)
+                )
                 continue
             written = _wrap(value, text)
             # A nested field has to be placeable in the paper, which in practice admits
@@ -652,10 +792,14 @@ def _nested(sch: Schema, inner: str, entity: MutableMapping[str, Any], slot: str
             # a template, answered `fixation` for three picture-viewing conditions. Honestly
             # labelled `generated` with no sentence, and wrong three times in four.
             if written["evidence"]["status"] != "present":
-                log.refused.append(Refusal(
-                    f"{slot}.{field_name}",
-                    "nothing in the paper places this value, and a nested guess is not "
-                    "worth the risk of being wrong", value))
+                log.refused.append(
+                    Refusal(
+                        f"{slot}.{field_name}",
+                        "nothing in the paper places this value, and a nested guess is not "
+                        "worth the risk of being wrong",
+                        value,
+                    )
+                )
                 continue
             target[field_name] = written
             landed += 1
@@ -670,9 +814,10 @@ def _same(sch: Schema, class_name: str, slot: str, old: Any, new: Any) -> bool:
     the warrant. Both sides go through `shape`, which is what the write itself would do.
     """
     try:
-        return values.shape(sch, class_name, slot, old) == \
-            values.shape(sch, class_name, slot, new)
-    except Exception:                     # a value that will not shape is not the same one
+        return values.shape(sch, class_name, slot, old) == values.shape(
+            sch, class_name, slot, new
+        )
+    except Exception:  # a value that will not shape is not the same one
         return False
 
 
@@ -706,16 +851,22 @@ def _inherited(current: Any, value: Any) -> tuple[dict, str] | None:
     if not wanted:
         return None
     held = values.read(current)
-    if isinstance(value, list) and isinstance(held, list) and held \
-            and all(item in value for item in held):
+    if (
+        isinstance(value, list)
+        and isinstance(held, list)
+        and held
+        and all(item in value for item in held)
+    ):
         # A strict superset removes nothing, so whatever warranted the old elements still
         # does. Asking the new ones to appear in the *same* span refuses most real
         # extensions -- a second value is usually named in a second sentence -- which
         # would leave `template_for`'s list templates unable to show any yield at all.
         return current["evidence"], str(current.get("value_source") or "reported")
-    texts = [str(span.get("text", ""))
-             for group in (current.get("evidence") or {}).get("sets") or []
-             for span in group.get("spans") or []]
+    texts = [
+        str(span.get("text", ""))
+        for group in (current.get("evidence") or {}).get("sets") or []
+        for span in group.get("spans") or []
+    ]
     if not texts or not all(any(_warrants(text, item) for text in texts) for item in wanted):
         return None
     return current["evidence"], str(current.get("value_source") or "reported")
@@ -724,11 +875,10 @@ def _inherited(current: Any, value: Any) -> tuple[dict, str] | None:
 _NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
 
 
-
 def _warrants(text: str, value: Any) -> bool:
     """Whether this span says this one value, rather than merely containing its characters."""
     if isinstance(value, bool):
-        return False                       # "true" is not a thing a sentence states
+        return False  # "true" is not a thing a sentence states
     if isinstance(value, (int, float)):
         return any(float(token) == float(value) for token in _NUMBER.findall(text))
     wanted = str(value).strip().lower()
@@ -742,32 +892,45 @@ def _warrants(text: str, value: Any) -> bool:
     return _bare(wanted) in _bare(text)
 
 
+def _placed(value: Any, text: str, quote: str = "") -> dict | None:
+    """The evidence for `value`, or None when no sentence in `text` puts it there.
+
+    One definition, used both to warrant a write and to judge whether a write may happen at
+    all: a guard that decided groundedness differently from the wrapper would refuse edits
+    the record then shows as evidenced, or admit ones it shows as bare.
+    """
+    from pondie.extraction.record import spans as span_tools
+
+    # The proposer's own citation when it gave one, the value itself otherwise. A cited
+    # sentence retires the twenty-character floor, which exists only because a bare value
+    # is too short to search for safely -- and it is what makes a numeric groundable at all.
+    cited = str(quote or value)
+    if not text or len(cited) < 20:
+        return None
+    try:
+        span = span_tools.resolve(text, cited).as_record()
+        span_tools.verify(text, span)
+    except Exception:
+        return None
+    return {"status": "present", "sets": [{"source": "repair_pass", "spans": [span]}]}
+
+
 def _wrap(value: Any, text: str, source: str = "reported", quote: str = "") -> dict:
     """A wrapper whose evidence says what was actually established.
 
     `not_found` rather than `not_applicable`: a sentence should exist for a value read off a
     paper, and saying none applies would be a claim the pass has not earned.
     """
-    from pondie.extraction.record import spans as span_tools
-
-    evidence: dict[str, Any] = {"status": "not_found"}
-    # The proposer's own citation when it gave one, the value itself otherwise. A cited
-    # sentence retires the twenty-character floor, which exists only because a bare value
-    # is too short to search for safely -- and it is what makes a numeric groundable at all.
-    quote = str(quote or value)
-    if text and len(quote) >= 20:
-        try:
-            span = span_tools.resolve(text, quote).as_record()
-            span_tools.verify(text, span)
-            evidence = {"status": "present",
-                        "sets": [{"source": "repair_pass", "spans": [span]}]}
-        except Exception:
-            pass
+    evidence: dict[str, Any] = _placed(value, text, quote) or {"status": "not_found"}
     # A value this pass could not place in the paper is one it reasoned to, and the schema
     # has a word for that. Marked `reported` regardless, it asserted the source said things
     # the source may not have: nine of thirteen findings on the first paper where the
     # proposer could write values at all were exactly that pairing -- `groups[].species`,
     # `recruitment_method`, `is_healthy`, `spatial_scope`, each `reported` with no sentence.
     honest = source if evidence["status"] == "present" else "generated"
-    return {"extraction_status": "extracted", "value": value,
-            "value_source": honest, "evidence": evidence}
+    return {
+        "extraction_status": "extracted",
+        "value": value,
+        "value_source": honest,
+        "evidence": evidence,
+    }

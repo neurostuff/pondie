@@ -55,10 +55,6 @@ ambiguous, or describes something the options do not cover. The record already r
 contradiction, so a reviewer can see it; a confident wrong answer removes that."""
 
 
-
-
-
-
 @dataclass
 class Report:
     """What one pass did to one record."""
@@ -75,9 +71,11 @@ class Report:
     introduced: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
-        return (f"wrote {len(self.written)}, "
-                f"refused {len(self.refused)}, adjudicated {len(self.adjudicated)}, "
-                f"introduced {len(self.introduced)}")
+        return (
+            f"wrote {len(self.written)}, "
+            f"refused {len(self.refused)}, adjudicated {len(self.adjudicated)}, "
+            f"introduced {len(self.introduced)}"
+        )
 
 
 @dataclass(frozen=True)
@@ -103,9 +101,10 @@ def contradictions(record: Mapping[str, Any], sch: Schema) -> list[Case]:
     to delete, not to ask. Measured over 42 records: 209 findings, of which 8 are these.
     """
     out: list[Case] = []
-    pairs = (("analyses", "Analysis", "spatial_scope", "regions"),
-             ("inference_settings", "InferenceSettings", "correction_scope",
-              "correction_regions"))
+    pairs = (
+        ("analyses", "Analysis", "spatial_scope", "regions"),
+        ("inference_settings", "InferenceSettings", "correction_scope", "correction_regions"),
+    )
     for container, class_name, scope_slot, region_slot in pairs:
         attribute = sch.attributes(class_name).get(scope_slot)
         options = tuple(
@@ -121,14 +120,21 @@ def contradictions(record: Mapping[str, Any], sch: Schema) -> list[Case]:
             if scope not in UNRESTRICTED or not regions:
                 continue
             named = ", ".join(_label(record, r) for r in regions)
-            out.append(Case(
-                id=f"{container}/{entity.get('local_id')}/{scope_slot}",
-                question=(f"{scope_slot} is '{scope}' while {region_slot} names {named}. "
-                          f"A whole-brain or searchlight procedure is restricted to no "
-                          f"region, so at most one of these is right."),
-                options=allowed, container=container,
-                local_id=str(entity.get("local_id")), slot=scope_slot,
-                clears=region_slot))
+            out.append(
+                Case(
+                    id=f"{container}/{entity.get('local_id')}/{scope_slot}",
+                    question=(
+                        f"{scope_slot} is '{scope}' while {region_slot} names {named}. "
+                        f"A whole-brain or searchlight procedure is restricted to no "
+                        f"region, so at most one of these is right."
+                    ),
+                    options=allowed,
+                    container=container,
+                    local_id=str(entity.get("local_id")),
+                    slot=scope_slot,
+                    clears=region_slot,
+                )
+            )
     return out
 
 
@@ -142,9 +148,17 @@ def _label(record: Mapping[str, Any], local_id: str) -> str:
     return local_id
 
 
-def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller: Any,
-               *, study_id: str, model: str, report: Report,
-               service_tier: str = "") -> Any:
+def adjudicate(
+    record: MutableMapping[str, Any],
+    sch: Schema,
+    text: str,
+    caller: Any,
+    *,
+    study_id: str,
+    model: str,
+    report: Report,
+    service_tier: str = "",
+) -> Any:
     """Put the unresolved contradictions to the extraction model, once, with the paper.
 
     A resolution is applied only when its quote resolves to a span of this paper, by the same
@@ -161,15 +175,25 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
     listing = "\n\n".join(
         f"case {i + 1} (id {c.id}):\n  {c.question}\n"
         f"  permissible values: {', '.join(c.options)}, or unresolved"
-        for i, c in enumerate(cases))
+        for i, c in enumerate(cases)
+    )
     reply = caller(
-        ModelCall(model=model, system=ADJUDICATION_SYSTEM, effort="low",
-                  max_output_tokens=4_000, service_tier=service_tier,
-                  prompt=(f"## Paper\n\n{text}\n\n## Cases\n\n{listing}\n\n"
-                          'Reply as {"resolutions": [{"id": ..., "value": ..., '
-                          '"quote": ...}]}, using the case id verbatim and an empty quote '
-                          'for anything unresolved.')),
-        paper=study_id, stage="repair")
+        ModelCall(
+            model=model,
+            system=ADJUDICATION_SYSTEM,
+            effort="low",
+            max_output_tokens=4_000,
+            service_tier=service_tier,
+            prompt=(
+                f"## Paper\n\n{text}\n\n## Cases\n\n{listing}\n\n"
+                'Reply as {"resolutions": [{"id": ..., "value": ..., '
+                '"quote": ...}]}, using the case id verbatim and an empty quote '
+                "for anything unresolved."
+            ),
+        ),
+        paper=study_id,
+        stage="repair",
+    )
     # `payload`, which is what a ModelReply carries. `body` is an attribute of
     # `MalformedReply` -- the exception -- so a getattr for it fell through to the reply
     # itself and json.loads got "payload={...} cost=Cost(...)".
@@ -189,22 +213,38 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
         except Exception:
             report.adjudicated.append(f"{case.id}: rejected, the quote is not in the paper")
             continue
-        entity = next((e for e in record.get(case.container) or []
-                       if isinstance(e, dict) and e.get("local_id") == case.local_id), None)
+        entity = next(
+            (
+                e
+                for e in record.get(case.container) or []
+                if isinstance(e, dict) and e.get("local_id") == case.local_id
+            ),
+            None,
+        )
         if entity is None:
             continue
         # Through the guards, like every other write. Coercing a cited scope to a bare enum
         # is exactly the shape `refuses_losing_the_warrant` exists for, and step 4 was the
         # one path that bypassed it.
-        edit = Edit(record, entity, case.slot, value)
+        #
+        # The quote goes with it. It was resolved against this paper's text just above, so
+        # withholding it left `refuses_an_unwarranted_replacement` judging a cited edit as
+        # though it had arrived bare -- refusing the one write on this path that had already
+        # proved itself.
+        edit = Edit(record, entity, case.slot, value, text, quote)
         if refused := refusals(edit):
             report.refused.extend(refused)
             report.adjudicated.append(f"{case.id}: refused, {refused[0].why}")
             continue
         entity[case.slot] = {
-            "extraction_status": "extracted", "value": value, "value_source": "reported",
-            "evidence": {"status": "present",
-                         "sets": [{"source": "repair_pass", "spans": [span]}]}}
+            "extraction_status": "extracted",
+            "value": value,
+            "value_source": "reported",
+            "evidence": {
+                "status": "present",
+                "sets": [{"source": "repair_pass", "spans": [span]}],
+            },
+        }
         if case.clears and value in UNRESTRICTED:
             entity[case.clears] = []
         report.adjudicated.append(f"{case.id}: {value}")
@@ -213,11 +253,19 @@ def adjudicate(record: MutableMapping[str, Any], sch: Schema, text: str, caller:
     return reply
 
 
-def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: str,
-        proposer: Any = None, caller: Any = None,
-        model: str = "", service_tier: str = "",
-        iterations: int = 2, gpu_workers: int = 1,
-        ) -> Report:
+def run(
+    record: MutableMapping[str, Any],
+    text: str,
+    sch: Schema,
+    *,
+    study_id: str,
+    proposer: Any = None,
+    caller: Any = None,
+    model: str = "",
+    service_tier: str = "",
+    iterations: int = 2,
+    gpu_workers: int = 1,
+) -> Report:
     """Repair `record` in place. Returns what happened, including anything it broke."""
     from copy import deepcopy
 
@@ -238,13 +286,20 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     # work on a card this process holds. It was a semaphore around a local model.
     for _pass in range(iterations if proposer is not None else 0):
         before_pass = len(report.written)
-        _sweep(record, premise, text, sch, proposer, report,
-               abbreviations, study_id)
+        _sweep(record, premise, text, sch, proposer, report, abbreviations, study_id)
         if len(report.written) == before_pass:
-            break                   # nothing changed, so a further pass sees the same
+            break  # nothing changed, so a further pass sees the same
     if caller is not None and model:
-        reply = adjudicate(record, sch, text, caller, study_id=study_id, model=model,
-                           report=report, service_tier=service_tier)
+        reply = adjudicate(
+            record,
+            sch,
+            text,
+            caller,
+            study_id=study_id,
+            model=model,
+            report=report,
+            service_tier=service_tier,
+        )
         if reply is not None:
             report.cost = reply.cost
             report.traces = ((reply.trace_id, reply.cache_status),) if reply.trace_id else ()
@@ -286,8 +341,11 @@ def _premise(text: str) -> str:
     """
     from pondie.extraction.evidence.retrieval import sectionize
 
-    spans = [text[start:end] for start, end, label in sectionize(text)
-             if any(word in label.lower() for word in PREMISE_SECTIONS)]
+    spans = [
+        text[start:end]
+        for start, end, label in sectionize(text)
+        if any(word in label.lower() for word in PREMISE_SECTIONS)
+    ]
     joined = "\n\n".join(spans)
     return joined if len(joined) >= max(2_000, len(text) // 10) else text
 
@@ -306,9 +364,16 @@ def _abbreviations(text: str) -> Any:
         return None
 
 
-def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: Schema,
-           proposer: Any, report: Report,
-           abbreviations: Any = None, study_id: str = "") -> None:
+def _sweep(
+    record: MutableMapping[str, Any],
+    premise: str,
+    document: str,
+    sch: Schema,
+    proposer: Any,
+    report: Report,
+    abbreviations: Any = None,
+    study_id: str = "",
+) -> None:
     """Ask the proposer per class, targets first, and write what survives the guards.
 
     Two texts, and conflating them writes spans that address the wrong string. The models see
@@ -326,8 +391,11 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
     # of its analyses search the hippocampus.
     by_container = sch.classes_by_container()
     order = sweep_order(sch, list(by_container))
-    context = {by_container[c]: existing(sch, record, by_container[c])
-               + candidates(sch, record, by_container[c]) for c in order}
+    context = {
+        by_container[c]: existing(sch, record, by_container[c])
+        + candidates(sch, record, by_container[c])
+        for c in order
+    }
     # A proposer that can answer about several classes at once is asked once rather than
     # per class: the premise is the same paper every time, and a network proposer paid to
     # read it twenty-eight times a paper.
@@ -335,22 +403,30 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
     if hasattr(proposer, "propose_many"):
         try:
             batched = proposer.propose_many(
-                sch, [by_container[c] for c in order], premise, context)
+                sch, [by_container[c] for c in order], premise, context
+            )
         except Exception as error:  # noqa: BLE001 -- fall back to the per-class sweep
-            report.refused.append(Refusal(
-                "sweep", f"batched proposal failed ({type(error).__name__}); "
-                         f"asked class by class instead"))
+            report.refused.append(
+                Refusal(
+                    "sweep",
+                    f"batched proposal failed ({type(error).__name__}); "
+                    f"asked class by class instead",
+                )
+            )
     for container in order:
         class_name = by_container[container]
         try:
-            proposals = (batched.get(class_name, []) if batched is not None
-                         else proposer.propose(sch, class_name, premise,
-                                               context[class_name]))
+            proposals = (
+                batched.get(class_name, [])
+                if batched is not None
+                else proposer.propose(sch, class_name, premise, context[class_name])
+            )
         except recall.Starved as starved:
             report.refused.append(Refusal(container, str(starved)))
             continue
-        by_id = {e.get("local_id"): e for e in record.get(container) or []
-                 if isinstance(e, Mapping)}
+        by_id = {
+            e.get("local_id"): e for e in record.get(container) or [] if isinstance(e, Mapping)
+        }
         # One per class sweep, and passed to every `apply` in it. An exclusive reference
         # slot names what belongs to one entity, so the same target list arriving on a
         # second entity of this class is a copy: on 18823721 the pass wrote the same four
@@ -369,14 +445,18 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
         for proposal in edits + news:
             entity = by_id.get(str(proposal.get("local_id") or "").strip())
             if entity is None:
-                entity, why = edit_module.create(sch, record, class_name, proposal,
-                                                 document, abbreviations)
+                entity, why = edit_module.create(
+                    sch, record, class_name, proposal, document, abbreviations
+                )
                 if entity is None:
                     report.refused.append(Refusal(container, why))
                     continue
                 record.setdefault(container, []).append(entity)
                 report.written.append(f"{container}/{entity['local_id']} created")
-            log = edit_module.apply(sch, record, class_name, entity, proposal, document,
-                                    abbreviations)
-            report.written += [f"{container}/{entity['local_id']}.{s}" for s, _v in log.written]
+            log = edit_module.apply(
+                sch, record, class_name, entity, proposal, document, abbreviations
+            )
+            report.written += [
+                f"{container}/{entity['local_id']}.{s}" for s, _v in log.written
+            ]
             report.refused += log.refused

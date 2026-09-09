@@ -19,8 +19,10 @@ from pondie import schema
 from pondie.extraction.record import edit
 from pondie.schema import reader
 
-PAPER = ("Participants were 12 opioid-dependent patients (mean age = 44.5 years, "
-         "S.D. = 3.9) recruited from a detoxification unit.")
+PAPER = (
+    "Participants were 12 opioid-dependent patients (mean age = 44.5 years, "
+    "S.D. = 3.9) recruited from a detoxification unit."
+)
 
 
 @pytest.fixture(scope="module")
@@ -29,11 +31,20 @@ def sch():
 
 
 def cited(value, text, source="reported"):
-    return {"extraction_status": "extracted", "value": value, "value_source": source,
-            "evidence": {"status": "present",
-                         "sets": [{"source": "model_quote",
-                                   "spans": [{"text": text, "start_char": 0,
-                                              "end_char": len(text)}]}]}}
+    return {
+        "extraction_status": "extracted",
+        "value": value,
+        "value_source": source,
+        "evidence": {
+            "status": "present",
+            "sets": [
+                {
+                    "source": "model_quote",
+                    "spans": [{"text": text, "start_char": 0, "end_char": len(text)}],
+                }
+            ],
+        },
+    }
 
 
 def test_re_proposing_the_same_value_is_not_an_edit(sch):
@@ -50,8 +61,7 @@ def test_re_proposing_the_same_value_is_not_an_edit(sch):
 def test_an_edit_the_old_span_still_warrants_inherits_it(sch):
     """`refuses_losing_the_warrant` lets this through *because* the span still contains the
     value. Dropping the span afterwards makes the guard's certification meaningless."""
-    entity = {"local_id": "grp_a",
-              "age_mean": cited(44.0, "mean age = 44.5 years")}
+    entity = {"local_id": "grp_a", "age_mean": cited(44.0, "mean age = 44.5 years")}
     edit.apply(sch, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER)
     node = entity["age_mean"]
     assert node["value"] == 44.5
@@ -66,7 +76,7 @@ def test_a_value_no_span_supports_is_still_honestly_ungrounded(sch):
     entity = {"local_id": "grp_a", "age_mean": cited(44.5, "mean age = 44.5 years")}
     edit.apply(sch, {"groups": [entity]}, "Group", entity, {"age_mean": 61.2}, PAPER)
     node = entity["age_mean"]
-    if node["value"] == 61.2:                      # a guard may refuse it outright, which is fine
+    if node["value"] == 61.2:  # a guard may refuse it outright, which is fine
         assert node["evidence"]["status"] == "not_found"
         assert node["value_source"] == "generated"
 
@@ -85,11 +95,20 @@ def test_a_one_element_list_is_still_a_list(sch):
     list; `refuses_shortening_a_list` required more than one element. It passed both, and
     with evidence inheritance it would have passed the warrant gate too -- a record made
     worse while every check reported green."""
-    entity = {"local_id": "grp_a",
-              "medical_condition": cited(["DSM-IV heroin dependence"],
-                                         "diagnosed with DSM-IV heroin dependence")}
-    log = edit.apply(sch, {"groups": [entity]}, "Group", entity,
-                     {"medical_condition": "heroin dependence"}, PAPER)
+    entity = {
+        "local_id": "grp_a",
+        "medical_condition": cited(
+            ["DSM-IV heroin dependence"], "diagnosed with DSM-IV heroin dependence"
+        ),
+    }
+    log = edit.apply(
+        sch,
+        {"groups": [entity]},
+        "Group",
+        entity,
+        {"medical_condition": "heroin dependence"},
+        PAPER,
+    )
     assert entity["medical_condition"]["value"] == ["DSM-IV heroin dependence"]
     assert not log.written
 
@@ -100,8 +119,14 @@ def test_a_list_slot_is_written_as_a_list(sch):
     it raw wrote bare strings into four list slots -- four of the five findings the pass
     introduced on 18823721."""
     entity = {"local_id": "grp_a"}
-    edit.apply(sch, {"groups": [entity]}, "Group", entity, {"medications": "methadone"},
-               PAPER + " All were maintained on methadone.")
+    edit.apply(
+        sch,
+        {"groups": [entity]},
+        "Group",
+        entity,
+        {"medications": "methadone"},
+        PAPER + " All were maintained on methadone.",
+    )
     assert entity["medications"]["value"] == ["methadone"]
 
 
@@ -109,8 +134,10 @@ def test_a_digit_inside_a_number_is_not_a_warrant(sch):
     """`acquired_count: 12 -> 1` inherited "consisted of 12 opioid-dependent patients",
     because "1" is inside "12". The span said the opposite of the value it was made to
     warrant, and the edit passed every gate. Numbers are compared as numbers."""
-    entity = {"local_id": "grp_a",
-              "acquired_count": cited(12, "consisted of 12 opioid-dependent patients")}
+    entity = {
+        "local_id": "grp_a",
+        "acquired_count": cited(12, "consisted of 12 opioid-dependent patients"),
+    }
     edit.apply(sch, {"groups": [entity]}, "Group", entity, {"acquired_count": 1}, PAPER)
     node = entity["acquired_count"]
     if node["value"] == 1:
@@ -123,8 +150,14 @@ def test_extending_a_grounded_list_is_allowed(sch):
     dropping a value looked fine -- exactly backwards."""
     text = "Analysis used SPM2 and FSL."
     entity = {"local_id": "prp", "software": cited(["SPM2"], "Analysis used SPM2 and FSL.")}
-    edit.apply(sch, {"preprocessings": [entity]}, "Preprocessing", entity,
-               {"software": ["SPM2", "FSL"]}, text)
+    edit.apply(
+        sch,
+        {"preprocessings": [entity]},
+        "Preprocessing",
+        entity,
+        {"software": ["SPM2", "FSL"]},
+        text,
+    )
     assert entity["software"]["value"] == ["SPM2", "FSL"]
     assert entity["software"]["evidence"]["status"] == "present"
 
@@ -133,17 +166,29 @@ def test_shortening_a_list_is_refused_whatever_shape_it_arrives_in(sch):
     """`shape` resolves multiplicity through the wrapper now, so the new value is always a
     list and the old `isinstance` test never fired -- switching the guard off on the very
     slot it was written for."""
-    entity = {"local_id": "prp",
-              "software": cited(["SPM2", "FSL"], "Analysis used SPM2 and FSL.")}
-    log = edit.apply(sch, {"preprocessings": [entity]}, "Preprocessing", entity,
-                     {"software": ["SPM2"]}, "Analysis used SPM2 and FSL.")
+    entity = {
+        "local_id": "prp",
+        "software": cited(["SPM2", "FSL"], "Analysis used SPM2 and FSL."),
+    }
+    log = edit.apply(
+        sch,
+        {"preprocessings": [entity]},
+        "Preprocessing",
+        entity,
+        {"software": ["SPM2"]},
+        "Analysis used SPM2 and FSL.",
+    )
     assert entity["software"]["value"] == ["SPM2", "FSL"]
     assert any("drops values" in r.why for r in log.refused)
 
 
 def _named(label):
-    return {"extraction_status": "extracted", "value": label, "value_source": "reported",
-            "evidence": {"status": "not_found"}}
+    return {
+        "extraction_status": "extracted",
+        "value": label,
+        "value_source": "reported",
+        "evidence": {"status": "not_found"},
+    }
 
 
 def test_a_minted_entity_does_not_stringify_its_nested_slots(sch):
@@ -152,10 +197,16 @@ def test_a_minted_entity_does_not_stringify_its_nested_slots(sch):
     skipped only reference slots -- so a nested one took the scalar path. Valid JSON,
     nothing the schema declares, and the last finding repair introduced across 15 records."""
     entity, why = edit.create(
-        sch, {"tasks": []}, "Task",
-        {"name": "alcohol picture viewing", "description": "viewing alcohol pictures",
-         "conditions": [{"local_id": "c1", "name": "alcohol pictures"}]},
-        PAPER)
+        sch,
+        {"tasks": []},
+        "Task",
+        {
+            "name": "alcohol picture viewing",
+            "description": "viewing alcohol pictures",
+            "conditions": [{"local_id": "c1", "name": "alcohol pictures"}],
+        },
+        PAPER,
+    )
     assert entity is not None, why
     assert "conditions" not in entity or isinstance(entity["conditions"], list)
 
@@ -168,15 +219,20 @@ def test_a_cited_quote_grounds_a_value_too_short_to_search_for(sch):
 
     text = "Participants were 12 opioid-dependent patients recruited from a detox unit."
     entity = {"local_id": "grp_a"}
-    edit.apply(sch, {"groups": [entity]}, "Group", entity,
-               {"acquired_count": 12,
-                recall.QUOTES: {"acquired_count": "12 opioid-dependent patients recruited"}},
-               text)
+    edit.apply(
+        sch,
+        {"groups": [entity]},
+        "Group",
+        entity,
+        {
+            "acquired_count": 12,
+            recall.QUOTES: {"acquired_count": "12 opioid-dependent patients recruited"},
+        },
+        text,
+    )
     node = entity["acquired_count"]
     assert node["value"] == 12
     assert node["evidence"]["status"] == "present", "the cited sentence was not used"
-
-
 
 
 def test_a_table_an_analysis_cites_reports_that_analysis_effect():
@@ -190,12 +246,18 @@ def test_a_table_an_analysis_cites_reports_that_analysis_effect():
 
     body = {
         "analyses": [{"local_id": "a1", "tables": ["tbl1"]}],
-        "tables": [{"local_id": "tbl1"},
-                   {"local_id": "tbl2",
-                    "purpose": {"extraction_status": "extracted",
-                                             "value": "demographics",
-                                             "value_source": "reported",
-                                             "evidence": {"status": "present"}}}],
+        "tables": [
+            {"local_id": "tbl1"},
+            {
+                "local_id": "tbl2",
+                "purpose": {
+                    "extraction_status": "extracted",
+                    "value": "demographics",
+                    "value_source": "reported",
+                    "evidence": {"status": "present"},
+                },
+            },
+        ],
     }
     filled = builder.derive_table_effects(body)
     assert values.read(body["tables"][0]["purpose"]) == "reported_effect"
@@ -211,3 +273,98 @@ def test_the_proposer_is_not_asked_for_a_derived_table_kind():
     from pondie.extraction import recall
 
     assert "purpose" in recall._SKIP
+
+
+# --- replacing an unwarranted value -----------------------------------------
+
+
+def _generated(value):
+    """A value the pass reasoned to: extracted, but with no sentence behind it."""
+    return {
+        "extraction_status": "extracted",
+        "value": value,
+        "value_source": "generated",
+        "evidence": {"status": "not_found"},
+    }
+
+
+PAPER = (
+    "A General Linear Model repeated-measure analysis of covariance (ANOVA) was used "
+    "in the analysis of each DTI-derived parameter before and after treatment."
+)
+
+
+def test_an_unwarranted_value_may_not_overwrite_another_unwarranted_one():
+    """84rGLhCbUJTh: `model_family` went `glm` -> `robust_regression` on an entity whose own
+    estimator reads "Pearson partial correlation", for a paper where the word `robust` does
+    not occur. `refuses_losing_the_warrant` could not see it -- there was no span to lose --
+    and 110 of that run's 230 replacements sat on slots in the same state."""
+    from pondie.extraction.record.edit import Edit, refuses_an_unwarranted_replacement
+
+    entity = {"local_id": "me1", "model_family": _generated("glm")}
+    edit = Edit({}, entity, "model_family", "robust_regression", PAPER, "")
+    refusal = refuses_an_unwarranted_replacement(edit)
+    assert refusal is not None and "no sentence" in refusal.why
+
+
+def test_a_replacement_the_paper_does_place_is_allowed():
+    from pondie.extraction.record.edit import Edit, refuses_an_unwarranted_replacement
+
+    entity = {"local_id": "me1", "model_family": _generated("glm")}
+    edit = Edit(
+        {},
+        entity,
+        "model_family",
+        "ancova",
+        PAPER,
+        "A General Linear Model repeated-measure analysis of covariance (ANOVA)",
+    )
+    assert refuses_an_unwarranted_replacement(edit) is None
+
+
+def test_adding_to_a_value_is_not_replacing_it():
+    """The six model-derived improvements in that run were all supersets -- a family gaining
+    `ancova`, a description gaining a verified clause. Groundedness is not asked of them."""
+    from pondie.extraction.record.edit import Edit, refuses_an_unwarranted_replacement
+
+    entity = {"local_id": "g1", "description": _generated("Children with ASD")}
+    edit = Edit(
+        {}, entity, "description", "Children with ASD, all male and right-handed", "", ""
+    )
+    assert refuses_an_unwarranted_replacement(edit) is None
+
+
+def test_a_multi_element_list_is_left_to_the_list_guards():
+    """kzMj26hGWacQ's preprocessing gained the paper's DARTEL smoothing in the same write
+    that reworded a neighbouring step. Judged as one value it is neither a superset nor
+    locatable, and refusing it lost a correct recovery."""
+    from pondie.extraction.record.edit import Edit, refuses_an_unwarranted_replacement
+
+    entity = {"local_id": "p1", "steps": _generated(["slice timing", "co-registration"])}
+    edit = Edit(
+        {},
+        entity,
+        "steps",
+        ["slice timing", "co-registration to the structural scan", "DARTEL smoothing"],
+        "",
+        "",
+    )
+    assert refuses_an_unwarranted_replacement(edit) is None
+
+
+def test_a_warranted_value_is_still_the_other_guard_s_business():
+    """When the value being replaced has a span, `refuses_losing_the_warrant` decides; this
+    guard standing down is what keeps one refusal per reason."""
+    from pondie.extraction.record.edit import Edit, refuses_an_unwarranted_replacement
+
+    entity = {
+        "local_id": "me1",
+        "model_family": {
+            "extraction_status": "extracted",
+            "value": "glm",
+            "value_source": "reported",
+            "evidence": {"status": "present", "sets": [{"spans": [{"text": "GLM"}]}]},
+        },
+    }
+    edit = Edit({}, entity, "model_family", "robust_regression", PAPER, "")
+    assert refuses_an_unwarranted_replacement(edit) is None
