@@ -30,6 +30,55 @@ def test_the_validator_runs_over_every_shipped_record(path):
         assert isinstance(message, str) and message.strip()
 
 
+def test_a_blank_may_say_why_and_an_extracted_value_may_not():
+    """`unreported_reason` qualifies a blank; on a filled slot there is nothing to explain.
+
+    The vocabulary deliberately has no `not_applicable`: extraction-readme.md reserves that
+    as a *value* -- "the concept does not apply", which an observational study's allocation
+    genuinely is -- and a blank claiming it would be silence recorded where an answer belongs.
+    """
+    sch = reader.load(schema.EXTRACTION)
+    blank = {
+        "extraction_status": "not_reported",
+        "unreported_reason": "silent",
+        "evidence": {"status": "not_applicable"},
+    }
+
+    validator = validate.Validator(sch, None)
+    validator.check_field(blank, "ExtractedString", "Group.name")
+    assert validator.errors == [], validator.errors
+
+    # Absent is allowed: a record written before the slot existed carries no reason, and
+    # that is a different claim from `silent`.
+    validator = validate.Validator(sch, None)
+    validator.check_field(
+        {k: v for k, v in blank.items() if k != "unreported_reason"},
+        "ExtractedString",
+        "Group.name",
+    )
+    assert validator.errors == [], validator.errors
+
+    validator = validate.Validator(sch, None)
+    validator.check_field(
+        {**blank, "unreported_reason": "not_applicable"}, "ExtractedString", "Group.name"
+    )
+    assert validator.errors, "a reason outside the vocabulary must be reported"
+
+    validator = validate.Validator(sch, None)
+    validator.check_field(
+        {
+            "extraction_status": "extracted",
+            "value": "controls",
+            "value_source": "reported",
+            "unreported_reason": "silent",
+            "evidence": {"status": "not_found"},
+        },
+        "ExtractedString",
+        "Group.name",
+    )
+    assert validator.errors, "a reason on a filled slot must be reported"
+
+
 def test_a_multivalued_extracted_value_is_checked_item_by_item():
     """The shape `extraction-readme.md` leads with: one wrapper over a list, not a list of
     wrappers. The branch that accepts it recursed with a dict comprehension over the slot,

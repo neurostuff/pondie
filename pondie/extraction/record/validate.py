@@ -17,6 +17,7 @@ multivalued shape), the class `rules` the storage schema states, and the
 invariants in the extraction schema header:
 
   * extraction_status: not_reported  =>  value omitted, evidence.status not_applicable
+  * extraction_status: extracted     =>  unreported_reason omitted
   * evidence.status: present         =>  at least one set, each with at least one span
   * every span satisfies text == source[start_char:end_char]
 
@@ -82,6 +83,7 @@ def storage_rules() -> Mapping[str, list[Mapping[str, Any]]]:
 _EXTRACTION_STATUS = {"extracted", "not_reported"}
 _VALUE_SOURCE = {"reported", "generated"}
 _EVIDENCE_STATUS = {"present", "not_found", "not_applicable"}
+_UNREPORTED_REASON = {"silent", "ambiguous", "outside_text", "cited_elsewhere", "undetermined"}
 
 # LinkML native ranges of the ExtractedValue subclasses, and the Python types
 # that satisfy them. bool is excluded from integer deliberately: True would
@@ -433,11 +435,20 @@ class Validator:
         else:
             self.check_evidence(evidence, status, f"{path}.evidence")
 
+        reason = node.get("unreported_reason")
+        if reason is not None and reason not in _UNREPORTED_REASON:
+            self.error(
+                path,
+                f"unreported_reason must be one of {sorted(_UNREPORTED_REASON)}, got {reason!r}",
+            )
+
         # Header invariant: not_reported means no value at all.
         if status == "not_reported":
             if "value" in node:
                 self.error(path, "not_reported fields must omit value")
         elif status == "extracted":
+            if reason is not None:
+                self.error(path, "extracted fields must omit unreported_reason")
             if "value" not in node:
                 self.error(path, "extracted fields must carry a value")
             else:

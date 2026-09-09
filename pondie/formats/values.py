@@ -9,6 +9,12 @@ it. The wrapper is what carries the second and third.
      "value_source": "reported",
      "evidence": {"status": "present", "sets": [{"quotes": ["forty-two patients"]}]}}
 
+A slot with no value carries the same wrapper without one, and says why it is blank:
+
+    {"extraction_status": "not_reported",
+     "unreported_reason": "silent",
+     "evidence": {"status": "not_applicable"}}
+
 This module exists because five modules had each written their own unwrapper and **they did
 not agree**. `derive_fields` returned `None` for any mapping without a `value` key, including
 ones that were not wrappers at all; `validate_record` returned `None` for anything that was
@@ -62,6 +68,17 @@ EvidenceStatus = Literal["present", "not_found", "not_applicable"]
 #: prevent: absent means nothing was asked.
 ExtractionStatus = Literal["extracted", "not_reported"]
 
+#: Why a `not_reported` slot has no value. A qualifier on the status, not a second status:
+#: missingness keeps one encoding, so a query asking what is missing still reads
+#: `extraction_status` alone and never has to know this vocabulary.
+#:
+#: Four of the five are claims about the source, and a reviewer can check them against the
+#: page. `undetermined` is the one that reports on the pass instead -- it is how a pass
+#: declines without the decline reading as a finding, and it is what a later pass looks for.
+UnreportedReason = Literal[
+    "silent", "ambiguous", "outside_text", "cited_elsewhere", "undetermined"
+]
+
 #: The key that makes a mapping a wrapper. Structural, so it is checked and not inferred.
 MARKER = "extraction_status"
 
@@ -90,6 +107,7 @@ class ExtractedValue(BaseModel):
     extraction_status: ExtractionStatus
     value: Any = None
     value_source: ValueSource | None = None
+    unreported_reason: UnreportedReason | None = None
     evidence: Evidence
 
     def as_field(self) -> dict[str, Any]:
@@ -98,10 +116,21 @@ class ExtractedValue(BaseModel):
         if self.extraction_status != "extracted":
             out.pop("value", None)
             out.pop("value_source", None)
+        else:
+            # There is no blank to explain on an extracted value, and the validator rejects
+            # one. Dropped rather than refused so a caller reusing a wrapper it just filled
+            # cannot silently invalidate the record.
+            out.pop("unreported_reason", None)
         return out
 
 
-def wrap(value: Any, *, source: ValueSource, evidence: EvidenceStatus) -> dict[str, Any]:
+def wrap(
+    value: Any,
+    *,
+    source: ValueSource,
+    evidence: EvidenceStatus,
+    reason: UnreportedReason | None = None,
+) -> dict[str, Any]:
     """A wrapper around `value`, or a `not_reported` one when there is no value.
 
     Both keywords are REQUIRED, with no default, and that is the point. `evidence` first
@@ -121,10 +150,19 @@ def wrap(value: Any, *, source: ValueSource, evidence: EvidenceStatus) -> dict[s
     `None` and `""` become `not_reported` because that is what they mean coming out of a
     manifest or a deriver: the field was asked for and the source did not carry it. An empty
     *list* is different -- it is an extracted answer of "none" -- so it is not folded in.
+
+    `reason` says why there is no value, and defaults to recording none. It is not defaulted
+    to `silent` on purpose: a deriver whose regex missed and a manifest that carried no
+    caption have not established that the page says nothing, and stamping the claim on their
+    behalf is how `value_source: derived` reached eight fields of every record in the corpus.
+    A caller that knows which of the five it is passes it; one that does not, leaves it, and
+    the blank stays honestly unexplained.
     """
     if value is None or value == "":
         return ExtractedValue(
-            extraction_status="not_reported", evidence=Evidence(status="not_applicable")
+            extraction_status="not_reported",
+            unreported_reason=reason,
+            evidence=Evidence(status="not_applicable"),
         ).as_field()
     return ExtractedValue(
         extraction_status="extracted",
