@@ -19,7 +19,7 @@ package spends most of its guards preventing; a finding tells a reviewer where t
 from __future__ import annotations
 
 import re
-from typing import Any, Iterator, Mapping, Sequence
+from typing import Any, Iterator, Mapping
 
 #: How a paper introduces the set it will report on. Deliberately narrow: a false enumeration
 #: produces a false gap, and a reviewer who is sent to look at nothing stops looking.

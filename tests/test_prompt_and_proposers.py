@@ -8,8 +8,6 @@ and the proposers rather than about the pass that was removed.
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from pondie import paths

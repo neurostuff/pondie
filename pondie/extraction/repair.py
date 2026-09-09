@@ -21,18 +21,11 @@ able to resolve what the paper plainly answers.
 
 from __future__ import annotations
 
-import contextlib
-import functools
-import json
-import os
 import re
-import sys
-import threading
 from dataclasses import dataclass, field
-from typing import Any, Mapping, MutableMapping, Sequence
+from typing import Any, Mapping, MutableMapping
 
 from pondie.extraction import recall
-from pondie.extraction.evidence import grounding
 from pondie.extraction.record import edit as edit_module
 from pondie.extraction.record.edit import UNRESTRICTED, Edit, Refusal, refusals
 from pondie.extraction.record.validate import Validator

@@ -20,9 +20,8 @@ so a quote that fails to resolve names the same field in both tools.
 from __future__ import annotations
 
 import re
-from typing import Any, Sequence
+from typing import Any
 
-from pondie.extraction.evidence import retrieval
 from pondie.extraction.models import EvidenceCounts
 
 #: Paths per call. Large enough that a paper is a handful of calls, small enough
@@ -155,31 +154,6 @@ def iter_fields(node: Any, path: str = ""):
             yield from iter_fields(value, f"{path}[{index}]")
 
 
-def owners(node: Any, path: str = "", owner: str = "") -> dict[str, str]:
-    """path -> the name of the entity the field hangs off.
-
-    The retriever scores a unit higher when it names the entity, and an entity's name is
-    not recoverable from a dotted path. Cheap to collect on the way past.
-    """
-
-    found: dict[str, str] = {}
-    if isinstance(node, dict):
-        if "extraction_status" in node:
-            return {path: owner}
-        mine = owner
-        for key in ("name", "title", "source_label", "modality"):
-            value = (node.get(key) or {}).get("value") if isinstance(node.get(key), dict) else None
-            if isinstance(value, str) and 3 < len(value) < 80:
-                mine = value
-                break
-        for key, value in node.items():
-            found |= owners(value, f"{path}.{key}" if path else str(key), mine)
-    elif isinstance(node, list):
-        for index, value in enumerate(node):
-            found |= owners(value, f"{path}[{index}]", owner)
-    return found
-
-
 def apply_evidence(
     payload: dict[str, Any],
     quotes: dict[str, str],
@@ -200,7 +174,6 @@ def apply_evidence(
     """
 
     counts = dict.fromkeys(EvidenceCounts.model_fields, 0)
-    owner_of = owners(payload)
     for path, field in iter_fields(payload):
         if field.get("extraction_status") != "extracted":
             field.pop("value", None)

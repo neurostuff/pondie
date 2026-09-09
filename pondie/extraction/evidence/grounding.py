@@ -18,11 +18,7 @@ heavyweight optional dependency and the rest of a repair is deterministic.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
-from typing import Any, Mapping, MutableMapping, Protocol, Sequence
-
-from pondie.extraction.record.edit import Refusal
-from pondie.formats import values
+from typing import Any
 
 #: subset on the slot would say it beside the definition instead of here.
 #:

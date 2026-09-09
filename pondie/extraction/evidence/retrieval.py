@@ -23,13 +23,11 @@ fails on perhaps a fifth of papers, and a hard filter turns those into guarantee
 from __future__ import annotations
 
 import re
-import sys
 import unicodedata
 from dataclasses import dataclass
 
 # One abbreviation list for the repo. `preprocess` owns it because that is where it was
 # measured against scispaCy; importing it is cheaper than the drift of a second copy.
-from pondie.extraction.evidence.grounding import REASONED
 from pondie.extraction.prompt.preprocess import ends_mid_sentence
 
 # --- sections ---------------------------------------------------------------

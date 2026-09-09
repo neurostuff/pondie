@@ -9,8 +9,6 @@ sentence does not have.
 
 from __future__ import annotations
 
-import pytest
-
 from pondie.extraction.evidence import quote as qz
 
 

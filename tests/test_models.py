@@ -1,6 +1,5 @@
 """The pipeline models exist to fail early. These check that they do."""
 
-import collections
 from pathlib import Path
 
 import pytest

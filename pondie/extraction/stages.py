@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import copy
 import json
-import os
 import shutil
 from dataclasses import dataclass
 from datetime import date
@@ -1004,7 +1003,6 @@ class Repair(_Base):
                 )
                 notes.append(f"proposer: {settings.model}")
 
-        reply = None
         report = repair_pass.run(
             # The schema this validates against, not the storage one. They differ --
             # `Table.coordinate_space` exists in storage and not in extraction -- so
