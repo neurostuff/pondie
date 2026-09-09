@@ -723,19 +723,6 @@ def _inherited(current: Any, value: Any) -> tuple[dict, str] | None:
 _NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
 
 
-def _in_document(value: Any, text: str) -> bool:
-    """Whether the paper states this value somewhere, span or no span.
-
-    The locator answers "is there a sentence I can cite for this field", which is a harder
-    question than "does the paper say this", and it fails on values the document plainly
-    contains. Separating the two is what lets an ungrounded write be refused without
-    throwing away the software names and field strengths the retriever merely missed.
-    """
-    if not text:
-        return False
-    return all(_warrants(text, item)
-               for item in (value if isinstance(value, list) else [value]))
-
 
 def _warrants(text: str, value: Any) -> bool:
     """Whether this span says this one value, rather than merely containing its characters."""

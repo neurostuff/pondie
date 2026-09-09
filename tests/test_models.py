@@ -14,7 +14,6 @@ from pondie.extraction.models import (
     Settings,
     StageName,
     StageOutcome,
-    Workflow,
 )
 from pondie.extraction.stages import sequence
 
@@ -45,36 +44,15 @@ def test_a_paper_knows_where_its_inputs_are_without_a_stage_being_told(tmp_path)
     assert not paper.ready(), "a paper with no text is not ready, and says so"
 
 
-def test_a_workflow_the_stages_do_not_implement_is_refused(tmp_path):
-    """`entity_first` was accepted, stored, and then never read.
 
-    A run asked for it, got the demand-driven ordering, and reported success -- the exact
-    failure `extra="forbid"` exists to prevent, reached by a correctly spelled value.
-    """
-
-    with pytest.raises(ValidationError, match="not implemented"):
-        Settings(
-            payloads=tmp_path, records=tmp_path, model="m", workflow=Workflow.entity_first
-        )
-
-
-def test_the_implemented_workflow_is_still_accepted(tmp_path):
+def test_the_pipeline_is_one_ordering(tmp_path):
+    """There is one workflow, so the order is a property of `DEMAND_DRIVEN` and not of a
+    setting. It is pinned because the order is the design: `demands` before `satisfy` so the
+    analyses declare their terms first, `fill` after `satisfy` because it finishes what that
+    pass left open, and `evidence` after `fill` so a value the loop adds gets a quote."""
     settings = Settings(payloads=tmp_path, records=tmp_path, model="m")
-    assert settings.workflow is Workflow.demand_driven
     assert [stage.name.value for stage in sequence(settings)] == [
-        "tables",
-        # Appends prose-stated coordinates to the parse. Before "split", which rewrites
-        # the whole document, so one stage owns the analyses list at a time.
-        "prose",
-        "split",
-        "demands",
-        "satisfy",
-        # Slot-level, and after `satisfy`: it finishes what that pass left open rather
-        # than deciding anything exists, and it needs the entities to exist to name their
-        # open slots. Before `evidence`, so a value it adds gets a quote like any other.
-        "fill",
-        "evidence",
-        "build",
+        "tables", "prose", "split", "demands", "satisfy", "fill", "evidence", "build",
         "repair",
     ]
 

@@ -230,9 +230,6 @@ def _keyword(paper: str, rule: str) -> str | None:
     )
 
 
-def derive_diagnostic_system(paper: str, **_: Any) -> str | None:
-    return _keyword(paper, "diagnostic_system")
-
 
 def derive_mr_acquisition_type(paper: str, **_: Any) -> str | None:
     return _keyword(paper, "mr_acquisition_type")
@@ -246,16 +243,8 @@ def derive_assignment_structure(paper: str, **_: Any) -> str | None:
     return _keyword(paper, "assignment_structure")
 
 
-def derive_hrf_model(paper: str, **_: Any) -> str | None:
-    return _keyword(paper, "hrf_model")
 
 
-def derive_handedness(paper: str, **_: Any) -> str | None:
-    return _keyword(paper, "handedness_category")
-
-
-#: (label, where the field lives, deriver). `scope` names the traversal, not a path: a
-#: field on every Group is reached differently from one on a Cell.
 DERIVERS: list[tuple[str, str, str, Callable[..., Any]]] = [
     (
         "Acquisition.magnetic_field_strength_tesla",

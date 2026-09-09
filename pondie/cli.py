@@ -17,7 +17,6 @@ from pondie.extraction.models import (
     Paper,
     Settings,
     StageName,
-    Workflow,
 )
 
 
@@ -52,7 +51,6 @@ def _extract(args: argparse.Namespace) -> int:
         payloads=run_dir / "payloads",
         records=run_dir / "records",
         model=args.model,
-        workflow=Workflow(args.workflow),
         stages=tuple(StageName(s) for s in args.stages) if args.stages else tuple(StageName),
         effort=args.effort,
         service_tier=args.service_tier,
@@ -135,9 +133,6 @@ def main(argv: list[str] | None = None) -> int:
     ex.add_argument("--env", type=Path, help="shell-style file of API credentials")
     ex.add_argument(
         "--flavour", default=Flavour.pubget.value, choices=[f.value for f in Flavour]
-    )
-    ex.add_argument(
-        "--workflow", default=Workflow.demand_driven.value, choices=[w.value for w in Workflow]
     )
     ex.add_argument("--stages", nargs="*", choices=[s.value for s in StageName])
     ex.add_argument("--effort", default="low", choices=["minimal", "low", "medium", "high"])

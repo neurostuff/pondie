@@ -464,7 +464,15 @@ def _parsed_points(parsed: Mapping[str, Any]) -> list[tuple[float, float, float]
 
 @dataclass(frozen=True)
 class Satisfy(_ModelPass):
-    """Build exactly the entities the demands pass asked for, and nothing else."""
+    """Build exactly the entities the demands pass asked for, and nothing else.
+
+    What it leaves open is `Fill`'s: this pass decides which entities exist and answers what
+    it can, and a slot-level loop finishes the rest. A second entity-shaped pass used to run
+    here and was removed -- re-rendering a class schema to add one field is judged on whether
+    the entity came back rather than on whether the slot did, and measured over five papers
+    three rounds of it bought 18 filled fields for 11% more input, inside the noise of two
+    runs of one configuration.
+    """
 
     name: StageName = StageName.satisfy
     mode: str = "satisfy"
@@ -474,100 +482,6 @@ class Satisfy(_ModelPass):
         if not demands.is_file():
             return ()
         return json.loads(demands.read_text("utf-8")).get("required_entities") or ()
-
-    def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
-        """The one pass, and then a second over whichever of `render.PRIORITY` came back thin.
-
-        Twenty-three entity classes share one call, and the ones an analysis leans on hardest
-        lose out: a cell names a level and a level names a condition or a cohort, so a thin
-        Task or Group is felt by every analysis pointing at it, and Analysis's own nested
-        closure -- Effect, Cell, ModelTerm -- gets the same crowding. Measured on 16038771, a
-        sweep found 132 empty fields the single pass had left on Task and Group alone -- nine
-        on one Group, three on the only Task, and not one condition described.
-
-        `render.thin` scores each of `render.PRIORITY`'s keys independently, so a Group that
-        came back full does not buy a thin Analysis a pass, and the second call is scoped
-        (via `active`) to only the keys that need it -- never paying to redo a class the
-        first pass already covered. Skipped entirely when nothing is thin, which is the
-        common case.
-
-        Not attempted on resume: `super().run` returns `_skip` once `satisfy.json` exists, so
-        a run interrupted after the first pass keeps the record it has rather than paying for
-        a second opinion on a paper this process never read.
-        """
-        outcome = super().run(paper, settings, caller)
-        if not settings.priority_pass or outcome.reason:
-            return outcome
-        written = self.produces(paper, settings)
-        if not written.is_file():
-            return outcome
-
-        payload = json.loads(written.read_text("utf-8"))
-        sch = reader.load(render.EXTRACTION_SCHEMA)
-        keys = render.priority_keys(sch)
-        containers = sch.containers()
-        text = paper.text.read_text(encoding="utf-8", errors="replace")
-
-        cost, traces, notes = outcome.cost, list(outcome.traces), []
-        seen: int | None = None
-        for round_number in range(1, max(1, settings.priority_rounds) + 1):
-            thin_keys = render.thin(payload, keys)
-            if not thin_keys:
-                notes.append(f"round {round_number}: nothing thin, stopped")
-                break
-            # A round that did not shrink the thin set is a round the next one repeats. The
-            # stop matters more than it looks: two runs of this stage on the same payload
-            # disagree by about a tenth of the fields they place, so "it got better" is not
-            # readable from one sample -- only "there is still something unanswered" is, and
-            # a loop that cannot see progress must not be trusted to run until it sees some.
-            if seen is not None and len(thin_keys) >= seen:
-                notes.append(
-                    f"round {round_number}: {len(thin_keys)} key(s) still thin and no fewer "
-                    f"than last round, stopped")
-                break
-            seen = len(thin_keys)
-
-            active = [n for n in render.PRIORITY if containers.get(n) in thin_keys]
-            prompt = render.build_prompt(
-                text, "priority", settings.retrieve_evidence,
-                render.filled_block(payload, thin_keys), active)
-            try:
-                reply = caller(
-                    ModelCall(model=settings.model, system=prompt.system, prompt=prompt.user,
-                              max_output_tokens=settings.max_output_tokens,
-                              effort=settings.effort, service_tier=settings.service_tier,
-                              attempts=settings.attempts),
-                    paper=paper.study_id,
-                    stage=f"{self.name.value}:priority{round_number}")
-                second, _notes = render.normalize(reply.payload, "satisfy")
-                filled, dropped = render.fill_empty(payload, second, thin_keys)
-                self._write(paper, settings, payload)
-            except Exception as error:  # noqa: BLE001 -- a later round must not lose an earlier
-                notes.append(f"round {round_number} skipped: {type(error).__name__}")
-                break
-
-            cost = cost + reply.cost
-            traces.append((reply.trace_id, reply.cache_status))
-            notes.append(
-                f"round {round_number}: asked about {','.join(thin_keys)}, "
-                f"filled {filled} empty field(s)")
-            if dropped:
-                # Not padding: every answer under an id the first pass never minted is
-                # discarded, and without this the result reads exactly like a paper that
-                # needed nothing.
-                notes.append(
-                    f"round {round_number} dropped {dropped} entity(s) under unmatched "
-                    f"local_id")
-            if reply.stop_reason and reply.stop_reason != "stop":
-                notes.append(f"round {round_number} stopped on {reply.stop_reason}")
-            if not filled:
-                # Nothing landed, so the next round sends the same question to the same
-                # model over the same paper. The cap is the backstop; this is the common exit.
-                notes.append(f"round {round_number}: nothing landed, stopped")
-                break
-
-        return outcome.model_copy(update={
-            "cost": cost, "traces": tuple(traces), "notes": (*outcome.notes, *notes)})
 
     def context(self, paper: Paper, settings: Settings) -> str:
         """The shopping list the demands pass wrote, as this pass's contract.
@@ -676,8 +590,7 @@ class Fill(_Base):
                     encoding="utf-8")
                 if not (filled or reasoned):
                     # The round settled nothing, so the next one asks the same model the
-                    # same question about the same paper. `priority_rounds` learned this
-                    # the expensive way.
+                    # same question about the same paper.
                     notes.append(f"{target.name} round {round_number}: nothing settled, "
                                  f"stopped")
                     break
@@ -971,7 +884,6 @@ class Build(_Base):
         return notes
 
 
-#: Named orderings, so a workflow is a name rather than a remembered set of flags.
 @dataclass(frozen=True)
 class Repair(_Base):
     """Improve a built record, and report anything the attempt broke.
