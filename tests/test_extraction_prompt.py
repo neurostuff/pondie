@@ -265,3 +265,58 @@ def test_a_moved_heading_is_reported_rather_than_silently_restored():
             render.conventions()
     finally:
         render._SKIP_SECTIONS = original
+
+
+# -- the demands pass's contract with the pass that follows it ----------------
+
+
+def _demand(term_model, analyses, inputs_from=()):
+    return {
+        "required_entities": [
+            {"local_id": "trm_timing", "kind": "ModelTerm", "model": term_model},
+            {"local_id": "mod_a", "kind": "ModelEstimation"},
+            {"local_id": "mod_b", "kind": "ModelEstimation", "inputs_from": list(inputs_from)},
+        ],
+        "analyses": [
+            {
+                "local_id": f"a{n}",
+                "model_estimation": model,
+                "effect": {"cells": [{"term": "trm_timing"}]},
+            }
+            for n, model in enumerate(analyses)
+        ],
+    }
+
+
+def test_a_term_cited_by_a_model_that_cannot_reach_it_is_a_retry():
+    """`ngDTY5BgJUuX` declared one `trm_timing` owned by `mod_mass_univariate`, then wrote
+    three analyses on `mod_mvpa` citing it. No record satisfies that: a cell must name a term
+    its analysis's model reaches. `satisfy` declared the term once per model to comply,
+    prefixing each, and every cell the earlier pass wrote was left pointing at an id that no
+    longer existed -- 34 of 176 cells over the benchmark papers."""
+    failures = render.unreachable_term_demands(_demand("mod_a", ["mod_a", "mod_b"]))
+    assert len(failures) == 1
+    assert "trm_timing" in failures[0] and "mod_b" in failures[0]
+    assert "inputs_from" in failures[0], "the message must say how to write it so a record exists"
+
+
+def test_a_term_reached_through_inputs_from_is_not_a_fault():
+    """§5.12's two-stage model: the group stage reaches the subject stage's terms, so one
+    declaration serves both and the cells resolve."""
+    assert (
+        render.unreachable_term_demands(
+            _demand("mod_a", ["mod_a", "mod_b"], inputs_from=["mod_a"])
+        )
+        == []
+    )
+
+
+def test_a_term_used_only_by_its_own_model_is_not_a_fault():
+    assert render.unreachable_term_demands(_demand("mod_a", ["mod_a", "mod_a"])) == []
+
+
+def test_the_postcondition_reaches_the_demands_pass():
+    """Wired into `postcondition_failures`, so the pass retries with the fault named rather
+    than handing an unsatisfiable list to `satisfy`."""
+    failures = render.postcondition_failures(_demand("mod_a", ["mod_a", "mod_b"]), "demands")
+    assert any("trm_timing" in f for f in failures)

@@ -768,6 +768,7 @@ def postcondition_failures(
                 "no required_entities were declared, so the entity pass that "
                 "follows has nothing to be held to"
             )
+        failures.extend(unreachable_term_demands(payload))
     else:
         if not any(payload.get(key) for key in ENTITY_LISTS):
             failures.append(
@@ -792,6 +793,56 @@ def postcondition_failures(
                 + ", ".join(sorted(missing)[:8])
             )
     return failures
+
+
+def unreachable_term_demands(payload: Mapping[str, Any]) -> list[str]:
+    """A declared term cited by an analysis whose model neither owns it nor reaches it.
+
+    The shopping list is this pass's contract with the next one, and it can be written so
+    that no record satisfies it. `ngDTY5BgJUuX` declared one `trm_timing`, owned by
+    `mod_mass_univariate`, and then wrote three analyses on `mod_mvpa` whose cells cite it.
+    A cell must name a term its analysis's model reaches, so there is no single term that
+    answers both -- and `satisfy` did the only thing left, declaring the term once per model
+    and prefixing each with the model to keep them apart. Every cell the earlier pass wrote
+    was then pointing at an id no longer present. 34 of 176 cells over the fifteen benchmark
+    papers, on 4 of them.
+
+    Two ways to write it so a record exists: declare one term per model that uses it, or
+    declare `inputs_from` on the upper model so it reaches the lower one's terms (§5.12).
+    Both are the pass's own to choose, which is why this is a retry and not a repair --
+    `builder.repoint_out_of_scope_terms` cleans up afterwards, and cleaning up afterwards
+    means the cells and the terms disagreed in the record that was written.
+    """
+
+    owner, reaches = {}, {}
+    for entry in payload.get("required_entities") or []:
+        if not isinstance(entry, Mapping) or not entry.get("local_id"):
+            continue
+        if entry.get("kind") == "ModelTerm":
+            owner[entry["local_id"]] = entry.get("model")
+        elif entry.get("kind") == "ModelEstimation":
+            reaches[entry["local_id"]] = set(entry.get("inputs_from") or ())
+
+    stranded: dict[str, set[str]] = {}
+    for analysis in payload.get("analyses") or []:
+        if not isinstance(analysis, Mapping):
+            continue
+        mine = analysis.get("model_estimation")
+        for cell in (analysis.get("effect") or {}).get("cells") or []:
+            if not isinstance(cell, Mapping):
+                continue
+            term = cell.get("term")
+            home = owner.get(term)
+            if not (home and mine) or home == mine or home in reaches.get(mine, set()):
+                continue
+            stranded.setdefault(str(term), set()).add(str(mine))
+
+    return [
+        f"term {term!r} is declared on model {owner[term]!r} but cited by analyses on "
+        f"{', '.join(sorted(models))}: declare one term per model that uses it, or give the "
+        f"citing model an `inputs_from` that reaches {owner[term]!r}"
+        for term, models in sorted(stranded.items())
+    ]
 
 
 def design_model_mismatch(payload: Mapping[str, Any]) -> list[str]:
