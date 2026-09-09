@@ -11,6 +11,10 @@ dependencies = [
     "pydantic>=2",
     "requests",
     "pyyaml",
+    # The progress bar. A corpus run is hours long and was silent until it
+    # finished; `pipeline.execute` disables it off a terminal, so this is not
+    # optional in the way a display dependency usually is -- the module imports it.
+    "tqdm",
     # Dependency-scoped negation. `medication_status` needs it to tell "not medicated"
     # from "medicated": without it `_negation` falls back and the field reads UNKNOWN
     # rather than failing, so a missing parser looks like a paper that said nothing.

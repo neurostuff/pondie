@@ -42,7 +42,17 @@ def _papers(root: Path, ids: Path, flavour: Flavour) -> list[Paper]:
 
 
 def _extract(args: argparse.Namespace) -> int:
+    import logging
+
     from pondie.extraction import GatewayCaller, load_env, plan, run
+
+    # Configured here and not at import: a library that installs a handler steals the
+    # formatting from anything embedding it. The CLI is the application, so it decides.
+    logging.basicConfig(
+        level=getattr(logging, args.log.upper()),
+        format="%(asctime)s %(levelname)-7s %(message)s",
+        datefmt="%H:%M:%S",
+    )
 
     if args.env:
         load_env(args.env)
@@ -62,7 +72,13 @@ def _extract(args: argparse.Namespace) -> int:
         for study, steps in plan(papers, settings).items():
             print(f"  {study}  {' '.join(steps)}")
         return 0
-    report = run(papers, settings, GatewayCaller(), workers=args.workers)
+    report = run(
+        papers,
+        settings,
+        GatewayCaller(),
+        workers=args.workers,
+        progress=not args.no_progress,
+    )
     print(report.summary())
     for paper in report.failures:
         print(f"  FAILED {paper.study_id}: {paper.failed.reason}")
@@ -149,6 +165,17 @@ def main(argv: list[str] | None = None) -> int:
     )
     ex.add_argument("--redo", action="store_true")
     ex.add_argument("--workers", type=int, default=1)
+    ex.add_argument(
+        "--no-progress",
+        action="store_true",
+        help="suppress the progress bar. It is already off when stderr is not a terminal",
+    )
+    ex.add_argument(
+        "--log",
+        default="warning",
+        choices=["debug", "info", "warning", "error"],
+        help="`info` names each step as it finishes; `debug` adds the cache hits",
+    )
     ex.add_argument("--plan", action="store_true", help="say what would run, spend nothing")
     ex.set_defaults(fn=_extract)
 

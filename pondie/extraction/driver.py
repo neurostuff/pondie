@@ -12,12 +12,21 @@ informative error.
 from __future__ import annotations
 
 import json
-from concurrent.futures import ThreadPoolExecutor
+import threading
+from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Iterable
 
+from pondie import pipeline
 from pondie.extraction.llm import Caller
-from pondie.extraction.models import Paper, PaperOutcome, RunReport, Settings, StageOutcome
+from pondie.extraction.models import (
+    Paper,
+    PaperOutcome,
+    RunReport,
+    Settings,
+    StageName,
+    StageOutcome,
+)
 from pondie.extraction.stages import sequence
 
 
@@ -79,17 +88,106 @@ def plan(papers: Iterable[Paper], settings: Settings) -> dict[str, list[str]]:
     return out
 
 
+class _StageFailed(RuntimeError):
+    """A stage that returned `ok=False` without raising, so the scheduler stops the paper."""
+
+
 def run(
-    papers: Iterable[Paper], settings: Settings, caller: Caller, workers: int = 1
+    papers: Iterable[Paper],
+    settings: Settings,
+    caller: Caller,
+    workers: int = 1,
+    progress: bool = True,
 ) -> RunReport:
+    """Schedule the stages over the papers, and report what each one did.
+
+    The scheduling, the caching, the progress bar and the event journal are
+    `pondie.pipeline`'s; what stays here is the domain -- which stages there are, what a
+    `StageOutcome` costs, and that a paper stops at its first failure.
+
+    A stage still decides for itself whether it has work to do, and says so with
+    `skipped=True`. That is a different question from the scheduler's: the scheduler asks
+    whether the answer on disk was computed from today's inputs, and a stage asks whether
+    there is anything to compute. Both answers reach the report.
+    """
+
     papers = list(papers)
-    if workers <= 1:
-        report = RunReport(papers=tuple(run_paper(p, settings, caller) for p in papers))
-    else:
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            report = RunReport(
-                papers=tuple(pool.map(lambda p: run_paper(p, settings, caller), papers))
+    collected: dict[str, list[StageOutcome]] = defaultdict(list)
+    #: (study, stage) the stage itself reported on. Anything the scheduler saw and this did
+    #: not is a stage that never returned -- cached, so never called, or raised.
+    spoke: set[tuple[str, str]] = set()
+    lock = threading.Lock()
+
+    def as_step(stage) -> pipeline.Step[Paper]:
+        def do(paper: Paper):
+            outcome = stage.run(paper, settings, caller)
+            with lock:
+                collected[paper.study_id].append(outcome)
+                spoke.add((paper.study_id, stage.name.value))
+            if not outcome.ok:
+                raise _StageFailed(outcome.reason or "stage reported a failure")
+            return outcome.reason or ""
+
+        return pipeline.Step(
+            name=stage.name.value,
+            produces=lambda paper: stage.produces(paper, settings),
+            depends_on=lambda paper: stage.depends_on(paper, settings),
+            run=do,
+        )
+
+    steps = [as_step(stage) for stage in sequence(settings)]
+    ready = [p for p in papers if p.ready()]
+    for paper in papers:
+        if paper.ready():
+            continue
+        collected[paper.study_id].append(
+            StageOutcome(
+                stage=settings.stages[0],
+                study_id=paper.study_id,
+                reason=f"missing text or stage-1 parse under {paper.root}",
             )
+        )
+
+    run_report = pipeline.execute(
+        ready,
+        steps,
+        name_of=lambda paper: paper.study_id,
+        workers=workers,
+        redo=settings.redo,
+        progress=progress,
+        events=settings.records.parent / "events.jsonl",
+    )
+    # Two ways a stage produces no `StageOutcome` of its own: the scheduler found the answer
+    # fresh and never called it, or it raised before returning one. Both have to reach the
+    # report -- without the first a run that skipped everything reports having done nothing,
+    # and without the second a crash is a paper that silently stops early.
+    for outcome in run_report.outcomes:
+        if (outcome.item, outcome.step) in spoke:
+            continue
+        if outcome.state == "cached":
+            collected[outcome.item].append(
+                StageOutcome(
+                    stage=StageName(outcome.step),
+                    study_id=outcome.item,
+                    skipped=True,
+                    reason="unchanged since it was last produced",
+                )
+            )
+        elif outcome.state == "failed":
+            collected[outcome.item].append(
+                StageOutcome(
+                    stage=StageName(outcome.step),
+                    study_id=outcome.item,
+                    reason=outcome.detail,
+                )
+            )
+
+    report = RunReport(
+        papers=tuple(
+            PaperOutcome(study_id=paper.study_id, outcomes=tuple(collected[paper.study_id]))
+            for paper in papers
+        )
+    )
     _record_usage(report, settings)
     return report
 

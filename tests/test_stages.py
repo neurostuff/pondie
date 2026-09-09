@@ -308,6 +308,9 @@ class _Fake:
     def produces(self, paper, settings):
         return settings.payloads / paper.study_id / f"{self.name.value}.json"
 
+    def depends_on(self, paper, settings):
+        return {"paper": paper.study_id, "stage": self.name.value}
+
     def done(self, paper, settings):
         return self.produces(paper, settings).is_file() and not settings.redo
 

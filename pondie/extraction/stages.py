@@ -16,6 +16,7 @@ the parse manifest, so putting them through a model can only introduce error.
 from __future__ import annotations
 
 import copy
+import functools
 import json
 import shutil
 from dataclasses import dataclass
@@ -23,7 +24,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
 
-from pondie import schema
+from pondie import pipeline, schema
 from pondie.extraction.llm import Caller, MalformedReply
 from pondie.extraction.models import (
     Cost,
@@ -35,7 +36,7 @@ from pondie.extraction.models import (
     StageOutcome,
 )
 from pondie.extraction.parse import TableParse
-from pondie.extraction.prompt import preprocess, render
+from pondie.extraction.prompt import preprocess, render, worked
 from pondie.formats import text_index, values
 from pondie.schema import reader
 
@@ -51,6 +52,15 @@ class Stage(Protocol):
     def produces(self, paper: Paper, settings: Settings) -> Path: ...
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome: ...
+
+    def depends_on(self, paper: Paper, settings: Settings) -> Mapping[str, Any]:
+        """Everything whose change should make this stage's output stale.
+
+        On the protocol rather than left to `_Base`, because the scheduler asks every stage
+        for it and a stage that answers with less than it depends on gets a cache that
+        serves stale answers -- the failure this replaced, and one nothing reports.
+        """
+        ...
 
 
 @dataclass(frozen=True)
@@ -70,8 +80,58 @@ class _Base:
         """
         return settings.payloads / paper.study_id / f"{self.name.value}.json"
 
+    #: The stages whose output this one reads. Their digests go into this stage's, so a
+    #: re-run cascades: `satisfy` cannot be fresh over a `demands` that was recomputed.
+    reads: tuple[StageName, ...] = ()
+
+    #: Whether the stage sends the paper to a model. A model pass depends on which model and
+    #: at what effort; `tables` copies a manifest and does not care.
+    asks_a_model: bool = False
+
+    def depends_on(self, paper: Paper, settings: Settings) -> dict[str, Any]:
+        """Everything whose change should produce a different answer.
+
+        Naming too little is the dangerous direction, and it is the one this replaced: a
+        stage used to be done when its file existed, so a changed prompt, model, effort or
+        schema reused every stale payload without saying so.
+
+        The paper enters by content hash rather than by path, because a corpus re-sync that
+        rewrites the same filename with different text is exactly the case a mtime misses.
+        """
+        parts: dict[str, Any] = {
+            "text": (
+                text_index.text_hash(
+                    text_index.normalize(paper.text.read_text(encoding="utf-8", errors="replace"))
+                )
+                if paper.text.is_file()
+                else ""
+            ),
+            "flavour": paper.flavour.value,
+        }
+        if self.asks_a_model:
+            parts |= {
+                "model": settings.model,
+                "effort": settings.effort,
+                "service_tier": settings.service_tier,
+                "prompt": prompt_digest(),
+            }
+        for upstream in self.reads:
+            output = settings.payloads / paper.study_id / f"{upstream.value}.json"
+            stamp = pipeline.Stamp.read(output)
+            parts[f"after:{upstream.value}"] = stamp.digest if stamp else ""
+        return parts
+
     def done(self, paper: Paper, settings: Settings) -> bool:
-        return self.produces(paper, settings).is_file() and not settings.redo
+        return pipeline.fresh(self.as_step(settings), paper, redo=settings.redo) is not None
+
+    def as_step(self, settings: Settings, caller: Caller = None) -> "pipeline.Step[Paper]":
+        """This stage as something the scheduler can run."""
+        return pipeline.Step(
+            name=self.name.value,
+            produces=lambda paper: self.produces(paper, settings),
+            depends_on=lambda paper: self.depends_on(paper, settings),
+            run=lambda paper: self.run(paper, settings, caller),
+        )
 
     def _skip(self, paper: Paper, reason: str = "already produced") -> StageOutcome:
         return StageOutcome(stage=self.name, study_id=paper.study_id, skipped=True, reason=reason)
@@ -81,6 +141,34 @@ class _Base:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(payload, indent=1, ensure_ascii=False) + "\n")
         return out
+
+
+@functools.lru_cache(maxsize=1)
+def prompt_digest() -> str:
+    """A digest of everything that decides what the model is asked.
+
+    The rendered prompt would be the exact answer and is the wrong one: it embeds the paper,
+    so it is per-item, and building it to decide whether to build it is circular. These are
+    the files it is assembled from -- the renderer, the conventions, the worked models, the
+    schema projection -- so the digest turns over when the ask changes and not when a paper
+    does. Coarser than necessary: editing a comment in `render.py` recomputes the corpus.
+    That is the safe direction, and the alternative is a cache that misses a real change.
+    """
+    sources = [
+        Path(render.__file__),
+        Path(worked.__file__),
+        schema.ROOT / "extraction-readme.md",
+        schema.ROOT / "representing-models.md",
+        schema.ROOT / "extraction-deviations.yaml",
+        *sorted((schema.ROOT / "neuroimaging-study-extraction").glob("*.yaml")),
+    ]
+    return pipeline.digest_of(
+        {
+            str(path.name): text_index.text_hash(path.read_text(encoding="utf-8"))
+            for path in sources
+            if path.is_file()
+        }
+    )
 
 
 def _manifest_value(text: str | None) -> dict:
@@ -433,6 +521,8 @@ class Demands(_ModelPass):
     """Analyses first: each declares the entities it needs, before any exist."""
 
     name: StageName = StageName.demands
+    reads: tuple[StageName, ...] = ()
+    asks_a_model: bool = True
     mode: str = "demands"
     repair_stage: tuple[str, ...] = ("shape", "demands")
 
@@ -498,6 +588,8 @@ class Satisfy(_ModelPass):
     """
 
     name: StageName = StageName.satisfy
+    reads: tuple[StageName, ...] = (StageName.demands,)
+    asks_a_model: bool = True
     mode: str = "satisfy"
     repair_stage: tuple[str, ...] = ("shape", "satisfy")
 
@@ -546,6 +638,8 @@ class Fill(_Base):
     """
 
     name: StageName = StageName.fill
+    reads: tuple[StageName, ...] = (StageName.demands, StageName.satisfy)
+    asks_a_model: bool = True
 
     def produces(self, paper: Paper, settings: Settings) -> Path:
         return settings.payloads / paper.study_id / "fill.json"
@@ -670,6 +764,8 @@ class Evidence(_Base):
     """
 
     name: StageName = StageName.evidence
+    reads: tuple[StageName, ...] = (StageName.demands, StageName.satisfy, StageName.fill)
+    asks_a_model: bool = True
     #: Fields per call. Every batch re-sends the whole paper -- 29k of the 36-42k tokens a
     #: call carries -- so the batch count, not the field count, is what this stage costs.
     #: Measured over the 89 records of `depression-full`: a median paper has 123 extracted
@@ -850,6 +946,13 @@ class Build(_Base):
     """
 
     name: StageName = StageName.build
+    reads: tuple[StageName, ...] = (
+        StageName.demands,
+        StageName.satisfy,
+        StageName.fill,
+        StageName.evidence,
+    )
+    asks_a_model: bool = False
 
     def produces(self, paper: Paper, settings: Settings) -> Path:
         return settings.records / f"{paper.study_id}.extraction.json"
@@ -936,6 +1039,8 @@ class Repair(_Base):
     """
 
     name: StageName = StageName.repair
+    reads: tuple[StageName, ...] = (StageName.build,)
+    asks_a_model: bool = True
 
     def produces(self, paper: Paper, settings: Settings) -> Path:
         """Beside the payloads, not among them.
