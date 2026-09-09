@@ -358,7 +358,7 @@ def stage1_block(
             caption = _wrap(first.get("table_caption") or "")[:160]
             lines.append(
                 f'{label} — "{caption}"'
-                f'   [table local_id: {table_ids.get(table_id, table_id)}]'
+                f"   [table local_id: {table_ids.get(table_id, table_id)}]"
             )
         for number, analysis in entries:
             points = analysis.get("points") or []
@@ -654,7 +654,8 @@ def conventions() -> str:
     if len(out) != len(re.split(r"\n(?=## )", text)) - len(_SKIP_SECTIONS):
         raise RuntimeError(
             f"{README.name}: expected to drop {_SKIP_SECTIONS} and did not. A heading has "
-            f"moved, and the prompt would silently grow back.")
+            f"moved, and the prompt would silently grow back."
+        )
     return "\n".join(out)
 
 

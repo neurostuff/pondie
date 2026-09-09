@@ -45,15 +45,15 @@ def passes(classes) -> dict:
     entities, entity_keep = render.mode_classes(classes, "entities")
     analyses, analysis_keep = render.mode_classes(classes, "analyses")
     return {
-        "entities": entities, "analyses": analyses,
-        "entity_keep": entity_keep, "analysis_keep": analysis_keep,
+        "entities": entities,
+        "analyses": analyses,
+        "entity_keep": entity_keep,
+        "analysis_keep": analysis_keep,
     }
 
 
 def _wrapper(classes, name: str) -> bool:
-    return name.startswith("Extracted") or classes.resolves_to(
-        name, "ExtractedValue"
-    )
+    return name.startswith("Extracted") or classes.resolves_to(name, "ExtractedValue")
 
 
 def test_the_passes_are_disjoint(passes: dict) -> None:
@@ -68,8 +68,7 @@ def test_every_described_class_lands_in_a_pass(classes, passes: dict) -> None:
 
     covered = passes["entities"] | passes["analyses"] | NOT_A_PASS_CLASS
     orphaned = {
-        name for name in classes
-        if name not in covered and not _wrapper(classes, name)
+        name for name in classes if name not in covered and not _wrapper(classes, name)
     }
 
     assert orphaned == set(), f"described by neither pass: {sorted(orphaned)}"
@@ -85,9 +84,9 @@ def test_every_payload_key_has_its_class_rendered(classes, passes: dict) -> None
         if classes.classify(attr, spec) != "nested":
             continue
         for target in classes.ranges(spec):
-            assert target in passes["entities"], (
-                f"the entities pass is asked for {attr!r} but {target} is not rendered in it"
-            )
+            assert (
+                target in passes["entities"]
+            ), f"the entities pass is asked for {attr!r} but {target} is not rendered in it"
 
 
 def test_entity_lists_are_offered_to_exactly_one_pass(passes: dict) -> None:
@@ -151,7 +150,8 @@ def test_payload_keys_split_cleanly(classes) -> None:
     direct = {k for k, v in builder._entity_lists().items() if "." not in v}
     offered = {
         mode: {
-            k for k, v in builder._entity_lists().items()
+            k
+            for k, v in builder._entity_lists().items()
             if "." not in v and v != "tables" and (v == "analyses") == (mode == "analyses")
         }
         for mode in ("entities", "analyses")
@@ -193,9 +193,17 @@ def test_the_analyses_pass_may_split_and_decline_a_stage_one_entry() -> None:
     coordinate table that reports no tested effect at all."""
 
     block = render.stage1_block(
-        {"analyses": [{"table_id": "t1", "name": "Encoding", "table_label": "Table 1",
-                       "table_caption": "Age correlation clusters",
-                       "points": [{"space": "TAL", "values": [{"kind": "correlation"}]}]}]},
+        {
+            "analyses": [
+                {
+                    "table_id": "t1",
+                    "name": "Encoding",
+                    "table_label": "Table 1",
+                    "table_caption": "Age correlation clusters",
+                    "points": [{"space": "TAL", "values": [{"kind": "correlation"}]}],
+                }
+            ]
+        },
         {"t1": "tbl1"},
     )
     assert "SPLIT" in block and "OMIT" in block
@@ -210,8 +218,17 @@ def test_the_stage_one_block_requires_the_table_local_id() -> None:
     the requirement has to be stated in the same change."""
 
     block = render.stage1_block(
-        {"analyses": [{"table_id": "t1", "name": "A > B", "table_label": "Table 1",
-                       "table_caption": "", "points": []}]},
+        {
+            "analyses": [
+                {
+                    "table_id": "t1",
+                    "name": "A > B",
+                    "table_label": "Table 1",
+                    "table_caption": "",
+                    "points": [],
+                }
+            ]
+        },
         {"t1": "tbl1"},
     )
     assert "[table local_id: tbl1]" in block

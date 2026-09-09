@@ -34,7 +34,7 @@ from typing import Any, Mapping, MutableMapping, Sequence
 from pondie.extraction import recall
 from pondie.extraction.evidence import grounding
 from pondie.extraction.record import edit as edit_module
-from pondie.extraction.record.edit import Edit, Refusal, UNRESTRICTED, refusals
+from pondie.extraction.record.edit import UNRESTRICTED, Edit, Refusal, refusals
 from pondie.extraction.record.validate import Validator
 from pondie.formats import values
 from pondie.schema.reader import Schema

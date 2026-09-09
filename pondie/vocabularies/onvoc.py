@@ -568,7 +568,6 @@ ROUTES: tuple[tuple[str, str, tuple[str, ...]], ...] = (
 )
 
 
-
 def iter_targets(record: dict) -> Iterator[tuple[str, str]]:
     """(routed path, text) for every field a vocabulary is asked about."""
     for route, _vocab, _branches in ROUTES:

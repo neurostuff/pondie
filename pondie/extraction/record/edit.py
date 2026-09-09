@@ -21,7 +21,8 @@ from __future__ import annotations
 
 import functools
 import re
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from typing import Any, Callable, Mapping, MutableMapping
 
 from pondie.formats import values
