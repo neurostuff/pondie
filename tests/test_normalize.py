@@ -10,12 +10,27 @@ from __future__ import annotations
 
 import pytest
 
+from pondie import paths  # noqa: E402
 from pondie.normalization import contrasts as q  # noqa: E402
 from pondie.vocabularies import onvoc as nz  # noqa: E402
 
 
 @pytest.fixture(scope="module")
 def onvoc():
+    """The real ONVOC, which is fetched rather than committed.
+
+    `data/vocab/` is documented as "fetched, none in git", so on a checkout that has not
+    fetched it these tests have no vocabulary to run against. They are not written against a
+    stand-in because several of them assert something about ONVOC's actual content -- that
+    exactly one label has the initials MDD, that `Wechsler Abbreviated Scale of Intelligence`
+    sits under `Tests` -- and a synthetic vocabulary would turn those into assertions about
+    the fixture.
+
+    Skipping states that; erroring on a missing file did not.
+    """
+    path = paths.VOCAB / "onvoc.json"
+    if not path.exists():
+        pytest.skip(f"{path} not fetched; see docs/pipeline-architecture.md for data/vocab")
     return nz.load_onvoc()
 
 
