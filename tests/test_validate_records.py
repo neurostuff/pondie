@@ -40,7 +40,7 @@ def test_a_blank_may_say_why_and_an_extracted_value_may_not():
     sch = reader.load(schema.EXTRACTION)
     blank = {
         "extraction_status": "not_reported",
-        "unreported_reason": "silent",
+        "unreported_reason": "outside_text",
         "evidence": {"status": "not_applicable"},
     }
 
@@ -48,8 +48,8 @@ def test_a_blank_may_say_why_and_an_extracted_value_may_not():
     validator.check_field(blank, "ExtractedString", "Group.name")
     assert validator.errors == [], validator.errors
 
-    # Absent is allowed: a record written before the slot existed carries no reason, and
-    # that is a different claim from `silent`.
+    # Absent is the ordinary case: `not_reported` already says the attribute was examined
+    # and the source carries no value, so plain silence adds no reason at all.
     validator = validate.Validator(sch, None)
     validator.check_field(
         {k: v for k, v in blank.items() if k != "unreported_reason"},
@@ -60,9 +60,9 @@ def test_a_blank_may_say_why_and_an_extracted_value_may_not():
 
     validator = validate.Validator(sch, None)
     validator.check_field(
-        {**blank, "unreported_reason": "not_applicable"}, "ExtractedString", "Group.name"
+        {**blank, "unreported_reason": "silent"}, "ExtractedString", "Group.name"
     )
-    assert validator.errors, "a reason outside the vocabulary must be reported"
+    assert validator.errors, "`silent` was removed from the vocabulary and must be refused"
 
     validator = validate.Validator(sch, None)
     validator.check_field(
@@ -70,7 +70,7 @@ def test_a_blank_may_say_why_and_an_extracted_value_may_not():
             "extraction_status": "extracted",
             "value": "controls",
             "value_source": "reported",
-            "unreported_reason": "silent",
+            "unreported_reason": "outside_text",
             "evidence": {"status": "not_found"},
         },
         "ExtractedString",

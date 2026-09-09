@@ -703,26 +703,26 @@ VALUE_RULE_EVIDENCE = """Every source-derived value is an ExtractedValue wrapper
     "evidence": {"status": "present", "sets": [{"quotes": ["<verbatim span>"]}]}}
    A quote MUST be copied character-for-character from the paper. It is located in the
    source text by exact match; a paraphrased or reconstructed quote is dropped.
-   A slot with no value takes `not_reported` and says why:
-   {"extraction_status": "not_reported", "unreported_reason": "silent",
-    "evidence": {"status": "not_applicable"}}
-   `unreported_reason` is one of: silent (the paper does not mention it), ambiguous (it
-   does, and settles on no one value), outside_text (it is in a figure, an image-only
-   table or an unfetched supplement), cited_elsewhere (given by reference to another
-   paper), undetermined (you could not work it out). Use `undetermined` rather than
-   `silent` unless you established the page says nothing."""
+   A slot with no value takes `not_reported` and nothing more:
+   {"extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}
+   That alone says the attribute was examined and the paper carries no value. Add
+   `unreported_reason` ONLY where the reason is not plain silence: ambiguous (the paper
+   addresses it and settles on no one value), outside_text (it is in a figure, an
+   image-only table or an unfetched supplement), cited_elsewhere (given by reference to
+   another paper), undetermined (you could not work it out -- use this rather than a bare
+   `not_reported` unless you established the page says nothing)."""
 
 VALUE_RULE_NO_EVIDENCE = """Every source-derived value is an ExtractedValue wrapper:
    {"extraction_status": "extracted", "value": <value>, "value_source": "reported"}
    DO NOT emit an `evidence` key anywhere. Supporting spans are added by a separate later
    pass. Spend your output on getting the values right and complete, not on quotation.
-   A slot with no value takes
-   {"extraction_status": "not_reported", "unreported_reason": "silent"}
-   where `unreported_reason` is one of: silent (the paper does not mention it), ambiguous
-   (it does, and settles on no one value), outside_text (it is in a figure, an image-only
-   table or an unfetched supplement), cited_elsewhere (given by reference to another
-   paper), undetermined (you could not work it out). Use `undetermined` rather than
-   `silent` unless you established the page says nothing."""
+   A slot with no value takes {"extraction_status": "not_reported"} and nothing more; that
+   alone says the attribute was examined and the paper carries no value. Add
+   `unreported_reason` ONLY where the reason is not plain silence: ambiguous (the paper
+   addresses it and settles on no one value), outside_text (it is in a figure, an
+   image-only table or an unfetched supplement), cited_elsewhere (given by reference to
+   another paper), undetermined (you could not work it out -- use this rather than a bare
+   `not_reported` unless you established the page says nothing)."""
 
 DEMANDS_NOTE = """
 This pass emits `analyses`, and the SHOPPING LIST of entities those analyses need.

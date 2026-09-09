@@ -12,7 +12,7 @@ it. The wrapper is what carries the second and third.
 A slot with no value carries the same wrapper without one, and says why it is blank:
 
     {"extraction_status": "not_reported",
-     "unreported_reason": "silent",
+     "unreported_reason": "outside_text",
      "evidence": {"status": "not_applicable"}}
 
 This module exists because five modules had each written their own unwrapper and **they did
@@ -68,15 +68,20 @@ EvidenceStatus = Literal["present", "not_found", "not_applicable"]
 #: prevent: absent means nothing was asked.
 ExtractionStatus = Literal["extracted", "not_reported"]
 
-#: Why a `not_reported` slot has no value. A qualifier on the status, not a second status:
-#: missingness keeps one encoding, so a query asking what is missing still reads
-#: `extraction_status` alone and never has to know this vocabulary.
+#: Why a `not_reported` slot has no value, where the reason is not the plain one. A qualifier
+#: on the status, not a second status: missingness keeps one encoding, so a query asking what
+#: is missing still reads `extraction_status` alone and never has to know this vocabulary.
 #:
-#: Four of the five are claims about the source, and a reviewer can check them against the
+#: There is no member for plain silence, deliberately. `not_reported` already says the
+#: attribute was examined and no value was found in the available source, so a token
+#: repeating that adds a word and no fact -- and being the commonest answer it would also be
+#: the one most often wrong, on a slot that nothing revisits once it is settled.
+#:
+#: Three of the four are claims about the source, and a reviewer can check them against the
 #: page. `undetermined` is the one that reports on the pass instead -- it is how a pass
 #: declines without the decline reading as a finding, and it is what a later pass looks for.
 UnreportedReason = Literal[
-    "silent", "ambiguous", "outside_text", "cited_elsewhere", "undetermined"
+    "ambiguous", "outside_text", "cited_elsewhere", "undetermined"
 ]
 
 #: The key that makes a mapping a wrapper. Structural, so it is checked and not inferred.
@@ -151,12 +156,10 @@ def wrap(
     manifest or a deriver: the field was asked for and the source did not carry it. An empty
     *list* is different -- it is an extracted answer of "none" -- so it is not folded in.
 
-    `reason` says why there is no value, and defaults to recording none. It is not defaulted
-    to `silent` on purpose: a deriver whose regex missed and a manifest that carried no
-    caption have not established that the page says nothing, and stamping the claim on their
-    behalf is how `value_source: derived` reached eight fields of every record in the corpus.
-    A caller that knows which of the five it is passes it; one that does not, leaves it, and
-    the blank stays honestly unexplained.
+    `reason` says why there is no value where the reason is not the plain one, and defaults
+    to recording none -- which is what plain silence looks like, the status already having
+    said the attribute was examined and nothing found. A caller that knows the blank is one
+    of the four unusual cases passes it; one that does not, leaves it.
     """
     if value is None or value == "":
         return ExtractedValue(

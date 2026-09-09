@@ -32,11 +32,12 @@ def ids(rows):
 
 
 def test_a_value_and_a_stated_reason_both_settle_a_slot(sch):
-    """The two ways of being done. `silent` is an answer -- the paper was read and says
-    nothing -- and a loop that re-asked it would invite the model to overwrite a finding."""
+    """The two ways of being done. A bare `not_reported` is an answer -- the status says the
+    attribute was examined and nothing found -- and a loop that re-asked it would invite the
+    model to overwrite a finding."""
     doc = group(
         name={"extraction_status": "extracted", "value": "MDD"},
-        age_median={"extraction_status": "not_reported", "unreported_reason": "silent"},
+        age_median={"extraction_status": "not_reported"},
     )
     open_ids = ids(fill.unsettled(doc, sch))
     assert "groups[g1].name" not in open_ids
@@ -66,14 +67,17 @@ def test_answering_shrinks_the_open_set(sch):
     filled, reasoned, dropped = fill.apply_fill(
         doc,
         {"groups[g1].species": {"value": "human"},
-         "groups[g1].age_median": {"unreported_reason": "silent"}},
+         "groups[g1].age_median": {"unreported_reason": fill.PLAIN}},
         before,
     )
     after = ids(fill.unsettled(doc, sch))
     assert (filled, reasoned, dropped) == (1, 1, 0)
     assert len(after) == len(before) - 2
     assert doc["groups"][0]["species"]["value"] == "human"
-    assert doc["groups"][0]["age_median"]["unreported_reason"] == "silent"
+    # PLAIN is the prompt's word for the ordinary case, not a schema value: it lands as the
+    # bare status, which already says the attribute was examined and nothing was found.
+    assert "unreported_reason" not in doc["groups"][0]["age_median"]
+    assert doc["groups"][0]["age_median"]["extraction_status"] == "not_reported"
 
 
 def test_an_answer_under_an_id_that_was_not_asked_is_discarded(sch):
@@ -193,3 +197,39 @@ def test_an_undetermined_slot_is_still_revisable(sch):
     filled, reasoned, dropped = fill.apply_fill(doc, {path: {"value": 41}}, [path])
     assert (filled, reasoned, dropped) == (1, 0, 0)
     assert doc["groups"][0]["age_median"]["value"] == 41
+
+
+def test_a_reason_outside_the_vocabulary_leaves_the_slot_untouched(sch):
+    """Refusing an answer and settling the slot anyway is worse than either alone.
+
+    The first cut wrote the bare `not_reported` before checking the reason, so a rejected
+    answer still closed the slot -- and closed it as plain silence, a claim the model had not
+    made. Nothing revisits a settled slot, so the loop would have recorded silence on the
+    strength of an answer it had just thrown away.
+    """
+    doc = group(name={"extraction_status": "extracted", "value": "MDD"})
+    open_ids = ids(fill.unsettled(doc, sch))
+    filled, reasoned, dropped = fill.apply_fill(
+        doc, {"groups[g1].age_mean": {"unreported_reason": "silent"}}, open_ids
+    )
+    assert (filled, reasoned, dropped) == (0, 0, 1)
+    assert "age_mean" not in doc["groups"][0]
+    assert "groups[g1].age_mean" in ids(fill.unsettled(doc, sch))
+
+
+def test_plain_silence_is_written_as_the_bare_status(sch):
+    """There is no schema token for the ordinary case, because `not_reported` already says
+    the attribute was examined and the source carries no value. The prompt still needs a name
+    for it -- a model offered only the unusual reasons reaches for the nearest one -- so it
+    answers `PLAIN` and that lands as the status alone."""
+    doc = group(name={"extraction_status": "extracted", "value": "MDD"})
+    open_ids = ids(fill.unsettled(doc, sch))
+    filled, reasoned, dropped = fill.apply_fill(
+        doc, {"groups[g1].age_mean": {"unreported_reason": fill.PLAIN}}, open_ids
+    )
+    assert (filled, reasoned, dropped) == (0, 1, 0)
+    held = doc["groups"][0]["age_mean"]
+    assert held == {"extraction_status": "not_reported",
+                    "evidence": {"status": "not_applicable"}}
+    assert "groups[g1].age_mean" not in ids(fill.unsettled(doc, sch))
+    assert fill.PLAIN not in fill.VOCABULARY

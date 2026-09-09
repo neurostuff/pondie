@@ -83,7 +83,7 @@ def storage_rules() -> Mapping[str, list[Mapping[str, Any]]]:
 _EXTRACTION_STATUS = {"extracted", "not_reported"}
 _VALUE_SOURCE = {"reported", "generated"}
 _EVIDENCE_STATUS = {"present", "not_found", "not_applicable"}
-_UNREPORTED_REASON = {"silent", "ambiguous", "outside_text", "cited_elsewhere", "undetermined"}
+_UNREPORTED_REASON = {"ambiguous", "outside_text", "cited_elsewhere", "undetermined"}
 
 # LinkML native ranges of the ExtractedValue subclasses, and the Python types
 # that satisfy them. bool is excluded from integer deliberately: True would
