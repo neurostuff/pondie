@@ -476,18 +476,20 @@ class Satisfy(_ModelPass):
         return json.loads(demands.read_text("utf-8")).get("required_entities") or ()
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
-        """The one pass, and then a second over Task and Group if they came back thin.
+        """The one pass, and then a second over whichever of `render.PRIORITY` came back thin.
 
-        Twenty-three entity classes share one call, and the two that every analysis leans on
+        Twenty-three entity classes share one call, and the ones an analysis leans on hardest
         lose out: a cell names a level and a level names a condition or a cohort, so a thin
-        Task or Group is felt by every analysis pointing at it. Measured on 16038771, a later
-        sweep found 132 empty fields the single pass had left -- nine on one Group, three on
-        the only Task, and not one condition described.
+        Task or Group is felt by every analysis pointing at it, and Analysis's own nested
+        closure -- Effect, Cell, ModelTerm -- gets the same crowding. Measured on 16038771, a
+        sweep found 132 empty fields the single pass had left on Task and Group alone -- nine
+        on one Group, three on the only Task, and not one condition described.
 
-        The second call is scoped to four classes instead of twenty-three and merges by
-        filling only what is still empty, so it can add and never overwrite. Skipped
-        entirely when the first pass already filled them, which is the common case worth not
-        paying for.
+        `render.thin` scores each of `render.PRIORITY`'s keys independently, so a Group that
+        came back full does not buy a thin Analysis a pass, and the second call is scoped
+        (via `active`) to only the keys that need it -- never paying to redo a class the
+        first pass already covered. Skipped entirely when nothing is thin, which is the
+        common case.
 
         Not attempted on resume: `super().run` returns `_skip` once `satisfy.json` exists, so
         a run interrupted after the first pass keeps the record it has rather than paying for
@@ -503,38 +505,69 @@ class Satisfy(_ModelPass):
         payload = json.loads(written.read_text("utf-8"))
         sch = reader.load(render.EXTRACTION_SCHEMA)
         keys = render.priority_keys(sch)
-        if not render.thin(payload, keys):
-            return outcome
+        containers = sch.containers()
+        text = paper.text.read_text(encoding="utf-8", errors="replace")
 
-        prompt = render.build_prompt(
-            paper.text.read_text(encoding="utf-8", errors="replace"),
-            "priority", settings.retrieve_evidence, render.filled_block(payload, keys))
-        try:
-            reply = caller(
-                ModelCall(model=settings.model, system=prompt.system, prompt=prompt.user,
-                          max_output_tokens=settings.max_output_tokens,
-                          effort=settings.effort, service_tier=settings.service_tier,
-                          attempts=settings.attempts),
-                paper=paper.study_id, stage=f"{self.name.value}:priority")
-            second, _notes = render.normalize(reply.payload, "satisfy")
-            filled, dropped = render.fill_empty(payload, second, keys)
-            self._write(paper, settings, payload)
-        except Exception as error:  # noqa: BLE001 -- a second pass must not lose the first
-            return outcome.model_copy(update={
-                "notes": (*outcome.notes, f"priority pass skipped: {type(error).__name__}")})
+        cost, traces, notes = outcome.cost, list(outcome.traces), []
+        seen: int | None = None
+        for round_number in range(1, max(1, settings.priority_rounds) + 1):
+            thin_keys = render.thin(payload, keys)
+            if not thin_keys:
+                notes.append(f"round {round_number}: nothing thin, stopped")
+                break
+            # A round that did not shrink the thin set is a round the next one repeats. The
+            # stop matters more than it looks: two runs of this stage on the same payload
+            # disagree by about a tenth of the fields they place, so "it got better" is not
+            # readable from one sample -- only "there is still something unanswered" is, and
+            # a loop that cannot see progress must not be trusted to run until it sees some.
+            if seen is not None and len(thin_keys) >= seen:
+                notes.append(
+                    f"round {round_number}: {len(thin_keys)} key(s) still thin and no fewer "
+                    f"than last round, stopped")
+                break
+            seen = len(thin_keys)
 
-        notes = [f"priority pass filled {filled} empty field(s)"]
-        if dropped:
-            # Not padding: every answer under an id the first pass never minted is discarded,
-            # and without this the result reads exactly like a paper that needed nothing.
-            notes.append(f"priority pass dropped {dropped} entity(s) under unmatched local_id")
-        if reply.stop_reason and reply.stop_reason != "stop":
-            notes.append(f"priority pass stopped on {reply.stop_reason}")
+            active = [n for n in render.PRIORITY if containers.get(n) in thin_keys]
+            prompt = render.build_prompt(
+                text, "priority", settings.retrieve_evidence,
+                render.filled_block(payload, thin_keys), active)
+            try:
+                reply = caller(
+                    ModelCall(model=settings.model, system=prompt.system, prompt=prompt.user,
+                              max_output_tokens=settings.max_output_tokens,
+                              effort=settings.effort, service_tier=settings.service_tier,
+                              attempts=settings.attempts),
+                    paper=paper.study_id,
+                    stage=f"{self.name.value}:priority{round_number}")
+                second, _notes = render.normalize(reply.payload, "satisfy")
+                filled, dropped = render.fill_empty(payload, second, thin_keys)
+                self._write(paper, settings, payload)
+            except Exception as error:  # noqa: BLE001 -- a later round must not lose an earlier
+                notes.append(f"round {round_number} skipped: {type(error).__name__}")
+                break
+
+            cost = cost + reply.cost
+            traces.append((reply.trace_id, reply.cache_status))
+            notes.append(
+                f"round {round_number}: asked about {','.join(thin_keys)}, "
+                f"filled {filled} empty field(s)")
+            if dropped:
+                # Not padding: every answer under an id the first pass never minted is
+                # discarded, and without this the result reads exactly like a paper that
+                # needed nothing.
+                notes.append(
+                    f"round {round_number} dropped {dropped} entity(s) under unmatched "
+                    f"local_id")
+            if reply.stop_reason and reply.stop_reason != "stop":
+                notes.append(f"round {round_number} stopped on {reply.stop_reason}")
+            if not filled:
+                # Nothing landed, so the next round sends the same question to the same
+                # model over the same paper. The cap is the backstop; this is the common exit.
+                notes.append(f"round {round_number}: nothing landed, stopped")
+                break
+
         return outcome.model_copy(update={
-            "cost": outcome.cost + reply.cost,
-            "traces": (*outcome.traces, (reply.trace_id, reply.cache_status)),
-            "notes": (*outcome.notes, *notes),
-        })
+            "cost": cost, "traces": tuple(traces), "notes": (*outcome.notes, *notes)})
 
     def context(self, paper: Paper, settings: Settings) -> str:
         """The shopping list the demands pass wrote, as this pass's contract.
@@ -548,6 +581,117 @@ class Satisfy(_ModelPass):
         if not demands.is_file():
             return ""
         return render.requirements_block(json.loads(demands.read_text("utf-8")))
+
+
+@dataclass(frozen=True)
+class Fill(_Base):
+    """Ask for the slots still open, round after round, until none are.
+
+    The pass `Satisfy` runs is shaped around entities: it renders a class schema and asks
+    for records. That is the right shape for deciding what exists and the wrong one for
+    finishing what already does -- to add one field it re-emits a whole entity, and its
+    answer is judged by whether the entity came back rather than by whether the slot did.
+    Measured on five papers, repeating it up to three times cost 11% more input and
+    returned 18 more filled fields, inside the ~9% two runs of one configuration differ by,
+    and three of five papers finished with `groups` still thin. Iterating that shape does
+    not converge because nothing in it says what "done" is.
+
+    This one names the slots, and a slot is done when it holds a value or an
+    `unreported_reason`. So the loop's exit is a fact about the record rather than a guess
+    about progress: it stops when `fill.unsettled` is empty. `fill_rounds` bounds the case
+    that does not get there -- `undetermined` is the one answer that leaves a slot open, and
+    a model that keeps giving it would otherwise be asked forever.
+
+    Writes back into the same payloads, so `Evidence` and `Build` see one record and not a
+    pile of rounds. A value it adds carries no evidence block; the quote pass adds those,
+    and a reason needs none.
+    """
+
+    name: StageName = StageName.fill
+
+    def produces(self, paper: Paper, settings: Settings) -> Path:
+        return settings.payloads / paper.study_id / "fill.json"
+
+    def _targets(self, paper: Paper, settings: Settings) -> list[Path]:
+        """The payloads holding entities. `tables.json` is deterministic and off limits."""
+        directory = settings.payloads / paper.study_id
+        skip = {"tables.json", "fill.json"}
+        return sorted(p for p in directory.glob("*.json") if p.name not in skip)
+
+    def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
+        if self.done(paper, settings):
+            return self._skip(paper)
+        from pondie.extraction.prompt import fill as slots
+
+        targets = self._targets(paper, settings)
+        if not targets:
+            return self._skip(paper, "no payloads to fill")
+
+        sch = reader.load(render.EXTRACTION_SCHEMA)
+        text = paper.text.read_text(encoding="utf-8", errors="replace")
+        cost, traces, notes = Cost(), [], []
+        opened = closed = 0
+
+        for target in targets:
+            payload = json.loads(target.read_text(encoding="utf-8"))
+            first = len(slots.unsettled(payload, sch))
+            opened += first
+            for round_number in range(1, settings.fill_rounds + 1):
+                rows = slots.unsettled(payload, sch)
+                if not rows:
+                    notes.append(f"{target.name} round {round_number}: nothing open, done")
+                    break
+                batch = rows[: settings.fill_batch]
+                ids = [r["id"] for r in batch]
+                try:
+                    reply = caller(
+                        ModelCall(
+                            model=settings.model,
+                            system=slots.SYSTEM,
+                            prompt=f"# Paper\n\n{text}\n\n{slots.block(batch)}\n"
+                            "Return the JSON object now.",
+                            max_output_tokens=settings.max_output_tokens,
+                            effort=settings.effort,
+                            service_tier=settings.service_tier,
+                            attempts=settings.attempts,
+                        ),
+                        paper=paper.study_id,
+                        stage=f"{self.name.value}{round_number}",
+                    )
+                except Exception as error:  # noqa: BLE001 -- a round must not lose the record
+                    notes.append(f"{target.name} round {round_number} skipped: "
+                                 f"{type(error).__name__}")
+                    break
+                cost = cost + reply.cost
+                traces.append((reply.trace_id, reply.cache_status))
+                filled, reasoned, dropped = slots.apply_fill(payload, reply.payload, ids)
+                notes.append(
+                    f"{target.name} round {round_number}: {len(batch)} asked, "
+                    f"{filled} valued, {reasoned} explained, {dropped} discarded")
+                if reply.stop_reason and reply.stop_reason != "stop":
+                    notes.append(f"{target.name} round {round_number} stopped on "
+                                 f"{reply.stop_reason}")
+                target.write_text(
+                    json.dumps(payload, indent=1, ensure_ascii=False) + "\n",
+                    encoding="utf-8")
+                if not (filled or reasoned):
+                    # The round settled nothing, so the next one asks the same model the
+                    # same question about the same paper. `priority_rounds` learned this
+                    # the expensive way.
+                    notes.append(f"{target.name} round {round_number}: nothing settled, "
+                                 f"stopped")
+                    break
+            closed += first - len(slots.unsettled(payload, sch))
+
+        self._write(paper, settings, {"opened": opened, "closed": closed})
+        return StageOutcome(
+            stage=self.name,
+            study_id=paper.study_id,
+            cost=cost,
+            traces=tuple(traces),
+            produced=tuple(targets),
+            notes=(f"{closed} of {opened} open slot(s) settled", *notes),
+        )
 
 
 @dataclass(frozen=True)
@@ -575,7 +719,18 @@ class Evidence(_Base):
     """
 
     name: StageName = StageName.evidence
-    batch: int = 60
+    #: Fields per call. Every batch re-sends the whole paper -- 29k of the 36-42k tokens a
+    #: call carries -- so the batch count, not the field count, is what this stage costs.
+    #: Measured over the 89 records of `depression-full`: a median paper has 123 extracted
+    #: fields, p90 189, max 360. At 60 that is 2.66 calls per paper (237 over the corpus);
+    #: at 200 it is 1.07 (95), and the papers needing a second call are the p90 tail.
+    #:
+    #: Bounded by the reply, not the request: 200 quotes is on the order of 10k output
+    #: tokens against a 48k ceiling, and the largest paper here would still fit in one.
+    #: Raising it was unsafe while a cut-off reply was silent -- the fields past the cut
+    #: take `not_found` from `apply_evidence` and read as a paper with nothing to cite --
+    #: so it went up only once the loop below started reading `stop_reason`.
+    batch: int = 200
 
     def produces(self, paper: Paper, settings: Settings) -> Path:
         return settings.payloads / paper.study_id / "noev"
@@ -628,6 +783,7 @@ class Evidence(_Base):
             apply_evidence,
             describe,
             iter_fields,
+            literal_quotes,
         )
 
         targets = self._payloads(paper, settings)
@@ -649,16 +805,23 @@ class Evidence(_Base):
         text = paper.text.read_text(encoding="utf-8", errors="replace")
         cost = Cost()
         traces: list[tuple[str, str]] = []
+        truncated: list[str] = []
+        settled = 0
         totals = EvidenceCounts()
 
         for target in targets:
             payload = json.loads(target.read_text(encoding="utf-8"))
+            # Settled without a call first, so the model is asked only about what is
+            # actually in doubt. A value occurring exactly once in the paper determines
+            # its own sentence, and `apply_evidence` cannot tell where a quote came from.
+            quotes: dict[str, str] = literal_quotes(payload, text)
+            literal = set(quotes)
             wanted = [
                 (path, field)
                 for path, field in iter_fields(payload)
-                if field.get("extraction_status") == "extracted"
+                if field.get("extraction_status") == "extracted" and path not in quotes
             ]
-            quotes: dict[str, str] = {}
+            settled += len(quotes)
             for begin in range(0, len(wanted), self.batch):
                 chunk = wanted[begin : begin + self.batch]
                 listing = "\n".join(describe(path, field) for path, field in chunk)
@@ -681,11 +844,27 @@ class Evidence(_Base):
                     paper=paper.study_id,
                     stage=self.name.value,
                 )
-                quotes.update({k: v for k, v in reply.payload.items() if isinstance(v, str)})
+                returned = {k: v for k, v in reply.payload.items() if isinstance(v, str)}
+                # The hazard `_ModelPass.run` already names, on the one pass that never
+                # checked for it. A cut-off reply still parses -- the model closes the
+                # object it has open and the body is a valid map of the fields it reached
+                # -- and the fields it never reached take `not_found` from
+                # `apply_evidence`, which reads exactly like a paper with no sentence to
+                # cite. This is the largest pass in the pipeline and the one whose reply
+                # grows with `batch`, so it is where truncation is likeliest and where it
+                # was least visible.
+                if reply.stop_reason and reply.stop_reason != "stop":
+                    truncated.append(
+                        f"{target.name} batch {begin // self.batch + 1} finished on "
+                        f"{reply.stop_reason!r} with {len(returned)}/{len(chunk)} quotes"
+                    )
+                quotes.update(returned)
                 cost = cost + reply.cost
                 traces.append((reply.trace_id, reply.cache_status))
 
-            totals = totals + apply_evidence(payload, quotes)
+            totals = totals + apply_evidence(
+                payload, quotes, literal=frozenset(literal)
+            )
             target.write_text(
                 json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
             )
@@ -700,6 +879,8 @@ class Evidence(_Base):
             notes=(
                 f"{totals.filled} warranted, {totals.unsupported} unsupported, "
                 f"{totals.not_reported} not_reported",
+                f"{settled} field(s) settled by literal match, not asked of the model",
+                *(f"truncated: {t}" for t in truncated),
             ),
         )
 
@@ -959,6 +1140,7 @@ DEMAND_DRIVEN: tuple[Stage, ...] = (
     SignSplit(),
     Demands(),
     Satisfy(),
+    Fill(),
     Evidence(),
     Build(),
     Repair(),

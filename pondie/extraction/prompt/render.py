@@ -98,21 +98,25 @@ def nested_closure(sch: Schema, roots: list[str]) -> set[str]:
     return seen
 
 
-#: The classes a second pass revisits first, if one is made. Chosen because a cell names a
-#: level and a level names a condition or a cohort, so a thin Task or Group is felt by every
-#: analysis that points at it.
-PRIORITY: tuple[str, ...] = ("Task", "Group")
+#: The classes a second pass can revisit, if one is made. Task and Group, because a cell
+#: names a level and a level names a condition or a cohort, so a thin one of either is felt
+#: by every analysis that points at it. Analysis itself, because its own nested closure --
+#: Effect, Cell, ModelTerm -- is exactly what a coordinate-level query reads, and the same
+#: single-call crowding that starves Task and Group starves it too.
+PRIORITY: tuple[str, ...] = ("Task", "Group", "Analysis")
 
 
 
-def priority_keys(sch: Schema) -> list[str]:
-    """The payload keys holding `PRIORITY`'s classes, read from the schema.
+def priority_keys(sch: Schema, active: Sequence[str] = PRIORITY) -> list[str]:
+    """The payload keys holding `active`'s classes, read from the schema.
 
     A written-out `("tasks", "groups")` is a second copy of what `containers()` already
-    knows, and the one that rots when a class is renamed.
+    knows, and the one that rots when a class is renamed. `active` defaults to all of
+    `PRIORITY`; a caller that already knows which of them came back thin passes just those,
+    so the keys offered match the classes a scoped `mode_classes` call actually rendered.
     """
     containers = sch.containers()
-    return [containers[name] for name in PRIORITY if name in containers]
+    return [containers[name] for name in active if name in containers]
 
 
 def _expected(sch: Schema, class_name: str, node: Any) -> tuple[int, int]:
@@ -155,25 +159,33 @@ def _expected(sch: Schema, class_name: str, node: Any) -> tuple[int, int]:
 
 
 def thin(payload: Mapping[str, Any], keys: Sequence[str],
-         threshold: float = 0.5) -> bool:
-    """Did these entities come back with more holes than the schema has slots for?
+         threshold: float = 0.5) -> list[str]:
+    """Which of these keys came back with more holes than the schema has slots for?
 
     Not "any hole": a paper that does not report a group's education leaves a slot empty and
     nothing is wrong. The question is whether the pass ran out of attention, and the share of
     declared slots left unanswered is the measure of it.
+
+    Per key, not pooled across them. A well-filled Group must not average away a thin
+    Analysis, and a caller that only re-asks about the keys this returns is not paying to
+    redo a class the first pass already covered. The empty list is falsy, so `if thin(...)`
+    still reads as "is anything thin" for a caller that has not been split up yet.
     """
     sch = reader.load(EXTRACTION_SCHEMA)
-    filled = empty = 0
+    result: list[str] = []
     for key in keys:
         class_name = sch.class_of(key)
         if class_name is None:
             continue
+        filled = empty = 0
         for entity in (payload.get(key) or []):
             one, other = _expected(sch, class_name, entity)
             filled += one
             empty += other
-    total = filled + empty
-    return total > 0 and empty / total > threshold
+        total = filled + empty
+        if total > 0 and empty / total > threshold:
+            result.append(key)
+    return result
 
 
 def fill_empty(payload: MutableMapping[str, Any], second: Mapping[str, Any],
@@ -288,8 +300,14 @@ def filled_block(payload: Mapping[str, Any], keys: Sequence[str]) -> str:
             "fields the paper supports.\n\n" + "\n".join(lines))
 
 
-def mode_classes(sch: Schema, mode: str) -> tuple[set[str], list[str]]:
-    """(classes to render, Study attributes to keep) for one pass."""
+def mode_classes(
+    sch: Schema, mode: str, active: Sequence[str] = PRIORITY
+) -> tuple[set[str], list[str]]:
+    """(classes to render, Study attributes to keep) for one pass.
+
+    `active` only matters for `mode == "priority"`: the subset of `PRIORITY` a caller has
+    already found thin, so the render can offer just those classes rather than all of them.
+    """
 
     analysis_side = nested_closure(sch, ["Analysis"])
     study = sch.attributes("Study")
@@ -299,12 +317,19 @@ def mode_classes(sch: Schema, mode: str) -> tuple[set[str], list[str]]:
         return analysis_side - DETERMINISTIC_CLASSES, keep
 
     if mode == "priority":
-        # Task and Group, and whatever they nest. One pass over twenty-three classes leaves
-        # these thin -- a repair sweep found 132 empty fields on 16038771, nine of them on
-        # one Group -- and they are the two an analysis leans on hardest: every cell names a
-        # level, and a level names a condition or a cohort.
-        return (nested_closure(sch, list(PRIORITY)) - analysis_side
-                - SCAFFOLDING_CLASSES - DETERMINISTIC_CLASSES), ["tasks", "groups"]
+        # `active`, and whatever it nests. One pass over twenty-three classes leaves these
+        # thin -- a repair sweep found 132 empty fields on 16038771, nine of them on one
+        # Group -- and Task and Group are what an analysis leans on hardest: every cell names
+        # a level, and a level names a condition or a cohort. Analysis is the same crowding
+        # felt on its own nested closure -- Effect, Cell, ModelTerm.
+        #
+        # The half not in `active` is subtracted rather than left to `nested_closure` to
+        # skip: Task/Group and Analysis are asked about independently (`thin` scores them
+        # per key), so a call scoped to only one side must not leak the other side's classes
+        # into the schema it renders, even where the two closures would otherwise overlap.
+        inactive = [name for name in PRIORITY if name not in active]
+        return (nested_closure(sch, list(active)) - nested_closure(sch, inactive)
+                - SCAFFOLDING_CLASSES - DETERMINISTIC_CLASSES), priority_keys(sch, active)
 
     roots: list[str] = []
     keep = []
@@ -677,12 +702,27 @@ VALUE_RULE_EVIDENCE = """Every source-derived value is an ExtractedValue wrapper
    {"extraction_status": "extracted", "value": <value>, "value_source": "reported",
     "evidence": {"status": "present", "sets": [{"quotes": ["<verbatim span>"]}]}}
    A quote MUST be copied character-for-character from the paper. It is located in the
-   source text by exact match; a paraphrased or reconstructed quote is dropped."""
+   source text by exact match; a paraphrased or reconstructed quote is dropped.
+   A slot with no value takes `not_reported` and says why:
+   {"extraction_status": "not_reported", "unreported_reason": "silent",
+    "evidence": {"status": "not_applicable"}}
+   `unreported_reason` is one of: silent (the paper does not mention it), ambiguous (it
+   does, and settles on no one value), outside_text (it is in a figure, an image-only
+   table or an unfetched supplement), cited_elsewhere (given by reference to another
+   paper), undetermined (you could not work it out). Use `undetermined` rather than
+   `silent` unless you established the page says nothing."""
 
 VALUE_RULE_NO_EVIDENCE = """Every source-derived value is an ExtractedValue wrapper:
    {"extraction_status": "extracted", "value": <value>, "value_source": "reported"}
    DO NOT emit an `evidence` key anywhere. Supporting spans are added by a separate later
-   pass. Spend your output on getting the values right and complete, not on quotation."""
+   pass. Spend your output on getting the values right and complete, not on quotation.
+   A slot with no value takes
+   {"extraction_status": "not_reported", "unreported_reason": "silent"}
+   where `unreported_reason` is one of: silent (the paper does not mention it), ambiguous
+   (it does, and settles on no one value), outside_text (it is in a figure, an image-only
+   table or an unfetched supplement), cited_elsewhere (given by reference to another
+   paper), undetermined (you could not work it out). Use `undetermined` rather than
+   `silent` unless you established the page says nothing."""
 
 DEMANDS_NOTE = """
 This pass emits `analyses`, and the SHOPPING LIST of entities those analyses need.
@@ -762,16 +802,16 @@ ceiling.
 """
 
 PRIORITY_NOTE = """
-This is a second pass over a paper already read once, covering the participant groups and
-the task only. What the first pass answered is shown below, under the `local_id` it gave
-each entity.
+This is a second pass over a paper already read once, covering only the classes named under
+"# Schema" below -- whichever of them the first pass left thin. What the first pass answered
+for those is shown under the `local_id` it gave each entity.
 
   * Reuse those `local_id` values exactly. An entity emitted under a new id cannot be
     matched to the one it describes, and everything said about it is discarded.
   * A field the first pass left out is not an invitation to guess. Add one only where the
     paper supports it; where the paper is silent, say so with `not_reported`.
-  * Conditions are the usual omission. A task's conditions are the distinct states a
-    participant was placed in, and each carries a `condition_kind`.
+  * Conditions are the usual omission, where a Task is in scope. A task's conditions are the
+    distinct states a participant was placed in, and each carries a `condition_kind`.
 """
 
 MODE_NOTE = {
@@ -883,9 +923,12 @@ MODE_NOTE["satisfy"] = SATISFY_NOTE
 MODE_NOTE["priority"] = PRIORITY_NOTE
 
 
-def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
+def build_prompt(
+    text: str, mode: str, evidence: bool, context: str, active: Sequence[str] = PRIORITY
+) -> Prompt:
+    """`active` only matters for `mode == "priority"`: see `mode_classes`."""
     sch = reader.load(EXTRACTION_SCHEMA)
-    names, study_keep = mode_classes(sch, MODE_SCHEMA.get(mode, mode))
+    names, study_keep = mode_classes(sch, MODE_SCHEMA.get(mode, mode), active)
 
     # Only the lists that sit directly on Study are offered as top-level payload keys.
     # `design.arms` and `design.timepoints` are reachable that way too, but naming them
@@ -900,11 +943,11 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
     if mode == "demands":
         payload_keys.append("required_entities")
     if MODE_SCHEMA.get(mode, mode) == "priority":
-        # Rule 2 tells the model these keys go at the top level. Naming all eleven while
-        # describing only Task and Group asks for lists whose classes this pass never
+        # Rule 2 tells the model these keys go at the top level. Naming all of them while
+        # describing only `active`'s classes asks for lists whose classes this pass never
         # rendered -- "the model invents the shape", which test_extraction_prompt.py exists
         # to catch -- and fill_empty discards every one of them regardless.
-        payload_keys = priority_keys(sch)
+        payload_keys = priority_keys(sch, active)
 
     # Ordering here is not a cache optimisation, and an attempt to make it one failed.
     # Every pass sends the same conventions, worked models and paper -- 29,152 of the

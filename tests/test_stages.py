@@ -145,7 +145,9 @@ def test_evidence_asks_about_the_fields_that_exist_not_about_the_paper(tmp_path,
     caller = Recorder()
     monkeypatch.setattr(
         "pondie.extraction.evidence.quote.apply_evidence",
-        lambda payload, quotes, reranker=None, units=(): EvidenceCounts(),
+        lambda payload, quotes, reranker=None, units=(), literal=frozenset(): (
+            EvidenceCounts()
+        ),
     )
     outcome = Evidence().run(paper, settings, caller)
     assert not outcome.skipped and outcome.ok

@@ -69,6 +69,10 @@ def test_the_implemented_workflow_is_still_accepted(tmp_path):
         "split",
         "demands",
         "satisfy",
+        # Slot-level, and after `satisfy`: it finishes what that pass left open rather
+        # than deciding anything exists, and it needs the entities to exist to name their
+        # open slots. Before `evidence`, so a value it adds gets a quote like any other.
+        "fill",
         "evidence",
         "build",
         "repair",

@@ -73,6 +73,10 @@ class StageName(str, Enum):
     sign_split = "split"
     demands = "demands"
     satisfy = "satisfy"
+    #: Slot-level, and after `satisfy` because it finishes what that pass left open rather
+    #: than deciding anything exists. Loops: a slot is settled when it holds a value or a
+    #: reason there is none, so "are we done" is a fact about the record and not a guess.
+    fill = "fill"
     evidence = "evidence"
     build = "build"
     #: After `build`, on the record rather than on a payload. Off unless asked for: it wants
@@ -249,6 +253,33 @@ class Settings(Strict):
     #: default: one call covers twenty-three entity classes and the two every analysis leans
     #: on lose out, which a later sweep then has to find -- 132 empty fields on one paper.
     priority_pass: bool = True
+    #: How many times that second call may repeat, each round re-asking only about the
+    #: classes still thin. 1 is the single pass this began as, and it is the default because
+    #: raising it was measured and did not pay.
+    #:
+    #: Over five papers, 3 cost one extra call and 11% more input than 1, and returned 18
+    #: more filled fields -- inside the ~9% that two runs of the same configuration differ
+    #: by anyway. The cap never bound: four of the five papers stopped after one round and
+    #: none reached three, exiting on "nothing landed" rather than on being settled, and
+    #: three of five finished with `groups` still thin. Iteration is not what limits this;
+    #: asking the same model the same question about the same paper is.
+    #:
+    #: A ceiling and not a convergence test, because convergence is not observable here: a
+    #: round that appears to gain is inside the noise of a round that did nothing, so the
+    #: loop stops on what it *can* see -- nothing thin, nothing landed, the thin set no
+    #: smaller -- and this bounds the rest. Raise it for a corpus where that has been
+    #: measured to help; it has not been here.
+    priority_rounds: Annotated[int, Field(ge=1)] = 1
+
+    #: How many rounds the `fill` stage may take. Unlike `priority_rounds` this loop has a
+    #: real exit -- a slot is settled when it holds a value or an `unreported_reason`, so it
+    #: stops when nothing is open rather than when nothing seems to be improving. The cap is
+    #: for the case that does not converge: `undetermined` is the one answer that leaves a
+    #: slot open, so a model that keeps giving it would otherwise be asked forever.
+    fill_rounds: Annotated[int, Field(ge=1)] = 3
+    #: Slots per call. The paper dominates a call whatever else is in it, so a round asks
+    #: about as many open slots as it can rather than splitting them over calls.
+    fill_batch: Annotated[int, Field(ge=1)] = 250
 
     #: Where the proposer is served. Default because a served proposer decodes under a
     #: grammar, which ends a failure the in-process one cannot: on 16962339 the free-running
