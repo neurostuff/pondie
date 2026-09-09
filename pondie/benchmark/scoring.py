@@ -16,7 +16,7 @@ Four questions, in the order they depend on each other:
    comparable triple. False positives and false negatives are both listed, not just counted.
 3. **Fields** -- for each matched pair, per-field agreement, reported per field as well as
    per type. Numbers are coerced and compared with a tolerance; free text is scored by fuzzy
-   overlap and, with semantics on, by embedding cosine; enums are exact.
+   overlap; enums are exact.
 4. **Direction** -- the highest-weighted question, and the only one with a second gold. A
    `Cell` is credited only when its `term` resolves to the nominally same ModelTerm in the
    gold, so a right sign on the wrong term earns nothing.
@@ -36,9 +36,7 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import re
-import sys
 import unicodedata
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -54,7 +52,6 @@ from pondie.schema.reader import EXTRACTED_VALUE, LOCAL_ID
 ROOT = Path(__file__).resolve().parents[2]
 #: The schema is a submodule of this repository, not a sibling directory.
 SCHEMA = schema.EXTRACTION
-CACHE = ROOT / ".cache" / "compare_embeddings.json"
 
 #: Provenance, not extraction: comparing these would score the pipeline, not the reading.
 SKIP_SLOTS = {"evidence", "extraction_metadata", "value_source"}
@@ -175,113 +172,6 @@ def fuzzy(a: str, b: str) -> float:
     dice = 2 * shared / (len(ta) + len(tb)) if ta and tb else 0.0
     containment = shared / min(len(ta), len(tb)) if ta and tb else 0.0
     return max(SequenceMatcher(None, na, nb).ratio(), dice, 0.9 * containment)
-
-
-class Semantics:
-    """Embedding cosine, when asked for and reachable; fuzzy overlap otherwise.
-
-    Texts are embedded in one prepass rather than pair by pair: the assignment problems
-    below are quadratic in entity count, and a per-comparison call would issue thousands
-    of requests for a few hundred distinct strings.
-    """
-
-    def __init__(
-        self, enabled: bool, model: str | None = None, base_url: str | None = None
-    ) -> None:
-        self.enabled = enabled
-        # `OPENAI_EMBEDDING_MODEL` alongside the `OPENAI_EMBEDDING_BASE_URL` that
-        # `_openai_client` already reads: a Portkey-style gateway routes on a
-        # provider-qualified name (`@provider-slug/text-embedding-3-small`) and rejects
-        # the bare one, so a deployment behind a gateway cannot use `--semantic` at all
-        # without being able to say which name to send.
-        self.model = model or os.environ.get("OPENAI_EMBEDDING_MODEL") or "text-embedding-3-small"
-        self.base_url = base_url
-        self.vectors: dict[str, list[float]] = {}
-        self._cache: dict[str, list[float]] = {}
-        if enabled and CACHE.is_file():
-            try:
-                cached = json.loads(CACHE.read_text(encoding="utf-8"))
-                self._cache = cached.get(model, {})
-            except (OSError, ValueError):
-                self._cache = {}
-
-    def prepare(self, texts: Iterable[str]) -> None:
-        if not self.enabled:
-            return
-        wanted = sorted({t[:2000] for t in texts if t and t.strip()})
-        missing = [t for t in wanted if t not in self._cache]
-        if missing:
-            # Any failure here -- no key, no network, a gateway that does not route the
-            # embeddings endpoint -- degrades to fuzzy rather than losing the whole run.
-            # The other metrics do not depend on embeddings and should still be produced.
-            try:
-                client = _openai_client(self.base_url)
-                for start in range(0, len(missing), 128):
-                    batch = missing[start : start + 128]
-                    response = client.embeddings.create(model=self.model, input=batch)
-                    for text, item in zip(batch, response.data):
-                        self._cache[text] = list(item.embedding)
-            except Exception as exc:  # noqa: BLE001
-                print(
-                    f"note: semantic similarity unavailable ({type(exc).__name__}: {exc}); "
-                    "scoring strings by fuzzy overlap only.",
-                    file=sys.stderr,
-                )
-                self.enabled = False
-                return
-            CACHE.parent.mkdir(parents=True, exist_ok=True)
-            existing = {}
-            if CACHE.is_file():
-                try:
-                    existing = json.loads(CACHE.read_text(encoding="utf-8"))
-                except (OSError, ValueError):
-                    existing = {}
-            existing[self.model] = self._cache
-            CACHE.write_text(json.dumps(existing), encoding="utf-8")
-        self.vectors = {t: self._cache[t] for t in wanted if t in self._cache}
-
-    def similarity(self, a: str, b: str) -> float:
-        surface = fuzzy(a, b)
-        if not self.enabled:
-            return surface
-        va, vb = self.vectors.get(a[:2000]), self.vectors.get(b[:2000])
-        if not va or not vb:
-            return surface
-        dot = sum(x * y for x, y in zip(va, vb))
-        na = math.sqrt(sum(x * x for x in va))
-        nb = math.sqrt(sum(y * y for y in vb))
-        if not na or not nb:
-            return surface
-        cosine = dot / (na * nb)
-        # Cosine over a modern embedding space floors around 0.3 for unrelated text;
-        # rescaling keeps a graded score comparable with the fuzzy one it is maxed against.
-        return max(surface, max(0.0, (cosine - 0.3) / 0.7))
-
-
-def _openai_client(base_url: str | None = None):
-    """The gateway `OPENAI_API_GATEWAY` names, unless one was given for embeddings alone.
-
-    A Portkey-style gateway routes chat completions on a virtual key and rejects
-    `/embeddings` without a provider header, so `--embedding-base-url` exists to send this
-    one endpoint straight at the provider.
-    """
-
-    if not os.environ.get("OPENAI_API_KEY"):
-        env = ROOT / ".env"
-        if env.is_file():
-            for raw in env.read_text(encoding="utf-8").splitlines():
-                line = raw.strip().removeprefix("export ").strip()
-                if line and not line.startswith("#") and "=" in line:
-                    name, _, value = line.partition("=")
-                    os.environ.setdefault(name.strip(), value.strip().strip("'\""))
-    from openai import OpenAI
-
-    return OpenAI(
-        api_key=os.environ["OPENAI_API_KEY"],
-        base_url=base_url
-        or os.environ.get("OPENAI_EMBEDDING_BASE_URL")
-        or os.environ.get("OPENAI_API_GATEWAY"),
-    )
 
 
 def as_number(value: Any) -> float | None:
@@ -611,9 +501,13 @@ class ValueVerdict:
     numeric_error: float | None = None
 
 
-def compare_values(kind: str, gold: Any, cand: Any, sem: Semantics) -> ValueVerdict:
+def compare_values(
+    kind: str,
+    gold: Any,
+    cand: Any,
+) -> ValueVerdict:
     if kind.endswith("[]"):
-        return compare_lists(kind[:-2], gold, cand, sem)
+        return compare_lists(kind[:-2], gold, cand)
     if kind == "number":
         g, c = as_number(gold), as_number(cand)
         if g is None or c is None:
@@ -629,11 +523,15 @@ def compare_values(kind: str, gold: Any, cand: Any, sem: Semantics) -> ValueVerd
         # Half credit for near-misses keeps the graded score informative on the open
         # vocabularies (variation_level, assessment_type) without ever calling them right.
         return ValueVerdict(match=exact, score=1.0 if exact else 0.5 * fuzzy(str(gold), str(cand)))
-    score = sem.similarity(str(gold), str(cand))
+    score = fuzzy(str(gold), str(cand))
     return ValueVerdict(match=score >= TEXT_MATCH, score=score)
 
 
-def compare_lists(kind: str, gold: Any, cand: Any, sem: Semantics) -> ValueVerdict:
+def compare_lists(
+    kind: str,
+    gold: Any,
+    cand: Any,
+) -> ValueVerdict:
     """Set agreement, order-free, by best assignment between the two lists.
 
     Positional comparison would be wrong for a list of inclusion criteria and right for a
@@ -648,9 +546,9 @@ def compare_lists(kind: str, gold: Any, cand: Any, sem: Semantics) -> ValueVerdi
         return ValueVerdict(match=True, score=1.0)
     if not g or not c:
         return ValueVerdict(match=False, score=0.0)
-    pairs = match(g, c, lambda a, b: compare_values(kind, a, b, sem).score, 0.0)
+    pairs = match(g, c, lambda a, b: compare_values(kind, a, b).score, 0.0)
     scores = [s for _, _, s in pairs]
-    hits = sum(1 for i, j, _ in pairs if compare_values(kind, g[i], c[j], sem).match)
+    hits = sum(1 for i, j, _ in pairs if compare_values(kind, g[i], c[j]).match)
     precision = hits / len(c)
     recall = hits / len(g)
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
@@ -723,10 +621,9 @@ class Aligner:
         gold: Record,
         cand: Record,
         sch: reader.Schema,
-        sem: Semantics,
         exclude: Mapping[str, set[str]] | None = None,
     ) -> None:
-        self.gold, self.cand, self.schema, self.sem = gold, cand, sch, sem
+        self.gold, self.cand, self.schema = gold, cand, sch
         self.exclude = exclude or {}
         self.weights = discriminative_weights(gold)
         self.map: dict[str, str] = {}
@@ -753,7 +650,14 @@ class Aligner:
             elif fa.status != "extracted" or fb.status != "extracted":
                 total += weight * (1.0 if fa.status == fb.status else 0.0)
             else:
-                total += weight * compare_values(fa.kind, fa.value, fb.value, self.sem).score
+                total += (
+                    weight
+                    * compare_values(
+                        fa.kind,
+                        fa.value,
+                        fb.value,
+                    ).score
+                )
             weighted += weight
         return total / weighted if weighted else 0.5
 
@@ -779,7 +683,21 @@ class Aligner:
             return 0.0
         return 1.0 if self.map.get(b.parent) == a.parent else 0.0
 
+    #: The slot both sides record independently during extraction, naming the stage-1 table
+    #: entry an analysis was made from. When both have one it is identity rather than
+    #: evidence: two analyses built from `t3#1` are the same analysis whatever they are
+    #: called, and two built from different entries are not, however alike they read.
+    PROVENANCE = "source_table_analysis"
+
+    def provenance(self, entity: Entity) -> str:
+        field = entity.fields.get(self.PROVENANCE)
+        return str(getattr(field, "value", "") or "") if field is not None else ""
+
     def pair_score(self, etype: str, a: Entity, b: Entity) -> float:
+        if etype == "Analysis":
+            mine, theirs = self.provenance(a), self.provenance(b)
+            if mine and theirs:
+                return 1.0 if mine == theirs else 0.0
         attributes = self.field_score(etype, a, b)
         # `local_id` is the extractor's own naming convention, not a fact about the paper.
         # It agrees far too often between runs of the same prompt to be trusted, and not at
@@ -972,7 +890,6 @@ def compare(
     gold_doc: Mapping,
     cand_doc: Mapping,
     sch: reader.Schema,
-    sem: Semantics,
     label: str,
     scope: str = "all",
 ) -> dict[str, Any]:
@@ -983,10 +900,8 @@ def compare(
     gold = flatten(gold_doc, sch, "gold")
     cand = flatten(cand_doc, sch, "candidate")
 
-    sem.prepare(_all_text(gold) + _all_text(cand))
-
-    aligner = Aligner(gold, cand, sch, sem)
-    blind = Aligner(gold, cand, sch, sem, exclude=DIRECTION_LEAKING)
+    aligner = Aligner(gold, cand, sch)
+    blind = Aligner(gold, cand, sch, exclude=DIRECTION_LEAKING)
 
     result: dict[str, Any] = {"record": label}
     result["entities"] = entity_metrics(gold, cand, aligner)
@@ -995,33 +910,15 @@ def compare(
     # Order matters: `field_metrics` aligns the inline lists and folds their edges into the
     # owning entity, so a reference held by an AnalysisGroup or a FactorLevel does not exist
     # as an edge until it has run. Scoring relationships first would silently lose them.
-    result["fields"] = field_metrics(pairs, sch, sem, inline_alignments)
+    result["fields"] = field_metrics(pairs, sch, inline_alignments)
     result["relationships"] = relationship_metrics(gold, cand, aligner, inline_alignments, schema)
     result["structure"] = structure_metrics(gold, cand, aligner)
     result["direction"] = {
-        "primary": direction_metrics(gold, cand, aligner, sch, sem),
-        "structure_only": direction_metrics(gold, cand, blind, sch, sem),
+        "primary": direction_metrics(gold, cand, aligner, sch),
+        "structure_only": direction_metrics(gold, cand, blind, sch),
     }
     result["composite"] = composite(result)
     return result
-
-
-def _all_text(record: Record) -> list[str]:
-    texts: list[str] = []
-    for ent in record.entities.values():
-        for f in ent.fields.values():
-            if f.status == "extracted" and f.kind.startswith("string"):
-                texts.extend(
-                    v
-                    for v in (f.value if isinstance(f.value, list) else [f.value])
-                    if isinstance(v, str)
-                )
-        for _, members in ent.inline.values():
-            for member in members:
-                for value in member.values():
-                    if isinstance(value, Mapping) and isinstance(value.get("value"), str):
-                        texts.append(value["value"])
-    return texts
 
 
 def entity_metrics(gold: Record, cand: Record, aligner: Aligner) -> dict[str, Any]:
@@ -1066,7 +963,6 @@ def _field_path(path: str) -> str:
 def field_metrics(
     pairs: Sequence[tuple[Entity, Entity]],
     sch: reader.Schema,
-    sem: Semantics,
     inline_out: dict,
 ) -> dict[str, Any]:
     per_type: dict[str, dict[str, Any]] = {}
@@ -1081,7 +977,7 @@ def field_metrics(
             aligned = match(
                 members,
                 cand_members,
-                lambda a, b, k=cls: inline_similarity(a, b, k, sch, sem),
+                lambda a, b, k=cls: inline_similarity(a, b, k, sch),
                 CELL_THRESHOLD,
             )
             inline_out[(g_ent.local_id, path)] = (members, cand_members, aligned, cls)
@@ -1114,7 +1010,7 @@ def field_metrics(
             for target in (bucket, row, field):
                 target["total"] += 1
             if g_has and c_has:
-                verdict = compare_values(gf.kind, gf.value, cf.value, sem)
+                verdict = compare_values(gf.kind, gf.value, cf.value)
                 for target in (bucket, row, field):
                     target["both"] += 1
                     target["score"] += verdict.score
@@ -1217,7 +1113,10 @@ def _summarize_field_bucket(b: dict[str, Any]) -> dict[str, Any]:
 
 
 def inline_similarity(
-    a: Mapping, b: Mapping, class_name: str, sch: reader.Schema, sem: Semantics
+    a: Mapping,
+    b: Mapping,
+    class_name: str,
+    sch: reader.Schema,
 ) -> float:
     blocked = ALIGN_EXCLUDE.get(class_name, set())
     fa, ea = flatten_inline(a, class_name, sch, "")
@@ -1240,7 +1139,7 @@ def inline_similarity(
         if x.status != "extracted" or y.status != "extracted":
             total += weight * (1.0 if x.status == y.status else 0.0)
         else:
-            total += weight * compare_values(x.kind, x.value, y.value, sem).score
+            total += weight * compare_values(x.kind, x.value, y.value).score
     fields = total / weighted if weighted else 0.5
     if not ea and not eb:
         return fields
@@ -1352,7 +1251,10 @@ def relationship_metrics(
 
 
 def direction_metrics(
-    gold: Record, cand: Record, aligner: Aligner, sch: reader.Schema, sem: Semantics
+    gold: Record,
+    cand: Record,
+    aligner: Aligner,
+    sch: reader.Schema,
 ) -> dict[str, Any]:
     """The headline: does the candidate say which way each contrast went, on the right term?
 
@@ -1386,7 +1288,7 @@ def direction_metrics(
         aligned = match(
             g_cells,
             c_cells,
-            lambda a, b: inline_similarity(a, b, "Cell", sch, sem),
+            lambda a, b: inline_similarity(a, b, "Cell", sch),
             CELL_THRESHOLD,
         )
         cells_aligned += len(aligned)
@@ -1900,7 +1802,6 @@ def score(
     cand_doc: Mapping,
     gold: Mapping[str, dict],
     sch: reader.Schema,
-    sem: Semantics,
     label: str,
 ) -> dict[str, Any]:
     """Align candidate to the record the reviewer was shown, then read only directions.
@@ -1911,8 +1812,7 @@ def score(
     """
     reference = flatten(reference_doc, sch, "reference")
     cand = flatten(cand_doc, sch, "candidate")
-    sem.prepare(_all_text(reference) + _all_text(cand))
-    aligner = Aligner(reference, cand, sch, sem)
+    aligner = Aligner(reference, cand, sch)
 
     cand_by_id = {e.local_id: e for e in cand.by_type.get("Analysis", [])}
     coverage = Counter()
@@ -1965,7 +1865,7 @@ def score(
         aligned = match(
             ref_cells,
             cand_cells,
-            lambda a, b: inline_similarity(a, b, "Cell", sch, sem),
+            lambda a, b: inline_similarity(a, b, "Cell", sch),
             CELL_THRESHOLD,
         )
         by_ref = {i: j for i, j, _ in aligned}

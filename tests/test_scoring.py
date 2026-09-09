@@ -35,7 +35,7 @@ def gold():
 
 
 def run(gold_doc, candidate, schema):
-    return ce.compare(gold_doc, candidate, schema, ce.Semantics(False), "test")
+    return ce.compare(gold_doc, candidate, schema, "test")
 
 
 def rename_ids(record):
@@ -396,13 +396,3 @@ def test_kappa_punishes_a_constant_answer():
     pairs = [("positive", "positive")] * 8 + [("negative", "positive")] * 2
     assert sum(1 for a, b in pairs if a == b) / len(pairs) == 0.8
     assert ce.cohen_kappa(pairs) == 0.0
-
-
-def test_semantic_similarity_uses_the_vectors_when_it_has_them():
-    sem = ce.Semantics(True)
-    sem.vectors = {"cerebral blood flow": [1.0, 0.0], "perfusion": [0.96, 0.28]}
-    assert sem.similarity("cerebral blood flow", "perfusion") > ce.fuzzy(
-        "cerebral blood flow", "perfusion"
-    )
-    # An unembedded string still gets a score rather than an exception.
-    assert 0.0 <= sem.similarity("cerebral blood flow", "unseen text") <= 1.0

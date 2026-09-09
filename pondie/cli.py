@@ -106,7 +106,7 @@ def _select(args: argparse.Namespace) -> int:
 def _benchmark(args: argparse.Namespace) -> int:
     from pondie.benchmark import run
 
-    result = run(candidate=args.candidate, reference=args.reference, semantic=args.semantic)
+    result = run(candidate=args.candidate, reference=args.reference)
     print(result.summary() if args.brief else result.report(limit=args.limit))
     return 0
 
@@ -184,11 +184,6 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=REFERENCE,
         help="the records the reviewer was shown; identity only, never scored",
-    )
-    be.add_argument(
-        "--semantic",
-        action="store_true",
-        help="embeddings for term same-ness rather than string comparison",
     )
     be.add_argument("--brief", action="store_true", help="the headline only, no tables")
     be.add_argument(

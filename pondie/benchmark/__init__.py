@@ -37,7 +37,7 @@ from pydantic import BaseModel, ConfigDict
 
 from pondie import paths
 from pondie.benchmark import scoring
-from pondie.benchmark.scoring import Semantics, compare, load_gold, score
+from pondie.benchmark.scoring import compare, load_gold, score
 from pondie.schema import reader
 
 BENCHMARKS = paths.REPO / "benchmarks"
@@ -205,14 +205,13 @@ def run(
     candidate: Path = CANDIDATE,
     reference: Path = REFERENCE,
     gold: Path = GOLD,
-    semantic: bool = False,
 ) -> Result:
     """Score every paper the gold covers, and return the numbers.
 
     Returns a `Result` rather than printing one: a caller that wants text calls `.report()`,
     a test asserts on `.direction.accuracy` or on one `FieldScore`.
     """
-    schema, semantics = reader.load(scoring.SCHEMA), Semantics(semantic)
+    schema = reader.load(scoring.SCHEMA)
 
     papers = scored = correct = reviewed = 0
     skipped: list[str] = []
@@ -229,7 +228,6 @@ def run(
             json.loads(cand.read_text()),
             answers,
             schema,
-            semantics,
             paper,
         )
         tier1 = result.get("tier1") or {}
@@ -251,7 +249,6 @@ def run(
             json.loads(gold_record.read_text()),
             json.loads(cand.read_text()),
             schema,
-            semantics,
             paper,
         )
         _accumulate(field_buckets, measured["fields"]["per_field"])
