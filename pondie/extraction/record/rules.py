@@ -30,7 +30,12 @@ from dataclasses import dataclass
 from typing import Any, Callable, Protocol
 
 from pondie.extraction.record import spans as span_tools
-from pondie.extraction.record.effect import terms_in_scope
+from pondie.extraction.record.effect import (
+    NO_LABEL,
+    UNDETERMINED_VARIATION,
+    derive_effect_kind,
+    terms_in_scope,
+)
 from pondie.formats import values
 
 
@@ -1227,7 +1232,58 @@ def check_counts_add_up(record: Mapping[str, Any], findings: Findings) -> None:
                 )
 
 
+def check_effect_kind(record: Mapping[str, Any], findings: Findings) -> None:
+    """`Effect.kind` and the cells beside it must describe the same test.
+
+    The kind follows entirely from the cells by §3's six ordered steps, so the slot is
+    redundant and that is what makes it useful: one statement of a shape cannot be checked,
+    and two can. Neither side is authoritative here. A stated `contrast` over cells deriving
+    `simple_effect` is either cells missing a level or a kind read off the analysis's title,
+    and this says only that the two disagree.
+
+    The case it was written for: `ngDTY5BgJUuX`'s three classification analyses and
+    `SULKxviGFurw`'s two MVPA ones carry `DecodingDetails` and two cells with no direction,
+    which derives `contrast` with its direction lost, while the papers report accuracy above
+    chance -- one signed cell, a `simple_effect`, as §5.9 encodes it. The prose route was tried
+    first: `a-classifier-signs-one-cell-not-two` tells the extractor that "one signed cell"
+    means exactly one, after all three analyses had signed both classes. They stopped signing
+    both and started signing neither, which asserts nothing rather than asserting the wrong
+    thing. Nothing reported either shape, because the record stated it only once.
+
+    A derivation of `none` is reported whatever the slot says, and on its own: cells that
+    describe no test are a defect before anything is compared against them.
+    """
+
+    models = _model_index(record)
+    for index, analysis in enumerate(record.get("analyses") or []):
+        if not isinstance(analysis, Mapping):
+            continue
+        effect = analysis.get("effect")
+        if not isinstance(effect, Mapping):
+            continue
+        path = f"analyses[{index}].effect"
+        terms = terms_in_scope(analysis.get("model_estimation"), models)
+        derived, why = derive_effect_kind(effect.get("cells"), terms)
+
+        if derived == NO_LABEL:
+            findings.error(f"{path}.cells", why)
+            continue
+        if derived == UNDETERMINED_VARIATION:
+            continue  # a missing `variation_level`, which `check_field` reports at its source
+
+        stated = values.read(effect.get("kind"))
+        if stated is None:
+            continue  # not asserted, so there is nothing to disagree with
+        if stated != derived:
+            findings.error(
+                f"{path}.kind",
+                f"says {stated!r} and its cells derive {derived!r} ({why}); one of the two "
+                "is wrong",
+            )
+
+
 RULES: tuple[Rule, ...] = (
+    Rule("effect_kind", "a stated effect kind matches the cells beside it", check_effect_kind),
     Rule("cell_terms", "every cell names a term its analysis's model can reach", check_cell_terms),
     Rule(
         "model_stages", "a stage chain is acyclic and names each column once", check_model_stages
