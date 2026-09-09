@@ -791,10 +791,11 @@ def test_a_field_that_could_never_have_had_a_sentence_is_not_flagged():
 
 
 def test_a_reasoned_value_claimed_as_reported_is_flagged():
-    """`grounding` exempts these from scoring because a paper does not write down that a
-    scope was `roi`. That is exactly why one asserted as `reported` with no sentence is
-    worth seeing -- a conclusion wearing the label of a quotation. All four wrong values
-    found by hand on this corpus were of that shape."""
+    """A paper does not write down that a scope was `roi`, so a checker asked for the
+    sentence behind one is asking for a sentence that does not exist. That is exactly why
+    one asserted as `reported` with no sentence is worth seeing -- a conclusion wearing the
+    label of a quotation. All four wrong values found by hand on this corpus were of that
+    shape."""
     from pondie.extraction.record import rules
 
     def claimed(value):

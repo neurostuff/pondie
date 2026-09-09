@@ -1,4 +1,4 @@
-"""Repair a built record: propose, ground, guard, and put what is left to a model.
+"""Repair a built record: propose, guard, and put what is left to a model.
 
 Runs after `build`, on a record that already exists, and changes it in place. Four steps,
 narrowing at each one:

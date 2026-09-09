@@ -1061,6 +1061,15 @@ def check_acquisition_devices(record: Mapping[str, Any], findings: Findings) -> 
 #: the record and later ones read what earlier ones wrote; these mutate nothing and read no
 #: shared state, measured. An ordering constraint written here would assert a dependency
 #: that does not exist, and the next person would maintain it.
+#: Addresses, not claims. A `local_id` is how the record refers to something internally, so
+#: asking whether the paper says "reg_hippocampus" always answers no.
+#:
+#: `local_id` and `id` are here for completeness rather than reach: `iter_fields` yields only
+#: `ExtractedValue` wrappers, and those two are plain strings that never appear as one. The
+#: slots that do reach here are the reference-shaped ones a projection wraps.
+IDENTIFIERS = frozenset({"local_id", "id", "source_table_analysis", "table_id"})
+
+
 def check_value_source_honesty(record: Mapping[str, Any], findings: Findings) -> None:
     """A value the paper reported has a sentence, or it is not `reported`.
 
@@ -1080,7 +1089,6 @@ def check_value_source_honesty(record: Mapping[str, Any], findings: Findings) ->
     `generated` is a judgement this cannot make. What it can do is stop the two kinds of
     value being indistinguishable in the output.
     """
-    from pondie.extraction.evidence.grounding import IDENTIFIERS
     from pondie.formats.values import iter_fields
 
     for path, node in iter_fields(record):
@@ -1097,13 +1105,13 @@ def check_value_source_honesty(record: Mapping[str, Any], findings: Findings) ->
         # from the table manifest -- and on `source_table_analysis`, which is an address
         # inside the record rather than a claim about the paper.
         #
-        # A `REASONED` slot is deliberately kept. `grounding` exempts those from *scoring*
-        # because a paper does not write down that a scope was `roi`, and that is exactly
-        # why one asserted as `reported` with no sentence is worth seeing: it is a
-        # conclusion wearing the label of a quotation. All four wrong values found by hand
-        # on this corpus were of that shape -- `family` = electrophysiology,
-        # `spatial_scope` = roi, `definition_method` = functional_localizer,
-        # `correction_scope` = roi.
+        # A slot whose value is a conclusion rather than a quotation -- `spatial_scope`,
+        # `direction`, `prespecification` -- is deliberately kept. A paper does not write
+        # down that a scope was `roi`, which is exactly why one asserted as `reported` with
+        # no sentence is worth seeing: it is a conclusion wearing the label of a quotation.
+        # All four wrong values found by hand on this corpus were of that shape --
+        # `family` = electrophysiology, `spatial_scope` = roi,
+        # `definition_method` = functional_localizer, `correction_scope` = roi.
         slot = path.rsplit(".", 1)[-1].split("[")[0]
         if path.startswith("tables[") or slot in IDENTIFIERS:
             continue

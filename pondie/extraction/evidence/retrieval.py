@@ -7,9 +7,8 @@ a section filter -- are written up in docs/evidence-top1-judgements.md and
 docs/evidence-union-design.md, and the measurement that the union was worth 21 points still
 holds. The ranking went with the local models.
 
-`sectionize` outlived it because two passes want the same question answered: `repair` builds
-its premise from the Methods and Results, and `grounding` scores a proposal against the
-section it came from. Neither ranks anything.
+`sectionize` outlived it because `repair` builds its premise from the Methods and Results,
+which is a question about where a sentence sits and not about how well it scores.
 """
 
 from __future__ import annotations
