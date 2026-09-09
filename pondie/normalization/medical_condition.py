@@ -31,8 +31,7 @@ from pondie.vocabularies.mondo import Vocabulary, load_mondo
 
 #: A condition field recording the ABSENCE of a condition. Left in, these dominate the tail.
 NEGATION = re.compile(
-    r"^\s*(none|no\b|not\b|nil\b|without\b|free of\b|absence of\b|"
-    r"unaffected|healthy|n/?a\b)",
+    r"^\s*(none|no\b|not\b|nil\b|without\b|free of\b|absence of\b|" r"unaffected|healthy|n/?a\b)",
     re.I,
 )
 #: Course and state, not a different disease. Lifted off and kept: "first-episode
@@ -114,9 +113,7 @@ def link(
                 }
             )
         else:
-            rejected.append(
-                {"text": head, "cosine": float(s), "nearest": vocab.labels[int(b)]}
-            )
+            rejected.append({"text": head, "cosine": float(s), "nearest": vocab.labels[int(b)]})
     return hit, queued, rejected
 
 
@@ -198,9 +195,7 @@ def report(patterns: tuple[str, ...] = DEFAULT) -> str:
         )
     lines.append(f"review queue {len(out['review'])}, rejected {len(out['rejected'])}")
     for r in out["review"][:6]:
-        lines.append(
-            f"   {r['cosine']:.2f}  {r['text'][:40]:40s} -> {r['candidates'][0][:36]}"
-        )
+        lines.append(f"   {r['cosine']:.2f}  {r['text'][:40]:40s} -> {r['candidates'][0][:36]}")
     return "\n".join(lines)
 
 

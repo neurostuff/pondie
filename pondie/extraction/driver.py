@@ -73,9 +73,7 @@ def plan(papers: Iterable[Paper], settings: Settings) -> dict[str, list[str]]:
     for paper in papers:
         steps = []
         for stage in sequence(settings):
-            state = (
-                "skip" if getattr(stage, "done", lambda *_: False)(paper, settings) else "run"
-            )
+            state = "skip" if getattr(stage, "done", lambda *_: False)(paper, settings) else "run"
             steps.append(f"{state}:{stage.name.value}")
         out[paper.study_id] = steps
     return out

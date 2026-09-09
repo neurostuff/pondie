@@ -191,11 +191,7 @@ def render_schema(sch: Schema, names: set[str], study_keep: list[str]) -> str:
             if kind == "reference":
                 bits.append(
                     f"local_id of {ranges[0]}"
-                    + (
-                        " — plain list of id strings"
-                        if spec.multivalued
-                        else " — plain id string"
-                    )
+                    + (" — plain list of id strings" if spec.multivalued else " — plain id string")
                 )
             elif kind == "nested":
                 bits.append(
@@ -364,12 +360,7 @@ def stage1_block(
             points = analysis.get("points") or []
             spaces = sorted({p.get("space") for p in points if p.get("space")})
             kinds = sorted(
-                {
-                    v.get("kind")
-                    for p in points
-                    for v in (p.get("values") or [])
-                    if v.get("kind")
-                }
+                {v.get("kind") for p in points for v in (p.get("values") or []) if v.get("kind")}
             )
             notes = [
                 (
@@ -922,9 +913,7 @@ def normalize(payload: dict[str, Any], mode: str) -> tuple[dict[str, Any], list[
         # next pass with nothing to be held to and the failure is silent.
         analyses = payload.get("analyses")
         if isinstance(analyses, list):
-            declarations = [
-                a for a in analyses if isinstance(a, Mapping) and not a.get("effect")
-            ]
+            declarations = [a for a in analyses if isinstance(a, Mapping) and not a.get("effect")]
             if declarations:
                 payload["analyses"] = [a for a in analyses if a not in declarations]
                 declared = payload.setdefault("required_entities", [])

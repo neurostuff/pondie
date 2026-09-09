@@ -36,9 +36,7 @@ def main() -> int:
         help="corpus root; lets each paper's own abbreviation "
         "definitions override the corpus-wide ones",
     )
-    parser.add_argument(
-        "--abbreviations", type=Path, default=paths.VOCAB / "abbreviations.json"
-    )
+    parser.add_argument("--abbreviations", type=Path, default=paths.VOCAB / "abbreviations.json")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--min-support", type=int, default=2)
     args = parser.parse_args()
@@ -58,7 +56,7 @@ def main() -> int:
             if args.texts:
                 try:
                     store = corpus_store.for_paper(
-                        paths.best_text(study, args.texts).read_text(encoding='utf-8')
+                        paths.best_text(study, args.texts).read_text(encoding="utf-8")
                     )
                 except (FileNotFoundError, OSError):
                     pass

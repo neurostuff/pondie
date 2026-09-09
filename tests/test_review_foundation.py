@@ -60,9 +60,7 @@ def _pairs_with(record_path: Path, text_path: Path) -> bool:
         .get("extraction_metadata", {})
         .get("source_text_hash")
     )
-    digest = text_index.text_hash(
-        text_index.normalize(text_path.read_text(encoding="utf-8"))
-    )
+    digest = text_index.text_hash(text_index.normalize(text_path.read_text(encoding="utf-8")))
     return bool(declared) and declared == digest
 
 
@@ -332,7 +330,9 @@ def test_merge_payloads_keeps_arms_and_timepoints(tmp_path: Path) -> None:
         json.dumps(
             {
                 "arms": [{"local_id": "active", "name": {"extraction_status": "extracted"}}],
-                "timepoints": [{"local_id": "baseline", "name": {"extraction_status": "extracted"}}],
+                "timepoints": [
+                    {"local_id": "baseline", "name": {"extraction_status": "extracted"}}
+                ],
             }
         ),
         encoding="utf-8",
@@ -352,6 +352,7 @@ def test_resolves_to_follows_is_a(classes: dict) -> None:
 
 # -- product columns and the crossings they record -------------------------
 
+
 #: Fixtures rather than a real record, because the defect being checked is one a
 #: real record wears invisibly: every reference resolves and every level agrees with
 #: its term, so the only way to test it is to build the shape by hand.
@@ -368,22 +369,31 @@ def _cell(term: str, direction: str, level: str | None = None) -> dict:
 
 GROUP = {"local_id": "t_group", "type": _text("categorical")}
 STAGE = {"local_id": "t_stage", "type": _text("categorical")}
-PRODUCT = {"local_id": "t_gxs", "type": _text("categorical"),
-           "interaction_with": ["t_group", "t_stage"]}
+PRODUCT = {
+    "local_id": "t_gxs",
+    "type": _text("categorical"),
+    "interaction_with": ["t_group", "t_stage"],
+}
 
 #: The two group cells of an interaction reported as an unsigned chi-square: the test
 #: yields no per-level sign, which crosses nothing.
-UNSIGNED_GROUP = [_cell("t_group", "undirected", "patients"),
-                  _cell("t_group", "undirected", "controls")]
+UNSIGNED_GROUP = [
+    _cell("t_group", "undirected", "patients"),
+    _cell("t_group", "undirected", "controls"),
+]
 
 
-def _record(terms: list[dict], analyses: list[tuple[str, list[dict]]],
-            model: str = "m1") -> dict:
+def _record(terms: list[dict], analyses: list[tuple[str, list[dict]]], model: str = "m1") -> dict:
     return {
         "model_estimations": [{"local_id": model, "terms": terms}],
         "analyses": [
-            {"local_id": f"a{index}", "name": _text(name), "definition": _text(name),
-             "model_estimation": model, "effect": {"cells": cells}}
+            {
+                "local_id": f"a{index}",
+                "name": _text(name),
+                "definition": _text(name),
+                "model_estimation": model,
+                "effect": {"cells": cells},
+            }
             for index, (name, cells) in enumerate(analyses)
         ],
     }
@@ -413,8 +423,9 @@ def test_reduplication_is_not_a_crossing() -> None:
 def test_interaction_without_a_product_column_is_flagged(classes: dict) -> None:
     """QQCjAAT6SwwQ's defect: an unsigned interaction test with nowhere to sit."""
 
-    flags = _flags(_record([GROUP, STAGE],
-                           [("Group-by-stage interaction", UNSIGNED_GROUP)]), classes)
+    flags = _flags(
+        _record([GROUP, STAGE], [("Group-by-stage interaction", UNSIGNED_GROUP)]), classes
+    )
 
     assert len(flags) == 1
     assert "interaction_with" in flags[0]
@@ -422,9 +433,12 @@ def test_interaction_without_a_product_column_is_flagged(classes: dict) -> None:
 
 
 def test_an_unsigned_cell_on_the_product_column_satisfies_it(classes: dict) -> None:
-    flags = _flags(_record([GROUP, STAGE, PRODUCT],
-                           [("Group-by-stage interaction",
-                             [_cell("t_gxs", "unstated")])]), classes)
+    flags = _flags(
+        _record(
+            [GROUP, STAGE, PRODUCT], [("Group-by-stage interaction", [_cell("t_gxs", "unstated")])]
+        ),
+        classes,
+    )
 
     assert flags == []
 
@@ -432,11 +446,14 @@ def test_an_unsigned_cell_on_the_product_column_satisfies_it(classes: dict) -> N
 def test_crossed_levels_need_no_product_column(classes: dict) -> None:
     """extraction-readme.md's converse: two crossed categorical factors say it themselves."""
 
-    cells = [_cell("t_group", "positive", "patients"), _cell("t_group", "negative", "controls"),
-             _cell("t_stage", "positive", "wake"), _cell("t_stage", "negative", "n3")]
+    cells = [
+        _cell("t_group", "positive", "patients"),
+        _cell("t_group", "negative", "controls"),
+        _cell("t_stage", "positive", "wake"),
+        _cell("t_stage", "negative", "n3"),
+    ]
 
-    assert _flags(_record([GROUP, STAGE], [("Group-by-stage interaction", cells)]),
-                  classes) == []
+    assert _flags(_record([GROUP, STAGE], [("Group-by-stage interaction", cells)]), classes) == []
 
 
 def test_a_simple_effect_within_one_level_is_not_flagged(classes: dict) -> None:
@@ -444,24 +461,32 @@ def test_a_simple_effect_within_one_level_is_not_flagged(classes: dict) -> None:
 
     cells = UNSIGNED_GROUP + [_cell("t_stage", "held", "wake")]
 
-    assert _flags(_record([GROUP, STAGE],
-                          [("Group-by-stage interaction at wake", cells)]), classes) == []
+    assert (
+        _flags(_record([GROUP, STAGE], [("Group-by-stage interaction at wake", cells)]), classes)
+        == []
+    )
 
 
 #: A factor whose levels are declared, which is what the held-constant reading is read
 #: against: `held` says one of these sat on both sides and the rest were weighted out,
 #: so a record celling all of them that way is claiming something else.
-LOAD = {"local_id": "t_load", "type": _text("categorical"),
-        "levels": [{"level": _text("high")}, {"level": _text("low")}]}
+LOAD = {
+    "local_id": "t_load",
+    "type": _text("categorical"),
+    "levels": [{"level": _text("high")}, {"level": _text("low")}],
+}
 
 
 def test_a_levelless_cell_may_not_be_held(classes: dict) -> None:
     """§4's first corollary: a product column or a slope has no level, so it has nothing
     to put on both sides of the comparison. An undirected test of one is `undirected`."""
 
-    flags = _flags(_record([GROUP, STAGE, PRODUCT],
-                           [("Group-by-stage interaction",
-                             [_cell("t_gxs", "held")])]), classes)
+    flags = _flags(
+        _record(
+            [GROUP, STAGE, PRODUCT], [("Group-by-stage interaction", [_cell("t_gxs", "held")])]
+        ),
+        classes,
+    )
 
     assert len(flags) == 1
     assert "names no level" in flags[0]
@@ -491,8 +516,11 @@ def test_the_same_factor_undirected_at_every_level_is_not(classes: dict) -> None
 def test_a_held_level_leaves_the_others_absent_and_is_not_flagged(classes: dict) -> None:
     """The one shape `held` has: one level celled, the rest weighted out."""
 
-    cells = [_cell("t_group", "positive", "patients"), _cell("t_group", "negative", "controls"),
-             _cell("t_load", "held", "high")]
+    cells = [
+        _cell("t_group", "positive", "patients"),
+        _cell("t_group", "negative", "controls"),
+        _cell("t_load", "held", "high"),
+    ]
 
     assert _flags(_record([GROUP, LOAD], [("Group effect at high load", cells)]), classes) == []
 
@@ -501,9 +529,13 @@ def test_identical_cells_disagreeing_about_a_crossing_is_flagged(classes: dict) 
     """The visible cost: an interaction and a main effect became the same record."""
 
     flags = _flags(
-        _record([GROUP, STAGE, PRODUCT],
-                [("Group-by-stage interaction", UNSIGNED_GROUP),
-                 ("Group effect", list(UNSIGNED_GROUP))]),
+        _record(
+            [GROUP, STAGE, PRODUCT],
+            [
+                ("Group-by-stage interaction", UNSIGNED_GROUP),
+                ("Group effect", list(UNSIGNED_GROUP)),
+            ],
+        ),
         classes,
     )
 
@@ -521,13 +553,28 @@ def test_a_product_column_may_name_a_lower_stage_term(classes: dict) -> None:
     record = {
         "model_estimations": [
             {"local_id": "first", "terms": [{"local_id": "t_cond", "type": _text("categorical")}]},
-            {"local_id": "group", "inputs_from": ["first"],
-             "terms": [GROUP, {"local_id": "t_x", "type": _text("categorical"),
-                               "interaction_with": ["t_group", "t_cond"]}]},
+            {
+                "local_id": "group",
+                "inputs_from": ["first"],
+                "terms": [
+                    GROUP,
+                    {
+                        "local_id": "t_x",
+                        "type": _text("categorical"),
+                        "interaction_with": ["t_group", "t_cond"],
+                    },
+                ],
+            },
         ],
-        "analyses": [{"local_id": "a0", "name": _text("Group × condition"),
-                      "definition": _text("Group × condition"), "model_estimation": "group",
-                      "effect": {"cells": [_cell("t_x", "positive")]}}],
+        "analyses": [
+            {
+                "local_id": "a0",
+                "name": _text("Group × condition"),
+                "definition": _text("Group × condition"),
+                "model_estimation": "group",
+                "effect": {"cells": [_cell("t_x", "positive")]},
+            }
+        ],
     }
 
     assert _flags(record, classes) == []
@@ -539,15 +586,27 @@ def test_a_component_in_a_sibling_model_is_flagged(classes: dict) -> None:
     record = {
         "model_estimations": [
             {"local_id": "other", "terms": [GROUP]},
-            {"local_id": "mine", "terms": [
-                {"local_id": "t_mi", "type": _text("continuous")},
-                {"local_id": "t_x", "type": _text("continuous"),
-                 "interaction_with": ["t_group", "t_mi"]},
-            ]},
+            {
+                "local_id": "mine",
+                "terms": [
+                    {"local_id": "t_mi", "type": _text("continuous")},
+                    {
+                        "local_id": "t_x",
+                        "type": _text("continuous"),
+                        "interaction_with": ["t_group", "t_mi"],
+                    },
+                ],
+            },
         ],
-        "analyses": [{"local_id": "a0", "name": _text("Group × MI"),
-                      "definition": _text("Group × MI"), "model_estimation": "mine",
-                      "effect": {"cells": [_cell("t_x", "positive")]}}],
+        "analyses": [
+            {
+                "local_id": "a0",
+                "name": _text("Group × MI"),
+                "definition": _text("Group × MI"),
+                "model_estimation": "mine",
+                "effect": {"cells": [_cell("t_x", "positive")]},
+            }
+        ],
     }
 
     flags = _flags(record, classes)
@@ -559,8 +618,7 @@ def test_a_component_in_a_sibling_model_is_flagged(classes: dict) -> None:
 def test_a_product_column_no_cell_names_is_flagged(classes: dict) -> None:
     """A declared crossing whose analysis was never extracted."""
 
-    flags = _flags(_record([GROUP, STAGE, PRODUCT],
-                           [("Group effect", UNSIGNED_GROUP)]), classes)
+    flags = _flags(_record([GROUP, STAGE, PRODUCT], [("Group effect", UNSIGNED_GROUP)]), classes)
 
     assert len(flags) == 1
     assert "carries no cell" in flags[0]
@@ -584,24 +642,35 @@ def test_the_checks_survive_a_cyclic_stage_chain(classes: dict) -> None:
 
 #: representing-models.md §5.6: one categorical term whose levels name the occasions.
 #: Only the slots these checks read are populated, per the fixture note above.
-TIME = {"local_id": "t_time", "type": _text("categorical"),
-        "variation_level": _text("within_subject"),
-        "levels": [{"level": _text("pre"), "timepoints": ["tp_base"]},
-                   {"level": _text("post"), "timepoints": ["tp_post"]}]}
+TIME = {
+    "local_id": "t_time",
+    "type": _text("categorical"),
+    "variation_level": _text("within_subject"),
+    "levels": [
+        {"level": _text("pre"), "timepoints": ["tp_base"]},
+        {"level": _text("post"), "timepoints": ["tp_post"]},
+    ],
+}
 
 #: TgcHKMRfrVog's defect: the same axis collapsed into one column named for the
 #: contrast it was the subject of, so nothing says which occasions were compared.
-COLLAPSED = {"local_id": "t_prepost", "type": _text("continuous"),
-             "name": _text("pre > post rsFC change"),
-             "variation_level": _text("within_subject")}
+COLLAPSED = {
+    "local_id": "t_prepost",
+    "type": _text("continuous"),
+    "name": _text("pre > post rsFC change"),
+    "variation_level": _text("within_subject"),
+}
 
 #: The exception the term half must not flag: one number per participant, named for the
 #: subtraction it came from, varying across the sample rather than within anyone. Sourced,
 #: so it is correct in every respect but the one under test.
-DIFFERENCE_SCORE = {"local_id": "t_dbdi", "type": _text("continuous"),
-                    "name": _text("percent change in BDI"),
-                    "variation_level": _text("between_subject"),
-                    "source_definition": _text("Percent reduction in BDI, (post-pre)/pre.")}
+DIFFERENCE_SCORE = {
+    "local_id": "t_dbdi",
+    "type": _text("continuous"),
+    "name": _text("percent change in BDI"),
+    "variation_level": _text("between_subject"),
+    "source_definition": _text("Percent reduction in BDI, (post-pre)/pre."),
+}
 
 TWO_OCCASIONS = {"timepoints": [{"local_id": "tp_base"}, {"local_id": "tp_post"}]}
 
@@ -621,9 +690,9 @@ def test_names_a_comparison_reads_contrast_syntax() -> None:
 def test_a_contrast_shaped_continuous_term_is_flagged(classes: dict) -> None:
     """TgcHKMRfrVog's defect: the occasion axis recorded as one continuous column."""
 
-    record = _record([COLLAPSED],
-                     [("CBT change: rsFC with aSCC, pre > post",
-                       [_cell("t_prepost", "positive")])])
+    record = _record(
+        [COLLAPSED], [("CBT change: rsFC with aSCC, pre > post", [_cell("t_prepost", "positive")])]
+    )
 
     flags = _flags(record, classes)
 
@@ -635,9 +704,15 @@ def test_a_contrast_shaped_continuous_term_is_flagged(classes: dict) -> None:
 def test_an_occasion_factor_satisfies_it(classes: dict) -> None:
     """§5.6's encoding of the same result raises nothing."""
 
-    record = _record([TIME], [("CBT change: rsFC with aSCC, pre > post",
-                              [_cell("t_time", "positive", "pre"),
-                               _cell("t_time", "negative", "post")])])
+    record = _record(
+        [TIME],
+        [
+            (
+                "CBT change: rsFC with aSCC, pre > post",
+                [_cell("t_time", "positive", "pre"), _cell("t_time", "negative", "post")],
+            )
+        ],
+    )
     record["design"] = TWO_OCCASIONS
 
     assert _flags(record, classes) == []
@@ -647,9 +722,10 @@ def test_a_per_participant_difference_score_is_not_flagged(classes: dict) -> Non
     """ModelTerm.type's stated exception. Its name says `change in` and it is right:
     one number per participant, entered across the sample, is a slope."""
 
-    record = _record([DIFFERENCE_SCORE],
-                     [("CBT change: rsFC with aSCC, percent reduction in BDI",
-                       [_cell("t_dbdi", "positive")])])
+    record = _record(
+        [DIFFERENCE_SCORE],
+        [("CBT change: rsFC with aSCC, percent reduction in BDI", [_cell("t_dbdi", "positive")])],
+    )
 
     assert _flags(record, classes) == []
 
@@ -657,8 +733,12 @@ def test_a_per_participant_difference_score_is_not_flagged(classes: dict) -> Non
 def test_a_product_column_named_for_its_crossing_is_not_flagged(classes: dict) -> None:
     """A product column has no levels either, and is named for what it multiplies."""
 
-    term = {"local_id": "t_x", "type": _text("continuous"),
-            "name": _text("age × diagnosis"), "interaction_with": ["t_group"]}
+    term = {
+        "local_id": "t_x",
+        "type": _text("continuous"),
+        "name": _text("age × diagnosis"),
+        "interaction_with": ["t_group"],
+    }
     record = _record([GROUP, term], [("Age × diagnosis", [_cell("t_x", "positive")])])
 
     assert [flag for flag in _flags(record, classes) if "states a comparison" in flag] == []
@@ -698,22 +778,28 @@ def test_one_declared_occasion_cannot_be_compared(classes: dict) -> None:
 
 # -- derived columns, and where they came from -----------------------------
 
+
 def _derived(**over) -> dict:
     """A percent-change covariate, complete, with `over` knocking pieces out."""
 
-    term = {"local_id": "t_dbdi", "type": _text("continuous"),
-            "name": _text("percent change in BDI"),
-            "variation_level": _text("between_subject"),
-            "assessment": "as_bdi",
-            "source_definition": _text("Percent reduction in BDI, (post-pre)/pre, from "
-                                       "baseline to post-treatment.")}
+    term = {
+        "local_id": "t_dbdi",
+        "type": _text("continuous"),
+        "name": _text("percent change in BDI"),
+        "variation_level": _text("between_subject"),
+        "assessment": "as_bdi",
+        "source_definition": _text(
+            "Percent reduction in BDI, (post-pre)/pre, from " "baseline to post-treatment."
+        ),
+    }
     term.update(over)
     return {k: v for k, v in term.items() if v is not None}
 
 
 def _derived_record(term: dict) -> dict:
-    record = _record([term], [("CBT change: rsFC and percent reduction in BDI",
-                               [_cell("t_dbdi", "positive")])])
+    record = _record(
+        [term], [("CBT change: rsFC and percent reduction in BDI", [_cell("t_dbdi", "positive")])]
+    )
     record["assessments"] = [{"local_id": "as_bdi", "name": _text("Beck Depression Inventory")}]
     return record
 
@@ -724,7 +810,8 @@ def test_names_a_derivation_reads_construction_not_measurement() -> None:
     assert rules.names_a_derivation(_text("improvement in HDRS"))
     # A measurement that merely contains "percent" is not a construction from several.
     assert not rules.names_a_derivation(
-        _text("percentage methylation at CpG sites 11-12 around AKT1 rs1130233"))
+        _text("percentage methylation at CpG sites 11-12 around AKT1 rs1130233")
+    )
     # A collapsed occasion factor is check_occasion_factors' finding, not this one.
     assert not rules.names_a_derivation(_text("pre > post rsFC change"))
     assert not rules.names_a_derivation(_text("BDI"))
@@ -758,8 +845,10 @@ def test_a_derived_column_with_no_assessment_to_name_is_not_flagged(classes: dic
     """A record declaring no instrument has none for the column to have dropped, so
     the assessment half stays quiet and only the derivation is asked for."""
 
-    record = _record([_derived(assessment=None, source_definition=None)],
-                     [("Change score", [_cell("t_dbdi", "positive")])])
+    record = _record(
+        [_derived(assessment=None, source_definition=None)],
+        [("Change score", [_cell("t_dbdi", "positive")])],
+    )
 
     flags = _flags(record, classes)
 
@@ -771,9 +860,15 @@ def test_a_factor_over_occasions_is_not_a_derived_column(classes: dict) -> None:
     """`TIME` compares occasions rather than being computed across them, so it needs
     no source_definition however its levels are labelled."""
 
-    record = _record([TIME], [("Change in rsFC, pre > post",
-                               [_cell("t_time", "positive", "pre"),
-                                _cell("t_time", "negative", "post")])])
+    record = _record(
+        [TIME],
+        [
+            (
+                "Change in rsFC, pre > post",
+                [_cell("t_time", "positive", "pre"), _cell("t_time", "negative", "post")],
+            )
+        ],
+    )
     record["design"] = TWO_OCCASIONS
 
     assert _flags(record, classes) == []
@@ -814,17 +909,34 @@ def test_an_analysis_naming_an_arm_it_cannot_reach_is_flagged(classes: dict) -> 
     """xevP8UDRAVh9's defect: the cell says `heroin`, the level says
     `heroin-associated perfusion`, and the join to the arm breaks on the string."""
 
-    flags = _flags(_arm_record([("Positive correlation with heroin-associated perfusion",
-                                 [_cell("t_arm", "positive", "heroin")])]), classes)
+    flags = _flags(
+        _arm_record(
+            [
+                (
+                    "Positive correlation with heroin-associated perfusion",
+                    [_cell("t_arm", "positive", "heroin")],
+                )
+            ]
+        ),
+        classes,
+    )
 
     assert len(flags) == 1
     assert "arm_heroin" in flags[0]
 
 
 def test_a_cell_reaching_the_level_that_names_the_arm_satisfies_it(classes: dict) -> None:
-    flags = _flags(_arm_record([("Positive correlation with heroin-associated perfusion",
-                                 [_cell("t_arm", "positive", "heroin-associated perfusion")])]),
-                   classes)
+    flags = _flags(
+        _arm_record(
+            [
+                (
+                    "Positive correlation with heroin-associated perfusion",
+                    [_cell("t_arm", "positive", "heroin-associated perfusion")],
+                )
+            ]
+        ),
+        classes,
+    )
 
     assert flags == []
 
@@ -833,8 +945,10 @@ def test_an_analysed_cohort_assigned_to_the_arm_satisfies_it(classes: dict) -> N
     """The parallel-group route: no cell names the arm, but the cohort was assigned
     to it, so `Group.arm` carries what the contrast does not."""
 
-    record = _arm_record([("Perfusion under heroin", [_cell("t_arm", "positive", "heroin")])],
-                         groups=[{"local_id": "g1", "arm": "arm_heroin"}])
+    record = _arm_record(
+        [("Perfusion under heroin", [_cell("t_arm", "positive", "heroin")])],
+        groups=[{"local_id": "g1", "arm": "arm_heroin"}],
+    )
     record["analyses"][0]["groups"] = [{"group": "g1"}]
 
     assert _flags(record, classes) == []
@@ -844,8 +958,12 @@ def test_an_analysis_naming_no_arm_is_left_alone(classes: dict) -> None:
     """A baseline contrast in a study that has arms is not about either of them,
     which is what keeps 84rGLhCbUJTh's four pre-medication analyses silent."""
 
-    flags = _flags(_arm_record([("Areas of abnormal FA before medication",
-                                 [_cell("t_arm", "positive", "heroin")])]), classes)
+    flags = _flags(
+        _arm_record(
+            [("Areas of abnormal FA before medication", [_cell("t_arm", "positive", "heroin")])]
+        ),
+        classes,
+    )
 
     assert flags == []
 
@@ -854,11 +972,13 @@ def test_a_short_arm_name_does_not_match_everything(classes: dict) -> None:
     """A two-character arm name would appear inside unrelated prose, so it is not
     vocabulary. The arm is then unreachable in the same way and silently so."""
 
-    record = _arm_record([("Positive correlation in the striatum",
-                           [_cell("t_arm", "positive", "heroin")])])
+    record = _arm_record(
+        [("Positive correlation in the striatum", [_cell("t_arm", "positive", "heroin")])]
+    )
     record["design"] = {"arms": [{"local_id": "arm_iv", "name": _text("IV")}]}
 
     assert _flags(record, classes) == []
+
 
 # -- the storage schema's class rules --------------------------------------
 
@@ -927,21 +1047,26 @@ def test_a_rule_construct_the_evaluator_cannot_read_is_reported(
     """Silently skipping one turns the rule into a check that always passes."""
 
     monkeypatch.setattr(
-        validate_record, "_RULES",
-        {"Analysis": [{
-            "description": "invented",
-            "preconditions": {"slot_conditions": {"spatial_scope": {"equals_string": "roi"}}},
-            "postconditions": {"slot_conditions": {"regions": {"maximum_cardinality": 3}}},
-        }]},
+        validate_record,
+        "_RULES",
+        {
+            "Analysis": [
+                {
+                    "description": "invented",
+                    "preconditions": {
+                        "slot_conditions": {"spatial_scope": {"equals_string": "roi"}}
+                    },
+                    "postconditions": {"slot_conditions": {"regions": {"maximum_cardinality": 3}}},
+                }
+            ]
+        },
     )
     errors = _rule_errors(
-        {"spatial_scope": {"extraction_status": "extracted", "value": "roi"},
-         "regions": ["r1"]},
+        {"spatial_scope": {"extraction_status": "extracted", "value": "roi"}, "regions": ["r1"]},
         classes,
     )
 
-    assert any("maximum_cardinality" in error and "not implemented" in error
-               for error in errors)
+    assert any("maximum_cardinality" in error and "not implemented" in error for error in errors)
 
 
 # -- the real record -------------------------------------------------------
@@ -1105,9 +1230,7 @@ def test_build_is_reproducible_and_gated_on_offsets() -> None:
     first, report = builder.build(
         PAPER, TEXT, PAYLOADS, "test-model", "test-version", "2026-08-02"
     )
-    second, _ = builder.build(
-        PAPER, TEXT, PAYLOADS, "test-model", "test-version", "2026-08-02"
-    )
+    second, _ = builder.build(PAPER, TEXT, PAYLOADS, "test-model", "test-version", "2026-08-02")
     assert first == second
     assert report.resolved_exact + report.resolved_tolerant > 0
     for failure in report.failures:
@@ -1136,7 +1259,6 @@ def test_aliases_only_rewrite_reference_slots(classes: dict) -> None:
     assert rewrites == 1
     assert body["analyses"][0]["model_estimation"] == "new_id"
     assert body["analyses"][0]["name"]["value"] == "old_id"
-
 
 
 # -- rendering the coordinate tables ----------------------------------------
@@ -1227,7 +1349,12 @@ def test_axis_columns_are_not_captured_by_a_z_statistic_column() -> None:
     # The statistic column is real and still there; it is simply not an axis. Read off
     # the collapsed header, where "Peak Coordinate" occupies one cell of span 3.
     assert [cell["text"] for cell in table["header"][0]] == [
-        "Contrast", "No of voxels", "Region (s)", "Peak Coordinate", "F/T", "Z",
+        "Contrast",
+        "No of voxels",
+        "Region (s)",
+        "Peak Coordinate",
+        "F/T",
+        "Z",
     ]
 
 
@@ -1242,9 +1369,7 @@ def test_section_rows_are_recognised_as_headings_not_data() -> None:
     table = _table_fixture("HU6mqxmtySg3", "brb3829-tbl-0003")
     # Whitespace is folded before comparing: this publisher sets the contrast names with
     # U+00A0 around the ">", and a retyped literal would differ invisibly.
-    sections = [
-        " ".join(row["text"].split()) for row in table["body"] if row["type"] == "section"
-    ]
+    sections = [" ".join(row["text"].split()) for row in table["body"] if row["type"] == "section"]
     assert sections == [
         "Proverbs > Literal sentences",
         "Transparent proverbs > Literal sentences",
@@ -1328,9 +1453,7 @@ def test_the_tables_variant_carries_the_cell_values_the_corpus_text_lacks(
 
     rebuild, module = pubget_text
     root = TEXTS / TEXT_PAPER / "source" / "pubget"
-    corpus = (
-        TEXTS / TEXT_PAPER / "processed" / "pubget" / "text.txt"
-    ).read_text(encoding="utf-8")
+    corpus = (TEXTS / TEXT_PAPER / "processed" / "pubget" / "text.txt").read_text(encoding="utf-8")
     built = rebuild.build(root / "article.xml", root, module, keep_tables=True)
 
     peak = "−58"  # a coordinate from Table 3, with the publisher's minus sign
@@ -1363,7 +1486,7 @@ def test_the_tables_variant_only_adds(pubget_text) -> None:
 
 @requires_pubget
 def test_each_table_follows_its_own_caption(pubget_text) -> None:
-    """"At the position it appears in the article" is the claim; this is it, checked."""
+    """ "At the position it appears in the article" is the claim; this is it, checked."""
 
     rebuild, module = pubget_text
     root = TEXTS / TEXT_PAPER / "source" / "pubget"
@@ -1405,7 +1528,6 @@ def test_sync_texts_wants_the_article_xml() -> None:
     from pondie.extraction.corpus import sync
 
     assert "source/pubget/article.xml" in sync.WANTED
-
 
 
 def test_only_a_markdown_heading_is_a_heading() -> None:
@@ -1454,14 +1576,12 @@ def test_the_markdown_table_columns_line_up() -> None:
 
     table = _table_fixture("4cRnHYtfSwuK", "t2")
     lines = [
-        line for line in tables.markdown_table(table).splitlines()
+        line
+        for line in tables.markdown_table(table).splitlines()
         if line.startswith("|") and not line.startswith("|-")
     ]
     data = [line for line in lines if line.count("|") == lines[0].count("|")]
     assert len({len(line) for line in data}) == 1, "rows are not a common width"
-
-
-
 
 
 # -- the type designator, and the four walkers that need it -----------------
@@ -1473,8 +1593,7 @@ def test_the_markdown_table_columns_line_up() -> None:
 
 def test_designated_type_follows_the_declaration(classes: dict) -> None:
     payload = {"details_type": "ConnectivityDetails"}
-    assert classes.designated_type(payload, "AnalysisDetails") == \
-        "ConnectivityDetails"
+    assert classes.designated_type(payload, "AnalysisDetails") == "ConnectivityDetails"
     assert classes.type_designator("AnalysisDetails") == "details_type"
     assert classes.type_designator("Group") is None
 
@@ -1484,20 +1603,21 @@ def test_designated_type_falls_back_rather_than_raising(classes: dict, named) ->
     """Silent by contract: a repair pass wants the best available answer, and `Group` is
     not an AnalysisDetails so naming it must not smuggle Group's slots in."""
 
-    assert (
-        classes.designated_type({"details_type": named}, "AnalysisDetails")
-        == "AnalysisDetails"
-    )
+    assert classes.designated_type({"details_type": named}, "AnalysisDetails") == "AnalysisDetails"
 
 
 def test_listify_reaches_a_slot_declared_on_a_payload_subclass(classes: dict) -> None:
     """The 40-error regression guard. `seed_regions` is multivalued and lives on
     ConnectivityDetails, two hops down through a single-valued nested slot."""
 
-    body = {"analyses": [{
-        "local_id": "a1",
-        "details": {"details_type": "ConnectivityDetails", "seed_regions": "reg_1"},
-    }]}
+    body = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "details": {"details_type": "ConnectivityDetails", "seed_regions": "reg_1"},
+            }
+        ]
+    }
     fixed = builder.listify_nested(body, classes)
     assert body["analyses"][0]["details"]["seed_regions"] == ["reg_1"]
     assert any("seed_regions" in line for line in fixed)
@@ -1506,9 +1626,19 @@ def test_listify_reaches_a_slot_declared_on_a_payload_subclass(classes: dict) ->
 def test_a_scalar_in_a_multivalued_wrapper_is_listified(classes: dict) -> None:
     """`interpretations` is an ExtractedStringList: one wrapper holding a list."""
 
-    body = {"analyses": [{"local_id": "a1", "interpretations": {
-        "extraction_status": "extracted", "value": "one finding", "value_source": "reported",
-        "evidence": {"status": "not_found"}}}]}
+    body = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "interpretations": {
+                    "extraction_status": "extracted",
+                    "value": "one finding",
+                    "value_source": "reported",
+                    "evidence": {"status": "not_found"},
+                },
+            }
+        ]
+    }
     fixed = builder.listify_scalars(body, classes)
     assert body["analyses"][0]["interpretations"]["value"] == ["one finding"]
     assert fixed == ["Study.analyses[0].interpretations"]
@@ -1517,9 +1647,18 @@ def test_a_scalar_in_a_multivalued_wrapper_is_listified(classes: dict) -> None:
 def test_a_missing_value_is_left_for_the_validator(classes: dict) -> None:
     """`extracted` with no value is a different fault and stays visible as one."""
 
-    body = {"analyses": [{"local_id": "a1", "interpretations": {
-        "extraction_status": "extracted", "value": None,
-        "evidence": {"status": "not_found"}}}]}
+    body = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "interpretations": {
+                    "extraction_status": "extracted",
+                    "value": None,
+                    "evidence": {"status": "not_found"},
+                },
+            }
+        ]
+    }
     assert builder.listify_scalars(body, classes) == []
 
 
@@ -1529,9 +1668,15 @@ def test_a_scalar_where_an_enum_list_belongs_is_an_error(classes: dict) -> None:
 
     validator = validate_record.Validator(classes, None)
     validator.check_field(
-        {"extraction_status": "extracted", "value": "button_press",
-         "value_source": "reported", "evidence": {"status": "not_found"}},
-        "ExtractedResponseModeList", "Study.tasks[0].response_mode")
+        {
+            "extraction_status": "extracted",
+            "value": "button_press",
+            "value_source": "reported",
+            "evidence": {"status": "not_found"},
+        },
+        "ExtractedResponseModeList",
+        "Study.tasks[0].response_mode",
+    )
     assert [e for e in validator.errors if "must be a list of ResponseMode" in e]
 
 
@@ -1549,13 +1694,17 @@ def _cell_errors(record: dict, classes: dict) -> list[str]:
 
 
 def _levelled(*names: str) -> dict:
-    return {"local_id": "t_group", "type": _text("categorical"),
-            "levels": [{"level": _text(name)} for name in names]}
+    return {
+        "local_id": "t_group",
+        "type": _text("categorical"),
+        "levels": [{"level": _text(name)} for name in names],
+    }
 
 
 def test_a_cell_level_naming_a_declared_level_is_accepted(classes: dict) -> None:
-    record = _record([_levelled("patients", "controls")],
-                     [("dx", [_cell("t_group", "positive", "patients")])])
+    record = _record(
+        [_levelled("patients", "controls")], [("dx", [_cell("t_group", "positive", "patients")])]
+    )
     assert _cell_errors(record, classes) == []
 
 
@@ -1563,8 +1712,9 @@ def test_a_cell_level_naming_no_declared_level_is_an_error(classes: dict) -> Non
     """`AD` against a declared `AD group`: the mapper's join finds nothing, and the record
     looks like it recorded which cohort was compared."""
 
-    record = _record([_levelled("AD group", "HC group")],
-                     [("dx", [_cell("t_group", "positive", "AD")])])
+    record = _record(
+        [_levelled("AD group", "HC group")], [("dx", [_cell("t_group", "positive", "AD")])]
+    )
     errors = _cell_errors(record, classes)
     assert len(errors) == 1 and "matches none of term" in errors[0]
     assert "'AD group'" in errors[0], "the declared levels are offered, not just refused"
@@ -1574,10 +1724,13 @@ def test_a_cell_naming_a_term_of_another_model_is_an_error(classes: dict) -> Non
     """Invariant 2. The term exists, so `check_local_ids` is satisfied and the record is
     structurally fine -- it is the *scope* that is wrong, and the message says whose."""
 
-    record = _record([_levelled("patients", "controls")],
-                     [("dx", [_cell("t_elsewhere", "positive", "patients")])])
+    record = _record(
+        [_levelled("patients", "controls")],
+        [("dx", [_cell("t_elsewhere", "positive", "patients")])],
+    )
     record["model_estimations"].append(
-        {"local_id": "m2", "terms": [{"local_id": "t_elsewhere", "type": _text("categorical")}]})
+        {"local_id": "m2", "terms": [{"local_id": "t_elsewhere", "type": _text("categorical")}]}
+    )
     errors = _cell_errors(record, classes)
     assert len(errors) == 1 and "'m2'" in errors[0] and "inputs_from" in errors[0]
 
@@ -1588,9 +1741,18 @@ def test_a_cell_naming_a_term_of_a_lower_stage_is_accepted(classes: dict) -> Non
 
     record = _record([], [("dx", [_cell("t_first", "positive", "task")])])
     record["model_estimations"][0]["inputs_from"] = ["m_first"]
-    record["model_estimations"].append({"local_id": "m_first", "terms": [
-        {"local_id": "t_first", "type": _text("categorical"),
-         "levels": [{"level": _text("task")}]}]})
+    record["model_estimations"].append(
+        {
+            "local_id": "m_first",
+            "terms": [
+                {
+                    "local_id": "t_first",
+                    "type": _text("categorical"),
+                    "levels": [{"level": _text("task")}],
+                }
+            ],
+        }
+    )
     assert _cell_errors(record, classes) == []
 
 
@@ -1604,8 +1766,10 @@ def test_a_level_differing_only_in_case_is_repaired_not_reported(classes: dict) 
     """A transcription slip, not a claim about the paper, so the builder settles it and
     says so -- and `check_cell_terms` then has nothing to report."""
 
-    record = _record([_levelled("healthy controls")],
-                     [("dx", [_cell("t_group", "positive", "Healthy controls")])])
+    record = _record(
+        [_levelled("healthy controls")],
+        [("dx", [_cell("t_group", "positive", "Healthy controls")])],
+    )
     fixed = builder.align_cell_levels(record)
     assert len(fixed) == 1 and "'Healthy controls' -> 'healthy controls'" in fixed[0]
     assert record["analyses"][0]["effect"]["cells"][0]["level"]["value"] == "healthy controls"
@@ -1616,16 +1780,18 @@ def test_a_level_that_merely_shortens_a_declared_one_is_not_repaired(classes: di
     """`AD` is not a folding of `AD group`. Shortening a level is a claim, and guessing
     which cohort was meant is the one thing this field must not contain."""
 
-    record = _record([_levelled("AD group", "HC group")],
-                     [("dx", [_cell("t_group", "positive", "AD")])])
+    record = _record(
+        [_levelled("AD group", "HC group")], [("dx", [_cell("t_group", "positive", "AD")])]
+    )
     assert builder.align_cell_levels(record) == []
 
 
 def test_an_ambiguous_fold_is_left_alone(classes: dict) -> None:
     """Two declared levels folding to the same string makes the rewrite a coin toss."""
 
-    record = _record([_levelled("Controls", "controls")],
-                     [("dx", [_cell("t_group", "positive", "CONTROLS")])])
+    record = _record(
+        [_levelled("Controls", "controls")], [("dx", [_cell("t_group", "positive", "CONTROLS")])]
+    )
     assert builder.align_cell_levels(record) == []
 
 
@@ -1645,8 +1811,16 @@ def test_a_pandas_suffixed_colspan_is_three_axis_columns() -> None:
     """`84rGLhCbUJTh` Table 2: one merged header over three columns, which pandas
     de-duplicates into `.1` and `.2`."""
 
-    header = [["Diffusion parameter", "Region", "Peak coordinates (x,y,z)",
-               "Peak coordinates (x,y,z).1", "Peak coordinates (x,y,z).2", "t value"]]
+    header = [
+        [
+            "Diffusion parameter",
+            "Region",
+            "Peak coordinates (x,y,z)",
+            "Peak coordinates (x,y,z).1",
+            "Peak coordinates (x,y,z).2",
+            "t value",
+        ]
+    ]
     body = _body(["FA", "L SFG", "-10", "52", "16", "3.79"])
     assert tables._axis_columns(header, 6, body) == [2, 3, 4]
 
@@ -1656,9 +1830,19 @@ def test_a_colspan_naming_no_axis_letter_still_resolves() -> None:
     below, where pandas left-aligns them to columns 0-2. The label plus the numbers is
     enough; the misplaced letters are no help."""
 
-    header = [["Brain regions", "Voxels", "Hem.", "Voxels in region",
-               "Peak coordinates", "Peak coordinates", "Peak coordinates", "Peak t"],
-              ["X", "Y", "Z", "", "", "", "", ""]]
+    header = [
+        [
+            "Brain regions",
+            "Voxels",
+            "Hem.",
+            "Voxels in region",
+            "Peak coordinates",
+            "Peak coordinates",
+            "Peak coordinates",
+            "Peak t",
+        ],
+        ["X", "Y", "Z", "", "", "", "", ""],
+    ]
     body = _body(["Cluster 1", "2971.0", "", "", "24", "-54", "51.0", "3.891"])
     assert tables._axis_columns(header, 8, body) == [4, 5, 6]
 
@@ -1700,17 +1884,19 @@ def test_a_triple_column_is_confirmed_by_majority_not_by_one_row() -> None:
     """One triple-looking cell in a column of region names must not carry it."""
 
     header = [["MNI coordinates (x, y, z)", "Region"]]
-    body = _body(["-52,-42,56", "L IPL"], ["not a coordinate", "L MCC"],
-                 ["also not one", "R STG"])
+    body = _body(["-52,-42,56", "L IPL"], ["not a coordinate", "L MCC"], ["also not one", "R STG"])
     assert tables._axis_cell(header, 2, body) is None
 
 
-@pytest.mark.parametrize("cell,expected", [
-    ("-52,-42,56", (-52.0, -42.0, 56.0)),
-    ("(-30, -84, 22)", (-30.0, -84.0, 22.0)),
-    ("46 -8 -38", (46.0, -8.0, -38.0)),
-    ("− 52,− 42,56", (-52.0, -42.0, 56.0)),
-])
+@pytest.mark.parametrize(
+    "cell,expected",
+    [
+        ("-52,-42,56", (-52.0, -42.0, 56.0)),
+        ("(-30, -84, 22)", (-30.0, -84.0, 22.0)),
+        ("46 -8 -38", (46.0, -8.0, -38.0)),
+        ("− 52,− 42,56", (-52.0, -42.0, 56.0)),
+    ],
+)
 def test_a_triple_cell_keeps_every_sign(cell: str, expected: tuple) -> None:
     """The sign is the whole risk. A pattern that skips a leading bracket by consuming any
     non-digit eats the minus with it and relocates the peak to the other hemisphere."""
@@ -1740,8 +1926,10 @@ def _purpose_flags(record: dict, classes: dict) -> tuple[list[str], list[str]]:
 
 
 def test_a_table_an_analysis_names_needs_no_purpose(classes: dict) -> None:
-    record = {"tables": [{"local_id": "tbl1"}],
-              "analyses": [{"local_id": "a1", "tables": ["tbl1"]}]}
+    record = {
+        "tables": [{"local_id": "tbl1"}],
+        "analyses": [{"local_id": "a1", "tables": ["tbl1"]}],
+    }
     assert _purpose_flags(record, classes) == ([], [])
 
 
@@ -1755,16 +1943,18 @@ def test_a_table_nobody_names_and_nothing_explains_is_flagged(classes: dict) -> 
 
 
 def test_a_table_that_says_what_it_reports_is_accepted(classes: dict) -> None:
-    record = {"tables": [{"local_id": "tbl4",
-                          "purpose": _text("component_peaks")}],
-              "analyses": []}
+    record = {
+        "tables": [{"local_id": "tbl4", "purpose": _text("component_peaks")}],
+        "analyses": [],
+    }
     assert _purpose_flags(record, classes) == ([], [])
 
 
 def test_a_table_cannot_both_be_an_analysis_and_not_one(classes: dict) -> None:
-    record = {"tables": [{"local_id": "tbl4",
-                          "purpose": _text("component_peaks")}],
-              "analyses": [{"local_id": "a1", "tables": ["tbl4"]}]}
+    record = {
+        "tables": [{"local_id": "tbl4", "purpose": _text("component_peaks")}],
+        "analyses": [{"local_id": "a1", "tables": ["tbl4"]}],
+    }
     errors, warnings = _purpose_flags(record, classes)
     assert warnings == []
     assert len(errors) == 1 and "an analysis names it" in errors[0]
@@ -1776,9 +1966,15 @@ def test_the_purpose_vocabulary_is_open(classes: dict, enums: dict) -> None:
 
     validator = validate_record.Validator(classes, None, enums)
     validator.check_field(
-        {"extraction_status": "extracted", "value": "a genotyping panel",
-         "value_source": "reported", "evidence": {"status": "not_found"}},
-        "ExtractedTablePurpose", "Study.tables[0].purpose")
+        {
+            "extraction_status": "extracted",
+            "value": "a genotyping panel",
+            "value_source": "reported",
+            "evidence": {"status": "not_found"},
+        },
+        "ExtractedTablePurpose",
+        "Study.tables[0].purpose",
+    )
     assert validator.errors == [], "an open vocabulary must not reject a free-text answer"
     assert any("open vocabulary" in w for w in validator.warnings), (
         "and it must still be reported, because off-vocabulary answers accumulating are "
@@ -1792,9 +1988,15 @@ def test_the_purpose_vocabulary_is_open(classes: dict, enums: dict) -> None:
 def _vocabulary_flags(wrapper: str, value: str, classes: dict, enums: dict) -> tuple[list, list]:
     validator = validate_record.Validator(classes, None, enums)
     validator.check_field(
-        {"extraction_status": "extracted", "value": value,
-         "value_source": "generated", "evidence": {"status": "not_found"}},
-        wrapper, "Study.somewhere")
+        {
+            "extraction_status": "extracted",
+            "value": value,
+            "value_source": "generated",
+            "evidence": {"status": "not_found"},
+        },
+        wrapper,
+        "Study.somewhere",
+    )
     return validator.errors, validator.warnings
 
 
@@ -1821,7 +2023,9 @@ def test_not_reported_is_how_a_silent_source_is_recorded(classes: dict, enums: d
     validator = validate_record.Validator(classes, None, enums)
     validator.check_field(
         {"extraction_status": "not_reported", "evidence": {"status": "not_applicable"}},
-        "ExtractedPrespecification", "Study.somewhere")
+        "ExtractedPrespecification",
+        "Study.somewhere",
+    )
     assert validator.errors == []
 
 
@@ -1842,10 +2046,7 @@ def test_no_vocabulary_offers_unstated(enums: dict) -> None:
     is an instruction to produce exactly what the record check rejects.
     """
 
-    live = [
-        name for name, body in enums.items()
-        if "unstated" in (body.permissible_values or {})
-    ]
+    live = [name for name, body in enums.items() if "unstated" in (body.permissible_values or {})]
     assert live == [], f"these vocabularies still offer `unstated` as an answer: {live}"
 
 
@@ -1856,10 +2057,13 @@ def test_a_cyclic_inputs_from_is_reported_and_not_merely_survived(classes: dict)
     """`_terms_in_scope` already guards against the hang. Surviving bad input is not
     reporting it, and a model fitted on its own output is not a stage order."""
 
-    record = {"model_estimations": [
-        {"local_id": "m1", "inputs_from": ["m2"], "terms": []},
-        {"local_id": "m2", "inputs_from": ["m1"], "terms": []},
-    ], "analyses": []}
+    record = {
+        "model_estimations": [
+            {"local_id": "m1", "inputs_from": ["m2"], "terms": []},
+            {"local_id": "m2", "inputs_from": ["m1"], "terms": []},
+        ],
+        "analyses": [],
+    }
     validator = validate_record.Validator(classes, None)
     rules.check_model_stages(record, validator)
     assert any("cyclic" in error for error in validator.errors)
@@ -1869,12 +2073,17 @@ def test_one_term_name_twice_in_a_stage_chain_is_reported(classes: dict) -> None
     """A first-level `motion` and a group-level `motion` are two columns with one name in
     one term list, and a reader cannot tell a refit from a mistake."""
 
-    record = {"model_estimations": [
-        {"local_id": "m_group", "inputs_from": ["m_first"],
-         "terms": [{"local_id": "t_a", "name": _text("motion")}]},
-        {"local_id": "m_first",
-         "terms": [{"local_id": "t_b", "name": _text("Motion")}]},
-    ], "analyses": []}
+    record = {
+        "model_estimations": [
+            {
+                "local_id": "m_group",
+                "inputs_from": ["m_first"],
+                "terms": [{"local_id": "t_a", "name": _text("motion")}],
+            },
+            {"local_id": "m_first", "terms": [{"local_id": "t_b", "name": _text("Motion")}]},
+        ],
+        "analyses": [],
+    }
     validator = validate_record.Validator(classes, None)
     rules.check_model_stages(record, validator)
     assert any("appears on both" in error for error in validator.errors)
@@ -1884,10 +2093,18 @@ def test_the_same_name_on_one_model_is_not_a_chain_collision(classes: dict) -> N
     """The invariant is about a *chain*. Two same-named terms on one record are a different
     fault, and `unique_keys` is what would catch it."""
 
-    record = {"model_estimations": [
-        {"local_id": "m1", "terms": [{"local_id": "t_a", "name": _text("motion")},
-                                     {"local_id": "t_b", "name": _text("motion")}]},
-    ], "analyses": []}
+    record = {
+        "model_estimations": [
+            {
+                "local_id": "m1",
+                "terms": [
+                    {"local_id": "t_a", "name": _text("motion")},
+                    {"local_id": "t_b", "name": _text("motion")},
+                ],
+            },
+        ],
+        "analyses": [],
+    }
     validator = validate_record.Validator(classes, None)
     rules.check_model_stages(record, validator)
     assert validator.errors == []
@@ -1901,12 +2118,12 @@ def test_the_same_name_on_one_model_is_not_a_chain_collision(classes: dict) -> N
 
 
 def _point(*values: tuple[float, str]) -> dict:
-    return {"coordinates": [0.0, 0.0, 0.0],
-            "values": [{"value": v, "kind": k} for v, k in values]}
+    return {"coordinates": [0.0, 0.0, 0.0], "values": [{"value": v, "kind": k} for v, k in values]}
 
 
 def _split(points: list[dict], name: str = "contrast"):
     from pondie.extraction.corpus.tables import split_opposite_signs
+
     split = split_opposite_signs([{"name": name, "points": points}])
     return list(split.analyses), list(split.notes)
 
@@ -1935,8 +2152,9 @@ def test_a_single_row_in_the_minority_direction_still_splits() -> None:
     Gating the split on group size would leave a negative statistic sitting inside a
     contrast the paper named `>`, which is the contradiction the rule exists to remove.
     """
-    out, _ = _split([_point((3.0, "t-statistic")), _point((4.0, "t-statistic")),
-                     _point((-2.9, "t-statistic"))])
+    out, _ = _split(
+        [_point((3.0, "t-statistic")), _point((4.0, "t-statistic")), _point((-2.9, "t-statistic"))]
+    )
     assert [len(a["points"]) for a in out] == [2, 1]
 
 
@@ -1959,14 +2177,16 @@ def test_a_z_statistic_is_directional() -> None:
 
 def test_an_unsignable_row_flags_rather_than_splitting_part_of_the_table() -> None:
     """A partial partition files some rows and strands the rest, which is worse than none."""
-    out, notes = _split([_point((3.0, "t-statistic")), _point((-3.0, "t-statistic")),
-                         _point((0.01, "p-value"))])
+    out, notes = _split(
+        [_point((3.0, "t-statistic")), _point((-3.0, "t-statistic")), _point((0.01, "p-value"))]
+    )
     assert len(out) == 1
     assert notes and notes[0].startswith("FLAG")
 
 
 def test_statistics_disagreeing_within_one_row_give_no_sign() -> None:
     from pondie.extraction.corpus.tables import _point_sign
+
     assert _point_sign(_point((3.0, "t-statistic"), (-0.4, "correlation"))) is None
     assert _point_sign(_point((0.0, "t-statistic"))) is None
 
@@ -1974,6 +2194,7 @@ def test_statistics_disagreeing_within_one_row_give_no_sign() -> None:
 def test_splitting_twice_changes_nothing() -> None:
     """Re-running over a corpus already split must be a no-op, since `--resplit` is rerun."""
     from pondie.extraction.corpus.tables import split_opposite_signs
+
     once, _ = _split([_point((1.0, "beta")), _point((-1.0, "beta"))])
     split = split_opposite_signs(once)
     twice, notes = list(split.analyses), list(split.notes)
@@ -2056,7 +2277,7 @@ def test_axis_cell_and_axis_cols_are_never_both_set(tmp_path: Path) -> None:
     directory = tmp_path / "tables"
     directory.mkdir()
     (directory / "t.csv").write_text(
-        "Region,MNI coordinates,x,y,z\nL IPL,\"-52,-42,56\",-52,-42,56\n", encoding="utf-8"
+        'Region,MNI coordinates,x,y,z\nL IPL,"-52,-42,56",-52,-42,56\n', encoding="utf-8"
     )
     (directory / "t_info.json").write_text('{"n_header_rows": 1}', encoding="utf-8")
     table = tables.read_table(tmp_path, "t.csv")
@@ -2150,12 +2371,6 @@ def test_a_stray_token_in_an_entity_list_does_not_lose_the_paper(tmp_path: Path)
     assert any("dropped 1 non-object" in n for n in notes), notes
 
 
-
-
-
-
-
-
 def test_an_initialism_expands_to_all_of_its_words() -> None:
     """Schwartz & Hearst returns the shortest valid suffix, which for "African American
     (AA)" is "American" -- leading `a` at a word start, second `a` inside the same word.
@@ -2165,7 +2380,8 @@ def test_an_initialism_expands_to_all_of_its_words() -> None:
 
     mined = abbreviations.mine_builtin(
         "prevalence rates for certain segments of the population, e.g. African American "
-        "(AA) men, Native Americans, and those of low income.")
+        "(AA) men, Native Americans, and those of low income."
+    )
     assert mined.get("AA") == "African American"
 
 
@@ -2175,7 +2391,8 @@ def test_schwartz_hearst_still_owns_the_shapes_it_had_right() -> None:
     from pondie.vocabularies import abbreviations
 
     caps = abbreviations.mine_builtin(
-        "assessed with the clinician-administered PTSD scale (CAPS) at baseline.")
+        "assessed with the clinician-administered PTSD scale (CAPS) at baseline."
+    )
     assert "clinician-administered PTSD scale" in (caps.get("CAPS") or "")
 
     fwhm = abbreviations.mine_builtin("smoothed at full-width-at-half-maximum (FWHM) 6 mm.")
@@ -2188,8 +2405,9 @@ def test_an_initialism_will_not_take_a_number_or_a_bracket_for_a_word() -> None:
     from pondie.vocabularies import abbreviations
 
     assert abbreviations._initialism("AB", "| 12 | 3.4 (0.2)") is None
-    assert abbreviations._initialism("aa", "african american") is None, \
-        "lower-case short forms are not initialisms"
+    assert (
+        abbreviations._initialism("aa", "african american") is None
+    ), "lower-case short forms are not initialisms"
 
 
 def test_the_locator_keeps_the_larger_cross_encoder() -> None:
@@ -2216,11 +2434,20 @@ def test_a_denominator_is_derived_from_the_count_and_the_percentage() -> None:
     from pondie.extraction.record import builder
 
     def entry(count, share):
-        return {"count": {"extraction_status": "extracted", "value": count,
-                          "value_source": "reported", "evidence": {"status": "not_found"}},
-                "percentage": {"extraction_status": "extracted", "value": share,
-                               "value_source": "reported",
-                               "evidence": {"status": "not_found"}}}
+        return {
+            "count": {
+                "extraction_status": "extracted",
+                "value": count,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+            "percentage": {
+                "extraction_status": "extracted",
+                "value": share,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+        }
 
     body = {"groups": [{"local_id": "g", "sex_distribution": [entry(12, 60), entry(8, 40)]}]}
     filled = builder.derive_denominators(body)
@@ -2228,8 +2455,9 @@ def test_a_denominator_is_derived_from_the_count_and_the_percentage() -> None:
     assert filled == ["groups[0].sex_distribution.denominator = 20"]
     for e in body["groups"][0]["sex_distribution"]:
         assert e["denominator"]["value"] == 20
-        assert e["denominator"]["value_source"] == "generated", \
-            "the paper stated a percentage, not this"
+        assert (
+            e["denominator"]["value_source"] == "generated"
+        ), "the paper stated a percentage, not this"
 
 
 def test_a_rounded_percentage_still_yields_its_base_when_it_round_trips() -> None:
@@ -2238,15 +2466,23 @@ def test_a_rounded_percentage_still_yields_its_base_when_it_round_trips() -> Non
     from pondie.extraction.record import builder
 
     def entry(count, share):
-        return {"count": {"extraction_status": "extracted", "value": count,
-                          "value_source": "reported", "evidence": {"status": "not_found"}},
-                "percentage": {"extraction_status": "extracted", "value": share,
-                               "value_source": "reported",
-                               "evidence": {"status": "not_found"}}}
+        return {
+            "count": {
+                "extraction_status": "extracted",
+                "value": count,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+            "percentage": {
+                "extraction_status": "extracted",
+                "value": share,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+        }
 
     body = {"groups": [{"local_id": "g", "sex_distribution": [entry(1, 33), entry(2, 67)]}]}
-    assert builder.derive_denominators(body) == \
-        ["groups[0].sex_distribution.denominator = 3"]
+    assert builder.derive_denominators(body) == ["groups[0].sex_distribution.denominator = 3"]
     assert body["groups"][0]["sex_distribution"][0]["denominator"]["value"] == 3
 
 
@@ -2256,11 +2492,20 @@ def test_a_base_that_does_not_reproduce_the_percentages_is_refused() -> None:
     from pondie.extraction.record import builder
 
     def entry(count, share):
-        return {"count": {"extraction_status": "extracted", "value": count,
-                          "value_source": "reported", "evidence": {"status": "not_found"}},
-                "percentage": {"extraction_status": "extracted", "value": share,
-                               "value_source": "reported",
-                               "evidence": {"status": "not_found"}}}
+        return {
+            "count": {
+                "extraction_status": "extracted",
+                "value": count,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+            "percentage": {
+                "extraction_status": "extracted",
+                "value": share,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+        }
 
     body = {"groups": [{"local_id": "g", "sex_distribution": [entry(5, 51), entry(5, 49)]}]}
     assert builder.derive_denominators(body) == []
@@ -2272,11 +2517,20 @@ def test_entries_that_disagree_on_the_base_are_left_alone() -> None:
     from pondie.extraction.record import builder
 
     def entry(count, share):
-        return {"count": {"extraction_status": "extracted", "value": count,
-                          "value_source": "reported", "evidence": {"status": "not_found"}},
-                "percentage": {"extraction_status": "extracted", "value": share,
-                               "value_source": "reported",
-                               "evidence": {"status": "not_found"}}}
+        return {
+            "count": {
+                "extraction_status": "extracted",
+                "value": count,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+            "percentage": {
+                "extraction_status": "extracted",
+                "value": share,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+        }
 
     body = {"groups": [{"local_id": "g", "sex_distribution": [entry(12, 60), entry(8, 20)]}]}
     assert builder.derive_denominators(body) == []
@@ -2286,13 +2540,35 @@ def test_a_stated_denominator_is_never_overwritten() -> None:
     """What the paper said outranks what arithmetic implies."""
     from pondie.extraction.record import builder
 
-    stated = {"extraction_status": "extracted", "value": 25, "value_source": "reported",
-              "evidence": {"status": "present", "sets": [{"spans": [{"text": "of 25"}]}]}}
-    body = {"groups": [{"local_id": "g", "sex_distribution": [
-        {"count": {"extraction_status": "extracted", "value": 12,
-                   "value_source": "reported", "evidence": {"status": "not_found"}},
-         "percentage": {"extraction_status": "extracted", "value": 60,
-                        "value_source": "reported", "evidence": {"status": "not_found"}},
-         "denominator": stated}]}]}
+    stated = {
+        "extraction_status": "extracted",
+        "value": 25,
+        "value_source": "reported",
+        "evidence": {"status": "present", "sets": [{"spans": [{"text": "of 25"}]}]},
+    }
+    body = {
+        "groups": [
+            {
+                "local_id": "g",
+                "sex_distribution": [
+                    {
+                        "count": {
+                            "extraction_status": "extracted",
+                            "value": 12,
+                            "value_source": "reported",
+                            "evidence": {"status": "not_found"},
+                        },
+                        "percentage": {
+                            "extraction_status": "extracted",
+                            "value": 60,
+                            "value_source": "reported",
+                            "evidence": {"status": "not_found"},
+                        },
+                        "denominator": stated,
+                    }
+                ],
+            }
+        ]
+    }
     assert builder.derive_denominators(body) == []
     assert body["groups"][0]["sex_distribution"][0]["denominator"]["value"] == 25

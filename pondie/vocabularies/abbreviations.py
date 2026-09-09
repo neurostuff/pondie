@@ -71,7 +71,7 @@ def _initialism(short: str, window: str) -> str | None:
     words = window.split()
     if len(words) < len(letters):
         return None
-    tail = words[-len(letters):]
+    tail = words[-len(letters) :]
     if [w[0].lower() for w in tail if w] != letters:
         return None
     if any(not w[0].isalpha() for w in tail):
@@ -355,9 +355,7 @@ class Abbreviations:
         return len(self.entries) - before
 
 
-def expansions_in(
-    text: str, store: Abbreviations, paper: str = ""
-) -> Iterator[tuple[str, str]]:
+def expansions_in(text: str, store: Abbreviations, paper: str = "") -> Iterator[tuple[str, str]]:
     """(short form, expansion) for every abbreviation this phrase uses."""
     for token in re.findall(r"[A-Za-z][A-Za-z0-9.-]{1,7}", str(text or "")):
         if not any(c.isupper() for c in token):

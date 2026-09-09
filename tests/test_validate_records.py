@@ -114,11 +114,18 @@ def test_a_wrapped_type_designator_still_names_the_subclass():
     designator = sch.type_designator("Acquisition")
     node = {
         "local_id": "acq_mri",
-        designator: {"extraction_status": "extracted", "value": "MRI",
-                     "value_source": "reported", "evidence": {"status": "not_found"}},
+        designator: {
+            "extraction_status": "extracted",
+            "value": "MRI",
+            "value_source": "reported",
+            "evidence": {"status": "not_found"},
+        },
         "magnetic_field_strength_tesla": {
-            "extraction_status": "extracted", "value": 3.0,
-            "value_source": "reported", "evidence": {"status": "not_found"}},
+            "extraction_status": "extracted",
+            "value": 3.0,
+            "value_source": "reported",
+            "evidence": {"status": "not_found"},
+        },
     }
     validator = validate.Validator(sch, None)
     assert validator.resolve_type(node, "Acquisition", "Study.acquisitions[]") == "MRI"

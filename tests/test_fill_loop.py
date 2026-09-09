@@ -47,8 +47,9 @@ def test_a_value_and_a_stated_reason_both_settle_a_slot(sch):
 def test_undetermined_is_the_one_reason_that_leaves_a_slot_open(sch):
     """It reports on the pass, not the paper: the model could not work the slot out. That is
     the claim a further round exists to revisit, and the reason the cap is needed at all."""
-    doc = group(age_median={"extraction_status": "not_reported",
-                            "unreported_reason": "undetermined"})
+    doc = group(
+        age_median={"extraction_status": "not_reported", "unreported_reason": "undetermined"}
+    )
     assert "groups[g1].age_median" in ids(fill.unsettled(doc, sch))
 
 
@@ -66,8 +67,10 @@ def test_answering_shrinks_the_open_set(sch):
     before = ids(fill.unsettled(doc, sch))
     filled, reasoned, dropped = fill.apply_fill(
         doc,
-        {"groups[g1].species": {"value": "human"},
-         "groups[g1].age_median": {"unreported_reason": fill.PLAIN}},
+        {
+            "groups[g1].species": {"value": "human"},
+            "groups[g1].age_median": {"unreported_reason": fill.PLAIN},
+        },
         before,
     )
     after = ids(fill.unsettled(doc, sch))
@@ -117,11 +120,16 @@ def test_the_listing_names_the_value_type_not_the_wrapper(sch):
 def test_nested_entities_are_reached(sch):
     """A Condition hangs off Task and carries its own slots. Walking only the top-level
     lists would leave every one of them permanently open, and the loop would never finish."""
-    doc = {"tasks": [{"local_id": "t1",
-                      "name": {"extraction_status": "extracted", "value": "n-back"},
-                      "conditions": [{"local_id": "c1"}]}]}
-    assert any(r["id"].startswith("tasks[t1].conditions[c1].")
-               for r in fill.unsettled(doc, sch))
+    doc = {
+        "tasks": [
+            {
+                "local_id": "t1",
+                "name": {"extraction_status": "extracted", "value": "n-back"},
+                "conditions": [{"local_id": "c1"}],
+            }
+        ]
+    }
+    assert any(r["id"].startswith("tasks[t1].conditions[c1].") for r in fill.unsettled(doc, sch))
 
 
 def test_a_singular_nested_object_takes_no_subscript(sch):
@@ -148,8 +156,7 @@ def test_every_offered_slot_can_be_written_back(sch):
     """The invariant the bug above broke, over a record shaped like a real one. `unsettled`
     and `_resolve` have to agree about addressing or the loop asks for what it cannot keep."""
     doc = {
-        "analyses": [{"local_id": "an1",
-                      "effect": {"cells": [{"term": "t1"}, {"term": "t2"}]}}],
+        "analyses": [{"local_id": "an1", "effect": {"cells": [{"term": "t1"}, {"term": "t2"}]}}],
         "groups": [{"local_id": "g1"}],
         "tasks": [{"local_id": "t1", "conditions": [{"local_id": "c1"}]}],
     }
@@ -169,8 +176,11 @@ def test_a_bare_unwrapped_value_is_an_answer_not_an_empty_slot(sch):
     `ambiguous`, and six of those the extraction had got right. Shape is the repair pass's
     business; open means holding nothing at all.
     """
-    doc = {"analyses": [{"local_id": "an1", "effect": {"cells": [
-        {"term": "t1", "direction": "positive"}]}}]}
+    doc = {
+        "analyses": [
+            {"local_id": "an1", "effect": {"cells": [{"term": "t1", "direction": "positive"}]}}
+        ]
+    }
     open_ids = ids(fill.unsettled(doc, sch))
     assert "analyses[an1].effect.cells[0].direction" not in open_ids, open_ids
 
@@ -178,8 +188,11 @@ def test_a_bare_unwrapped_value_is_an_answer_not_an_empty_slot(sch):
 def test_a_held_value_is_never_overwritten_even_if_it_is_offered(sch):
     """The second guard. `unsettled` should never offer an answered slot, but it did once,
     and the writer is the last place to stop a correct value being replaced by a reason."""
-    doc = {"analyses": [{"local_id": "an1", "effect": {"cells": [
-        {"term": "t1", "direction": "positive"}]}}]}
+    doc = {
+        "analyses": [
+            {"local_id": "an1", "effect": {"cells": [{"term": "t1", "direction": "positive"}]}}
+        ]
+    }
     path = "analyses[an1].effect.cells[0].direction"
     filled, reasoned, dropped = fill.apply_fill(
         doc, {path: {"unreported_reason": "ambiguous"}}, [path]
@@ -191,8 +204,9 @@ def test_a_held_value_is_never_overwritten_even_if_it_is_offered(sch):
 def test_an_undetermined_slot_is_still_revisable(sch):
     """The guard must not close the one door the loop needs: `undetermined` is the model
     saying it could not tell, and a later round exists to replace exactly that."""
-    doc = group(age_median={"extraction_status": "not_reported",
-                            "unreported_reason": "undetermined"})
+    doc = group(
+        age_median={"extraction_status": "not_reported", "unreported_reason": "undetermined"}
+    )
     path = "groups[g1].age_median"
     filled, reasoned, dropped = fill.apply_fill(doc, {path: {"value": 41}}, [path])
     assert (filled, reasoned, dropped) == (1, 0, 0)
@@ -229,7 +243,6 @@ def test_plain_silence_is_written_as_the_bare_status(sch):
     )
     assert (filled, reasoned, dropped) == (0, 1, 0)
     held = doc["groups"][0]["age_mean"]
-    assert held == {"extraction_status": "not_reported",
-                    "evidence": {"status": "not_applicable"}}
+    assert held == {"extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}
     assert "groups[g1].age_mean" not in ids(fill.unsettled(doc, sch))
     assert fill.PLAIN not in fill.VOCABULARY

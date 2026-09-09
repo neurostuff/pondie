@@ -128,7 +128,9 @@ class Result(Strict):
         scored = [f for f in self.fields if f.scored]
         if scored:
             mean = sum(f.f1 for f in scored) / len(scored)
-            line += f"\n{self.records_scored} record(s) · {len(scored)} field(s) · macro-F1 {mean:.1%}"
+            line += (
+                f"\n{self.records_scored} record(s) · {len(scored)} field(s) · macro-F1 {mean:.1%}"
+            )
         return line
 
     def report(self, limit: int = 0) -> str:
@@ -136,9 +138,7 @@ class Result(Strict):
         out = [self.summary(), ""]
         if self.entities:
             out += ["ENTITIES", _table(self.entities), ""]
-        scored = sorted(
-            (f for f in self.fields if f.scored), key=lambda f: (f.f1, f.field)
-        )
+        scored = sorted((f for f in self.fields if f.scored), key=lambda f: (f.f1, f.field))
         if scored:
             out += [f"FIELDS ({len(scored)} scored, worst first)"]
             out += [_table(scored[:limit] if limit else scored)]

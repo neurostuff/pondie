@@ -48,8 +48,6 @@ class ParsedAnalysis:
         """Kept out of the extraction prompt because the paper does not describe it."""
         return bool(self.raw.get("withhold"))
 
-
-
     def __repr__(self) -> str:
         mark = " [withheld]" if self.is_withheld else ""
         return f"<ParsedAnalysis {self.name!r} {len(self.points)} point(s){mark}>"

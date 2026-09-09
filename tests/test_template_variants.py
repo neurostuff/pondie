@@ -29,6 +29,7 @@ def sch():
 def style(monkeypatch):
     def choose(value: str):
         monkeypatch.setenv("PONDIE_TEMPLATE", value)
+
     return choose
 
 
@@ -49,9 +50,11 @@ def test_a_quoted_template_asks_for_the_sentence_beside_the_value(sch, style):
 
 
 def test_a_quoted_reply_splits_into_values_and_citations():
-    reply = {"local_id": "grp_a",
-             "acquired_count": {"value": 12, "quote": "the final sample consisted of 12"},
-             "medications": {"value": ["haloperidol"], "quote": "One patient was excluded"}}
+    reply = {
+        "local_id": "grp_a",
+        "acquired_count": {"value": 12, "quote": "the final sample consisted of 12"},
+        "medications": {"value": ["haloperidol"], "quote": "One patient was excluded"},
+    }
     out = recall.unquote(reply)
     assert out["acquired_count"] == 12
     assert out["medications"] == ["haloperidol"]
@@ -98,4 +101,4 @@ def test_every_style_still_projects_a_template_for_every_class(sch, style):
     for class_name in sch.classes_by_container().values():
         template = recall.template_for(sch, class_name)
         assert len(template) == 1
-        assert json.dumps(template)          # serialisable, which is what the model is sent
+        assert json.dumps(template)  # serialisable, which is what the model is sent

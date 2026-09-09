@@ -256,8 +256,7 @@ class Candidate:
     def render(self) -> str:
         expanded = f"  (= {self.expansions[0]})" if self.expansions else ""
         return (
-            f"{self.support:3d} paper(s)  {self.branch_group:11s} "
-            f"{self.text[:58]!r}{expanded}"
+            f"{self.support:3d} paper(s)  {self.branch_group:11s} " f"{self.text[:58]!r}{expanded}"
         )
 
 

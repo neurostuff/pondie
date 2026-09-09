@@ -23,13 +23,19 @@ def sch():
 
 
 def field(value, evidence=None):
-    return {"extraction_status": "extracted", "value": value, "value_source": "reported",
-            "evidence": evidence or {"status": "not_found"}}
+    return {
+        "extraction_status": "extracted",
+        "value": value,
+        "value_source": "reported",
+        "evidence": evidence or {"status": "not_found"},
+    }
 
 
 def cited(value, quote):
-    return field(value, {"status": "present",
-                         "sets": [{"source": "model_quote", "spans": [{"text": quote}]}]})
+    return field(
+        value,
+        {"status": "present", "sets": [{"source": "model_quote", "spans": [{"text": quote}]}]},
+    )
 
 
 def edit(sch, class_name, entity, slot, value, record=None):
@@ -45,33 +51,57 @@ def why(refusals):
 
 def test_an_edit_that_only_shortens_is_refused(sch):
     """22952599: "compared to traumatized controls." became "compared to traumatized"."""
-    entity = {"local_id": "a1", "definition": cited(
-        "Decreased gray matter volume in PTSD patients compared to traumatized controls.",
-        "Decreased gray matter volume in PTSD patients compared to traumatized controls.")}
-    e = edit(sch, "Analysis", entity, "definition",
-             "Decreased gray matter volume in PTSD patients compared to traumatized")
+    entity = {
+        "local_id": "a1",
+        "definition": cited(
+            "Decreased gray matter volume in PTSD patients compared to traumatized controls.",
+            "Decreased gray matter volume in PTSD patients compared to traumatized controls.",
+        ),
+    }
+    e = edit(
+        sch,
+        "Analysis",
+        entity,
+        "definition",
+        "Decreased gray matter volume in PTSD patients compared to traumatized",
+    )
     assert "shortens" in why(edit_module.refusals(e))
 
 
 def test_an_edit_that_extends_and_keeps_its_span_is_allowed(sch):
     """23021615: the restored full sentence was already the cited span."""
-    quote = ("Relative to the non-PTSD group, the PTSD group showed reduced gray matter in "
-             "the same large cluster comprising the sgACC, caudate, and hypothalamus "
-             "( Fig. 3 A, B).")
-    entity = {"local_id": "a1", "definition": cited(
-        "Relative to the non-PTSD group, the PTSD group showed reduced gray matter", quote)}
-    e = edit(sch, "Analysis", entity, "definition",
-             "Relative to the non-PTSD group, the PTSD group showed reduced gray matter in "
-             "the same large cluster comprising the sgACC, caudate, and hypothalamus.")
+    quote = (
+        "Relative to the non-PTSD group, the PTSD group showed reduced gray matter in "
+        "the same large cluster comprising the sgACC, caudate, and hypothalamus "
+        "( Fig. 3 A, B)."
+    )
+    entity = {
+        "local_id": "a1",
+        "definition": cited(
+            "Relative to the non-PTSD group, the PTSD group showed reduced gray matter", quote
+        ),
+    }
+    e = edit(
+        sch,
+        "Analysis",
+        entity,
+        "definition",
+        "Relative to the non-PTSD group, the PTSD group showed reduced gray matter in "
+        "the same large cluster comprising the sgACC, caudate, and hypothalamus.",
+    )
     assert edit_module.refusals(e) == []
 
 
 def test_an_edit_that_drops_the_warrant_is_refused(sch):
     """12853571: a cited, true "whole volume analyzed and a priori small volumes" was
     coerced to the bare enum "whole_brain", losing the small-volume half."""
-    entity = {"local_id": "i1", "correction_scope": cited(
-        "whole volume analyzed and a priori small volumes",
-        "Correction was applied to the whole volume analyzed and to a priori small volumes.")}
+    entity = {
+        "local_id": "i1",
+        "correction_scope": cited(
+            "whole volume analyzed and a priori small volumes",
+            "Correction was applied to the whole volume analyzed and to a priori small volumes.",
+        ),
+    }
     e = edit(sch, "InferenceSettings", entity, "correction_scope", "whole_brain")
     assert "warrant" in why(edit_module.refusals(e))
 
@@ -86,12 +116,15 @@ def test_one_value_does_not_replace_several(sch):
 # ---------------------------------------------------------------------------- scope pairs
 
 
-@pytest.mark.parametrize("scope,regions,refused", [
-    ("roi", [], True),                  # 19996042: a restriction with nothing named
-    ("roi", ["reg_x"], False),
-    ("whole_brain", ["reg_x"], True),   # 11950456: whole-brain beside a named region
-    ("whole_brain", [], False),
-])
+@pytest.mark.parametrize(
+    "scope,regions,refused",
+    [
+        ("roi", [], True),  # 19996042: a restriction with nothing named
+        ("roi", ["reg_x"], False),
+        ("whole_brain", ["reg_x"], True),  # 11950456: whole-brain beside a named region
+        ("whole_brain", [], False),
+    ],
+)
 def test_a_scope_and_the_regions_beside_it_must_agree(sch, scope, regions, refused):
     entity = {"local_id": "i1", "correction_regions": list(regions)}
     e = edit(sch, "InferenceSettings", entity, "correction_scope", scope)
@@ -116,11 +149,17 @@ def test_nothing_references_itself(sch):
 
 def test_repointing_may_not_orphan_the_terms_a_cell_names(sch):
     """19942229: `a_793_1` was moved to a model that does not reach `trm_group_r_nr`."""
-    record = {"model_estimations": [
-        {"local_id": "mod_a", "terms": [{"local_id": "t_a"}]},
-        {"local_id": "mod_b", "terms": [{"local_id": "t_b"}]}]}
-    entity = {"local_id": "a1", "model_estimation": "mod_a",
-              "effect": {"cells": [{"term": "t_a"}]}}
+    record = {
+        "model_estimations": [
+            {"local_id": "mod_a", "terms": [{"local_id": "t_a"}]},
+            {"local_id": "mod_b", "terms": [{"local_id": "t_b"}]},
+        ]
+    }
+    entity = {
+        "local_id": "a1",
+        "model_estimation": "mod_a",
+        "effect": {"cells": [{"term": "t_a"}]},
+    }
     away = edit(sch, "Analysis", entity, "model_estimation", "mod_b", record)
     assert "does not reach" in why(edit_module.refusals(away))
     home = edit(sch, "Analysis", entity, "model_estimation", "mod_a", record)
@@ -139,8 +178,9 @@ def test_a_repair_that_damages_the_record_is_reported(sch):
     from pondie.extraction.record.validate import Validator
 
     before = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
-    after = {"analyses": [{"local_id": "a1", "name": field("VBM"),
-                           "correction_scope": field("roi")}]}
+    after = {
+        "analyses": [{"local_id": "a1", "name": field("VBM"), "correction_scope": field("roi")}]
+    }
     validator = Validator(sch, None)
     assert any("correction_scope" in line for line in validator.diff(before, after))
     assert validator.diff(before, before) == []
@@ -164,12 +204,18 @@ def test_a_reference_gains_without_losing_what_was_there(sch):
     total score, which is the one thing that correlation is of."""
     from pondie.extraction.record import edit as edit_module
 
-    record = {"assessments": [{"local_id": "asm_caps", "name": field("CAPS total score")},
-                              {"local_id": "asm_ies", "name": field("impact of event scale")}],
-              "analyses": [{"local_id": "a1", "name": field("correlation"),
-                            "assessments": ["asm_caps"]}]}
-    log = edit_module.apply(sch, record, "Analysis", record["analyses"][0],
-                            {"assessments": ["impact of event scale"]})
+    record = {
+        "assessments": [
+            {"local_id": "asm_caps", "name": field("CAPS total score")},
+            {"local_id": "asm_ies", "name": field("impact of event scale")},
+        ],
+        "analyses": [
+            {"local_id": "a1", "name": field("correlation"), "assessments": ["asm_caps"]}
+        ],
+    }
+    log = edit_module.apply(
+        sch, record, "Analysis", record["analyses"][0], {"assessments": ["impact of event scale"]}
+    )
     assert record["analyses"][0]["assessments"] == ["asm_caps", "asm_ies"]
     assert log.changed
 
@@ -178,10 +224,17 @@ def test_a_reference_list_holds_each_target_once(sch):
     """23021615: four preprocessing names all resolved to one entity, written four times."""
     from pondie.extraction.record import edit as edit_module
 
-    record = {"preprocessings": [{"local_id": "prp_vbm", "name": field("VBM pipeline")}],
-              "model_estimations": [{"local_id": "m1", "name": field("group model")}]}
-    edit_module.apply(sch, record, "ModelEstimation", record["model_estimations"][0],
-                      {"preprocessing": ["VBM pipeline"] * 3})
+    record = {
+        "preprocessings": [{"local_id": "prp_vbm", "name": field("VBM pipeline")}],
+        "model_estimations": [{"local_id": "m1", "name": field("group model")}],
+    }
+    edit_module.apply(
+        sch,
+        record,
+        "ModelEstimation",
+        record["model_estimations"][0],
+        {"preprocessing": ["VBM pipeline"] * 3},
+    )
     assert record["model_estimations"][0]["preprocessing"] == ["prp_vbm"]
 
 
@@ -190,8 +243,7 @@ def test_a_value_that_will_not_fit_its_slot_is_refused_not_coerced(sch):
     from pondie.extraction.record import edit as edit_module
 
     record = {"groups": [{"local_id": "g1", "name": field("patients")}]}
-    log = edit_module.apply(sch, record, "Group", record["groups"][0],
-                            {"is_healthy": "mostly"})
+    log = edit_module.apply(sch, record, "Group", record["groups"][0], {"is_healthy": "mostly"})
     assert "is_healthy" not in record["groups"][0]
     assert any(r.slot == "is_healthy" for r in log.refused)
 
@@ -204,12 +256,23 @@ def test_references_are_written_before_the_values_that_guard_against_them(sch):
     side ran while the scope was still unset, and the scope was set afterwards."""
     from pondie.extraction.record import edit as edit_module
 
-    record = {"regions": [{"local_id": "reg_stg", "name": field("superior temporal gyrus"),
-                           "definition_method": field("anatomical_a_priori")}],
-              "inference_settings": [{"local_id": "i1"}]}
-    log = edit_module.apply(sch, record, "InferenceSettings", record["inference_settings"][0],
-                            {"correction_scope": "whole_brain",
-                             "correction_regions": ["superior temporal gyrus"]})
+    record = {
+        "regions": [
+            {
+                "local_id": "reg_stg",
+                "name": field("superior temporal gyrus"),
+                "definition_method": field("anatomical_a_priori"),
+            }
+        ],
+        "inference_settings": [{"local_id": "i1"}],
+    }
+    log = edit_module.apply(
+        sch,
+        record,
+        "InferenceSettings",
+        record["inference_settings"][0],
+        {"correction_scope": "whole_brain", "correction_regions": ["superior temporal gyrus"]},
+    )
     assert record["inference_settings"][0]["correction_regions"] == ["reg_stg"]
     assert "correction_scope" not in record["inference_settings"][0]
     assert any(r.slot == "correction_scope" for r in log.refused)
@@ -238,12 +301,26 @@ def corpus(tmp_path):
     records.mkdir()
     # A record carrying a contradiction, so the adjudication path is actually reached: a
     # whole-brain correction naming the region it was restricted to.
-    (records / f"{study}.extraction.json").write_text(json.dumps({
-        "regions": [{"local_id": "reg_stg", "name": field("superior temporal gyrus"),
-                     "definition_method": field("anatomical_a_priori")}],
-        "inference_settings": [{"local_id": "i1",
-                                "correction_scope": field("whole_brain"),
-                                "correction_regions": ["reg_stg"]}]}))
+    (records / f"{study}.extraction.json").write_text(
+        json.dumps(
+            {
+                "regions": [
+                    {
+                        "local_id": "reg_stg",
+                        "name": field("superior temporal gyrus"),
+                        "definition_method": field("anatomical_a_priori"),
+                    }
+                ],
+                "inference_settings": [
+                    {
+                        "local_id": "i1",
+                        "correction_scope": field("whole_brain"),
+                        "correction_regions": ["reg_stg"],
+                    }
+                ],
+            }
+        )
+    )
     return Paper(study_id=study, root=root), records
 
 
@@ -258,8 +335,9 @@ def test_repair_runs_by_default_and_can_be_turned_off(tmp_path, corpus):
     assert default.repair and default.adjudicate
     assert StageName.repair in [s.name for s in sequence(default)]
 
-    off = Settings(payloads=tmp_path / "pay", records=records, model="m",
-                   repair=False, adjudicate=False)
+    off = Settings(
+        payloads=tmp_path / "pay", records=records, model="m", repair=False, adjudicate=False
+    )
     outcome = Repair().run(paper=paper, settings=off, caller=None)
     assert outcome.skipped and "neither" in (outcome.reason or "")
 
@@ -279,9 +357,18 @@ def test_the_stage_runs_against_a_real_paper(tmp_path, corpus):
         # read as `reply.body` -- an attribute of the MalformedReply exception, not of a
         # reply.
         asked.append(call)
-        return ModelReply(payload={"resolutions": [
-            {"id": "inference_settings/i1/correction_scope", "value": "roi",
-             "quote": "Images were acquired on a 3 T scanner."}]}, cost=Cost())
+        return ModelReply(
+            payload={
+                "resolutions": [
+                    {
+                        "id": "inference_settings/i1/correction_scope",
+                        "value": "roi",
+                        "quote": "Images were acquired on a 3 T scanner.",
+                    }
+                ]
+            },
+            cost=Cost(),
+        )
 
     settings = Settings(payloads=tmp_path / "pay", records=records, model="m", repair=False)
     outcome = Repair().run(paper=paper, settings=settings, caller=caller)
@@ -297,8 +384,6 @@ def test_repair_reports_what_it_introduced(sch, tmp_path):
     """A finding the pass caused is a defect in the pass, not in the paper."""
     from pondie.extraction import repair as repair_pass
 
-    from pondie.extraction import repair as repair_pass
-
     record = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
     report = repair_pass.run(record, "", sch, study_id="p")
     assert report.introduced == []
@@ -311,20 +396,32 @@ def test_only_a_settleable_contradiction_reaches_the_model(sch):
     from pondie.extraction import repair as repair_pass
 
     contradictory = {
-        "regions": [{"local_id": "reg_stg", "name": field("superior temporal gyrus"),
-                     "definition_method": field("anatomical_a_priori")}],
-        "inference_settings": [{"local_id": "i1",
-                                "correction_scope": field("whole_brain"),
-                                "correction_regions": ["reg_stg"]}]}
+        "regions": [
+            {
+                "local_id": "reg_stg",
+                "name": field("superior temporal gyrus"),
+                "definition_method": field("anatomical_a_priori"),
+            }
+        ],
+        "inference_settings": [
+            {
+                "local_id": "i1",
+                "correction_scope": field("whole_brain"),
+                "correction_regions": ["reg_stg"],
+            }
+        ],
+    }
     cases = repair_pass.contradictions(contradictory, sch)
     assert len(cases) == 1
     assert cases[0].slot == "correction_scope"
     assert "superior temporal gyrus" in cases[0].question
     assert "roi" in cases[0].options
 
-    consistent = {"inference_settings": [{"local_id": "i1",
-                                          "correction_scope": field("whole_brain"),
-                                          "correction_regions": []}]}
+    consistent = {
+        "inference_settings": [
+            {"local_id": "i1", "correction_scope": field("whole_brain"), "correction_regions": []}
+        ]
+    }
     assert repair_pass.contradictions(consistent, sch) == []
 
 
@@ -371,9 +468,16 @@ def test_a_region_the_proposal_fully_specifies_is_created(sch):
     from pondie.extraction.record import edit as edit_module
 
     record = {"regions": []}
-    entity, why = edit_module.create(sch, record, "Region", {
-        "name": "hippocampus", "definition_method": "anatomical_a_priori",
-        "region_type": "anatomical"})
+    entity, why = edit_module.create(
+        sch,
+        record,
+        "Region",
+        {
+            "name": "hippocampus",
+            "definition_method": "anatomical_a_priori",
+            "region_type": "anatomical",
+        },
+    )
     assert entity is not None, why
     assert entity["local_id"] == "reg_hippocampus"
     assert values.read(entity["definition_method"]) == "anatomical_a_priori"
@@ -385,8 +489,9 @@ def test_an_entity_that_could_not_be_valid_is_refused_by_the_slots_it_lacks(sch)
     what the message asks for rather than of changing a policy."""
     from pondie.extraction.record import edit as edit_module
 
-    entity, why = edit_module.create(sch, {"analyses": []}, "Analysis",
-                                     {"name": "PTSD < controls", "definition": "a contrast"})
+    entity, why = edit_module.create(
+        sch, {"analyses": []}, "Analysis", {"name": "PTSD < controls", "definition": "a contrast"}
+    )
     assert entity is None
     assert "table parse" in why or "effect" in why
 
@@ -411,17 +516,7 @@ def test_the_prompt_and_the_repair_pass_share_one_id_convention():
     assert all(prefix in table for prefix in ids.PREFIX.values())
 
 
-
-
-
-
 # ------------------------------------------------------------------- grounding what can be
-
-
-
-
-
-
 
 
 def test_one_instrument_under_two_names_is_not_created_twice(sch):
@@ -431,11 +526,14 @@ def test_one_instrument_under_two_names_is_not_created_twice(sch):
 
     class Abbrev:
         def expand(self, short):
-            return {"CAPS": "clinician-administered PTSD scale",
-                    "PTSD": "posttraumatic stress disorder"}.get(short)
+            return {
+                "CAPS": "clinician-administered PTSD scale",
+                "PTSD": "posttraumatic stress disorder",
+            }.get(short)
 
     assert edit_module.same_entity(
-        "CAPS total score", "clinician-administered PTSD scale (CAPS)", Abbrev())
+        "CAPS total score", "clinician-administered PTSD scale (CAPS)", Abbrev()
+    )
     assert not edit_module.same_entity("PTSD checklist", "PTSD symptom scale", Abbrev())
 
 
@@ -452,8 +550,10 @@ def test_a_multivalued_slot_keeps_its_values_separate(sch):
     """`str()` of a list is the list's repr, so a slot given ["a", "b"] took the single
     string "['a', 'b']" -- one bogus value where two belong, legal enough to pass the
     validator."""
-    assert values.cast(sch, "Group", "inclusion_criteria", ["right-handed", "aged 25-45"]) \
-        == ["right-handed", "aged 25-45"]
+    assert values.cast(sch, "Group", "inclusion_criteria", ["right-handed", "aged 25-45"]) == [
+        "right-handed",
+        "aged 25-45",
+    ]
     # all or nothing: one element that will not cast refuses the whole list
     assert values.cast(sch, "Group", "medications", ["fluoxetine", 42]) == ["fluoxetine", "42"]
 
@@ -465,13 +565,20 @@ def test_an_instrument_already_in_the_record_is_not_minted_again(sch):
 
     class Abbrev:
         def expand(self, short):
-            return {"CAPS": "clinician-administered PTSD scale",
-                    "PTSD": "posttraumatic stress disorder"}.get(short)
+            return {
+                "CAPS": "clinician-administered PTSD scale",
+                "PTSD": "posttraumatic stress disorder",
+            }.get(short)
 
     record = {"assessments": [{"local_id": "asm_caps", "name": field("CAPS total score")}]}
     entity, why = edit_module.create(
-        sch, record, "Assessment",
-        {"name": "clinician-administered PTSD scale (CAPS)"}, "", Abbrev())
+        sch,
+        record,
+        "Assessment",
+        {"name": "clinician-administered PTSD scale (CAPS)"},
+        "",
+        Abbrev(),
+    )
     assert entity is None
     assert "already holds" in why and "asm_caps" in why
 
@@ -481,13 +588,14 @@ def test_a_nested_slot_is_not_stringified(sch):
     from pondie.extraction.record import edit as edit_module
 
     record = {"analyses": [{"local_id": "a1", "name": field("contrast")}]}
-    edit_module.apply(sch, record, "Analysis", record["analyses"][0],
-                      {"groups": [{"group": "grp_ptsd"}]})
+    edit_module.apply(
+        sch, record, "Analysis", record["analyses"][0], {"groups": [{"group": "grp_ptsd"}]}
+    )
     assert "groups" not in record["analyses"][0]
 
 
 def test_the_analysis_directive_is_not_circular():
-    """"List every statistical analysis ... used by one of its statistical analyses" asks
+    """ "List every statistical analysis ... used by one of its statistical analyses" asks
     the sweep to find analyses by their relation to analyses."""
     from pondie.extraction.recall import directive
 
@@ -507,20 +615,47 @@ def test_a_repaired_record_says_it_was_repaired(sch):
     assert "repaired_by" not in untouched.get("extraction_metadata", {})
 
     changed = {
-        "regions": [{"local_id": "reg_stg", "name": field("superior temporal gyrus"),
-                     "definition_method": field("anatomical_a_priori")}],
-        "inference_settings": [{"local_id": "i1", "correction_scope": field("whole_brain"),
-                                "correction_regions": ["reg_stg"]}]}
+        "regions": [
+            {
+                "local_id": "reg_stg",
+                "name": field("superior temporal gyrus"),
+                "definition_method": field("anatomical_a_priori"),
+            }
+        ],
+        "inference_settings": [
+            {
+                "local_id": "i1",
+                "correction_scope": field("whole_brain"),
+                "correction_regions": ["reg_stg"],
+            }
+        ],
+    }
 
     class Caller:
         def __call__(self, call, *, paper, stage):
             from pondie.extraction.models import Cost, ModelReply
-            return ModelReply(payload={"resolutions": [
-                {"id": "inference_settings/i1/correction_scope", "value": "roi",
-                 "quote": "A region of interest analysis was performed."}]}, cost=Cost())
 
-    repair_pass.run(changed, "A region of interest analysis was performed.", sch,
-                    study_id="p", caller=Caller(), model="m")
+            return ModelReply(
+                payload={
+                    "resolutions": [
+                        {
+                            "id": "inference_settings/i1/correction_scope",
+                            "value": "roi",
+                            "quote": "A region of interest analysis was performed.",
+                        }
+                    ]
+                },
+                cost=Cost(),
+            )
+
+    repair_pass.run(
+        changed,
+        "A region of interest analysis was performed.",
+        sch,
+        study_id="p",
+        caller=Caller(),
+        model="m",
+    )
     assert changed["extraction_metadata"]["repaired_by"] == repair_pass.REPAIRER
 
 
@@ -531,13 +666,17 @@ def test_a_slot_of_a_subclass_is_written_against_that_subclass(sch):
     from pondie.extraction.record import edit as edit_module
 
     designator = sch.type_designator("Acquisition")
-    record = {"acquisitions": [{"local_id": "acq", designator: "MRI",
-                                "name": field("structural scan")}]}
-    edit_module.apply(sch, record, "Acquisition", record["acquisitions"][0],
-                      {"magnetic_field_strength_tesla": "3"})
+    record = {
+        "acquisitions": [{"local_id": "acq", designator: "MRI", "name": field("structural scan")}]
+    }
+    edit_module.apply(
+        sch,
+        record,
+        "Acquisition",
+        record["acquisitions"][0],
+        {"magnetic_field_strength_tesla": "3"},
+    )
     assert "magnetic_field_strength_tesla" in record["acquisitions"][0]
-
-
 
 
 def test_the_type_designator_is_never_rewritten(sch):
@@ -550,8 +689,13 @@ def test_the_type_designator_is_never_rewritten(sch):
     designator = sch.type_designator("Acquisition")
     entity = {"local_id": "acq", designator: "MRI", "name": field("structural scan")}
     record = {"acquisitions": [entity]}
-    edit_module.apply(sch, record, "Acquisition", entity,
-                      {designator: "PET", "magnetic_field_strength_tesla": "3"})
+    edit_module.apply(
+        sch,
+        record,
+        "Acquisition",
+        entity,
+        {designator: "PET", "magnetic_field_strength_tesla": "3"},
+    )
     assert entity[designator] == "MRI", "the designator must survive the edit untouched"
     assert "magnetic_field_strength_tesla" in entity, "the subclass slot must still land"
 
@@ -568,13 +712,12 @@ def test_a_starved_proposer_is_reported_not_silently_empty(sch):
             raise recall.Starved(f"{class_name}: out of memory at a 6000-character premise")
 
     record = {"analyses": [{"local_id": "an", "name": field("a contrast")}]}
-    report = repair_pass.run(record, "Methods. A contrast was computed.", sch,
-                             study_id="p", proposer=Starving())
+    report = repair_pass.run(
+        record, "Methods. A contrast was computed.", sch, study_id="p", proposer=Starving()
+    )
     assert report.refused, "a starved sweep must leave a trace a reviewer can see"
     assert any("out of memory" in r.why for r in report.refused)
     assert not report.written
-
-
 
 
 def test_the_default_is_one_paper_in_the_models_at_a_time(tmp_path):
@@ -583,60 +726,6 @@ def test_the_default_is_one_paper_in_the_models_at_a_time(tmp_path):
     from pondie.extraction.models import Settings
 
     assert Settings(payloads=tmp_path, records=tmp_path, model="m").repair_workers == 1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class _Findings:
@@ -656,9 +745,19 @@ def test_a_value_said_to_be_reported_needs_a_sentence():
     record contradicts itself and nothing said so."""
     from pondie.extraction.record import rules
 
-    record = {"measures": [{"local_id": "m", "family": {
-        "extraction_status": "extracted", "value": "electrophysiology",
-        "value_source": "reported", "evidence": {"status": "not_found"}}}]}
+    record = {
+        "measures": [
+            {
+                "local_id": "m",
+                "family": {
+                    "extraction_status": "extracted",
+                    "value": "electrophysiology",
+                    "value_source": "reported",
+                    "evidence": {"status": "not_found"},
+                },
+            }
+        ]
+    }
     found = _Findings()
     rules.check_value_source_honesty(record, found)
 
@@ -672,9 +771,19 @@ def test_a_generated_value_without_a_sentence_is_fine():
     is the fix, so it must not then be flagged."""
     from pondie.extraction.record import rules
 
-    record = {"measures": [{"local_id": "m", "family": {
-        "extraction_status": "extracted", "value": "electrophysiology",
-        "value_source": "generated", "evidence": {"status": "not_found"}}}]}
+    record = {
+        "measures": [
+            {
+                "local_id": "m",
+                "family": {
+                    "extraction_status": "extracted",
+                    "value": "electrophysiology",
+                    "value_source": "generated",
+                    "evidence": {"status": "not_found"},
+                },
+            }
+        ]
+    }
     found = _Findings()
     rules.check_value_source_honesty(record, found)
     assert found.warnings == []
@@ -686,14 +795,26 @@ def test_a_field_that_could_never_have_had_a_sentence_is_not_flagged():
     from pondie.extraction.record import rules
 
     def claimed(value):
-        return {"extraction_status": "extracted", "value": value,
-                "value_source": "reported", "evidence": {"status": "not_found"}}
+        return {
+            "extraction_status": "extracted",
+            "value": value,
+            "value_source": "reported",
+            "evidence": {"status": "not_found"},
+        }
 
     found = _Findings()
     rules.check_value_source_honesty(
-        {"tables": [{"local_id": "t", "caption": claimed("Table 1. Peaks"),
-                     "source_table_analysis": claimed("3#1")}]},
-        found)
+        {
+            "tables": [
+                {
+                    "local_id": "t",
+                    "caption": claimed("Table 1. Peaks"),
+                    "source_table_analysis": claimed("3#1"),
+                }
+            ]
+        },
+        found,
+    )
     assert found.warnings == [], found.warnings
 
 
@@ -705,12 +826,17 @@ def test_a_reasoned_value_claimed_as_reported_is_flagged():
     from pondie.extraction.record import rules
 
     def claimed(value):
-        return {"extraction_status": "extracted", "value": value,
-                "value_source": "reported", "evidence": {"status": "not_found"}}
+        return {
+            "extraction_status": "extracted",
+            "value": value,
+            "value_source": "reported",
+            "evidence": {"status": "not_found"},
+        }
 
     found = _Findings()
     rules.check_value_source_honesty(
-        {"analyses": [{"local_id": "a", "spatial_scope": claimed("roi")}]}, found)
+        {"analyses": [{"local_id": "a", "spatial_scope": claimed("roi")}]}, found
+    )
     assert len(found.warnings) == 1, found.warnings
 
 
@@ -742,10 +868,14 @@ def test_two_modalities_do_not_forbid_each_other_s_measures():
     from pondie.extraction.record import rules
 
     record = {
-        "acquisitions": [{"local_id": "a1", "modality": field("fMRI")},
-                         {"local_id": "a2", "modality": field("sMRI")}],
-        "measures": [{"local_id": "m1", "family": field("functional_bold")},
-                     {"local_id": "m2", "family": field("structural_morphometry")}],
+        "acquisitions": [
+            {"local_id": "a1", "modality": field("fMRI")},
+            {"local_id": "a2", "modality": field("sMRI")},
+        ],
+        "measures": [
+            {"local_id": "m1", "family": field("functional_bold")},
+            {"local_id": "m2", "family": field("structural_morphometry")},
+        ],
     }
     found = _Findings()
     rules.check_modality_measures(record, found)
@@ -760,15 +890,13 @@ def test_a_breakdown_that_does_not_sum_to_its_own_denominator():
     def entry(count, denominator):
         return {"count": field(count), "denominator": field(denominator)}
 
-    over = {"groups": [{"local_id": "g",
-                        "sex_distribution": [entry(12, 20), entry(14, 20)]}]}
+    over = {"groups": [{"local_id": "g", "sex_distribution": [entry(12, 20), entry(14, 20)]}]}
     found = _Findings()
     rules.check_counts_add_up(over, found)
     assert len(found.warnings) == 1
     assert "sum to 26" in found.warnings[0][1] and "denominator of 20" in found.warnings[0][1]
 
-    ok = {"groups": [{"local_id": "g",
-                      "sex_distribution": [entry(12, 20), entry(8, 20)]}]}
+    ok = {"groups": [{"local_id": "g", "sex_distribution": [entry(12, 20), entry(8, 20)]}]}
     clean = _Findings()
     rules.check_counts_add_up(ok, clean)
     assert clean.warnings == []
@@ -786,15 +914,24 @@ def test_an_enrolment_funnel_that_grows():
     schema's own definitions, so the sequence cannot increase."""
     from pondie.extraction.record import rules
 
-    record = {"groups": [{"local_id": "g", "enrolled_count": field(20),
-                          "acquired_count": field(24)}]}
+    record = {
+        "groups": [{"local_id": "g", "enrolled_count": field(20), "acquired_count": field(24)}]
+    }
     found = _Findings()
     rules.check_counts_add_up(record, found)
     assert len(found.warnings) == 1
     assert "subset of the one before" in found.warnings[0][1]
 
-    ok = {"groups": [{"local_id": "g", "approached_count": field(40),
-                      "enrolled_count": field(24), "acquired_count": field(20)}]}
+    ok = {
+        "groups": [
+            {
+                "local_id": "g",
+                "approached_count": field(40),
+                "enrolled_count": field(24),
+                "acquired_count": field(20),
+            }
+        ]
+    }
     clean = _Findings()
     rules.check_counts_add_up(ok, clean)
     assert clean.warnings == []
@@ -806,8 +943,6 @@ def test_the_new_rules_are_registered():
 
     names = {rule.name for rule in rules.RULES}
     assert {"value_source_honesty", "modality_measures", "counts_add_up"} <= names
-
-
 
 
 def test_a_minted_id_becomes_a_label_a_paper_could_contain():
@@ -843,10 +978,13 @@ def test_a_declared_name_still_wins_over_the_id():
     modality rather than what the paper calls that acquisition."""
     from pondie.extraction.record.edit import label_of
 
-    assert label_of({"local_id": "acq_fmri", "name": field("resting-state scan")}) \
+    assert (
+        label_of({"local_id": "acq_fmri", "name": field("resting-state scan")})
         == "resting-state scan"
-    assert label_of({"local_id": "mod_glm", "model_type": field("mixed effects")}) \
-        == "mixed effects"
+    )
+    assert (
+        label_of({"local_id": "mod_glm", "model_type": field("mixed effects")}) == "mixed effects"
+    )
     assert label_of({"local_id": "dev_siemens_trio"}) == "siemens trio"
 
 
@@ -864,18 +1002,12 @@ def test_a_short_derived_label_does_not_match_inside_a_word():
     to hand it at all."""
     from pondie.extraction.evidence import retrieval
 
-    units = ["A factor analysis of the surface data was performed.",
-             "Images were acquired on a Siemens Trio scanner."]
+    units = [
+        "A factor analysis of the surface data was performed.",
+        "Images were acquired on a Siemens Trio scanner.",
+    ]
     assert retrieval.entity_hits(units, "fa") == []
     assert retrieval.entity_hits(units, "siemens trio") == [1]
-
-
-
-
-
-
-
-
 
 
 def test_a_paper_that_enumerates_its_regions_is_checked_against_the_record():
@@ -888,13 +1020,18 @@ def test_a_paper_that_enumerates_its_regions_is_checked_against_the_record():
     and the six it already has, it returns those six and nothing else."""
     from pondie.extraction.evidence import completeness
 
-    text = ("Methods. The regions included bilateral anterior piriform cortex (aPC), "
-            "lateral amygdala (AMYG), head of the hippocampus (HPC), anterior insula "
-            "(aINS), and orbitofrontal cortex (OFC). Each ROI was created in MARSBAR as a "
-            "5 mm-radius sphere centered around the published coordinates.")
-    record = {"regions": [{"local_id": "r", "name": field(n)} for n in
-                          ("left aINS", "right aINS", "left AMYG", "left aPC",
-                           "right aPC", "right OFC")]}
+    text = (
+        "Methods. The regions included bilateral anterior piriform cortex (aPC), "
+        "lateral amygdala (AMYG), head of the hippocampus (HPC), anterior insula "
+        "(aINS), and orbitofrontal cortex (OFC). Each ROI was created in MARSBAR as a "
+        "5 mm-radius sphere centered around the published coordinates."
+    )
+    record = {
+        "regions": [
+            {"local_id": "r", "name": field(n)}
+            for n in ("left aINS", "right aINS", "left AMYG", "left aPC", "right aPC", "right OFC")
+        ]
+    }
 
     found = completeness.missing_regions(record, text)
     joined = " | ".join(found)
@@ -904,14 +1041,16 @@ def test_a_paper_that_enumerates_its_regions_is_checked_against_the_record():
 
 
 def test_a_results_sentence_is_not_an_enumeration_of_definitions():
-    """"regions were activated in cocaine users" opens a list, and every clause of the
+    """ "regions were activated in cocaine users" opens a list, and every clause of the
     paragraph after it became a missing region -- seventeen false findings on one paper,
     which is worse than saying nothing."""
     from pondie.extraction.evidence import completeness
 
-    text = ("Results. The regions were activated in cocaine users and comparison subjects "
-            "when they viewed the sex film, in the prefrontal, dorsolateral and limbic "
-            "areas, with coordinates reported in Table 2.")
+    text = (
+        "Results. The regions were activated in cocaine users and comparison subjects "
+        "when they viewed the sex film, in the prefrontal, dorsolateral and limbic "
+        "areas, with coordinates reported in Table 2."
+    )
     record = {"regions": []}
     assert completeness.missing_regions(record, text) == []
 
@@ -921,10 +1060,13 @@ def test_a_region_name_does_not_keep_the_preposition_in_front_of_it():
     failure even when the gap it reports is real."""
     from pondie.extraction.evidence import completeness
 
-    items = completeness.named("located in the right superior frontal gyrus, "
-                               "left inferior parietal lobule")
-    assert [name for name, _both in items] == ["right superior frontal gyrus",
-                                               "left inferior parietal lobule"]
+    items = completeness.named(
+        "located in the right superior frontal gyrus, " "left inferior parietal lobule"
+    )
+    assert [name for name, _both in items] == [
+        "right superior frontal gyrus",
+        "left inferior parietal lobule",
+    ]
 
 
 def test_a_value_the_pass_could_not_place_is_marked_generated(sch):
@@ -943,9 +1085,14 @@ def test_a_value_the_pass_could_not_place_is_marked_generated(sch):
 
     record = {"groups": [{"local_id": "g", "name": field("patients")}]}
     entity = record["groups"][0]
-    edit_module.apply(sch, record, "Group", entity,
-                      {"recruitment_method": "advertisement"},
-                      text="Methods. Participants answered an advertisement.")
+    edit_module.apply(
+        sch,
+        record,
+        "Group",
+        entity,
+        {"recruitment_method": "advertisement"},
+        text="Methods. Participants answered an advertisement.",
+    )
 
     written = entity["recruitment_method"]
     assert written["evidence"]["status"] == "not_found"
@@ -959,8 +1106,9 @@ def test_a_value_the_pass_did_place_stays_reported(sch):
     quote = "Participants were recruited by newspaper advertisement in the local area."
     record = {"groups": [{"local_id": "g", "name": field("patients")}]}
     entity = record["groups"][0]
-    edit_module.apply(sch, record, "Group", entity,
-                      {"recruitment_method": quote}, text=f"Methods. {quote}")
+    edit_module.apply(
+        sch, record, "Group", entity, {"recruitment_method": quote}, text=f"Methods. {quote}"
+    )
 
     written = entity["recruitment_method"]
     assert written["evidence"]["status"] == "present"
@@ -994,8 +1142,10 @@ def test_a_wrapper_is_resolved_to_what_it_wraps(sch):
     assert schema.value_ranges(schema.attributes("Group")["acquired_count"]) == ["integer"]
     assert schema.value_ranges(schema.attributes("Region")["name"]) == ["string"]
     # An open vocabulary keeps both branches.
-    assert set(schema.value_ranges(
-        schema.attributes("Condition")["condition_kind"])) == {"ConditionKind", "string"}
+    assert set(schema.value_ranges(schema.attributes("Condition")["condition_kind"])) == {
+        "ConditionKind",
+        "string",
+    }
 
 
 def test_a_string_answer_lands_in_the_type_its_slot_declares(sch):
@@ -1021,12 +1171,24 @@ def test_a_nested_object_gains_prose_it_was_missing(sch):
     from pondie.extraction.record import edit as edit_module
 
     said = "the neutral condition showed household objects matched for visual complexity"
-    record = {"tasks": [{"local_id": "tsk", "name": field("picture viewing"),
-                         "conditions": [{"local_id": "c1", "name": field("Neutral")}]}]}
+    record = {
+        "tasks": [
+            {
+                "local_id": "tsk",
+                "name": field("picture viewing"),
+                "conditions": [{"local_id": "c1", "name": field("Neutral")}],
+            }
+        ]
+    }
     entity = record["tasks"][0]
-    edit_module.apply(sch, record, "Task", entity,
-                      {"conditions": [{"local_id": "c1", "description": said}]},
-                      text=f"Methods. In this study {said}, presented in blocks.")
+    edit_module.apply(
+        sch,
+        record,
+        "Task",
+        entity,
+        {"conditions": [{"local_id": "c1", "description": said}]},
+        text=f"Methods. In this study {said}, presented in blocks.",
+    )
 
     written = entity["conditions"][0]["description"]
     assert values.read(written) == said
@@ -1040,13 +1202,24 @@ def test_a_nested_classification_is_left_to_the_pass_that_read_the_paper(sch):
     three picture-viewing conditions."""
     from pondie.extraction.record import edit as edit_module
 
-    record = {"tasks": [{"local_id": "tsk", "name": field("picture viewing"),
-                         "conditions": [{"local_id": "c2", "name": field("Disgust")}]}]}
+    record = {
+        "tasks": [
+            {
+                "local_id": "tsk",
+                "name": field("picture viewing"),
+                "conditions": [{"local_id": "c2", "name": field("Disgust")}],
+            }
+        ]
+    }
     entity = record["tasks"][0]
     log = edit_module.apply(
-        sch, record, "Task", entity,
+        sch,
+        record,
+        "Task",
+        entity,
         {"conditions": [{"local_id": "c2", "condition_kind": "fixation"}]},
-        text="Methods. Disgust pictures were shown in thirty-second blocks.")
+        text="Methods. Disgust pictures were shown in thirty-second blocks.",
+    )
 
     assert values.read(entity["conditions"][0].get("condition_kind")) is None
     assert any("nothing in the paper places this value" in r.why for r in log.refused)
@@ -1058,13 +1231,26 @@ def test_a_nested_object_keeps_what_it_already_had(sch):
     from pondie.extraction.record import edit as edit_module
 
     kept = cited("control_state", "a neutral condition served as the comparison")
-    record = {"tasks": [{"local_id": "tsk", "name": field("picture viewing"),
-                         "conditions": [{"local_id": "c1", "name": field("Neutral"),
-                                         "condition_kind": kept}]}]}
+    record = {
+        "tasks": [
+            {
+                "local_id": "tsk",
+                "name": field("picture viewing"),
+                "conditions": [
+                    {"local_id": "c1", "name": field("Neutral"), "condition_kind": kept}
+                ],
+            }
+        ]
+    }
     entity = record["tasks"][0]
-    edit_module.apply(sch, record, "Task", entity,
-                      {"conditions": [{"local_id": "c1", "condition_kind": "task_state"}]},
-                      text="Methods. Something else entirely.")
+    edit_module.apply(
+        sch,
+        record,
+        "Task",
+        entity,
+        {"conditions": [{"local_id": "c1", "condition_kind": "task_state"}]},
+        text="Methods. Something else entirely.",
+    )
 
     assert values.read(entity["conditions"][0]["condition_kind"]) == "control_state"
 
@@ -1074,13 +1260,24 @@ def test_a_nested_object_the_record_does_not_have_is_not_invented(sch):
     never ran, and this pass is in no position to tell the difference."""
     from pondie.extraction.record import edit as edit_module
 
-    record = {"tasks": [{"local_id": "tsk", "name": field("picture viewing"),
-                         "conditions": [{"local_id": "c1", "name": field("Neutral")}]}]}
+    record = {
+        "tasks": [
+            {
+                "local_id": "tsk",
+                "name": field("picture viewing"),
+                "conditions": [{"local_id": "c1", "name": field("Neutral")}],
+            }
+        ]
+    }
     entity = record["tasks"][0]
-    edit_module.apply(sch, record, "Task", entity,
-                      {"conditions": [{"local_id": "c9", "name": "Fixation",
-                                       "condition_kind": "fixation"}]},
-                      text="Methods. A fixation cross was shown between blocks.")
+    edit_module.apply(
+        sch,
+        record,
+        "Task",
+        entity,
+        {"conditions": [{"local_id": "c9", "name": "Fixation", "condition_kind": "fixation"}]},
+        text="Methods. A fixation cross was shown between blocks.",
+    )
 
     assert [values.read(c["name"]) for c in entity["conditions"]] == ["Neutral"]
 

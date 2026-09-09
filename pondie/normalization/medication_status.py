@@ -97,9 +97,7 @@ def report(patterns: tuple[str, ...] | None = None) -> str:
         for _study, body in iter_records(patterns or DEFAULT)
         for s in strings_at(body, "groups.medication_status")
     ]
-    return f"groups.medication_status: {len(decisions)} values\n" + summarize(
-        decisions, VALUES
-    )
+    return f"groups.medication_status: {len(decisions)} values\n" + summarize(decisions, VALUES)
 
 
 if __name__ == "__main__":

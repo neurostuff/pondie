@@ -257,7 +257,9 @@ def check_order(sequence: tuple[Repair, ...]) -> list[str]:
 
 
 def apply_all(
-    body: dict, ctx: Context, sequence: tuple[Repair, ...] | None = None,
+    body: dict,
+    ctx: Context,
+    sequence: tuple[Repair, ...] | None = None,
     stage: str | None = None,
 ) -> RepairLog:
     """Run the sequence in order, recording what each one changed.

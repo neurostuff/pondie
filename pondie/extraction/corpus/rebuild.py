@@ -304,9 +304,7 @@ def build(
     transformed = stylesheet(
         etree.parse(str(article_xml)),
         **{
-            "preserve-crossrefs": etree.XSLT.strparam(
-                "true" if PRESERVE_CROSSREFS else "false"
-            ),
+            "preserve-crossrefs": etree.XSLT.strparam("true" if PRESERVE_CROSSREFS else "false"),
             "keep-tables": etree.XSLT.strparam("true" if keep_tables else "false"),
         },
     )
@@ -350,8 +348,7 @@ def check_equivalence(rebuilt: str, corpus: str) -> str | None:
         return (
             "the corpus text for this study has no markdown headings, so it is the "
             "XSLT-failure fallback (a flat xpath text join) rather than stylesheet "
-            "output. No stylesheet setting reproduces it.\n"
-            + first_difference(rebuilt, corpus)
+            "output. No stylesheet setting reproduces it.\n" + first_difference(rebuilt, corpus)
         )
     return first_difference(rebuilt, corpus)
 
@@ -401,10 +398,7 @@ def choose_flavour(study_dir: Path) -> str | None:
     for flavour in FLAVOURS:
         if not (study_dir / "processed" / flavour / "text.txt").is_file():
             continue
-        if (
-            flavour == "pubget"
-            and not (study_dir / "source" / "pubget" / "article.xml").is_file()
-        ):
+        if flavour == "pubget" and not (study_dir / "source" / "pubget" / "article.xml").is_file():
             continue
         return flavour
     return None
@@ -437,9 +431,7 @@ def build_appended_one(study_dir: Path, flavour: str, *, overwrite: bool = False
             "tables": {"sha256": digest(with_tables), "chars": len(with_tables)},
         },
     }
-    (out_dir / "build.json").write_text(
-        json.dumps(provenance, indent=1) + "\n", encoding="utf-8"
-    )
+    (out_dir / "build.json").write_text(json.dumps(provenance, indent=1) + "\n", encoding="utf-8")
     return provenance
 
 
@@ -485,9 +477,7 @@ def build_one(
     plain = build(article_xml, article_dir, text_module, keep_tables=False)
     problem = check_equivalence(plain, corpus)
     if problem and not allow_drift:
-        raise BuildError(
-            "the rebuilt plain text does not reproduce the corpus text.\n" + problem
-        )
+        raise BuildError("the rebuilt plain text does not reproduce the corpus text.\n" + problem)
 
     tables_report: dict = {"parsed": 0, "floated": []}
     with_tables = build(
@@ -526,9 +516,7 @@ def build_one(
             "tables": {"sha256": digest(with_tables), "chars": len(with_tables)},
         },
     }
-    (out_dir / "build.json").write_text(
-        json.dumps(provenance, indent=1) + "\n", encoding="utf-8"
-    )
+    (out_dir / "build.json").write_text(json.dumps(provenance, indent=1) + "\n", encoding="utf-8")
     return provenance
 
 

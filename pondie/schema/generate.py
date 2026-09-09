@@ -192,9 +192,7 @@ def tree_root_of(classes: Mapping[str, object]) -> str:
     return roots[0]
 
 
-def kept_own_attributes(
-    classes: Mapping[str, object], class_name: str
-) -> dict[str, Mapping]:
+def kept_own_attributes(classes: Mapping[str, object], class_name: str) -> dict[str, Mapping]:
     return {
         name: attribute
         for name, attribute in own_attributes(classes, class_name).items()
@@ -271,9 +269,7 @@ def naturalize(node: object) -> object:
     """
 
     if isinstance(node, Mapping):
-        return {
-            key: naturalize(value) for key, value in node.items() if key != IN_SUBSET
-        }
+        return {key: naturalize(value) for key, value in node.items() if key != IN_SUBSET}
     if isinstance(node, list):
         return [naturalize(item) for item in node]
     if isinstance(node, str):
@@ -361,8 +357,7 @@ def build_enum_wrappers(
                 + (
                     "."
                     if closed
-                    else ", or the source's own wording when the vocabulary does not "
-                    "cover it."
+                    else ", or the source's own wording when the vocabulary does not " "cover it."
                 )
             ),
             "slot_usage": {"value": value_slot},
@@ -549,9 +544,7 @@ def apply_deviations(
             if target is None:
                 raise ValueError(f"{label} names an unknown class: {deviation['class']}")
             if deviation["slot"] not in target["attributes"]:
-                raise ValueError(
-                    f"{label} replaces a slot that is not there: {deviation['slot']}"
-                )
+                raise ValueError(f"{label} replaces a slot that is not there: {deviation['slot']}")
             target["attributes"][deviation["slot"]] = deviation["definition"]
 
         elif operation == "describe_slot":
@@ -585,9 +578,7 @@ def apply_deviations(
 
         elif operation == "add_class":
             module = str(deviation["module"])
-            documents_classes.setdefault(module, {})[deviation["class"]] = deviation[
-                "definition"
-            ]
+            documents_classes.setdefault(module, {})[deviation["class"]] = deviation["definition"]
 
         elif operation == "drop_class":
             module, _, class_name = str(deviation["class"]).partition(".")
@@ -696,9 +687,7 @@ def build_output() -> tuple[dict[str, dict], Report]:
     apply_required_additions(module_classes, deviations["required_additions"], report)
     apply_deviations(module_classes, deviations["deviations"], report)
 
-    live_modules = [
-        name for name in module_classes if module_classes[name] or module_enums[name]
-    ]
+    live_modules = [name for name in module_classes if module_classes[name] or module_enums[name]]
 
     documents: dict[str, dict] = {}
     for module_name in live_modules:
@@ -791,13 +780,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="Fail if the committed tree differs from what would be generated.",
     )
-    parser.add_argument(
-        "--quiet", action="store_true", help="Suppress the projection report."
-    )
+    parser.add_argument("--quiet", action="store_true", help="Suppress the projection report.")
     arguments = parser.parse_args(argv)
 
     documents, report = build_output()
-    texts = {path: dump_schema(document, SOURCE_ENTRYPOINT.name) for path, document in documents.items()}
+    texts = {
+        path: dump_schema(document, SOURCE_ENTRYPOINT.name) for path, document in documents.items()
+    }
 
     if not arguments.quiet:
         print("\n".join(describe(documents, report)))

@@ -31,9 +31,7 @@ def test_negation_decides_medication_status():
         "free of psychotropic medication",
     ):
         assert medication_status.normalize(text).value == "FREE", text
-    assert (
-        medication_status.normalize("on stable antipsychotic medication").value == "MEDICATED"
-    )
+    assert medication_status.normalize("on stable antipsychotic medication").value == "MEDICATED"
 
 
 def test_a_negation_in_a_later_clause_does_not_invert_the_cohort():
@@ -76,14 +74,17 @@ def test_a_missing_parser_is_an_error_not_an_unreported_field(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("value,expected", [
-    ("naïve", "naive"),
-    ("Étude", "etude"),
-    ("Möbitz II", "mobitzii"),
-    ("Müllerian", "mullerian"),
-    ("gray matter", "graymatter"),
-    ("Alzheimer's disease", "alzheimersdisease"),
-])
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("naïve", "naive"),
+        ("Étude", "etude"),
+        ("Möbitz II", "mobitzii"),
+        ("Müllerian", "mullerian"),
+        ("gray matter", "graymatter"),
+        ("Alzheimer's disease", "alzheimersdisease"),
+    ],
+)
 def test_squash_folds_an_accent_rather_than_deleting_it(value, expected):
     """`squash` said it was "`fold` with the spaces removed" and skipped `fold`'s NFKD step,
     so an accented letter fell out of `[a-z0-9]` and was dropped: `naïve` squashed to

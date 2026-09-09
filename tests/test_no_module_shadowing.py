@@ -80,7 +80,9 @@ def test_no_function_shadows_a_module_its_file_imports(source: Path) -> None:
     modules = {
         name
         for name in imported
-        if name.islower() and not name.startswith("_") and "_" not in name.strip("_")
+        if name.islower()
+        and not name.startswith("_")
+        and "_" not in name.strip("_")
         or name in {"parse_keys", "table_parse", "text_index", "span_tools"}
     }
     offences = [
@@ -88,7 +90,6 @@ def test_no_function_shadows_a_module_its_file_imports(source: Path) -> None:
         for fn in ast.walk(tree)
         if isinstance(fn, ast.FunctionDef) and (_bindings(fn) & modules)
     ]
-    assert not offences, (
-        f"{source.name}: a local shadows a module imported by this file -- "
-        + "; ".join(offences)
-    )
+    assert (
+        not offences
+    ), f"{source.name}: a local shadows a module imported by this file -- " + "; ".join(offences)

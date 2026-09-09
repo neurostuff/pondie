@@ -128,10 +128,7 @@ def _features(pairs, dense, lexical, overlap):
     rows = []
     for i, j in pairs:
         rows.append(
-            [
-                float(dense[k][i] @ dense[k][j])
-                for k in ("name", "prose", "setting", "measures")
-            ]
+            [float(dense[k][i] @ dense[k][j]) for k in ("name", "prose", "setting", "measures")]
             + [overlap(i, j), float(lexical[i].multiply(lexical[j]).sum())]
         )
     return np.asarray(rows)

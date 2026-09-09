@@ -233,9 +233,7 @@ def treatment_contrasts(
         if isinstance(measure, dict) and values.read(measure.get("local_id")):
             local = str(values.read(measure["local_id"]))
             measures[local] = str(
-                values.read(measure.get("source_label"))
-                or values.read(measure.get("type"))
-                or ""
+                values.read(measure.get("source_label")) or values.read(measure.get("type")) or ""
             )
             kinds[local] = (
                 str(values.read(measure.get("type")) or ""),
@@ -293,12 +291,8 @@ def treatment_contrasts(
             direction=_direction((intervention[1] or {}).get("direction")),
             agent_concept=agents.get(intervention[0].agent, ""),
             measure=measures.get(str(values.read(analysis.get("measure")) or ""), ""),
-            measure_type=kinds.get(str(values.read(analysis.get("measure")) or ""), ("", ""))[
-                0
-            ],
-            measure_family=kinds.get(
-                str(values.read(analysis.get("measure")) or ""), ("", "")
-            )[1],
+            measure_type=kinds.get(str(values.read(analysis.get("measure")) or ""), ("", ""))[0],
+            measure_family=kinds.get(str(values.read(analysis.get("measure")) or ""), ("", ""))[1],
             held=held,
             comparator_direction=_direction((comparator[1] or {}).get("direction")),
         )
@@ -330,6 +324,3 @@ _RISK = re.compile(
     r"\bCHR\b|\bUHR\b|\bARMS\b)\b",
     re.I,
 )
-
-
-

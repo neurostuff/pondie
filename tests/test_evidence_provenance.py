@@ -46,16 +46,28 @@ def test_a_literally_located_quote_is_not_labelled_a_model_quote():
 def test_the_literal_locator_finds_a_value_that_occurs_once_and_skips_a_repeated_one():
     """Uniqueness is the safety condition. A value the document states in one place has a
     determined sentence; one it states in three does not, and goes to the model as before."""
-    text = ("Participants were scanned on a 3 T magnet.\n"
-            "Analysis used SPM12 throughout.\n"
-            "We report SPM12 defaults, and SPM12 was also used for preprocessing.\n")
-    doc = {"acquisitions": [{
-        "local_id": "acq",
-        "magnetic_strength": {"extraction_status": "extracted", "value": "3 T",
-                              "value_source": "reported"},
-        "software": {"extraction_status": "extracted", "value": "SPM12",
-                     "value_source": "reported"},
-    }]}
+    text = (
+        "Participants were scanned on a 3 T magnet.\n"
+        "Analysis used SPM12 throughout.\n"
+        "We report SPM12 defaults, and SPM12 was also used for preprocessing.\n"
+    )
+    doc = {
+        "acquisitions": [
+            {
+                "local_id": "acq",
+                "magnetic_strength": {
+                    "extraction_status": "extracted",
+                    "value": "3 T",
+                    "value_source": "reported",
+                },
+                "software": {
+                    "extraction_status": "extracted",
+                    "value": "SPM12",
+                    "value_source": "reported",
+                },
+            }
+        ]
+    }
     got = qz.literal_quotes(doc, text)
     assert "acquisitions[0].magnetic_strength" in got, got
     assert "3 T" in got["acquisitions[0].magnetic_strength"]
@@ -66,14 +78,19 @@ def test_the_literal_locator_will_not_match_inside_a_longer_number():
     """`spans._tolerant_pattern` anchors nothing, so a bare `3` hits the `3` of `13`. A
     value that only appears as part of another token is not present at all."""
     text = "Thirteen volunteers (n = 13) completed the protocol without incident.\n"
-    doc = {"groups": [{"local_id": "g",
-                       "size": {"extraction_status": "extracted", "value": "3",
-                                "value_source": "reported"}}]}
+    doc = {
+        "groups": [
+            {
+                "local_id": "g",
+                "size": {
+                    "extraction_status": "extracted",
+                    "value": "3",
+                    "value_source": "reported",
+                },
+            }
+        ]
+    }
     assert qz.literal_quotes(doc, text) == {}
-
-
-
-
 
 
 def test_a_field_no_locator_placed_carries_no_set_to_label():
@@ -83,5 +100,3 @@ def test_a_field_no_locator_placed_carries_no_set_to_label():
     evidence = acq["magnetic_strength"]["evidence"]
     assert evidence["status"] == "not_found"
     assert "sets" not in evidence
-
-

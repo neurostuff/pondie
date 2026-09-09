@@ -51,7 +51,8 @@ def classify(class_definitions: Mapping[str, object]) -> tuple[list[str], list[s
             checked += 1
             path = f"{class_name}.{field_name}"
             marks = [
-                subset for subset in (DETERMINISTIC, MODEL_EXTRACTED)
+                subset
+                for subset in (DETERMINISTIC, MODEL_EXTRACTED)
                 if is_marked(attribute, subset)
             ]
             if not marks:

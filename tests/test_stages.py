@@ -137,17 +137,13 @@ def test_evidence_asks_about_the_fields_that_exist_not_about_the_paper(tmp_path,
     payload = settings.payloads / "S1" / "satisfy.json"
     payload.parent.mkdir(parents=True)
     payload.write_text(
-        json.dumps(
-            {"groups": [{"name": {"extraction_status": "extracted", "value": "patients"}}]}
-        )
+        json.dumps({"groups": [{"name": {"extraction_status": "extracted", "value": "patients"}}]})
     )
 
     caller = Recorder()
     monkeypatch.setattr(
         "pondie.extraction.evidence.quote.apply_evidence",
-        lambda payload, quotes, reranker=None, units=(), literal=frozenset(): (
-            EvidenceCounts()
-        ),
+        lambda payload, quotes, reranker=None, units=(), literal=frozenset(): (EvidenceCounts()),
     )
     outcome = Evidence().run(paper, settings, caller)
     assert not outcome.skipped and outcome.ok
@@ -174,9 +170,7 @@ def test_evidence_writes_its_blocks_into_the_payloads(tmp_path):
     payload = settings.payloads / "S1" / "satisfy.json"
     payload.parent.mkdir(parents=True)
     payload.write_text(
-        json.dumps(
-            {"groups": [{"name": {"extraction_status": "extracted", "value": "patients"}}]}
-        )
+        json.dumps({"groups": [{"name": {"extraction_status": "extracted", "value": "patients"}}]})
     )
 
     outcome = Evidence().run(paper, settings, Quoter())
@@ -910,9 +904,7 @@ def test_a_reply_cut_off_mid_answer_says_so(tmp_path):
         def __call__(self, call, *, paper, stage):
             return ModelReply(
                 payload={
-                    "analyses": [
-                        {"local_id": "a1", "name": "A", "effect": {"kind": "contrast"}}
-                    ],
+                    "analyses": [{"local_id": "a1", "name": "A", "effect": {"kind": "contrast"}}],
                     "required_entities": [{"local_id": "g1", "kind": "Group"}],
                 },
                 cost=Cost(calls=1),
@@ -932,9 +924,7 @@ def test_a_reply_that_finished_cleanly_says_nothing(tmp_path):
         def __call__(self, call, *, paper, stage):
             return ModelReply(
                 payload={
-                    "analyses": [
-                        {"local_id": "a1", "name": "A", "effect": {"kind": "contrast"}}
-                    ],
+                    "analyses": [{"local_id": "a1", "name": "A", "effect": {"kind": "contrast"}}],
                     "required_entities": [{"local_id": "g1", "kind": "Group"}],
                 },
                 cost=Cost(calls=1),
@@ -1073,10 +1063,14 @@ def test_repair_keeps_the_record_it_started_from(tmp_path, monkeypatch) -> None:
     corpus.mkdir(parents=True)
     (corpus / "text.tables.txt").write_text("Methods. A contrast was computed.")
 
-    settings = Settings(payloads=tmp_path / "payloads", records=records, model="m", adjudicate=False,
-                        stages=(StageName.repair,))
-    paper = Paper(study_id="p1", root=tmp_path / "corpus",
-                  flavour=paths.Flavour.local)
+    settings = Settings(
+        payloads=tmp_path / "payloads",
+        records=records,
+        model="m",
+        adjudicate=False,
+        stages=(StageName.repair,),
+    )
+    paper = Paper(study_id="p1", root=tmp_path / "corpus", flavour=paths.Flavour.local)
 
     # `caller=None` is the no-proposer path: the deterministic half of the pass runs and
     # the record is still copied aside first, which is what this pins.

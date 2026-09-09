@@ -46,9 +46,7 @@ def test_a_missing_stage_one_parse_is_not_blamed_on_the_extractor(result):
     """Two different problems: a corpus that was never synced, and a record whose key does
     not join. Reporting both as "no joinable row group" sent the reader to the wrong place.
     """
-    assert (
-        "no joinable row group" not in result.lost or "no stage-1 parse synced" in result.lost
-    )
+    assert "no joinable row group" not in result.lost or "no stage-1 parse synced" in result.lost
 
 
 def test_an_analysis_with_no_sample_size_is_dropped_rather_than_given_one(tmp_path):
@@ -103,9 +101,10 @@ def test_the_studyset_is_one_analysis_per_study_with_every_coordinate(tmp_path):
         (7.0, 8.0, 9.0),
     ], "both analyses' foci pooled"
     assert [tuple(p.coordinates) for p in analyses["S2"][0].points] == [(-2.0, -4.0, -6.0)]
-    assert sorted(
-        a.metadata["sample_sizes"][0] for group in analyses.values() for a in group
-    ) == [20, 31]
+    assert sorted(a.metadata["sample_sizes"][0] for group in analyses.values() for a in group) == [
+        20,
+        31,
+    ]
     assert outcome.lost["no sample size, so it cannot be weighted"] == 1
 
 
@@ -328,9 +327,7 @@ def _arm_record(tmp_path, monkeypatch, arms, levels, cells):
     record = {
         # Arms declare their kind; the role is read from that, never from the name.
         "design": {
-            "arms": [
-                {"local_id": i, "name": ex(i), "arm_kind": ex(k)} for i, k in arms.items()
-            ]
+            "arms": [{"local_id": i, "name": ex(i), "arm_kind": ex(k)} for i, k in arms.items()]
         },
         "model_estimations": [
             {

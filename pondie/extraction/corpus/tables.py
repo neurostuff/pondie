@@ -347,9 +347,7 @@ def pond_analyses(study_dir: Path) -> list[dict]:
     if not path.is_file():
         return []
     return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
 
 
@@ -416,9 +414,7 @@ def resplit(pmids: Path, texts: Path) -> int:
             #: Recorded on the document rather than inferred from the parts, so a reader can
             #: tell a file the rule has been applied to from one parsed before it existed.
             doc["sign_split_applied"] = True
-            path.write_text(
-                json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
-            )
+            path.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
             print(f"{study}: {len(before)} -> {len(after)} analyses, rewrote {path}")
             changed += 1
     print(f"\n{changed} study file(s) rewritten")

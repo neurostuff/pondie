@@ -24,12 +24,6 @@ from typing import Any, Mapping, MutableMapping, Protocol, Sequence
 from pondie.extraction.record.edit import Refusal
 from pondie.formats import values
 
-
-
-
-
-
-
 #: subset on the slot would say it beside the definition instead of here.
 #:
 #: Slots whose value is a conclusion rather than a quotation. A paper states its scanner and
@@ -38,12 +32,29 @@ from pondie.formats import values
 #: by whoever encodes it. Asking a checker for the sentence that supports one is asking for a
 #: sentence that does not exist, and scoring its absence as unsupported marks a correct
 #: reading wrong.
-REASONED = frozenset({
-    "spatial_scope", "correction_scope", "prespecification", "direction", "variation_level",
-    "assignment_structure", "allocation", "blinding", "stage", "spatial_unit", "family",
-    "inference_level", "region_type", "definition_method", "acquisition_type",
-    "details_type", "value_source", "is_healthy", "type",
-})
+REASONED = frozenset(
+    {
+        "spatial_scope",
+        "correction_scope",
+        "prespecification",
+        "direction",
+        "variation_level",
+        "assignment_structure",
+        "allocation",
+        "blinding",
+        "stage",
+        "spatial_unit",
+        "family",
+        "inference_level",
+        "region_type",
+        "definition_method",
+        "acquisition_type",
+        "details_type",
+        "value_source",
+        "is_healthy",
+        "type",
+    }
+)
 
 
 #: Addresses, not claims. A local_id is how the record refers to something internally, so a
@@ -55,12 +66,6 @@ REASONED = frozenset({
 IDENTIFIERS = frozenset({"local_id", "id", "source_table_analysis", "table_id"})
 
 
-
-
-
-
-
-
 #: Sections whose prose describes what was done and what was found. An entity is judged to
 #: exist against these; a paper's introduction describes other people's studies.
 PREMISE_SECTIONS = ("method", "material", "result")
@@ -70,8 +75,11 @@ def _premise(text: str) -> str:
     """The methods and results, or the whole text where they cannot be found."""
     from pondie.extraction.evidence.retrieval import sectionize
 
-    spans = [text[start:end] for start, end, label in sectionize(text)
-             if any(word in label.lower() for word in PREMISE_SECTIONS)]
+    spans = [
+        text[start:end]
+        for start, end, label in sectionize(text)
+        if any(word in label.lower() for word in PREMISE_SECTIONS)
+    ]
     joined = "\n\n".join(spans)
     return joined if len(joined) >= max(2_000, len(text) // 10) else text
 
@@ -99,34 +107,42 @@ NUMERIC = re.compile(r"^[-+0-9.,;:\s]+$")
 #: before the trail was added, and 44% of `level` spans were being discarded after it was
 #: dropped in the port.
 CONTAINER = {
-    "cells": "contrast cell", "terms": "model term", "levels": "factor level",
-    "groups": "analysis group", "conditions": "task condition", "arms": "trial arm",
-    "timepoints": "timepoint", "sex_distribution": "sex breakdown entry",
-    "race_distribution": "race breakdown entry", "steps": "preprocessing step",
-    "effect": "reported effect", "statistic": "test statistic",
-    "details": "method detail", "design": "study design", "mediation": "mediation path",
+    "cells": "contrast cell",
+    "terms": "model term",
+    "levels": "factor level",
+    "groups": "analysis group",
+    "conditions": "task condition",
+    "arms": "trial arm",
+    "timepoints": "timepoint",
+    "sex_distribution": "sex breakdown entry",
+    "race_distribution": "race breakdown entry",
+    "steps": "preprocessing step",
+    "effect": "reported effect",
+    "statistic": "test statistic",
+    "details": "method detail",
+    "design": "study design",
+    "mediation": "mediation path",
 }
 
 #: The top-level containers, said in words, so a claim has a subject.
 SUBJECT = {
-    "analyses": "analysis", "groups": "group", "tasks": "task", "measures": "measure",
-    "regions": "brain region", "acquisitions": "acquisition", "devices": "device",
-    "preprocessings": "preprocessing procedure", "model_estimations": "statistical model",
-    "inference_settings": "statistical threshold", "tables": "table",
+    "analyses": "analysis",
+    "groups": "group",
+    "tasks": "task",
+    "measures": "measure",
+    "regions": "brain region",
+    "acquisitions": "acquisition",
+    "devices": "device",
+    "preprocessings": "preprocessing procedure",
+    "model_estimations": "statistical model",
+    "inference_settings": "statistical threshold",
+    "tables": "table",
     "assessments": "assessment",
 }
 
 _INDEX = re.compile(r"^([a-z_]+)(?:\[(\d+)\])?$")
 
 
-
-
-
-
 #: Two to six capitals is what a paper's own short forms look like. Anything longer is a
 #: word in caps, and a single capital is an initial.
 ACRONYM = re.compile(r"\b[A-Z]{2,6}\b")
-
-
-
-

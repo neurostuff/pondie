@@ -116,9 +116,7 @@ def render(node: Any, path: str = "", depth: int = 0, out: list | None = None) -
 
 
 def command_show(args: argparse.Namespace) -> int:
-    record = json.loads(
-        (args.records_dir / f"{args.paper}.extraction.json").read_text("utf-8")
-    )
+    record = json.loads((args.records_dir / f"{args.paper}.extraction.json").read_text("utf-8"))
     meta = record.get("extraction_metadata", {})
     print(
         f"# {args.paper}   extractor={meta.get('extractor_model')} "

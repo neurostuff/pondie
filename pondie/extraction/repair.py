@@ -456,7 +456,5 @@ def _sweep(
             log = edit_module.apply(
                 sch, record, class_name, entity, proposal, document, abbreviations
             )
-            report.written += [
-                f"{container}/{entity['local_id']}.{s}" for s, _v in log.written
-            ]
+            report.written += [f"{container}/{entity['local_id']}.{s}" for s, _v in log.written]
             report.refused += log.refused

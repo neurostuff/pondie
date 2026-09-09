@@ -26,8 +26,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from pondie.extraction.models import Cost, ModelCall
-from pondie.extraction.recall import (
-    INSTRUCTION, _NOUN, _Proposes, directive, template_for)
+from pondie.extraction.recall import _NOUN, INSTRUCTION, _Proposes, directive, template_for
 
 #: What a served or local NuExtract gets from its chat template and a chat model does not:
 #: the template is the shape of the answer, not an example of one.
@@ -55,9 +54,16 @@ class ModelProposer(_Proposes):
     #: serialise a wait on the network for a GPU it never touches. See `Proposer.local`.
     local = False
 
-    def __init__(self, caller: Any, model: str, *, study_id: str = "",
-                 service_tier: str = "", effort: str = "low",
-                 max_chars: int = 120_000) -> None:
+    def __init__(
+        self,
+        caller: Any,
+        model: str,
+        *,
+        study_id: str = "",
+        service_tier: str = "",
+        effort: str = "low",
+        max_chars: int = 120_000,
+    ) -> None:
         self._caller = caller
         self._model = model
         self._study_id = study_id
@@ -70,25 +76,36 @@ class ModelProposer(_Proposes):
         #: reported 0 calls and 0 tokens for a stage that had made hundreds.
         self.cost = Cost()
 
-    def ask(self, template: Mapping[str, Any], instruction: str, premise: str,
-            what: str = "") -> Mapping[str, Any]:
+    def ask(
+        self, template: Mapping[str, Any], instruction: str, premise: str, what: str = ""
+    ) -> Mapping[str, Any]:
         """One templated generation. Same contract as `NuExtract.ask`, different transport."""
         prompt = (
             (directive(what) if what in _NOUN or what == "Analysis" else "")
-            + INSTRUCTION + instruction
-            + "\n\n# Template\n\n" + json.dumps(template, indent=1)
-            + "\n\n# Paper\n\n" + premise[:self._max_chars]
+            + INSTRUCTION
+            + instruction
+            + "\n\n# Template\n\n"
+            + json.dumps(template, indent=1)
+            + "\n\n# Paper\n\n"
+            + premise[: self._max_chars]
             + "\n\nEmit the JSON object now."
         )
         reply = self._caller(
-            ModelCall(model=self._model, system=SHAPE, prompt=prompt,
-                      max_output_tokens=24_000, effort=self._effort,
-                      service_tier=self._service_tier, attempts=2),
-            paper=self._study_id, stage=f"repair:propose:{what or 'any'}")
+            ModelCall(
+                model=self._model,
+                system=SHAPE,
+                prompt=prompt,
+                max_output_tokens=24_000,
+                effort=self._effort,
+                service_tier=self._service_tier,
+                attempts=2,
+            ),
+            paper=self._study_id,
+            stage=f"repair:propose:{what or 'any'}",
+        )
         self.cost = self.cost + reply.cost
         payload = getattr(reply, "payload", None)
         return payload if isinstance(payload, Mapping) else {}
-
 
     #: How many calls one sweep costs. The per-class sweep sent the paper once per entity
     #: class -- 28 calls a paper measured, 116k input tokens -- and the premise is the same
@@ -105,8 +122,9 @@ class ModelProposer(_Proposes):
     #: or already belongs to the other cohort. Asked about the record at once, it can.
     GROUPS = int(os.environ.get("PONDIE_PROPOSER_GROUPS", "1"))
 
-    def propose_many(self, sch: Any, class_names: Sequence[str], premise: str,
-                     instructions: Mapping[str, str]) -> dict[str, list]:
+    def propose_many(
+        self, sch: Any, class_names: Sequence[str], premise: str, instructions: Mapping[str, str]
+    ) -> dict[str, list]:
         """Every class in a couple of calls, rather than one call per class.
 
         Cheaper for the obvious reason and possibly better for a less obvious one: asked
@@ -119,7 +137,7 @@ class ModelProposer(_Proposes):
         size = max(1, (len(names) + self.GROUPS - 1) // self.GROUPS)
         out: dict[str, list] = {}
         for start in range(0, len(names), size):
-            group = names[start:start + size]
+            group = names[start : start + size]
             template: dict[str, Any] = {}
             for name in group:
                 template.update(template_for(sch, name))

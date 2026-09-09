@@ -44,7 +44,6 @@ def test_a_paper_knows_where_its_inputs_are_without_a_stage_being_told(tmp_path)
     assert not paper.ready(), "a paper with no text is not ready, and says so"
 
 
-
 def test_the_pipeline_is_one_ordering(tmp_path):
     """There is one workflow, so the order is a property of `DEMAND_DRIVEN` and not of a
     setting. It is pinned because the order is the design: `demands` before `satisfy` so the
@@ -52,7 +51,14 @@ def test_the_pipeline_is_one_ordering(tmp_path):
     pass left open, and `evidence` after `fill` so a value the loop adds gets a quote."""
     settings = Settings(payloads=tmp_path, records=tmp_path, model="m")
     assert [stage.name.value for stage in sequence(settings)] == [
-        "tables", "prose", "split", "demands", "satisfy", "fill", "evidence", "build",
+        "tables",
+        "prose",
+        "split",
+        "demands",
+        "satisfy",
+        "fill",
+        "evidence",
+        "build",
         "repair",
     ]
 
@@ -84,5 +90,3 @@ def test_a_report_totals_what_its_stages_spent(tmp_path):
     )
     assert report.cost.input_tokens == 200
     assert report.cost.calls == 2
-
-

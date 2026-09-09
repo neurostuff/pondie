@@ -176,9 +176,7 @@ def refuses_losing_the_warrant(edit: Edit) -> Refusal | None:
         return None
     if (node.get("evidence") or {}).get("status") != "present":
         return None
-    return Refusal(
-        edit.slot, "loses the span that warranted the value it replaces", edit.value
-    )
+    return Refusal(edit.slot, "loses the span that warranted the value it replaces", edit.value)
 
 
 def _extends(old: Any, new: Any) -> bool:
@@ -551,11 +549,7 @@ def create(
         # schema declares, and the one finding repair still introduced across fifteen
         # records. `_nested_defaults` supplies the two nested slots a proposal can honestly
         # fill, and `apply` writes the rest through `_nested` once the entity exists.
-        if (
-            name in ("local_id", "id")
-            or name not in proposal
-            or kind in ("reference", "nested")
-        ):
+        if name in ("local_id", "id") or name not in proposal or kind in ("reference", "nested"):
             continue
         value = values.shape(sch, class_name, name, proposal[name])
         if value is not None:
@@ -676,16 +670,12 @@ def apply(
             # Reached late. The template began offering conditions before this could write
             # them, so the proposer was asked and its answer discarded -- and the one field
             # that says a state was a control could still only come from the extraction pass.
-            written = _nested(
-                sch, str(ranges.get(name) or ""), entity, name, proposed, text, log
-            )
+            written = _nested(sch, str(ranges.get(name) or ""), entity, name, proposed, text, log)
             if written:
                 log.written.append((name, written))
             continue
         if kinds[name] == "reference":
-            resolved = resolve(
-                record, sch, str(ranges.get(name) or ""), proposed, abbreviations
-            )
+            resolved = resolve(record, sch, str(ranges.get(name) or ""), proposed, abbreviations)
             if not resolved:
                 continue
             existing = entity.get(name) or []
@@ -780,9 +770,7 @@ def _nested(
                 continue  # what is already there, with its evidence
             value = values.shape(sch, inner, field_name, raw)
             if value is None:
-                log.refused.append(
-                    Refusal(f"{slot}.{field_name}", "will not fit the slot", raw)
-                )
+                log.refused.append(Refusal(f"{slot}.{field_name}", "will not fit the slot", raw))
                 continue
             written = _wrap(value, text)
             # A nested field has to be placeable in the paper, which in practice admits
@@ -815,9 +803,7 @@ def _same(sch: Schema, class_name: str, slot: str, old: Any, new: Any) -> bool:
     the warrant. Both sides go through `shape`, which is what the write itself would do.
     """
     try:
-        return values.shape(sch, class_name, slot, old) == values.shape(
-            sch, class_name, slot, new
-        )
+        return values.shape(sch, class_name, slot, old) == values.shape(sch, class_name, slot, new)
     except Exception:  # a value that will not shape is not the same one
         return False
 

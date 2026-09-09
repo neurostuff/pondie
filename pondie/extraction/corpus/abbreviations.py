@@ -167,9 +167,7 @@ def main() -> int:
     if dropped:
         print(
             f"{len(dropped)} mis-parsed expansion(s) refused, e.g. "
-            + "; ".join(
-                f"{k!r} -> {v['expansion'][:34]!r}" for k, v in list(dropped.items())[:3]
-            )
+            + "; ".join(f"{k!r} -> {v['expansion'][:34]!r}" for k, v in list(dropped.items())[:3])
         )
     print(f"{len(store.entries)} abbreviations: {mined} mined, {curated} curated")
     clashes = store.disagreements()

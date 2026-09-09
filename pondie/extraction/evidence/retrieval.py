@@ -453,9 +453,7 @@ def _table_units(block: list[tuple[int, str]]) -> list[Unit]:
         if not row:
             continue
         pairs = [
-            f"{column} is {cell}"
-            for column, cell in zip(header[1:], row[1:])
-            if cell and column
+            f"{column} is {cell}" for column, cell in zip(header[1:], row[1:]) if cell and column
         ]
         if pairs:
             units.append(
@@ -517,9 +515,3 @@ RERANKER = "cross-encoder/ms-marco-MiniLM-L12-v2"
 #: 80%. Below the gate the retriever contributes nothing, which is the point -- it has no
 #: way to abstain otherwise, and unioning an always-answering locator imports its errors.
 MARGIN_GATE = 2.62
-
-
-
-
-
-

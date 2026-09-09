@@ -46,8 +46,12 @@ def priority_paths(priorities: Mapping[str, object]) -> tuple[set[str], list[str
         for field_name, priority in fields.items():
             path = f"{class_name}.{field_name}"
             paths.add(path)
-            if (type(priority) is not int and priority != "n/a") or priority not in VALID_PRIORITIES:
-                invalid.append(f"{path} (expected priority 0, 1, 2, 3, or 'n/a'; got {priority!r})")
+            if (
+                type(priority) is not int and priority != "n/a"
+            ) or priority not in VALID_PRIORITIES:
+                invalid.append(
+                    f"{path} (expected priority 0, 1, 2, 3, or 'n/a'; got {priority!r})"
+                )
     return paths, invalid
 
 

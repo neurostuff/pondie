@@ -261,9 +261,7 @@ def test_no_same_named_term_in_scope_is_left_reported():
 
 def test_two_same_named_terms_in_scope_are_not_guessed_between():
     body = _scoped("t_other")
-    body["model_estimations"][1]["terms"].append(
-        {"local_id": "t_dup", "name": _wrapped("group")}
-    )
+    body["model_estimations"][1]["terms"].append({"local_id": "t_dup", "name": _wrapped("group")})
     assert br.repoint_out_of_scope_terms(body) == []
 
 
@@ -389,9 +387,7 @@ def test_an_ambiguous_name_leaves_the_analysis_honestly_unjoinable(tmp_path):
         tmp_path,
         [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t2", "name": "SZ > HC"}],
     )
-    body = {
-        "analyses": [{"local_id": "a1", "tables": ["t1", "t2"], "name": _wrapped("SZ > HC")}]
-    }
+    body = {"analyses": [{"local_id": "a1", "tables": ["t1", "t2"], "name": _wrapped("SZ > HC")}]}
     assert br.resolve_source_table_analysis(body, stage1) == []
     assert "source_table_analysis" not in body["analyses"][0]
 
@@ -496,7 +492,9 @@ def test_every_repair_names_a_stage_that_runs():
 
     groups = set(r.AFTER_DEMANDS) | set(r.AFTER_SATISFY) | set(r.AFTER_FILL) | set(r.AT_MERGE)
     for repair in r.build_sequence():
-        assert repair.stage in groups, f"{repair.name} is tagged {repair.stage!r}, which no group runs"
+        assert (
+            repair.stage in groups
+        ), f"{repair.name} is tagged {repair.stage!r}, which no group runs"
 
 
 def test_each_repair_runs_exactly_once_across_the_stages():
@@ -505,6 +503,7 @@ def test_each_repair_runs_exactly_once_across_the_stages():
     check, so a repair running twice would duplicate analyses -- measured: 6 -> 9 -> 12 on
     347jHLHiWNjT."""
     from collections import Counter
+
     from pondie.extraction.record import repairs as r
 
     ran = Counter()

@@ -458,9 +458,7 @@ def score_row(row: dict) -> dict[str, int]:
     text = haystack(row)
     scores = {}
     for code, (_, _, terms) in AXES.items():
-        hit = sum(
-            1 for term in terms if re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", text)
-        )
+        hit = sum(1 for term in terms if re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", text))
         if hit:
             scores[code] = hit
     return scores
@@ -633,8 +631,7 @@ def command_pick(args: argparse.Namespace) -> int:
     """
 
     index = {
-        row["study"]: row
-        for row in (json.loads(l) for l in args.shortlist.open(encoding="utf-8"))
+        row["study"]: row for row in (json.loads(l) for l in args.shortlist.open(encoding="utf-8"))
     }
     scored = [json.loads(l) for l in args.scored.open(encoding="utf-8")]
     for row in scored:
@@ -673,9 +670,7 @@ def command_pick(args: argparse.Namespace) -> int:
 
     with args.out.open("w", encoding="utf-8") as fh:
         fh.write("# pmid\tneurostore_id\taxes\n")
-        fh.write(
-            "# Chosen by select.py to span the schema; see deploy/DEPLOYMENT.md.\n"
-        )
+        fh.write("# Chosen by select.py to span the schema; see deploy/DEPLOYMENT.md.\n")
         for row in chosen:
             axes = "+".join(sorted(row["hits"]))
             fh.write(f"{row['pmid']}\t{row['study']}\t{axes}\n")

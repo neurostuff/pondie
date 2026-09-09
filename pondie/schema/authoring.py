@@ -44,9 +44,7 @@ def own_attributes(classes: Mapping[str, object], class_name: str) -> dict[str, 
     if not isinstance(attributes, Mapping):
         return {}
     return {
-        name: attribute
-        for name, attribute in attributes.items()
-        if isinstance(attribute, Mapping)
+        name: attribute for name, attribute in attributes.items() if isinstance(attribute, Mapping)
     }
 
 
@@ -143,8 +141,6 @@ def load_imported_classes(path: Path, key: str = "classes") -> dict[str, object]
     return classes
 
 
-
-
 def subclasses_of(classes: Mapping[str, object], class_name: str) -> set[str]:
     """Return every class that inherits from class_name, directly or transitively.
 
@@ -179,7 +175,3 @@ def _inherits_from(classes: Mapping[str, object], class_name: str, ancestor: str
         parent = definition.get("is_a")
         current = parent if isinstance(parent, str) else None
     return False
-
-
-
-

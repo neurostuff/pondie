@@ -67,8 +67,7 @@ def _transient(error: BaseException) -> bool:
     # No status at all is a connection reset, a DNS failure or a read timeout -- the wire,
     # not the request.
     return isinstance(error, (ConnectionError, TimeoutError, OSError)) or any(
-        name in type(error).__name__
-        for name in ("Connection", "Timeout", "APIError")
+        name in type(error).__name__ for name in ("Connection", "Timeout", "APIError")
     )
 
 
@@ -125,9 +124,7 @@ class GatewayCaller:
             try:
                 raw = client.chat.completions.with_raw_response.create(
                     model=call.model,
-                    messages=(
-                        [{"role": "system", "content": call.system}] if call.system else []
-                    )
+                    messages=([{"role": "system", "content": call.system}] if call.system else [])
                     + [{"role": "user", "content": call.prompt}],
                     max_completion_tokens=call.max_output_tokens,
                     reasoning_effort=call.effort,
@@ -150,7 +147,7 @@ class GatewayCaller:
                     # The SDK has already backed off twice inside this one call, so this
                     # spaces whole calls. Jittered: eight workers that hit the same limit
                     # would otherwise return in lockstep and hit it again.
-                    time.sleep(min(2.0 ** unreachable, 30.0) * (0.5 + random.random() / 2))
+                    time.sleep(min(2.0**unreachable, 30.0) * (0.5 + random.random() / 2))
                     continue
                 attempt += 1
                 continue

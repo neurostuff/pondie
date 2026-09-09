@@ -80,9 +80,7 @@ ExtractionStatus = Literal["extracted", "not_reported"]
 #: Three of the four are claims about the source, and a reviewer can check them against the
 #: page. `undetermined` is the one that reports on the pass instead -- it is how a pass
 #: declines without the decline reading as a finding, and it is what a later pass looks for.
-UnreportedReason = Literal[
-    "ambiguous", "outside_text", "cited_elsewhere", "undetermined"
-]
+UnreportedReason = Literal["ambiguous", "outside_text", "cited_elsewhere", "undetermined"]
 
 #: The key that makes a mapping a wrapper. Structural, so it is checked and not inferred.
 MARKER = "extraction_status"
@@ -194,10 +192,6 @@ def read(node: Any) -> Any:
     return node.get("value") if is_field(node) else node
 
 
-
-
-
-
 def iter_fields(node: Any, path: str = "") -> Iterator[tuple[str, dict[str, Any]]]:
     """Every wrapper in a payload, with the dotted path the builder reports it under.
 
@@ -285,8 +279,6 @@ def value_of(node: object, multivalued: bool = False) -> object:
             return value
         return [] if value is None else [value]
     return value
-
-
 
 
 #: What a model writes when it means yes or no. Spelled out because the answer arrives as

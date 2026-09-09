@@ -18,11 +18,20 @@ from typing import Any, Mapping
 
 #: Class -> the prefix its ids carry.
 PREFIX: dict[str, str] = {
-    "Group": "grp_", "Acquisition": "acq_", "ModelEstimation": "mod_",
-    "Task": "tsk_", "Preprocessing": "prp_", "ModelTerm": "trm_",
-    "Assessment": "asm_", "Measure": "mea_", "InferenceSettings": "inf_",
-    "Region": "reg_", "Arm": "arm_", "Timepoint": "tp_",
-    "Device": "dev_", "ExternalDataset": "ext_",
+    "Group": "grp_",
+    "Acquisition": "acq_",
+    "ModelEstimation": "mod_",
+    "Task": "tsk_",
+    "Preprocessing": "prp_",
+    "ModelTerm": "trm_",
+    "Assessment": "asm_",
+    "Measure": "mea_",
+    "InferenceSettings": "inf_",
+    "Region": "reg_",
+    "Arm": "arm_",
+    "Timepoint": "tp_",
+    "Device": "dev_",
+    "ExternalDataset": "ext_",
     #: Only for an analysis with no row group; see `DERIVED`.
     "Analysis": "ana_",
 }
@@ -42,8 +51,7 @@ def prefix_table() -> str:
     width = 3
     """The convention as the extraction prompt prints it, from the one definition."""
     rows = [f"{p:<6} {c:<18}" for c, p in PREFIX.items()]
-    lines = ["     " + "".join(rows[i:i + width]).rstrip()
-             for i in range(0, len(rows), width)]
+    lines = ["     " + "".join(rows[i : i + width]).rstrip() for i in range(0, len(rows), width)]
     return "\n".join(lines)
 
 

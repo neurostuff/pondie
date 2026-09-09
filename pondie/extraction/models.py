@@ -29,7 +29,6 @@ from pondie import paths
 Flavour = paths.Flavour
 
 
-
 class Strict(BaseModel):
     """Every contract here forbids unknown fields and is immutable once built."""
 
@@ -58,7 +57,6 @@ class StageName(str, Enum):
     #: a GPU for the local models, or a model call for the adjudication, and a run that
     #: wants neither should not pay for either.
     repair = "repair"
-
 
 
 class Paper(Strict):
@@ -123,9 +121,7 @@ class Cost(Strict):
     calls: int = 0
 
     def __add__(self, other: "Cost") -> "Cost":
-        return Cost(
-            **{f: getattr(self, f) + getattr(other, f) for f in type(self).model_fields}
-        )
+        return Cost(**{f: getattr(self, f) + getattr(other, f) for f in type(self).model_fields})
 
 
 class ModelCall(Strict):
@@ -207,9 +203,6 @@ class Settings(Strict):
     #: about as many open slots as it can rather than splitting them over calls.
     fill_batch: Annotated[int, Field(ge=1)] = 250
 
-
-
-
     #: How many papers may be inside the two local models at once. The stages above are
     #: network-bound and run at `workers`; these are 8 GB of card between them and do not
     #: divide. At eight, every full-length paper OOMed down to the proposer's floor and
@@ -221,8 +214,6 @@ class Settings(Strict):
     #: record that does not -- 8 cases across 42 records measured.
     adjudicate: bool = True
     redo: bool = False
-
-
 
     @model_validator(mode="after")
     def _build_needs_its_inputs(self) -> "Settings":

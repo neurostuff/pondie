@@ -107,9 +107,7 @@ def declared_extras() -> tuple[set[str], set[str]]:
 # --------------------------------------------------------------------------------------
 
 
-def check_identity(
-    storage: Mapping[str, object], extraction: Mapping[str, object]
-) -> list[str]:
+def check_identity(storage: Mapping[str, object], extraction: Mapping[str, object]) -> list[str]:
     """Assert the two schemas name the same things in the same places."""
 
     problems: list[str] = []
@@ -272,14 +270,11 @@ def check_vocabularies(
             } or {value.get("range")}
             if enum_ranges[0] not in reached:
                 problems.append(
-                    f"{path}: {wrapper}.value reaches {sorted(reached)}, not "
-                    f"{enum_ranges[0]}"
+                    f"{path}: {wrapper}.value reaches {sorted(reached)}, not " f"{enum_ranges[0]}"
                 )
                 continue
 
-            if (attribute.get("multivalued") is True) != (
-                value.get("multivalued") is True
-            ):
+            if (attribute.get("multivalued") is True) != (value.get("multivalued") is True):
                 problems.append(
                     f"{path}: storage is "
                     f"{'multivalued' if attribute.get('multivalued') else 'single-valued'}, "

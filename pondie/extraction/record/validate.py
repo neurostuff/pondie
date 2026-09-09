@@ -96,6 +96,7 @@ _SCALAR_TYPES: dict[str, tuple[type, ...]] = {
     "boolean": (bool,),
 }
 
+
 #: What makes an analysis's own text a claim about a crossing. Short on purpose:
 #: `interaction` and `moderation` are the words papers use for one, and `×` is how a
 #: term name spells it. `-by-` is a crossing in "group-by-stage" and a reduplication
@@ -240,8 +241,14 @@ class Validator:
             attribute = attributes.get(key)
             if attribute is None:
                 continue
-            self.check_slot(value, key, attribute, f"{path}.{key}",
-                            owner=node.get("local_id"), owner_class=class_name)
+            self.check_slot(
+                value,
+                key,
+                attribute,
+                f"{path}.{key}",
+                owner=node.get("local_id"),
+                owner_class=class_name,
+            )
 
         self.check_rules(node, class_name, path)
 
@@ -334,8 +341,13 @@ class Validator:
         )
 
     def check_slot(
-        self, value: Any, name: str, attribute: SlotDefinition, path: str,
-        owner: Any = None, owner_class: str | None = None,
+        self,
+        value: Any,
+        name: str,
+        attribute: SlotDefinition,
+        path: str,
+        owner: Any = None,
+        owner_class: str | None = None,
     ) -> None:
         kind = self.schema.classify(name, attribute)
         multivalued = bool(attribute.multivalued)
@@ -366,9 +378,12 @@ class Validator:
                     # and `interaction_with` had nothing, so a self-loop on either passed.
                     # Derived from the range rather than named here, so a self-referential
                     # slot added later is covered the day it is added.
-                    if (isinstance(owner, str) and owner == item
-                            and owner_class is not None
-                            and attribute.range == owner_class):
+                    if (
+                        isinstance(owner, str)
+                        and owner == item
+                        and owner_class is not None
+                        and attribute.range == owner_class
+                    ):
                         self.error(
                             here,
                             f"{name!r} names its own instance {item!r}; a slot whose range "
@@ -480,9 +495,7 @@ class Validator:
         # evidence for whether the vocabulary is short a value.
         vocabulary, closed = self.vocabulary_of(value_slot)
         if vocabulary is not None:
-            for item in (
-                value if value_slot.multivalued and isinstance(value, list) else [value]
-            ):
+            for item in (value if value_slot.multivalued and isinstance(value, list) else [value]):
                 if not isinstance(item, str):
                     continue
                 # Missingness has one encoding, and no vocabulary offers `unstated` any
@@ -520,15 +533,12 @@ class Validator:
             accepts = (
                 declared
                 if declared in _SCALAR_TYPES
-                else " or ".join(
-                    r for r in self.schema.ranges(value_slot) if r != "Any"
-                )
+                else " or ".join(r for r in self.schema.ranges(value_slot) if r != "Any")
                 or "value"
             )
             self.error(
                 path,
-                f"{class_name}.value must be a list of {accepts}, "
-                f"got {type(value).__name__}",
+                f"{class_name}.value must be a list of {accepts}, " f"got {type(value).__name__}",
             )
             return
 
@@ -616,8 +626,11 @@ class Validator:
         source = node.get("source")
         permissible = getattr(self.enums.get("EvidenceSource"), "permissible_values", None)
         if source is not None and permissible and source not in permissible:
-            self.error(path, f"evidence set source {source!r} is not a permissible value "
-                             f"({', '.join(sorted(permissible))})")
+            self.error(
+                path,
+                f"evidence set source {source!r} is not a permissible value "
+                f"({', '.join(sorted(permissible))})",
+            )
         spans = node.get("spans")
         if not isinstance(spans, list) or not spans:
             self.error(path, "EvidenceSet requires at least one span (minimum_cardinality: 1)")
@@ -645,7 +658,6 @@ class Validator:
 
     # -- crossings and the columns that carry them -------------------------
 
-
     def diff(self, before: Any, after: Any) -> list[str]:
         """Findings `after` has that `before` did not, most frequent first.
 
@@ -664,8 +676,7 @@ class Validator:
             checker = Validator(self.schema, self.normalized, self.enums)
             checker.check_record(record)
             return Counter(
-                re.sub(r"\[\d+\]", "[]", message)
-                for message in checker.errors + checker.warnings
+                re.sub(r"\[\d+\]", "[]", message) for message in checker.errors + checker.warnings
             )
 
         added = kinds(after) - kinds(before)
@@ -696,9 +707,7 @@ class Validator:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--record", required=True, type=Path)
-    parser.add_argument(
-        "--text", type=Path, help="normalized source text; enables offset checks"
-    )
+    parser.add_argument("--text", type=Path, help="normalized source text; enables offset checks")
     parser.add_argument("--paper", help="neurostore id, for the report header")
     args = parser.parse_args()
 

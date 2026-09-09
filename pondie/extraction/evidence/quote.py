@@ -92,7 +92,7 @@ def _clause(text: str, start: int, end: int) -> str:
     m = _BREAK.search(text, end, min(len(text), end + cap))
     if m:
         hi = m.start()
-    return text[max(lo, start - cap):min(hi, end + cap)].strip()
+    return text[max(lo, start - cap) : min(hi, end + cap)].strip()
 
 
 def literal_quotes(payload: dict[str, Any], text: str) -> dict[str, str]:
@@ -168,9 +168,7 @@ def owners(node: Any, path: str = "", owner: str = "") -> dict[str, str]:
             return {path: owner}
         mine = owner
         for key in ("name", "title", "source_label", "modality"):
-            value = (
-                (node.get(key) or {}).get("value") if isinstance(node.get(key), dict) else None
-            )
+            value = (node.get(key) or {}).get("value") if isinstance(node.get(key), dict) else None
             if isinstance(value, str) and 3 < len(value) < 80:
                 mine = value
                 break
@@ -180,8 +178,6 @@ def owners(node: Any, path: str = "", owner: str = "") -> dict[str, str]:
         for index, value in enumerate(node):
             found |= owners(value, f"{path}[{index}]", owner)
     return found
-
-
 
 
 def apply_evidence(

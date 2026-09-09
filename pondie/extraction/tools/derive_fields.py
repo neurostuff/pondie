@@ -56,9 +56,7 @@ def stage1_analyses(paper: str) -> list[dict]:
 #: `1.5 T`, `3T`, `3.0 Tesla`. The lookbehind keeps it off the `3` of `p < 0.003 T-value`,
 #: and the modal hit wins because a Methods section names its scanner's strength repeatedly
 #: while a stray match appears once.
-_TESLA = re.compile(
-    r"(?<![\d.])(1\.5|3\.0|3|4|4\.7|7|9\.4|11\.7)\s*-?\s*(?:T\b|Tesla\b)", re.I
-)
+_TESLA = re.compile(r"(?<![\d.])(1\.5|3\.0|3|4|4\.7|7|9\.4|11\.7)\s*-?\s*(?:T\b|Tesla\b)", re.I)
 
 #: Counted, not merely found. One mention of "rat" is a citation or an analogy; a rodent
 #: study says it on every other line. Three is well clear of both observed populations --
@@ -85,9 +83,7 @@ _KIND_TO_FAMILY = {
 #: A contrast name is often a formal expression -- `FESZ>NC`, `Baseline > week 6`. 51% of
 #: parsed names carry one of these operators, and the side a level sits on then gives its
 #: sign outright.
-_COMPARISON = re.compile(
-    r"(>=|<=|>|<|\bversus\b|\bvs\.?\b|\bgreater than\b|\bless than\b)", re.I
-)
+_COMPARISON = re.compile(r"(>=|<=|>|<|\bversus\b|\bvs\.?\b|\bgreater than\b|\bless than\b)", re.I)
 _GREATER = {">", ">=", "greater than"}
 
 #: A direction word in the name of a slope analysis -- `Left dlPFC parcel — Negative FC`.
@@ -114,9 +110,7 @@ def derive_age_unit(paper: str, **_: Any) -> str | None:
     return "years" if derive_species(paper) == "human" else None
 
 
-def derive_statistic_family(
-    paper: str, analysis: Mapping | None = None, **_: Any
-) -> str | None:
+def derive_statistic_family(paper: str, analysis: Mapping | None = None, **_: Any) -> str | None:
     if not analysis:
         return None
     name = values.read(analysis.get("name")) or ""
@@ -230,7 +224,6 @@ def _keyword(paper: str, rule: str) -> str | None:
     )
 
 
-
 def derive_mr_acquisition_type(paper: str, **_: Any) -> str | None:
     return _keyword(paper, "mr_acquisition_type")
 
@@ -241,8 +234,6 @@ def derive_blinding(paper: str, **_: Any) -> str | None:
 
 def derive_assignment_structure(paper: str, **_: Any) -> str | None:
     return _keyword(paper, "assignment_structure")
-
-
 
 
 DERIVERS: list[tuple[str, str, str, Callable[..., Any]]] = [
@@ -313,9 +304,7 @@ def _targets(record: Mapping, paper: str):
                         label,
                         cell,
                         key,
-                        deriver(
-                            paper, analysis=analysis, level=values.read(cell.get("level"))
-                        ),
+                        deriver(paper, analysis=analysis, level=values.read(cell.get("level"))),
                         values.read(cell.get(key)),
                     )
 
@@ -348,9 +337,7 @@ def audit(records: list[Path]) -> dict[str, collections.Counter]:
                 bucket["agree"] += 1
             else:
                 bucket["conflict"] += 1
-                conflicts.append(
-                    f"    {paper} {label}: model {current!r} vs derived {derived!r}"
-                )
+                conflicts.append(f"    {paper} {label}: model {current!r} vs derived {derived!r}")
     stats["_conflicts"] = conflicts  # type: ignore[assignment]
     return stats
 
@@ -401,9 +388,7 @@ def main(argv: list[str] | None = None) -> int:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     ap.add_argument("records", nargs="+")
-    ap.add_argument(
-        "--fill", action="store_true", help="write derived values into empty fields"
-    )
+    ap.add_argument("--fill", action="store_true", help="write derived values into empty fields")
     ap.add_argument("--apply", action="store_true", help="with --fill, actually write")
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args(argv)

@@ -1,7 +1,5 @@
 """The benchmark runs from a clean clone, and its number does not silently move."""
 
-
-
 import pytest
 
 from pondie.benchmark import CANDIDATE, DIRECTION_GOLD, REFERENCE, run
@@ -45,9 +43,7 @@ def test_the_benchmark_discriminates_between_extraction_runs():
     assert (
         deployed.accuracy is not None and deployed.accuracy > shipped.accuracy
     ), f"deployed {deployed} vs candidate {shipped}"
-    assert (
-        deployed.accuracy < 1.0
-    ), "a third-party gold means even the reviewed set can be wrong"
+    assert deployed.accuracy < 1.0, "a third-party gold means even the reviewed set can be wrong"
 
 
 # --- what the field half must report ------------------------------------------
@@ -79,7 +75,9 @@ def test_presence_and_value_are_scored_apart(result):
     filled_but_wrong = [
         f for f in result.fields if f.f1 == 1.0 and f.accuracy is not None and f.accuracy < 1.0
     ]
-    assert filled_but_wrong, "the shipped candidate has fields it fills correctly but fills wrongly"
+    assert (
+        filled_but_wrong
+    ), "the shipped candidate has fields it fills correctly but fills wrongly"
 
 
 def test_a_field_both_sides_left_empty_is_not_scored_as_a_failure(result):

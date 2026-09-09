@@ -475,9 +475,11 @@ def _axis_cell(
             if r.get("type") == "data"
         ]
         present = [cell for cell in cells if cell]
-        return bool(present) and sum(
-            bool(TRIPLE_CELL.match(normalize_number(cell))) for cell in present
-        ) >= len(present) / 2
+        return (
+            bool(present)
+            and sum(bool(TRIPLE_CELL.match(normalize_number(cell))) for cell in present)
+            >= len(present) / 2
+        )
 
     # AXIS_TRIPLE first and across every row, then COORDISH. Two passes rather than one
     # test per cell so that a table which resolved before resolves to the same column:

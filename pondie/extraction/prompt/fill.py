@@ -98,7 +98,7 @@ def _label(entity: Mapping[str, Any]) -> str:
     for key, held in entity.items():
         if key in ("local_id", "id") or len(marks) >= 3:
             continue
-        if isinstance(held, str) and held.strip():          # a reference, by local_id
+        if isinstance(held, str) and held.strip():  # a reference, by local_id
             marks.append(f"{key}={held.strip()[:34]}")
         elif values.is_field(held):
             got = values.read(held)
@@ -181,33 +181,41 @@ def unsettled(payload: Mapping[str, Any], sch: Schema) -> list[dict[str, Any]]:
             # inside it (`TablePurpose`). Naming the wrapper would ask for the wrong shape.
             inner = sch.value_ranges(slot) or ["string"]
             enum = sch.enums.get(inner[0])
-            out.append({
-                "id": f"{path}.{name}",
-                "owner": f"{cls} {label}",
-                "range": inner[0],
-                "multivalued": sch.is_multivalued(cls, name),
-                "description": (slot.description or "").strip(),
-                "vocabulary": sorted((enum.permissible_values or {}).keys()) if enum else [],
-                # What the terms mean, for the vocabularies small enough to gloss. Names
-                # alone are not enough where the awkward cases have their own term:
-                # `Direction` offers `held` for a level the contrast was taken *within*
-                # and `undirected` for a test with no per-level sign, and a model shown
-                # only "one of: held, negative, positive, undirected" cannot know that,
-                # so it answers `ambiguous` and the slot reads blank on a paper that
-                # settled it. Measured on 12 cells of pMZeVGA2rQQi: every one of them.
-                "glossary": {
-                    k: (v.description or "").strip()
-                    for k, v in (enum.permissible_values or {}).items()
-                } if enum and len(enum.permissible_values or {}) <= 6 else {},
-            })
+            out.append(
+                {
+                    "id": f"{path}.{name}",
+                    "owner": f"{cls} {label}",
+                    "range": inner[0],
+                    "multivalued": sch.is_multivalued(cls, name),
+                    "description": (slot.description or "").strip(),
+                    "vocabulary": sorted((enum.permissible_values or {}).keys()) if enum else [],
+                    # What the terms mean, for the vocabularies small enough to gloss. Names
+                    # alone are not enough where the awkward cases have their own term:
+                    # `Direction` offers `held` for a level the contrast was taken *within*
+                    # and `undirected` for a test with no per-level sign, and a model shown
+                    # only "one of: held, negative, positive, undirected" cannot know that,
+                    # so it answers `ambiguous` and the slot reads blank on a paper that
+                    # settled it. Measured on 12 cells of pMZeVGA2rQQi: every one of them.
+                    "glossary": (
+                        {
+                            k: (v.description or "").strip()
+                            for k, v in (enum.permissible_values or {}).items()
+                        }
+                        if enum and len(enum.permissible_values or {}) <= 6
+                        else {}
+                    ),
+                }
+            )
     return out
 
 
 def block(rows: Sequence[Mapping[str, Any]]) -> str:
     cap = 400
     """The open slots as the pass's question. One line each, truncated to `cap` lines."""
-    lines = ["\n# Fields left blank\n",
-             f"{min(len(rows), cap)} field(s). Answer every id with a value or a reason.\n"]
+    lines = [
+        "\n# Fields left blank\n",
+        f"{min(len(rows), cap)} field(s). Answer every id with a value or a reason.\n",
+    ]
     owner = None
     for row in rows[:cap]:
         if row["owner"] != owner:
@@ -251,7 +259,8 @@ def apply_fill(
             # `dropped` hid it -- an id the model invented reads the same way.
             raise AssertionError(
                 f"{ident} was offered as open and cannot be resolved; `unsettled` and "
-                f"`_resolve` disagree about how to address it")
+                f"`_resolve` disagree about how to address it"
+            )
         # Belt and braces, because the failure this guards is silent and destroys data
         # rather than merely wasting a call. `unsettled` should never offer a slot that
         # holds anything, but it did -- a bare `"positive"` is not a wrapper and read as
@@ -285,8 +294,11 @@ def apply_fill(
             # `PLAIN` is how the prompt says "the ordinary case" and is not a schema value,
             # so it becomes no reason at all -- the bare status it stands for.
             target[name] = values.wrap(
-                None, source="reported", evidence="not_applicable",
-                reason=None if reason == PLAIN else reason)
+                None,
+                source="reported",
+                evidence="not_applicable",
+                reason=None if reason == PLAIN else reason,
+            )
             reasoned += 1
         else:
             dropped += 1

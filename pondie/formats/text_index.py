@@ -20,6 +20,7 @@ from pathlib import Path
 _HEADING = re.compile(r"^(#+)[ \t]+(.*?)[ \t]*$", re.MULTILINE)
 _MARKDOWN_DEPTH_OFFSET = 1
 
+
 def _headings(normalized: str) -> list[tuple[int, int, int, str]]:
     """`(start, end, level, title)` for every heading, in document order.
 

@@ -75,9 +75,11 @@ pondie = [
 ]
 
 [tool.black]
-# 95 rather than the default 88: the existing code sits at p95=90, p99=94, and 88 would
-# rewrap well over a thousand lines that read fine, burying the real changes in a diff.
-line-length = 95
+# 99 rather than the default 88. The code sits at p95=90, p99=94, so 88 would rewrap well
+# over a thousand lines that read fine; 99 leaves those alone and lets black join the ones
+# a narrower limit had split. Raising it does not shrink a reformat -- the magic trailing
+# comma, not the width, is what explodes a collection literal one element per line.
+line-length = 99
 target-version = ["py311"]
 
 [tool.mypy]
@@ -110,5 +112,5 @@ follow_imports = "silent"
 
 [tool.isort]
 profile = "black"
-line_length = 95
+line_length = 99
 known_first_party = ["pondie"]

@@ -194,9 +194,7 @@ class Semantics:
         # provider-qualified name (`@provider-slug/text-embedding-3-small`) and rejects
         # the bare one, so a deployment behind a gateway cannot use `--semantic` at all
         # without being able to say which name to send.
-        self.model = (
-            model or os.environ.get("OPENAI_EMBEDDING_MODEL") or "text-embedding-3-small"
-        )
+        self.model = model or os.environ.get("OPENAI_EMBEDDING_MODEL") or "text-embedding-3-small"
         self.base_url = base_url
         self.vectors: dict[str, list[float]] = {}
         self._cache: dict[str, list[float]] = {}
@@ -383,9 +381,7 @@ def match(
         return []
     grid = [[scorer(r, c) for c in cols] for r in rows]
     return [
-        (i, j, grid[i][j])
-        for i, j in sorted(hungarian(grid).items())
-        if grid[i][j] >= threshold
+        (i, j, grid[i][j]) for i, j in sorted(hungarian(grid).items()) if grid[i][j] >= threshold
     ]
 
 
@@ -428,9 +424,7 @@ class Entity:
 class Record:
     label: str
     entities: dict[str, Entity] = dataclass_field(default_factory=dict)
-    by_type: dict[str, list[Entity]] = dataclass_field(
-        default_factory=lambda: defaultdict(list)
-    )
+    by_type: dict[str, list[Entity]] = dataclass_field(default_factory=lambda: defaultdict(list))
     #: target -> {(source local_id, path)}. Which entities point at this one, and through
     #: which slot. For an entity that exists to be referenced -- a Measure, a Region, a
     #: continuous ModelTerm with no levels and so no outgoing edges at all -- this is most
@@ -581,9 +575,7 @@ def flatten_inline(
                         holder.edges.add((path, ref))
             elif target:
                 members = [
-                    m
-                    for m in (raw if isinstance(raw, list) else [raw])
-                    if isinstance(m, Mapping)
+                    m for m in (raw if isinstance(raw, list) else [raw]) if isinstance(m, Mapping)
                 ]
                 if isinstance(raw, list):
                     holder.inline[path] = (target, members)
@@ -595,9 +587,7 @@ def flatten_inline(
                     if isinstance(raw, (int, float)) and not isinstance(raw, bool)
                     else "boolean" if isinstance(raw, bool) else "string"
                 )
-                holder.fields[path] = Field(
-                    path=path, kind=kind, status="extracted", value=raw
-                )
+                holder.fields[path] = Field(path=path, kind=kind, status="extracted", value=raw)
 
     visit(node, class_name, "")
     return (
@@ -638,9 +628,7 @@ def compare_values(kind: str, gold: Any, cand: Any, sem: Semantics) -> ValueVerd
         exact = normalize(str(gold)) == normalize(str(cand))
         # Half credit for near-misses keeps the graded score informative on the open
         # vocabularies (variation_level, assessment_type) without ever calling them right.
-        return ValueVerdict(
-            match=exact, score=1.0 if exact else 0.5 * fuzzy(str(gold), str(cand))
-        )
+        return ValueVerdict(match=exact, score=1.0 if exact else 0.5 * fuzzy(str(gold), str(cand)))
     score = sem.similarity(str(gold), str(cand))
     return ValueVerdict(match=score >= TEXT_MATCH, score=score)
 
@@ -852,14 +840,10 @@ class Aligner:
 
 def prf(true_positive: int, false_positive: int, false_negative: int) -> dict[str, float]:
     precision = (
-        true_positive / (true_positive + false_positive)
-        if true_positive + false_positive
-        else 0.0
+        true_positive / (true_positive + false_positive) if true_positive + false_positive else 0.0
     )
     recall = (
-        true_positive / (true_positive + false_negative)
-        if true_positive + false_negative
-        else 0.0
+        true_positive / (true_positive + false_negative) if true_positive + false_negative else 0.0
     )
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
     return {
@@ -1012,9 +996,7 @@ def compare(
     # owning entity, so a reference held by an AnalysisGroup or a FactorLevel does not exist
     # as an edge until it has run. Scoring relationships first would silently lose them.
     result["fields"] = field_metrics(pairs, sch, sem, inline_alignments)
-    result["relationships"] = relationship_metrics(
-        gold, cand, aligner, inline_alignments, schema
-    )
+    result["relationships"] = relationship_metrics(gold, cand, aligner, inline_alignments, schema)
     result["structure"] = structure_metrics(gold, cand, aligner)
     result["direction"] = {
         "primary": direction_metrics(gold, cand, aligner, sch, sem),
@@ -1065,9 +1047,7 @@ def entity_metrics(gold: Record, cand: Record, aligner: Aligner) -> dict[str, An
     return {
         "micro": prf(tp, fp, fn),
         "per_type": per_type,
-        "macro_f1": (
-            sum(v["f1"] for v in per_type.values()) / len(per_type) if per_type else 0.0
-        ),
+        "macro_f1": (sum(v["f1"] for v in per_type.values()) / len(per_type) if per_type else 0.0),
     }
 
 
@@ -1285,9 +1265,7 @@ def structure_metrics(gold: Record, cand: Record, aligner: Aligner) -> dict[str,
         out_gold = g.ref_edges
         out_cand = {(p, aligner.map.get(t, f"?{t}")) for p, t in c.ref_edges}
         in_gold = gold.incoming.get(gold_id, set())
-        in_cand = {
-            (aligner.map.get(s, f"?{s}"), p) for s, p in cand.incoming.get(cand_id, set())
-        }
+        in_cand = {(aligner.map.get(s, f"?{s}"), p) for s, p in cand.incoming.get(cand_id, set())}
         neighbours = prf(
             len(out_gold & out_cand) + len(in_gold & in_cand),
             len(out_cand - out_gold) + len(in_cand - in_gold),
@@ -1321,9 +1299,7 @@ def structure_metrics(gold: Record, cand: Record, aligner: Aligner) -> dict[str,
         "per_entity": sorted(scored, key=lambda r: r["neighbourhood"]["f1"]),
         "unconnected": unconnected,
         "mean_neighbourhood_f1": (
-            sum(r["neighbourhood"]["f1"] for r in scored) / len(scored)
-            if scored
-            else float("nan")
+            sum(r["neighbourhood"]["f1"] for r in scored) / len(scored) if scored else float("nan")
         ),
         # An entity the attributes like and the graph does not: right object, wrong place.
         "misplaced": [
@@ -1444,8 +1420,7 @@ def direction_metrics(
                         "cand": _cell_repr(c_cells[j]),
                         "term_grounded": (
                             _cell_term(c_cells[j]) is not None
-                            and aligner.map.get(_cell_term(c_cells[j]))
-                            == _cell_term(g_cells[i])
+                            and aligner.map.get(_cell_term(c_cells[j])) == _cell_term(g_cells[i])
                         ),
                         "direction_match": _cell_direction(g_cells[i])
                         == _cell_direction(c_cells[j]),
@@ -1475,9 +1450,7 @@ def direction_metrics(
             "candidate": cells_cand,
             "aligned": cells_aligned,
             "term_grounded": cells_grounded,
-            "grounding_rate": (
-                cells_grounded / cells_aligned if cells_aligned else float("nan")
-            ),
+            "grounding_rate": (cells_grounded / cells_aligned if cells_aligned else float("nan")),
             "cell_recall": cells_grounded / cells_gold if cells_gold else float("nan"),
         },
         "accuracy_term_grounded": (
@@ -1561,11 +1534,7 @@ def _contrast_verdict(
     downstream from a contrast that is merely partly wrong.
     """
 
-    if (
-        grounded != len(g_cells)
-        or len(c_cells) != len(g_cells)
-        or len(aligned) != len(g_cells)
-    ):
+    if grounded != len(g_cells) or len(c_cells) != len(g_cells) or len(aligned) != len(g_cells):
         return "structure_mismatch"
     if all(g == c for g, c in pairs):
         return "exact"
@@ -1598,9 +1567,7 @@ def composite(result: Mapping[str, Any]) -> dict[str, Any]:
     usable = {k: v for k, v in parts.items() if isinstance(v, float) and not math.isnan(v)}
     total = sum(COMPOSITE_WEIGHTS[k] for k in usable)
     score = (
-        sum(COMPOSITE_WEIGHTS[k] * v for k, v in usable.items()) / total
-        if total
-        else float("nan")
+        sum(COMPOSITE_WEIGHTS[k] * v for k, v in usable.items()) / total if total else float("nan")
     )
     return {"score": score, "parts": parts, "weights": COMPOSITE_WEIGHTS}
 
@@ -1625,9 +1592,7 @@ def render(result: Mapping[str, Any], verbose: bool) -> str:
     add("")
     add(
         f"composite {pct(comp['score'])}   "
-        + "  ".join(
-            f"{k} {pct(v)}(w={COMPOSITE_WEIGHTS[k]})" for k, v in comp["parts"].items()
-        )
+        + "  ".join(f"{k} {pct(v)}(w={COMPOSITE_WEIGHTS[k]})" for k, v in comp["parts"].items())
     )
 
     primary = result["direction"]["primary"]
@@ -1906,9 +1871,7 @@ def _pair_gold_to_cells(
             # term alone identifies it.
             paired[candidates[0]] = entry
             continue
-        hit = next(
-            (i for i in candidates if _same_level(target, _level_of(ref_cells[i]))), None
-        )
+        hit = next((i for i in candidates if _same_level(target, _level_of(ref_cells[i]))), None)
         if hit is None:
             unresolved.append(entry)
         else:

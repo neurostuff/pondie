@@ -40,5 +40,7 @@ def test_the_run_wide_setting_is_off_by_default(tmp_path):
     indistinguishable from a stage that hung."""
     settings = Settings(payloads=tmp_path, records=tmp_path, model="m")
     assert settings.service_tier == ""
-    assert Settings(payloads=tmp_path, records=tmp_path, model="m",
-                    service_tier="flex").service_tier == "flex"
+    assert (
+        Settings(payloads=tmp_path, records=tmp_path, model="m", service_tier="flex").service_tier
+        == "flex"
+    )

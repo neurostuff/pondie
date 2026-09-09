@@ -279,9 +279,7 @@ def test_a_term_is_matched_by_who_references_it_not_only_by_its_name(gold, schem
 
     result = run(gold, candidate, schema)
     matched = [
-        r
-        for r in result["structure"]["per_entity"]
-        if r["gold_id"] == "term_perfusion_condition"
+        r for r in result["structure"]["per_entity"] if r["gold_id"] == "term_perfusion_condition"
     ]
     assert matched, "the renamed term was not matched at all"
     assert matched[0]["evidence"]["incoming"] > 0.9
@@ -296,8 +294,7 @@ def test_incoming_references_include_those_held_by_inline_objects(gold, schema):
     assert sources, "no incoming references found for a term every cell names"
     assert all(record.entities[s].etype == "Analysis" for s in sources)
     assert any(
-        path.startswith("effect.cells[]")
-        for _, path in record.incoming["term_gray_matter_volume"]
+        path.startswith("effect.cells[]") for _, path in record.incoming["term_gray_matter_volume"]
     )
 
 
@@ -374,9 +371,7 @@ def test_hungarian_matches_brute_force(rows, cols):
 
 
 def test_fuzzy_carries_an_abbreviation_against_its_expansion():
-    assert (
-        ce.fuzzy("SCID-II", "Structured Clinical Interview for DSM-IV Axis II (SCID-II)") > 0.6
-    )
+    assert ce.fuzzy("SCID-II", "Structured Clinical Interview for DSM-IV Axis II (SCID-II)") > 0.6
     assert ce.fuzzy("frontal lobe", "lobe frontal") > 0.9
     assert ce.fuzzy("frontal lobe", "cerebellum") < 0.4
 

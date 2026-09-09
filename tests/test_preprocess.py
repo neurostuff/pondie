@@ -79,6 +79,7 @@ def zones() -> dict[str, str]:
 
 # ------------------------------------------------------------------------------- zones
 
+
 def test_every_imrad_zone_is_found(zones):
     assert zones["Introduction"] == "intro"
     assert zones["Materials and Methods"] == "methods"
@@ -93,7 +94,7 @@ def test_front_matter_becomes_its_own_section():
 
 
 def test_a_weak_heading_inherits_its_parent_rather_than_its_own_keyword(zones):
-    """"Voxel-based morphometry analyses" is a Results subsection.
+    """ "Voxel-based morphometry analyses" is a Results subsection.
 
     A flat keyword match puts it in Methods on the word "analyses", and `sections` then
     drops the only place two of gold's six analyses are reported.
@@ -186,8 +187,9 @@ def test_the_null_result_sentence_reaches_the_contrast_digest():
 
 # ----------------------------------------------------------------------- the extractors
 
+
 def test_a_shared_head_noun_becomes_two_regions():
-    """"the frontal and temporal lobe" is gold's two Regions, not one."""
+    """ "the frontal and temporal lobe" is gold's two Regions, not one."""
 
     delimited, _ = preprocess.region_mentions(PAPER)
     lowered = {name.lower() for name in delimited}
@@ -203,13 +205,15 @@ def test_a_result_table_label_is_not_offered_as_a_delimited_region():
 def test_an_abbreviation_does_not_run_back_over_a_sentence_boundary():
     text = "We saw acute effects. Arterial spin labeling (ASL) was used."
     assert dict((s, l) for s, l, _ in preprocess.abbreviations(text)) == {
-        "ASL": "Arterial spin labeling"}
+        "ASL": "Arterial spin labeling"
+    }
 
 
 def test_the_shortest_satisfying_long_form_wins():
     text = "This was measured by Biological Parametric Mapping (BPM) in every subject."
     assert ("BPM", "Biological Parametric Mapping") in [
-        (s, l) for s, l, _ in preprocess.abbreviations(text)]
+        (s, l) for s, l, _ in preprocess.abbreviations(text)
+    ]
 
 
 def test_a_two_letter_acronym_survives_but_a_two_letter_word_does_not():
@@ -234,7 +238,7 @@ def test_a_coordinate_with_a_cue_is_read_as_one():
 
 
 def test_a_p_value_threshold_does_not_become_a_cluster_extent():
-    """"extent threshold of p < 0.05" is not a 0-voxel cluster."""
+    """ "extent threshold of p < 0.05" is not a 0-voxel cluster."""
 
     text = "## Methods\n\nAn extent threshold of p < 0.05 was applied.\n"
     assert "cluster_extent" not in preprocess.method_parameters(text)
@@ -263,8 +267,10 @@ def test_method_parameters_are_labelled_with_extraction_field_names():
 def test_a_methods_number_quoted_in_the_discussion_is_out_of_scope():
     """Zone-scoped, so a protocol described in the Discussion is not this study's."""
 
-    text = ("## Methods\n\nScanning used a 3T scanner.\n\n"
-            "## Discussion\n\nAn earlier study used a 7T scanner.\n")
+    text = (
+        "## Methods\n\nScanning used a 3T scanner.\n\n"
+        "## Discussion\n\nAn earlier study used a 7T scanner.\n"
+    )
     assert _values(preprocess.method_parameters(text), "field strength") == ["3T"]
 
 
@@ -272,8 +278,9 @@ def test_the_cohort_digest_finds_the_sample_the_sex_split_and_the_occasions():
     found = preprocess.cohort_parameters(PAPER)
     # The whole phrase, not a fragment: a decimal point in the demographics parenthetical
     # used to stop the match dead and report "8 years) ... patients" as the sample.
-    assert any(v.startswith("Fourteen") and v.endswith("patients")
-               for v in _values(found, "count phrase"))
+    assert any(
+        v.startswith("Fourteen") and v.endswith("patients") for v in _values(found, "count phrase")
+    )
     assert {"eight male", "six female"} <= set(_values(found, "sex"))
     assert any("scanned twice" in v for v in _values(found, "timepoint"))
 
@@ -287,8 +294,7 @@ def test_retrieval_keeps_the_front_matter_whole():
 
 def test_retrieval_marks_where_it_cut():
     reduced = preprocess.bm25_select(PAPER, preprocess.RETRIEVAL_QUERY, budget=0.2)
-    assert preprocess.OMISSION in reduced, \
-        "a reduced section must not read as a complete one"
+    assert preprocess.OMISSION in reduced, "a reduced section must not read as a complete one"
 
 
 def test_sections_drops_the_argument_and_keeps_the_evidence():
@@ -326,6 +332,7 @@ def test_none_is_the_identity():
 
 
 # ------------------------------------------------- the digest's slot names must be real
+
 
 def _named_slots() -> set[tuple[str, str]]:
     """(class, field) for every schema slot the two labelled digests name."""
@@ -372,8 +379,7 @@ def test_a_value_with_no_slot_is_marked_as_having_none():
     """Inversion time has no field. Listing it unlabelled invites an invented one."""
 
     digest = preprocess.method_block(PAPER)
-    assert "No extraction field holds the values below" in digest or \
-        "inversion time" not in digest
+    assert "No extraction field holds the values below" in digest or "inversion time" not in digest
 
 
 def test_every_digest_preamble_is_a_named_literal():
@@ -389,10 +395,15 @@ def test_every_digest_preamble_is_a_named_literal():
     calls = re.findall(r"return _block\((.*?)\)\n", source, re.DOTALL)
     assert len(calls) == 7, f"expected seven digest blocks, found {len(calls)}"
     # A separator like "\n\n" is not prompt text. A literal containing a letter is.
-    inline = [call for call in calls
-              if re.search(r"[\"'](?:[^\"'\\]|\\.)*[A-Za-z]{2,}(?:[^\"'\\]|\\.)*[\"']", call)]
-    assert not inline, ("a digest passes an inline string to _block; move it to a constant "
-                        "and add it to PROMPT_LITERALS: " + "; ".join(inline))
+    inline = [
+        call
+        for call in calls
+        if re.search(r"[\"'](?:[^\"'\\]|\\.)*[A-Za-z]{2,}(?:[^\"'\\]|\\.)*[\"']", call)
+    ]
+    assert not inline, (
+        "a digest passes an inline string to _block; move it to a constant "
+        "and add it to PROMPT_LITERALS: " + "; ".join(inline)
+    )
     for literal in preprocess.PROMPT_LITERALS:
         assert literal.strip(), "PROMPT_LITERALS holds an empty string"
 
@@ -402,15 +413,18 @@ def test_every_digest_preamble_is_a_named_literal():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("text,leaks", [
-    ("miniblocks of 16 trials", False),
-    ("to minimize head motion", False),
-    ("a minimum cluster extent", False),
-    ("minimal brain volume alterations", False),
-    ("the MINI was administered", True),
-    ("MINI-International Neuropsychiatric Interview", True),
-    ("Mini-Mental State Examination", True),
-])
+@pytest.mark.parametrize(
+    "text,leaks",
+    [
+        ("miniblocks of 16 trials", False),
+        ("to minimize head motion", False),
+        ("a minimum cluster extent", False),
+        ("minimal brain volume alterations", False),
+        ("the MINI was administered", True),
+        ("MINI-International Neuropsychiatric Interview", True),
+        ("Mini-Mental State Examination", True),
+    ],
+)
 def test_the_diagnosis_digest_reads_mini_as_the_instrument_only(text, leaks):
     """The alternation opens with `\\b` and did not close, so `MINI` matched the front of
     any word starting with those letters. 53,614 of its 62,002 corpus hits were `minimize`,
@@ -425,16 +439,19 @@ def test_the_diagnosis_digest_reads_mini_as_the_instrument_only(text, leaks):
     assert bool(pattern.search(text)) is leaks
 
 
-@pytest.mark.parametrize("chunk,mid", [
-    ("Additionally, Li et al.", True),
-    ("as reported previously (e.g.", True),
-    ("opaque idioms (vs.", True),
-    ("shown in Fig.", True),
-    ("The scan lasted 12 min.", True),
-    ("a whole sentence that ends here.", False),
-    ("threshold was p < 0.001.", False),
-    ("", False),
-])
+@pytest.mark.parametrize(
+    "chunk,mid",
+    [
+        ("Additionally, Li et al.", True),
+        ("as reported previously (e.g.", True),
+        ("opaque idioms (vs.", True),
+        ("shown in Fig.", True),
+        ("The scan lasted 12 min.", True),
+        ("a whole sentence that ends here.", False),
+        ("threshold was p < 0.001.", False),
+        ("", False),
+    ],
+)
 def test_a_period_after_an_abbreviation_is_not_a_sentence_end(chunk, mid):
     """The one abbreviation list in the repo, exported because `evidence/retrieval.py`
     cuts units on the same punctuation and had no guard at all."""
@@ -446,9 +463,7 @@ def test_the_sentence_splitter_still_uses_the_shared_guard():
     sentences = preprocess.sentences_of(
         "Activation was reported by Li et al. The cluster survived correction."
     )
-    assert sentences == [
-        "Activation was reported by Li et al. The cluster survived correction."
-    ]
+    assert sentences == ["Activation was reported by Li et al. The cluster survived correction."]
 
 
 def _scanner_hits(text: str) -> set[str]:
@@ -460,14 +475,17 @@ def _scanner_hits(text: str) -> set[str]:
     }
 
 
-@pytest.mark.parametrize("text", [
-    "a Gradient Echo (GE) echo planar imaging sequence",
-    "with the GE-EPI sequence producing image contrast",
-    "Holder GE McCulloch DL Tormene AP, Vaegan",
-    "False Discovery Rate (FDR) was used for multiple comparisons",
-    "Advanced Search Search Menu AI Discovery Assistant Abstract",
-    "BBC/Discovery Channel coproduction",
-])
+@pytest.mark.parametrize(
+    "text",
+    [
+        "a Gradient Echo (GE) echo planar imaging sequence",
+        "with the GE-EPI sequence producing image contrast",
+        "Holder GE McCulloch DL Tormene AP, Vaegan",
+        "False Discovery Rate (FDR) was used for multiple comparisons",
+        "Advanced Search Search Menu AI Discovery Assistant Abstract",
+        "BBC/Discovery Channel coproduction",
+    ],
+)
 def test_the_ordinary_readings_of_ge_and_discovery_are_not_scanners(text):
     """Both tokens are ordinary text more often than they are hardware. `GE` is gradient
     echo and an author's initials; `Discovery` is the false discovery rate and a banner an
@@ -476,14 +494,17 @@ def test_the_ordinary_readings_of_ge_and_discovery_are_not_scanners(text):
     assert _scanner_hits(text) == set()
 
 
-@pytest.mark.parametrize("text,wanted", [
-    ("a 3 T GE Signa scanner", "3 T GE"),
-    ("images acquired on a GE MR750 3.0T whole-body scanner", "GE MR750"),
-    ("MR system (Discovery MR750 System, GE Healthcare)", "Discovery MR750"),
-    ("a 3.0 Tesla MRI scanner (Discovery 750w; GE Healthcare)", "Discovery 750w"),
-    ("scanned on a 3T MRI scanner (GE). A T2-weighted image", "MRI scanner (GE"),
-    ("a standard GE whole-head coil", "GE whole-head"),
-])
+@pytest.mark.parametrize(
+    "text,wanted",
+    [
+        ("a 3 T GE Signa scanner", "3 T GE"),
+        ("images acquired on a GE MR750 3.0T whole-body scanner", "GE MR750"),
+        ("MR system (Discovery MR750 System, GE Healthcare)", "Discovery MR750"),
+        ("a 3.0 Tesla MRI scanner (Discovery 750w; GE Healthcare)", "Discovery 750w"),
+        ("scanned on a 3T MRI scanner (GE). A T2-weighted image", "MRI scanner (GE"),
+        ("a standard GE whole-head coil", "GE whole-head"),
+    ],
+)
 def test_a_qualified_ge_or_discovery_is_still_a_scanner(text, wanted):
     """Kept where a division or a model name settles it, which is how a Methods section
     that means the scanner writes them anyway."""
@@ -506,29 +527,30 @@ def test_the_unambiguous_vendors_are_untouched():
 COORDINATE_CASES = [
     # 18823721: the contrast that cost a gold inclusion. Axis-labelled, no commas between
     # the pairs, so the bare three-comma pattern cannot see it.
-    ("right STN activation when contrasting heroin stimuli to neutral stimuli "
-     "(x = 9 y = \u221212 z = \u22126; Z = 3.31)", True),
+    (
+        "right STN activation when contrasting heroin stimuli to neutral stimuli "
+        "(x = 9 y = \u221212 z = \u22126; Z = 3.31)",
+        True,
+    ),
     # 32541652 writes thin spaces around the equals signs.
     ("the OFC (x \u2009=\u2009\u221235, y \u2009=\u200932, z \u2009=\u2009\u22126)", True),
-    ("center of mass at ( X \u221244, Y \u221220, Z 32)", True),      # 16123763: no equals
-    ("right NAcc ([x:16, y:8, z:\u221210]; Z = 3.35)", True),          # 31113931: colons
+    ("center of mass at ( X \u221244, Y \u221220, Z 32)", True),  # 16123763: no equals
+    ("right NAcc ([x:16, y:8, z:\u221210]; Z = 3.35)", True),  # 31113931: colons
     ("MNI coordinates of the maximum voxel = [\u2212 18, 15, 12], z = 3.66", True),
     # A Brodmann label carrying its own number, then a real coordinate. The area guard
     # must look at what precedes the numbers, not for "BA" anywhere in the sentence.
     ("DLPFC (BA = 46; \u221242, 32, 17) peak voxel", True),
-    ("as reported previously ( 14 , 15 , 34 )", False),                # pubget citation list
+    ("as reported previously ( 14 , 15 , 34 )", False),  # pubget citation list
     ("These included the frontal (BA 6, 8, 9, 10), anterior cingulate", False),
     ("the anterior cingulate (BA 29, 30, 31), temporal (BA 20, 21, 22)", False),
     ("significantly higher levels ( P < 0.01, 0.001, 0.05, respectively)", False),
     ("effect sizes: d = 0.42, 0.37, 0.53, respectively", False),
-    ("clusters at 300, 400, 500 mm", False),                           # outside either space
+    ("clusters at 300, 400, 500 mm", False),  # outside either space
 ]
 
 
 @pytest.mark.parametrize("sentence,is_location", COORDINATE_CASES)
-def test_a_prose_coordinate_is_told_from_the_numbers_that_look_like_one(
-    sentence, is_location
-):
+def test_a_prose_coordinate_is_told_from_the_numbers_that_look_like_one(sentence, is_location):
     """The table parse cannot see a result reported only in prose, and 18823721 lost a
     gold inclusion to one. Reading them back means telling a location from a citation
     list, a Brodmann enumeration and a row of p-values, all of which are three numbers."""
@@ -558,8 +580,10 @@ WIDE_CORPUS_CASES = [
     ("deterministic tractography16,23,24, a method that fits a tensor at each voxel", False),
     # "coordinated" satisfied a cue that meant to say "coordinate".
     ("a modulatory effect on coordinated neural activity (104, 105, 106, 107).", False),
-    ("registered to anatomical images (FLIRT, registration [ 34 , 35 , 36 ]), smoothed voxel",
-     False),
+    (
+        "registered to anatomical images (FLIRT, registration [ 34 , 35 , 36 ]), smoothed voxel",
+        False,
+    ),
     ("increased connectivity (FWHM(mm)=15.7, 15.7, 13.7, volume=48619 voxels)", False),
     ("the 3rd NF run minus the 1st NF run of NF session 1,2,3; cluster corrected", False),
     # Must still be found: the cue sits well before the numbers in real reporting.
@@ -593,18 +617,21 @@ def test_a_coordinate_a_table_carries_is_marked_not_dropped():
     Heroin>BL table under a different contrast. Dropping the sentence because the number
     was already known discarded the comparison, which is the only thing it added -- and
     that comparison is the paper's sole qualifying cue>control contrast."""
-    sentence = ("In opioid-dependent subjects, right STN activation was also observed when "
-                "contrasting heroin stimuli to neutral stimuli ( x = 9 y = −12 z = −6).")
+    sentence = (
+        "In opioid-dependent subjects, right STN activation was also observed when "
+        "contrasting heroin stimuli to neutral stimuli ( x = 9 y = −12 z = −6)."
+    )
     rows = preprocess.prose_coordinates(sentence, known=[(9, -12, -6)])
     assert rows, "the sentence was dropped because a table already held its coordinate"
-    (_sentence, found), = rows
+    ((_sentence, found),) = rows
     assert found == [((9.0, -12.0, -6.0), True)], "the overlap must be marked, not silent"
 
 
 def test_a_coordinate_no_table_carries_is_unmarked():
     rows = preprocess.prose_coordinates(
-        "The peak was at x = 9 y = −12 z = −6.", known=[(40, 40, 40)])
-    (_sentence, found), = rows
+        "The peak was at x = 9 y = −12 z = −6.", known=[(40, 40, 40)]
+    )
+    ((_sentence, found),) = rows
     assert found == [((9.0, -12.0, -6.0), False)]
 
 
@@ -621,14 +648,15 @@ def test_prose_entries_share_the_parse_address_space_without_shifting_it():
 
     parsed = [{"table_id": "tbl1"}, {"table_id": "tbl1"}, {"table_id": "tbl2"}]
     entries = preprocess.prose_parse_entries(
-        "The peak was at x = 9 y = −12 z = −6 for heroin versus neutral.")
+        "The peak was at x = 9 y = −12 z = −6 for heroin versus neutral."
+    )
     assert entries and entries[0]["table_id"] == "prose"
     assert entries[0]["points"][0]["coordinates"] == [9.0, -12.0, -6.0]
 
     before = parse_keys.parse_keys(parsed)
     after = parse_keys.parse_keys([*parsed, *entries])
-    assert after[:len(before)] == before, "appending prose renumbered the table entries"
-    assert after[len(before):] == ["prose#1"]
+    assert after[: len(before)] == before, "appending prose renumbered the table entries"
+    assert after[len(before) :] == ["prose#1"]
 
 
 def test_a_statistic_is_paired_to_the_coordinate_it_follows():
@@ -638,7 +666,8 @@ def test_a_statistic_is_paired_to_the_coordinate_it_follows():
     z-statistic equal to its own z coordinate."""
     points = preprocess.prose_points(
         "both bilateral amygdala ( x = 22, y = −3, z = −15, Z = 3.85; "
-        "x = −16, y = −3 z = −19, Z = 4.01)")
+        "x = −16, y = −3 z = −19, Z = 4.01)"
+    )
     assert [p["coordinates"] for p in points] == [[22.0, -3.0, -15.0], [-16.0, -3.0, -19.0]]
     assert [p["values"] for p in points] == [
         [{"value": 3.85, "kind": "z-statistic"}],
@@ -647,7 +676,7 @@ def test_a_statistic_is_paired_to_the_coordinate_it_follows():
 
 
 def test_a_space_between_the_minus_and_the_digits_keeps_the_sign():
-    """"[- 18, 15, 12]" is one coordinate, not a positive 18. Typesetting puts a space
+    """ "[- 18, 15, 12]" is one coordinate, not a positive 18. Typesetting puts a space
     after the minus; a coordinate parsed with the wrong sign is in the other hemisphere,
     and `table_parse` normalises the same way for the same reason."""
     points = preprocess.prose_points("MNI coordinates of the peak voxel = [− 18, 15, 12]")

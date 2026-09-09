@@ -26,7 +26,6 @@ from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
 
 from pondie import schema
 from pondie.extraction.llm import Caller, MalformedReply
-from pondie.formats import text_index
 from pondie.extraction.models import (
     Cost,
     EvidenceCounts,
@@ -38,8 +37,8 @@ from pondie.extraction.models import (
 )
 from pondie.extraction.parse import TableParse
 from pondie.extraction.prompt import preprocess, render
+from pondie.formats import text_index, values
 from pondie.schema import reader
-from pondie.formats import values
 
 #: Written into every record's `extraction_metadata`, so a record says which pipeline made
 #: it. Bump it when a change would make two records incomparable.
@@ -76,9 +75,7 @@ class _Base:
         return self.produces(paper, settings).is_file() and not settings.redo
 
     def _skip(self, paper: Paper, reason: str = "already produced") -> StageOutcome:
-        return StageOutcome(
-            stage=self.name, study_id=paper.study_id, skipped=True, reason=reason
-        )
+        return StageOutcome(stage=self.name, study_id=paper.study_id, skipped=True, reason=reason)
 
     def _write(self, paper: Paper, settings: Settings, payload: dict) -> Path:
         out = self.produces(paper, settings)
@@ -134,9 +131,7 @@ class Tables(_Base):
             )
 
         tables, id_map = [], {}
-        for index, line in enumerate(
-            manifest.read_text(encoding="utf-8").splitlines(), start=1
-        ):
+        for index, line in enumerate(manifest.read_text(encoding="utf-8").splitlines(), start=1):
             if not line.strip():
                 continue
             source = json.loads(line)
@@ -214,8 +209,10 @@ class ProseFoci(_Base):
             stage=self.name,
             study_id=paper.study_id,
             produced=(paper.parse,),
-            notes=(f"{len(entries)} prose coordinate sentence(s) appended "
-                   f"to {len(before)} parsed",),
+            notes=(
+                f"{len(entries)} prose coordinate sentence(s) appended "
+                f"to {len(before)} parsed",
+            ),
         )
 
 
@@ -456,11 +453,12 @@ class Demands(_ModelPass):
         if paper.parse.is_file():
             parsed = json.loads(paper.parse.read_text("utf-8"))
             table_ids = (
-                json.loads(paper.table_map.read_text("utf-8"))
-                if paper.table_map.is_file() else {}
+                json.loads(paper.table_map.read_text("utf-8")) if paper.table_map.is_file() else {}
             )
             block = render.stage1_block(
-                parsed, table_ids, zero_foci_rule=settings.zero_foci_rule,
+                parsed,
+                table_ids,
+                zero_foci_rule=settings.zero_foci_rule,
             )
         # Offered as proposals the pass confirms or drops, and offered whether or not a
         # parse exists: of the 88 cue_reactivity papers stating a Results coordinate no
@@ -475,8 +473,8 @@ class Demands(_ModelPass):
 def _parsed_points(parsed: Mapping[str, Any]) -> list[tuple[float, float, float]]:
     """Every coordinate the stage-1 parse already holds, so prose does not repeat it."""
     out = []
-    for analysis in (parsed.get("analyses") or []):
-        for point in (analysis.get("points") or []):
+    for analysis in parsed.get("analyses") or []:
+        for point in analysis.get("points") or []:
             coords = point.get("coordinates")
             if isinstance(coords, Mapping):
                 coords = [coords.get("x"), coords.get("y"), coords.get("z")]
@@ -600,18 +598,21 @@ class Fill(_Base):
                         stage=f"{self.name.value}{round_number}",
                     )
                 except Exception as error:  # noqa: BLE001 -- a round must not lose the record
-                    notes.append(f"{target.name} round {round_number} skipped: "
-                                 f"{type(error).__name__}")
+                    notes.append(
+                        f"{target.name} round {round_number} skipped: " f"{type(error).__name__}"
+                    )
                     break
                 cost = cost + reply.cost
                 traces.append((reply.trace_id, reply.cache_status))
                 filled, reasoned, dropped = slots.apply_fill(payload, reply.payload, ids)
                 notes.append(
                     f"{target.name} round {round_number}: {len(batch)} asked, "
-                    f"{filled} valued, {reasoned} explained, {dropped} discarded")
+                    f"{filled} valued, {reasoned} explained, {dropped} discarded"
+                )
                 if reply.stop_reason and reply.stop_reason != "stop":
-                    notes.append(f"{target.name} round {round_number} stopped on "
-                                 f"{reply.stop_reason}")
+                    notes.append(
+                        f"{target.name} round {round_number} stopped on " f"{reply.stop_reason}"
+                    )
                 # Shape only, and after each round: the loop writes values from a model
                 # reply, so a numeric string or a lone scalar in a multivalued slot arrives
                 # here exactly as it does from `satisfy`. These are idempotent, which is
@@ -624,13 +625,14 @@ class Fill(_Base):
                     stage=_repairs.AFTER_FILL,
                 )
                 target.write_text(
-                    json.dumps(payload, indent=1, ensure_ascii=False) + "\n",
-                    encoding="utf-8")
+                    json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+                )
                 if not (filled or reasoned):
                     # The round settled nothing, so the next one asks the same model the
                     # same question about the same paper.
-                    notes.append(f"{target.name} round {round_number}: nothing settled, "
-                                 f"stopped")
+                    notes.append(
+                        f"{target.name} round {round_number}: nothing settled, " f"stopped"
+                    )
                     break
             closed += first - len(slots.unsettled(payload, sch))
 
@@ -813,9 +815,7 @@ class Evidence(_Base):
                 cost = cost + reply.cost
                 traces.append((reply.trace_id, reply.cache_status))
 
-            totals = totals + apply_evidence(
-                payload, quotes, literal=frozenset(literal)
-            )
+            totals = totals + apply_evidence(payload, quotes, literal=frozenset(literal))
             target.write_text(
                 json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
             )
@@ -834,6 +834,7 @@ class Evidence(_Base):
                 *(f"truncated: {t}" for t in truncated),
             ),
         )
+
 
 @dataclass(frozen=True)
 class Build(_Base):
@@ -914,8 +915,7 @@ class Build(_Base):
         notes = []
         if validator.errors:
             notes.append(
-                f"{len(validator.errors)} validation error(s): "
-                + "; ".join(validator.errors[:3])
+                f"{len(validator.errors)} validation error(s): " + "; ".join(validator.errors[:3])
             )
         if validator.warnings:
             notes.append(f"{len(validator.warnings)} validation warning(s)")
@@ -948,7 +948,6 @@ class Repair(_Base):
         """
         return settings.payloads.parent / "repairs" / f"{paper.study_id}.json"
 
-
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if not (settings.repair or settings.adjudicate):
             return self._skip(paper, "neither repair nor adjudicate was asked for")
@@ -961,8 +960,11 @@ class Repair(_Base):
 
         record_path = settings.records / f"{paper.study_id}.extraction.json"
         if not record_path.is_file():
-            return StageOutcome(stage=self.name, study_id=paper.study_id,
-                                reason="no record to repair; build did not produce one")
+            return StageOutcome(
+                stage=self.name,
+                study_id=paper.study_id,
+                reason="no record to repair; build did not produce one",
+            )
         record = json.loads(record_path.read_text())
         # Kept before anything is changed, because this stage writes the record in place and
         # the record is the only copy of what `build` produced. Without it, asking "did the
@@ -994,8 +996,12 @@ class Repair(_Base):
                 from pondie.extraction.recall_llm import ModelProposer
 
                 proposer = ModelProposer(
-                    caller, settings.model, study_id=paper.study_id,
-                    service_tier=settings.service_tier, effort=settings.effort)
+                    caller,
+                    settings.model,
+                    study_id=paper.study_id,
+                    service_tier=settings.service_tier,
+                    effort=settings.effort,
+                )
                 notes.append(f"proposer: {settings.model}")
 
         reply = None
@@ -1005,7 +1011,10 @@ class Repair(_Base):
             # editing against one and checking against the other offered the proposer
             # slots the record may not carry. Harmless while every template held only
             # `local_id`; four invalid writes on the first paper once they did not.
-            record, text, reader.load(EXTRACTION_SCHEMA), study_id=paper.study_id,
+            record,
+            text,
+            reader.load(EXTRACTION_SCHEMA),
+            study_id=paper.study_id,
             proposer=proposer,
             caller=caller if settings.adjudicate else None,
             model=settings.model if settings.adjudicate else "",
@@ -1016,12 +1025,18 @@ class Repair(_Base):
         record_path.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
         out = self.produces(paper, settings)
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps({
-            "written": report.written,
-            "refused": [{"slot": r.slot, "why": r.why} for r in report.refused],
-            "adjudicated": report.adjudicated,
-            "introduced": report.introduced,
-        }, indent=1) + "\n")
+        out.write_text(
+            json.dumps(
+                {
+                    "written": report.written,
+                    "refused": [{"slot": r.slot, "why": r.why} for r in report.refused],
+                    "adjudicated": report.adjudicated,
+                    "introduced": report.introduced,
+                },
+                indent=1,
+            )
+            + "\n"
+        )
         # A finding this pass introduced is a defect in the pass rather than in the paper.
         # It is a note and not a `reason`, for the same reason `build` treats its findings
         # that way: the repaired record is still better than no record, and failing the
@@ -1037,9 +1052,13 @@ class Repair(_Base):
         if proposed is not None:
             spent = proposed if spent is None else spent + proposed
         spend = {"cost": spent} if spent is not None else {}
-        return StageOutcome(stage=self.name, study_id=paper.study_id,
-                            traces=report.traces, notes=tuple(notes + report.introduced),
-                            **spend)
+        return StageOutcome(
+            stage=self.name,
+            study_id=paper.study_id,
+            traces=report.traces,
+            notes=tuple(notes + report.introduced),
+            **spend,
+        )
 
 
 DEMAND_DRIVEN: tuple[Stage, ...] = (

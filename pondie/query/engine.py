@@ -174,13 +174,9 @@ class Result:
         # Weighting provenance, because a pooled result rests on it. A row weighted on a
         # cohort total rather than an analysed count is over-weighted by however many
         # participants that analysis dropped, and nothing downstream can tell.
-        inferred = sorted(
-            {s for r in self.rows for s in r.get("n_source", ()) if s != "analysis"}
-        )
+        inferred = sorted({s for r in self.rows for s in r.get("n_source", ()) if s != "analysis"})
         if inferred:
-            rows = sum(
-                1 for r in self.rows if any(s != "analysis" for s in r.get("n_source", ()))
-            )
+            rows = sum(1 for r in self.rows if any(s != "analysis" for s in r.get("n_source", ())))
             out.append(
                 f"NOTE: {rows} of {len(self.rows)} analyses are weighted on a cohort total "
                 f"({', '.join(inferred)}) because no per-analysis n was reported; that is "
@@ -366,9 +362,7 @@ def _time_sides(body: Mapping[str, Any]) -> dict[tuple[str, str], str]:
                 # out rather than folded onto one.
                 poles &= {"pre_intervention", "post_intervention"}
                 if len(poles) == 1:
-                    sides[(term.get("local_id"), str(value_of(level.get("level"))))] = (
-                        poles.pop()
-                    )
+                    sides[(term.get("local_id"), str(value_of(level.get("level"))))] = poles.pop()
     return sides
 
 
@@ -553,9 +547,7 @@ def select(
             parsed = json.loads(stage1.read_text()).get("analyses") or []
             keyed = dict(zip(parse_keys.parse_keys(parsed), parsed))
         points_by_key = {k: (v.get("points") or []) for k, v in keyed.items()}
-        wants_arms = (
-            selection.arm_contrast is not None or selection.treatment_exposure is not None
-        )
+        wants_arms = selection.arm_contrast is not None or selection.treatment_exposure is not None
         arm_sides = _arm_sides(body) if wants_arms else {}
         time_sides = _time_sides(body) if selection.treatment_exposure is not None else {}
         groups_by_id = {
@@ -598,9 +590,7 @@ def select(
 
             if selection.diagnosis is not None:
                 if diagnoses is None:
-                    lost[
-                        "diagnosis filter needs `pondie normalize medical_condition` output"
-                    ] += 1
+                    lost["diagnosis filter needs `pondie normalize medical_condition` output"] += 1
                     continue
                 if diagnoses.get(f"{study}|{aid}") != selection.diagnosis:
                     lost[f"diagnosis != {selection.diagnosis}"] += 1

@@ -292,8 +292,11 @@ def _resolve_field(
             # `source` says which locator found this set. Rebuilding the set without it
             # would drop the distinction the evidence pass just recorded, leaving the two
             # locators told apart only by position again.
-            rebuilt.append({"spans": resolved} if not evidence_set.get("source")
-                           else {"source": evidence_set["source"], "spans": resolved})
+            rebuilt.append(
+                {"spans": resolved}
+                if not evidence_set.get("source")
+                else {"source": evidence_set["source"], "spans": resolved}
+            )
 
     if rebuilt:
         evidence["sets"] = rebuilt
@@ -359,7 +362,8 @@ def merge_payloads(payload_dir: Path) -> tuple[dict[str, Any], list[str]]:
                     collisions.append(
                         f"{key}: dropped {len(value) - len(kept)} non-object "
                         f"entr{'y' if len(value) - len(kept) == 1 else 'ies'} "
-                        f"(from {path.name})")
+                        f"(from {path.name})"
+                    )
                 lists.setdefault(_ENTITY_LISTS[key], []).extend(kept)
             elif key not in _CONSUMED_ELSEWHERE:
                 # The one signal that an entity list was silently lost. `arms` and
@@ -458,10 +462,10 @@ def derive_table_effects(body: dict[str, Any]) -> list[str]:
     from pondie.formats import values as value_tools
 
     cited: set[str] = set()
-    for analysis in (body.get("analyses") or []):
+    for analysis in body.get("analyses") or []:
         if not isinstance(analysis, dict):
             continue
-        for target in (analysis.get("tables") or []):
+        for target in analysis.get("tables") or []:
             if isinstance(target, str):
                 cited.add(target)
 
@@ -478,9 +482,9 @@ def derive_table_effects(body: dict[str, Any]) -> list[str]:
         # An analysis cites it, so any other kind contradicts the record rather than
         # describing it -- which is the contradiction `check_table_content` reports.
         table["purpose"] = value_tools.wrap(
-            "reported_effect", source="generated", evidence="not_applicable")
-        filled.append(f"tables[{index}].purpose"
-                      + (f": was {held!r}" if held else ""))
+            "reported_effect", source="generated", evidence="not_applicable"
+        )
+        filled.append(f"tables[{index}].purpose" + (f": was {held!r}" if held else ""))
     return filled
 
 
@@ -538,7 +542,8 @@ def derive_denominators(body: dict[str, Any]) -> list[str]:
                     continue
                 for entry in entries:
                     entry["denominator"] = {
-                        "extraction_status": "extracted", "value": int(base),
+                        "extraction_status": "extracted",
+                        "value": int(base),
                         "value_source": "generated",
                         "evidence": {"status": "not_applicable"},
                     }
@@ -593,9 +598,7 @@ def derive_coordinate_spaces(
         # anyway -- and counted it in `report.downgraded`, which meant that number was
         # dominated by the builder's own output and could not be thresholded on. There is no
         # quote to find for a value read off the table parse, so `not_found` is simply true.
-        analysis["coordinate_space"] = values.wrap(
-            space, source="reported", evidence="not_found"
-        )
+        analysis["coordinate_space"] = values.wrap(space, source="reported", evidence="not_found")
         filled.append(f"analyses[{index}] -> {space}")
     return filled
 
@@ -658,9 +661,7 @@ def listify_nested(body: dict[str, Any], sch: Schema) -> list[str]:
             if kind == "nested":
                 target = attribute.range
                 if isinstance(target, str):
-                    for index, item in enumerate(
-                        node[key] if isinstance(node[key], list) else []
-                    ):
+                    for index, item in enumerate(node[key] if isinstance(node[key], list) else []):
                         visit(item, target, f"{path}.{key}[{index}]")
 
     study_attributes = sch.attributes("Study")
@@ -770,9 +771,7 @@ def fill_directions(body: dict[str, Any]) -> list[str]:
                 node["extraction_status"] = "extracted"
                 node["value_source"] = "generated"
             else:
-                cell["direction"] = values.wrap(
-                    derived, source="generated", evidence="not_found"
-                )
+                cell["direction"] = values.wrap(derived, source="generated", evidence="not_found")
             filled.append(
                 f"{values.read(analysis.get('local_id'))}: "
                 f"{level or '(unnamed level)'} -> {derived}"
@@ -915,9 +914,7 @@ def listify_scalars(body: dict[str, Any], sch: Schema) -> list[str]:
             elif kind == "nested":
                 target = attribute.range
                 if isinstance(target, str):
-                    for index, item in enumerate(
-                        value if isinstance(value, list) else [value]
-                    ):
+                    for index, item in enumerate(value if isinstance(value, list) else [value]):
                         suffix = f"[{index}]" if isinstance(value, list) else ""
                         visit(item, target, f"{path}.{key}{suffix}")
 
@@ -1086,11 +1083,7 @@ def unwrap_plain_slots(body: dict[str, Any], sch: Schema) -> list[str]:
                                 f"{here}[{index}]: unwrapped a wrapper into a " f"{kind} slot"
                             )
                 continue
-            if (
-                kind == "evidence"
-                and value is not None
-                and not isinstance(value, (dict, list))
-            ):
+            if kind == "evidence" and value is not None and not isinstance(value, (dict, list)):
                 # The inverse slip: a bare scalar in a slot that holds an ExtractedValue.
                 # The value is the model's answer and it offered no span for it, so the
                 # evidence is honestly `not_found` rather than invented.
@@ -1144,9 +1137,7 @@ def coerce_numeric_values(body: dict[str, Any], sch: Schema) -> list[str]:
                 # after every model call it needed had been paid for.
                 wants = getattr(declared, "range", None)
                 inner = value.get("value")
-                if wants in ("float", "double", "decimal", "integer") and isinstance(
-                    inner, str
-                ):
+                if wants in ("float", "double", "decimal", "integer") and isinstance(inner, str):
                     cleaned = re.sub(r"[^0-9eE.+-]", "", inner.strip())
                     try:
                         number = float(cleaned)
@@ -1184,9 +1175,7 @@ def rehome_stray_tables(body: dict[str, Any], sch: Schema) -> list[str]:
         if isinstance(analysis, Mapping):
             cited = values.read(analysis.get("tables")) or []
             referenced |= {
-                t
-                for t in (cited if isinstance(cited, list) else [cited])
-                if isinstance(t, str)
+                t for t in (cited if isinstance(cited, list) else [cited]) if isinstance(t, str)
             }
 
     moved: list[str] = []
@@ -1357,9 +1346,7 @@ def repoint_out_of_scope_terms(body: dict[str, Any]) -> list[str]:
     for index, analysis in enumerate(body.get("analyses") or []):
         if not isinstance(analysis, Mapping):
             continue
-        in_scope = terms_in_scope(
-            str(values.read(analysis.get("model_estimation")) or ""), models
-        )
+        in_scope = terms_in_scope(str(values.read(analysis.get("model_estimation")) or ""), models)
         for position, cell in enumerate((analysis.get("effect") or {}).get("cells") or []):
             if not isinstance(cell, Mapping):
                 continue
@@ -1525,9 +1512,7 @@ def check_local_ids(body: dict[str, Any], sch: Schema) -> list[str]:
             kind = sch.classify(key, attribute)
             if kind == "reference":
                 refs = (
-                    [value]
-                    if isinstance(value, str)
-                    else value if isinstance(value, list) else []
+                    [value] if isinstance(value, str) else value if isinstance(value, list) else []
                 )
                 for ref in refs:
                     if isinstance(ref, str) and ref and ref not in declared:
@@ -1535,9 +1520,7 @@ def check_local_ids(body: dict[str, Any], sch: Schema) -> list[str]:
             elif kind == "nested":
                 target = attribute.range
                 if isinstance(target, str):
-                    for index, item in enumerate(
-                        value if isinstance(value, list) else [value]
-                    ):
+                    for index, item in enumerate(value if isinstance(value, list) else [value]):
                         suffix = f"[{index}]" if isinstance(value, list) else ""
                         visit(item, target, f"{here}{suffix}")
 
@@ -1585,7 +1568,8 @@ def build(
     # tables together. Running the earlier groups again would be harmless for the idempotent
     # ones and wrong for `mirrored`, which appends.
     log = repairs.apply_all(
-        body, repairs.Context(schema=sch, stage1=stage1, table_map=table_map),
+        body,
+        repairs.Context(schema=sch, stage1=stage1, table_map=table_map),
         stage=repairs.AT_MERGE,
     )
     report.repair_log = log

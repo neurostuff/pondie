@@ -46,7 +46,6 @@ class Findings(Protocol):
     def warn(self, path: str, message: str) -> None: ...
 
 
-
 # ------------------------------------------------------------------------------------
 # Reading a record's prose. A trigger, never a verdict: these route a record to review
 # and the rule that calls one decides what to do about it.
@@ -154,6 +153,7 @@ def names_a_crossing(*fields: Any) -> bool:
         return True
     return any(left != right for left, right in _BY_CROSSING.findall(text))
 
+
 @dataclass(frozen=True)
 class Rule:
     """One check, and what it is for. Registered by existing, not by being called."""
@@ -169,6 +169,7 @@ def _model_index(record: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
         if isinstance(model, Mapping) and isinstance(model.get("local_id"), str):
             models[model["local_id"]] = model
     return models
+
 
 def _cell_signature(model_id: Any, cells: Any) -> tuple:
     """What an effect compared: its model, and its cells as a set.
@@ -187,6 +188,7 @@ def _cell_signature(model_id: Any, cells: Any) -> tuple:
         if isinstance(cell, Mapping)
     )
     return (str(model_id), tuple(parts))
+
 
 def check_crossings(record: Mapping[str, Any], findings: Findings) -> None:
     """Flag interactions the cells do not actually record.
@@ -259,9 +261,7 @@ def check_crossings(record: Mapping[str, Any], findings: Findings) -> None:
                 "ModelTerm with interaction_with that carries an unsigned interaction test",
             )
 
-        signatures.setdefault(_cell_signature(model_id, cells), []).append(
-            (path, claimed)
-        )
+        signatures.setdefault(_cell_signature(model_id, cells), []).append((path, claimed))
 
     for (model_id, _), members in signatures.items():
         if len(members) < 2:
@@ -275,6 +275,7 @@ def check_crossings(record: Mapping[str, Any], findings: Findings) -> None:
                 "the same cells over the same model are the same estimand, so an "
                 "interaction and a main effect cannot both be what these record",
             )
+
 
 def check_product_columns(record: Mapping[str, Any], findings: Findings) -> None:
     """Flag product columns that nothing can reach.
@@ -329,7 +330,9 @@ def check_product_columns(record: Mapping[str, Any], findings: Findings) -> None
                     "but it is also what a missing interaction analysis looks like",
                 )
 
+
 # -- the two unsigned values --------------------------------------------
+
 
 def check_unsigned_cells(record: Mapping[str, Any], findings: Findings) -> None:
     """Flag the two shapes `held` cannot have.
@@ -395,8 +398,7 @@ def check_unsigned_cells(record: Mapping[str, Any], findings: Findings) -> None:
             term = terms.get(term_id)
             declared = [
                 values.read(level.get("level"))
-                for level in (term.get("levels") if isinstance(term, Mapping) else None)
-                or []
+                for level in (term.get("levels") if isinstance(term, Mapping) else None) or []
                 if isinstance(level, Mapping)
             ]
             if len(declared) < 2 or set(declared) - set(celled.get(term_id, [])):
@@ -411,7 +413,9 @@ def check_unsigned_cells(record: Mapping[str, Any], findings: Findings) -> None:
                 "rest absent (representing-models.md 4)",
             )
 
+
 # -- occasions, and the factors that should carry them ------------------
+
 
 def check_occasion_factors(record: Mapping[str, Any], findings: Findings) -> None:
     """Flag a comparison the record collapsed into a single column.
@@ -502,7 +506,9 @@ def check_occasion_factors(record: Mapping[str, Any], findings: Findings) -> Non
         "recorded the scans are here and the comparison between them is not",
     )
 
+
 # -- arms, and the analyses that cannot say which one they are ----------
+
 
 def check_arm_reachability(record: Mapping[str, Any], findings: Findings) -> None:
     """Flag an analysis that cannot be linked to an arm.
@@ -540,9 +546,7 @@ def check_arm_reachability(record: Mapping[str, Any], findings: Findings) -> Non
         for word in words:
             if len(word.strip()) < 3 or word == "None":
                 continue
-            vocabulary.append(
-                (arm["local_id"], re.compile(rf"\b{re.escape(word.lower())}\b"))
-            )
+            vocabulary.append((arm["local_id"], re.compile(rf"\b{re.escape(word.lower())}\b")))
     if not vocabulary:
         return
 
@@ -595,7 +599,9 @@ def check_arm_reachability(record: Mapping[str, Any], findings: Findings) -> Non
             "arm, or the arm was held constant for this analysis, which has no slot",
         )
 
+
 # -- derived columns and where they came from ---------------------------
+
 
 def check_derived_columns(record: Mapping[str, Any], findings: Findings) -> None:
     """Flag a derived column whose origin the record does not state.
@@ -651,7 +657,9 @@ def check_derived_columns(record: Mapping[str, Any], findings: Findings) -> None
                     "the instrument it came from",
                 )
 
+
 # -- entry point -------------------------------------------------------
+
 
 def check_cell_terms(record: Mapping[str, Any], findings: Findings) -> None:
     """§3 invariants 2, 3 and 4: a cell names a term of its own stage chain, and a
@@ -730,8 +738,7 @@ def check_cell_terms(record: Mapping[str, Any], findings: Findings) -> None:
             if not declared:
                 findings.error(
                     f"{path}.level",
-                    f"is {level!r} but term {term_id!r} declares "
-                    "no levels to match it against",
+                    f"is {level!r} but term {term_id!r} declares " "no levels to match it against",
                 )
             elif level not in declared:
                 findings.error(
@@ -740,6 +747,7 @@ def check_cell_terms(record: Mapping[str, Any], findings: Findings) -> None:
                     f"({', '.join(repr(name) for name in declared)}); the mapper joins "
                     "these on the string",
                 )
+
 
 def check_model_stages(record: Mapping[str, Any], findings: Findings) -> None:
     """§3 invariants 6 and 7: `inputs_from` is acyclic, and a term name is unique across
@@ -798,7 +806,9 @@ def check_model_stages(record: Mapping[str, Any], findings: Findings) -> None:
                 )
             seen[folded] = owner_id
 
-def _chain_terms(model_id: Any,
+
+def _chain_terms(
+    model_id: Any,
     models: Mapping[str, Mapping[str, Any]],
     seen: set[str] | None = None,
 ) -> list[tuple[str, Mapping[str, Any]]]:
@@ -818,10 +828,9 @@ def _chain_terms(model_id: Any,
     found: list[tuple[str, Mapping[str, Any]]] = []
     for lower in model.get("inputs_from") or []:
         found += _chain_terms(lower, models, seen)
-    found += [
-        (model_id, term) for term in model.get("terms") or [] if isinstance(term, Mapping)
-    ]
+    found += [(model_id, term) for term in model.get("terms") or [] if isinstance(term, Mapping)]
     return found
+
 
 def check_table_purpose(record: Mapping[str, Any], findings: Findings) -> None:
     """A coordinate table either reports an analysis or says what it does instead.
@@ -868,6 +877,7 @@ def check_table_purpose(record: Mapping[str, Any], findings: Findings) -> None:
                 "nothing says whether it was deliberately not encoded or missed",
             )
 
+
 def check_references_resolve(
     record: Mapping[str, Any],
     findings: Findings,
@@ -908,9 +918,8 @@ def check_references_resolve(
             )
             findings.error(path, f"names {local_id!r}, which is not {tail}")
 
-def check_one_protocol_per_acquisition(
-    record: Mapping[str, Any], findings: Findings
-) -> None:
+
+def check_one_protocol_per_acquisition(record: Mapping[str, Any], findings: Findings) -> None:
     """Several echo times and several repetition times is two protocols, not one sequence.
 
     `echo_time_seconds` is "one value per echo": a multi-echo sequence has several, and one
@@ -974,6 +983,7 @@ def check_group_instruments(record: Mapping[str, Any], findings: Findings) -> No
         "drop the reference if nothing established this group's diagnosis",
     )
 
+
 def check_analysis_inference_settings(record: Mapping[str, Any], findings: Findings) -> None:
     """An analysis's thresholding scheme must be one the study declares.
 
@@ -996,6 +1006,7 @@ def check_analysis_inference_settings(record: Mapping[str, Any], findings: Findi
         "states, or point at the existing scheme this analysis shares",
     )
 
+
 def check_analysis_measures(record: Mapping[str, Any], findings: Findings) -> None:
     """An analysis's measured quantity must be one the study declares.
 
@@ -1015,6 +1026,7 @@ def check_analysis_measures(record: Mapping[str, Any], findings: Findings) -> No
         tail="a measure of this study. Add it to `measures` with the quantity the "
         "source names, or point at the existing measure this analysis shares",
     )
+
 
 def check_acquisition_devices(record: Mapping[str, Any], findings: Findings) -> None:
     """An acquisition's device must be one the study declares.
@@ -1105,8 +1117,16 @@ _MODALITY_FAMILIES: dict[str, frozenset[str]] = {
     "PET": frozenset({"electrophysiology", "electrophysiological_amplitude"}),
     "sMRI": frozenset({"electrophysiology", "electrophysiological_amplitude"}),
     "dMRI": frozenset({"electrophysiology", "electrophysiological_amplitude"}),
-    "EEG": frozenset({"functional_bold", "bold_response", "structural_morphometry",
-                      "perfusion", "diffusion", "molecular_imaging"}),
+    "EEG": frozenset(
+        {
+            "functional_bold",
+            "bold_response",
+            "structural_morphometry",
+            "perfusion",
+            "diffusion",
+            "molecular_imaging",
+        }
+    ),
 }
 
 
@@ -1209,21 +1229,69 @@ def check_counts_add_up(record: Mapping[str, Any], findings: Findings) -> None:
 
 RULES: tuple[Rule, ...] = (
     Rule("cell_terms", "every cell names a term its analysis's model can reach", check_cell_terms),
-    Rule("model_stages", "a stage chain is acyclic and names each column once", check_model_stages),
+    Rule(
+        "model_stages", "a stage chain is acyclic and names each column once", check_model_stages
+    ),
     Rule("table_purpose", "every table is either encoded or says why not", check_table_purpose),
-    Rule("group_instruments", "a group's diagnostic instrument is an assessment of the study", check_group_instruments),
-    Rule("analysis_inference_settings", "a thresholding scheme the study declares", check_analysis_inference_settings),
-    Rule("analysis_measures", "an analysis measures something the study declares", check_analysis_measures),
-    Rule("acquisition_devices", "an acquisition names a device the study declares", check_acquisition_devices),
+    Rule(
+        "group_instruments",
+        "a group's diagnostic instrument is an assessment of the study",
+        check_group_instruments,
+    ),
+    Rule(
+        "analysis_inference_settings",
+        "a thresholding scheme the study declares",
+        check_analysis_inference_settings,
+    ),
+    Rule(
+        "analysis_measures",
+        "an analysis measures something the study declares",
+        check_analysis_measures,
+    ),
+    Rule(
+        "acquisition_devices",
+        "an acquisition names a device the study declares",
+        check_acquisition_devices,
+    ),
     Rule("crossings", "an interaction the prose names is encoded as one", check_crossings),
-    Rule("product_columns", "a product column's factors are both in the model", check_product_columns),
-    Rule("unsigned_cells", "a contrast the name signs has cells that carry the sign", check_unsigned_cells),
-    Rule("occasion_factors", "a within-subject occasion is a factor, not two analyses", check_occasion_factors),
-    Rule("arm_reachability", "a trial's arms are reachable from its analyses", check_arm_reachability),
-    Rule("derived_columns", "a derived column says what it was derived from", check_derived_columns),
-    Rule("one_protocol_per_acquisition", "an acquisition describes one sequence, not two", check_one_protocol_per_acquisition),
-    Rule("value_source_honesty", "a value said to be reported has a sentence", check_value_source_honesty),
-    Rule("modality_measures", "a measure the acquisition could have produced", check_modality_measures),
+    Rule(
+        "product_columns",
+        "a product column's factors are both in the model",
+        check_product_columns,
+    ),
+    Rule(
+        "unsigned_cells",
+        "a contrast the name signs has cells that carry the sign",
+        check_unsigned_cells,
+    ),
+    Rule(
+        "occasion_factors",
+        "a within-subject occasion is a factor, not two analyses",
+        check_occasion_factors,
+    ),
+    Rule(
+        "arm_reachability",
+        "a trial's arms are reachable from its analyses",
+        check_arm_reachability,
+    ),
+    Rule(
+        "derived_columns", "a derived column says what it was derived from", check_derived_columns
+    ),
+    Rule(
+        "one_protocol_per_acquisition",
+        "an acquisition describes one sequence, not two",
+        check_one_protocol_per_acquisition,
+    ),
+    Rule(
+        "value_source_honesty",
+        "a value said to be reported has a sentence",
+        check_value_source_honesty,
+    ),
+    Rule(
+        "modality_measures",
+        "a measure the acquisition could have produced",
+        check_modality_measures,
+    ),
     Rule("counts_add_up", "a breakdown sums to the group it breaks down", check_counts_add_up),
 )
 

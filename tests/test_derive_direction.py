@@ -137,9 +137,7 @@ def test_the_mirror_is_named_for_the_half_it_holds_not_the_half_it_came_from():
     described = {
         "local_id": "a1",
         "name": {"extraction_status": "extracted", "value": "FESZ > NC"},
-        "effect": {
-            "cells": [{"level": {"value": "FESZ"}, "direction": {"value": "positive"}}]
-        },
+        "effect": {"cells": [{"level": {"value": "FESZ"}, "direction": {"value": "positive"}}]},
     }
     withheld = {"name": "FESZ > NC (reversed)", "points": []}
     mirrored = dd.mirror_analysis(described, withheld, "t3#2")
@@ -301,11 +299,7 @@ def test_a_withheld_half_whose_partner_vanished_is_reported_not_invented(tmp_pat
     stage1 = tmp_path / "analyses.json"
     stage1.write_text(
         json.dumps(
-            {
-                "analyses": [
-                    {"name": "A > B (reversed)", "mirror_of": "A > B", "withhold": True}
-                ]
-            }
+            {"analyses": [{"name": "A > B (reversed)", "mirror_of": "A > B", "withhold": True}]}
         )
     )
     body = {"analyses": []}

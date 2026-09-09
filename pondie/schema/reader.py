@@ -201,9 +201,9 @@ class Schema:
         if class_name not in self.classes:
             return frozenset()
         if class_name not in self._subclasses:
-            self._subclasses[class_name] = (
-                frozenset(self.view.class_descendants(class_name)) - {class_name}
-            )
+            self._subclasses[class_name] = frozenset(self.view.class_descendants(class_name)) - {
+                class_name
+            }
         return self._subclasses[class_name]
 
     def resolves_to(self, class_name: str, ancestor: str) -> bool:
@@ -269,8 +269,11 @@ class Schema:
             return True
         for candidate in self.ranges(attribute):
             inner = self.attributes(candidate).get("value") if candidate in self else None
-            if inner is not None and self.resolves_to(candidate, "ExtractedValue") \
-                    and inner.multivalued:
+            if (
+                inner is not None
+                and self.resolves_to(candidate, "ExtractedValue")
+                and inner.multivalued
+            ):
                 return True
         return False
 

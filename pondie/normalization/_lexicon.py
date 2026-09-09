@@ -76,9 +76,7 @@ def residual(decisions: list[Decision]) -> Counter:
 def summarize(decisions: list[Decision], values: tuple[str, ...]) -> str:
     counts = Counter(d.value for d in decisions)
     total = max(1, sum(counts.values()))
-    lines = [
-        f"  {v:34s} {counts[v]:6d}  ({counts[v] / total:4.0%})" for v in values if counts[v]
-    ]
+    lines = [f"  {v:34s} {counts[v]:6d}  ({counts[v] / total:4.0%})" for v in values if counts[v]]
     folded = Counter((d.value, d.text) for d in decisions if d.reason == "lexical" and d.text)
     for v in values:
         forms = [(t, n) for (val, t), n in folded.items() if val == v]

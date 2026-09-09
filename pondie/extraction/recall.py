@@ -45,11 +45,13 @@ class Proposer(Protocol):
 
     local: bool
 
-    def propose(self, sch: Schema, class_name: str, premise: str,
-                instruction: str) -> Sequence[Mapping[str, Any]]: ...
+    def propose(
+        self, sch: Schema, class_name: str, premise: str, instruction: str
+    ) -> Sequence[Mapping[str, Any]]: ...
 
-    def ask(self, template: Mapping[str, Any], instruction: str, premise: str,
-            what: str = "") -> Mapping[str, Any]: ...
+    def ask(
+        self, template: Mapping[str, Any], instruction: str, premise: str, what: str = ""
+    ) -> Mapping[str, Any]: ...
 
 
 class Starved(RuntimeError):
@@ -65,21 +67,37 @@ class Starved(RuntimeError):
 #: LinkML range -> the type NuExtract templates use. Anything unmapped becomes a string,
 #: which is the safe default: NuExtract validates its own output against the template, so a
 #: wrong type costs a field and a wrong *shape* costs the reply.
-_TYPES = {"string": "string", "integer": "integer", "float": "number",
-          "double": "number", "decimal": "number", "boolean": "boolean",
-          "date": "date-time", "datetime": "date-time", "uriorcurie": "string"}
+_TYPES = {
+    "string": "string",
+    "integer": "integer",
+    "float": "number",
+    "double": "number",
+    "decimal": "number",
+    "boolean": "boolean",
+    "date": "date-time",
+    "datetime": "date-time",
+    "uriorcurie": "string",
+}
 
 #: Slots a proposal has no business setting. `id` is the schema's identifier and `local_id`
 #: is added back explicitly at the front; the rest are minted by other stages or hold text
 #: this pass cannot check.
-_SKIP = frozenset({"id", "mirror_of", "source_table_analysis", "defines_regions",
-                   "model_representation_notes",
-                   # Derived from the `Analysis.tables` join by `derive_table_effects`, and
-                   # unanswerable from a template: the slot's correct value is usually
-                   # absent, the vocabulary has no token for "this is an analysis", and a
-                   # proposer shown a key with eight choices picks one. It marked 18 of 19
-                   # tables over twelve papers, 16 of them cited by an analysis.
-                   "purpose"})
+_SKIP = frozenset(
+    {
+        "id",
+        "mirror_of",
+        "source_table_analysis",
+        "defines_regions",
+        "model_representation_notes",
+        # Derived from the `Analysis.tables` join by `derive_table_effects`, and
+        # unanswerable from a template: the slot's correct value is usually
+        # absent, the vocabulary has no token for "this is an analysis", and a
+        # proposer shown a key with eight choices picks one. It marked 18 of 19
+        # tables over twelve papers, 16 of them cited by an analysis.
+        "purpose",
+    }
+)
+
 
 #: Which template variants are in play, from `PONDIE_TEMPLATE` -- a comma-separated set of
 #: `described`, `quoted`, `scoped`. Empty is the shape every measurement in
@@ -93,8 +111,9 @@ def styles() -> frozenset[str]:
     """The template variants asked for, as a set."""
     import os
 
-    return frozenset(part.strip() for part in os.environ.get("PONDIE_TEMPLATE", "").split(",")
-                     if part.strip())
+    return frozenset(
+        part.strip() for part in os.environ.get("PONDIE_TEMPLATE", "").split(",") if part.strip()
+    )
 
 
 #: The rule the residue needs stated. Of the eleven wrong values left after the warrant fix,
@@ -134,12 +153,20 @@ matter masking is not a restriction to a region at all.
 
 #: What each class is called when asking for it. Read from the container name rather than
 #: the class so the phrasing matches the schema's own plural.
-_NOUN = {"Analysis": "statistical analysis", "Region": "brain region",
-         "Group": "participant group", "Task": "task", "Measure": "measured quantity",
-         "Acquisition": "imaging acquisition", "Device": "scanner",
-         "Preprocessing": "preprocessing pipeline", "ModelEstimation": "statistical model",
-         "InferenceSettings": "thresholding and correction scheme",
-         "Table": "table", "Assessment": "assessment instrument"}
+_NOUN = {
+    "Analysis": "statistical analysis",
+    "Region": "brain region",
+    "Group": "participant group",
+    "Task": "task",
+    "Measure": "measured quantity",
+    "Acquisition": "imaging acquisition",
+    "Device": "scanner",
+    "Preprocessing": "preprocessing pipeline",
+    "ModelEstimation": "statistical model",
+    "InferenceSettings": "thresholding and correction scheme",
+    "Table": "table",
+    "Assessment": "assessment instrument",
+}
 
 
 def directive(class_name: str) -> str:
@@ -153,12 +180,16 @@ def directive(class_name: str) -> str:
     noun = _NOUN.get(class_name, class_name.lower())
     if class_name == "Analysis":
         # Not "used by one of its statistical analyses", which is circular for this sweep.
-        return ("List every statistical analysis this paper reports on brain data. An "
-                "analysis is one tested comparison or association that produces a "
-                "statistical map or a set of regional results -- not a method or a piece "
-                "of software.\n\n")
-    return (f"List every {noun} in this paper that is used by, or reported for, one of its "
-            f"statistical analyses. Ignore anything not tied to an analysis.\n\n")
+        return (
+            "List every statistical analysis this paper reports on brain data. An "
+            "analysis is one tested comparison or association that produces a "
+            "statistical map or a set of regional results -- not a method or a piece "
+            "of software.\n\n"
+        )
+    return (
+        f"List every {noun} in this paper that is used by, or reported for, one of its "
+        f"statistical analyses. Ignore anything not tied to an analysis.\n\n"
+    )
 
 
 def nu_type(sch: Schema, slot: Any) -> Any:
@@ -175,7 +206,7 @@ def nu_type(sch: Schema, slot: Any) -> Any:
             permissible = list(getattr(sch.enums[candidate], "permissible_values", {}) or {})
             return permissible or "string"
     if any(candidate in sch.classes for candidate in ranges):
-        return None                      # a reference; `candidates` offers those by name
+        return None  # a reference; `candidates` offers those by name
     return _TYPES.get(str(ranges[0] if ranges else "string").lower(), "string")
 
 
@@ -235,8 +266,10 @@ def descriptions(sch: Schema, class_name: str, limit: int = 3_000) -> str:
         if total > limit:
             # Said, not silent: the fields that fall off are still in the template, and a
             # model shown twenty documented and a twenty-first not should know which.
-            block.append(f"- ({len(lines) - len(block)} further fields are not described "
-                         f"here; do not guess at them)")
+            block.append(
+                f"- ({len(lines) - len(block)} further fields are not described "
+                f"here; do not guess at them)"
+            )
             break
         block.append(line)
     return "What each field means:\n" + "\n".join(block) + "\n\n"
@@ -273,8 +306,10 @@ def vocabulary(sch: Schema, class_name: str) -> str:
             block.append(f"- ... {len(lines) - len(block)} further values not listed here")
             break
         block.append(line)
-    return ("\n\nWhat the listed values mean. Choose one only if the paper describes that; "
-            "leave the field out otherwise.\n" + "\n".join(block) + "\n\n")
+    return (
+        "\n\nWhat the listed values mean. Choose one only if the paper describes that; "
+        "leave the field out otherwise.\n" + "\n".join(block) + "\n\n"
+    )
 
 
 def _vocabulary_lines(sch: Schema, class_name: str, prefix: str) -> list[str]:
@@ -330,10 +365,14 @@ def template_for(sch: Schema, class_name: str) -> dict:
         # says so in its range name (`ExtractedStringList`) and the attribute's own flag is
         # False, so the template offered a scalar for all 23 list slots -- the proposer
         # could not express two medications even where the paper named two.
-        shaped = [projected] if sch.is_multivalued(class_name, name) \
-            and isinstance(projected, str) else projected
-        fields[name] = {"value": shaped, "quote": "verbatim-string"} \
-            if "quoted" in styles() else shaped
+        shaped = (
+            [projected]
+            if sch.is_multivalued(class_name, name) and isinstance(projected, str)
+            else projected
+        )
+        fields[name] = (
+            {"value": shaped, "quote": "verbatim-string"} if "quoted" in styles() else shaped
+        )
     return {sch.containers().get(class_name, class_name.lower()): [fields]}
 
 
@@ -375,8 +414,9 @@ class _Proposes:
     applied to one copy and not the other is invisible until a run disagrees with itself.
     """
 
-    def propose(self, sch: Schema, class_name: str, premise: str,
-                instruction: str) -> Sequence[Mapping[str, Any]]:
+    def propose(
+        self, sch: Schema, class_name: str, premise: str, instruction: str
+    ) -> Sequence[Mapping[str, Any]]:
         template = template_for(sch, class_name)
         key = next(iter(template))
         # The vocabulary rides with the instruction, not the template: a template is a type
@@ -386,12 +426,15 @@ class _Proposes:
         chosen = styles()
         said = descriptions(sch, class_name) if "described" in chosen else ""
         scope = SCOPED if "scoped" in chosen else ""
-        payload = self.ask(template, scope + said + vocabulary(sch, class_name) + instruction,
-                           premise, what=class_name)
+        payload = self.ask(
+            template,
+            scope + said + vocabulary(sch, class_name) + instruction,
+            premise,
+            what=class_name,
+        )
         proposed = payload.get(key) if isinstance(payload, Mapping) else None
         found = [p for p in (proposed or []) if isinstance(p, Mapping)]
         return [unquote(p) for p in found] if "quoted" in chosen else found
-
 
 
 def sweep_order(sch: Schema, keys: Sequence[str]) -> list[str]:
@@ -404,9 +447,13 @@ def sweep_order(sch: Schema, keys: Sequence[str]) -> list[str]:
     containers = sch.containers()
     class_of = sch.classes_by_container()
     targets = {
-        key: {containers.get(slot.range) for _n, slot, kind in sch.iter_slots(class_of[key])
-              if kind == "reference" and isinstance(slot.range, str)}
-        for key in keys if key in class_of
+        key: {
+            containers.get(slot.range)
+            for _n, slot, kind in sch.iter_slots(class_of[key])
+            if kind == "reference" and isinstance(slot.range, str)
+        }
+        for key in keys
+        if key in class_of
     }
     out: list[str] = []
     seen: set[str] = set()
@@ -448,10 +495,12 @@ def existing(sch: Schema, record: Mapping[str, Any], class_name: str) -> str:
         summary = _slot_summary(sch, entity, class_name)
         if summary:
             lines.append(f"    current values: {summary}")
-    return (head + "\n".join(lines) + "\n\n"
-            "Return the COMPLETE list. To correct one of these, reuse its `local_id` and "
-            "give only the values the paper contradicts. For one the paper describes that "
-            "is missing above, leave `local_id` out.\n\n")
+    return (
+        head + "\n".join(lines) + "\n\n"
+        "Return the COMPLETE list. To correct one of these, reuse its `local_id` and "
+        "give only the values the paper contradicts. For one the paper describes that "
+        "is missing above, leave `local_id` out.\n\n"
+    )
 
 
 def _slot_summary(sch: Schema, entity: Mapping[str, Any], class_name: str) -> str:
@@ -496,18 +545,26 @@ def candidates(sch: Schema, record: Mapping[str, Any], class_name: str) -> str:
             continue
         key = sch.containers().get(slot.range)
         listed = "; ".join(
-            label for entity in (record.get(key) or []) if isinstance(entity, Mapping)
-            for label in [label_of(entity)] if label
+            label
+            for entity in (record.get(key) or [])
+            if isinstance(entity, Mapping)
+            for label in [label_of(entity)]
+            if label
         )
-        blocks.append(f"- `{name}` ({slot.range}): {_meaning(slot)}\n"
-                      f"  {'already in the record: ' + listed if listed else 'none in the record yet'}")
+        blocks.append(
+            f"- `{name}` ({slot.range}): {_meaning(slot)}\n"
+            f"  {'already in the record: ' + listed if listed else 'none in the record yet'}"
+        )
     if not blocks:
         return ""
-    return ("## Links this record can carry\n\n" + "\n".join(blocks) +
-            "\n\nName an entity in the slot that describes it, exactly as listed where it is "
-            "listed. Name one the paper describes even if it is not listed. Leave a slot out "
-            "when the paper gives nothing to put there -- an empty slot is a claim in itself "
-            "where the description above says so.\n\n")
+    return (
+        "## Links this record can carry\n\n"
+        + "\n".join(blocks)
+        + "\n\nName an entity in the slot that describes it, exactly as listed where it is "
+        "listed. Name one the paper describes even if it is not listed. Leave a slot out "
+        "when the paper gives nothing to put there -- an empty slot is a claim in itself "
+        "where the description above says so.\n\n"
+    )
 
 
 def _meaning(slot: Any) -> str:
@@ -516,5 +573,3 @@ def _meaning(slot: Any) -> str:
     text = " ".join((getattr(slot, "description", "") or "").split())
     parts = re.split(r"(?<=[.?!]) ", text)
     return " ".join(parts[:sentences]) or "an entity of this class"
-
-

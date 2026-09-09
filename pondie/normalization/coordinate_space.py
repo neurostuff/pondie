@@ -58,9 +58,7 @@ def resolve(analysis: dict, record: dict, points_by_key: dict | None = None) -> 
         return Decision(UNKNOWN, "tables disagree")
 
     key = str(value_of(analysis.get("source_table_analysis")) or "")
-    spaces = {
-        str(p.get("space") or "").upper() for p in ((points_by_key or {}).get(key) or [])
-    }
+    spaces = {str(p.get("space") or "").upper() for p in ((points_by_key or {}).get(key) or [])}
     spaces.discard("")
     if len(spaces) == 1:
         return Decision(normalize(spaces.pop()).value, "parsed coordinates")

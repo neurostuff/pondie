@@ -21,10 +21,7 @@ CASES = [("els", "elsevier"), ("ace", "ace")]
 def coordinates(study: Path, flavour: str) -> list[dict]:
     lines = (study / "processed" / flavour / "tables.jsonl").read_text().splitlines()
     return [
-        c
-        for line in lines
-        if line.strip()
-        for c in (json.loads(line).get("coordinates") or [])
+        c for line in lines if line.strip() for c in (json.loads(line).get("coordinates") or [])
     ]
 
 
@@ -60,9 +57,7 @@ def test_a_coordinate_the_manifest_lists_can_be_spanned(name, flavour):
         for c in coords
         if not all(tp.normalize_number(str(int(c[axis]))) in numbers for axis in "xyz")
     ]
-    assert (
-        not missing
-    ), f"{len(missing)} of {len(coords)} coordinates are not in the built text"
+    assert not missing, f"{len(missing)} of {len(coords)} coordinates are not in the built text"
 
 
 @pytest.mark.parametrize("name,flavour", CASES)

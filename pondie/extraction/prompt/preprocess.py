@@ -31,8 +31,8 @@ from __future__ import annotations
 import argparse
 import math
 import re
-from collections.abc import Iterable
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -428,7 +428,8 @@ _AXIS_TRIPLE = re.compile(
 #: A smoothing kernel is three numbers in millimetres and is not a place.
 #: `FWHM(mm)=15.7, 15.7, 13.7` was matched as a location in the wider corpus.
 _KERNEL_LABEL = re.compile(
-    r"\b(?:FWHM|kernel|smooth(?:ed|ing)?|voxel siz\w+|resolution)\b[^.;]{0,24}$", re.I)
+    r"\b(?:FWHM|kernel|smooth(?:ed|ing)?|voxel siz\w+|resolution)\b[^.;]{0,24}$", re.I
+)
 
 #: How near the cue has to sit. "coordinated neural activity ... (104, 105, 106, 107)"
 #: put a cue and a citation list in one sentence, and the whole-sentence test read them
@@ -472,10 +473,10 @@ def coordinates_in(sentence: str) -> list[tuple[float, float, float]]:
         if trip:
             found.append(trip)
     for match in _BARE_TRIPLE.finditer(sentence):
-        before = sentence[:match.start()]
+        before = sentence[: match.start()]
         if _AREA_LABEL.search(before) or _KERNEL_LABEL.search(before):
             continue
-        near = sentence[max(0, match.start() - _CUE_WINDOW):match.end() + 40]
+        near = sentence[max(0, match.start() - _CUE_WINDOW) : match.end() + 40]
         if not _COORDINATE_CUE.search(near):
             continue
         trip = _triple(re.findall(_NUM, match.group(0)))
@@ -491,8 +492,11 @@ def _runs_on(values: tuple[float, float, float]) -> bool:
     A real location can be three consecutive integers, and the corpus holds none -- the
     ratio of citation lists to (10, 11, 12) is not close.
     """
-    return (all(float(v).is_integer() for v in values)
-            and values[1] - values[0] == 1 and values[2] - values[1] == 1)
+    return (
+        all(float(v).is_integer() for v in values)
+        and values[1] - values[0] == 1
+        and values[2] - values[1] == 1
+    )
 
 
 def _triple(parts) -> tuple[float, float, float] | None:
@@ -503,9 +507,9 @@ def _triple(parts) -> tuple[float, float, float] | None:
     if len(values) != 3:
         return None
     if all(abs(v) < 1 for v in values):
-        return None                       # p-values and effect sizes, not a location
+        return None  # p-values and effect sizes, not a location
     if any(abs(v) > 120 for v in values):
-        return None                       # outside either standard space
+        return None  # outside either standard space
     return values
 
 
@@ -720,9 +724,7 @@ _METHOD_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
     (
         "repetition time",
         "MRI.repetition_time_seconds",
-        re.compile(
-            r"\b(?:TR|repetition time)\b[^.;)\n]{0,25}?(\d+(?:[.,]\d+)?)\s*(m?s)", re.I
-        ),
+        re.compile(r"\b(?:TR|repetition time)\b[^.;)\n]{0,25}?(\d+(?:[.,]\d+)?)\s*(m?s)", re.I),
     ),
     (
         "echo time",
@@ -1191,9 +1193,7 @@ respectively however therefore thus moreover furthermore addition""".split())
 
 
 def _terms(text: str) -> list[str]:
-    return [
-        w for w in re.findall(r"[a-z][a-z0-9_\-]{2,}", text.lower()) if w not in _STOPWORDS
-    ]
+    return [w for w in re.findall(r"[a-z][a-z0-9_\-]{2,}", text.lower()) if w not in _STOPWORDS]
 
 
 #: What stands where `retrieval` dropped a sentence. No terminal punctuation before the
@@ -1445,8 +1445,7 @@ def prose_coordinates(
         if section.zone in ("back", "intro"):
             continue
         for sentence in sentences(section.text):
-            found = [(c, tuple(round(v) for v in c) in seen)
-                     for c in coordinates_in(sentence)]
+            found = [(c, tuple(round(v) for v in c) in seen) for c in coordinates_in(sentence)]
             if found:
                 out.append((" ".join(sentence.split()), found))
     return out
@@ -1454,8 +1453,13 @@ def prose_coordinates(
 
 #: How the parse names the statistics it reads off a table, so a prose point and a table
 #: point describe their values the same way.
-_STAT_KIND = {"Z": "z-statistic", "t": "t-statistic", "F": "f-statistic",
-              "beta": "beta", "r": "correlation"}
+_STAT_KIND = {
+    "Z": "z-statistic",
+    "t": "t-statistic",
+    "F": "f-statistic",
+    "beta": "beta",
+    "r": "correlation",
+}
 
 #: A space named in the sentence. `Analysis.coordinate_space` is authoritative over this,
 #: but a point that knows its space is what lets the query engine compare it with others.
@@ -1493,13 +1497,16 @@ def prose_points(sentence: str) -> list[dict]:
     points = []
     for index, (coord, _start, end) in enumerate(spans):
         following = spans[index + 1][1] if index + 1 < len(spans) else len(sentence)
-        values = [{"value": value, "kind": kind}
-                  for at, kind, value in stats if end <= at < following]
-        points.append({
-            "coordinates": list(coord),
-            "space": space.group(0).upper() if space else None,
-            "values": values,
-        })
+        values = [
+            {"value": value, "kind": kind} for at, kind, value in stats if end <= at < following
+        ]
+        points.append(
+            {
+                "coordinates": list(coord),
+                "space": space.group(0).upper() if space else None,
+                "values": values,
+            }
+        )
     return points
 
 
@@ -1511,10 +1518,10 @@ def _coordinate_spans(sentence: str) -> list[tuple[tuple[float, float, float], i
         if trip:
             out.append((trip, match.start(), match.end()))
     for match in _BARE_TRIPLE.finditer(sentence):
-        before = sentence[:match.start()]
+        before = sentence[: match.start()]
         if _AREA_LABEL.search(before) or _KERNEL_LABEL.search(before):
             continue
-        near = sentence[max(0, match.start() - _CUE_WINDOW):match.end() + 40]
+        near = sentence[max(0, match.start() - _CUE_WINDOW) : match.end() + 40]
         if not _COORDINATE_CUE.search(near):
             continue
         trip = _triple(re.findall(_NUM, match.group(0)))
@@ -1523,9 +1530,7 @@ def _coordinate_spans(sentence: str) -> list[tuple[tuple[float, float, float], i
     return sorted(out, key=lambda row: row[1])
 
 
-def prose_parse_entries(
-    text: str, known: Iterable[tuple[float, float, float]] = ()
-) -> list[dict]:
+def prose_parse_entries(text: str, known: Iterable[tuple[float, float, float]] = ()) -> list[dict]:
     """Prose coordinate sentences, shaped as parse entries so they share one address space.
 
     The schema stores no coordinates -- `Analysis.source_table_analysis` is the only route
@@ -1538,16 +1543,18 @@ def prose_parse_entries(
     """
     entries = []
     for sentence, found in prose_coordinates(text, known):
-        entries.append({
-            "name": "",                   # named by the extraction pass, from the sentence
-            "description": sentence,
-            "table_id": "prose",
-            "table_number": None,
-            "table_caption": sentence[:300],
-            "table_footer": "",
-            "from_prose": True,
-            "points": _mark(prose_points(sentence), found),
-        })
+        entries.append(
+            {
+                "name": "",  # named by the extraction pass, from the sentence
+                "description": sentence,
+                "table_id": "prose",
+                "table_number": None,
+                "table_caption": sentence[:300],
+                "table_footer": "",
+                "from_prose": True,
+                "points": _mark(prose_points(sentence), found),
+            }
+        )
     return entries
 
 
@@ -1560,9 +1567,7 @@ def _mark(points: list[dict], found) -> list[dict]:
     return points
 
 
-def prose_coordinate_block(
-    text: str, known: Iterable[tuple[float, float, float]] = ()
-) -> str:
+def prose_coordinate_block(text: str, known: Iterable[tuple[float, float, float]] = ()) -> str:
     rows = prose_coordinates(text, known)
     if not rows:
         return ""
@@ -1580,9 +1585,7 @@ def statistic_block(text: str) -> str:
     rows = statistic_sentences(text)
     if not rows:
         return ""
-    body = "\n".join(
-        f"  [{'+'.join(kinds)}] {sentence[:400]}" for sentence, kinds in rows[:60]
-    )
+    body = "\n".join(f"  [{'+'.join(kinds)}] {sentence[:400]}" for sentence, kinds in rows[:60])
     return _block(STATS_TITLE, STATS_NOTE + "\n\n" + body)
 
 
@@ -1591,8 +1594,7 @@ def contrast_block(text: str) -> str:
     if not rows:
         return ""
     body = "\n".join(
-        f"  [{zone}: {'+'.join(groups)}] {sentence[:400]}"
-        for sentence, groups, zone in rows[:70]
+        f"  [{zone}: {'+'.join(groups)}] {sentence[:400]}" for sentence, groups, zone in rows[:70]
     )
     return _block(CONTRAST_TITLE, CONTRAST_NOTE + "\n\n" + body)
 
@@ -1639,9 +1641,7 @@ def region_block(text: str) -> str:
         return ""
     parts = []
     if delimited:
-        parts.append(
-            REGION_DELIMITED_NOTE + "\n" + "\n".join(f"  {name}" for name in delimited)
-        )
+        parts.append(REGION_DELIMITED_NOTE + "\n" + "\n".join(f"  {name}" for name in delimited))
     if reported:
         parts.append(REGION_REPORTED_NOTE + "\n" + "\n".join(f"  {name}" for name in reported))
     return _block(REGION_TITLE, "\n".join(parts))
@@ -1893,8 +1893,7 @@ def apply_strategy(name: str, text: str, mode: str) -> Prepared:
         return Prepared(text)
     if name not in STRATEGIES:
         raise KeyError(
-            f"unknown preprocessing strategy {name!r}; "
-            f"have {', '.join(sorted(STRATEGIES))}"
+            f"unknown preprocessing strategy {name!r}; " f"have {', '.join(sorted(STRATEGIES))}"
         )
     return STRATEGIES[name].apply(text, mode)
 

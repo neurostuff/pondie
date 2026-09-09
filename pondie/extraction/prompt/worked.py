@@ -287,11 +287,7 @@ def _render(node: Any, indent: int, notes: dict[str, str]) -> list[str]:
             # the examples that show both.
             if indent == 0 and key in ("effect", "analysis") and lines:
                 lines.append("")
-            if (
-                isinstance(value, list)
-                and value
-                and not any(isinstance(v, dict) for v in value)
-            ):
+            if isinstance(value, list) and value and not any(isinstance(v, dict) for v in value):
                 lines.append(f"{pad}{key}: [{', '.join(map(str, value))}]{_note(key, notes)}")
             elif isinstance(value, (dict, list)):
                 lines.append(f"{pad}{key}:")

@@ -202,9 +202,7 @@ def test_a_trial_with_no_comparator_arm_yields_nothing():
     assert (
         list(
             q.treatment_contrasts(
-                _trial(
-                    ("escitalopram", "placebo"), kinds=("pharmacological", "pharmacological")
-                )
+                _trial(("escitalopram", "placebo"), kinds=("pharmacological", "pharmacological"))
             )
         )
         == []

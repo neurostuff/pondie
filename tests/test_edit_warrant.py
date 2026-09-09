@@ -328,9 +328,7 @@ def test_adding_to_a_value_is_not_replacing_it():
     from pondie.extraction.record.edit import Edit, refuses_an_unwarranted_replacement
 
     entity = {"local_id": "g1", "description": _generated("Children with ASD")}
-    edit = Edit(
-        {}, entity, "description", "Children with ASD, all male and right-handed", "", ""
-    )
+    edit = Edit({}, entity, "description", "Children with ASD, all male and right-handed", "", "")
     assert refuses_an_unwarranted_replacement(edit) is None
 
 
