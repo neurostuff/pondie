@@ -1324,6 +1324,25 @@ def repoint_out_of_scope_terms(body: dict[str, Any]) -> list[str]:
     levels, and it covers 24 of the 105 out-of-scope references measured over 30 records.
     The other 81 are left reported -- 73 have no same-named term in scope at all, which
     means something larger is wrong than a mistyped identifier.
+
+    A second, narrower case: the cell names an id nothing declares, and exactly one term in
+    scope declares that id under a model prefix -- `trm_modality` against
+    `mod_mass_univariate.trm_modality`. That is not a mistyped identifier but a disagreement
+    between two passes. `demands` declares a term `trm_modality` and writes cells naming it;
+    `satisfy` re-declares it once per model estimation that needs it, prefixing each with the
+    model to keep them apart, and the cells written by the earlier pass are left pointing at
+    an id no longer present. 21 of 183 cells over the fifteen benchmark papers, against 0 of
+    186 in the reviewer's reference.
+
+    It is worth repairing because the loss is silent and large. Nothing points at the
+    surviving term, so it has no incoming edges; the benchmark's aligner reads that as
+    structural disagreement and scores the pair 0.421 against a 0.45 threshold even though
+    the names agree and the parent model matches. The term goes unaligned, every cell on it
+    is dropped from the polarity score, and one paper loses 19 cells that way.
+
+    Scoped by the analysis, which is what makes it unambiguous: `trm_modality` may be
+    declared under two models, but only one of those is in this analysis's scope. Measured
+    over the same fifteen papers, all 21 resolve to exactly one term and none to several.
     """
 
     models = {
@@ -1352,6 +1371,17 @@ def repoint_out_of_scope_terms(body: dict[str, Any]) -> list[str]:
                 continue
             named = values.read(cell.get("term"))
             if not isinstance(named, str) or named in in_scope:
+                continue
+            if named not in everywhere:
+                # Declared nowhere: the id may be the unprefixed half of a term `satisfy`
+                # re-declared under its model.
+                under = [k for k in in_scope if k.endswith(f".{named}")]
+                if len(under) == 1:
+                    cell["term"] = under[0]
+                    fixed.append(
+                        f"analyses[{index}].effect.cells[{position}].term: "
+                        f"{named!r} -> {under[0]!r} (declared under its model)"
+                    )
                 continue
             wanted = name_of(everywhere.get(named))
             if not wanted:

@@ -1190,3 +1190,65 @@ def test_a_structure_a_flat_reply_cannot_carry_is_still_left_alone(sch):
 
     assert flat(sch, "Condition")
     assert not flat(sch, "Effect")
+
+
+def test_a_cell_naming_a_term_its_model_declares_under_a_prefix_is_repointed():
+    """`demands` declares `trm_modality` and writes cells naming it; `satisfy` re-declares it
+    once per model that needs it, prefixed to keep the two apart, and the earlier pass's cells
+    are left pointing at an id nothing declares. 21 of 183 cells over the benchmark papers.
+
+    The cost is silent: nothing points at the surviving term, so the benchmark's aligner sees
+    no incoming edges and scores the pair below threshold despite matching names and a
+    matching parent model -- one paper lost 19 polarity cells that way.
+    """
+    from pondie.extraction.record import builder as br
+
+    body = {
+        "model_estimations": [
+            {
+                "local_id": "mod_a",
+                "terms": [{"local_id": "mod_a.trm_modality", "name": field("modalities")}],
+            },
+            {
+                "local_id": "mod_b",
+                "terms": [{"local_id": "mod_b.trm_modality", "name": field("modalities")}],
+            },
+        ],
+        "analyses": [
+            {
+                "local_id": "an1",
+                "model_estimation": "mod_a",
+                "effect": {"cells": [{"term": "trm_modality", "direction": field("positive")}]},
+            }
+        ],
+    }
+    notes = br.repoint_out_of_scope_terms(body)
+    assert notes, "an unresolvable cell term must be repaired or reported, not passed over"
+    assert body["analyses"][0]["effect"]["cells"][0]["term"] == "mod_a.trm_modality"
+    assert "mod_b" not in notes[0], "the analysis's own model decides which prefix is meant"
+
+
+def test_the_prefix_repair_leaves_an_ambiguous_reference_alone():
+    """Scoping by the analysis is what makes the suffix unique. Where it is not, the cell
+    keeps a reference the validator reports rather than gaining a guessed one."""
+    from pondie.extraction.record import builder as br
+
+    body = {
+        "model_estimations": [
+            {
+                "local_id": "mod_a",
+                "inputs_from": ["mod_b"],
+                "terms": [{"local_id": "mod_a.trm_x", "name": field("x")}],
+            },
+            {"local_id": "mod_b", "terms": [{"local_id": "mod_b.trm_x", "name": field("x")}]},
+        ],
+        "analyses": [
+            {
+                "local_id": "an1",
+                "model_estimation": "mod_a",
+                "effect": {"cells": [{"term": "trm_x", "direction": field("positive")}]},
+            }
+        ],
+    }
+    br.repoint_out_of_scope_terms(body)
+    assert body["analyses"][0]["effect"]["cells"][0]["term"] == "trm_x"
