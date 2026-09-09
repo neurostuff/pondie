@@ -630,6 +630,39 @@ def requirements_block(declared: Mapping[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+#: Sections of the conventions the extractor cannot act on, dropped before the prompt.
+#: `## 1` gates papers on PubMed metadata before any text is read, so a model shown a paper
+#: has already passed it; `## 4` is the extraction-to-storage mapper's contract, and every
+#: field it describes is `deterministic` and therefore absent from the rendered schema. Both
+#: are here for a maintainer. `## 5` stays: it tells an extractor which facts have no slot,
+#: so it does not go hunting for one.
+_SKIP_SECTIONS = ("## 1. Gates", "## 4. Mapper responsibilities")
+
+
+def conventions() -> str:
+    """`extraction-readme.md` minus the sections addressed to a maintainer.
+
+    Sent on both the demands and the satisfy call, so a section the model cannot act on is
+    paid for twice a paper. These two are 2,758 tokens of the 12,437 the file carries.
+
+    Raises rather than silently sending everything when a heading moves: the saving is
+    invisible when it stops happening, and a prompt quietly growing back is exactly the kind
+    of regression nothing reports.
+    """
+    text = README.read_text(encoding="utf-8")
+    out = []
+    for chunk in re.split(r"\n(?=## )", text):
+        head = chunk.split("\n", 1)[0]
+        if any(head.startswith(skip) for skip in _SKIP_SECTIONS):
+            continue
+        out.append(chunk)
+    if len(out) != len(re.split(r"\n(?=## )", text)) - len(_SKIP_SECTIONS):
+        raise RuntimeError(
+            f"{README.name}: expected to drop {_SKIP_SECTIONS} and did not. A heading has "
+            f"moved, and the prompt would silently grow back.")
+    return "\n".join(out)
+
+
 def worked_models() -> str:
     """`representing-models.md` §5 -- the worked encodings -- for the prompt.
 
@@ -708,7 +741,7 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
 
     user = (
         "# Conventions (extraction-readme.md)\n\n"
-        + README.read_text(encoding="utf-8")
+        + conventions()
         + "\n\n# Worked models (representing-models.md)\n\n"
         + "Twelve reported results and the encoding each takes. Follow the shape of the\n"
         + "one this paper's result is closest to; do not invent a third when its wording\n"

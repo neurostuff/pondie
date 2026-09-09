@@ -220,3 +220,33 @@ def test_the_stage_one_block_requires_the_table_local_id() -> None:
         "rule 4c tells the model to omit a reference key when there is nothing to point at, "
         "which is exactly wrong here and has to be excepted explicitly"
     )
+
+
+def test_the_prompt_drops_the_sections_the_extractor_cannot_act_on():
+    """`## 1` gates papers on PubMed metadata before any text is read, and `## 4` is the
+    mapper's contract over fields the rendered schema does not even carry -- both are
+    maintainer documentation, and both were paid for on every demands and satisfy call.
+
+    `## 5` stays. It lists facts no slot holds, which is the one section written *to* an
+    extractor: without it a model hunts for somewhere to put a behavioural outcome.
+    """
+    sent = render.conventions()
+    assert "## 1. Gates" not in sent
+    assert "## 4. Mapper responsibilities" not in sent
+    assert "## 5. Known limits" in sent
+    assert "## 2. Conventions the schema cannot state" in sent
+    assert "## 3. Invariants" in sent
+
+
+def test_a_moved_heading_is_reported_rather_than_silently_restored():
+    """The saving is invisible when it stops happening: a renamed section would put 2,758
+    tokens a call back with nothing to say so."""
+    import pytest
+
+    original = render._SKIP_SECTIONS
+    render._SKIP_SECTIONS = ("## 9. A section that does not exist",)
+    try:
+        with pytest.raises(RuntimeError, match="has moved"):
+            render.conventions()
+    finally:
+        render._SKIP_SECTIONS = original
