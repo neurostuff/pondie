@@ -133,7 +133,7 @@ def test_evidence_asks_about_the_fields_that_exist_not_about_the_paper(tmp_path,
     from pondie.extraction.stages import Evidence
 
     paper = _paper(tmp_path)
-    settings = _settings(tmp_path, stages=(StageName.evidence,), union=False)
+    settings = _settings(tmp_path, stages=(StageName.evidence,))
     payload = settings.payloads / "S1" / "satisfy.json"
     payload.parent.mkdir(parents=True)
     payload.write_text(
@@ -170,7 +170,7 @@ def test_evidence_writes_its_blocks_into_the_payloads(tmp_path):
             )
 
     paper = _paper(tmp_path)
-    settings = _settings(tmp_path, stages=(StageName.evidence,), union=False)
+    settings = _settings(tmp_path, stages=(StageName.evidence,))
     payload = settings.payloads / "S1" / "satisfy.json"
     payload.parent.mkdir(parents=True)
     payload.write_text(
@@ -576,7 +576,7 @@ def test_the_evidence_pass_does_not_re_ask_what_the_table_manifest_already_answe
     from pondie.extraction.stages import Evidence
 
     paper = _paper(tmp_path)
-    settings = _settings(tmp_path, stages=(StageName.evidence,), union=False)
+    settings = _settings(tmp_path, stages=(StageName.evidence,))
     payloads = settings.payloads / paper.study_id
     payloads.mkdir(parents=True)
     tables = payloads / "tables.json"
@@ -622,7 +622,7 @@ def test_the_evidence_pass_sends_its_instructions_on_the_cacheable_half(tmp_path
             return ModelReply(payload={}, cost=Cost())
 
     paper = _paper(tmp_path)
-    settings = _settings(tmp_path, stages=(StageName.evidence,), union=False)
+    settings = _settings(tmp_path, stages=(StageName.evidence,))
     payloads = settings.payloads / paper.study_id
     payloads.mkdir(parents=True)
     (payloads / "satisfy.json").write_text(
@@ -1057,7 +1057,7 @@ def test_the_transport_budget_is_bounded() -> None:
 def test_repair_keeps_the_record_it_started_from(tmp_path, monkeypatch) -> None:
     """The stage writes the record in place, and that record is the only copy of what
     `build` produced. Without a copy, asking whether a repair helped means running it again
-    -- forty seconds a paper, and a different answer whenever the models move."""
+    -- forty seconds a paper, and a different answer whenever the model moves."""
     import json
 
     from pondie import paths
@@ -1073,14 +1073,13 @@ def test_repair_keeps_the_record_it_started_from(tmp_path, monkeypatch) -> None:
     corpus.mkdir(parents=True)
     (corpus / "text.tables.txt").write_text("Methods. A contrast was computed.")
 
-    settings = Settings(payloads=tmp_path / "payloads", records=records, model="m",
-                        proposer_url="", union=False, adjudicate=False,
+    settings = Settings(payloads=tmp_path / "payloads", records=records, model="m", adjudicate=False,
                         stages=(StageName.repair,))
     paper = Paper(study_id="p1", root=tmp_path / "corpus",
                   flavour=paths.Flavour.local)
 
-    monkeypatch.setattr("pondie.extraction.repair.models",
-                        lambda *a, **k: (_ for _ in ()).throw(ImportError("no models")))
+    # `caller=None` is the no-proposer path: the deterministic half of the pass runs and
+    # the record is still copied aside first, which is what this pins.
     stages.Repair().run(paper, settings, caller=None)
 
     kept = tmp_path / "unrepaired" / "p1.extraction.json"

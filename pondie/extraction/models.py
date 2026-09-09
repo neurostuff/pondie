@@ -17,7 +17,6 @@ setting that silently does not apply.
 
 from __future__ import annotations
 
-import zlib
 from enum import Enum
 from pathlib import Path
 from typing import Annotated, Literal
@@ -26,33 +25,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from pondie import paths
 
-
-def available_reranker_devices() -> tuple[str, ...]:
-    """Every visible CUDA device, or CPU when there is none.
-
-    The evidence retriever's cross-encoder is the one model this package runs
-    locally, and defaulting it to CPU meant a host with four idle GPUs scored spans
-    on its cores. Detection is here rather than at the call site so every entry
-    point gets it -- `pondie extract` exposes no flag for the field, so a CLI run
-    could not opt in at all.
-
-    Every failure mode falls back to CPU rather than raising: torch is an optional
-    dependency (the `reranker` extra), and a driver too old for the installed build
-    makes `is_available()` warn and return False. `retrieval.load_reranker` retries
-    on CPU per paper as well, so a card that will not hold the model costs that
-    paper its reranker and nothing else.
-    """
-    try:
-        import torch  # noqa: PLC0415
-
-        if torch.cuda.is_available() and torch.cuda.device_count():
-            return tuple(f"cuda:{i}" for i in range(torch.cuda.device_count()))
-    except Exception:
-        pass
-    return ("cpu",)
-
 #: Re-exported: a render is a fact about the corpus layout, so `paths` owns it.
 Flavour = paths.Flavour
+
 
 
 class Strict(BaseModel):
@@ -208,14 +183,6 @@ class Settings(Strict):
     stages: tuple[StageName, ...] = tuple(StageName)
     effort: Literal["minimal", "low", "medium", "high"] = "low"
     max_output_tokens: Annotated[int, Field(gt=0)] = 48_000
-    #: The second evidence locator. On by default because it costs nothing at the margin --
-    #: it runs locally -- and recovers spans the quote pass did not place.
-    union: bool = True
-    #: Devices the evidence retriever may use, cycled per paper. One device shared by nine
-    #: workers exhausted an 8GB card; a list lets a run spread them without any stage
-    #: having to know how many workers there are. Defaults to every visible GPU, falling
-    #: back to CPU -- see `available_reranker_devices`.
-    reranker_devices: tuple[str, ...] = Field(default_factory=available_reranker_devices)
     attempts: Annotated[int, Field(ge=1)] = 3
     retrieve_evidence: bool = True
     zero_foci_rule: bool = True
@@ -230,10 +197,6 @@ class Settings(Strict):
     #: can link to: a region proposed in pass one is a candidate an analysis can name in pass
     #: two, and with one pass those links have nothing to point at.
     repair_iterations: Annotated[int, Field(ge=1)] = 2
-    #: Which cards this process may use, set once before either local model loads. The
-    #: checker places itself from this and nothing else, so it cannot be given a card of its
-    #: own without hiding the proposer's. Empty leaves the environment alone.
-    visible_devices: str = ""
     #: How many rounds the `fill` stage may take. This loop has a real exit -- a slot is
     #: settled when it holds a value or an `unreported_reason`, so it stops when nothing is
     #: open rather than when nothing seems to be improving. The cap is
@@ -244,29 +207,8 @@ class Settings(Strict):
     #: about as many open slots as it can rather than splitting them over calls.
     fill_batch: Annotated[int, Field(ge=1)] = 250
 
-    #: Where the proposer is served. Default because a served proposer decodes under a
-    #: grammar, which ends a failure the in-process one cannot: on 16962339 the free-running
-    #: decoder repeats a completed object until `max_tokens`, unparseable, and under a schema
-    #: the same call answers in 70 tokens. Measured 5.9x over the in-process path on eighteen
-    #: calls. Empty runs in-process instead; an address nothing answers falls back to it,
-    #: saying so, rather than failing the run.
-    proposer_url: str = "http://127.0.0.1:8311/v1"
 
-    #: A shell command that brings the proposer's server back after its engine dies. Empty
-    #: waits for whoever else supervises it; either way a paper that kills the engine twice
-    #: is repaired without a proposer rather than retried, and named in the report.
-    proposer_restart: str = ""
 
-    #: The name the server was started with (`--served-model-name`).
-    proposer_model: str = "nu"
-    #: Which model answers the repair sweep. `local` is NuExtract on a card; `model` is the
-    #: extraction model over the network, which exists to separate the design from the
-    #: proposer: on four hand-read papers repair was wrong about 11 of the 19 fields it
-    #: changed, and every one of those errors was a real fact from the paper in the wrong
-    #: place. That is either a 3B model's limit or a property of the question, and the two
-    #: have different fixes. A fraction of nineteen, not a rate -- the Wilson interval runs
-    #: 36% to 77%, which is wider than most of what this could move.
-    proposer_kind: Literal["local", "model"] = "local"
 
     #: How many papers may be inside the two local models at once. The stages above are
     #: network-bound and run at `workers`; these are 8 GB of card between them and do not
@@ -274,10 +216,6 @@ class Settings(Strict):
     #: returned nothing, which a report cannot distinguish from having nothing to add.
     repair_workers: Annotated[int, Field(ge=1)] = 1
 
-    #: The proposer's card, indexed within `visible_devices`. The two models do not share one
-    #: unless it holds both: together they are about 9.5 GB, and the response to not fitting
-    #: is a silent spill to CPU rather than a failure.
-    proposer_device: int = 1
     #: Put the contradictions nothing else could settle to the extraction model, once per
     #: record, with the paper. Costs one call for a record that has one, and nothing for a
     #: record that does not -- 8 cases across 42 records measured.
@@ -285,15 +223,6 @@ class Settings(Strict):
     redo: bool = False
 
 
-    def device_for(self, paper: "Paper") -> str:
-        """A device for this paper, spread deterministically over those available.
-
-        `crc32` and not `hash`: Python randomises string hashing per process, so `hash`
-        would give a resumed run a different assignment from the one that wrote the
-        payloads -- and a spread that cannot be reproduced cannot be debugged.
-        """
-        pool = self.reranker_devices or ("cpu",)
-        return pool[zlib.crc32(paper.study_id.encode()) % len(pool)]
 
     @model_validator(mode="after")
     def _build_needs_its_inputs(self) -> "Settings":

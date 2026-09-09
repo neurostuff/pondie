@@ -13,7 +13,7 @@ import json
 import pytest
 
 from pondie import paths
-from pondie.extraction import recall, recall_server
+from pondie.extraction import recall
 from pondie.extraction.prompt import render
 from pondie.schema import reader
 
@@ -52,12 +52,6 @@ def test_the_condition_vocabulary_reaches_the_model(sch):
     said = recall.vocabulary(sch, "Task")
     assert "task_state" in said and "control_state" in said
 
-
-def test_both_proposers_share_one_propose():
-    """The two differed by one type annotation, so wiring the vocabulary in meant making the
-    same edit twice by hand -- and a fix applied to one copy is invisible until a run
-    disagrees with itself."""
-    assert recall.NuExtract.propose is recall_server.NuExtractServer.propose
 
 
 def test_a_half_emitted_entity_is_a_postcondition_failure():

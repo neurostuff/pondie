@@ -686,18 +686,6 @@ def test_a_starved_proposer_is_reported_not_silently_empty(sch):
     assert not report.written
 
 
-def test_the_local_models_take_fewer_workers_than_the_stages_above(sch):
-    """The gate is per process and per limit, so every worker thread waits on the same one.
-    A gate built per call would let eight workers interleave inside one card."""
-    from pondie.extraction import repair as repair_pass
-
-    assert repair_pass.gate(2) is repair_pass.gate(2), "one semaphore per limit, per process"
-    assert repair_pass.gate(2) is not repair_pass.gate(3)
-
-    gate = repair_pass.gate(2)
-    assert gate.acquire(blocking=False) and gate.acquire(blocking=False)
-    assert not gate.acquire(blocking=False), "the third paper must wait"
-    gate.release(), gate.release()
 
 
 def test_the_default_is_one_paper_in_the_models_at_a_time(tmp_path):
@@ -828,394 +816,44 @@ def test_a_field_with_no_citation_is_contested_even_though_it_scored_nothing(sch
     assert rows[0].premise == ""
 
 
-def test_every_leaf_of_a_projected_template_admits_nothing():
-    """A grammar with no way to say "nothing here" does not decline -- it emits the best
-    string it can. On 16759342, a paper declaring no arms whose every group the extractor
-    left empty, a non-nullable schema filled `Group.arm` with 'smoking' and 'non-smoking'
-    under `strict: true` AND `strict: false` alike; nullable answers null under both."""
-    from pondie.extraction.recall import template_for
-    from pondie.extraction.recall_server import json_schema_for
-    from pondie.extraction.record.validate import EXTRACTION_SCHEMA
-
-    # The extraction schema, because that is what the proposer projects. The storage schema
-    # declares slots the extraction one does not, and a template built from it is not the
-    # template a run sends.
-    sch = reader.load(EXTRACTION_SCHEMA)
-
-    def leaves(node, path="", bad=None):
-        bad = [] if bad is None else bad
-        if not isinstance(node, dict):
-            return bad
-        if "enum" in node:
-            if None not in node["enum"]:
-                bad.append(f"{path}: closed enum cannot express nothing")
-            return bad
-        kind = node.get("type")
-        if isinstance(kind, str) and kind not in ("object", "array"):
-            bad.append(f"{path}: {kind!r} is not nullable")
-        if kind == "object":
-            if node.get("required"):
-                bad.append(f"{path}: required {node['required']}")
-            for name, child in (node.get("properties") or {}).items():
-                leaves(child, f"{path}.{name}", bad)
-        branches = node.get("anyOf") or []
-        if branches:
-            # A multivalued enum projects as `anyOf: [enum+null, array of enum]`. Emptiness
-            # for the array branch is `[]`, not a null element, so it is enough that one
-            # branch admits nothing -- requiring it of the item enum asks for a null member
-            # of a list, which means nothing.
-            if not any(None in (b.get("enum") or []) for b in branches):
-                for child in branches:
-                    leaves(child, path, bad)
-        if isinstance(node.get("items"), dict):
-            leaves(node["items"], f"{path}[]", bad)
-        return bad
-
-    for class_name in ("Group", "Analysis", "Region", "InferenceSettings"):
-        schema = json_schema_for(template_for(sch, class_name))
-        assert leaves(schema, class_name) == [], leaves(schema, class_name)
-
-
-def test_an_enum_carries_null_inside_itself(sch):
-    """A type union cannot widen a closed `enum`, so nullability there is a second
-    mechanism -- and one an enum branch that forgets it would silently lose."""
-    from pondie.extraction.recall_server import json_schema_for
-
-    schema = json_schema_for(["whole_brain", "roi"])
-    assert None in schema["anyOf"][0]["enum"]
-
-
-def test_the_server_proposer_asks_for_a_strict_grammar():
-    """Strict was off while the invention above was blamed on it. The schema was the cause;
-    a strict grammar over a nullable schema both guarantees parseable output and lets the
-    model answer nothing."""
-    from pondie.extraction.recall_server import NuExtractServer
-
-    assert NuExtractServer()._strict is True
-
-
-def test_the_served_proposer_is_the_default(tmp_path):
-    """Chosen for the failure it ends rather than the speed: a free-running decoder that
-    repeats a completed object until `max_tokens` parses to nothing and reads as the model
-    declining to answer, and no prompt change fixes that from inside the process."""
-    from pondie.extraction.models import Settings
-
-    settings = Settings(payloads=tmp_path, records=tmp_path, model="m")
-    assert settings.proposer_url.startswith("http")
-
-
-def test_an_address_nothing_answers_falls_back_and_says_so(monkeypatch, capsys):
-    """A run that quietly used the other proposer produces a different record, and nothing
-    in the output distinguishes the two -- so the fallback is announced, not silent."""
-    from pondie.extraction import repair as repair_pass
-    from pondie.extraction.recall_server import NuExtractServer
-
-    monkeypatch.setattr(NuExtractServer, "reachable", lambda self, timeout=3.0: False)
-    monkeypatch.setattr("pondie.extraction.recall.NuExtract", lambda **kw: "LOCAL")
-    monkeypatch.setattr("pondie.extraction.evidence.grounding.MiniCheck",
-                        lambda *a, **k: "CHECKER")
-
-    repair_pass.models.cache_clear()
-    proposer, checker = repair_pass.models("", 1, "http://127.0.0.1:9/v1", "nu")
-
-    assert proposer == "LOCAL" and checker == "CHECKER"
-    assert "no server at" in capsys.readouterr().err
-    repair_pass.models.cache_clear()
-
-
-def test_a_reachable_server_is_used_without_loading_anything_locally(monkeypatch):
-    """The point of serving it: ~5 GB of weights stay out of every worker."""
-    from pondie.extraction import repair as repair_pass
-    from pondie.extraction.recall_server import NuExtractServer
-
-    monkeypatch.setattr(NuExtractServer, "reachable", lambda self, timeout=3.0: True)
-    monkeypatch.setattr("pondie.extraction.recall.NuExtract",
-                        lambda **kw: pytest.fail("must not load the in-process model"))
-    monkeypatch.setattr("pondie.extraction.evidence.grounding.MiniCheck",
-                        lambda *a, **k: "CHECKER")
 
-    repair_pass.models.cache_clear()
-    proposer, _checker = repair_pass.models("", 1, "http://127.0.0.1:8311/v1", "nu")
-    assert isinstance(proposer, NuExtractServer)
-    repair_pass.models.cache_clear()
 
 
-def test_the_reachability_probe_asks_the_right_address():
-    """`rsplit` on the completions URL left `/v1/chat/models`, which 404s -- so a live server
-    read as absent and the run silently loaded the in-process model instead. The tests above
-    stub `reachable`, so only this one can catch it."""
-    from pondie.extraction.recall_server import NuExtractServer
 
-    server = NuExtractServer(base_url="http://host:8311/v1")
-    assert server._url == "http://host:8311/v1/chat/completions"
-    assert server._base + "/models" == "http://host:8311/v1/models"
 
-    trailing = NuExtractServer(base_url="http://host:8311/v1/")
-    assert trailing._base + "/models" == "http://host:8311/v1/models"
 
 
-class _DeadEngine:
-    """A server whose engine has gone, then comes back after a restart."""
 
-    def __init__(self, deaths=1):
-        self.deaths, self.calls, self.restarts = deaths, 0, 0
 
-    def post(self, _request):
-        self.calls += 1
-        if self.calls <= self.deaths:
-            from pondie.extraction.recall_server import EngineDied
-            raise EngineDied("EngineCore encountered an issue")
-        return '{"groups": [{"local_id": "g1"}]}'
 
 
-def _served(monkeypatch, engine, recovers=True):
-    from pondie.extraction.recall_server import NuExtractServer
 
-    server = NuExtractServer()
-    monkeypatch.setattr(server, "_post", engine.post)
-    def recover():
-        engine.restarts += 1
-        return recovers
-    monkeypatch.setattr(server, "recover", recover)
-    return server
 
 
-def test_a_dead_engine_is_restarted_and_the_call_retried(monkeypatch):
-    """An engine that dies at paper 300 would otherwise fail every paper after it."""
-    engine = _DeadEngine(deaths=1)
-    server = _served(monkeypatch, engine)
 
-    payload = server.ask({"groups": [{"local_id": "string"}]}, "find groups", "Methods.")
 
-    assert engine.restarts == 1, "must try to bring the server back"
-    assert payload == {"groups": [{"local_id": "g1"}]}, "and retry the call"
 
 
-def test_a_second_death_on_one_call_is_not_retried_again(monkeypatch):
-    """Once is the server; twice on the same request is the request. Retrying further just
-    takes the server down for every other paper in the run."""
-    from pondie.extraction.recall_server import EngineDied
 
-    engine = _DeadEngine(deaths=2)
-    server = _served(monkeypatch, engine)
 
-    with pytest.raises(EngineDied):
-        server.ask({"groups": [{"local_id": "string"}]}, "find groups", "Methods.")
-    assert engine.restarts == 1, "one recovery per call, not a loop"
 
 
-def test_a_paper_that_killed_the_engine_is_named_and_skipped(sch, monkeypatch):
-    """Logged and skipped: the record still gets the deterministic half of the pass, and the
-    run does not spend another engine on it."""
-    from pondie.extraction import repair as repair_pass
-    from pondie.extraction.recall_server import EngineDied
 
-    class Killer:
-        def propose(self, *_a, **_k):
-            raise EngineDied("EngineCore encountered an issue")
 
-        def ask(self, *_a, **_k):
-            raise EngineDied("EngineCore encountered an issue")
 
-    repair_pass.POISON.discard("p_dead")
-    record = {"analyses": [{"local_id": "an", "name": field("a contrast")}]}
-    first = repair_pass.run(record, "Methods. A contrast.", sch, study_id="p_dead",
-                            proposer=Killer())
-    assert "p_dead" in repair_pass.POISON
-    assert any("engine died" in r.why for r in first.refused)
 
-    second = repair_pass.run(record, "Methods. A contrast.", sch, study_id="p_dead",
-                             proposer=Killer())
-    assert any("killed the proposer engine earlier" in r.why for r in second.refused)
-    repair_pass.POISON.discard("p_dead")
 
 
-def test_a_server_that_is_gone_counts_as_a_dead_engine(monkeypatch):
-    """A server whose engine died answers 500; one that died outright refuses the
-    connection. Only the first was caught, so killing the server produced `URLError:
-    Connection refused`, no recovery was attempted, and the paper failed. `HTTPError`
-    subclasses `URLError`, so the order of the clauses matters."""
-    import urllib.error
 
-    from pondie.extraction.recall_server import EngineDied, NuExtractServer
 
-    server = NuExtractServer()
-    monkeypatch.setattr("urllib.request.urlopen",
-                        lambda *_a, **_k: (_ for _ in ()).throw(
-                            urllib.error.URLError("[Errno 111] Connection refused")))
-    with pytest.raises(EngineDied):
-        server._post({"model": "nu"})
 
 
-def test_a_bad_request_is_still_not_a_dead_engine(monkeypatch):
-    """A 400 must not trigger a restart: the server is fine and the request is not."""
-    import io
-    import urllib.error
 
-    from pondie.extraction.recall_server import EngineDied, NuExtractServer
 
-    def refuse(*_a, **_k):
-        raise urllib.error.HTTPError("u", 400, "Bad Request", {},
-                                     io.BytesIO(b'{"error":"malformed"}'))
 
-    server = NuExtractServer()
-    monkeypatch.setattr("urllib.request.urlopen", refuse)
-    with pytest.raises(RuntimeError) as caught:
-        server._post({"model": "nu"})
-    assert not isinstance(caught.value, EngineDied)
 
 
-def test_a_served_proposer_is_not_throttled_by_the_local_gate(sch):
-    """The gate bounds this process's card. Holding it across a sweep that waits on the
-    network serialises eight workers over a card the proposer never touches."""
-    from pondie.extraction import repair as repair_pass
 
-    held = []
-
-    class Served:
-        local = False
-
-        def propose(self, *_a, **_k):
-            held.append(repair_pass.gate(1).acquire(blocking=False))
-            if held[-1]:
-                repair_pass.gate(1).release()
-            return []
-
-        def ask(self, *_a, **_k):
-            return {}
-
-    record = {"analyses": [{"local_id": "an", "name": field("a contrast")}]}
-    repair_pass.run(record, "Methods. A contrast.", sch, study_id="p", proposer=Served())
-
-    assert held, "the sweep must have run"
-    assert all(held), "the gate must be free while a served proposer is working"
-
-
-def test_an_in_process_proposer_still_holds_the_gate(sch):
-    """Unchanged where it matters: two of these in one card is the contention the gate was
-    added for."""
-    from pondie.extraction import repair as repair_pass
-
-    held = []
-
-    class Local:
-        local = True
-
-        def propose(self, *_a, **_k):
-            got = repair_pass.gate(1).acquire(blocking=False)
-            held.append(got)
-            if got:
-                repair_pass.gate(1).release()
-            return []
-
-        def ask(self, *_a, **_k):
-            return {}
-
-    record = {"analyses": [{"local_id": "an", "name": field("a contrast")}]}
-    repair_pass.run(record, "Methods. A contrast.", sch, study_id="p2", proposer=Local())
-
-    assert held, "the sweep must have run"
-    assert not any(held), "an in-process proposer must hold the gate for the whole pass"
-
-
-def test_the_checker_is_still_bounded_when_the_proposer_is_served(sch):
-    """It is then the only thing in this process on a card, so it is what the gate is for."""
-    from pondie.extraction import repair as repair_pass
-
-    seen = []
-
-    class Checker:
-        def score(self, claims):
-            seen.append(repair_pass.gate(1).acquire(blocking=False))
-            if seen[-1]:
-                repair_pass.gate(1).release()
-            return [0.9] * len(claims)
-
-    class Served:
-        local = False
-
-        def propose(self, *_a, **_k):
-            return [{"local_id": "an", "name": "a better contrast"}]
-
-        def ask(self, *_a, **_k):
-            return {}
-
-    record = {"analyses": [{"local_id": "an", "name": cited("a contrast", "A contrast.")}]}
-    repair_pass.run(record, "Methods. A contrast was computed.", sch, study_id="p3",
-                    proposer=Served(), checker=Checker())
-
-    assert seen, "the checker must have been called"
-    assert not any(seen), "and it must hold the gate while scoring"
-
-
-def test_the_evidence_stage_asks_for_no_card(sch):
-    """Network in one stage, card in another. A stage that spends tokens *and* holds a card
-    can have neither half improved without paying for the other: when the retriever got 5.4x
-    faster mid-run, 353 already-extracted papers could not take the improvement without
-    re-running the quote pass, and the corpus ended up built two ways."""
-    import inspect
-
-    from pondie.extraction import stages
-
-    source = inspect.getsource(stages.Evidence)
-    assert "_retriever" not in source, "the locator belongs to repair now"
-    assert "reranker" not in source, "and nothing here should touch one"
-    assert "load_reranker" in inspect.getsource(stages.Repair)
-
-
-def test_a_retrieved_sentence_must_also_beat_the_incumbent(sch):
-    """It used to write a second span whenever it cleared its own gate, with no refusal
-    recorded anywhere. As a candidate it obeys the one rule that cannot lower support."""
-    from pondie.extraction.evidence import relocate as relocate_module
-
-    doc = "Methods. Images were acquired on a 3 T Siemens scanner. We thank the department."
-    good = "Images were acquired on a 3 T Siemens scanner."
-
-    class Unit:
-        text = good
-
-    class Reranker:
-        pass
-
-    class Checker:
-        def __init__(self):
-            self.calls = 0
-
-        def score(self, claims):
-            self.calls += 1
-            return [0.9 if self.calls == 1 else 0.04] * len(claims)
-
-    monkey = {"unit": Unit()}
-    relocate_module.retrieval = None  # not used; locate is patched below
-    record = {"acquisitions": [{"local_id": "acq", "name": field("scan"),
-                                "modality": cited("3 T", "We thank the department.")}]}
-
-    import pondie.extraction.evidence.retrieval as retrieval_module
-    original = retrieval_module.locate
-    retrieval_module.locate = lambda *_a, **_k: monkey["unit"]
-    try:
-        refused: list = []
-        improved = relocate_module.relocate(
-            record, doc, doc, [("acquisitions[0].modality", 0.04)],
-            None, Checker(), refused, reranker=Reranker(), units=[Unit()])
-    finally:
-        retrieval_module.locate = original
-
-    assert "acquisitions[0].modality" in improved
-    assert record["acquisitions"][0]["modality"]["evidence"]["sets"][0]["spans"][0]["text"] \
-        == good
-
-
-def test_the_retriever_alone_is_enough_to_run_the_pass(sch):
-    """`relocate` used to require a proposer. With the locator moved into repair, a host
-    with a reranker and no NuExtract still improves evidence."""
-    import inspect
-
-    from pondie.extraction.evidence import relocate as relocate_module
-
-    source = inspect.getsource(relocate_module.relocate)
-    assert "if proposer is not None else ()" in source, \
-        "the proposer loop must be skippable"
 
 
 class _Findings:

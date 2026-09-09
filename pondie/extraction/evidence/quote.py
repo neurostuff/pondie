@@ -177,55 +177,11 @@ def owners(node: Any, path: str = "", owner: str = "") -> dict[str, str]:
     return found
 
 
-def rendered_value(field: dict) -> str:
-    value = field.get("value")
-    if isinstance(value, list):
-        return str(value[0]) if value else ""
-    return "" if value in (None, "", []) else str(value)
-
-
-def _flat(text: str) -> str:
-    """Whitespace collapsed, for asking whether two quotes are the same passage."""
-    return re.sub(r"\s+", " ", text or "").strip()
-
-
-def union_span(
-    reranker, units, path: str, field: dict, owner: str, quote: str | None
-) -> str | None:
-    """A second supporting passage for this field, or None.
-
-    Only fires when the retriever clears its own gate, and never when it lands on the
-    passage the model already quoted -- a duplicate set is not a second warrant. Worth
-    +6.3 points of located evidence over the quote pass alone, measured over 173 fields
-    with human evidence; see docs/evidence-union-design.md.
-    """
-
-    value = rendered_value(field)
-    if not value:
-        return None
-    unit = retrieval.locate(
-        reranker, units, re.sub(r"\[\d+\]", "", path), value, owner
-    )
-    if unit is None:
-        return None
-    # `unit.text` and not `unit.rendered`: build_record resolves a quote by exact match,
-    # and a table row's rendered sentence appears nowhere in the paper.
-    #
-    # Compared on collapsed whitespace, because the two sides do not agree on it. The model
-    # copies the paper's non-breaking spaces -- "mean\xa0=\xa010.7\xa0months" -- while the
-    # retriever's unit carries ordinary ones, so exact matching called them different strings
-    # and 19914045 kept two sets holding one sentence. A duplicate is not a second warrant,
-    # and one that survives inflates the retriever's apparent contribution.
-    if quote and (_flat(quote) in _flat(unit.text) or _flat(unit.text) in _flat(quote)):
-        return None
-    return unit.text
 
 
 def apply_evidence(
     payload: dict[str, Any],
     quotes: dict[str, str],
-    reranker: Any = None,
-    units: Sequence[str] = (),
     literal: frozenset[str] | set[str] = frozenset(),
 ) -> EvidenceCounts:
     """Put an evidence block on every field of a payload, in place.
@@ -260,11 +216,7 @@ def apply_evidence(
         # locators apart.
         source = "literal_match" if path in literal else "model_quote"
         sets = [{"source": source, "quotes": [quote]}] if quote else []
-        second = (
-            union_span(reranker, units, path, field, owner_of.get(path, ""), quote)
-            if reranker
-            else None
-        )
+        second = None
         if second:
             sets.append({"source": "retriever", "quotes": [second]})
             counts["unioned"] += 1

@@ -31,23 +31,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# The two local models the repair stage uses. Optional because they want a GPU and most of
-# the pass -- the guards, the casts, the differential validation -- is deterministic without
-# them, and because the stage degrades to a note rather than failing when they are absent.
-repair = [
-    "minicheck @ git+https://github.com/Liyan06/MiniCheck.git",
-    "transformers>=4.44",
-    "accelerate",
-    "bitsandbytes",
-]
-
 # The encoders normalization falls back to when a rule does not decide a value.
 encoders = ["sentence-transformers", "scikit-learn", "numpy"]
 # Coordinate-based meta-analysis. Not needed to extract or normalize a record.
 meta = ["nimare>=0.2", "numpy", "nibabel"]
-# A second evidence locator, scored against the quote pass. An enhancement: without it the
-# evidence stage still runs and says which locator it used.
-reranker = ["torch", "transformers"]
 # Rebuilding a paper's text with its tables inlined. `corpus.rebuild` runs pubget's own
 # stylesheet over `article.xml` and requires the result to reproduce the corpus text byte
 # for byte -- the guarantee every existing record's offsets rest on -- so it has to be

@@ -257,10 +257,6 @@ def test_units_carry_their_section():
     assert "methods" in sections and "intro" in sections
 
 
-def test_a_missing_reranker_is_not_an_error():
-    # The union is an enhancement; a missing optional dependency must not take the
-    # evidence stage down with it.
-    assert er.locate(None, [], "groups.name", "controls") is None
 
 
 # ---------------------------------------------------------------------------

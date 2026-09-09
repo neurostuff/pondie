@@ -86,17 +86,3 @@ def test_a_report_totals_what_its_stages_spent(tmp_path):
     assert report.cost.calls == 2
 
 
-def test_evidence_devices_are_spread_and_reproducible(tmp_path):
-    """crc32 and not hash: Python randomises string hashing per process, so a resumed run
-    would assign differently from the one that wrote the payloads, and a spread that cannot
-    be reproduced cannot be debugged."""
-    settings = Settings(
-        payloads=tmp_path,
-        records=tmp_path,
-        model="m",
-        reranker_devices=("cuda:0", "cuda:1", "cuda:2", "cuda:3"),
-    )
-    papers = [Paper(study_id=f"study{i}", root=tmp_path) for i in range(40)]
-    spread = collections.Counter(settings.device_for(p) for p in papers)
-    assert len(spread) == 4 and max(spread.values()) - min(spread.values()) <= 2
-    assert settings.device_for(papers[0]) == settings.device_for(papers[0])

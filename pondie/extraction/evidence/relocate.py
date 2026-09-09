@@ -135,45 +135,6 @@ def _evidence(document: str, sentences: Sequence[Any]) -> dict[str, Any] | None:
     return {"status": "present", "sets": [{"spans": located}]}
 
 
-def _retrieved(reranker: Any, units: Sequence[Any], record: Mapping[str, Any],
-               rows: Sequence[Contested], document: str) -> dict[str, dict]:
-    """The local locator's candidate for each contested field, by tag.
-
-    The same question the proposer is asked -- which sentence supports this value -- put to
-    a cross-encoder over the paper's own sentences instead of to a generative model. It used
-    to run in `evidence` and write a second span whenever it cleared its own gate, with no
-    refusal recorded anywhere. Here its answer is a candidate like any other and has to beat
-    the incumbent to be kept, which is the one rule that cannot lower a record's support.
-    """
-    if reranker is None or not units:
-        return {}
-    from pondie.extraction.evidence import retrieval
-
-    found: dict[str, dict] = {}
-    for row in rows:
-        unit = retrieval.locate(reranker, list(units), row.path.split("[")[0],
-                                str(row.value), label_for(record, row.path))
-        if unit is None:
-            continue
-        located = _evidence(document, [unit.text])
-        if located is not None:
-            found[row.tag] = located
-    return found
-
-
-def label_for(record: Mapping[str, Any], path: str) -> str:
-    """The name of the entity a leaf sits on, which the locator scores as a bonus."""
-    from pondie.extraction.record.edit import label_of
-
-    head = path.split(".", 1)[0]
-    name, _, index = head.partition("[")
-    entities = record.get(name)
-    if not isinstance(entities, list) or not index:
-        return ""
-    position = int(index.rstrip("]"))
-    if position >= len(entities):
-        return ""
-    return label_of(entities[position]) or ""
 
 
 def _fragment(candidate: str, incumbent: str) -> bool:
@@ -189,7 +150,7 @@ def _fragment(candidate: str, incumbent: str) -> bool:
 def relocate(record: MutableMapping[str, Any], document: str, premise: str,
              weak: Sequence[tuple[str, float]], proposer: Any, checker: Checker,
              refused: list, abbreviations: Any = None, paper: str = "",
-             reranker: Any = None, units: Sequence[Any] = ()) -> list[str]:
+             ) -> list[str]:
     """Re-cite what `review_spans` doubted. Returns the paths that improved.
 
     A replacement has to beat what it replaces. A field with no span has nothing to be
@@ -201,7 +162,7 @@ def relocate(record: MutableMapping[str, Any], document: str, premise: str,
         return []
     # Two sources of candidate sentences, one acceptance rule. The retriever answers for
     # every contested field it can place; the proposer answers for the ones it recognises.
-    retrieved = _retrieved(reranker, units, record, rows, document)
+    retrieved = {}
 
     from pondie.extraction.recall import Starved
     from pondie.formats.values import iter_fields

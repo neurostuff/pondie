@@ -910,25 +910,6 @@ class Repair(_Base):
         """
         return settings.payloads.parent / "repairs" / f"{paper.study_id}.json"
 
-    def _retriever(self, paper: Paper, settings: Settings):
-        """The cross-encoder locator and the paper's sentences, or nothing.
-
-        An enhancement must not take the stage down: without `pondie[reranker]` this returns
-        nothing and the pass runs on the proposer alone.
-        """
-        if not settings.union:
-            return None, ()
-        from pondie.extraction.evidence import retrieval
-
-        reranker = retrieval.load_reranker(device=settings.device_for(paper))
-        if reranker is None:
-            return None, ()
-        units = retrieval.sentence_units(
-            paper.text.read_text(encoding="utf-8", errors="replace"))
-        # Once per paper, not once per field: `locate` runs for every contested field and
-        # would otherwise re-read all ~300 units each time.
-        retrieval.index_units(reranker, units)
-        return reranker, units
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if not (settings.repair or settings.adjudicate):
@@ -956,7 +937,6 @@ class Repair(_Base):
             kept.write_text(record_path.read_text(), encoding="utf-8")
         # The local locator, moved here from `evidence` so every card-bound pass sits in one
         # stage. Optional like the rest: a host without torch repairs without it.
-        reranker, units = self._retriever(paper, settings)
         # `text_index.load`, not `read_text`: every offset in the record is measured against
         # the normalized text and hashed into `source_text_hash`, so a span this pass writes
         # against the raw file would address a different string. `Paper.text` is a property
@@ -967,36 +947,18 @@ class Repair(_Base):
         proposer = checker = None
         notes: list[str] = []
         if settings.repair:
-            try:
-                proposer, checker = repair_pass.models(
-                    settings.visible_devices, settings.proposer_device,
-                    settings.proposer_url, settings.proposer_model,
-                    settings.proposer_restart)
-            except ImportError as error:
-                notes.append(
-                    f"no local repair models ({error}); "
-                    f"install pondie[repair] for entity recall and grounding")
-            except Exception as error:  # noqa: BLE001 -- a device or download fault
-                # Distinguished from a missing package on purpose: "install pondie[repair]"
-                # is the wrong advice for an invalid device ordinal or an OOM, and telling a
-                # user to reinstall a package they have is how a real fault gets ignored.
-                notes.append(f"local repair models unavailable: "
-                             f"{type(error).__name__}: {error}")
-            if settings.proposer_kind == "model" and caller is None:
-                # No caller, no network proposer. The local path degrades rather than
-                # failing when its models are missing, and this must too -- constructed
-                # anyway it raises on the first proposal, which reads as a broken stage
-                # rather than as an unavailable one.
-                notes.append("no caller for the model proposer; using the local one")
-            elif settings.proposer_kind == "model":
-                # The checker stays local -- it grounds what the proposer says and is not
-                # the variable under test. Only the proposer changes between arms.
+            if caller is None:
+                # Nothing to propose with. The deterministic half of the pass -- the guards,
+                # the casts, the differential validation -- still runs, so this is a note
+                # rather than a failure.
+                notes.append("no caller for the proposer; repairing deterministically")
+            else:
                 from pondie.extraction.recall_llm import ModelProposer
 
                 proposer = ModelProposer(
                     caller, settings.model, study_id=paper.study_id,
                     service_tier=settings.service_tier, effort=settings.effort)
-                notes.append(f"proposer: {settings.model} over the network")
+                notes.append(f"proposer: {settings.model}")
 
         reply = None
         report = repair_pass.run(
@@ -1012,7 +974,6 @@ class Repair(_Base):
             service_tier=settings.service_tier,
             iterations=settings.repair_iterations,
             gpu_workers=settings.repair_workers,
-            reranker=reranker, units=units,
         )
         record_path.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
         out = self.produces(paper, settings)

@@ -32,7 +32,6 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, MutableMapping, Sequence
 
 from pondie.extraction import recall
-from pondie.extraction import recall_server
 from pondie.extraction.evidence import grounding
 from pondie.extraction.evidence import relocate
 from pondie.extraction.evidence.grounding import Checker
@@ -58,70 +57,8 @@ ambiguous, or describes something the options do not cover. The record already r
 contradiction, so a reviewer can see it; a confident wrong answer removes that."""
 
 
-@functools.lru_cache(maxsize=1)
-def models(visible_devices: str, proposer_device: int, server_url: str = "",
-           server_model: str = "nu", server_restart: str = "") -> tuple[Any, Any]:
-    """The two local models, built once per process and shared by every paper.
-
-    Cached because they are ~10 GB of weights and the stage runs per paper under a thread
-    pool: constructing them in `run` loaded and freed them for each of 52 papers, and two
-    workers put two proposers on one card. `schema.reader` caches the same way and for the
-    same reason -- the objects are immutable readers, not mutable state.
-
-    Visibility is set here, before either import, because MiniCheck places itself from
-    `CUDA_VISIBLE_DEVICES` and takes no device argument. It has to happen before torch
-    initialises CUDA, which an earlier stage may already have done -- so a run that wants a
-    specific placement sets it in the environment, and this is the fallback rather than the
-    mechanism.
-    """
-    if visible_devices and "CUDA_VISIBLE_DEVICES" not in os.environ:
-        os.environ["CUDA_VISIBLE_DEVICES"] = visible_devices
-    from pondie.extraction.evidence.grounding import MiniCheck
-    from pondie.extraction.recall import NuExtract
-
-    # A served proposer by default: constrained decoding ends a failure the in-process path
-    # cannot address -- a decoder repeating a completed object until `max_tokens`, which
-    # parses to nothing and reads as the model declining to answer -- and it keeps ~5 GB of
-    # weights out of every worker. Asked first, because discovering the server is down on
-    # paper one of a long run costs a model load to find out.
-    if server_url:
-        from pondie.extraction.recall_server import NuExtractServer
-
-        served = NuExtractServer(base_url=server_url, model=server_model,
-                                 restart=server_restart)
-        if served.reachable():
-            return served, MiniCheck()
-        # Said aloud, not silent: a run that quietly used the other proposer produces a
-        # different record, and nothing in the output distinguishes the two.
-        print(f"  proposer: no server at {server_url}; using the in-process model",
-              file=sys.stderr)
-    return NuExtract(device=proposer_device), MiniCheck()
 
 
-#: Studies that killed the proposer's engine. A paper here is repaired without a proposer
-#: rather than retried: the engine took the whole server down once already, and every other
-#: paper in the run pays for a second attempt at it. Held per process, which is the life of
-#: a run -- the stage writes its report either way, so a resume does not revisit it.
-POISON: set[str] = set()
-
-
-def _bounded(checker: Checker, limit: int) -> Checker:
-    """`checker`, with its scoring behind the gate.
-
-    For a served proposer the checker is the only thing in this process holding a card, so
-    it is the only thing that needs bounding -- and bounding it at its own call lets the
-    rest of the sweep run at the width the caller asked for.
-    """
-
-    class Bounded:
-        def score(self, claims):
-            with gate(limit):
-                return checker.score(claims)
-
-    return Bounded()
-
-
-@functools.lru_cache(maxsize=None)
 def gate(limit: int) -> threading.Semaphore:
     """Bounds how many papers may be inside the local models at once, per process.
 
@@ -298,7 +235,7 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
         proposer: Any = None, checker: Checker | None = None, caller: Any = None,
         model: str = "", threshold: float = 0.5, service_tier: str = "",
         iterations: int = 2, gpu_workers: int = 1,
-        reranker: Any = None, units: Sequence[Any] = ()) -> Report:
+        ) -> Report:
     """Repair `record` in place. Returns what happened, including anything it broke."""
     from copy import deepcopy
 
@@ -315,41 +252,24 @@ def run(record: MutableMapping[str, Any], text: str, sch: Schema, *, study_id: s
     # abstract and introduction before it sees a method. `sectionize` falls back to the whole
     # text when it finds nothing, which is the honest behaviour for a paper it cannot split.
     premise = _premise(text)
-    # The gate bounds work on *this process's* card and nothing else. With the proposer in
-    # this process that is the whole pass, so one gate covers it: acquiring per call would
-    # let eight workers interleave inside one card, which is the contention it exists to
-    # prevent. With the proposer served, the sweep is mostly a wait on the network, and
-    # holding the gate across it would serialise eight workers over a card the proposer
-    # never touches -- so only the checker is bounded, at its own call.
-    if study_id in POISON and proposer is not None:
-        # Already killed the engine once this run. The grounding half still runs.
-        report.refused.append(Refusal(
-            "proposer", f"{study_id} killed the proposer engine earlier in this run; "
-                        f"repaired without it"))
-        proposer = None
-    served = proposer is not None and not getattr(proposer, "local", True)
-    if served and checker is not None:
-        checker = _bounded(checker, gpu_workers)
-    held = gate(gpu_workers) if (not served and (proposer is not None
-                                                 or checker is not None)) \
-        else contextlib.nullcontext()
-    with held:
-        for _pass in range(iterations if proposer is not None else 0):
-            before_pass = len(report.written)
-            _sweep(record, premise, text, sch, proposer, checker, threshold, report,
-                   abbreviations, study_id)
-            if len(report.written) == before_pass:
-                break                   # nothing changed, so a further pass sees the same
-        if checker is not None:
-            report.weak_evidence = grounding.review_spans(
-                record, checker, report.refused, abbreviations, study_id)
-            # Doubt is not a verdict, so it is spent going to look rather than deleting.
-            # `review_spans` says which citations are suspect; this asks for better ones and
-            # keeps them only when they score higher than what they replace.
-            if proposer is not None or reranker is not None:
-                report.recited = relocate.relocate(
-                    record, text, premise, report.weak_evidence, proposer, checker,
-                    report.refused, abbreviations, study_id, reranker, units)
+    # No gate: the proposer answers over the network, so the sweep is a wait rather than
+    # work on a card this process holds. It was a semaphore around a local model.
+    for _pass in range(iterations if proposer is not None else 0):
+        before_pass = len(report.written)
+        _sweep(record, premise, text, sch, proposer, checker, threshold, report,
+               abbreviations, study_id)
+        if len(report.written) == before_pass:
+            break                   # nothing changed, so a further pass sees the same
+    if checker is not None:
+        report.weak_evidence = grounding.review_spans(
+            record, checker, report.refused, abbreviations, study_id)
+        # Doubt is not a verdict, so it is spent going to look rather than deleting.
+        # `review_spans` says which citations are suspect; this asks for better ones and
+        # keeps them only when they score higher than what they replace.
+        if proposer is not None:
+            report.recited = relocate.relocate(
+                record, text, premise, report.weak_evidence, proposer, checker,
+                report.refused, abbreviations, study_id)
     if caller is not None and model:
         reply = adjudicate(record, sch, text, caller, study_id=study_id, model=model,
                            report=report, service_tier=service_tier)
@@ -457,15 +377,6 @@ def _sweep(record: MutableMapping[str, Any], premise: str, document: str, sch: S
         except recall.Starved as starved:
             report.refused.append(Refusal(container, str(starved)))
             continue
-        except recall_server.EngineDied as died:
-            # Nothing after this can succeed until the server is back, and `ask` has already
-            # tried once to bring it back. Abandon the sweep, name the paper, carry on with
-            # the rest of the record -- the deterministic half of the pass still runs.
-            POISON.add(study_id)
-            report.refused.append(Refusal(
-                container, f"proposer engine died on this paper; "
-                           f"skipped its remaining classes ({str(died)[:120]})"))
-            return
         by_id = {e.get("local_id"): e for e in record.get(container) or []
                  if isinstance(e, Mapping)}
         # One per class sweep, and passed to every `apply` in it. An exclusive reference
