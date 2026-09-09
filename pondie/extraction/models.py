@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -272,13 +272,44 @@ class RunReport(Strict):
     def failures(self) -> tuple[PaperOutcome, ...]:
         return tuple(p for p in self.papers if p.failed)
 
+    #: A note whose presence means a paper was extracted without its tables. Matched on the
+    #: text because that is what a stage has to say with; the alternative is a typed outcome
+    #: field that every other stage would carry and none would set.
+    MISSING_TABLES: ClassVar[str] = "no tables.jsonl"
+
+    def starved(self) -> tuple[str, ...]:
+        """Papers whose table manifest was absent, so no Table record could be copied."""
+        return tuple(
+            outcome.study_id
+            for paper in self.papers
+            for outcome in paper.outcomes
+            if any(self.MISSING_TABLES in note for note in outcome.notes)
+        )
+
     def summary(self) -> str:
+        """The headline, and the one degradation a run can suffer while reporting success.
+
+        A paper with no table manifest still extracts: the stage writes an empty list, says
+        so in a note, and every later stage runs. What it produces is a record whose analyses
+        reference tables it does not contain, and the stage that copies them exists because a
+        rewrite once dropped it and left 155 of 156 records that way. That went unnoticed
+        because nothing above the stage said anything. Counted here for the same reason the
+        failures are: a summary that reports only what raised is not a summary of the run.
+        """
         cost = self.cost
-        return (
+        line = (
             f"{len(self.papers)} paper(s), {len(self.failures)} failed · "
             f"{cost.input_tokens:,} in / {cost.output_tokens:,} out tokens "
             f"over {cost.calls} call(s)"
         )
+        if missing := self.starved():
+            shown = ", ".join(missing[:4]) + (" ..." if len(missing) > 4 else "")
+            line += (
+                f"\n  WARNING: {len(missing)} paper(s) had no table manifest and hold no "
+                f"Table records ({shown}). Their analyses reference tables the record does "
+                f"not contain; polarity coverage falls with them."
+            )
+        return line
 
 
 class Prompt(Strict):

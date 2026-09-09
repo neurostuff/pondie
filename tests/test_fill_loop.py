@@ -246,3 +246,47 @@ def test_plain_silence_is_written_as_the_bare_status(sch):
     assert held == {"extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}
     assert "groups[g1].age_mean" not in ids(fill.unsettled(doc, sch))
     assert fill.PLAIN not in fill.VOCABULARY
+
+
+# --- addressing a nested entity whose id contains a dot -----------------------
+
+
+def test_a_local_id_containing_a_dot_still_resolves():
+    """`rxaz3qhEmJhx` named a term `mod_akt1_allele.trm_akt1_allele_count`, namespacing it
+    under its model. `_resolve` split the whole path on "." , tore the id in half, looked for
+    a term called `mod_akt1_allele`, and found none -- so a path `unsettled` had just offered
+    resolved to nothing and the assertion took the paper down."""
+    from pondie.extraction.prompt.fill import _resolve, _segments
+
+    payload = {
+        "model_estimations": [
+            {
+                "local_id": "mod_akt1_allele",
+                "terms": [{"local_id": "mod_akt1_allele.trm_akt1_allele_count"}],
+            }
+        ]
+    }
+    ident = (
+        "model_estimations[mod_akt1_allele]"
+        ".terms[mod_akt1_allele.trm_akt1_allele_count].functional_form"
+    )
+    assert _segments(ident) == [
+        "model_estimations[mod_akt1_allele]",
+        "terms[mod_akt1_allele.trm_akt1_allele_count]",
+        "functional_form",
+    ]
+    target, name = _resolve(payload, ident)
+    assert target is not None and name == "functional_form"
+    assert target["local_id"] == "mod_akt1_allele.trm_akt1_allele_count"
+
+
+def test_an_ordinary_path_is_unchanged_by_the_bracket_aware_split():
+    from pondie.extraction.prompt.fill import _segments
+
+    assert _segments("groups[g1].size") == ["groups[g1]", "size"]
+    assert _segments("analyses[a1].effect.cells[0].direction") == [
+        "analyses[a1]",
+        "effect",
+        "cells[0]",
+        "direction",
+    ]

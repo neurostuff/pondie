@@ -305,10 +305,36 @@ def apply_fill(
     return filled, reasoned, dropped
 
 
+def _segments(ident: str) -> list[str]:
+    """`ident` split on the dots that separate slots, and not on any others.
+
+    A `local_id` may contain a dot -- `mod_akt1_allele.trm_akt1_allele_count` namespaces a
+    term under its model, and 10 of 6,060 ids in the corpus do something like it. Splitting
+    the whole string on "." tore that id in half, so `_resolve` looked for a term called
+    `mod_akt1_allele` among the terms, found none, and returned nothing for a path
+    `unsettled` had just offered. The assertion below then took the paper down: one dotted id
+    cost the whole of `rxaz3qhEmJhx`.
+
+    Only dots outside brackets separate. This is the grammar `_entities` writes, stated once
+    so the two halves cannot drift again.
+    """
+    out, depth, start = [], 0, 0
+    for index, char in enumerate(ident):
+        if char == "[":
+            depth += 1
+        elif char == "]":
+            depth = max(0, depth - 1)
+        elif char == "." and depth == 0:
+            out.append(ident[start:index])
+            start = index + 1
+    out.append(ident[start:])
+    return out
+
+
 def _resolve(payload: Any, ident: str) -> tuple[MutableMapping[str, Any] | None, str]:
     """The container holding `ident`'s last segment, and that segment's name."""
     node: Any = payload
-    parts = ident.split(".")
+    parts = _segments(ident)
     for part in parts[:-1]:
         key, _, rest = part.partition("[")
         node = node.get(key) if isinstance(node, dict) else None
