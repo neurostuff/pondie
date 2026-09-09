@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from pondie.extraction.prompt import render
+from pondie.extraction.prompt import render, worked
 from pondie.extraction.record import builder
 from pondie.schema import reader
 
@@ -115,7 +115,7 @@ def test_the_worked_models_survive_the_slice() -> None:
 
     section = render.worked_models()
 
-    assert section.startswith(render.WORKED_MODELS_SECTION)
+    assert section.startswith(worked.SECTION)
     # The example that would have caught TgcHKMRfrVog: a factor over occasions in a
     # study with no paradigm, and the levels that name them.
     assert "5.6 A pre–post change with no paradigm" in section

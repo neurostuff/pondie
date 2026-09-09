@@ -65,8 +65,14 @@ pondie = "pondie.cli:main"
 include = ["pondie*"]
 
 [tool.setuptools.package-data]
-# The referents are prompt input, read from the installed package.
-pondie = ["extraction/prompt/referents/*"]
+# The referents are prompt input, read from the installed package -- `prompt/worked.py`
+# projects the worked models out of them at render time, so a missing record is a missing
+# section of the prompt rather than a stale copy of one.
+pondie = [
+    "extraction/prompt/referents/*",
+    "extraction/prompt/worked_models/manifest.yaml",
+    "extraction/prompt/worked_models/prose/*.md",
+]
 
 [tool.black]
 # 95 rather than the default 88: the existing code sits at p95=90, p99=94, and 88 would

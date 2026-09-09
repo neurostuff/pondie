@@ -1,0 +1,226 @@
+# Which record each worked model is drawn from, and which of its parts the example
+# shows. Every value in the rendered YAML is projected from the referent record at
+# render time -- nothing here restates a record's content, so the two cannot drift.
+- id: '5.1'
+  title: A simple contrast — emotion labeling > emotion matching
+  slug: a-simple-contrast-emotion-labeling-emotion-m
+  referent: 4CA3Ca2bzfPW
+  pmid: 25821147
+  blocks:
+  - models:
+    - id: me-subject-glm
+      show:
+      - stage
+      terms:
+      - term-condition
+      - term-motion
+    analysis:
+      id: analysis-5
+      show:
+      - effect
+- id: '5.2'
+  title: The same map against the implicit baseline
+  slug: the-same-map-against-the-implicit-baseline
+  referent: 4CA3Ca2bzfPW
+  pmid: 25821147
+  blocks:
+  - analysis:
+      id: analysis-1
+      show:
+      - effect
+- id: '5.3'
+  title: Brain–behaviour correlation with a continuous measure
+  slug: brainbehaviour-correlation-with-a-continuous
+  referent: 3KGhvY7MhanA
+  pmid: 31397949
+  blocks:
+  - models:
+    - id: me-group-correlations-mediation
+      show:
+      - stage
+      terms:
+      - term-perceived-stress
+      - term-age
+      - term-sex
+      - term-framewise-displacement
+      - term-anxiety
+    analysis:
+      id: analysis-table2-perceived-stress-falff
+      show:
+      - effect
+  annotations:
+    assessment: the measurement's provenance
+- id: '5.4'
+  title: Moderation — a continuous measure crossed with a cohort factor
+  slug: moderation-a-continuous-measure-crossed-with
+  referent: 5P7tnuyp5NTP
+  pmid: 27062552
+  blocks:
+  - models:
+    - id: me-group-ctq-ptsd
+      show:
+      - stage
+      terms:
+      - term-ctq
+      - term-ptsd
+      - term-ctq-x-ptsd
+      - term-age
+    analysis:
+      id: analysis-interaction-negative
+      show:
+      - effect
+  annotations:
+    term: the interaction coefficient's sign
+- id: '5.5'
+  title: A factorial with one within- and one between-subject factor
+  slug: a-factorial-with-one-within-and-one-between-
+  referent: Qa5HqrHq97Pm
+  pmid: 37559139
+  blocks:
+  - models:
+    - id: me-group-anova
+      show:
+      - stage
+      - inputs_from
+      terms:
+      - term-group
+      - term-disease-activity
+      - term-das28-crp
+  annotations:
+    inputs_from: task and motion are fitted below
+- id: '5.6'
+  title: A pre–post change with no paradigm
+  slug: a-prepost-change-with-no-paradigm
+  referent: 39HoutR6iLMj
+  pmid: 18417700
+  blocks:
+  - models:
+    - id: model-vbm
+      show:
+      - stage
+      terms:
+      - term-vbm-time
+      - term-vbm-group
+    analysis:
+      id: analysis-vbm-practice-increase
+      show:
+      - effect
+  - analysis:
+      id: analysis-fmri-practice-decrease
+      show:
+      - effect
+- id: '5.7'
+  title: An ordered factor contrasted at its extremes
+  slug: an-ordered-factor-contrasted-at-its-extremes
+  referent: 7EEyXsyEDf2Q
+  pmid: 26624517
+  blocks:
+  - models:
+    - id: me-fmri-group
+      show:
+      - stage
+      terms:
+      - term-condition
+    analysis:
+      id: analysis-9
+      show:
+      - effect
+- id: '5.8'
+  title: An omnibus F-test over a three-level factor
+  slug: an-omnibus-f-test-over-a-three-level-factor
+  referent: 7EEyXsyEDf2Q
+  pmid: 26624517
+  blocks:
+  - analysis:
+      id: analysis-2
+      show:
+      - effect
+- id: '5.9'
+  title: Multivariate — decoding above chance
+  slug: multivariate-decoding-above-chance
+  referent: 3jDCyBsgwY5d
+  pmid: 29208951
+  blocks:
+  - models:
+    - id: me-mvpa
+      show:
+      - stage
+      terms:
+      - term-task-mvpa
+    analysis:
+      id: analysis-vowel-imagery
+      show:
+      - effect
+      - details
+      details_fields:
+      - details_type
+      - decoded_variable
+      - validation_scheme
+      - performance_metrics
+- id: '5.10'
+  title: A double dissociation between regions
+  slug: a-double-dissociation-between-regions
+  referent: 6Ts55HvrSTEJ
+  pmid: 28611616
+  blocks:
+  - models:
+    - id: me-group-fc
+      show:
+      - stage
+      - inputs_from
+      terms:
+      - term-seed
+      - term-group
+    analysis:
+      id: analysis-tbl3-4
+      show:
+      - effect
+- id: '5.11'
+  title: A mediated path
+  slug: a-mediated-path
+  referent: 5PXzmhEsxc2e
+  pmid: 25172389
+  blocks:
+  - models:
+    - id: me-gmd-mediation
+      show:
+      - stage
+      terms:
+      - term-age-med
+      - term-gmd
+      - term-ica-loading
+    analysis:
+      id: analysis-significant-mediation-clusters
+      show:
+      - effect
+- id: '5.12'
+  title: A model estimated in two stages
+  slug: a-model-estimated-in-two-stages
+  referent: 6WJs2gBAhcQL
+  pmid: 26467643
+  blocks:
+  - models:
+    - id: me-subject-rsfmri
+      show:
+      - model_family
+      - stage
+      - estimator
+      terms:
+      - term-vim-timecourse
+      - term-motion
+    - id: me-group-diagnosis
+      show:
+      - model_family
+      - stage
+      - estimator
+      - inputs_from
+      terms:
+      - term-diagnosis
+      - term-trs
+  - analysis:
+      id: analysis-1
+      show:
+      - model_estimation
+      - effect
+  annotations:
+    model_estimation: the top stage, always

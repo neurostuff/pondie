@@ -273,7 +273,7 @@
             "term": "term-diagnosis",
             "level": {
               "extraction_status": "extracted",
-              "value": "healthy controls",
+              "value": "HCs",
               "value_source": "reported",
               "evidence": {
                 "status": "present",

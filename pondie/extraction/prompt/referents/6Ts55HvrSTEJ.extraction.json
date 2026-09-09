@@ -547,7 +547,7 @@
             "term": "term-group",
             "level": {
               "extraction_status": "extracted",
-              "value": "HC",
+              "value": "healthy controls",
               "value_source": "reported",
               "evidence": {
                 "status": "present",
@@ -588,7 +588,7 @@
             "term": "term-group",
             "level": {
               "extraction_status": "extracted",
-              "value": "PD",
+              "value": "Parkinson's disease patients",
               "value_source": "reported",
               "evidence": {
                 "status": "present",
@@ -834,7 +834,7 @@
             "term": "term-group",
             "level": {
               "extraction_status": "extracted",
-              "value": "HC",
+              "value": "healthy controls",
               "value_source": "reported",
               "evidence": {
                 "status": "present",
@@ -875,7 +875,7 @@
             "term": "term-group",
             "level": {
               "extraction_status": "extracted",
-              "value": "PD",
+              "value": "Parkinson's disease patients",
               "value_source": "reported",
               "evidence": {
                 "status": "present",
@@ -1121,7 +1121,7 @@
             "term": "term-group",
             "level": {
               "extraction_status": "extracted",
-              "value": "PD",
+              "value": "Parkinson's disease patients",
               "value_source": "reported",
               "evidence": {
                 "status": "present",
@@ -1162,7 +1162,7 @@
             "term": "term-group",
             "level": {
               "extraction_status": "extracted",
-              "value": "HC",
+              "value": "healthy controls",
               "value_source": "reported",
               "evidence": {
                 "status": "present",
@@ -1501,7 +1501,7 @@
             "term": "term-group",
             "level": {
               "extraction_status": "extracted",
-              "value": "HC",
+              "value": "healthy controls",
               "value_source": "reported",
               "evidence": {
                 "status": "present",
@@ -1542,7 +1542,7 @@
             "term": "term-group",
             "level": {
               "extraction_status": "extracted",
-              "value": "PD",
+              "value": "Parkinson's disease patients",
               "value_source": "reported",
               "evidence": {
                 "status": "present",
@@ -1860,7 +1860,7 @@
             "term": "term-group",
             "level": {
               "extraction_status": "extracted",
-              "value": "HC",
+              "value": "healthy controls",
               "value_source": "reported",
               "evidence": {
                 "status": "present",
@@ -1901,7 +1901,7 @@
             "term": "term-group",
             "level": {
               "extraction_status": "extracted",
-              "value": "PD",
+              "value": "Parkinson's disease patients",
               "value_source": "reported",
               "evidence": {
                 "status": "present",

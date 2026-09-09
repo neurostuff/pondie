@@ -30,7 +30,7 @@ in neither.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from pondie import paths, schema
@@ -38,9 +38,9 @@ from pondie.extraction.models import Prompt
 
 # `builder` for the payload contract (see ENTITY_LISTS); `preprocess` for the
 # deterministic text transforms selected by --preprocess.
+from pondie.extraction.prompt import worked
 from pondie.extraction.record import builder, ids
 from pondie.formats import parse_keys
-from pondie.formats import values as fields
 from pondie.schema import reader
 from pondie.schema.reader import Schema
 
@@ -49,11 +49,6 @@ REPO = paths.REPO
 #: module used to sit in.
 EXTRACTION_SCHEMA = schema.EXTRACTION
 README = schema.ROOT / "extraction-readme.md"
-MODELS = schema.ROOT / "representing-models.md"
-
-#: The heading of the section of `representing-models.md` the prompt carries, and
-#: the sub-heading `test_extraction_prompt.py` asserts survives the slice.
-WORKED_MODELS_SECTION = "## 5. Worked models"
 
 #: Payload keys merge_payloads() accepts, taken from the schema through the same
 #: function build_record uses. Hardcoding this list is how `conditions` and `terms`
@@ -672,28 +667,15 @@ def worked_models() -> str:
     (§5.6), an ordered factor contrasted at its extremes (§5.7), a model split across
     stages (§5.12).
 
-    Sliced rather than sent whole. §1-§4 restate what the conventions and the rendered
-    `description:` fields already say, and §6 asks whether a paper fits the schema at
-    all, which this pass does not decide.
-
-    Raises rather than returning "" when the heading moves. The file is committed here,
-    so an empty slice is a repo error, and announcing a section the prompt does not
-    carry is worse than failing loudly.
+    Composed from the referent records rather than sliced out of the markdown. The
+    encodings were a hand-written transcription of records the package already ships,
+    and the transcription had drifted: an invented `FactorLevel.order`, and a decrease
+    encoded on the VBM model's term when the paper reports it on the fMRI model's. See
+    `prompt/worked.py`; §1-§4 and §6 are still left out, because they restate the
+    conventions and the rendered `description:` fields, and ask a question about whether
+    a paper fits the schema at all that this pass does not decide.
     """
-
-    text = MODELS.read_text(encoding="utf-8")
-    # Up to the next `## ` heading. `### 5.1` and friends do not match it -- the
-    # character after `##` is `#`, not a space -- so the subsections stay in.
-    match = re.search(
-        rf"^{re.escape(WORKED_MODELS_SECTION)}$.*?(?=^## |\Z)", text, re.MULTILINE | re.DOTALL
-    )
-    if match is None:
-        raise RuntimeError(
-            f"{MODELS.name} has no {WORKED_MODELS_SECTION!r} heading: the worked models "
-            "cannot be sliced out for the prompt. Renumbering the section means updating "
-            "WORKED_MODELS_SECTION with it."
-        )
-    return match.group(0).rstrip()
+    return worked.document().rstrip()
 
 
 #: The demand-driven pair. `demands` renders the analysis side and `satisfy` the entity
