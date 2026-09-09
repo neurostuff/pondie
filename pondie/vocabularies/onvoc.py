@@ -112,6 +112,12 @@ _SUFFIXES = (
     "ically",
     "ation",
     "ities",
+    # After `ation`, so `agitation` stems to `agitat` and not `agitati`. Without it the
+    # nominalisation of a clinical noun does not reach its adjective -- `depression` stayed
+    # whole while `depressive` folded to `depress`, so a paper writing the commoner of the two
+    # missed `Depressive Disorder` entirely. 45 ONVOC labels contain a word this strips, and
+    # the resolvable stem count is unchanged at 744, so it collapses no concept into another.
+    "ion",
     "ive",
     "ity",
     "ies",
