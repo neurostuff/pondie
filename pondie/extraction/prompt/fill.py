@@ -203,7 +203,8 @@ def unsettled(payload: Mapping[str, Any], sch: Schema) -> list[dict[str, Any]]:
     return out
 
 
-def block(rows: Sequence[Mapping[str, Any]], cap: int = 400) -> str:
+def block(rows: Sequence[Mapping[str, Any]]) -> str:
+    cap = 400
     """The open slots as the pass's question. One line each, truncated to `cap` lines."""
     lines = ["\n# Fields left blank\n",
              f"{min(len(rows), cap)} field(s). Answer every id with a value or a reason.\n"]
@@ -264,6 +265,9 @@ def apply_fill(
             dropped += 1
             continue
         if "value" in answer and answer["value"] not in (None, ""):
+            # Built here rather than through `values.wrap`, which requires an evidence
+            # status: this pass does not know one. `Evidence` runs after it and puts the
+            # block on, the same as it does for anything `satisfy` emitted.
             target[name] = {
                 "extraction_status": "extracted",
                 "value": answer["value"],
@@ -278,14 +282,11 @@ def apply_fill(
             if reason != PLAIN and reason not in VOCABULARY:
                 dropped += 1
                 continue
-            target[name] = {
-                "extraction_status": "not_reported",
-                "evidence": {"status": "not_applicable"},
-            }
             # `PLAIN` is how the prompt says "the ordinary case" and is not a schema value,
-            # so it is written as the bare status it means.
-            if reason != PLAIN:
-                target[name]["unreported_reason"] = reason
+            # so it becomes no reason at all -- the bare status it stands for.
+            target[name] = values.wrap(
+                None, source="reported", evidence="not_applicable",
+                reason=None if reason == PLAIN else reason)
             reasoned += 1
         else:
             dropped += 1

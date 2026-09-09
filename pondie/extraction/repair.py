@@ -57,17 +57,6 @@ contradiction, so a reviewer can see it; a confident wrong answer removes that."
 
 
 
-def gate(limit: int) -> threading.Semaphore:
-    """Bounds how many papers may be inside the local models at once, per process.
-
-    The stages above this are network-bound and want every worker they can get; the two
-    local models are 8 GB of card between them and want far fewer. Eight workers sharing one
-    proposer OOMed their way down the halving ladder on every full-length paper and returned
-    nothing, while the stubs -- whose premises were already under the floor -- sailed
-    through. Cached per limit so every thread waits on the same semaphore, for the reason
-    `models` is cached: one object, many workers.
-    """
-    return threading.BoundedSemaphore(max(1, limit))
 
 
 @dataclass

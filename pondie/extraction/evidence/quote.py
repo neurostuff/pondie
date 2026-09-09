@@ -47,6 +47,10 @@ Rules:
    from, not a sentence containing the term."""
 
 
+#: How much of a sentence a lifted clause may carry. Long enough that `build_record`
+#: can resolve it unambiguously, short enough that it is a citation and not a page.
+_CLAUSE_CAP = 400
+
 #: Sentence enders, for lifting the clause a value sits in out of the document.
 _BREAK = re.compile(r"(?<=[.!?])\s|\n")
 
@@ -78,8 +82,9 @@ def _anchored(value: str) -> re.Pattern[str] | None:
         return None
 
 
-def _clause(text: str, start: int, end: int, cap: int = 400) -> str:
-    """The sentence `text[start:end]` sits in, clipped to `cap` characters."""
+def _clause(text: str, start: int, end: int) -> str:
+    """The sentence `text[start:end]` sits in, clipped to `_CLAUSE_CAP` characters."""
+    cap = _CLAUSE_CAP
     lo = 0
     for m in _BREAK.finditer(text, max(0, start - cap), start):
         lo = m.end()

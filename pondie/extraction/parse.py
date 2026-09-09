@@ -48,13 +48,7 @@ class ParsedAnalysis:
         """Kept out of the extraction prompt because the paper does not describe it."""
         return bool(self.raw.get("withhold"))
 
-    @property
-    def mirror_of(self) -> str | None:
-        return self.raw.get("mirror_of")
 
-    @property
-    def split_direction(self) -> str | None:
-        return self.raw.get("split_direction")
 
     def __repr__(self) -> str:
         mark = " [withheld]" if self.is_withheld else ""

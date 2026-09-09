@@ -276,7 +276,6 @@ result of the same contrast must not extract to the same record.
 def stage1_block(
     stage1: Mapping[str, Any],
     table_ids: Mapping[str, str],
-    detail: bool = False,
     zero_foci_rule: bool = False,
 ) -> str:
     """The analyses parsed from the result tables, grouped by the table reporting them.
@@ -394,19 +393,6 @@ def stage1_block(
             )
             if analysis.get("description"):
                 lines.append(f"       ({_wrap(analysis['description'])[:150]})")
-            if detail:
-                # The rows the parse was made without. A signed statistic value is the
-                # only place some papers state which way a contrast went, and the digest
-                # above reduces it to a count.
-                for point in points[:40]:
-                    coordinates = ", ".join(f"{c:g}" for c in (point.get("coordinates") or []))
-                    values = " ".join(
-                        f"{v.get('kind', '?')}={v.get('value')}"
-                        for v in (point.get("values") or [])
-                    )
-                    lines.append(f"       ({coordinates})  {values}")
-                if len(points) > 40:
-                    lines.append(f"       ... {len(points) - 40} further foci")
     return "\n".join(lines) + "\n"
 
 

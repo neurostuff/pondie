@@ -67,7 +67,8 @@ def plain(node: Any) -> Any:
     return node
 
 
-def _fmt(value: Any, width: int = 150) -> str:
+def _fmt(value: Any) -> str:
+    width = 150
     if value is None:
         return "<null>"
     text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)

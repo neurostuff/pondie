@@ -194,28 +194,8 @@ def read(node: Any) -> Any:
     return node.get("value") if is_field(node) else node
 
 
-def read_scalar(node: Any) -> Any:
-    """`read`, repeated until the answer is not a wrapper. For a slot that should hold one.
-
-    A wrapper whose `value` is itself a wrapper is a real and recurring shape -- the model
-    emits it when a field is described as an ExtractedValue and it wraps the answer twice --
-    and a caller that unwraps once gets a dict where it expected a string, then breaks on
-    the first thing that groups by it. Two call sites wrote the double unwrap inline; this
-    is the name for it.
-
-    Bounded, because a cycle here would hang a reader whose job is to report on bad input.
-    """
-    for _ in range(4):
-        unwrapped = read(node)
-        if unwrapped is node or not is_field(unwrapped):
-            return unwrapped
-        node = unwrapped
-    return node
 
 
-def is_reported(node: Any) -> bool:
-    """Whether the wrapper claims a value at all, as opposed to asserting silence."""
-    return is_field(node) and node.get("extraction_status") == "extracted"
 
 
 def iter_fields(node: Any, path: str = "") -> Iterator[tuple[str, dict[str, Any]]]:
@@ -307,10 +287,6 @@ def value_of(node: object, multivalued: bool = False) -> object:
     return value
 
 
-def slot_value(sch: "Schema", class_name: str, entity: Mapping[str, Any], slot: str) -> Any:
-    """`value_of` with the slot's shape taken from the schema rather than from the caller."""
-    attribute = sch.attributes(class_name).get(slot)
-    return value_of(entity.get(slot), bool(attribute.multivalued) if attribute else False)
 
 
 #: What a model writes when it means yes or no. Spelled out because the answer arrives as
@@ -395,14 +371,11 @@ __all__ = [
     "MARKER",
     "ValueSource",
     "is_field",
-    "is_reported",
     "iter_fields",
     "read",
-    "read_scalar",
     "wrap",
     "NOT_REPORTED",
     "value_of",
-    "slot_value",
     "cast",
     "shape",
 ]

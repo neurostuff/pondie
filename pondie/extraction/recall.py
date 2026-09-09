@@ -242,7 +242,8 @@ def descriptions(sch: Schema, class_name: str, limit: int = 3_000) -> str:
     return "What each field means:\n" + "\n".join(block) + "\n\n"
 
 
-def vocabulary(sch: Schema, class_name: str, limit: int = 1_400) -> str:
+def vocabulary(sch: Schema, class_name: str) -> str:
+    limit = 1_400
     """What the enum tokens in this class's template mean, for the instruction beside it.
 
     A NuExtract template is a type skeleton: `condition_kind` arrives as
@@ -453,9 +454,9 @@ def existing(sch: Schema, record: Mapping[str, Any], class_name: str) -> str:
             "is missing above, leave `local_id` out.\n\n")
 
 
-def _slot_summary(sch: Schema, entity: Mapping[str, Any], class_name: str,
-                  limit: int = 6) -> str:
+def _slot_summary(sch: Schema, entity: Mapping[str, Any], class_name: str) -> str:
     """A few of the entity's filled slots, so a correction has something to correct."""
+    limit = 6
     parts = []
     for name, _slot, kind in sch.iter_slots(class_name):
         if name in ("local_id", "name") or kind == "nested" or len(parts) >= limit:
@@ -509,7 +510,8 @@ def candidates(sch: Schema, record: Mapping[str, Any], class_name: str) -> str:
             "where the description above says so.\n\n")
 
 
-def _meaning(slot: Any, sentences: int = 2) -> str:
+def _meaning(slot: Any) -> str:
+    sentences = 2
     """The slot's own description, trimmed to what fits in a prompt."""
     text = " ".join((getattr(slot, "description", "") or "").split())
     parts = re.split(r"(?<=[.?!]) ", text)

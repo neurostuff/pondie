@@ -253,9 +253,9 @@ GUARDS: tuple[Check, ...] = (
 )
 
 
-def refusals(edit: Edit, checks: tuple[Check, ...] = GUARDS) -> list[Refusal]:
+def refusals(edit: Edit) -> list[Refusal]:
     """Every reason this write should not happen. Empty means write it."""
-    return [refusal for check in checks if (refusal := check(edit)) is not None]
+    return [refusal for check in GUARDS if (refusal := check(edit)) is not None]
 
 
 @dataclass
@@ -347,7 +347,8 @@ def same_entity(one: str, other: str, abbreviations: Any = None) -> bool:
     return len(small) >= 2 and small <= large
 
 
-def _words(label: str, abbreviations: Any, rounds: int = 3) -> set[str]:
+def _words(label: str, abbreviations: Any) -> set[str]:
+    rounds = 3
     text = label or ""
     for _ in range(rounds):
         expanded, grew = [], False

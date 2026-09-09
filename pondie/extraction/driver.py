@@ -21,7 +21,8 @@ from pondie.extraction.models import Paper, PaperOutcome, RunReport, Settings, S
 from pondie.extraction.stages import sequence
 
 
-def _why(error: BaseException, depth: int = 3) -> str:
+def _why(error: BaseException) -> str:
+    depth = 3
     """The exception and what caused it, down the chain.
 
     `llm.py` raises `RuntimeError("satisfy for X: 1 attempt(s) failed") from last`, and

@@ -38,7 +38,8 @@ PREFIX: dict[str, str] = {
 DERIVED: frozenset[str] = frozenset({"Table"})
 
 
-def prefix_table(width: int = 3) -> str:
+def prefix_table() -> str:
+    width = 3
     """The convention as the extraction prompt prints it, from the one definition."""
     rows = [f"{p:<6} {c:<18}" for c, p in PREFIX.items()]
     lines = ["     " + "".join(rows[i:i + width]).rstrip()

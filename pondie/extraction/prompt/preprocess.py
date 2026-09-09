@@ -1210,9 +1210,13 @@ REORDER_NOTE = (
 )
 
 
-def bm25_select(
-    text: str, query: str, budget: float = 0.45, k1: float = 1.5, b: float = 0.75
-) -> str:
+#: BM25's saturation and length-normalisation terms, at the values the literature
+#: gives them. Named rather than inlined because that is how they are cited.
+_K1, _B = 1.5, 0.75
+
+
+def bm25_select(text: str, query: str, budget: float = 0.45) -> str:
+    k1, b = _K1, _B
     """Keep the highest-scoring prose sentences, in document order.
 
     Retrieval and not summarisation: every kept sentence is the paper's own, so a value
