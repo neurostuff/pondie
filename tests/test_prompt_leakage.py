@@ -78,7 +78,6 @@ def static_prompt_sources() -> dict[str, str]:
         # of the experiment written inside `SHAPE`'s literal rather than beside it was sent
         # to the model as part of its instructions before anything noticed.
         "recall.INSTRUCTION": recall.INSTRUCTION,
-        "recall.SCOPED": recall.SCOPED,
         "recall_llm.SHAPE": recall_llm.SHAPE,
     }
     sources.update({f"MODE_NOTE[{name}]": note for name, note in er.MODE_NOTE.items()})

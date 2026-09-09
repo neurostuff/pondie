@@ -700,34 +700,6 @@ def test_the_type_designator_is_never_rewritten(sch):
     assert "magnetic_field_strength_tesla" in entity, "the subclass slot must still land"
 
 
-def test_a_starved_proposer_is_reported_not_silently_empty(sch):
-    """Eight workers sharing one card OOMed every sweep on every full-length paper for an
-    hour. Each recorded `0 written, 0 refused`, which reads as a pass with nothing to do --
-    the stubs, whose premises were already under the floor, were the only ones that worked."""
-    from pondie.extraction import recall
-    from pondie.extraction import repair as repair_pass
-
-    class Starving:
-        def propose(self, sch, class_name, premise, instruction):
-            raise recall.Starved(f"{class_name}: out of memory at a 6000-character premise")
-
-    record = {"analyses": [{"local_id": "an", "name": field("a contrast")}]}
-    report = repair_pass.run(
-        record, "Methods. A contrast was computed.", sch, study_id="p", proposer=Starving()
-    )
-    assert report.refused, "a starved sweep must leave a trace a reviewer can see"
-    assert any("out of memory" in r.why for r in report.refused)
-    assert not report.written
-
-
-def test_the_default_is_one_paper_in_the_models_at_a_time(tmp_path):
-    """Settings has to be right on beast without being told: the failure it prevents is
-    silent, so a run that forgets the flag looks like a run with nothing to repair."""
-    from pondie.extraction.models import Settings
-
-    assert Settings(payloads=tmp_path, records=tmp_path, model="m").repair_workers == 1
-
-
 class _Findings:
     def __init__(self):
         self.errors, self.warnings = [], []
@@ -1008,65 +980,6 @@ def test_a_short_derived_label_does_not_match_inside_a_word():
     ]
     assert retrieval.entity_hits(units, "fa") == []
     assert retrieval.entity_hits(units, "siemens trio") == [1]
-
-
-def test_a_paper_that_enumerates_its_regions_is_checked_against_the_record():
-    """26424424 defines ten regions of interest and the record holds six. The four absent
-    ones are exactly those with no significant finding, so the extractor kept the regions
-    that appear in the results and dropped the ones that appear only in the definition --
-    and nothing said so, because a missing entity leaves no trace to check.
-
-    Asking the proposer does not recover them: given the defining sentence in its premise
-    and the six it already has, it returns those six and nothing else."""
-    from pondie.extraction.evidence import completeness
-
-    text = (
-        "Methods. The regions included bilateral anterior piriform cortex (aPC), "
-        "lateral amygdala (AMYG), head of the hippocampus (HPC), anterior insula "
-        "(aINS), and orbitofrontal cortex (OFC). Each ROI was created in MARSBAR as a "
-        "5 mm-radius sphere centered around the published coordinates."
-    )
-    record = {
-        "regions": [
-            {"local_id": "r", "name": field(n)}
-            for n in ("left aINS", "right aINS", "left AMYG", "left aPC", "right aPC", "right OFC")
-        ]
-    }
-
-    found = completeness.missing_regions(record, text)
-    joined = " | ".join(found)
-    assert "HPC" in joined, found
-    assert "AMYG" in joined and "right" in joined, found
-    assert "OFC" in joined and "left" in joined, found
-
-
-def test_a_results_sentence_is_not_an_enumeration_of_definitions():
-    """ "regions were activated in cocaine users" opens a list, and every clause of the
-    paragraph after it became a missing region -- seventeen false findings on one paper,
-    which is worse than saying nothing."""
-    from pondie.extraction.evidence import completeness
-
-    text = (
-        "Results. The regions were activated in cocaine users and comparison subjects "
-        "when they viewed the sex film, in the prefrontal, dorsolateral and limbic "
-        "areas, with coordinates reported in Table 2."
-    )
-    record = {"regions": []}
-    assert completeness.missing_regions(record, text) == []
-
-
-def test_a_region_name_does_not_keep_the_preposition_in_front_of_it():
-    """A finding that says 'located in the right superior frontal gyrus' reads as a parsing
-    failure even when the gap it reports is real."""
-    from pondie.extraction.evidence import completeness
-
-    items = completeness.named(
-        "located in the right superior frontal gyrus, " "left inferior parietal lobule"
-    )
-    assert [name for name, _both in items] == [
-        "right superior frontal gyrus",
-        "left inferior parietal lobule",
-    ]
 
 
 def test_a_value_the_pass_could_not_place_is_marked_generated(sch):

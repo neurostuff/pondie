@@ -25,7 +25,6 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Mapping, MutableMapping
 
-from pondie.extraction import recall
 from pondie.extraction.record import edit as edit_module
 from pondie.extraction.record.edit import UNRESTRICTED, Edit, Refusal, refusals
 from pondie.extraction.record.validate import Validator
@@ -257,7 +256,6 @@ def run(
     model: str = "",
     service_tier: str = "",
     iterations: int = 2,
-    gpu_workers: int = 1,
 ) -> Report:
     """Repair `record` in place. Returns what happened, including anything it broke."""
     from copy import deepcopy
@@ -408,15 +406,11 @@ def _sweep(
             )
     for container in order:
         class_name = by_container[container]
-        try:
-            proposals = (
-                batched.get(class_name, [])
-                if batched is not None
-                else proposer.propose(sch, class_name, premise, context[class_name])
-            )
-        except recall.Starved as starved:
-            report.refused.append(Refusal(container, str(starved)))
-            continue
+        proposals = (
+            batched.get(class_name, [])
+            if batched is not None
+            else proposer.propose(sch, class_name, premise, context[class_name])
+        )
         by_id = {
             e.get("local_id"): e for e in record.get(container) or [] if isinstance(e, Mapping)
         }

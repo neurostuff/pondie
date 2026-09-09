@@ -203,12 +203,6 @@ class Settings(Strict):
     #: about as many open slots as it can rather than splitting them over calls.
     fill_batch: Annotated[int, Field(ge=1)] = 250
 
-    #: How many papers may be inside the two local models at once. The stages above are
-    #: network-bound and run at `workers`; these are 8 GB of card between them and do not
-    #: divide. At eight, every full-length paper OOMed down to the proposer's floor and
-    #: returned nothing, which a report cannot distinguish from having nothing to add.
-    repair_workers: Annotated[int, Field(ge=1)] = 1
-
     #: Put the contradictions nothing else could settle to the extraction model, once per
     #: record, with the paper. Costs one call for a record that has one, and nothing for a
     #: record that does not -- 8 cases across 42 records measured.
