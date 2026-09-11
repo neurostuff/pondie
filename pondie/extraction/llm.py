@@ -15,6 +15,7 @@ import json
 import os
 import random
 import sys
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -90,22 +91,45 @@ class GatewayCaller:
         self, api_key_env: str = "OPENAI_API_KEY", base_url_env: str = "OPENAI_API_GATEWAY"
     ):
         self._key_env, self._base_env = api_key_env, base_url_env
+        self._shared = None
+        self._lock = threading.Lock()
 
-    def _client(self, paper: str, stage: str):
-        from openai import OpenAI
+    def _client(self):
+        """One client for the whole run, built on first use.
 
-        return OpenAI(
-            api_key=os.environ[self._key_env],
-            base_url=os.environ.get(self._base_env),
-            default_headers={
-                "x-portkey-metadata": json.dumps(
-                    {"paper": paper, "stage": stage, "run_id": RUN_ID, "pipeline": "pondie"}
-                )
-            },
-        )
+        The connection pool is the reason it is shared. Every `OpenAI()` builds its own
+        httpx pool, so a client per call reuses no connection and pays a TLS handshake per
+        call -- invisible at eight workers, and at ninety-six a burst of handshakes against
+        a 1024 file-descriptor soft limit. What forced a client per call was the Portkey
+        metadata, which named the paper and the stage in `default_headers`; that is
+        per-request information and is passed per request below, so nothing is left that
+        varies between calls.
+
+        Locked and double-checked because the scheduler runs items on a thread pool and the
+        first calls arrive together: without it the first N workers each build a client and
+        all but one is discarded, which is the per-call cost this removes, on the one batch
+        where it is largest. The client itself is thread-safe and is meant to be shared.
+        """
+        if self._shared is None:
+            with self._lock:
+                if self._shared is None:
+                    from openai import OpenAI
+
+                    self._shared = OpenAI(
+                        api_key=os.environ[self._key_env],
+                        base_url=os.environ.get(self._base_env),
+                    )
+        return self._shared
 
     def __call__(self, call: ModelCall, *, paper: str, stage: str) -> ModelReply:
-        client = self._client(paper, stage)
+        client = self._client()
+        # Per request, not per client: this is what a call is about, and putting it on the
+        # client is what used to make the client unshareable.
+        metadata = {
+            "x-portkey-metadata": json.dumps(
+                {"paper": paper, "stage": stage, "run_id": RUN_ID, "pipeline": "pondie"}
+            )
+        }
         last: Exception | None = None
         # Dropped for the rest of this call if the provider says it does not know the
         # parameter, so a gateway without JSON mode degrades to the old behaviour instead
@@ -130,6 +154,7 @@ class GatewayCaller:
                     reasoning_effort=call.effort,
                     **({"response_format": {"type": "json_object"}} if constrain else {}),
                     **({"service_tier": call.service_tier} if call.service_tier else {}),
+                    extra_headers=metadata,
                 )
                 response = raw.parse()
             except Exception as error:  # noqa: BLE001 -- retried, then surfaced
