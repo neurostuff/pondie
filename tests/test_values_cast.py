@@ -53,10 +53,10 @@ def test_a_slot_the_class_does_not_declare_takes_nothing(sch):
 
 
 def test_a_multivalued_slot_gets_a_list(sch):
-    """`Task.response_mode` is multivalued, and the scalar produced
-    "ExtractedResponseModeList.value must be a list of ResponseMode or string, got str"."""
+    """`Task.response_modality` is multivalued, and the scalar produced
+    "ExtractedResponseModalityList.value must be a list of ResponseModality or string, got str"."""
 
-    assert values.shape(sch, "Task", "response_mode", "button press") == ["button press"]
+    assert values.shape(sch, "Task", "response_modality", "button press") == ["button press"]
     assert values.shape(sch, "Group", "acquired_count", "31") == 31
 
 

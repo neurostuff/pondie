@@ -1128,8 +1128,8 @@ def strip_provenance(node, path: str = "") -> dict:
 RANGES: dict[str, dict[str, str]] = {}
 
 #: key -> {slot: whether it is multivalued}. A cast value still has to arrive in the shape
-#: the slot declares: `Task.response_mode` takes a list, and writing the scalar produced
-#: "ExtractedResponseModeList.value must be a list of ResponseMode or string, got str".
+#: the slot declares: `Task.response_modality` takes a list, and writing the scalar produced
+#: "ExtractedResponseModalityList.value must be a list of ResponseModality or string, got str".
 MULTI: dict[str, dict[str, bool]] = {}
 
 #: enum name -> its permissible values, for slots whose range is a closed enum. A slot

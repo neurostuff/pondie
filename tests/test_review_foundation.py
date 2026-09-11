@@ -1663,7 +1663,7 @@ def test_a_missing_value_is_left_for_the_validator(classes: dict) -> None:
 
 
 def test_a_scalar_where_an_enum_list_belongs_is_an_error(classes: dict) -> None:
-    """`ExtractedResponseModeList` declares its `value` with `any_of` and no `range`, so
+    """`ExtractedResponseModalityList` declares its `value` with `any_of` and no `range`, so
     the shape check used to be unreachable and a bare string passed silently."""
 
     validator = validate_record.Validator(classes, None)
@@ -1674,10 +1674,10 @@ def test_a_scalar_where_an_enum_list_belongs_is_an_error(classes: dict) -> None:
             "value_source": "reported",
             "evidence": {"status": "not_found"},
         },
-        "ExtractedResponseModeList",
-        "Study.tasks[0].response_mode",
+        "ExtractedResponseModalityList",
+        "Study.tasks[0].response_modality",
     )
-    assert [e for e in validator.errors if "must be a list of ResponseMode" in e]
+    assert [e for e in validator.errors if "must be a list of ResponseModality" in e]
 
 
 # -- §3 invariants 2, 3 and 4: a cell's term and level ----------------------
