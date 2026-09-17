@@ -239,7 +239,10 @@ def test_a_reference_list_holds_each_target_once(sch):
 
 
 def test_a_value_that_will_not_fit_its_slot_is_refused_not_coerced(sch):
-    """28416565: `is_healthy` was given the word, and `bool("false")` is True."""
+    """28416565: a boolean slot was given the word, and `bool("false")` is True.
+
+    Was `Group.is_healthy` until that slot became derived and left the extraction schema;
+    `tfce_used` is the same shape and still asked for."""
     from pondie.extraction.record import edit as edit_module
 
     record = {"groups": [{"local_id": "g1", "name": field("patients")}]}
@@ -1031,7 +1034,7 @@ def test_the_repair_stage_edits_against_the_schema_it_checks_against():
 
 
 def test_a_wrapper_is_resolved_to_what_it_wraps(sch):
-    """`Group.is_healthy` declares `ExtractedBoolean`, so reading `range` directly gives a
+    """`InferenceSettings.tfce_used` declares `ExtractedBoolean`, so reading `range` gives a
     class name and concludes "reference". Two consumers did that independently: `nu_type`
     offered nothing but `local_id` for every class, and `cast` skipped the coercion branch
     its own docstring names."""
@@ -1039,7 +1042,8 @@ def test_a_wrapper_is_resolved_to_what_it_wraps(sch):
     from pondie.schema import reader
 
     schema = reader.load(EXTRACTION_SCHEMA)
-    assert schema.value_ranges(schema.attributes("Group")["is_healthy"]) == ["boolean"]
+    assert schema.value_ranges(
+        schema.attributes("InferenceSettings")["tfce_used"]) == ["boolean"]
     assert schema.value_ranges(schema.attributes("Group")["acquired_count"]) == ["integer"]
     assert schema.value_ranges(schema.attributes("Region")["name"]) == ["string"]
     # An open vocabulary keeps both branches.
@@ -1058,12 +1062,13 @@ def test_a_string_answer_lands_in_the_type_its_slot_declares(sch):
     from pondie.schema import reader
 
     schema = reader.load(EXTRACTION_SCHEMA)
-    assert value_tools.cast(schema, "Group", "is_healthy", "true") is True
+    assert value_tools.cast(schema, "InferenceSettings", "tfce_used", "true") is True
     assert value_tools.cast(schema, "Group", "acquired_count", "31") == 31
     assert value_tools.cast(schema, "Group", "age_mean", "24.6") == 24.6
     # And an answer that will not fit is still refused rather than coerced.
     assert value_tools.cast(schema, "Group", "acquired_count", "about twenty") is None
-    assert value_tools.cast(schema, "Group", "is_healthy", "mostly") is None
+    assert value_tools.cast(
+        schema, "InferenceSettings", "tfce_used", "mostly") is None
 
 
 def test_a_nested_object_gains_prose_it_was_missing(sch):
