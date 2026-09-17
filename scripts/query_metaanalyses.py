@@ -219,6 +219,40 @@ def visual_stimuli(record: dict) -> bool | None:
     return any(re.search(r"visual|image|picture|photograph|video|film", s, re.I) for s in prose)
 
 
+def measures(record: dict, pattern: str) -> bool | None:
+    """"assessing GM volume differences" / "focused on gray matter structural differences".
+
+    `Measure.type`, and it is the predicate whose absence produced most of the strict
+    query's false positives. Without it a criterion naming grey-matter *volume* admits any
+    structural study: 32977211 measures only `diffusion_metric`, 28971228 and 26507433
+    measure `cortical_thickness`, and all three were selected because the modality predicate
+    saw "structural MRI" and stopped there.
+    """
+    seen = [s for m in record.get("measures") or [] if isinstance(m, dict)
+            for s in strings(m.get("type"), "type") + strings(m.get("family"), "family")]
+    if not seen:
+        return UNANSWERABLE
+    return any(re.search(pattern, s, re.I) for s in seen)
+
+
+def group_contrast(record: dict) -> bool | None:
+    """"a between-subjects contrast comparing smokers to matched nonsmoking participants".
+
+    Stricter than `between_group`, which asks only that two cohorts sit on one term's
+    levels. This also asks that the effect is a *contrast* rather than a regression or an
+    interaction, because a criterion naming a group difference does not admit a correlation
+    with a continuous exposure: 26947584 is a `cross_subject_regression` on AUDIT score and
+    20424827 contrasts a cessation *outcome*, and both were selected without it.
+    """
+    kinds = [s for a in record.get("analyses") or [] if isinstance(a, dict)
+             for s in strings((a.get("effect") or {}).get("kind"), "kind")]
+    if not kinds:
+        return UNANSWERABLE
+    if not any(s.lower() == "contrast" for s in kinds):
+        return False
+    return between_group(record)
+
+
 def has_direction(record: dict) -> bool | None:
     """"users < non-users ; users > non-users" / "bvFTD < HC" -- the contrast has a sign.
     `Cell.direction`."""
@@ -266,8 +300,9 @@ QUERIES: dict[str, tuple[str, list[tuple[str, Predicate]]]] = {
         ("structural modality", lambda r: any_modality(r, r"structural|vbm|smri|\bMRI\b|T1")),
         ("whole brain", whole_brain),
         ("standard space", standard_space),
+        ("gray matter measure", lambda r: measures(r, r"gray_matter|grey_matter|morphometry")),
         ("PTSD cohort", lambda r: group_condition(r, r"PTSD|post.?traumatic")),
-        ("between-group contrast", between_group),
+        ("between-group contrast", group_contrast),
         ("adults", lambda r: adults(r, 18)),
         ("signed contrast", has_direction),
     ]),
@@ -294,7 +329,8 @@ QUERIES: dict[str, tuple[str, list[tuple[str, Predicate]]]] = {
         ("substance-use cohort", lambda r: group_condition(
             r, r"alcohol|nicotine|tobacco|smok|cocaine|cannabis|opioid|heroin|"
                r"methamphetamine|substance|depend|abuse|addict")),
-        ("between-group contrast", between_group),
+        ("gray matter volume measure", lambda r: measures(r, r"gray_matter_volume|grey_matter_volume")),
+        ("between-group contrast", group_contrast),
         ("no pharmacological arm", no_pharmacological),
     ]),
     "35413444": ("emotion_regulation_2022", [

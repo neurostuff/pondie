@@ -284,3 +284,52 @@ That is finding 9 of this document, and `AssignmentStructure.observational_cohor
 tightened `Allocation.non_randomized` description is its fix -- for future extractions. These
 records predate it, and no deterministic backfill can recover a label the model was steered
 into by a vocabulary with no right answer in it.
+
+## Five papers the strict query wrongly included, and what they show
+
+Asked for false positives I would defend as false, five hold up — and all five turned out to
+fail a criterion the **records already answer**, through a predicate I had not written. The
+query was too coarse; the records were not too thin.
+
+| pmid | the query's error | what the record says |
+|---|---|---|
+| `32977211` | PTSD: "focused on gray matter structural differences", and this uses **diffusion tensor imaging and region-based morphometry**. Also excluded as a "non-voxel-based morphometry method". | `Measure: diffusion_metric/diffusion` — and no grey-matter measure at all |
+| `28971228` | Substance use: "assessing GM volume differences". Measures **cortical thickness**, and its own abstract says it "focused on empathy-related brain areas", an ROI restriction. | `Measure: cortical_thickness` |
+| `26507433` | Substance use: no non-using control group — it contrasts **early-onset against late-onset users** — and measures cortical thickness, GWR and gyrification, not volume. | `Measure: cortical_thickness`, `Effect.kind: interaction` |
+| `26947584` | Substance use: not a users-versus-controls contrast. It **regresses grey matter on a continuous AUDIT score** across a 436-person range of severity. | `Effect.kind: cross_subject_regression`, `ModelTerm: AUDIT score:continuous` |
+| `20424827` | Substance use: contrasts a **smoking-cessation treatment outcome** (abstinence at 4 weeks) within smokers, so it is both a treatment study and not a users-versus-controls design. | terms are `cigarettes per day:continuous`, `smoking cessation outcome:categorical` — no user/control group factor |
+
+A sixth, `30456877`, tests a **gene × smoking interaction** rather than a main effect of
+smokers against non-smokers: `ModelTerm: rs1137070 genotype:categorical` and
+`smoking status:categorical`.
+
+### The correction, and what it cost
+
+Two predicates were missing and both were expressible:
+
+- **`measures(pattern)`** on `Measure.type`. Without it, a criterion naming grey-matter
+  *volume* admitted any structural study, because the modality predicate saw "structural
+  MRI" and stopped.
+- **`group_contrast`** requiring `Effect.kind == contrast` before asking for two cohorts on
+  a term, because a criterion naming a group difference does not admit a regression on a
+  continuous exposure or an interaction.
+
+| | strict precision before | after |
+|---|---|---|
+| `vbm_of_ptsd` | 81.8% | **90.0%** |
+| `vbm_of_substance_use` | 68.2% | **86.7%** |
+| mean over five | 48.8% | **54.1%** |
+
+Recall fell with it -- substance use from 23.1% to 20.0% -- so the query is now precise and
+narrow rather than precise and broad, and it is still far short of any screener on the
+objective that matters. What changed is the diagnosis: a meaningful part of what I had
+attributed to incomplete records was an incomplete translation of the criteria, and
+`Measure.type` and `Effect.kind` were sitting in every record the whole time.
+
+One paper I will not claim: **`16371250`**, "Gray matter density reduction in the insula in
+fire survivors with posttraumatic stress disorder", 12 fire victims with PTSD against 12
+matched victims of the same fire without PTSD, by VBM. It meets every criterion the PTSD
+meta-analysis states and is not in its included set, so it reads as a gold-set omission
+rather than a query error -- which, with the two reviews the publication-type filter found
+inside `vbm_of_substance_use`'s included set, makes three disagreements with the benchmark
+that look like the benchmark's.
