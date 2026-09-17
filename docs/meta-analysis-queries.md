@@ -489,31 +489,60 @@ can state the contrast. It can.
 | `dementia` / functional | 11 | 64% | 27% | **9%** | 82% | 27% |
 | `dementia` / structural | 9 | 56% | 33% | **11%** | 67% | 22% |
 
-## This is the bottleneck, and it is not screening
+## CORRECTION: this is not analysis selection, and the claim above was wrong
 
-**On the gold papers it selected, autonima reproduces the foci the published meta-analysis
-pooled for 9% to 35% of them.** Screening recall on the same corpus is 95.3%. So the stage that
-finds the right papers works, and the stage that decides which coordinates enter the map --
-which is the stage the map is made of -- agrees with the published analysis on a third of
-papers at best.
+I wrote that analysis selection is the bottleneck. **It is not.** Auditing the metric found
+two things, and the second overturns the conclusion.
 
-That reframes the map results this experiment has been reporting. `figure7`'s R² and the
-Dice figures compare a map built from the wrong contrasts against one built from the right
-ones, on papers that were mostly correctly included. The arm contrast -- full text against
-records -- was measured at screening, where all three arms exceed 82% recall and differ by
-less than the run-to-run noise. The place where a map is won or lost was never in that
-comparison.
+**First: where the annotation does select, the coordinates are exact.** The table above
+compares foci *counts*, which two different analyses can share. Comparing the coordinate
+*sets* for `vbm_of_ptsd`, over the 7 gold studies both the gold and the annotation contain:
 
-## The query is competitive here, which says the same thing again
+```
+count agrees on 7/7, the SET agrees on 7/7
+foci: gold 73, auto 73, shared 73  ->  recall 100%, precision 100%
+```
 
-The deterministic query finds a matching contrast more often than the annotation does on
-dementia (86%, 82%, 67% against 57%, 64%, 56%) and matches the gold count as often on PTSD
-(35% each), while losing on substance use (24% against 41%). Given that it is five lines of
-predicate over `Effect.cells` and `Cell.direction`, with no model and no prompt, that is not a
-claim that it should replace the annotation pass -- the samples are 9 to 74 papers and
-dementia's are small. It is the third time in this document that criteria applied mechanically
-match a model reading the same record, and the reading is the same each time: the records
-carry the facts and the pass that reads them is not extracting the advantage.
+So extraction, parsing and selection are exactly right on every study that gets through. The
+count agreement was not luck, and there is no coordinate-level disagreement to explain.
+
+**Second: the studies that do not get through are almost never lost at annotation.** Placing
+each gold study in the channel that lost it:
+
+| project / key | contributed | annotation selected none | **absent from the coordinate parse** | rejected at screening | never reached screening | gold |
+|---|---|---|---|---|---|---|
+| `vbm_of_ptsd` / non-PTSD>PTSD | 7 | 1 | **8** | 1 | 5 | 22 |
+| `cue_reactivity` / reward | 89 | 2 | **23** | 4 | 42 | 160 |
+| `cue_reactivity` / drug | 81 | 1 | **21** | 3 | 7 | 113 |
+| `cue_reactivity` / natural | 10 | 0 | **4** | 1 | 35 | 50 |
+| `dementia` / all | 7 | 1 | **10** | 0 | 3 | 21 |
+| `dementia` / decrease | 6 | 1 | **8** | 0 | 2 | 17 |
+| `vbm_of_substance_use` / all | 47 | 8 | **8** | 2 | 12 | 77 |
+
+**`annotation selected none` is the smallest channel in every row** -- 0 to 8 studies. The
+large ones are search and **the coordinate parse**: for PTSD, 8 of 22 gold studies were
+screened in and are simply *not in `coordinate_parsing_results.json` at all*, which holds 11
+studies against a 29-study studyset. No table was parsed, so no analysis existed to annotate.
+
+So the loss ranking is **search > coordinate parse > screening ≈ annotation**, and the honest
+statement is the one `AUDIT.md` already made, extended by one stage: full-text screening is a
+small channel, and the stage after it -- getting a coordinate table parsed at all -- is a
+large one that no comparison in this experiment had counted.
+
+That also connects the thread rather than opening a new one. The `Tables` stage work found 654
+of 1,143 dangling `Analysis.tables` references in papers with **no table manifest for their
+flavour**, and this is the same root cause reaching the map: no manifest, no parse, no
+analyses, no contribution. The parse fallback added there is aimed at the second-largest
+channel, which is worth knowing before anyone tunes the annotation prompt.
+
+## What the query comparison does and does not show
+
+The deterministic query finds a matching contrast more often than the annotation on dementia
+(86%, 82%, 67% against 57%, 64%, 56%) and matches the gold count as often on PTSD. But the
+annotation's apparent misses are mostly papers with no parsed analyses to annotate, and the
+query is reading a *record*, which exists for those papers. So the two are not selecting from
+the same candidate set, and the comparison overstates the query. It remains true that the
+criteria are expressible; it is no longer evidence that the annotation pass underperforms them.
 
 ## Two measurement notes, because both bit
 
