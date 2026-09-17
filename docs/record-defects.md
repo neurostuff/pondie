@@ -14,7 +14,8 @@ it needs, because that is the decision:
 | | | volume | fix |
 |---|---|---|---|
 | 1 | `check_table_purpose` errors on the repair's own output | 799 errors, 461 papers | **deterministic**, one line |
-| 2 | A level names an entity the record declares and does not point at it | 849 links | **deterministic**, prototyped |
+| 2 | A level names an entity the record declares and does not point at it | 876 links | **deterministic**, prototyped |
+| 2b | A wrapper with no `extraction_status` aborts the rule set | 151 fields, 3 crashes | **deterministic** |
 | 3 | A scalar enum slot holds a one-item list | 21,701 fields | **deterministic** |
 | 4 | Derived values are labelled `reported` | ~10,300 fields | **deterministic** |
 | 5 | A cell names a level on a continuous term | 1,204 errors, 527 papers | 62% deterministic |
@@ -103,62 +104,68 @@ the record; nothing wrote it down.
 
 ### The fix, investigated
 
-`link_by_name` in `scripts/audit_records.py` is the working prototype. Per record it builds a
-folded-name index of every declared entity by kind, and for an empty reference slot on an
-entity carrying a name, writes the link on an **exact fold match to exactly one** candidate,
-`value_source: generated`. That is `align_cell_levels`' existing rule — repair only where the
-choice is not a choice — applied one level up.
+`link_by_name` in `scripts/audit_records.py` is the working prototype, and **every decision
+it makes comes from the schema**. Per record it indexes each declared entity by folded name
+*and class*; for an empty reference slot it takes the slot's declared `range` as the set of
+things that may be connected, and writes the link on an exact fold match to exactly one
+candidate. That is `align_cell_levels`' existing rule — repair only where the choice is not a
+choice — applied one level up.
 
-It is general in mechanism and **enumerated in scope**, and the difference is the whole
-finding. Run over every reference slot in the schema it proposes 11,000 links; run correctly
-it proposes 849. Three guards account for the gap, and each was earned by a measured failure
-rather than anticipated.
+Three things the schema supplies that a hand-written table got wrong:
 
-**1. Never link an entity to itself.** Without this the matcher writes **9,151 self-links**:
-`Analysis.mirror_of` pointing at its own analysis (5,458) and `ModelTerm.interaction_with` at
-its own term (3,692). An entity's name trivially matches itself, so every empty
-same-class reference slot resolves to its owner.
+**Which classes may connect.** `attribute.range`, resolved through `Schema.resolves_to` so
+subclasses satisfy a supertype — a slot declaring `Acquisition` is satisfied by an `MRI`.
+A first version carried its own slot→kind table and missed 27 links the schema finds:
+`Analysis.defines_regions` (16), `DecodingClass.condition` (4), `Analysis.tasks` (3),
+`ModelTerm.assessment` (2), `ModelTerm.region` (2).
 
-**2. Identity slots only.** After the self-guard `ModelTerm.interaction_with` still proposes
-708 links, and **97% are a term named `group` in one model matching a term named `group` in a
-different model** — `age` 44 times, `diagnosis` 18, `sex` 10. `interaction_with` means
-*crossed with*; two models each having a group factor is not a crossing, and writing the link
-would fabricate interactions that `check_crossings` then reports as unrecorded. `mirror_of`
-(370) is the same error: `direction.mirror_analysis` owns that relation, and two analyses
-sharing a name are not sign-reversed twins of each other.
+**Which references are identity and which are relations.** A name says what a thing *is*; it
+says nothing about how two things *relate*. The schema separates them exactly: **a reference
+whose `range` is the owner's own kind is a relation.** Of 39 reference slots, three are, and
+they are precisely the three:
 
-So the rule is not "reference slots" but **"references that mean *is that entity*"**:
-
-| in scope | out of scope, and why |
+| self-ranged slot | what it means |
 |---|---|
-| `FactorLevel.conditions`, `.arms`, `.timepoints`, `.groups`, `.regions` | `ModelTerm.interaction_with` — *crossed with* |
-| `Group.arm` | `Analysis.mirror_of` — *sign-reversed twin of* |
-| | `ModelEstimation.inputs_from` — *fitted on the output of* |
-| | `ConnectivityEdge.source_region` / `.target_region` — directional |
+| `Analysis.mirror_of` → `Analysis` | sign-reversed twin of |
+| `ModelEstimation.inputs_from` → `ModelEstimation` | fitted on the output of |
+| `ModelTerm.interaction_with` → `ModelTerm` | crossed with |
 
-A name says what a thing *is*. It says nothing about how two things *relate*, and every slot
-in the right column is a relation.
+No list is needed, and that matters because a list is what I would have got wrong. Matched on
+a name these three propose **9,151 self-links** — an entity's name trivially matches itself —
+and after excluding self, `interaction_with` still proposes 708 links of which **97% are a
+term named `group` in one model matching a term named `group` in another** (`age` 44 times,
+`diagnosis` 18, `sex` 10). Two models each having a group factor is not a crossing, and the
+link would fabricate interactions that `check_crossings` then reports as unrecorded.
 
-**3. Exact fold match, never substring.** A further 966 links are reachable on a single
-substring match and are not taken — 403 of them `Analysis.defines_regions`, 101
-`Analysis.regions`. `normalize_open_fields.py` measured what containment does to a hierarchy:
-it merged `emotion regulation`, the most frequent term in the corpus, into a rarer variant,
-with 38 candidate hosts. A substring is a hint; report it.
+**What shape to write.** `attribute.multivalued`: a bare id string, or a bare list of them.
+Never an `ExtractedValue` — a reference is an address inside the record, not a claim about
+the paper, which is why `IDENTIFIERS` exempts these slots from the evidence checks. The first
+prototype wrapped them, which would have written 838 malformed fields.
 
-**One decision that is not a guard.** 122 matched levels name two kinds of entity at once,
-and **112 of those are `arms` + `groups`** — a level named "Exercise" matching both the arm
-and the cohort allocated to it. Writing both is correct; that is the parallel-group design
-`Group.arm` exists for. The other 10 (`conditions`+`timepoints`, `arms`+`conditions`) should
-be reported rather than double-written. No name matched two entities of the *same* kind
-anywhere in the corpus, so the ambiguity guard never fired.
+One guard the schema cannot supply: **exact fold match, never substring.** A further 966
+links are reachable on a single substring match and are not taken — 403 of them
+`Analysis.defines_regions`, 101 `Analysis.regions`. `normalize_open_fields.py` measured what
+containment does to a hierarchy: it merged `emotion regulation`, the corpus's most frequent
+task term, into a rarer variant, with 38 candidate hosts. A substring is a hint; report it.
+
+**One decision, not a guard.** 122 matched levels name two kinds of entity at once, and 112
+are `arms` + `groups` — a level named "Exercise" matching both the arm and the cohort
+allocated to it. Writing both is correct; that is the parallel-group design `Group.arm` exists
+for. The other 10 should be reported. No name matched two entities of the *same* kind
+anywhere in the corpus, so the ambiguity guard never had to fire.
 
 ### What it buys, in queries
 
-849 links: 572 conditions, 164 arms, 72 timepoints, 29 groups, 11 `Group.arm`, 1 region.
+**876 links over 265 records**: 572 `FactorLevel.conditions`, 164 `.arms`, 72 `.timepoints`,
+29 `.groups`, 1 `.regions`, 16 `Analysis.defines_regions`, 11 `Group.arm`, 4
+`DecodingClass.condition`, 3 `Analysis.tasks`, 2 `ModelTerm.assessment`, 2 `ModelTerm.region`.
 
-Measured **per (analysis, level) pair**, because that is what a query traverses: one unwritten
-link costs every analysis whose model reaches the term, which is why 849 links move 2,184
-pairs.
+Re-validating those 265 records: **415 rule errors before, 415 after.** No new error of any
+kind, which is the claim that matters for a fixer that writes into the record.
+
+Queryability, measured **per (analysis, level) pair** because that is what a query traverses —
+one unwritten link costs every analysis whose model reaches the term, which is why 838
+FactorLevel links move 2,184 pairs:
 
 | | before | after |
 |---|---|---|
@@ -168,14 +175,35 @@ pairs.
 | analyses that can say which arm | 3.6% | **7.8%** |
 | analyses that can say which occasion | 5.0% | **7.1%** |
 
-**+454 analyses become fully resolvable** — every categorical level in their contrast reaches
-a declared entity, so the comparison can be reconstructed from the entity graph instead of
-from string matching.
+**+454 analyses become fully resolvable** — every categorical level in their contrast reaches a
+declared entity, so the comparison can be reconstructed from the entity graph instead of from
+string matching.
 
 The honest limit is the arm row. It more than doubles, and **92% of analyses still cannot say
 which arm they belong to.** The fixer closes the gap where both halves are already in the
 record; it cannot create an Arm the record never declared. That is finding 7, and it is the
 larger half of the problem.
+
+## 2b. A wrapper with no `extraction_status` crashes the rule set
+
+**151 wrappers in 12 papers carry `value` and no `extraction_status`** — `Cell.direction` as
+`{"value": "positive"}`, and the same on `Analysis.prespecification` (35),
+`Analysis.spatial_scope` (25), `Effect.kind` (24), `Statistic.family` (22).
+
+`values.read` reads a mapping without a status as a nested entity and returns **the dict
+itself**, which is how it is supposed to tell a wrapper from an entity —
+`_records._descend` documents exactly this. So a consumer asking for a direction gets
+`{"value": "positive"}`, and `check_crossings` does `direction in {"positive", "negative"}`
+and raises `TypeError: unhashable type: 'dict'` on 3 records.
+
+Two fixes, and the second is the one that generalises:
+
+- A `shape` repair setting `extraction_status: "extracted"` on a wrapper that carries a
+  `value` and no status. 151 fields, no judgment.
+- **`check_all` must not let one rule's exception abort the rest.** It iterates `RULES` with
+  no guard, so those 3 records lose every check registered after `crossings` — silently, and
+  the loss is invisible in the output because a record with no findings and a record whose
+  checks never ran look identical. `validate.py` propagates the exception to the caller.
 
 ## 3. A scalar enum slot holds a one-item list
 

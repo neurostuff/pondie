@@ -42,80 +42,114 @@ LEVEL_JOINS = ("conditions", "arms", "timepoints", "groups", "regions")
 NUMERIC = {"integer", "float", "double", "decimal"}
 
 
-#: The FactorLevel slots a name match may fill, and the kind of entity each names. The
-#: fixer is enumerated rather than applied to every reference slot because name identity is
-#: evidence only where the reference means "is that entity". See docs/record-defects.md:
-#: `ModelTerm.interaction_with` means "crossed with", and matching it on a name links the
-#: group factor to the group factor 708 times.
+#: The FactorLevel slots a query traverses to say what a contrast compared. Used for the
+#: queryability metric only -- the fixer below derives its scope from the schema.
 IDENTITY_SLOTS = ("conditions", "arms", "timepoints", "groups", "regions")
 
 
-def name_catalogue(body: dict) -> dict[str, dict[str, list[str]]]:
-    """folded name -> {FactorLevel slot: [local_id]} over the kinds a level can name."""
-    out: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
+def is_relation(schema_, owner: str, target: str) -> bool:
+    """Does this reference mean a structural relation rather than "is that entity"?
 
-    def add(slot: str, entity: object) -> None:
-        if isinstance(entity, dict) and isinstance(entity.get("local_id"), str):
-            name = fold(values.read(entity.get("name")))
-            if name:
-                out[name][slot].append(entity["local_id"])
+    The schema answers it: a reference pointing at the owner's OWN kind is a relation.
+    Exactly three slots in the schema do -- `Analysis.mirror_of`, `ModelEstimation
+    .inputs_from`, `ModelTerm.interaction_with` -- and they are exactly the three that mean
+    *sign-reversed twin of*, *fitted on the output of* and *crossed with*. Every other
+    reference slot points at a different class and means identity.
 
-    for group in body.get("groups") or []:
-        add("groups", group)
-    for task in body.get("tasks") or []:
-        if isinstance(task, dict):
-            for condition in task.get("conditions") or []:
-                add("conditions", condition)
-    for region in body.get("regions") or []:
-        add("regions", region)
-    design = body.get("design") or {}
-    for slot in ("arms", "timepoints"):
-        for entity in design.get(slot) or []:
-            add(slot, entity)
+    A name says what a thing is; it says nothing about how two things relate. Matched on a
+    name, `interaction_with` links the group factor to the group factor in another model 708
+    times, which would fabricate interactions `check_crossings` then reports as unrecorded.
+    """
+    return (
+        owner == target
+        or schema_.resolves_to(owner, target)
+        or schema_.resolves_to(target, owner)
+    )
+
+
+def name_index(schema_, body: dict) -> dict[str, list[tuple[str, str]]]:
+    """folded name -> [(class, local_id)] for every entity the record declares.
+
+    Keyed by class rather than by the slot that reaches it, so a slot's candidates come
+    from its declared `range` and subclasses resolve: a slot declaring `Acquisition` is
+    satisfied by an `MRI`, which is `Schema.resolves_to`'s job and not a table here.
+    """
+    out: dict[str, list[tuple[str, str]]] = defaultdict(list)
+
+    def walk(node: object, cls: str) -> None:
+        if not isinstance(node, dict):
+            return
+        cls = schema_.designated_type(node, cls)
+        attributes = schema_.attributes(cls)
+        if not attributes:
+            return
+        if isinstance(node.get("local_id"), str) and node["local_id"]:
+            for slot in ("name", "level", "label"):
+                name = fold(values.read(node.get(slot)))
+                if name:
+                    out[name].append((cls, node["local_id"]))
+        for key, attribute in attributes.items():
+            if key not in node or schema_.classify(key, attribute) != "nested":
+                continue
+            if not isinstance(attribute.range, str):
+                continue
+            child = node[key]
+            for item in child if isinstance(child, list) else [child]:
+                walk(item, attribute.range)
+
+    walk(body, "Study")
     return out
 
 
 def held(node: object, slot: str) -> bool:
     if not isinstance(node, dict):
         return False
-    return bool(node.get(slot)) and bool([x for x in (values.read(node.get(slot)) or []) if x])
+    return bool([x for x in (values.read(node.get(slot)) or []) if x]) if node.get(slot) else False
 
 
-def link_by_name(body: dict) -> Counter:
-    """Write the links a name match settles. Returns what it wrote, by slot.
+def link_by_name(schema_, body: dict) -> Counter:
+    """Write the links a name match settles, everywhere the schema says it may.
 
-    Only an exact fold match to exactly one candidate, only where the slot is empty, and
-    never to the entity itself -- the three guards, each of which a measured failure earned.
+    Three conditions, and the schema supplies all three: the slot is a reference, its
+    `range` is not the owner's own kind, and exactly one declared entity of that range (or
+    a subclass) carries the name. The written shape is the one `multivalued` declares -- a
+    bare id string or a bare list of them, never an `ExtractedValue`: a reference is an
+    address inside the record, not a claim about the paper, which is why `IDENTIFIERS`
+    exempts these slots from the evidence checks.
     """
-    catalogue = name_catalogue(body)
+    index = name_index(schema_, body)
     wrote: Counter = Counter()
-    for model in body.get("model_estimations") or []:
-        if not isinstance(model, dict):
-            continue
-        for term in model.get("terms") or []:
-            if not isinstance(term, dict):
+
+    def visit(node: object, cls: str) -> None:
+        if not isinstance(node, dict) or values.is_field(node):
+            return
+        cls = schema_.designated_type(node, cls)
+        mine = node.get("local_id") if isinstance(node.get("local_id"), str) else None
+        names = [n for n in (fold(values.read(node.get(s))) for s in ("name", "level", "label")) if n]
+        for key, attribute in schema_.attributes(cls).items():
+            kind = schema_.classify(key, attribute)
+            if kind == "nested" and isinstance(attribute.range, str) and key in node:
+                child = node[key]
+                for item in child if isinstance(child, list) else [child]:
+                    visit(item, attribute.range)
                 continue
-            for level in term.get("levels") or []:
-                if not isinstance(level, dict):
-                    continue
-                name = fold(values.read(level.get("level")))
-                for slot, local_ids in (catalogue.get(name) or {}).items():
-                    if len(local_ids) != 1 or held(level, slot):
-                        continue
-                    level[slot] = {
-                        "value": [local_ids[0]],
-                        "extraction_status": "extracted",
-                        "value_source": "generated",
-                        "evidence": None,
-                    }
-                    wrote[slot] += 1
-    for group in body.get("groups") or []:
-        if not isinstance(group, dict) or group.get("arm"):
-            continue
-        local_ids = (catalogue.get(fold(values.read(group.get("name")))) or {}).get("arms") or []
-        if len(local_ids) == 1:
-            group["arm"] = local_ids[0]
-            wrote["Group.arm"] += 1
+            if kind != "reference" or not isinstance(attribute.range, str):
+                continue
+            target = attribute.range
+            if held(node, key) or not names or is_relation(schema_, cls, target):
+                continue
+            found = {
+                local_id
+                for name in names
+                for owner, local_id in index.get(name, ())
+                if local_id != mine and (owner == target or schema_.resolves_to(owner, target))
+            }
+            if len(found) != 1:
+                continue
+            node[key] = [found.pop()] if attribute.multivalued else found.pop()
+            wrote[f"{cls}.{key}"] += 1
+
+    visit(body, "Study")
     return wrote
 
 
@@ -411,7 +445,7 @@ def main() -> int:
                     continuous_level["categorical, entity not declared"] += 1
 
         # 8 -- what a name-match fixer would write, and what it buys
-        wrote += link_by_name(body)
+        wrote += link_by_name(ext, body)
         queryability(body, after)
 
         # 7 -- orphans
