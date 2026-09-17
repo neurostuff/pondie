@@ -121,6 +121,111 @@ Three design points that were arrived at by measurement and are easy to get wron
   without, and stop-signal stayed separate from go/no-go either way. Giving the name its own
   weighted channel had already solved it.
 
+## Shape 4 — partition: `population_characteristics.py`
+
+A fourth shape, and the first where the target is not a vocabulary but a *second field*.
+`Group.population_characteristics` holds what a study chose its cohort for — habitual
+exposure, training, occupation, lifestyle, atypical body habitus. Its whole value is that a
+query can filter on it, and that value survives only while every entry is discriminative.
+
+Asking the model for discrimination failed, three times. Each round rewrote the slot
+description and re-extracted the same ten papers:
+
+| round | entries | selective | non-selective | restating a typed slot | duplicate |
+|---|---|---|---|---|---|
+| v1 — asked, loose wording | 33 | 61% | 6% | 24% | 9% |
+| v2 — `is_healthy` derived, tight wording | 37 | 86% | 0% | 14% | 0% |
+| v3 — wording built around deviation | 30 | 87% | 7% | 7% | 0% |
+
+The trend reads as progress and is not measurable as any. The v2→v3 differences are two and
+three entries out of thirty; re-running one annotation stage under an unchanged config moves
+mean map R² by 0.034, and nothing suggests extraction is quieter than that. Three rounds of
+description edits produced changes that cannot be attributed to the edits, and v3 put back
+the two values the round was written to remove. This is the `is_healthy` finding again: a
+description cannot outvote the source's own wording.
+
+So the question is left alone and the answer is partitioned afterwards. Non-selective values
+move to `Group.other_characteristics`, which is `deterministic` in the storage schema and
+therefore never projected into the extraction schema — the model is not asked about it and
+cannot fill it. Moved rather than dropped: the values are not wrong, and a reader auditing a
+cohort wants to see "normal weight" and "right-handed". They just cannot share a field with
+the trait a filter selects on.
+
+### Full-string on a reduced core, never a substring
+
+`search(r"healthy")` moves "Otherwise healthy adult smokers" and loses that cohort's
+defining trait. So each value is folded, stripped of generic person nouns and hedges at both
+ends, and matched **in full**: "Otherwise healthy adult smokers" reduces to `healthy adult
+smokers`, which no pattern matches, and stays. "Healthy weight children" reduces to `healthy
+weight`, which does.
+
+### Two asymmetries, both of which a blunter rule inverts
+
+**Handedness.** "right-handed" is normative; "left-handed" and "mixed-handed" are selective,
+because a study recruiting left-handers recruited for that.
+
+**Negation.** A negated *condition* is normative — every control cohort in the corpus carries
+"no neurological or psychiatric disorder". A negated *exposure* is selective: "no history of
+smoking" *is* the control arm of a smoking study, and "cannabis use less than 50 times" is how
+a cue-reactivity paper defines its comparison group. An `EXPOSURE` lexicon is therefore
+decisive against every rule, which is what lets the negation rule be stated broadly.
+
+Two narrowings of the negation rule each removed a measured false positive:
+
+- Bare qualifiers are not illness heads. With `significant` among them, "no significant
+  re-experiencing, avoidance, or hyperarousal symptoms" moved — a PTSD study's comparison
+  group, and the clearest wrong answer in the sweep.
+- Named diagnoses never trigger it, which is why `disorder` and `diagnosis` are not
+  domain-generic words. With them there, "No PTSD diagnosis" and "no post-traumatic stress
+  disorder" moved. They reach a separate `BARE` branch that admits a bare illness noun only
+  when nothing but a qualifier stands between it and the negation — so "no chronic
+  conditions" moves and "no anxiety disorder" does not.
+
+### Measured on the corpus
+
+The committed 1,817-record corpus predates the slot, so `report()` falls back to the fields
+these traits were landing in instead — every value of at most eight words, prose excluded.
+**2,583 of 25,077 values (10%) move**:
+
+| rule | moved | distinct forms | heaviest form |
+|---|---|---|---|
+| `no_condition` | 934 | 558 | "No history of neurological or psychiatric disorders" |
+| `handedness` | 603 | 19 | "Right-handed" (294) |
+| `health` | 519 | 74 | "healthy" (73) |
+| `senses` | 171 | 22 | "Normal or corrected-to-normal vision" (83) |
+| `language` | 121 | 31 | "Native English speaker" (20) |
+| `mri_eligibility` | 87 | 21 | "Not pregnant" (13) |
+| `cognition` | 65 | 11 | "Cognitively normal" (24) |
+| `consent` | 43 | 8 | "Provided written informed consent" (14) |
+| `weight` | 25 | 7 | "normal weight" (13) |
+| `development` | 15 | 8 | "Typically developing" (5) |
+
+The per-field rates are the evidence that it is aimed at the right class of statement:
+
+| field | values | moved |
+|---|---|---|
+| `inclusion_criteria` | 8,642 | **23.1%** |
+| `medical_condition` | 4,333 | 11.7% |
+| `clinical_characteristics` | 503 | 10.3% |
+| `exclusion_criteria` | 11,599 | **0.3%** |
+
+Inclusion criteria are where prerequisites live, and they are what this rule is about.
+Exclusion criteria name conditions rather than negate them, so almost nothing matches — the
+rule is reading the negation, not the disease word.
+
+Precision, on the two curated vocabularies: **0 of 157** task terms move, and 72 distinct
+condition forms do — all of them health assertions or generic-condition negations, which is
+`medical_condition` holding the absence of a condition, a defect that field's own audit had
+already found at 5%.
+
+### What it does not do
+
+6.7% of the values it keeps restate a slot that already exists — "male" (128), "age 18-65
+years" (36), "caucasian" (15), "left-handed" (13). Those belong in `sex_distribution`,
+`age_minimum`/`age_maximum`, `race_distribution` and `handedness_distribution`, and routing
+them there is a different mechanism from this one: a partition decides whether a value is
+selective, not which typed slot carries it. This rule leaves them where the model put them.
+
 ## The long tail is a promotion rule, not a matching problem
 
 70% of `medical_condition` forms and 62% of task identities occur exactly once. Measured, that
