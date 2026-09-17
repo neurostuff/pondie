@@ -154,18 +154,26 @@ def group_condition(record: dict, pattern: str) -> bool | None:
     return any(re.search(pattern, s, re.I) for s in seen)
 
 
-def all_groups_healthy(record: dict) -> bool | None:
-    """"healthy participants" / "no prior report of neurological, medical, or psychiatric
-    disorders". Derived from `medical_condition`, per `pondie.normalization.is_healthy`."""
+def a_healthy_cohort(record: dict) -> bool | None:
+    """"healthy adults with no prior report of neurological, medical, or psychiatric
+    disorders ... Articles including patients were only selected if they reported results
+    for a control group separately, and only the latter group was included here."
+
+    ANY cohort, not every cohort. An earlier version of this predicate required all of them
+    and vetoed 16 of emotion regulation's 87 gold papers -- a mistranslation, not a record
+    defect: the criterion explicitly admits a paper with patients so long as a healthy group
+    is reported separately, which is most of this literature. Derived from
+    `medical_condition` by `pondie.normalization.is_healthy`.
+    """
     from pondie.normalization.is_healthy import derive
 
     groups = [g for g in record.get("groups") or [] if isinstance(g, dict)]
     if not groups:
         return UNANSWERABLE
     verdicts = [derive(g) for g in groups]
-    if any(v is None for v in verdicts):
-        return UNANSWERABLE
-    return all(verdicts)
+    if any(v is True for v in verdicts):
+        return True
+    return UNANSWERABLE if all(v is None for v in verdicts) else False
 
 
 def adults(record: dict, floor: float = 18.0) -> bool | None:
@@ -223,14 +231,20 @@ def has_direction(record: dict) -> bool | None:
 
 
 def no_pharmacological(record: dict) -> bool | None:
-    """"presence of pharmacological manipulations" excluded. An Arm is an administered
-    thing, so a study with none administered nothing. `StudyDesign.arms`/`allocation`."""
-    design = record.get("design") or {}
-    arms = [a for a in (design.get("arms") or []) if isinstance(a, dict)]
-    allocation = strings(design.get("allocation"))
-    if not allocation and not arms:
+    """"presence of pharmacological manipulations" excluded. `StudyDesign.allocation`.
+
+    Read off `allocation` and not off whether an Arm is declared. An earlier version used
+    arm presence and vetoed 7 of substance use's gold against 12 non-gold -- barely better
+    than chance -- because the records invent Arms for diagnostic cohorts: 47 of the 164
+    `parallel`-with-arms records have every arm name identical to a cohort name. That is the
+    defect `AssignmentStructure.observational_cohorts` was added for, and it reaches a query
+    here. `allocation: not_applicable` is glossed "Nothing was administered", which is the
+    criterion itself.
+    """
+    allocation = strings((record.get("design") or {}).get("allocation"), "allocation")
+    if not allocation:
         return UNANSWERABLE
-    return not arms
+    return all(a.lower() in ("not_applicable", "single_arm") for a in allocation)
 
 
 def whole_brain_correction(record: dict) -> bool | None:
@@ -287,7 +301,7 @@ QUERIES: dict[str, tuple[str, list[tuple[str, Predicate]]]] = {
         ("fMRI", lambda r: any_modality(r, r"fMRI|functional")),
         ("whole brain", whole_brain),
         ("standard space", standard_space),
-        ("all cohorts healthy", all_groups_healthy),
+        ("a healthy cohort", a_healthy_cohort),
         ("adults", lambda r: adults(r, 18)),
     ]),
 }

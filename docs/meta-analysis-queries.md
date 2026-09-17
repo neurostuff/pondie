@@ -187,3 +187,76 @@ type rather than from reading the papers.
    and its cited tables agree. `derive_coordinate_spaces` already does the table half.
 5. **`FactorLevel.groups`** is the join four of the five criteria need and 52% of levels lack.
    Finding 7 of `record-defects.md` is the larger half of it and is a prompt problem.
+
+# Three selectors, one denominator
+
+`scripts/compare_screening_to_queries.py` scores a language model reading the full article,
+the same model reading the extraction record, and the deterministic query, against the same
+gold and over the same pool: **the papers all three can see** -- extracted *and* reached
+full-text screening. That matters because `compare_arms.py` scores over the papers all arms
+screened in common, which omits gold lost upstream, and its PTSD recall reads 0.941 where
+end-to-end it is 16/22.
+
+Mean over the five projects:
+
+| selector | precision | recall | F1 |
+|---|---|---|---|
+| autonima, full text | 40.0% | **95.3%** | 0.555 |
+| autonima, record + evidence | 44.4% | 84.1% | 0.567 |
+| autonima, record, no evidence | 45.3% | 82.3% | 0.570 |
+| query, strict | **48.8%** | 45.8% | 0.430 |
+| query, permissive | 33.0% | 69.0% | 0.409 |
+| query veto + full text | 50.4% | 67.4% | 0.532 |
+| query veto + record + evidence | **52.1%** | 62.0% | 0.527 |
+
+## F1 ranks these wrongly, and it is worth saying so
+
+The veto compositions and the record arms beat full text on F1. **They should not be
+preferred on that basis.** A screening stage feeds a shortlist to a human and to a
+coordinate extraction; a missed study biases the pooled estimate and cannot be recovered
+downstream, while a false positive is removed by the next reader at the cost of their time.
+Those errors are not exchangeable, and F1 assumes they are.
+
+On the objective that matches the task, **full text wins clearly: 95.3% recall against
+84.1% and 82.3% for the record arms and 45.8% for the query.** Every alternative here buys
+precision with recall. That is the same conclusion `AUDIT.md` reached from the arm contrast
+and it survives the addition of a third selector.
+
+## What the query is good for is measurement
+
+The query's 23-point gap between strict (45.8%) and permissive (69.0%) is **entirely
+records that cannot answer**, so it is a direct read on record completeness rather than on
+the query's logic. Used that way it localises the gap: `vbm_of_ptsd` strict precision is
+**81.8%** -- the highest single figure in the table -- on 17 gold papers, because that
+project's records answer most criteria.
+
+It is also free. The arms cost a model pass per paper; the query costs nothing at screening
+time, and the veto removes 17 to 262 papers per project that a screener then never reads.
+As a prefilter ahead of the model, on a corpus where the records are complete, that is a
+real saving. On these records it is not safe: the veto drops 38 of cue reactivity's 140
+gold papers and 47 of substance use's 65.
+
+## Correcting two of my own translations made the query worse, and that is the finding
+
+Two predicates were mistranslations rather than record defects, and fixing them moved the
+failure rather than removing it.
+
+**`all cohorts healthy` → `a healthy cohort`.** Emotion regulation's criterion explicitly
+admits a paper with patients "if they reported results for a control group separately", and
+requiring every cohort to be healthy vetoed 16 of its 87 gold papers. Faithful now.
+
+**`no pharmacological arm` read off `allocation`, not off whether an Arm is declared.** The
+arm version vetoed 7 of substance use's gold against 12 non-gold, barely better than chance,
+because the records invent Arms for diagnostic cohorts -- 47 of 164 `parallel`-with-arms
+records have every arm name identical to a cohort name.
+
+The corrected version is worse, and for a reason already documented: **45 of substance use's
+76 gold papers carry `allocation: non_randomized`** for observational studies where nothing
+was administered. `non_randomized` cannot distinguish "assigned to a drug non-randomly" from
+"split by diagnosis", so "presence of pharmacological manipulations" is unanswerable from
+these records either way, and query recall there falls from 66.2% to **23.1%**.
+
+That is finding 9 of this document, and `AssignmentStructure.observational_cohorts` with the
+tightened `Allocation.non_randomized` description is its fix -- for future extractions. These
+records predate it, and no deterministic backfill can recover a label the model was steered
+into by a vocabulary with no right answer in it.
