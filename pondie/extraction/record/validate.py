@@ -469,6 +469,40 @@ class Validator:
             else:
                 self.check_value_type(node["value"], class_name, attributes, path)
 
+    def check_value_cardinality(
+        self, value: Any, value_slot: SlotDefinition, path: str
+    ) -> None:
+        """A wrapper's `value` is a list exactly when its own class declares one.
+
+        Nothing checked this, and 22,431 fields over 1,817 records were on the wrong side of
+        it -- 21,701 of them a one-item list in a scalar slot, concentrated on the enum
+        slots a query filters on: `Analysis.spatial_scope` 4,470 times,
+        `Analysis.prespecification` 4,328, `Group.species` 2,207. `values.read` returns the
+        list as it stands, so a consumer testing `spatial_scope == "whole_brain"` matches
+        nothing, and `spatial_scope` is the slot that cost 17133391 its inclusion.
+
+        It passed in silence because the vocabulary check below iterates
+        `[value]` for a scalar slot and skips any item that is not a string -- so a
+        one-item list was neither unwrapped nor reported. The cardinality has to be
+        asserted before the membership, not inferred from it.
+
+        `listify_scalars` and `unwrap_singleton_lists` repair both directions; this is what
+        catches the slot they have not been taught about yet.
+        """
+        if not isinstance(value_slot, SlotDefinition):
+            return
+        if value_slot.multivalued and not isinstance(value, list):
+            self.error(path, f"value must be a list, got {type(value).__name__}")
+        elif not value_slot.multivalued and isinstance(value, list):
+            self.error(
+                path,
+                # `any_of: [<Enum>, string]` leaves `range` as Any, which names nothing a
+                # reader recognises, so the wrapper's own declaration is not printed there.
+                f"value must be a single {value_slot.range} value, got a {len(value)}-item list"
+                if value_slot.range and value_slot.range != "Any"
+                else f"value must be a single value, got a {len(value)}-item list",
+            )
+
     def vocabulary_of(self, value_slot: SlotDefinition) -> tuple[set[str] | None, bool]:
         """(permissible values, closed) for a wrapper's `value` slot, or (None, False).
 
@@ -486,6 +520,7 @@ class Validator:
         self, value: Any, class_name: str, attributes: Mapping[str, SlotDefinition], path: str
     ) -> None:
         value_slot = attributes.get("value", {})
+        self.check_value_cardinality(value, value_slot, path)
 
         # A vocabulary is checked before the scalar branch, because an enum range is not in
         # _SCALAR_TYPES and would otherwise fall straight through -- which is how a
@@ -495,7 +530,7 @@ class Validator:
         # evidence for whether the vocabulary is short a value.
         vocabulary, closed = self.vocabulary_of(value_slot)
         if vocabulary is not None:
-            for item in (value if value_slot.multivalued and isinstance(value, list) else [value]):
+            for item in (value if isinstance(value, list) else [value]):
                 if not isinstance(item, str):
                     continue
                 # Missingness has one encoding, and no vocabulary offers `unstated` any

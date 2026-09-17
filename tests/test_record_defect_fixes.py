@@ -1,0 +1,381 @@
+"""The five defect classes measured in docs/record-defects.md, and their fixes.
+
+Every case is a shape observed in the 1,817-record corpus, with the count it occurred at in
+the docstring of the thing it tests. The counts are what make these regression tests rather
+than examples: if a fix stops firing, the corpus number is the thing to re-measure.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from pondie import schema
+from pondie.extraction.record import builder, rules
+from pondie.schema import reader
+
+
+@pytest.fixture(scope="module")
+def sch():
+    return reader.load(schema.EXTRACTION)
+
+
+class Sink:
+    def __init__(self):
+        self.errors, self.warnings = [], []
+
+    def error(self, path, message):
+        self.errors.append((path, message))
+
+    def warn(self, path, message):
+        self.warnings.append((path, message))
+
+
+def field(value, source="reported", evidence="present"):
+    return {
+        "value": value,
+        "extraction_status": "extracted",
+        "value_source": source,
+        "evidence": {"status": evidence},
+    }
+
+
+# --- 1. check_table_purpose errored on derive_table_effects' own answer ---------------
+
+
+def test_a_cited_table_marked_reported_effect_is_not_a_contradiction():
+    """799 errors over 461 papers, a quarter of every error in the corpus.
+
+    `derive_table_effects` writes `reported_effect` on every cited table by design, and the
+    check read any truthy purpose as a contradiction -- so the message refuted itself:
+    "says this table reports 'reported_effect' rather than an effect".
+    """
+    record = {
+        "analyses": [{"local_id": "a1", "tables": ["tbl1"]}],
+        "tables": [{"local_id": "tbl1", "purpose": field("reported_effect", "generated")}],
+    }
+    sink = Sink()
+    rules.check_table_purpose(record, sink)
+    assert sink.errors == []
+
+
+def test_a_cited_table_marked_something_else_is_still_a_contradiction():
+    """The check's actual purpose, which the exemption must not remove."""
+    record = {
+        "analyses": [{"local_id": "a1", "tables": ["tbl1"]}],
+        "tables": [{"local_id": "tbl1", "purpose": field("roi_definition", "reported")}],
+    }
+    sink = Sink()
+    rules.check_table_purpose(record, sink)
+    assert len(sink.errors) == 1
+    assert "roi_definition" in sink.errors[0][1]
+
+
+def test_an_uncited_unmarked_table_still_warns():
+    record = {"analyses": [{"local_id": "a1"}], "tables": [{"local_id": "tbl1"}]}
+    sink = Sink()
+    rules.check_table_purpose(record, sink)
+    assert len(sink.warnings) == 1
+
+
+# --- 2. a level naming an entity the record declares ----------------------------------
+
+
+def _level_record(level_name, **entities):
+    record = {
+        "model_estimations": [
+            {
+                "local_id": "mod1",
+                "terms": [
+                    {
+                        "local_id": "trm1",
+                        "name": field("condition"),
+                        "type": field("categorical"),
+                        "levels": [{"level": field(level_name)}],
+                    }
+                ],
+            }
+        ],
+    }
+    record.update(entities)
+    return record
+
+
+def test_a_level_links_to_the_condition_it_names(sch):
+    """715 of 1,713 unjoined levels fold to an entity the same record declares."""
+    record = _level_record(
+        "smoking cue",
+        tasks=[{"local_id": "tsk1", "conditions": [
+            {"local_id": "cond_smoking_cue", "name": field("Smoking Cue")}]}],
+    )
+    changed = builder.link_entities_by_name(record, sch)
+    level = record["model_estimations"][0]["terms"][0]["levels"][0]
+    assert level["conditions"] == ["cond_smoking_cue"]
+    assert changed and "cond_smoking_cue" in changed[0]
+
+
+def test_a_level_links_to_the_timepoint_it_names(sch):
+    record = _level_record(
+        "predose",
+        design={"timepoints": [{"local_id": "tp_predose", "name": field("predose")}]},
+    )
+    builder.link_entities_by_name(record, sch)
+    assert record["model_estimations"][0]["terms"][0]["levels"][0]["timepoints"] == ["tp_predose"]
+
+
+def test_a_name_matching_both_an_arm_and_a_cohort_writes_both(sch):
+    """112 of the 122 two-kind matches. The cohort was allocated to the arm; `Group.arm`
+    exists to say so, and writing one and not the other would lose half the fact."""
+    record = _level_record(
+        "Exercise",
+        groups=[{"local_id": "grp_exercise", "name": field("Exercise")}],
+        design={"arms": [{"local_id": "arm_exercise", "name": field("Exercise")}]},
+    )
+    builder.link_entities_by_name(record, sch)
+    level = record["model_estimations"][0]["terms"][0]["levels"][0]
+    assert level["groups"] == ["grp_exercise"]
+    assert level["arms"] == ["arm_exercise"]
+
+
+def test_two_candidates_of_one_kind_are_left_alone(sch):
+    record = _level_record(
+        "controls",
+        groups=[{"local_id": "grp_a", "name": field("controls")},
+                {"local_id": "grp_b", "name": field("Controls")}],
+    )
+    assert builder.link_entities_by_name(record, sch) == []
+    assert "groups" not in record["model_estimations"][0]["terms"][0]["levels"][0]
+
+
+def test_a_relation_slot_is_never_filled_from_a_name(sch):
+    """The guard the whole design rests on.
+
+    `interaction_with` means *crossed with*. Matched on a name it proposes 708 links of
+    which 97% are a term named `group` in one model matching a term named `group` in
+    another -- fabricating interactions `check_crossings` then reports as unrecorded.
+    """
+    record = {
+        "model_estimations": [
+            {"local_id": "mod1", "terms": [{"local_id": "trm_a", "name": field("group")}]},
+            {"local_id": "mod2", "terms": [{"local_id": "trm_b", "name": field("group")}]},
+        ]
+    }
+    assert builder.link_entities_by_name(record, sch) == []
+    assert "interaction_with" not in record["model_estimations"][0]["terms"][0]
+
+
+def test_an_entity_is_never_linked_to_itself(sch):
+    """9,151 self-links without this: a name trivially matches its own owner."""
+    record = {"analyses": [{"local_id": "a1", "name": field("A > B")}]}
+    assert builder.link_entities_by_name(record, sch) == []
+    assert "mirror_of" not in record["analyses"][0]
+
+
+def test_the_written_shape_is_the_one_multivalued_declares(sch):
+    """A reference is a bare id or a bare list of them, never an ExtractedValue.
+
+    The first prototype wrapped them, which would have written 838 malformed fields.
+    """
+    record = _level_record(
+        "patients",
+        groups=[{"local_id": "grp_p", "name": field("patients")}],
+        design={"arms": [{"local_id": "arm_p", "name": field("patients")}]},
+    )
+    builder.link_entities_by_name(record, sch)
+    level = record["model_estimations"][0]["terms"][0]["levels"][0]
+    assert level["groups"] == ["grp_p"]          # multivalued -> bare list
+    assert record["groups"][0]["arm"] == "arm_p"  # scalar -> bare string
+
+
+def test_a_slot_that_already_holds_a_reference_is_not_touched(sch):
+    record = _level_record(
+        "patients", groups=[{"local_id": "grp_p", "name": field("patients")}]
+    )
+    record["model_estimations"][0]["terms"][0]["levels"][0]["groups"] = ["grp_other"]
+    builder.link_entities_by_name(record, sch)
+    assert record["model_estimations"][0]["terms"][0]["levels"][0]["groups"] == ["grp_other"]
+
+
+# --- 3. a scalar enum slot holding a one-item list ------------------------------------
+
+
+def test_a_one_item_list_in_a_scalar_wrapper_is_unwrapped(sch):
+    """21,701 fields. `values.read` returns the list, so a filter on `spatial_scope`
+    matches nothing on 4,470 analyses."""
+    record = {"analyses": [{"local_id": "a1", "spatial_scope": field(["whole_brain"])}]}
+    changed = builder.unwrap_singleton_lists(record, sch)
+    assert record["analyses"][0]["spatial_scope"]["value"] == "whole_brain"
+    assert changed
+
+
+def test_a_longer_list_in_a_scalar_wrapper_is_left_for_the_check(sch):
+    """730 of them, and `spatial_scope: ['whole_brain', 'roi']` 31 times -- the two exclude
+    each other, so picking one would be deciding which."""
+    record = {"analyses": [{"local_id": "a1", "spatial_scope": field(["whole_brain", "roi"])}]}
+    assert builder.unwrap_singleton_lists(record, sch) == []
+    assert record["analyses"][0]["spatial_scope"]["value"] == ["whole_brain", "roi"]
+
+
+def test_a_multivalued_wrapper_keeps_its_list(sch):
+    record = {"groups": [{"local_id": "g1", "medical_condition": field(["obesity"])}]}
+    assert builder.unwrap_singleton_lists(record, sch) == []
+    assert record["groups"][0]["medical_condition"]["value"] == ["obesity"]
+
+
+@pytest.mark.parametrize("value,expect", [(["whole_brain"], "1-item list"), ("whole_brain", None)])
+def test_the_validator_reports_a_list_in_a_scalar_wrapper(value, expect):
+    """22,431 violations passed validation in silence, which is why this went unseen.
+
+    The membership loop iterated `[value]` for a scalar slot and skipped anything that was
+    not a string, so a one-item list was neither unwrapped nor reported.
+    """
+    from pondie.extraction.record.validate import Validator
+
+    validator = Validator(reader.load(schema.EXTRACTION), None)
+    validator.check_record({"local_id": "S1", "analyses": [
+        {"local_id": "a1", "spatial_scope": field(value)}]})
+    said = [e for e in validator.errors if "value must be a single" in e]
+    assert bool(said) is bool(expect)
+    if expect:
+        assert expect in said[0]
+
+
+# --- 4. derived values labelled reported ----------------------------------------------
+
+
+def test_a_conclusion_with_no_sentence_is_relabelled_generated(sch):
+    """`ModelTerm.type` 3,037 of 3,041. No paper writes down that a term is continuous."""
+    record = {"model_estimations": [{"local_id": "m1", "terms": [
+        {"local_id": "t1", "type": field("continuous", "reported", "not_found")}]}]}
+    changed = builder.relabel_conclusions(record, sch)
+    assert record["model_estimations"][0]["terms"][0]["type"]["value_source"] == "generated"
+    assert changed
+
+
+def test_a_conclusion_with_a_sentence_keeps_reported(sch):
+    """"the interaction was negative" is a direction read off prose, and the label is
+    earned. Relabelling it would throw away the only case where it is."""
+    record = {"analyses": [{"local_id": "a1", "effect": {"cells": [
+        {"term": "t1", "direction": field("negative", "reported", "present")}]}}]}
+    assert builder.relabel_conclusions(record, sch) == []
+    cells = record["analyses"][0]["effect"]["cells"]
+    assert cells[0]["direction"]["value_source"] == "reported"
+
+
+def test_a_slot_a_paper_could_have_stated_is_left_for_the_warning(sch):
+    """`tfce_used` at 57% and `Statistic.family` at 31% are things a results section
+    prints, so an unevidenced one is a reviewer's business rather than a relabel."""
+    record = {"inference_settings": [
+        {"local_id": "i1", "tfce_used": field(True, "reported", "not_found")}]}
+    assert builder.relabel_conclusions(record, sch) == []
+    assert record["inference_settings"][0]["tfce_used"]["value_source"] == "reported"
+
+
+# --- 5. a cell naming a level on a continuous term ------------------------------------
+
+
+def _continuous(level, direction=None):
+    cell = {"term": "trm_bmi", "level": field(level)}
+    if direction is not None:
+        cell["direction"] = field(direction)
+    return {
+        "analyses": [{"local_id": "a1", "model_estimation": "mod1",
+                      "effect": {"cells": [cell]}}],
+        "model_estimations": [{"local_id": "mod1", "terms": [
+            {"local_id": "trm_bmi", "name": field("BMI"), "type": field("continuous")}]}],
+    }
+
+
+def test_a_level_restating_its_own_term_is_dropped():
+    """547 of 1,185 (46%): `BMI` on term `BMI`, `age` on `age`, `pack-years` on itself."""
+    record = _continuous("BMI")
+    changed = builder.drop_redundant_cell_levels(record)
+    assert "level" not in record["analyses"][0]["effect"]["cells"][0]
+    assert changed and "restated" in changed[0]
+
+
+def test_a_level_duplicating_its_direction_is_dropped():
+    """185 of 1,185. The sign is already in the slot that holds signs."""
+    record = _continuous("positive", "positive")
+    builder.drop_redundant_cell_levels(record)
+    cell = record["analyses"][0]["effect"]["cells"][0]
+    assert "level" not in cell
+    assert cell["direction"]["value"] == "positive"
+
+
+def test_a_level_that_is_the_only_sign_is_moved_not_dropped():
+    record = _continuous("higher")
+    builder.drop_redundant_cell_levels(record)
+    cell = record["analyses"][0]["effect"]["cells"][0]
+    assert "level" not in cell
+    assert cell["direction"]["value"] == "positive"
+    assert cell["direction"]["value_source"] == "generated"
+
+
+def test_a_level_contradicting_its_direction_is_left_for_the_check():
+    """26 cells. Dropping the level resolves a contradiction about the sign of an effect by
+    picking a side silently, and the sign decides which map a coordinate enters."""
+    record = _continuous("positive", "negative")
+    assert builder.drop_redundant_cell_levels(record) == []
+    assert record["analyses"][0]["effect"]["cells"][0]["level"]["value"] == "positive"
+    sink = Sink()
+    rules.check_cell_level_polarity(record, sink)
+    assert len(sink.errors) == 1
+    assert "increase or decrease map" in sink.errors[0][1]
+
+
+def test_a_categorical_level_on_a_mistyped_term_is_left_alone():
+    """424 of 1,185. Flipping `type` means synthesising the levels the term should have
+    declared, which is a claim about the model rather than a tidy-up."""
+    record = _continuous("bvFTD")
+    assert builder.drop_redundant_cell_levels(record) == []
+    assert record["analyses"][0]["effect"]["cells"][0]["level"]["value"] == "bvFTD"
+
+
+def test_a_sign_word_another_term_declares_as_a_level_is_a_level():
+    """29935441, and the only record the corpus sweep showed this repair breaking.
+
+    `level: 'negative'` sits on the product column `PCL-by-emotion-by-task`, and `negative`
+    is one of `trm_emotion`'s declared levels beside `positive` and `neutral` -- an emotion,
+    not a sign. Read as a direction it became `direction: negative`, turning a factor level
+    into a polarity, and `check_crossings` reported a signed cell on a product column.
+    """
+    record = _continuous("negative")
+    record["model_estimations"][0]["terms"].append(
+        {"local_id": "trm_emotion", "name": field("emotion"), "type": field("categorical"),
+         "levels": [{"level": field("negative")}, {"level": field("positive")},
+                    {"level": field("neutral")}]}
+    )
+    assert builder.drop_redundant_cell_levels(record) == []
+    cell = record["analyses"][0]["effect"]["cells"][0]
+    assert cell["level"]["value"] == "negative"
+    assert "direction" not in cell
+
+
+def test_an_undirected_cell_is_not_overwritten():
+    """`undirected` is an answer, not a gap. Overwriting it replaces a stated fact with an
+    inference, which is how the product-column case above went wrong."""
+    record = _continuous("positive", "undirected")
+    assert builder.drop_redundant_cell_levels(record) == []
+    assert record["analyses"][0]["effect"]["cells"][0]["direction"]["value"] == "undirected"
+
+
+def test_a_level_on_a_term_that_declares_levels_is_left_alone():
+    record = _continuous("BMI")
+    record["model_estimations"][0]["terms"][0]["levels"] = [{"level": field("high")}]
+    assert builder.drop_redundant_cell_levels(record) == []
+
+
+# --- the guard that keeps one broken rule from hiding the others -----------------------
+
+
+def test_a_rule_that_raises_becomes_a_finding_rather_than_an_abort():
+    """`check_crossings` raises on 3 of 1,817 records, where a wrapper carries `value` and
+    no `extraction_status`, so those records silently lost the 17 checks after it."""
+    record = {"analyses": [{"local_id": "a1", "model_estimation": "mod1", "name": field("x"),
+                            "effect": {"cells": [{"term": "t1", "direction": {"value": "positive"}}]}}],
+              "model_estimations": [{"local_id": "mod1", "terms": [
+                  {"local_id": "t1", "name": field("g"), "type": field("categorical")}]}]}
+    sink = Sink()
+    rules.check_all(record, sink)          # must not raise
+    raised = [m for _p, m in sink.errors if "check raised" in m]
+    assert len(raised) <= 1, "only the crashing rule should report a crash"

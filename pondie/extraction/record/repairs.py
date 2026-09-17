@@ -158,6 +158,13 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="shape",
         ),
         Repair(
+            "unwrap_singletons",
+            "unwrap a one-item list in a wrapper whose value is declared scalar",
+            lambda body, ctx: br.unwrap_singleton_lists(body, ctx.schema),
+            after="listified",
+            stage="shape",
+        ),
+        Repair(
             "listified_scalars",
             "wrap a lone scalar the slot declares multivalued",
             lambda body, ctx: br.listify_scalars(body, ctx.schema),
@@ -205,10 +212,38 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="demands",
         ),
         Repair(
+            "name_links",
+            "write a reference where a name settles which declared entity it means",
+            lambda body, ctx: br.link_entities_by_name(body, ctx.schema),
+            # After `cell_levels`, which rewrites a level to the declared form: matching on
+            # the pre-aligned string would look up a name the record does not use. And
+            # after `derived_ids`, so a link is written to the id the record keeps.
+            after="derived_ids",
+            stage="merged",
+        ),
+        Repair(
             "directions",
             "fill a cell's direction from the contrast's own name",
             lambda body, ctx: br.fill_directions(body),
             after="cell_levels",
+            stage="merged",
+        ),
+        Repair(
+            "redundant_levels",
+            "drop a cell level a continuous term cannot have and that says nothing new",
+            lambda body, ctx: br.drop_redundant_cell_levels(body),
+            # After `directions`, which is what fills the slot this compares against: run
+            # first and a cell whose direction was about to be written reads as having none.
+            after="directions",
+            stage="merged",
+        ),
+        Repair(
+            "conclusions",
+            "say `generated` where the record claims a conclusion was `reported`",
+            lambda body, ctx: br.relabel_conclusions(body, ctx.schema),
+            # After `directions`, which writes some of these: relabelling first would leave
+            # the ones it then wrote still saying `reported`.
+            after="directions",
             stage="merged",
         ),
         Repair(

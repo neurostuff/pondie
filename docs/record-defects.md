@@ -8,6 +8,26 @@ from that script; rerun it to reproduce them.
 python scripts/audit_records.py --records '<records>/*/*.extraction.json'
 ```
 
+**All five deterministic fixes are implemented, tested and measured.** Over the 1,817
+records: **errors 3,200 → 1,828 (−43%)**, warnings 44,603 → 33,249 (−25%), and the
+queryability figures in finding 2 realised in full. `tests/test_record_defect_fixes.py`
+carries 28 cases, each a shape observed in the corpus with its count.
+
+| repair | stage | changes written |
+|---|---|---|
+| `unwrap_singletons` | `shape` | 21,701 |
+| `conclusions` | `merged` | 11,154 |
+| `name_links` | `merged` | 876 |
+| `redundant_levels` | `merged` | 728 |
+| `table_purpose` exemption | check | 799 errors removed |
+
+Two things the implementation added that the report did not propose. `check_all` now
+catches a raising rule and reports it as a finding, because unguarded it took every rule
+after it silently — a record with no findings and a record whose checks never ran look
+identical. And `validate.check_value_cardinality` asserts a wrapper's `value` against its
+own declared cardinality, which is the half of finding 3 that keeps the next slot from
+going the same way.
+
 Seven findings. They are ordered by volume times confidence, and each is labelled by what
 it needs, because that is the decision:
 

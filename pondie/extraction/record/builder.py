@@ -871,6 +871,382 @@ def mirror_withheld(body: dict[str, Any], stage1: Path | None) -> list[str]:
     return made
 
 
+#: The slots an entity's identity can be read off. `description` is not among them:
+#: matching prose against an entity name is a substring operation, and
+#: `normalize_open_fields.py` measured what containment does -- it merged `emotion
+#: regulation`, the corpus's most frequent task term, into a rarer variant, with 38
+#: candidate hosts.
+NAMING_SLOTS = ("name", "level", "label")
+
+
+def link_entities_by_name(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Write a reference where a name settles which entity it means.
+
+    1,713 of 6,860 `FactorLevel`s are on a categorical term and reach no entity at all -- a
+    bare string, and `check_cell_terms` says why that costs: "the mapper joins these on the
+    string". 715 of those fold to the exact name of an entity the same record already
+    declares, `local_id` and all: `level 'smoking cue'` beside `cond_smoking_cue`,
+    `level 'predose'` beside `tp_predose`, `level 'Exercise'` beside `arm_exercise`. Both
+    halves of the join are in the record and nothing wrote it down.
+
+    THE SCHEMA DECIDES ALL OF IT, which is the only reason this is safe to run over every
+    reference slot rather than a list:
+
+      which entities may connect   `attribute.range`, through `Schema.resolves_to` so a
+                                   subclass satisfies a supertype -- a slot declaring
+                                   `Acquisition` is satisfied by an `MRI`.
+
+      which references a name may   a reference whose range is the owner's OWN kind is a
+      settle                        structural relation, not an identity. Exactly three
+                                    slots in the schema are -- `Analysis.mirror_of`,
+                                    `ModelEstimation.inputs_from`,
+                                    `ModelTerm.interaction_with` -- and they mean
+                                    *sign-reversed twin of*, *fitted on the output of* and
+                                    *crossed with*. A name says what a thing is and nothing
+                                    about how two things relate. Matched on a name these
+                                    three propose 9,151 self-links, and after excluding
+                                    self, `interaction_with` still proposes 708 of which
+                                    97% are a term named `group` in one model matching a
+                                    term named `group` in another -- links that would
+                                    fabricate interactions `check_crossings` then reports.
+
+      what shape to write           `attribute.multivalued`: a bare id string or a bare
+                                    list of them, never an `ExtractedValue`. A reference is
+                                    an address inside the record, not a claim about the
+                                    paper, which is why `rules.IDENTIFIERS` exempts these
+                                    slots from the evidence checks.
+
+    Exact fold match to exactly one candidate, and never to the entity itself. A further 966
+    links are reachable on a single substring match and are not taken, for `NAMING_SLOTS`'
+    reason. A name matching two candidates of the same kind is left alone; matching two
+    *kinds* is written to both, which is the parallel-group case -- 112 of 122 are a level
+    naming both the arm and the cohort allocated to it, and `Group.arm` exists to say so.
+    """
+
+    index: dict[str, list[tuple[str, str]]] = {}
+
+    def collect(node: Any, class_name: str) -> None:
+        if not isinstance(node, dict):
+            return
+        class_name = sch.designated_type(node, class_name)
+        attributes = sch.attributes(class_name)
+        if not attributes:
+            return
+        local_id = node.get("local_id")
+        if isinstance(local_id, str) and local_id:
+            for slot in NAMING_SLOTS:
+                name = _fold_name(values.read(node.get(slot)))
+                if name:
+                    index.setdefault(name, []).append((class_name, local_id))
+        for key, attribute in attributes.items():
+            if key not in node or sch.classify(key, attribute) != "nested":
+                continue
+            if not isinstance(attribute.range, str):
+                continue
+            child = node[key]
+            for item in child if isinstance(child, list) else [child]:
+                collect(item, attribute.range)
+
+    def is_relation(owner: str, target: str) -> bool:
+        return owner == target or sch.resolves_to(owner, target) or sch.resolves_to(target, owner)
+
+    fixed: list[str] = []
+
+    def visit(node: Any, class_name: str, path: str) -> None:
+        if not isinstance(node, dict) or values.is_field(node):
+            return
+        class_name = sch.designated_type(node, class_name)
+        mine = node.get("local_id") if isinstance(node.get("local_id"), str) else None
+        names = [n for n in (_fold_name(values.read(node.get(s))) for s in NAMING_SLOTS) if n]
+        for key, attribute in sch.attributes(class_name).items():
+            kind = sch.classify(key, attribute)
+            if kind == "nested" and isinstance(attribute.range, str) and key in node:
+                child = node[key]
+                for order, item in enumerate(child if isinstance(child, list) else [child]):
+                    suffix = f"[{order}]" if isinstance(child, list) else ""
+                    visit(item, attribute.range, f"{path}.{key}{suffix}")
+                continue
+            if kind != "reference" or not isinstance(attribute.range, str):
+                continue
+            target = attribute.range
+            if not names or is_relation(class_name, target):
+                continue
+            current = node.get(key)
+            if [x for x in (current if isinstance(current, list) else [current]) if x]:
+                continue
+            found = {
+                local_id
+                for name in names
+                for owner, local_id in index.get(name, ())
+                if local_id != mine and (owner == target or sch.resolves_to(owner, target))
+            }
+            if len(found) != 1:
+                continue
+            settled = found.pop()
+            node[key] = [settled] if attribute.multivalued else settled
+            fixed.append(f"{path}.{key}: {settled!r} from its name")
+
+    collect(body, "Study")
+    visit(body, "Study", "Study")
+    return fixed
+
+
+#: Words a `Cell.level` carries when it is really stating which way the effect went, by
+#: polarity. `Cell.direction` is the slot for that, and on a continuous term there is no
+#: level for it to be.
+_LEVEL_POLARITY: dict[str, str] = {
+    **{w: "positive" for w in (
+        "positive", "higher", "greater", "more", "increase", "increased", "up", "activation",
+        "positive correlation", "positively correlated",
+    )},
+    **{w: "negative" for w in (
+        "negative", "lower", "less", "fewer", "decrease", "decreased", "down", "deactivation",
+        "negative correlation", "negatively correlated",
+    )},
+}
+
+
+def _fold_name(text: Any) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(text or "").lower())
+
+
+def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
+    """Drop a `Cell.level` that a continuous term cannot have and that says nothing new.
+
+    A continuous term declares no levels, so `check_cell_terms` errors on any cell naming
+    one: 1,204 errors over 527 papers, the largest error class in the corpus, and 1,185 of
+    the 1,205 are on a term typed continuous. Two of the three shapes carry no information
+    and are removed here.
+
+      restates the term  547 (46%). `BMI` on term `BMI`, `age` on `age`, `pack-years` on
+                         `pack-years`. A regressor's cell has no level, and naming it after
+                         the term says nothing a reader did not already have.
+
+      duplicates the     185 (16%). `positive` where `direction` already says positive.
+      direction          `Cell.direction` is where the sign lives and it is already right.
+
+    The third shape is left alone: 424 cells name a genuinely categorical level on a term
+    whose `type` is wrong. Fixing that means flipping the type *and* synthesising the levels
+    the term should have declared, which is a claim about the model rather than a tidy-up, so
+    `check_cell_terms` keeps reporting it.
+
+    So is the case where the two disagree. 26 cells read `direction='negative'` with
+    `level='positive'`, and dropping the level there would resolve a contradiction about the
+    sign of an effect by picking one side silently -- and the sign is what decides whether a
+    coordinate enters an increase map or a decrease map. `check_cell_level_polarity` reports
+    those instead.
+    """
+
+    from pondie.extraction.record.effect import terms_in_scope
+
+    models = {
+        model["local_id"]: model
+        for model in (body.get("model_estimations") or [])
+        if isinstance(model, Mapping) and isinstance(model.get("local_id"), str)
+    }
+    fixed: list[str] = []
+    for index, analysis in enumerate(body.get("analyses") or []):
+        if not isinstance(analysis, dict):
+            continue
+        terms = terms_in_scope(analysis.get("model_estimation"), models)
+        effect = analysis.get("effect")
+        if not isinstance(effect, dict):
+            continue
+        for position, cell in enumerate(effect.get("cells") or []):
+            if not isinstance(cell, dict):
+                continue
+            term_id = cell.get("term")
+            level = values.read(cell.get("level"))
+            if not isinstance(term_id, str) or not isinstance(level, str) or not level.strip():
+                continue
+            term = terms.get(term_id)
+            if term is None or values.read(term.get("type")) != "continuous":
+                continue
+            declared = [
+                name
+                for name in (
+                    values.read(entry.get("level"))
+                    for entry in (term.get("levels") or [])
+                    if isinstance(entry, Mapping)
+                )
+                if isinstance(name, str)
+            ]
+            if declared:
+                continue
+            path = f"analyses[{index}].effect.cells[{position}].level"
+            folded, term_name = _fold_name(level), _fold_name(values.read(term.get("name")))
+            if folded and term_name and (folded == term_name or folded in term_name or term_name in folded):
+                cell.pop("level", None)
+                fixed.append(f"{path}: {level!r} restated term {term_id!r} -- dropped")
+                continue
+            polarity = _LEVEL_POLARITY.get(str(level).strip().lower())
+            if polarity is None:
+                continue
+            # A sign word that another term in this model declares as a LEVEL is a level.
+            # 29935441 puts `level: 'negative'` on the product column
+            # `PCL-by-emotion-by-task`, and `negative` is one of `trm_emotion`'s three
+            # declared levels alongside `positive` and `neutral` -- an emotion, not a sign.
+            # Read as a direction it became `direction: negative` and turned a factor level
+            # into a polarity, which `check_crossings` then reported as a signed cell on a
+            # product column. The level belongs to a term the cell does not name, which is
+            # `check_cell_terms`' finding and not something to resolve here.
+            if any(
+                folded == _fold_name(values.read(entry.get("level")))
+                for other in terms.values()
+                for entry in (other.get("levels") or [])
+                if isinstance(entry, Mapping)
+            ):
+                continue
+            held_raw = values.read(cell.get("direction"))
+            held = _LEVEL_POLARITY.get(str(held_raw or "").strip().lower())
+            if held == polarity:
+                cell.pop("level", None)
+                fixed.append(f"{path}: {level!r} duplicated direction -- dropped")
+            elif held is None and (held_raw is None or not str(held_raw).strip()):
+                # Only where `direction` is genuinely absent. `undirected` is an answer, not
+                # a gap, and overwriting it would replace a stated fact with an inference.
+                cell["direction"] = values.wrap(
+                    polarity, source="generated", evidence="not_applicable"
+                )
+                cell.pop("level", None)
+                fixed.append(f"{path}: {level!r} moved to direction")
+
+    return fixed
+
+
+#: (class, slot) pairs whose value is a conclusion about the record's own structure rather
+#: than anything a paper can be quoted saying. Deliberately short.
+#:
+#: `check_value_source_honesty` warns on `value_source: reported` with
+#: `evidence.status: not_found`, and over 1,817 records it fires 43,772 times in 98.6% of
+#: papers -- so nobody reads it, including on the four genuinely wrong values it was written
+#: for (`family = electrophysiology` on a BOLD study, `spatial_scope = roi` nobody stated).
+#: Most of the flood is these five slots: `ModelTerm.type` 3,037 of 3,041 (100%),
+#: `Effect.kind` 464 of 467 (99%), `Cell.direction` 3,095 of 3,364 (92%), `FactorLevel.order`
+#: 3,694 of 5,575 (66%).
+#:
+#: The test for membership is that `reported` is impossible **in principle**, not merely
+#: unevidenced. No paper writes down that a term is continuous, that a level is the second
+#: one, or that an effect's kind is a between-subject contrast -- `direction.py` and
+#: `derive_effect_kind` and `derive_denominators` compute those. A slot a paper *could* have
+#: stated and did not is the case the warning exists for and stays out: `tfce_used` at 57%,
+#: `CategoryDistribution.percentage` at 67% and `Statistic.family` at 31% are all things a
+#: results section prints, so an unevidenced one is worth a reviewer's eye rather than a
+#: relabel.
+CONCLUSION_SLOTS: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("ModelTerm", "type"),
+        ("Effect", "kind"),
+        ("Cell", "direction"),
+        ("FactorLevel", "order"),
+        ("CategoryDistribution", "denominator"),
+    }
+)
+
+
+def relabel_conclusions(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Say `generated` where the record claims a conclusion was `reported`.
+
+    Only where no sentence was found. A conclusion slot that *does* carry evidence keeps
+    `reported`, because then the paper did say it -- "the interaction was negative" is a
+    direction read off prose, and relabelling it would throw away the one case where the
+    label is earned.
+
+    The point is not tidiness. `reported` and `generated` license different downstream
+    actions, and while 98.6% of papers carry the warning there is no way to see the record
+    that says `spatial_scope = roi` on no evidence -- which is what cost 17133391 its
+    inclusion.
+    """
+
+    fixed: list[str] = []
+
+    def visit(node: Any, class_name: str, path: str) -> None:
+        if not isinstance(node, dict) or values.is_field(node):
+            return
+        class_name = sch.designated_type(node, class_name)
+        attributes = sch.attributes(class_name)
+        for key, value in node.items():
+            attribute = attributes.get(key)
+            if attribute is None:
+                continue
+            kind = sch.classify(key, attribute)
+            if kind == "evidence" and values.is_field(value):
+                if (class_name, key) not in CONCLUSION_SLOTS:
+                    continue
+                if value.get("value_source") != "reported":
+                    continue
+                if (value.get("evidence") or {}).get("status") != "not_found":
+                    continue
+                value["value_source"] = "generated"
+                fixed.append(f"{path}.{key}: reported -> generated")
+            elif kind == "nested":
+                target = attribute.range
+                if isinstance(target, str):
+                    for index, item in enumerate(value if isinstance(value, list) else [value]):
+                        suffix = f"[{index}]" if isinstance(value, list) else ""
+                        visit(item, target, f"{path}.{key}{suffix}")
+
+    visit(body, "Study", "Study")
+    return fixed
+
+
+def unwrap_singleton_lists(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Unwrap a one-item list in a wrapper whose `value` is declared scalar.
+
+    The inverse of `listify_scalars`, and the commoner direction by an order of magnitude:
+    over 1,817 records 21,701 scalar wrappers held a one-item list against 1,900-odd scalars
+    in list slots. It concentrates on the enum slots, because a model writing an enum member
+    has just been told the field has a vocabulary and offers one from it as a list:
+    `Analysis.spatial_scope` 4,470 times, `Analysis.prespecification` 4,328, `Group.species`
+    2,207, `Region.region_type` 2,151.
+
+    It matters because `values.read` returns what it finds. A consumer testing
+    `spatial_scope == "whole_brain"` matches nothing against `["whole_brain"]`, and
+    `spatial_scope` is the field that cost 17133391 its place in a meta-analysis.
+
+    **Only a one-item list.** A longer one is a claim the slot cannot hold -- 730 of them,
+    `spatial_scope: ['whole_brain', 'roi']` 31 times, where the two exclude each other, and
+    `Region.region_type: ['anatomical', 'atlas_parcel']` 198 times, which reads more like the
+    storage slot wanting `multivalued` than like an extraction error. Picking one would be
+    deciding which, so those are left for `check_value_cardinality` to report.
+    """
+
+    fixed: list[str] = []
+
+    def visit(node: Any, class_name: str, path: str) -> None:
+        if not isinstance(node, dict) or values.is_field(node):
+            return
+        class_name = sch.designated_type(node, class_name)
+        attributes = sch.attributes(class_name)
+        for key, value in node.items():
+            attribute = attributes.get(key)
+            if attribute is None:
+                continue
+            kind = sch.classify(key, attribute)
+            if kind == "evidence" and values.is_field(value):
+                wrapper = attribute.range
+                declared = (
+                    (sch.attributes(wrapper) or {}).get("value", {})
+                    if isinstance(wrapper, str)
+                    else {}
+                )
+                if not declared or declared.multivalued:
+                    continue
+                inner = value.get("value")
+                if isinstance(inner, list) and len(inner) == 1:
+                    value["value"] = inner[0]
+                    fixed.append(f"{path}.{key}: [{inner[0]!r}] -> {inner[0]!r}")
+            elif kind == "nested":
+                target = attribute.range
+                if isinstance(target, str):
+                    for index, item in enumerate(value if isinstance(value, list) else [value]):
+                        suffix = f"[{index}]" if isinstance(value, list) else ""
+                        visit(item, target, f"{path}.{key}{suffix}")
+
+    visit(body, "Study", "Study")
+    return fixed
+
+
 def listify_scalars(body: dict[str, Any], sch: Schema) -> list[str]:
     """Wrap a lone scalar in a list inside an `Extracted<T>List` wrapper.
 

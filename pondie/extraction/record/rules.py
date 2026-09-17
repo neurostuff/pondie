@@ -754,6 +754,54 @@ def check_cell_terms(record: Mapping[str, Any], findings: Findings) -> None:
                 )
 
 
+#: `Cell.level` words that state a sign, by polarity. Shared with
+#: `builder._LEVEL_POLARITY`'s intent: there the duplicates are dropped, here the
+#: contradictions are reported, and both need the same reading of "higher" as positive.
+_LEVEL_POLARITY = {
+    **{w: "positive" for w in ("positive", "higher", "greater", "more", "increase",
+                               "increased", "up", "activation")},
+    **{w: "negative" for w in ("negative", "lower", "less", "fewer", "decrease",
+                               "decreased", "down", "deactivation")},
+}
+
+
+def check_cell_level_polarity(record: Mapping[str, Any], findings: Findings) -> None:
+    """A cell whose `level` and `direction` state opposite signs of the same effect.
+
+    26 cells in the 1,817-record corpus: `direction='negative'` with `level='positive'` nine
+    times, `direction='positive'` with `level='decrease'` three. The rest of that family --
+    185 cells whose level merely repeats the direction, and 547 whose level repeats the
+    term's own name -- carry no information and `drop_redundant_cell_levels` removes them.
+    These do carry information, and it contradicts itself.
+
+    An error rather than a warning, and separate from `check_cell_terms` although both read
+    a cell's level, because this is the only finding in the set where the wrong answer
+    changes a map: `direction` is what decides whether a coordinate enters the increase or
+    the decrease image, so a record stating both signs cannot be resolved by a default.
+    """
+
+    for index, analysis in enumerate(record.get("analyses") or []):
+        if not isinstance(analysis, Mapping):
+            continue
+        effect = analysis.get("effect")
+        if not isinstance(effect, Mapping):
+            continue
+        for position, cell in enumerate(effect.get("cells") or []):
+            if not isinstance(cell, Mapping):
+                continue
+            level = _LEVEL_POLARITY.get(str(values.read(cell.get("level")) or "").strip().lower())
+            held = _LEVEL_POLARITY.get(
+                str(values.read(cell.get("direction")) or "").strip().lower()
+            )
+            if level and held and level != held:
+                findings.error(
+                    f"analyses[{index}].effect.cells[{position}]",
+                    f"level {values.read(cell.get('level'))!r} states a "
+                    f"{level} effect and direction says {held}; one of the two is wrong, and "
+                    "direction is what puts a coordinate in the increase or decrease map",
+                )
+
+
 def check_model_stages(record: Mapping[str, Any], findings: Findings) -> None:
     """§3 invariants 6 and 7: `inputs_from` is acyclic, and a term name is unique across
     a whole stage chain.
@@ -837,6 +885,12 @@ def _chain_terms(
     return found
 
 
+#: The `TablePurpose` value meaning "these rows are the foci of a tested effect". Named
+#: here because two places depend on it agreeing: `derive_table_effects` writes it and
+#: `check_table_purpose` must not read it as a contradiction.
+REPORTED_EFFECT = "reported_effect"
+
+
 def check_table_purpose(record: Mapping[str, Any], findings: Findings) -> None:
     """A coordinate table either reports an analysis or says what it does instead.
 
@@ -869,7 +923,13 @@ def check_table_purpose(record: Mapping[str, Any], findings: Findings) -> None:
         local_id = table.get("local_id")
         path = f"tables[{index}]"
         marked = values.read(table.get("purpose"))
-        if marked and local_id in referenced:
+        # `reported_effect` is not a non-analysis marking -- it is the one value that says
+        # the rows ARE an effect, and `derive_table_effects` writes it on every cited table
+        # by design. Without this exemption the check errored on the repair's own answer
+        # 799 times across 461 papers, a quarter of every error in the 1,817-record corpus,
+        # and the message refuted itself when printed: "says this table reports
+        # 'reported_effect' rather than an effect".
+        if marked and marked != REPORTED_EFFECT and local_id in referenced:
             findings.error(
                 f"{path}.purpose",
                 f"says this table reports {marked!r} rather than an effect, but an "
@@ -1294,6 +1354,11 @@ RULES: tuple[Rule, ...] = (
     Rule("effect_kind", "a stated effect kind matches the cells beside it", check_effect_kind),
     Rule("cell_terms", "every cell names a term its analysis's model can reach", check_cell_terms),
     Rule(
+        "cell_level_polarity",
+        "a cell's level and its direction agree on the sign",
+        check_cell_level_polarity,
+    ),
+    Rule(
         "model_stages", "a stage chain is acyclic and names each column once", check_model_stages
     ),
     Rule("table_purpose", "every table is either encoded or says why not", check_table_purpose),
@@ -1361,6 +1426,21 @@ RULES: tuple[Rule, ...] = (
 
 
 def check_all(record: Mapping[str, Any], findings: Findings) -> None:
-    """Every rule, over one record."""
+    """Every rule, over one record. A rule that raises is a finding, not an abort.
+
+    Unguarded, one exception took every rule registered after it with it -- silently, since
+    a record with no findings and a record whose checks never ran look identical in the
+    output. Measured: `check_crossings` raises `TypeError: unhashable type: 'dict'` on 3 of
+    1,817 records, where a wrapper carries `value` and no `extraction_status` so
+    `values.read` returns the mapping itself, which is what it is supposed to do for a
+    nested entity. Those records lost the 17 checks that follow `crossings`.
+    """
     for rule in RULES:
-        rule.fn(record, findings)
+        try:
+            rule.fn(record, findings)
+        except Exception as exc:  # noqa: BLE001 -- a crashing rule must not hide the others
+            findings.error(
+                f"rules.{rule.name}",
+                f"check raised {type(exc).__name__}: {exc}; this record was not checked "
+                f"for {rule.what!r}",
+            )
