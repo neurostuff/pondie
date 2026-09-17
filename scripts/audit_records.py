@@ -42,6 +42,118 @@ LEVEL_JOINS = ("conditions", "arms", "timepoints", "groups", "regions")
 NUMERIC = {"integer", "float", "double", "decimal"}
 
 
+#: The FactorLevel slots a name match may fill, and the kind of entity each names. The
+#: fixer is enumerated rather than applied to every reference slot because name identity is
+#: evidence only where the reference means "is that entity". See docs/record-defects.md:
+#: `ModelTerm.interaction_with` means "crossed with", and matching it on a name links the
+#: group factor to the group factor 708 times.
+IDENTITY_SLOTS = ("conditions", "arms", "timepoints", "groups", "regions")
+
+
+def name_catalogue(body: dict) -> dict[str, dict[str, list[str]]]:
+    """folded name -> {FactorLevel slot: [local_id]} over the kinds a level can name."""
+    out: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
+
+    def add(slot: str, entity: object) -> None:
+        if isinstance(entity, dict) and isinstance(entity.get("local_id"), str):
+            name = fold(values.read(entity.get("name")))
+            if name:
+                out[name][slot].append(entity["local_id"])
+
+    for group in body.get("groups") or []:
+        add("groups", group)
+    for task in body.get("tasks") or []:
+        if isinstance(task, dict):
+            for condition in task.get("conditions") or []:
+                add("conditions", condition)
+    for region in body.get("regions") or []:
+        add("regions", region)
+    design = body.get("design") or {}
+    for slot in ("arms", "timepoints"):
+        for entity in design.get(slot) or []:
+            add(slot, entity)
+    return out
+
+
+def held(node: object, slot: str) -> bool:
+    if not isinstance(node, dict):
+        return False
+    return bool(node.get(slot)) and bool([x for x in (values.read(node.get(slot)) or []) if x])
+
+
+def link_by_name(body: dict) -> Counter:
+    """Write the links a name match settles. Returns what it wrote, by slot.
+
+    Only an exact fold match to exactly one candidate, only where the slot is empty, and
+    never to the entity itself -- the three guards, each of which a measured failure earned.
+    """
+    catalogue = name_catalogue(body)
+    wrote: Counter = Counter()
+    for model in body.get("model_estimations") or []:
+        if not isinstance(model, dict):
+            continue
+        for term in model.get("terms") or []:
+            if not isinstance(term, dict):
+                continue
+            for level in term.get("levels") or []:
+                if not isinstance(level, dict):
+                    continue
+                name = fold(values.read(level.get("level")))
+                for slot, local_ids in (catalogue.get(name) or {}).items():
+                    if len(local_ids) != 1 or held(level, slot):
+                        continue
+                    level[slot] = {
+                        "value": [local_ids[0]],
+                        "extraction_status": "extracted",
+                        "value_source": "generated",
+                        "evidence": None,
+                    }
+                    wrote[slot] += 1
+    for group in body.get("groups") or []:
+        if not isinstance(group, dict) or group.get("arm"):
+            continue
+        local_ids = (catalogue.get(fold(values.read(group.get("name")))) or {}).get("arms") or []
+        if len(local_ids) == 1:
+            group["arm"] = local_ids[0]
+            wrote["Group.arm"] += 1
+    return wrote
+
+
+def queryability(body: dict, out: Counter) -> None:
+    """Can a query reconstruct each analysis's contrast from the entity graph?
+
+    Counted per (analysis, level) pair rather than per distinct level, because that is what
+    a query traverses: one unwritten link costs every analysis whose model reaches the term.
+    """
+    models = _model_index(body)
+    for analysis in body.get("analyses") or []:
+        if not isinstance(analysis, dict):
+            continue
+        terms = terms_in_scope(analysis.get("model_estimation"), models)
+        cells = [
+            level
+            for term in terms.values()
+            if str(values.read(term.get("type"))) == "categorical"
+            for level in (term.get("levels") or [])
+            if isinstance(level, dict)
+        ]
+        if not cells:
+            continue
+        out["analyses with a categorical contrast"] += 1
+        resolved = [any(held(level, slot) for slot in IDENTITY_SLOTS) for level in cells]
+        out["levels"] += len(resolved)
+        out["levels resolved"] += sum(resolved)
+        if all(resolved):
+            out["analyses fully resolvable from the entity graph"] += 1
+        for slot, label in (
+            ("conditions", "analyses that can say which condition"),
+            ("arms", "analyses that can say which arm"),
+            ("timepoints", "analyses that can say which occasion"),
+        ):
+            if any(held(level, slot) for level in cells):
+                out[label] += 1
+
+
 class Sink:
     def __init__(self):
         self.errors: list[tuple[str, str]] = []
@@ -106,6 +218,8 @@ def main() -> int:
     continuous_level = Counter()
     declared_cls, referenced_cls = Counter(), Counter()
     records = 0
+    wrote: Counter = Counter()
+    before, after = Counter(), Counter()
 
     def walk_shapes(node, cls):
         if not isinstance(node, dict) or values.is_field(node):
@@ -176,6 +290,7 @@ def main() -> int:
 
     for study, body in iter_records((args.records,)):
         records += 1
+        queryability(body, before)
 
         # 1 -- what the existing rules already say
         sink = Sink()
@@ -295,6 +410,10 @@ def main() -> int:
                 else:
                     continuous_level["categorical, entity not declared"] += 1
 
+        # 8 -- what a name-match fixer would write, and what it buys
+        wrote += link_by_name(body)
+        queryability(body, after)
+
         # 7 -- orphans
         ids: dict[str, str] = {}
         index_ids(body, "Study", ids)
@@ -356,6 +475,22 @@ def main() -> int:
     total = max(1, sum(continuous_level.values()))
     for kind, count in continuous_level.most_common():
         print(f"  {count:6d}  ({count / total:4.0%})  {kind}")
+
+    section("8. What linking on an exact name match would write, and buy")
+    print("  links written:")
+    for slot, count in wrote.most_common():
+        print(f"    {count:6d}  {slot}")
+    print(f"    {sum(wrote.values()):6d}  total\n")
+    print(f"  {'':52} {'before':>8} {'after':>8}")
+    for key, denom in (
+        ("levels resolved", "levels"),
+        ("analyses fully resolvable from the entity graph", "analyses with a categorical contrast"),
+        ("analyses that can say which condition", "analyses with a categorical contrast"),
+        ("analyses that can say which arm", "analyses with a categorical contrast"),
+        ("analyses that can say which occasion", "analyses with a categorical contrast"),
+    ):
+        print(f"  {key:52} {before[key] / max(1, before[denom]):7.1%} "
+              f"{after[key] / max(1, after[denom]):7.1%}")
 
     section("7. Entities nothing references")
     print(f"  {'class':24} {'declared':>9} {'referenced':>11} {'orphaned':>9} {'rate':>6}")

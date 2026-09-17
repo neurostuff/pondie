@@ -14,7 +14,7 @@ it needs, because that is the decision:
 | | | volume | fix |
 |---|---|---|---|
 | 1 | `check_table_purpose` errors on the repair's own output | 799 errors, 461 papers | **deterministic**, one line |
-| 2 | A level names an entity the record declares and does not point at it | 715 joins | **deterministic** |
+| 2 | A level names an entity the record declares and does not point at it | 849 links | **deterministic**, prototyped |
 | 3 | A scalar enum slot holds a one-item list | 21,701 fields | **deterministic** |
 | 4 | Derived values are labelled `reported` | ~10,300 fields | **deterministic** |
 | 5 | A cell names a level on a continuous term | 1,204 errors, 527 papers | 62% deterministic |
@@ -101,16 +101,81 @@ groups       level 'women'                     == grp_women
 595 conditions, 64 timepoints, 29 groups, 26 arms, 1 region. Both halves of the join are in
 the record; nothing wrote it down.
 
-**Fix.** A repair in the `merged` stage: for a categorical `FactorLevel` reaching no entity,
-fold its `level` against the names of the record's Groups, Task conditions, Regions, Arms and
-Timepoints. On an **exact fold match to exactly one** candidate, write the reference into the
-matching slot with `value_source: generated`. This is `align_cell_levels`' existing rule —
-repair only where the choice is not a choice — applied one level up.
+### The fix, investigated
 
-A further 98 (6%) match one candidate on a substring and 73 are ambiguous. Report those;
-do not apply them. `normalize_open_fields.py` already measured what substring containment
-does to a hierarchy: it merged `emotion regulation` into a rarer variant with 38 candidate
-hosts. A substring is a hint, not a join.
+`link_by_name` in `scripts/audit_records.py` is the working prototype. Per record it builds a
+folded-name index of every declared entity by kind, and for an empty reference slot on an
+entity carrying a name, writes the link on an **exact fold match to exactly one** candidate,
+`value_source: generated`. That is `align_cell_levels`' existing rule — repair only where the
+choice is not a choice — applied one level up.
+
+It is general in mechanism and **enumerated in scope**, and the difference is the whole
+finding. Run over every reference slot in the schema it proposes 11,000 links; run correctly
+it proposes 849. Three guards account for the gap, and each was earned by a measured failure
+rather than anticipated.
+
+**1. Never link an entity to itself.** Without this the matcher writes **9,151 self-links**:
+`Analysis.mirror_of` pointing at its own analysis (5,458) and `ModelTerm.interaction_with` at
+its own term (3,692). An entity's name trivially matches itself, so every empty
+same-class reference slot resolves to its owner.
+
+**2. Identity slots only.** After the self-guard `ModelTerm.interaction_with` still proposes
+708 links, and **97% are a term named `group` in one model matching a term named `group` in a
+different model** — `age` 44 times, `diagnosis` 18, `sex` 10. `interaction_with` means
+*crossed with*; two models each having a group factor is not a crossing, and writing the link
+would fabricate interactions that `check_crossings` then reports as unrecorded. `mirror_of`
+(370) is the same error: `direction.mirror_analysis` owns that relation, and two analyses
+sharing a name are not sign-reversed twins of each other.
+
+So the rule is not "reference slots" but **"references that mean *is that entity*"**:
+
+| in scope | out of scope, and why |
+|---|---|
+| `FactorLevel.conditions`, `.arms`, `.timepoints`, `.groups`, `.regions` | `ModelTerm.interaction_with` — *crossed with* |
+| `Group.arm` | `Analysis.mirror_of` — *sign-reversed twin of* |
+| | `ModelEstimation.inputs_from` — *fitted on the output of* |
+| | `ConnectivityEdge.source_region` / `.target_region` — directional |
+
+A name says what a thing *is*. It says nothing about how two things *relate*, and every slot
+in the right column is a relation.
+
+**3. Exact fold match, never substring.** A further 966 links are reachable on a single
+substring match and are not taken — 403 of them `Analysis.defines_regions`, 101
+`Analysis.regions`. `normalize_open_fields.py` measured what containment does to a hierarchy:
+it merged `emotion regulation`, the most frequent term in the corpus, into a rarer variant,
+with 38 candidate hosts. A substring is a hint; report it.
+
+**One decision that is not a guard.** 122 matched levels name two kinds of entity at once,
+and **112 of those are `arms` + `groups`** — a level named "Exercise" matching both the arm
+and the cohort allocated to it. Writing both is correct; that is the parallel-group design
+`Group.arm` exists for. The other 10 (`conditions`+`timepoints`, `arms`+`conditions`) should
+be reported rather than double-written. No name matched two entities of the *same* kind
+anywhere in the corpus, so the ambiguity guard never fired.
+
+### What it buys, in queries
+
+849 links: 572 conditions, 164 arms, 72 timepoints, 29 groups, 11 `Group.arm`, 1 region.
+
+Measured **per (analysis, level) pair**, because that is what a query traverses: one unwritten
+link costs every analysis whose model reaches the term, which is why 849 links move 2,184
+pairs.
+
+| | before | after |
+|---|---|---|
+| levels resolved to an entity | 72.3% | **83.8%** |
+| analyses whose contrast is fully resolvable from the entity graph | 67.3% | **77.2%** |
+| analyses that can say which condition | 37.5% | **49.7%** |
+| analyses that can say which arm | 3.6% | **7.8%** |
+| analyses that can say which occasion | 5.0% | **7.1%** |
+
+**+454 analyses become fully resolvable** — every categorical level in their contrast reaches
+a declared entity, so the comparison can be reconstructed from the entity graph instead of
+from string matching.
+
+The honest limit is the arm row. It more than doubles, and **92% of analyses still cannot say
+which arm they belong to.** The fixer closes the gap where both halves are already in the
+record; it cannot create an Arm the record never declared. That is finding 7, and it is the
+larger half of the problem.
 
 ## 3. A scalar enum slot holds a one-item list
 
