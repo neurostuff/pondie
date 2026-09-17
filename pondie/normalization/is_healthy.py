@@ -86,8 +86,12 @@ def apply(record: dict) -> dict[str, int]:
         group["is_healthy"] = {
             "value": after,
             "extraction_status": "extracted",
-            "value_source": "derived",
-            "evidence": None,
+            # `generated`, not `derived`: `ValueSource` offers `reported` and `generated`
+            # and nothing else, and the enum's own gloss for `generated` is "Created by the
+            # extraction system", which is exactly this. `derived` would have been a
+            # validation error on every group this touched.
+            "value_source": "generated",
+            "evidence": {"status": "not_applicable"},
         }
         tally["set"] += 1
         if before is not None:

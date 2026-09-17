@@ -57,7 +57,10 @@ def test_apply_overrules_a_contradicting_model_value():
     record = {"groups": [group(["nicotine dependence"], healthy=True)]}
     tally = apply(record)
     assert record["groups"][0]["is_healthy"]["value"] is False
-    assert record["groups"][0]["is_healthy"]["value_source"] == "derived"
+    # `generated`, not `derived`. `ValueSource` offers `reported` and `generated` and
+    # nothing else, so `derived` was a validation error on every group this touched, and
+    # the enum's gloss for `generated` -- "Created by the extraction system" -- is this.
+    assert record["groups"][0]["is_healthy"]["value_source"] == "generated"
     assert tally["overruled"] == 1
 
 

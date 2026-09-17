@@ -132,14 +132,54 @@ meta-analyses" (social) are unexpressible today and cost one API call per paper.
 parse holds the points per analysis, and the `Tables` stage already reads that parse -- it
 copies `table_number`, `caption` and `footer` and could copy the count in the same pass.
 
+## Done: the corpus backfilled
+
+`scripts/backfill_records.py` applied `unwrap_singletons` and filled `Study.study_type` from
+PubMed over all 1,817 records — 21,701 unwrapped fields and 1,817 filled slots, stamped
+`repaired_by: pondie-repair-1+backfill-1`, because a backfilled record is no longer the one
+the extractor produced.
+
+**The records are older than the schema, so both fills were argued rather than assumed.**
+`unwrap_singletons` reads the *current* schema to decide which wrappers are scalar, which is
+only safe if no slot it touches changed cardinality since extraction: the records date from
+2026-09-09 and 09-11, the storage commits after that are the cohort-trait fields, the modality
+rename and the design enum, and `Region.region_type` and `Region.definition_method` — which
+hold the most multi-item values — were scalar at extraction too. So the repair fixes a defect
+that was already one. `study_type` comes from PubMed rather than the paper and does not depend
+on the extraction-time schema at all.
+
+What the backfill does not fix is reported rather than hidden: 4,237 groups still carry no
+`population_characteristics` and 1,405 tasks still say `response_mode`, because those slots
+landed after these records were written.
+
+Strict recall under a literal scalar comparison, from the records themselves with no repair
+applied at read time:
+
+| | before the backfill | after |
+|---|---|---|
+| `vbm_of_ptsd` | 5.9% | **47.1%** |
+| `dementia` | 10.3% | **51.7%** |
+| `cue_reactivity` | 5.0% | **52.9%** |
+| `vbm_of_substance_use` | 10.5% | **59.2%** |
+| `emotion_regulation_2022` | 5.7% | **35.6%** |
+
+PubMed answered for all 1,804 distinct pmids (1,817 files: 13 papers are screened by two
+projects each). The publication-type exclusion now runs, and excludes 23 papers across the
+five as non-original research — **21 of the 23 are correctly outside the gold set**.
+
+The two that are not are in `vbm_of_substance_use`'s included set and are reviews:
+`23142417` "The role of default network deactivation in cognition and disease" (`Review`) and
+`27793597` "Impact of general cognition and executive function deficits on addiction treatment
+outcomes: Systematic review and meta-analysis" (`Systematic Review`). That meta-analysis's own
+criterion is "only empirical English language MRI studies", so the criterion and the gold set
+disagree and the criterion looks right. Two of 79, inferred from the title and the PubMed
+type rather than from reading the papers.
+
 ## Proposals, ordered by what they buy a query
 
-1. **Run `unwrap_singletons` over the corpus.** Measured: strict recall 5–10% → 36–59%. The
-   repair exists; the records predate it.
-2. **Fill `Study.study_type` from PubMed** and add a `language` slot filled the same way. Both
-   are deterministic, both are one lookup, and together they express the publication-type and
-   language criteria that every meta-analysis in the benchmark states and none can currently
-   be asked about.
+1. ~~Run `unwrap_singletons` over the corpus.~~ Done, above.
+2. ~~Fill `Study.study_type` from PubMed.~~ Done, above. Language was dropped as out of
+   scope.
 3. **Fill `Table.coordinate_count` in the `Tables` stage** from the parse it already reads, and
    consider an analysis-level count, since "did this contrast report any foci" is a criterion
    and a per-table number cannot answer it.
