@@ -216,7 +216,16 @@ def visual_stimuli(record: dict) -> bool | None:
              for s in strings(t.get("stimuli")) + strings(t.get("description"))]
     if not prose:
         return UNANSWERABLE
-    return any(re.search(r"visual|image|picture|photograph|video|film", s, re.I) for s in prose)
+    joined = " ".join(prose)
+    # The criterion excludes gustatory, olfactory and tactile cues by name, so those are
+    # what disqualifies a task -- not the absence of the word "visual". Written words on a
+    # screen are a visual cue: 14667419 presents "alcohol-related and neutral words" and
+    # was dropped with nine other gold papers because the pattern did not admit text.
+    if re.search(r"gustator|olfact|taste|tasting|odour|odor|smell|tactile|haptic", joined, re.I):
+        if not re.search(r"visual|image|picture|photograph|video|film", joined, re.I):
+            return False
+    return bool(re.search(r"visual|image|picture|photograph|video|film|word|text|written|"
+                          r"sentence|letter|face|scene|cue", joined, re.I))
 
 
 def measures(record: dict, pattern: str) -> bool | None:
@@ -329,7 +338,13 @@ QUERIES: dict[str, tuple[str, list[tuple[str, Predicate]]]] = {
         ("substance-use cohort", lambda r: group_condition(
             r, r"alcohol|nicotine|tobacco|smok|cocaine|cannabis|opioid|heroin|"
                r"methamphetamine|substance|depend|abuse|addict")),
-        ("gray matter volume measure", lambda r: measures(r, r"gray_matter_volume|grey_matter_volume")),
+        # `gray_matter` and not `gray_matter_volume`. VBM measures density or
+        # concentration and the criterion says "volume": 11822992 is "voxel based
+        # morphometry ... gray and white matter concentration", its record correctly says
+        # `gray_matter_density`, and the narrow pattern dropped it along with 18 other gold
+        # papers. The distinction the criterion draws is grey matter against cortical
+        # thickness and diffusion, which this keeps.
+        ("gray matter measure", lambda r: measures(r, r"gray_matter|grey_matter")),
         ("between-group contrast", group_contrast),
         ("no pharmacological arm", no_pharmacological),
     ]),

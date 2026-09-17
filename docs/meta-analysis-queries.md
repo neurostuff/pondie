@@ -333,3 +333,66 @@ meta-analysis states and is not in its included set, so it reads as a gold-set o
 rather than a query error -- which, with the two reviews the publication-type filter found
 inside `vbm_of_substance_use`'s included set, makes three disagreements with the benchmark
 that look like the benchmark's.
+
+## Five papers the strict query wrongly excluded
+
+The mirror of the last section, and the five split three ways rather than one.
+
+| pmid | the record's claim | the paper | verdict |
+|---|---|---|---|
+| `17133391` | `spatial_scope: roi` on **all 12** analyses, `correction_scope: roi` | whole-brain fMRI of voluntary emotion regulation, reporting prefrontal and amygdala effects | **record defect** |
+| `15127179` | `spatial_scope: roi` on both analyses | cue-induced striatal and medial-prefrontal activation, 10 abstinent alcoholics against controls, included by a meta-analysis that excludes ROI studies | **record defect** |
+| `16687507` | `spatial_scope: roi` on its one analysis | "Individual differences in reward drive predict neural responses to images of food" -- a correlation across the brain whose *findings* are in orbitofrontal, striatal and amygdala regions | **record defect** |
+| `11822992` | `gray_matter_density`, `spatial_scope: whole_brain`, `correction_scope: whole_brain` -- all correct | "voxel based morphometry ... gray and white matter **concentration**" in cocaine-dependent against cocaine-naive | **my predicate**: it asked for `gray_matter_volume` and VBM measures density |
+| `14667419` | `stimuli: "Alcohol-related and neutral words"`, `spatial_scope: whole_brain` -- correct | fMRI response to alcohol-related **words** in alcohol-dependent young women | **my predicate**: written words on a screen are a visual cue and the pattern did not admit text |
+
+And a sixth that is neither: **`21686071`**, "How grossed out are you? The neural bases of emotion regulation **from childhood to adolescence**", record `age_minimum: 7`, `age_mean: 13.03`. The emotion-regulation meta-analysis's first criterion is "studies of healthy **adults**". The query is right and the paper is in the included set -- a fourth benchmark disagreement, after `16371250` and the two reviews.
+
+### The three record defects are one defect, and it is the most consequential one
+
+`spatial_scope: roi` where the paper is whole-brain contradicts **38 gold papers**: 20 in cue
+reactivity, 12 in emotion regulation, 4 in dementia, 2 in PTSD. "Whole brain, not ROI" is the
+single criterion every meta-analysis in this benchmark states, so this one field decides more
+inclusions than any other, and all three examples above share a shape: **the paper names
+regions because that is how a whole-brain result is reported, and the record reads the names
+as a restriction.**
+
+The largest driver overall is not this one. `no pharmacological arm` contradicts **39 of
+substance use's 65 gold papers**, and that is the `allocation: non_randomized` defect of
+finding 9 -- a diagnosis read as an assignment. `observational_cohorts` is its fix and these
+records predate it.
+
+### A diagnostic that failed, and one that partly works
+
+I expected `spatial_scope: roi` with no `regions` reference to flag the mislabel -- an ROI
+analysis must have a region. **It does the opposite.** Of 1,865 `roi` analyses, the ones in
+gold papers name no region 3% of the time against 10% in non-gold. So the mislabelled records
+are internally coherent: they name regions and still disagree with the meta-analysts, and no
+consistency check inside the record will find them.
+
+What does carry signal is the table metadata. Among gold papers whose record says **no**
+whole-brain analysis anywhere, **43% declare no Table at all**, against 24% of the gold papers
+whose record does say whole-brain. Missing table metadata nearly doubles the rate of the
+mislabel, which is the 17133391 diagnosis generalising: the caption stating "whole-brain
+analysis" never reached the extractor. That makes the `Tables` stage's parse fallback a
+testable prediction rather than a tidy-up -- 654 of the 1,143 dangling `Analysis.tables`
+references came from exactly these papers. 47% of the mislabels have captioned tables, so it
+is not the whole cause.
+
+### The two predicate errors, fixed
+
+`measures` now asks for `gray_matter` rather than `gray_matter_volume`, because VBM measures
+density or concentration and the criterion says volume -- the narrow pattern dropped 19 gold
+papers. And `visual_stimuli` admits text, and disqualifies a task by finding gustatory,
+olfactory or tactile cues rather than by failing to find the word "visual" -- which is what
+the criterion actually says. That dropped 10.
+
+| | before | after |
+|---|---|---|
+| `cue_reactivity` strict recall | 57.1% | **60.7%** |
+| `vbm_of_substance_use` strict recall | 20.0% | 21.5% |
+| mean strict | 45.2% / 54.1% precision | **46.2% / 54.3%** |
+
+A point of recall for no precision, which is the right direction and a small effect: after
+four rounds of correcting my own translations, what is left is dominated by two record
+defects rather than by the difficulty of writing the query.
