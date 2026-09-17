@@ -54,27 +54,48 @@ The recurring pairs are the same few contrasts written differently -- `smoking >
 The variance is on the **baseline** side and in the modifiers, and the baseline is a small
 closed set: a condition defined by the *absence* of the manipulation.
 
-Classifying each contrast by whether a baseline sits on exactly one side:
+**The schema already has the field, and it is already filled.** `Condition.condition_kind`
+takes `task_state`, `rest`, `fixation` or `control_state`, and it is populated on **3,010 of
+3,013 conditions -- 100%**: `task_state` 2,037, `control_state` 837, `fixation` 91, `rest` 44.
+
+It also states the distinction better than a first pass at this gets it. I had proposed adding
+a `target` / `baseline` role to `Condition`; that is wrong, for the reason `ConditionKind`'s own
+description gives:
+
+> Intrinsic to the condition and not its role in any one contrast. What a tested effect was
+> measured against is carried by `Cell.direction` ... a condition can be the comparator in one
+> analysis and the target in another, and recording that here would make it a property of the
+> wrong thing.
+
+So the decomposition is not one new field. It is the **pair of fields that already exist**:
+`condition_kind` says what a condition is in itself, `Cell.direction` says which side it took
+in this contrast, and the target/baseline shape is the join of the two.
+
+Classifying each contrast by whether a baseline *kind* sits on exactly one side:
 
 | shape | contrasts | |
 |---|---|---|
-| target > baseline | 494 | 47% |
-| baseline > target (reversed) | 109 | 10% |
-| neither side is a baseline | 405 | 38% |
-| both sides look like a baseline | 53 | 5% |
+| target > baseline | 542 | 51% |
+| baseline > target (reversed) | 96 | 9% |
+| neither side is a baseline kind | 398 | 38% |
+| both sides are a baseline kind | 25 | 2% |
 
-**57% have a baseline on exactly one side**, and once it is lifted off, the target side alone
-is a far smaller vocabulary:
+**60% have a baseline on exactly one side.** A hand-written lexicon over the condition names
+-- `neutral|fixation|rest|control|look|maintain|...` -- reaches 57% and leaves 53 contrasts
+with a baseline on both sides against `condition_kind`'s 25, so the field separates the sides
+more cleanly than the words do, as well as needing no lexicon.
+
+Once the baseline is lifted off, the target side alone is a far smaller vocabulary:
 
 | | distinct bags | top 25 | top 50 | top 100 |
 |---|---|---|---|---|
 | condition names, flat | 1,415 | 26% | 34% | 44% |
-| **target side of a baseline-anchored contrast** | **205** | **46%** | **62%** | **81%** |
+| **target side, split by `condition_kind`** | **231** | **42%** | **59%** | **77%** |
 
-**Seven times fewer terms, and 100 of them reach 81% of the contrasts** where the flat
-condition vocabulary needs more than 200 to reach 55%. The heads are exactly what a query
-asks for: `smoking` 29, `reappraise` 26, `food` 17, `negative` 17, `reappraisal` 17,
-`decrease` 16, `smoke` 15, `regulate` 15, `alcohol` 14, `increase` 11.
+**Six times fewer terms, and 100 of them reach 77% of the contrasts** where the flat condition
+vocabulary needs more than 200 to reach 55%. The heads are exactly what a query asks for:
+`smoking` 29, `food` 28, `alcohol` 26, `reappraisal` 18, `negative` 13, `smoke` 11,
+`negative regulate` 11.
 
 ## The recommendation
 
@@ -82,15 +103,16 @@ asks for: `smoking` 29, `reappraise` 26, `food` 17, `negative` 17, `reappraisal`
 `name_links` recovers 595 condition links on an exact name match; the rest is
 `record-defects.md` finding 7 and needs the extraction pass, not a normaliser.
 
-**2. Add a small closed `Condition` role: `target` or `baseline`.** This is the whole
-mechanism. A baseline is a condition defined by the absence of the manipulation --
-`neutral`, `fixation`, `rest`, `baseline`, `control`, `look`, `maintain`, `view`, `scrambled`,
-`non-X`. It is a closed enum, it is asked of the model once per condition rather than inferred
-from a contrast, and it is what makes the target side a curatable vocabulary.
+**2. Nothing needs adding.** `Condition.condition_kind` is the field and it is 100% filled;
+joined to `Cell.direction` it gives the target/baseline shape on 60% of contrasts. An earlier
+draft of this document proposed a `target`/`baseline` role on `Condition` instead, which is
+wrong twice over: the field exists, and the role is a property of the contrast rather than of
+the condition, which is what `ConditionKind`'s description already says.
 
-**3. Curate the target side, not the condition side.** 205 bags, ~100 terms for 81% coverage.
-That is a tractable list, unlike the 1,415-bag condition vocabulary or the 887-bag task
-vocabulary.
+**3. Curate the target side, not the condition side.** 231 bags, ~100 terms for 77%
+coverage. That is a tractable list, unlike the 1,415-bag condition vocabulary or the 887-bag
+task vocabulary. The query is `condition_kind = task_state` on the side whose `Cell.direction`
+is positive, and the vocabulary to curate is what that side names.
 
 **4. Lemmatise inside the target side, and nothing more.** `reappraise` (26) and
 `reappraisal` (17), `smoking` (29) and `smoke` (15) are morphology and merge with no judgement.
