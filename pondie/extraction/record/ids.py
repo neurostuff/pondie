@@ -27,6 +27,8 @@ PREFIX: dict[str, str] = {
     "Assessment": "asm_",
     "Measure": "mea_",
     "InferenceSettings": "inf_",
+    #: Minted by `table_local_id` from the printed number, not by `mint`; see `DERIVED`.
+    "Table": "tbl",
     "Region": "reg_",
     "Arm": "arm_",
     "Timepoint": "tp_",
@@ -46,11 +48,49 @@ PREFIX: dict[str, str] = {
 #: and only one with no parse behind it is minted here.
 DERIVED: frozenset[str] = frozenset({"Table"})
 
+#: Words a printed table label wraps its number in. Stripped so "Supplementary Table S4"
+#: and "Table S4" mint the same id -- the number is the identity, the wording is not.
+_LABEL_NOISE = re.compile(r"\b(?:supplementary|supplemental|suppl?|online|table|tbl)\b", re.I)
+
+
+def table_local_id(number: Any, label: Any, taken: Mapping[str, Any] | set[str]) -> str:
+    """An address for a Table, from the number the paper printed on it.
+
+    Not from the manifest's `table_id`. That key is the staging flavour's, and it varies
+    with the flavour rather than with the paper: across the corpus the same slot holds bare
+    `20`, `tbl1`, `t1`, `T1`, `Tab1`, `pone-0074164-t002` and `pone.0074164.t002`. A model
+    shown `pone.0074164.t002` and reading "Table 2" in the prose writes `tab_2`, and 485
+    `Analysis.tables` references dangle that way. The printed number is the thing the
+    *paper* fixes, which is the rule the rest of this module already follows, and `tbl2` is
+    what a model writes unprompted.
+
+    `table_number` is not unique -- one paper in the corpus carries two tables numbered 1 --
+    so a collision takes a suffix rather than overwriting. Positional only when the manifest
+    carried no number at all, because a positional id moves if a table is added upstream.
+    """
+    stem = re.sub(r"[^a-z0-9]+", "", str(number or "").lower())
+    if not stem:
+        stem = re.sub(r"[^a-z0-9]+", "", _LABEL_NOISE.sub("", str(label or "")).lower())
+    if not stem:
+        return ""
+    candidate = f"{PREFIX['Table']}{stem[:24]}"
+    if candidate not in taken:
+        return candidate
+    n = 2
+    while f"{candidate}_{n}" in taken:
+        n += 1
+    return f"{candidate}_{n}"
+
 
 def prefix_table() -> str:
+    """The convention as the extraction prompt prints it, from the one definition.
+
+    `DERIVED` classes are left out. Printing `tbl Table` beside the classes a model does
+    mint ids for reads as permission to mint one, and a minted Table id points at nothing:
+    the Tables stage has already assigned them and the prompt hands them over by name.
+    """
     width = 3
-    """The convention as the extraction prompt prints it, from the one definition."""
-    rows = [f"{p:<6} {c:<18}" for c, p in PREFIX.items()]
+    rows = [f"{p:<6} {c:<18}" for c, p in PREFIX.items() if c not in DERIVED]
     lines = ["     " + "".join(rows[i : i + width]).rstrip() for i in range(0, len(rows), width)]
     return "\n".join(lines)
 

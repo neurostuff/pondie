@@ -29,18 +29,25 @@ class Recorder:
         return ModelReply(payload={"stage": stage}, cost=Cost(input_tokens=10, calls=1))
 
 
-def _paper(tmp_path, manifest=({"table_id": "t1", "table_number": 1, "caption": "Peaks"},)):
+def _paper(
+    tmp_path,
+    manifest=({"table_id": "t1", "table_number": 1, "caption": "Peaks"},),
+    parsed=(),
+):
     """A staged paper: a text, the stage-1 parse, and the table manifest beside the text.
 
     `table-map.json` is deliberately not written. It is an *output* of the Tables stage --
     the map `Analysis.tables` references resolve through -- and a fixture that supplies it
     hides the stage failing to write one.
+
+    `parsed` fills the stage-1 parse's analyses, which is the Tables stage's second source:
+    a flavour shipping no manifest still has tables if the parse read some.
     """
     root = tmp_path / "texts"
     (root / "S1" / "processed" / "pubget").mkdir(parents=True)
     (root / "S1" / "stage1").mkdir(parents=True)
     (root / "S1" / "processed" / "pubget" / "text.txt").write_text("a paper")
-    (root / "S1" / "stage1" / "analyses.json").write_text('{"analyses": []}')
+    (root / "S1" / "stage1" / "analyses.json").write_text(json.dumps({"analyses": list(parsed)}))
     if manifest is not None:
         (root / "S1" / "processed" / "pubget" / "tables.jsonl").write_text(
             "\n".join(json.dumps(row) for row in manifest)
@@ -62,7 +69,7 @@ def test_tables_takes_no_model_call(tmp_path):
     assert caller.calls == [], "the manifest is copied, never retyped through a model"
     produced = report.papers[0].outcomes[0].produced[0]
     written = json.loads(produced.read_text())["tables"]
-    assert [entry["local_id"] for entry in written] == ["t1"]
+    assert [entry["local_id"] for entry in written] == ["tbl1"]
     # Wrapped, because the slot is an ExtractedValue. A bare string here is a repair the
     # builder then has to make, on a value that was never uncertain.
     assert written[0]["caption"]["value"] == "Peaks"
@@ -78,7 +85,7 @@ def test_tables_writes_the_id_map_analysis_references_resolve_through(tmp_path):
     """
     paper = _paper(tmp_path)
     run([paper], _settings(tmp_path, stages=(StageName.tables,)), Recorder())
-    assert json.loads(paper.table_map.read_text()) == {"t1": "t1"}
+    assert json.loads(paper.table_map.read_text()) == {"t1": "tbl1"}
 
 
 def test_a_table_with_no_caption_is_not_reported_rather_than_empty(tmp_path):
@@ -90,9 +97,13 @@ def test_a_table_with_no_caption_is_not_reported_rather_than_empty(tmp_path):
     assert "value" not in written[0]["caption"]
 
 
-def test_table_number_is_not_used_as_the_identifier(tmp_path):
-    """One paper in the corpus carries two tables numbered 1; keying on the number
-    collapses them into a single record."""
+def test_two_tables_numbered_one_stay_two_records(tmp_path):
+    """One paper in the corpus carries two tables numbered 1.
+
+    The id is minted from the printed number, so the number has to be allowed to repeat
+    without collapsing the tables into one record -- the collision takes a suffix. Both
+    keys stay in the map, so an `Analysis.tables` reference through either still resolves.
+    """
     paper = _paper(
         tmp_path,
         manifest=(
@@ -102,16 +113,109 @@ def test_table_number_is_not_used_as_the_identifier(tmp_path):
     )
     report = run([paper], _settings(tmp_path, stages=(StageName.tables,)), Recorder())
     written = json.loads(report.papers[0].outcomes[0].produced[0].read_text())["tables"]
-    assert [entry["local_id"] for entry in written] == ["a", "b"]
+    assert [entry["local_id"] for entry in written] == ["tbl1", "tbl1_2"]
+    assert json.loads(paper.table_map.read_text()) == {"a": "tbl1", "b": "tbl1_2"}
 
 
-def test_a_paper_with_no_manifest_is_not_a_failure(tmp_path):
-    """Most of the corpus is ace, which ships no table manifest at all."""
+def test_the_local_id_comes_from_the_paper_not_the_staging_flavour(tmp_path):
+    """The manifest's `table_id` varies with the flavour; the printed number does not.
+
+    Across the corpus that slot holds bare `20`, `tbl1`, `t1`, `T1`, `Tab1` and
+    `pone.0074164.t002`. A model shown `pone.0074164.t002` and reading "Table 2" in the
+    prose writes `tab_2`, and 485 `Analysis.tables` references dangled that way.
+    """
+    paper = _paper(
+        tmp_path,
+        manifest=(
+            {"table_id": "pone.0074164.t002", "table_number": 2, "caption": "Peaks"},
+            {"table_id": "20", "table_number": "S1", "caption": "More"},
+        ),
+    )
+    report = run([paper], _settings(tmp_path, stages=(StageName.tables,)), Recorder())
+    written = json.loads(report.papers[0].outcomes[0].produced[0].read_text())["tables"]
+    assert [entry["local_id"] for entry in written] == ["tbl2", "tbls1"]
+    # The staging key is not lost -- it is what the parse's `table_id` joins through.
+    assert json.loads(paper.table_map.read_text()) == {
+        "pone.0074164.t002": "tbl2",
+        "20": "tbls1",
+    }
+
+
+def test_a_flavour_with_no_manifest_falls_back_to_the_stage_one_parse(tmp_path):
+    """654 of 1,143 dangling `Analysis.tables` references came from this case.
+
+    With no manifest the stage used to write `{"tables": []}`, but the prompt still groups
+    the parse listing by `table_id` and tells the model `tables` is REQUIRED because
+    "there is always something to point at". The model cited table identities no Table
+    entity declared. The parse carries the caption and number, so it can declare them.
+    """
+    paper = _paper(
+        tmp_path,
+        manifest=None,
+        parsed=(
+            {"table_id": "t2", "table_number": 2, "table_caption": "Peaks", "name": "A>B"},
+            {"table_id": "t2", "table_number": 2, "table_caption": "Peaks", "name": "B>A"},
+            {"table_id": "prose", "name": "from a sentence"},
+        ),
+    )
+    report = run([paper], _settings(tmp_path, stages=(StageName.tables,)), Recorder())
+    written = json.loads(report.papers[0].outcomes[0].produced[0].read_text())["tables"]
+    # One Table per table, not per analysis, and the prose pseudo-table is not a table.
+    assert [entry["local_id"] for entry in written] == ["tbl2"]
+    assert written[0]["caption"]["value"] == "Peaks"
+    assert json.loads(paper.table_map.read_text()) == {"t2": "tbl2"}
+    assert "stage-1 parse" in report.papers[0].outcomes[0].notes[0]
+
+
+def test_an_empty_manifest_falls_back_the_same_way_an_absent_one_does(tmp_path):
+    """A manifest with no rows makes the same claim an absent one does."""
+    paper = _paper(
+        tmp_path,
+        manifest=(),
+        parsed=({"table_id": "t2", "table_number": 2, "table_caption": "Peaks"},),
+    )
+    report = run([paper], _settings(tmp_path, stages=(StageName.tables,)), Recorder())
+    written = json.loads(report.papers[0].outcomes[0].produced[0].read_text())["tables"]
+    assert [entry["local_id"] for entry in written] == ["tbl2"]
+
+
+def test_the_prompt_never_offers_an_id_the_record_does_not_declare(tmp_path):
+    """The other half of the same fault: if nothing is mapped, do not print a local_id.
+
+    `table_ids.get(table_id, table_id)` fell back to the parse's own key, which reads as a
+    declared id and is not one. The fallback above should make this unreachable; it is
+    asserted because an unreachable wrong answer is still a wrong answer to offer.
+    """
+    parsed = {
+        "analyses": [
+            {"table_id": "t2", "table_number": 2, "table_caption": "Peaks", "name": "A>B"}
+        ]
+    }
+    mapped = render.stage1_block(parsed, {"t2": "tbl2"})
+    assert "[table local_id: tbl2]" in mapped
+    unmapped = render.stage1_block(parsed, {})
+    assert "[no table local_id" in unmapped
+    # The heading is the only place an id may come from, so no heading may carry one.
+    headings = [ln for ln in unmapped.splitlines() if ln.startswith("Table ")]
+    assert headings and not any("[table local_id:" in ln for ln in headings)
+    assert "OMIT `tables`" in unmapped
+    # `source_table_analysis` still carries the parse key, which is built from the table id
+    # and is a different slot: it joins to the coordinate rows, not to a Table entity.
+    assert "[parse key: t2#1]" in unmapped
+
+
+def test_a_paper_with_no_manifest_and_no_parsed_table_is_not_a_failure(tmp_path):
+    """Most of the corpus is ace, which ships no table manifest at all.
+
+    With neither source the stage declares no Table, and says so in the terms the fault
+    is read in downstream: there is no `Analysis.tables` target, so a reference dangles.
+    """
     paper = _paper(tmp_path, manifest=None)
     report = run([paper], _settings(tmp_path, stages=(StageName.tables,)), Recorder())
     outcome = report.papers[0].outcomes[0]
     assert report.failures == ()
     assert "no tables.jsonl" in outcome.notes[0]
+    assert "no `Analysis.tables` target" in outcome.notes[0]
 
 
 def test_a_missing_stage_one_parse_stops_the_paper_with_a_reason(tmp_path):
@@ -876,13 +980,13 @@ def test_the_caller_treats_an_unparseable_body_as_a_failed_attempt(tmp_path):
 
     caller = GatewayCaller()
     client = Client(['{"broken": ', '{"ok": 1}'])
-    caller._client = lambda paper, stage: client
+    caller._client = lambda: client
 
     call = ModelCall(model="m", system="s", prompt="p", max_output_tokens=10, attempts=2)
     reply = caller(call, paper="S1", stage="demands")
     assert reply.payload == {"ok": 1}, "the second attempt's good body is returned"
 
-    caller._client = lambda paper, stage: Client(['{"broken": '])
+    caller._client = lambda: Client(['{"broken": '])
     with pytest.raises(MalformedReply) as raised:
         caller(
             ModelCall(model="m", system="s", prompt="p", max_output_tokens=10, attempts=1),
@@ -963,7 +1067,7 @@ def test_the_finish_reason_rides_on_an_unparseable_reply(tmp_path):
             return Raw()
 
     caller = GatewayCaller()
-    caller._client = lambda paper, stage: Client()
+    caller._client = lambda: Client()
     with pytest.raises(MalformedReply) as raised:
         caller(
             ModelCall(model="m", system="s", prompt="p", max_output_tokens=10, attempts=1),

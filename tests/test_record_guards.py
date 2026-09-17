@@ -516,7 +516,13 @@ def test_the_prompt_and_the_repair_pass_share_one_id_convention():
 
     table = ids.prefix_table()
     assert "reg_   Region" in table and "asm_   Assessment" in table
-    assert all(prefix in table for prefix in ids.PREFIX.values())
+    # Every class a model mints an id for, and only those. A `DERIVED` class has its ids
+    # assigned before the prompt is built and handed over by name, so printing its prefix
+    # would read as permission to invent one that points at nothing.
+    assert all(
+        prefix in table for name, prefix in ids.PREFIX.items() if name not in ids.DERIVED
+    )
+    assert all(name not in table for name in ids.DERIVED)
 
 
 # ------------------------------------------------------------------- grounding what can be

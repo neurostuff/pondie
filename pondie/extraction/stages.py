@@ -36,6 +36,7 @@ from pondie.extraction.models import (
     StageOutcome,
 )
 from pondie.extraction.parse import TableParse
+from pondie.extraction.record.ids import table_local_id
 from pondie.extraction.prompt import preprocess, render, worked
 from pondie.formats import text_index, values
 from pondie.schema import reader
@@ -88,6 +89,13 @@ class _Base:
     #: at what effort; `tables` copies a manifest and does not care.
     asks_a_model: bool = False
 
+    #: Whether the stage reads the stage-1 parse. `Tables` does, now that it falls back to
+    #: the parse when a flavour ships no manifest, so a re-parse has to invalidate it --
+    #: otherwise the Table records describe tables the parse no longer reports. `Demands`
+    #: reads it too and inherits the dependency through `reads`, because `Tables` writes the
+    #: `table_map` its prompt prints.
+    reads_the_parse: bool = False
+
     def depends_on(self, paper: Paper, settings: Settings) -> dict[str, Any]:
         """Everything whose change should produce a different answer.
 
@@ -108,6 +116,12 @@ class _Base:
             ),
             "flavour": paper.flavour.value,
         }
+        if self.reads_the_parse:
+            parts["parse"] = (
+                text_index.text_hash(paper.parse.read_text(encoding="utf-8", errors="replace"))
+                if paper.parse.is_file()
+                else ""
+            )
         if self.asks_a_model:
             parts |= {
                 "model": settings.model,
@@ -181,13 +195,62 @@ def _manifest_value(text: str | None) -> dict:
     return values.wrap(text, source="reported", evidence="not_applicable")
 
 
+def _manifest_tables(manifest: Path) -> list[dict]:
+    """The staging manifest's tables, in one shape both sources share."""
+    out = []
+    for line in manifest.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        source = json.loads(line)
+        metadata = source.get("metadata") or {}
+        out.append(
+            {
+                "table_id": source.get("table_id"),
+                "table_number": source.get("table_number"),
+                "table_label": metadata.get("table_label"),
+                "caption": source.get("caption") or None,
+                "footer": source.get("footer") or None,
+            }
+        )
+    return out
+
+
+def _parsed_tables(parse: Path) -> list[dict]:
+    """The tables the stage-1 parse read, one entry each, first mention winning.
+
+    `corpus.tables` stamps every parsed analysis with the table it came from, so the parse
+    carries the same five fields the manifest does. The prose pseudo-table is excluded: it
+    is not a table, and `stage1_block` already renders it under a heading that tells the
+    model to omit `tables`.
+    """
+    if not parse.is_file():
+        return []
+    try:
+        analyses = json.loads(parse.read_text(encoding="utf-8")).get("analyses") or []
+    except (OSError, json.JSONDecodeError):
+        return []
+    out: dict[str, dict] = {}
+    for analysis in analyses:
+        table_id = str(analysis.get("table_id") or "")
+        if not table_id or table_id == render.PROSE_TABLE_ID or table_id in out:
+            continue
+        out[table_id] = {
+            "table_id": table_id,
+            "table_number": analysis.get("table_number"),
+            "table_label": analysis.get("table_label"),
+            "caption": analysis.get("table_caption") or None,
+            "footer": analysis.get("table_footer") or None,
+        }
+    return list(out.values())
+
+
 @dataclass(frozen=True)
 class Tables(_Base):
-    """Copy the table manifest into Table records. No model, and first.
+    """Fill Table records deterministically. No model, and first.
 
     `table_number`, `caption` and `footer` are literal strings in the manifest, so retyping
     them through a model can only introduce error. It runs first because the analyses pass
-    is told the local_ids it assigns, and every `Analysis.tables` reference points at one.
+    is told the local_ids and every `Analysis.tables` reference points at one.
 
     Omitting this stage is the regression that motivated writing it down: a rewritten
     pipeline dropped it and 155 of 156 records ended up with no tables declared while 1,076
@@ -195,61 +258,76 @@ class Tables(_Base):
     parse, not the Table entity -- so the fault stayed invisible until a coordinate query
     asked for the join.
 
-    The manifest is read from the same flavour the text came from. Hardcoding
-    `processed/pubget/tables.jsonl` finds nothing for a paper staged from `ace` or
-    `elsevier`, and this corpus is mostly those.
+    TWO SOURCES, IN ORDER. The manifest is read from the same flavour the text came from;
+    hardcoding `processed/pubget/tables.jsonl` finds nothing for a paper staged from `ace`
+    or `elsevier`, and this corpus is mostly those. When there is no manifest the stage
+    falls back to the **stage-1 parse**, whose entries carry `table_id`, `table_number`,
+    `table_label`, `table_caption` and `table_footer` -- everything a Table needs.
+
+    The fallback exists because writing `{"tables": []}` was not neutral. The prompt groups
+    the parse listing by `table_id` and states that `tables` is REQUIRED because "under one
+    of these headings there is always something to point at", so the model was shown table
+    identities no Table entity declared and cited them: 654 of the 1,143 dangling
+    `Analysis.tables` references in the 1,817-record corpus come from papers with an empty
+    `tables` container and a populated parse. Two independent sources of table identity and
+    only one of them gated. A Table carrying the parse's caption and number is both true
+    and a valid reference target.
     """
 
     name: StageName = StageName.tables
+    reads_the_parse: bool = True
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
-        manifest = paper.text.parent / "tables.jsonl"
-        if not manifest.is_file():
-            return StageOutcome(
-                stage=self.name,
-                study_id=paper.study_id,
-                produced=(self._write(paper, settings, {"tables": []}),),
-                notes=(
-                    f"no tables.jsonl beside the {paper.flavour.value} text; "
-                    f"no Table records to copy",
-                ),
-            )
 
-        tables, id_map = [], {}
-        for index, line in enumerate(manifest.read_text(encoding="utf-8").splitlines(), start=1):
-            if not line.strip():
-                continue
-            source = json.loads(line)
-            # Keyed on the manifest's own table_id so the identity the staging wrote keeps
-            # holding, and positionally only when it has none. `table_number` is not an
-            # identifier: one paper in the corpus carries two tables numbered 1.
-            local_id = str(source.get("table_id") or f"tbl{index}")
-            id_map[str(source.get("table_id") or local_id)] = local_id
-            metadata = source.get("metadata") or {}
-            label = metadata.get("table_label") or (
-                f"Table {source['table_number']}" if source.get("table_number") else None
-            )
+        manifest = paper.text.parent / "tables.jsonl"
+        sources = _manifest_tables(manifest) if manifest.is_file() else []
+        origin = f"{paper.flavour.value}/tables.jsonl"
+        if not sources:
+            # On emptiness as well as absence. A manifest with no rows makes the same claim
+            # an absent one does, and the fallback is what keeps the prompt's table headings
+            # backed by a declared entity either way.
+            sources, origin = _parsed_tables(paper.parse), "the stage-1 parse"
+
+        tables, id_map, taken = [], {}, set()
+        for index, source in enumerate(sources, start=1):
+            local_id = table_local_id(source["table_number"], source["table_label"], taken)
+            if not local_id:
+                # No printed number and no label: positional, and only here. An id that
+                # moves when a table is added upstream is the thing `table_local_id`
+                # avoids, so it is the last resort rather than the default.
+                local_id = f"tbl{index}"
+                while local_id in taken:
+                    index += 1
+                    local_id = f"tbl{index}"
+            taken.add(local_id)
+            id_map[str(source["table_id"] or local_id)] = local_id
             tables.append(
                 {
                     "local_id": local_id,
-                    "table_number": _manifest_value(label),
-                    "caption": _manifest_value(source.get("caption")),
-                    "footer": _manifest_value(source.get("footer")),
+                    "table_number": _manifest_value(
+                        source["table_label"]
+                        or (f"Table {source['table_number']}" if source["table_number"] else None)
+                    ),
+                    "caption": _manifest_value(source["caption"]),
+                    "footer": _manifest_value(source["footer"]),
                 }
             )
 
         paper.table_map.parent.mkdir(parents=True, exist_ok=True)
         paper.table_map.write_text(json.dumps(id_map, indent=1) + "\n", encoding="utf-8")
+        note = f"{len(tables)} Table record(s) from {origin} (deterministic)"
+        if not tables:
+            note = (
+                f"no tables.jsonl beside the {paper.flavour.value} text and no table in the "
+                f"stage-1 parse; no Table records, so no `Analysis.tables` target exists"
+            )
         return StageOutcome(
             stage=self.name,
             study_id=paper.study_id,
             produced=(self._write(paper, settings, {"tables": tables}),),
-            notes=(
-                f"{len(tables)} Table record(s) copied from "
-                f"{paper.flavour.value}/tables.jsonl (deterministic)",
-            ),
+            notes=(note,),
         )
 
 
@@ -521,7 +599,11 @@ class Demands(_ModelPass):
     """Analyses first: each declares the entities it needs, before any exist."""
 
     name: StageName = StageName.demands
-    reads: tuple[StageName, ...] = ()
+    #: `context` prints the `table_map` that `Tables` wrote, so a change to the Table
+    #: local_ids has to re-ask this pass. Left empty, a resumed run would pair fresh table
+    #: ids with a stale analyses payload and every `Analysis.tables` reference would dangle
+    #: -- the failure this dependency exists to prevent, not a cache nicety.
+    reads: tuple[StageName, ...] = (StageName.tables,)
     asks_a_model: bool = True
     mode: str = "demands"
     repair_stage: tuple[str, ...] = ("shape", "demands")

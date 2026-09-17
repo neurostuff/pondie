@@ -332,10 +332,12 @@ def stage1_block(
         "and several analyses usually cite the same table. If you SPLIT one listing entry",
         "into several, every part carries the same key.",
         "",
-        "`tables` is REQUIRED on every entry you emit here. It is the bracketed",
-        "`[table local_id: ...]` of the heading the entry sits under, copied verbatim, and it",
-        "is the only link between the record and the rows the result was read off. Rule 4c",
-        "does not apply: under one of these headings there is always something to point at.",
+        "`tables` is REQUIRED on every entry under a heading that carries a",
+        "`[table local_id: ...]`: copy that id verbatim, and copy no other. It is the only",
+        "link between the record and the rows the result was read off. Rule 4c does not",
+        "apply there -- under such a heading there is something to point at. Where a heading",
+        "says `[no table local_id]` instead, OMIT `tables`: nothing declares that table, so",
+        "any id you write there dangles. Never take an id from anywhere but the heading.",
         "",
         "The `space` and `statistic` notes are what the results table showed -- confirm them",
         "against the paper's own wording rather than copying the code.\n",
@@ -352,10 +354,18 @@ def stage1_block(
         else:
             label = first.get("table_label") or f"Table {first.get('table_number')}"
             caption = _wrap(first.get("table_caption") or "")[:160]
-            lines.append(
-                f'{label} — "{caption}"'
-                f"   [table local_id: {table_ids.get(table_id, table_id)}]"
-            )
+            local_id = table_ids.get(table_id)
+            if local_id:
+                lines.append(f'{label} — "{caption}"   [table local_id: {local_id}]')
+            else:
+                # No Table entity carries this table, so there is no id to hold. Printing
+                # the parse's own `table_id` here is what bought 654 dangling
+                # `Analysis.tables` references: the requirement above says "there is always
+                # something to point at", and for an unmapped table there is not. The
+                # `Tables` stage now seeds from the parse so this should not be reached;
+                # it stays because an id the record does not declare must never be offered
+                # as one it does.
+                lines.append(f'{label} — "{caption}"   [no table local_id — OMIT `tables`]')
         for number, analysis in entries:
             points = analysis.get("points") or []
             spaces = sorted({p.get("space") for p in points if p.get("space")})
