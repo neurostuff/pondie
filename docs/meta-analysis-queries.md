@@ -465,3 +465,66 @@ What four rounds of correction established is where the remaining gap lives. It 
 difficulty of writing the criteria down: two record defects account for most of it --
 `spatial_scope: roi` on whole-brain papers, contradicting 38 gold, and
 `allocation: non_randomized` on observational studies, contradicting 39 in one project.
+
+# Analysis selection, which is the stage that actually decides the map
+
+Screening picks papers. A coordinate meta-analysis pools **contrasts**, and the benchmark
+names them: "non-PTSD > PTSD", "bvFTD < HC (all & by modality)", "users < non-users". The
+ground truth is `nimads/<project>/merged/`, whose annotation carries one boolean per key per
+analysis, so the analyses a published meta-analysis pooled are recorded per key. In autonima
+this stage is `annotation_results.json` -- an `include` per analysis per key -- and it has not
+been measured against that gold before now. `scripts/query_analysis_selection.py` does it,
+alongside a deterministic query over `Effect.cells`.
+
+Every key here is a directional between-group contrast, optionally restricted by modality, and
+both are things the schema encodes: a `Cell.direction` on a `FactorLevel` that reaches a
+`Group`, and `Analysis.measure` → `Measure.family`. So the question is not whether the schema
+can state the contrast. It can.
+
+| project / key | papers | autonima ≥1 | autonima = gold count | **autonima = gold foci** | query ≥1 | query = gold count |
+|---|---|---|---|---|---|---|
+| `vbm_of_ptsd` / non-PTSD > PTSD | 17 | 41% | 35% | **35%** | 53% | 35% |
+| `vbm_of_substance_use` / all drug classes | 74 | 64% | 41% | **32%** | 46% | 24% |
+| `dementia` / decrease | 14 | 57% | 29% | **21%** | 86% | 43% |
+| `dementia` / functional | 11 | 64% | 27% | **9%** | 82% | 27% |
+| `dementia` / structural | 9 | 56% | 33% | **11%** | 67% | 22% |
+
+## This is the bottleneck, and it is not screening
+
+**On the gold papers it selected, autonima reproduces the foci the published meta-analysis
+pooled for 9% to 35% of them.** Screening recall on the same corpus is 95.3%. So the stage that
+finds the right papers works, and the stage that decides which coordinates enter the map --
+which is the stage the map is made of -- agrees with the published analysis on a third of
+papers at best.
+
+That reframes the map results this experiment has been reporting. `figure7`'s R² and the
+Dice figures compare a map built from the wrong contrasts against one built from the right
+ones, on papers that were mostly correctly included. The arm contrast -- full text against
+records -- was measured at screening, where all three arms exceed 82% recall and differ by
+less than the run-to-run noise. The place where a map is won or lost was never in that
+comparison.
+
+## The query is competitive here, which says the same thing again
+
+The deterministic query finds a matching contrast more often than the annotation does on
+dementia (86%, 82%, 67% against 57%, 64%, 56%) and matches the gold count as often on PTSD
+(35% each), while losing on substance use (24% against 41%). Given that it is five lines of
+predicate over `Effect.cells` and `Cell.direction`, with no model and no prompt, that is not a
+claim that it should replace the annotation pass -- the samples are 9 to 74 papers and
+dementia's are small. It is the third time in this document that criteria applied mechanically
+match a model reading the same record, and the reading is the same each time: the records
+carry the facts and the pass that reads them is not extracting the advantage.
+
+## Two measurement notes, because both bit
+
+**Merged gold studies cannot be attributed per paper.** Dementia's gold merges up to **27
+pmids into one study**; assigning that study's foci to each of them made every per-paper
+comparison meaningless, and the foci column read 2-6% before I noticed. Those analyses are now
+dropped and counted -- 8 in dementia, 3 in substance use -- which is why dementia's samples
+fall to 9-14 papers. PTSD is 22 single-paper studies and cue reactivity 191, so neither is
+affected.
+
+**The query has no foci column yet**, and it should. `Analysis.source_table_analysis` is the
+exact join -- "the only exact route from an analysis to its coordinates", per its own repair --
+so the record can be taken to a focus count without a string match. Computing it needs the
+stage-1 parse beside the records, which is the one input this harness does not have locally.
