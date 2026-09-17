@@ -557,3 +557,89 @@ affected.
 exact join -- "the only exact route from an analysis to its coordinates", per its own repair --
 so the record can be taken to a focus count without a string match. Computing it needs the
 stage-1 parse beside the records, which is the one input this harness does not have locally.
+
+# What would make these queries simpler, and which normalizations to avoid
+
+Written after translating sixteen published criteria into predicates, getting four of them
+wrong, and correcting each against the gold. The evidence for every item below is a measured
+cost in this document, not a preference.
+
+## What made the queries hard to write
+
+**Every group-contrast predicate reconstructs the same thing by hand.** `group_contrast` walks
+`analyses[] -> effect.cells[] -> cell.term -> model_estimations[].terms[].levels[] ->
+FactorLevel.groups -> groups[].medical_condition`, and joins `Cell.direction` on the way, to
+answer "did this analysis compare a patient cohort against a control cohort, and which way".
+That is 40 lines, it is the same 40 lines in `query_metaanalyses.py` and
+`query_analysis_selection.py`, and **it is what every one of the sixteen criteria asks**.
+
+A derived, deterministic `Analysis` summary -- which cohorts, which conditions, which
+direction -- would collapse it to one field test. It needs no model: all four inputs are in
+the record, the derivation is the walk above, and `Effect.kind` already does the same job for
+a coarser question. This is the single largest simplification available.
+
+**Two fields a query needs and cannot reach.** "Did this analysis report any foci" decides the
+null-effects exclusion and cannot be answered from the record: `Table.coordinate_count` is
+per-table and absent on all 2,267 tables. And `Analysis.coordinate_space` is unanswerable on
+15-42% while the space is parsed off the table -- the table slot is filled and the analysis
+slot a query reads is not.
+
+## Normalizations that would help, in order of what they cost me
+
+| field | what I had to write | what it cost |
+|---|---|---|
+| `Group.medical_condition` | `alcohol\|nicotine\|tobacco\|smok\|cocaine\|cannabis\|opioid\|heroin\|methamphetamine\|substance\|depend\|abuse\|addict` | a MONDO subsumption query replaces the whole alternation; it still vetoed 6 gold papers whose condition wording I had not anticipated |
+| `Measure.type` | `gray_matter_volume` first, then `gray_matter` | the narrow form dropped **19 gold papers**, because VBM measures density or concentration and the criterion says volume |
+| `Analysis.coordinate_space` | `mni\|talairach\|tal\b\|icbm\|mni152\|asym` | a two-value enum would make this `== MNI`; the regex is the reason I cannot tell a missing space from an unrecognised one |
+| `Task.stimulus_modality` | a prose fallback over `stimuli` and `description` | the fallback dropped **10 gold papers**; the field now exists and these records predate it |
+| `StudyDesign.allocation` | `not_applicable\|single_arm` | not a normalization problem -- a vocabulary gap, and it cost **45 of 76** gold papers in one project |
+
+`Group.is_healthy` is the counter-example that shows the shape working: because it is derived
+from `medical_condition` in code, the healthy-cohort predicate is three lines and needed no
+negation lexicon of its own.
+
+## Normalizations that would be harmful, and the field each would damage
+
+These are not hypotheticals. Each is a normalization that looks obviously good and is
+contradicted by a measurement here.
+
+**`Analysis.spatial_scope` -- never infer it.** Inferring `roi` from region mentions is the
+single largest record defect found: **38 gold papers** contradicted, across four projects, on
+the one criterion every meta-analysis in the benchmark states. And the obvious consistency
+rule fails: `roi` with no `regions` reference is *rarer* in gold papers (3%) than in non-gold
+(10%), so the mislabelled records are internally coherent and a normalization pass has nothing
+to key on. Any rule that reads scope from prose, or from `Analysis.regions` being populated,
+makes this worse.
+
+**`Cell.level` and `FactorLevel.level` -- do not canonicalise.** They are a join key, and
+`spans.fold_label` already states the rule: "`Healthy controls` and `healthy controls` are the
+same level; `AD` and `AD group` are not, and calling them equal here would hide the join
+failure rather than report it." 1,713 levels reach no entity and 715 are recoverable by an
+*exact* fold; loosening the fold converts a visible join failure into a silent wrong join, and
+`normalize_open_fields.py` measured what containment does -- it merged the corpus's most
+frequent task term into a rarer variant with 38 candidate hosts.
+
+**`Cell.direction` -- do not derive it more aggressively.** 163 cells already state opposite
+signs in `level` and `direction`. Direction decides whether a coordinate enters the increase
+or the decrease map, so a normalization that resolves those contradictions by rule would pick
+a side on the one field where a wrong answer changes the result.
+
+**`Group.medical_condition` -- do not let an ontology absorb the negations.** 235 mentions
+(5%) assert the *absence* of a condition, and matched against a disease ontology every one
+retrieves something at plausible similarity. Normalizing before triaging turns "no psychiatric
+history" into a psychiatric diagnosis.
+
+**`Group.population_characteristics` -- do not subset-merge.** Measured: 86 of 148 merges had
+more than one candidate host, and containment inverts the relation that matters -- `emotion
+regulation`, the most frequent term in the corpus, is absorbed into a rarer, more specific
+variant.
+
+**`StudyDesign.assignment_structure` -- do not normalize toward the existing vocabulary.**
+That is what produced the defect: the vocabulary had no value for an observational
+multi-cohort design, so 1,120 records said `parallel` and 956 of them declared no arm. A
+normalization pass mapping free text onto the old four values would have entrenched it.
+The fix was to add a value, not to map harder.
+
+The pattern across all six: **normalize a field whose target vocabulary exists outside the
+corpus, and leave alone any field that is a join key, a sign, or a judgement the corpus is the
+only evidence for.**
