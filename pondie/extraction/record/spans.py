@@ -114,6 +114,43 @@ def _tolerant_pattern(quote: str, *, ignore_case: bool = False) -> re.Pattern[st
     return re.compile(r"\s+".join(tokens), re.IGNORECASE if ignore_case else 0)
 
 
+#: An elision a model writes when it joins two non-adjacent fragments of a sentence:
+#: "our design ... allows us to identify". The result is not in the document and never can
+#: be, but each fragment is. Measured over 104,957 proposed quotes on the 903-paper run,
+#: 176 of the 2,952 that nothing could place are this shape, and for 169 of them EVERY
+#: fragment resolves on its own.
+ELLIPSIS = re.compile(r"\s*(?:\.\s*\.\s*\.|\u2026)\s*")
+
+
+def resolve_elided(
+    normalized: str,
+    quote: str,
+    *,
+    near: int | None = None,
+    folded_text: str | None = None,
+) -> list[ResolvedSpan]:
+    """Resolve an elided quote as the several spans it actually cites.
+
+    An `EvidenceSet` already holds several spans, so an elided quote is not a malformed
+    quote needing repair -- it is two citations written as one, and this is the shape the
+    schema has for it.
+
+    All or nothing: a fragment that does not place makes the whole quote unresolved, because
+    half the support offered is not the support offered. Raises rather than returning a
+    partial list, so the caller counts it as a drop exactly as before.
+    """
+
+    fragments = [part for part in ELLIPSIS.split(quote) if part.strip()]
+    if len(fragments) < 2:
+        raise SpanResolutionError(f"quote is not elided: {quote[:60]!r}")
+    haystack = folded_text if folded_text is not None else fold(normalized)
+    placed = [
+        resolve(normalized, fragment, near=near, folded_text=haystack)
+        for fragment in fragments
+    ]
+    return sorted(placed, key=lambda span: span.start_char)
+
+
 def resolve(
     normalized: str,
     quote: str,

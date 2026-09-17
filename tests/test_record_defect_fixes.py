@@ -492,3 +492,68 @@ def test_the_case_insensitive_pass_cannot_move_an_existing_match():
     assert found.cased is False
     assert text[found.start_char:found.end_char] == "the group"
     assert found.start_char > 20
+
+
+# --- elided quotes: two citations written as one ---------------------------------------
+
+
+def _elided_text():
+    return ("Our design is fully factorial. It allows us to identify significant effects "
+            "of heroin injection and salient visual stimuli separately.")
+
+
+def test_an_elided_quote_resolves_as_the_spans_it_cites():
+    """176 of the 2,952 unplaceable quotes on the 903-paper run are this shape, and for 169
+    every fragment resolves alone. An `EvidenceSet` already holds several spans, so an
+    elided quote is two citations written as one rather than a malformed quote."""
+    from pondie.extraction.record import spans
+    from pondie.extraction.record.builder import BuildReport, _resolve_field
+
+    text = _elided_text()
+    node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
+            "evidence": {"status": "present", "sets": [
+                {"quotes": ["Our design ... allows us to identify significant effects"]}]}}
+    report = BuildReport()
+    _resolve_field(node, text, spans.fold(text), "Study.x", report)
+    placed = node["evidence"]["sets"][0]["spans"]
+    assert node["evidence"]["status"] == "present"
+    assert [span["text"] for span in placed] == [
+        "Our design", "allows us to identify significant effects"]
+    assert report.resolved_elided == 2
+    for span in placed:
+        assert text[span["start_char"]:span["end_char"]] == span["text"]
+
+
+def test_an_elided_quote_with_one_invented_fragment_is_a_drop():
+    """All or nothing: half the support offered is not the support offered."""
+    from pondie.extraction.record import spans
+    from pondie.extraction.record.builder import BuildReport, _resolve_field
+
+    text = _elided_text()
+    node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
+            "evidence": {"status": "present", "sets": [
+                {"quotes": ["Our design ... proves causation"]}]}}
+    report = BuildReport()
+    _resolve_field(node, text, spans.fold(text), "Study.x", report)
+    assert node["evidence"]["status"] == "not_found"
+    assert node["evidence"]["unlocated_quotes"] == 1
+    assert report.resolved_elided == 0
+
+
+def test_a_partly_lost_field_records_the_loss_while_staying_present():
+    """A field offering two quotes and keeping one reads as fully evidenced to any consumer.
+    Recording the count only on total failure would measure unevidenced FIELDS while
+    claiming to measure dropped QUOTES."""
+    from pondie.extraction.record import spans
+    from pondie.extraction.record.builder import BuildReport, _resolve_field
+
+    text = _elided_text()
+    node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
+            "evidence": {"status": "present", "sets": [
+                {"quotes": ["Our design is fully factorial", "a claim the paper never makes"]}]}}
+    report = BuildReport()
+    _resolve_field(node, text, spans.fold(text), "Study.x", report)
+    assert node["evidence"]["status"] == "present"
+    assert node["evidence"]["unlocated_quotes"] == 1
+    assert report.fields_quote_partly_unlocated == 1
+    assert report.fields_quote_unlocated == 0

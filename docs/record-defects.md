@@ -591,10 +591,54 @@ the case-sensitive one finds nothing, so it is **strictly additive** — a case-
 a later offset can never be displaced by a case-different one earlier. Offsets are unaffected
 because the match is against `fold(normalized)`, which is length-equal to the document.
 
-**What this buys is not yet measured, deliberately.** A built corpus cannot be asked: a
-resolved span keeps the document's text, not the quote that located it. `resolved_cased` is
-the instrument, and it reads on the next run. Persisting the split before changing the matcher
-is the whole point — otherwise the change ships with no way to tell whether it worked.
+### How much evidence the step actually drops
+
+The built records cannot be asked — a resolved span keeps the document's text, not the quote
+that located it — but the **payloads** can: they hold the model's original quotes, and `build`
+replaces them on the way into the record. Re-resolving all of them against their paper texts
+over the 903-paper `pondie-907` run (`scripts/measure_quote_drops.py`):
+
+| | quotes | |
+|---|---|---|
+| placed exactly | 99,781 | 95.1% |
+| placed by the whitespace pass | 1,686 | 1.6% |
+| **placed only by ignoring case** | **538** | **0.5%** |
+| **dropped — nothing could place them** | **2,952** | **2.8%** |
+| total proposed | 104,957 | |
+
+So **span resolution drops 2.8% of proposed quotes**, and the case pass recovers 538 — **15%
+of everything that previously failed**. That answers retrospectively what I had said would
+have to wait for the next run.
+
+**But the matcher is the minor cause of unevidenced fields, not the major one.** Of the
+extracted fields in the same payloads:
+
+| | fields | |
+|---|---|---|
+| `reported`, a quote proposed | 65,687 | 62.6% |
+| `generated`, a quote proposed | 25,436 | 24.2% |
+| `generated`, **no quote proposed** | 7,237 | 6.9% |
+| `reported`, **no quote proposed** | 6,506 | 6.2% |
+
+**9.0% of `reported` fields never had a quote proposed at all.** Against a 2.8% quote-drop
+rate, which can cost at most a couple of points at field level, the two together land near
+the 11.6% median paper measured on the corpus. So a correction to what is written above: the
+evidence pass's dominant failure is **not proposing** support, not offering support the
+matcher then rejects.
+
+### What the dropped quotes are
+
+One recoverable shape, and it is now taken. 176 of the 2,952 are an **ellipsis splice** —
+`"our design ... allows us to identify"`, two non-adjacent fragments joined as one — and for
+**169 of them every fragment places on its own**. An `EvidenceSet` already holds several
+spans, so an elided quote is two citations written as one rather than a malformed quote:
+`spans.resolve_elided` splits it and emits both, all-or-nothing, tried only after the whole
+quote fails. The other 94% are genuine rewording — `"tape condition"`, `"Mean brain volumes
+(cc)"`, sentences reconstructed rather than copied — and no matcher should reach those.
+
+Of the 3,490 quotes that used to fail, **707 are recovered (20%): 538 by case, 169 by
+elision.** The remaining 2,783 are 2.7% of proposed quotes, and they are a quoting problem
+rather than a matching one.
 
 ## Checked and ruled out
 

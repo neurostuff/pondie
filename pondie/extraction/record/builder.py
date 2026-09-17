@@ -107,6 +107,8 @@ class BuildReport:
     #: asked what ignoring case would have bought, since a resolved span keeps the
     #: document's text and not the quote that located it.
     resolved_cased: int = 0
+    #: Spans recovered by splitting an elided quote into the fragments it cites.
+    resolved_elided: int = 0
     failures: list[str] = field(default_factory=list)
     fields_total: int = 0
     fields_extracted: int = 0
@@ -118,6 +120,10 @@ class BuildReport:
     #: two are opposite faults with opposite fixes, and `status: not_found` said only that
     #: one of them happened.
     fields_quote_unlocated: int = 0
+    #: Fields that kept some evidence and lost some. Invisible in every field-level count,
+    #: including `fields_quote_unlocated`: the field reads as fully evidenced, and only the
+    #: quote-level tally shows the loss.
+    fields_quote_partly_unlocated: int = 0
     downgraded: list[str] = field(default_factory=list)
 
     #: The repairs, one list each, and the two hard faults. Counted rather than printed and
@@ -149,8 +155,10 @@ class BuildReport:
             f"evidence: present={self.fields_evidence_present}, "
             f"not_found={self.fields_evidence_not_found}\n"
             f"spans: exact={self.resolved_exact}, whitespace-tolerant={self.resolved_tolerant}, "
-            f"case-insensitive={self.resolved_cased}, unresolved={len(self.failures)}\n"
-            f"fields with a quote nothing could place={self.fields_quote_unlocated}\n"
+            f"case-insensitive={self.resolved_cased}, elided={self.resolved_elided}, "
+            f"unresolved={len(self.failures)}\n"
+            f"fields unevidenced despite a quote={self.fields_quote_unlocated}, "
+            f"partly={self.fields_quote_partly_unlocated}\n"
             f"downgraded fields={len(self.downgraded)}\n"
             f"repairs={self.repairs} ("
             + ", ".join(
@@ -288,18 +296,27 @@ def _resolve_field(
         resolved: list[dict[str, object]] = []
         for quote in quotes:
             try:
-                found = span_tools.resolve(normalized, quote, folded_text=folded)
+                placed = [span_tools.resolve(normalized, quote, folded_text=folded)]
             except span_tools.SpanResolutionError as error:
-                report.failures.append(f"{path} set[{index}]: {error}")
-                unlocated += 1
-                continue
-            if found.exact:
-                report.resolved_exact += 1
-            elif found.cased:
-                report.resolved_cased += 1
+                # A quote joining two non-adjacent fragments with "..." is not in the
+                # document and never can be, but each fragment is, and an EvidenceSet
+                # already holds several spans. Tried only after the whole quote fails.
+                try:
+                    placed = span_tools.resolve_elided(normalized, quote, folded_text=folded)
+                    report.resolved_elided += len(placed)
+                except span_tools.SpanResolutionError:
+                    report.failures.append(f"{path} set[{index}]: {error}")
+                    unlocated += 1
+                    continue
             else:
-                report.resolved_tolerant += 1
-            resolved.append(found.as_record())
+                found = placed[0]
+                if found.exact:
+                    report.resolved_exact += 1
+                elif found.cased:
+                    report.resolved_cased += 1
+                else:
+                    report.resolved_tolerant += 1
+            resolved.extend(span.as_record() for span in placed)
 
         # An EvidenceSet requires at least one span (minimum_cardinality: 1), so a
         # set whose every quote failed to resolve cannot be emitted at all.
@@ -313,10 +330,20 @@ def _resolve_field(
                 else {"source": evidence_set["source"], "spans": resolved}
             )
 
+    # Written whenever a quote was dropped, not only when every one was. A field offering
+    # two quotes and keeping one is `present` and fully evidenced to any reader, and the
+    # dropped half is exactly the thing this slot exists to count -- recording it only on
+    # total failure would measure unevidenced FIELDS while claiming to measure dropped
+    # QUOTES, and the two differ by every partial loss.
+    if unlocated:
+        evidence["unlocated_quotes"] = unlocated
+
     if rebuilt:
         evidence["sets"] = rebuilt
         evidence["status"] = "present"
         report.fields_evidence_present += 1
+        if unlocated:
+            report.fields_quote_partly_unlocated += 1
     else:
         # No usable evidence survived. The value may still be right, so keep it
         # and record that support was not located rather than deleting the field.
@@ -329,7 +356,6 @@ def _resolve_field(
             # absent, so the slot's presence is the claim that support WAS proposed and
             # nothing could place it -- a fidelity failure rather than a recall one.
             if unlocated:
-                evidence["unlocated_quotes"] = unlocated
                 report.fields_quote_unlocated += 1
         else:
             evidence["status"] = "not_applicable"
