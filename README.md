@@ -22,11 +22,20 @@ The record's own shape is **not** among them. That is the LinkML schema under
 `study_schema/`, a submodule carrying YAML and prose and no code at all; restating it in
 pydantic would be a second source of truth that drifts.
 
-Every line that *reads* that schema is here, under `pondie.schema`: `utils` (classes, slots,
-ranges, values), `generate` (the extraction schema, projected from the storage schema) and
-`checks` (what has to hold for the two to agree). Records are read through
-`pondie.schema.reader.value_of`, which takes the wrapper and the declared shape from the
-schema.
+Every line that *reads* that schema is here, under `pondie.schema`: `reader` (classes,
+slots, ranges, values), `authoring` (the subsets and markers the storage schema declares),
+`generate` (the extraction schema, projected from the storage schema) and `checks` (what has
+to hold for the two to agree). Records are read through `pondie.formats.values.value_of`,
+which takes the wrapper and the declared shape from the schema — hand-rolling that unwrap
+conflates absent, `not_reported` and reported-empty, and each conflation is a silent wrong
+answer.
+
+Some slots the schema declares are filled by code rather than asked of a model. Storage marks
+them `deterministic` and the projection drops them, so the ones filled on the *extraction*
+side are declared back in `extraction-deviations.yaml`: `Analysis.mirror_of`,
+`Group.is_healthy` (derived from `medical_condition`, so the two cannot disagree) and
+`Study.study_type` (PubMed publication types, via `pondie.extraction.pubmed`, which is what a
+criterion excluding reviews and editorials asks about).
 
 ## Extraction
 
@@ -46,16 +55,18 @@ pondie extract --pmids papers.pmids --run v3 --model <model> --env .env
 pondie extract --pmids papers.pmids --run v3 --model <model> --plan   # spend nothing
 ```
 
-Seven stages, and the order is the design:
+Nine stages, and the order is the design:
 
 | stage | model | what it does |
 |---|---|---|
-| `tables` | no | copies the parse manifest and mints the Table ids analyses reference. `caption` and `footer` are literal strings; a model can only introduce error |
+| `tables` | no | mints the Table ids analyses reference, from the printed table number rather than the staging flavour's key, and copies `caption` and `footer` as the literal strings they are. Reads the manifest where there is one and the stage-1 parse where there is not — a paper with no manifest used to get no Table at all, and every `Analysis.tables` reference in it dangled |
+| `prose` | no | appends coordinates the paper states in prose and no table reports. The schema stores no coordinates, so a focus that is not a parse entry has nowhere to live |
 | `split` | no | a parse reporting both signs is two contrasts; the half the paper never describes is withheld and rebuilt by arithmetic |
 | `demands` | yes | analyses first: each declares the entities it needs, before any exist |
 | `satisfy` | yes | builds exactly those entities and nothing else |
+| `fill` | yes | asks for the slots still open, round after round, until none are — a shape for finishing an entity rather than deciding it exists |
 | `evidence` | yes | a supporting quote for every value — **45% of input tokens** |
-| `build` | no | merge, repair, resolve quotes to offsets, write the record |
+| `build` | no | merge, 22 repairs, resolve quotes to offsets, check 19 rules, write the record |
 | `repair` | optional | a second model proposes what the first missed, a third judges whether the paper supports it, and what neither settles goes back to the extraction model once |
 
 `demands` precedes `satisfy` because a cell cannot be righter than the term it points at:
@@ -117,6 +128,26 @@ This is the fifth extraction pipeline this repository has had and the only one i
 [docs/what-was-removed.md](docs/what-was-removed.md) is the other four, what each measured,
 and where each finding is written up — so none of them gets re-proposed as new.
 
+## What is wrong with the records, measured
+
+Four documents carry the current evidence, in the order a reader should take them. Each states
+what it measured over the 1,817 committed extraction records, and each names the corrections
+made to its own earlier claims rather than quietly replacing them.
+
+| | |
+|---|---|
+| [docs/record-defects.md](docs/record-defects.md) | seven defect classes and what a deterministic fix closes. Errors 3,200 → 1,828 over the corpus. `scripts/audit_records.py` reproduces every number |
+| [docs/meta-analysis-queries.md](docs/meta-analysis-queries.md) | the sixteen published criteria in neurometabench, translated into predicates and scored against the benchmark's own included sets. Where the records cannot answer, and where the criteria cannot be written at all |
+| [docs/task-condition-normalization.md](docs/task-condition-normalization.md) | why neither task names nor condition names should be normalized as flat vocabularies, and what to curate instead |
+| [docs/normalization-pipelines.md](docs/normalization-pipelines.md) | how a field's shape decides its method, including the fourth shape and what rules provably cannot do |
+
+The finding that governs the others: **the loss channels are search, then the coordinate
+parse, then screening and analysis selection roughly level.** Full-text screening rejects one
+to five gold papers per project; search loses three to forty-nine; and for `vbm_of_ptsd`, 8 of
+22 gold studies were screened in and never reached `coordinate_parsing_results.json` at all,
+so no analysis existed to select. Where the pipeline does select an analysis, its coordinates
+are exact — 7 of 7 studies match the gold set byte for byte, 73 foci of 73.
+
 ## Where the data goes
 
 `pondie/paths.py` is the only definition, and `PONDIE_DATA_DIR` moves the whole tree.
@@ -135,13 +166,20 @@ answer "what does this paper have, from whichever run wrote last".
 
 ## Normalization
 
-A field's shape decides its method, and three shapes recur.
+A field's shape decides its method, and four shapes recur.
 
 | shape | fields | method |
 |---|---|---|
 | closed target | `coordinate_space`, `multiple_comparison_method`, `correction_scope`, `medication_status`, `sex_distribution`, `handedness_distribution` | rules over a fixed answer set |
 | link | `medical_condition` | retrieval against MONDO, then UMLS |
 | cluster | `task` | the corpus clustered against itself |
+| partition | `population_characteristics` | one field holding two kinds of value; the non-selective ones move to `other_characteristics`, which no model is asked to fill |
+
+A fifth thing is deliberately outside the list: `is_healthy` *fills* a slot from a field it
+does not touch, rather than normalizing one, so it exposes `apply` and no `normalize`. It is
+there because measurement said a description could not carry the distinction — asked directly,
+168 of 1,817 records said a cohort was healthy beside a real diagnosis, 132 of them citing the
+paper's own wording.
 
 Two conventions every module shares. **`UNKNOWN` is not `OTHER`**: `OTHER` asserts an answer
 outside the known set, `UNKNOWN` asserts we cannot tell, and they license different downstream
@@ -233,8 +271,8 @@ python -m spacy download en_core_web_sm     # negation scope, for medication_sta
 pytest
 ```
 
-534 of the tests run against nothing but the repository. The rest are gated on corpus data
-and say so; to lift them:
+896 of the tests run against nothing but the repository. The other 17 are gated on corpus
+data and say so; to lift them:
 
 ```bash
 pip install -e ".[pubget]"
@@ -244,7 +282,7 @@ python -m pondie.extraction.corpus.sync    --pmids <file> --host beast \
 python -m pondie.extraction.corpus.rebuild --pmids <file> --pubget .tmp_repos/pubget
 ```
 
-That turns on the fifteen tests over `corpus.rebuild` and the coordinate-table parser,
+That turns on the tests over `corpus.rebuild` and the coordinate-table parser,
 including the one that matters most: rebuilding a paper with `keep_tables=False` reproduces
 the corpus text **byte for byte**. Every offset in every existing record rests on that, and
 until the checkout is present nothing checks it.
