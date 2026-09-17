@@ -22,6 +22,7 @@ it needs, because that is the decision:
 | 5b | **A cell's level and its direction state opposite signs** | 26 | **check only** |
 | 6 | Entities nothing points at | 1,624 Conditions, 528 Timepoints | mostly finding 2 |
 | 7 | 823 levels name nothing the record declares | 823 | **prompt** |
+| 9 | `parallel` on a study with no arms — the enum has no value for observational cohorts | 956 records | **schema** + check |
 
 Finding 5b is the smallest and the one to do first: it is the only one where a wrong answer
 changes a meta-analytic map rather than costing a join.
@@ -179,10 +180,9 @@ FactorLevel links move 2,184 pairs:
 declared entity, so the comparison can be reconstructed from the entity graph instead of from
 string matching.
 
-The honest limit is the arm row. It more than doubles, and **92% of analyses still cannot say
-which arm they belong to.** The fixer closes the gap where both halves are already in the
-record; it cannot create an Arm the record never declared. That is finding 7, and it is the
-larger half of the problem.
+The honest limit is the arm row. It more than doubles, and 92% of analyses still cannot say
+which arm they belong to. But **that number is not a defect rate**, and reading it as one was
+my error — see finding 9.
 
 ## 2b. A wrapper with no `extraction_status` crashes the rule set
 
@@ -378,6 +378,78 @@ The analyses pass declares the levels it needs and the entity pass does not crea
 them. `Demands` already emits a demand list; the measurable question is whether `Satisfy` is
 dropping demands or whether the demands never name these levels. That is one join away from
 the existing payloads and worth measuring before any prompt is rewritten.
+
+## 9. Why arms and occasions look so bad, and what is actually wrong
+
+The 3.6% arm and 5.0% occasion rates in finding 2 are over *all* analyses, and most analyses
+are in studies that have neither. Conditioning on the entity existing to be referenced:
+
+| | analyses | reference one | rate |
+|---|---|---|---|
+| in a record declaring ≥1 `Arm` | 706 | 157 | **22.2%** (not 2.6%) |
+| in a record declaring ≥1 `Timepoint` | 1,186 | 222 | **18.7%** (not 3.7%) |
+
+Only **241 of 1,817 records declare an Arm (13%)** and 363 a Timepoint (20%). So the first
+answer is yes: mostly the analyses are not testing arms or occasions, and the low
+unconditional rate is correct rather than a failure.
+
+Of the analyses that *could* link and do not, the prose says which is which:
+
+| | | |
+|---|---|---|
+| arm declared, no link, and the analysis names one of the declared arms | 206 | **recoverable** |
+| arm declared, no link, and the prose names no arm | 343 | correct — pooled or baseline contrast |
+| occasion declared, no link, prose names a change over time | 109 | **recoverable** |
+| occasion declared, no link, prose names no change over time | 855 | correct |
+
+So roughly **half the arm gap and a tenth of the occasion gap is a missing join**, and the
+rest is analyses that genuinely do not test it. These 315 are not reachable by finding 2's
+fixer: it matches a *level's* name, and here the arm is named in the analysis's own prose.
+`check_arm_reachability` already warns on the 206 and nothing acts on it.
+
+### The reason arms look like they should be there
+
+**1,120 records (61.6%) say `assignment_structure: parallel`, and 956 of them declare no Arm
+at all.** The enum's own description makes that a contradiction:
+
+> `parallel`: Each arm is a separate cohort, and no participant is in more than one, so the
+> allocation is a property of a Group: **set `Group.arm`**.
+
+Those 956 are not treatment studies:
+
+| their `allocation` | |
+|---|---|
+| `non_randomized` | 569 (59.5%) |
+| `not_applicable` | 318 (33.3%) |
+| `randomized` | 35 (3.7%) |
+
+93% have no randomisation, 93% declare two or more Groups, and their groups are
+`healthy controls` (132), `bvFTD` (80), `controls` (67), `AD` (57), `smokers` (36) —
+**diagnostic cohorts, not treatment arms.**
+
+This is a **schema gap, not a model error.** The vocabulary offers `parallel`, `crossover`,
+`within_subject`, `single_group`, and the commonest design in this literature — several
+naturally-occurring cohorts, scanned once, no intervention — fits none of them.
+`single_group` is "One cohort measured once", so a two-cohort observational study cannot use
+it. The enum's top-level description frames the whole choice as being about arms — "Whether
+the **arms** of the study are separate cohorts or the same participants at different times" —
+which presupposes arms exist. Asked which kind of arms a case-control study has, a model
+answers `parallel`, because two cohorts are in parallel.
+
+**Proposals:**
+
+- **Add a permissible value** for the observational multi-cohort design: several cohorts that
+  were not allocated to anything, `Group.arm` stays empty, and the cohorts reach an analysis
+  through `FactorLevel.groups` — which is what these records already do, correctly, in the
+  47.5% of levels that carry a group. 956 records (53% of the corpus) would stop asserting an
+  allocation that never happened.
+- **A check**: `assignment_structure` in `{parallel, crossover}` with zero `Arm`s declared is
+  a contradiction of the enum's own text, and nothing reports it today.
+  `check_arm_reachability` fires only once an Arm exists, so this whole class is invisible to
+  it.
+- The 206 + 109 recoverable joins want an **error naming both slots** rather than a repair.
+  Matching an analysis's prose against an arm name is substring matching on prose, which is
+  the operation finding 2 declines for the reason `normalize_open_fields.py` measured.
 
 ## Checked and ruled out
 
