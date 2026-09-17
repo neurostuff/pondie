@@ -102,12 +102,22 @@ _CONSUMED_ELSEWHERE = {"required_entities"}
 class BuildReport:
     resolved_exact: int = 0
     resolved_tolerant: int = 0
+    #: Spans only the case-insensitive pass could place. Separate from `resolved_tolerant`
+    #: because it is the measurement for adding that pass: a corpus already built cannot be
+    #: asked what ignoring case would have bought, since a resolved span keeps the
+    #: document's text and not the quote that located it.
+    resolved_cased: int = 0
     failures: list[str] = field(default_factory=list)
     fields_total: int = 0
     fields_extracted: int = 0
     fields_not_reported: int = 0
     fields_evidence_present: int = 0
     fields_evidence_not_found: int = 0
+    #: Fields left `not_found` after a quote WAS offered and no locator placed it, against
+    #: `fields_evidence_not_found` which counts both that and the fields nobody quoted. The
+    #: two are opposite faults with opposite fixes, and `status: not_found` said only that
+    #: one of them happened.
+    fields_quote_unlocated: int = 0
     downgraded: list[str] = field(default_factory=list)
 
     #: The repairs, one list each, and the two hard faults. Counted rather than printed and
@@ -139,7 +149,8 @@ class BuildReport:
             f"evidence: present={self.fields_evidence_present}, "
             f"not_found={self.fields_evidence_not_found}\n"
             f"spans: exact={self.resolved_exact}, whitespace-tolerant={self.resolved_tolerant}, "
-            f"unresolved={len(self.failures)}\n"
+            f"case-insensitive={self.resolved_cased}, unresolved={len(self.failures)}\n"
+            f"fields with a quote nothing could place={self.fields_quote_unlocated}\n"
             f"downgraded fields={len(self.downgraded)}\n"
             f"repairs={self.repairs} ("
             + ", ".join(
@@ -269,6 +280,7 @@ def _resolve_field(
         return
 
     rebuilt: list[dict[str, Any]] = []
+    unlocated = 0
     for index, evidence_set in enumerate(raw_sets):
         quotes = evidence_set.get("quotes") if isinstance(evidence_set, dict) else None
         if not isinstance(quotes, list):
@@ -279,9 +291,12 @@ def _resolve_field(
                 found = span_tools.resolve(normalized, quote, folded_text=folded)
             except span_tools.SpanResolutionError as error:
                 report.failures.append(f"{path} set[{index}]: {error}")
+                unlocated += 1
                 continue
             if found.exact:
                 report.resolved_exact += 1
+            elif found.cased:
+                report.resolved_cased += 1
             else:
                 report.resolved_tolerant += 1
             resolved.append(found.as_record())
@@ -310,6 +325,12 @@ def _resolve_field(
             evidence["status"] = "not_found"
             report.fields_evidence_not_found += 1
             report.downgraded.append(path)
+            # Which of the two faults this was. A field nobody quoted keeps the slot
+            # absent, so the slot's presence is the claim that support WAS proposed and
+            # nothing could place it -- a fidelity failure rather than a recall one.
+            if unlocated:
+                evidence["unlocated_quotes"] = unlocated
+                report.fields_quote_unlocated += 1
         else:
             evidence["status"] = "not_applicable"
 

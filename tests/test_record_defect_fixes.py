@@ -379,3 +379,116 @@ def test_a_rule_that_raises_becomes_a_finding_rather_than_an_abort():
     rules.check_all(record, sink)          # must not raise
     raised = [m for _p, m in sink.errors if "check raised" in m]
     assert len(raised) <= 1, "only the crashing rule should report a crash"
+
+
+# --- the two faults `not_found` used to collapse ---------------------------------------
+
+
+def _text():
+    return "Participants were 24 right-handed volunteers recruited from the community."
+
+
+@pytest.mark.parametrize(
+    "quote,expect_status,expect_unlocated",
+    [
+        ("24 right-handed volunteers", "present", None),
+        ("participants were 24", "present", None),          # case only -- third pass
+        ("two dozen right handers", "not_found", 1),        # a paraphrase
+    ],
+)
+def test_build_records_which_evidence_fault_occurred(quote, expect_status, expect_unlocated):
+    """`status: not_found` said only that one of two opposite faults happened.
+
+    A value with no quote is a recall failure; a value whose quote was rejected is a
+    fidelity failure. Over 1,817 records 32,500 fields carried the first status and no way
+    to tell which fault it was, so the warning firing on 98.6% of papers was unactionable.
+    """
+    from pondie.extraction.record import spans
+    from pondie.extraction.record.builder import BuildReport, _resolve_field
+
+    text = _text()
+    node = {
+        "extraction_status": "extracted", "value": "x", "value_source": "reported",
+        "evidence": {"status": "present", "sets": [{"quotes": [quote]}]},
+    }
+    report = BuildReport()
+    _resolve_field(node, text, spans.fold(text), "Study.x", report)
+    assert node["evidence"]["status"] == expect_status
+    assert node["evidence"].get("unlocated_quotes") == expect_unlocated
+
+
+def test_a_field_that_offered_no_quote_carries_no_marker():
+    """The slot's presence is the claim, so silence must stay silent."""
+    from pondie.extraction.record import spans
+    from pondie.extraction.record.builder import BuildReport, _resolve_field
+
+    text = _text()
+    node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
+            "evidence": {"status": "not_found"}}
+    report = BuildReport()
+    _resolve_field(node, text, spans.fold(text), "Study.y", report)
+    assert "unlocated_quotes" not in node["evidence"]
+    assert report.fields_quote_unlocated == 0
+
+
+def test_the_honesty_warning_says_which_fault_it_is():
+    record = {"analyses": [
+        {"local_id": "a1", "name": {
+            "extraction_status": "extracted", "value": "A > B", "value_source": "reported",
+            "evidence": {"status": "not_found", "unlocated_quotes": 2}}},
+        {"local_id": "a2", "name": {
+            "extraction_status": "extracted", "value": "C > D", "value_source": "reported",
+            "evidence": {"status": "not_found"}}},
+    ]}
+    sink = Sink()
+    rules.check_value_source_honesty(record, sink)
+    said = " | ".join(m for _p, m in sink.warnings)
+    assert "2 proposed quote(s) could not be placed" in said
+    assert "no supporting sentence was proposed at all" in said
+
+
+# --- the case-insensitive third pass ---------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "text,quote,how",
+    [
+        (_text(), "24 right-handed volunteers", "exact"),
+        (_text().replace("handed volunteers", "handed\nvolunteers"),
+         "right-handed volunteers", "tolerant"),
+        (_text(), "participants were 24", "cased"),
+        (_text(), "RIGHT-HANDED VOLUNTEERS", "cased"),
+        (_text(), "two dozen right handers", None),
+    ],
+)
+def test_resolve_tries_exact_then_whitespace_then_case(text, quote, how):
+    """Case is the one perturbation a model makes mechanically, and `fold` cannot absorb it
+    -- casefolding is not length-preserving for all of Unicode and `fold` promises length.
+    Matching case-insensitively against the folded original sidesteps that."""
+    from pondie.extraction.record import spans
+
+    if how is None:
+        with pytest.raises(spans.SpanResolutionError):
+            spans.resolve(text, quote)
+        return
+    found = spans.resolve(text, quote)
+    assert (found.exact, found.cased) == {
+        "exact": (True, False),
+        "tolerant": (False, False),
+        "cased": (False, True),
+    }[how]
+    # The invariant the whole design rests on: offsets address the document, and the span
+    # text is the document's substring rather than the quote that located it.
+    assert text[found.start_char:found.end_char] == found.text
+
+
+def test_the_case_insensitive_pass_cannot_move_an_existing_match():
+    """A separate pass rather than a flag on the second, so a case-sensitive hit at a later
+    offset is never displaced by a case-different one earlier in the document."""
+    from pondie.extraction.record import spans
+
+    text = "The GROUP was scanned. Later the group was rescanned."
+    found = spans.resolve(text, "the group")
+    assert found.cased is False
+    assert text[found.start_char:found.end_char] == "the group"
+    assert found.start_char > 20

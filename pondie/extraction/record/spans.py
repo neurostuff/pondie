@@ -59,6 +59,11 @@ class ResolvedSpan:
     end_char: int
     text: str
     exact: bool
+    #: True when only the case-insensitive pass found it. Counted separately by `build`, so
+    #: the next run can say what ignoring case bought rather than assuming it bought
+    #: anything -- the corpus cannot be asked, because a resolved span keeps the document's
+    #: text and not the quote that located it.
+    cased: bool = False
 
     def as_record(self) -> dict[str, object]:
         return {"text": self.text, "start_char": self.start_char, "end_char": self.end_char}
@@ -87,13 +92,26 @@ def fold_label(value: str) -> str:
     return re.sub(r"\s+", " ", fold(value)).strip().casefold()
 
 
-def _tolerant_pattern(quote: str) -> re.Pattern[str]:
-    """Build a regex matching the quote with any whitespace run between tokens."""
+def _tolerant_pattern(quote: str, *, ignore_case: bool = False) -> re.Pattern[str]:
+    """Build a regex matching the quote with any whitespace run between tokens.
+
+    `ignore_case` is the third pass `resolve` tries, and it is a separate pass rather than a
+    flag on the second so that no quote which already matches can match somewhere *else*:
+    a case-sensitive hit at offset 900 must not be displaced by a case-different one at 50.
+    Strictly additive, so only quotes that used to fail can now resolve.
+
+    Case is the one perturbation a model makes mechanically -- it lowercases a mid-sentence
+    quote it starts with a capital, or title-cases a phrase -- and `fold` cannot absorb it,
+    because `fold` is a character translation and casefolding is not length-preserving for
+    all of Unicode. Matching case-insensitively against the *folded original* sidesteps
+    that: the haystack is untouched, so the offsets still address the document and
+    `EvidenceSpan.text` is still the document substring rather than the model's quote.
+    """
 
     tokens = [re.escape(token) for token in fold(quote).split()]
     if not tokens:
         raise SpanResolutionError("quote is empty")
-    return re.compile(r"\s+".join(tokens))
+    return re.compile(r"\s+".join(tokens), re.IGNORECASE if ignore_case else 0)
 
 
 def resolve(
@@ -120,15 +138,20 @@ def resolve(
         )
 
     haystack = folded_text if folded_text is not None else fold(normalized)
-    matches = list(_tolerant_pattern(quote).finditer(haystack))
-    if not matches:
-        raise SpanResolutionError(f"quote not found in source text: {quote[:80]!r}")
-
-    starts = [match.start() for match in matches]
-    chosen = matches[starts.index(_pick(starts, near))]
-    return ResolvedSpan(
-        chosen.start(), chosen.end(), normalized[chosen.start() : chosen.end()], False
-    )
+    for ignore_case in (False, True):
+        matches = list(_tolerant_pattern(quote, ignore_case=ignore_case).finditer(haystack))
+        if not matches:
+            continue
+        starts = [match.start() for match in matches]
+        chosen = matches[starts.index(_pick(starts, near))]
+        return ResolvedSpan(
+            chosen.start(),
+            chosen.end(),
+            normalized[chosen.start() : chosen.end()],
+            False,
+            cased=ignore_case,
+        )
+    raise SpanResolutionError(f"quote not found in source text: {quote[:80]!r}")
 
 
 def _pick(starts: list[int], near: int | None) -> int:

@@ -525,6 +525,77 @@ is arguable there, and `AssignmentStructure` being single-valued means a mixed d
 state both halves. I did not iterate on this, because iterating against the held-out set would
 turn it into a second tuning set and there would be nothing left to check the wording against.
 
+## 4b. What is behind the 32,500 warnings that remain
+
+`conclusions` removed 11,312 of the 43,810. The rest is not the same defect thinned out, and
+diagnosing it corrected two things I had said.
+
+**Not a template default.** The prompt hands the model `{"value_source": "reported"}` in its
+worked skeleton, so I assumed it was copying. It is not: `generated` values are unevidenced at
+**48.9%** against `reported` at **16.4%**, and per slot the separation is wide —
+`assessments.name` 3% against 100%, `regions.name` 10% against 99%,
+`groups.enrolled_count` 7% against 94%. The label discriminates threefold.
+
+**It is the evidence pass failing to place a quote**, which its own docstring allows for:
+"what it cannot place is left `not_found` for `repair` to go looking for." The repair locator
+recovers 2,616 spans, **1.6% of all located spans**, so that fallback is barely working — and
+its gate is part of why, since `edit.py` refuses any quote under 20 characters without trying
+while 80,022 of the reported values are three words or fewer.
+
+Three readings are ruled out by measurement:
+
+- **Not a handful of bad texts.** Median paper 11.6% unevidenced, p90 30.2%, none above 80%,
+  and the papers at ≥50% are only 7% of the warnings.
+- **Not verbatim-ness.** Flat by value shape: 17.0% lists, 17.0% strings of 4+ words, 17.3%
+  strings of ≤3 words, 11.8% numbers. A number printed in the text fails nearly as often as a
+  phrase. Booleans alone stand out at 33.9%, which is `tfce_used` at 57%.
+- **Not one bad locator.** 80.4% of found spans are `model_quote`, 17.5% `literal_match`,
+  1.6% `repair_pass`.
+
+What is left is a **gradient of the same thing finding 4 fixed**. Against the 16.4% base:
+`sex_distribution.percentage` 67%, `tfce_used` 57%, `cells.level` 39%,
+`terms.source_definition` 35%, `analyses.interpretations` 34%, `statistic.family` 31%,
+`analyses.name` 26% — all the record's own encoding rather than the paper's words. The low end
+is verbatim material: `assessments.name` 3%, `groups.name` 6%. So the five slots relabelled
+were the absolute end of a continuum, not a separate kind, which is why the fix took 11,312
+and left 32,500.
+
+### The split, and the matcher
+
+`status: not_found` collapsed two opposite faults: **no quote was offered** (recall) and **a
+quote was offered and rejected** (fidelity). `build` counted both and wrote neither into the
+record, so the committed corpus cannot be asked which dominates. Both are now recorded:
+
+- `Evidence.unlocated_quotes` — how many proposed quotes no locator could place, omitted
+  where none were, so its presence is the claim. The same argument `EvidenceSource` was added
+  for: a distinction the pipeline already knows and the record did not carry.
+- `BuildReport.fields_quote_unlocated` and `resolved_cased`, both in the build notes.
+- `check_value_source_honesty` now says which fault it found, so the warning names an owner.
+
+And `spans.resolve` gained a **third pass**. It does no fuzzy matching and should not — the
+integrity gate asserts `normalized[start:end] == span.text`, and `fold` is a 1:1
+length-preserving translation because "folding has to preserve string length, or the offsets
+it produces would not address the original document". But its tolerance was only *between*
+tokens, since each token is escaped whole:
+
+| perturbation | before |
+|---|---|
+| newline or double space between tokens | resolves |
+| curly quote, en dash, non-breaking space | resolves |
+| trailing punctuation that is in the text | resolves |
+| **lowercased first letter, or Title Case** | **fails** |
+| dropped hyphen, dropped comma, paraphrase, ellipsis | fails |
+
+Case is the one of those a model makes mechanically. It is now a third pass, tried only after
+the case-sensitive one finds nothing, so it is **strictly additive** — a case-sensitive hit at
+a later offset can never be displaced by a case-different one earlier. Offsets are unaffected
+because the match is against `fold(normalized)`, which is length-equal to the document.
+
+**What this buys is not yet measured, deliberately.** A built corpus cannot be asked: a
+resolved span keeps the document's text, not the quote that located it. `resolved_cased` is
+the instrument, and it reads on the next run. Persisting the split before changing the matcher
+is the whole point — otherwise the change ships with no way to tell whether it worked.
+
 ## Checked and ruled out
 
 Two things that look like defects in this corpus and are not, recorded so they are not

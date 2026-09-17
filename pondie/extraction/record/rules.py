@@ -1175,11 +1175,25 @@ def check_value_source_honesty(record: Mapping[str, Any], findings: Findings) ->
         slot = path.rsplit(".", 1)[-1].split("[")[0]
         if path.startswith("tables[") or slot in IDENTIFIERS:
             continue
-        findings.warn(
-            path,
-            "value_source is 'reported' but no supporting sentence was found. Either cite "
-            "one, or set value_source to 'generated' to say the pipeline reasoned to it",
-        )
+        # Two faults, and the message says which. `unlocated_quotes` is set by `build` when
+        # a quote was proposed and no locator could place it, so its presence separates a
+        # fidelity failure from a recall one. Undifferentiated, this warning fires 32,500
+        # times over 1,817 records and nobody can act on any of it.
+        unlocated = (node.get("evidence") or {}).get("unlocated_quotes")
+        if unlocated:
+            findings.warn(
+                path,
+                f"value_source is 'reported' and {unlocated} proposed quote(s) could not be "
+                "placed in the source text. The support was offered and rejected, so this is "
+                "the quote or the matcher, not the reading",
+            )
+        else:
+            findings.warn(
+                path,
+                "value_source is 'reported' and no supporting sentence was proposed at all. "
+                "Either cite one, or set value_source to 'generated' to say the pipeline "
+                "reasoned to it",
+            )
 
 
 #: What a measure may be, given how the data were acquired. Only the pairings a modality
