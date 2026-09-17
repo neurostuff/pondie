@@ -206,8 +206,32 @@ Mean over the five projects:
 | autonima, record, no evidence | 45.3% | 82.3% | 0.570 |
 | query, strict | **48.8%** | 45.8% | 0.430 |
 | query, permissive | 33.0% | 69.0% | 0.409 |
-| query veto + full text | 50.4% | 67.4% | 0.532 |
-| query veto + record + evidence | **52.1%** | 62.0% | 0.527 |
+| full text → query veto | 50.4% | 67.4% | 0.532 |
+| record + evidence → query veto | **52.1%** | 62.0% | 0.527 |
+
+The last two rows are a **pipeline, not a fourth selector**:
+
+```python
+selected = arm_included - vetoed
+vetoed   = {paper : some predicate answered False on its record}
+```
+
+Take every paper the arm included, then drop the ones whose record *contradicts* a stated
+criterion. Three properties follow, and the first is the design:
+
+- **The veto fires on `False` alone**, never on "cannot say". A record that is silent is left
+  to the screener; only a record that positively says `spatial_scope: roi` or
+  `allocation: non_randomized` overrides a model. The query's confident exclusions and its
+  silences are different things and only the first is worth acting on.
+- It is a **subset of the arm**. The query can only remove a paper, never add one the arm
+  excluded, so recall can only fall and precision can only rise or hold.
+- In this order the arm's model pass still happens on every paper. The saving -- a paper the
+  screener never reads -- needs the veto to run *first*, which is a deployment and not what
+  is measured here.
+
+They were labelled `query veto + <arm>` until someone asked what it meant: `record +
+evidence` has a plus in its own name, so the composition operator and the arm name were the
+same symbol.
 
 ## F1 ranks these wrongly, and it is worth saying so
 

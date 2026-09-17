@@ -65,7 +65,7 @@ def main() -> int:
         records[Path(path).parent.name][Path(path).name.split(".")[0]] = body.get("study") or body
 
     arms = ["full text", "record + evidence", "record, no evidence"]
-    print(f"{'project':24} {'selector':26} {'n':>5} {'prec':>7} {'recall':>7} {'F1':>7}")
+    print(f"{'project':30} {'selector':32} {'n':>5} {'prec':>7} {'recall':>7} {'F1':>7}")
     totals: dict[str, list[tuple[float, float, float]]] = defaultdict(list)
     for meta_pmid, (project, predicates) in QUERIES.items():
         here = records.get(project) or {}
@@ -76,7 +76,7 @@ def main() -> int:
         pool = set(here) & set(screened)
         want = gold[meta_pmid] & pool
         print("-" * 84)
-        print(f"{project:24} {'(pool)':26} {len(pool):5d}   gold in pool {len(want)}")
+        print(f"{project:30} {'(pool)':32} {len(pool):5d}   gold in pool {len(want)}")
 
         for arm in arms:
             table = decisions.get((project, arm)) or {}
@@ -85,7 +85,7 @@ def main() -> int:
             selected = {p for p, d in table.items() if d == INCLUDED}
             p, r, f = score(selected, gold[meta_pmid], pool)
             totals[arm].append((p, r, f))
-            print(f"{'':24} {'autonima: ' + arm:26} {len(selected & pool):5d} "
+            print(f"{'':30} {'autonima: ' + arm:32} {len(selected & pool):5d} "
                   f"{p:7.1%} {r:7.1%} {f:7.3f}")
 
         verdicts = {}
@@ -107,42 +107,51 @@ def main() -> int:
             }
             p, r, f = score(selected, gold[meta_pmid], pool)
             totals[label].append((p, r, f))
-            print(f"{'':24} {label:26} {len(selected):5d} {p:7.1%} {r:7.1%} {f:7.3f}")
+            print(f"{'':30} {label:32} {len(selected):5d} {p:7.1%} {r:7.1%} {f:7.3f}")
 
-        # A composition, because the two selectors fail differently. The query is precise
-        # about EXCLUSION -- a paper whose record contradicts a stated criterion -- and
-        # silent where the record is. So let it veto, and let the screener decide the rest.
-        # The point is not only accuracy: every paper the veto removes is a model call the
-        # screener never makes.
+        # A PIPELINE, not a fourth selector: the arm decides, then the query removes what
+        # the record contradicts. `selected = arm_included - vetoed`, so it is a subset of
+        # the arm and can only ever drop a paper, never add one the arm excluded.
+        #
+        # The veto fires on False ALONE -- the record positively contradicts a stated
+        # criterion -- and never on "cannot say", which is left to the screener. That is
+        # the reason to compose them rather than pick one: the query's confident exclusions
+        # and its silences are different things, and only the first is worth overriding a
+        # model with.
+        #
+        # Ordered this way the arm's model pass still happens on every paper. The saving --
+        # a paper the screener never reads -- needs the veto to run first, which is the
+        # deployment and not the measurement.
         vetoed = {
             pmid for pmid in pool
             if any(verdicts[name][pmid] is False for name, _p in predicates)
         }
-        table = decisions.get((project, "full text")) or {}
-        screened_in = {p for p, d in table.items() if d == INCLUDED}
         for arm in ("full text", "record + evidence"):
             table = decisions.get((project, arm)) or {}
             if not table:
                 continue
-            screened_in = {p for p, d in table.items() if d == INCLUDED}
-            selected = screened_in - vetoed
+            selected = {p for p, d in table.items() if d == INCLUDED} - vetoed
             p_, r_, f_ = score(selected, gold[meta_pmid], pool)
-            label = f"query veto + {arm}"
+            # Not "query veto + <arm>": `record + evidence` has a plus in its own name, so
+            # the composition operator and the arm name were the same symbol and the label
+            # read three ways.
+            label = f"{arm} then query veto"
             totals[label].append((p_, r_, f_))
-            print(f"{'':24} {label:26} {len(selected & pool):5d} {p_:7.1%} {r_:7.1%} "
-                  f"{f_:7.3f}   veto removes {len(vetoed)} of {len(pool)} "
+            print(f"{'':30} {label:32} {len(selected & pool):5d} {p_:7.1%} {r_:7.1%} "
+                  f"{f_:7.3f}   veto drops {len(vetoed)} of {len(pool)} "
                   f"({len(vetoed & (gold[meta_pmid] & pool))} gold)")
 
     print("=" * 84)
-    print(f"{'mean over the five projects':24} {'selector':26} {'':5} "
+    print(f"{'mean over the five projects':30} {'selector':32} {'':5} "
           f"{'prec':>7} {'recall':>7} {'F1':>7}")
     for name in arms + ["query, strict", "query, permissive",
-                        "query veto + full text", "query veto + record + evidence"]:
+                        "full text then query veto",
+                        "record + evidence then query veto"]:
         rows = totals.get(name) or []
         if not rows:
             continue
         n = len(rows)
-        print(f"{'':24} {name:26} {'':5} {sum(x[0] for x in rows)/n:7.1%} "
+        print(f"{'':30} {name:32} {'':5} {sum(x[0] for x in rows)/n:7.1%} "
               f"{sum(x[1] for x in rows)/n:7.1%} {sum(x[2] for x in rows)/n:7.3f}")
     return 0
 
