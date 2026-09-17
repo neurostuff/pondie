@@ -396,3 +396,72 @@ the criterion actually says. That dropped 10.
 A point of recall for no precision, which is the right direction and a small effect: after
 four rounds of correcting my own translations, what is left is dominated by two record
 defects rather than by the difficulty of writing the query.
+
+## The comparison again, after four predicate corrections
+
+Two rounds of examining the query's own errors corrected four predicates -- `measures`,
+`group_contrast`, a wider grey-matter pattern, and a visual-cue test that admits text. The
+comparison with both autonima arms, rerun:
+
+| selector | precision | recall | F1 |
+|---|---|---|---|
+| autonima, full text | 40.1% | **95.3%** | 0.555 |
+| autonima, record + evidence | 44.4% | 84.1% | 0.566 |
+| autonima, record, no evidence | 45.3% | 82.3% | 0.569 |
+| query, strict | **54.3%** | 46.2% | 0.437 |
+| query, permissive | 40.5% | 70.0% | 0.441 |
+| full text → query veto | 52.1% | 68.2% | 0.537 |
+| record + evidence → query veto | 53.9% | 62.7% | 0.532 |
+
+Against the first run, the query's strict precision rose from 48.0% to 54.3% and its recall
+fell from 53.3% to 46.2%. **The whole of that recall loss is one project.**
+`vbm_of_substance_use` went from 58.1% / 66.2% to 87.5% / 21.5%, because reading "no
+pharmacological manipulations" off `allocation` rather than off declared Arms exposed the
+defect of finding 9: 45 of its 76 gold papers say `allocation: non_randomized` for a study
+that administered nothing. The predicate is now faithful to the criterion and the criterion
+is unanswerable from these records.
+
+Excluding that project, so the mean is not carrying one unanswerable criterion:
+
+| selector | precision | recall | F1 |
+|---|---|---|---|
+| autonima, full text | 39.0% | **94.9%** | 0.541 |
+| autonima, record + evidence | 41.6% | 81.7% | 0.534 |
+| autonima, record, no evidence | 42.3% | 81.3% | 0.540 |
+| query, strict | 46.0% | 52.4% | 0.460 |
+| query, permissive | 33.6% | **81.0%** | 0.457 |
+| full text → query veto | 46.7% | 78.8% | **0.575** |
+| record + evidence → query veto | **49.2%** | 72.2% | 0.573 |
+
+Three things this says that the five-project mean does not.
+
+**The veto pipelines lead on F1 and the arms are indistinguishable from each other.** 0.575
+and 0.573 against 0.534 to 0.541 for all three arms, whose spread is 0.007 -- well inside the
+0.034 run-to-run noise `AUDIT.md` measured. The arm contrast this experiment was built to
+settle does not resolve at this precision, and the veto does.
+
+**Where the records can answer, the deterministic criteria match a model reading the same
+records.** `query, permissive` reaches **81.0% recall against the record arms' 81.7% and
+81.3%** -- admitting the papers the record is silent about, the published criteria applied
+mechanically select as much of the gold as a language model reading the record does. It does
+so at 33.6% precision against their ~42%, so it is not a replacement; it is evidence that the
+criteria are expressible and that what the model adds over them is judgement about silence.
+
+**`vbm_of_ptsd` is what this looks like when the records are good.** Query strict reaches
+**90.0% precision**, and `full text → query veto` reaches **F1 0.778**, the highest figure
+anywhere in this document and above full text's own 0.727. That project is 49 papers with
+records that answer most criteria, and it is the only place the composition is clearly worth
+deploying.
+
+### The conclusion does not change
+
+Full text still wins on recall -- 95.3%, or 94.9% without substance use -- and recall is the
+objective screening has. A missed study biases the pooled estimate and cannot be recovered
+downstream; a false positive costs the next reader some time. Every alternative in both
+tables buys precision with recall, the veto included, and the F1 column should not be read as
+a ranking.
+
+What four rounds of correction established is where the remaining gap lives. It is not in the
+difficulty of writing the criteria down: two record defects account for most of it --
+`spatial_scope: roi` on whole-brain papers, contradicting 38 gold, and
+`allocation: non_randomized` on observational studies, contradicting 39 in one project.
