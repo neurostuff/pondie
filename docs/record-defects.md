@@ -442,7 +442,7 @@ answers `parallel`, because two cohorts are in parallel.
   were not allocated to anything, `Group.arm` stays empty, and the cohorts reach an analysis
   through `FactorLevel.groups` — which is what these records already do, correctly, in the
   47.5% of levels that carry a group. 956 records (53% of the corpus) would stop asserting an
-  allocation that never happened.
+  allocation that never happened. **Done and tested — see below.**
 - **A check**: `assignment_structure` in `{parallel, crossover}` with zero `Arm`s declared is
   a contradiction of the enum's own text, and nothing reports it today.
   `check_arm_reachability` fires only once an Arm exists, so this whole class is invisible to
@@ -450,6 +450,60 @@ answers `parallel`, because two cohorts are in parallel.
 - The 206 + 109 recoverable joins want an **error naming both slots** rather than a repair.
   Matching an analysis's prose against an arm name is substring matching on prose, which is
   the operation finding 2 declines for the reason `normalize_open_fields.py` measured.
+
+### `observational_cohorts`, added and tested
+
+`AssignmentStructure` now carries `observational_cohorts`, `parallel` requires that something
+was administered, `single_group` requires both of its halves, and
+`Allocation.non_randomized` no longer offers "or an existing exposure" — the clause that let
+569 records call a diagnosis an assignment.
+
+Tested with `scripts/ab_enum_wording.py`: same input, same model, same temperature, the enum
+block the only difference. Not a re-extraction — the paper texts are not on this host, so the
+input is the design evidence each record already quotes, which is the text the original answer
+was read off. That buys a sample large enough to see past run-to-run variation, which three
+rounds of `population_characteristics` rewrites never had.
+
+**66 papers to tune on, then 66 disjoint papers to check** — the same seeded shuffle, second
+slice, overlap zero. Predictions were written down before the held-out run.
+
+| | tuning | held-out | predicted |
+|---|---|---|---|
+| target (`parallel`, no arms, ≥2 cohorts) → `observational_cohorts` | 29/30 | **28/30 (93%)** | ≥90% ✓ |
+| genuine randomized trials stay `parallel` | 5/5 | **8/8 (100%)** | 100% ✓ |
+| `crossover` unchanged | 6/6 | **6/6** | ≥90% ✓ |
+| `within_subject` unchanged | 5/6 | **5/6** | ≥80% ✓ |
+| `single_group` unchanged | 7/12 | **5/12 (42%)** | ≥70% ✗ |
+
+The `single_group` prediction failed, and it is the prediction that was wrong rather than the
+change: the **old** enum also scores 5/12 on that draw. `single_group` is an unstable label in
+both arms, because "one cohort measured once" has two conditions and papers routinely satisfy
+one. It is worth its own look and is not a regression from this change.
+
+**One iteration, and only on the tuning set.** The first wording fixed 30/30 of the target but
+pulled two *mixed* designs to `observational_cohorts` — a crossover with a between-subject
+group factor, and a repeated-measures stress study comparing men and women. So
+`observational_cohorts` now states that a within-subject structure takes priority, with the
+reason: the cohort comparison is already recorded in `FactorLevel.groups`, and the
+repeated-measures structure has no other slot. That recovered both, cost one target paper
+(itself a two-session counterbalanced design, so arguably the right answer), and eliminated
+three arguable `within_subject` → `single_group` flips.
+
+**What the held-out set also confirmed, unasked:** 7 of the 12 `parallel`-*with*-arms papers in
+the tuning set and 2 of 12 in the held-out set flipped, and adjudicating every one shows the
+flips are corrections — their "arms" were `['maltreated', 'non-maltreated']`,
+`['bvFTD', 'controls']`, `['no intervention']`, `['prenatal cannabis exposure', ...]`. The
+same schema gap was also producing **invented Arm entities**, not just a wrong label: across
+the corpus **47 of the 164 `parallel`-with-arms records have every arm name identical to a
+cohort name**, and 28 of those are `non_randomized` or `not_applicable`. So the change reaches
+roughly 989 records, not 956.
+
+**Known limit, named rather than tuned away.** The priority rule moves a controlled trial with
+pre/post scanning to `within_subject` (`27091455`: DBT vs usual care, before and after 12
+weeks). The rule's own justification holds — the arms survive on `Group.arm` — but `parallel`
+is arguable there, and `AssignmentStructure` being single-valued means a mixed design cannot
+state both halves. I did not iterate on this, because iterating against the held-out set would
+turn it into a second tuning set and there would be nothing left to check the wording against.
 
 ## Checked and ruled out
 
