@@ -615,3 +615,99 @@ def test_references_are_yielded_with_their_ids(sch):
     found = {slot.key: walk.ids_of(slot.value) for slot in walk.references(record, sch)}
     assert found["tables"] == ["tbl1", "tbl2"]
     assert found["inference_settings"] == ["inf1"]
+
+
+# --- repointing a dangling reference: the three conditions ------------------------------
+
+
+def _with_tasks(*tasks):
+    return {
+        "local_id": "S1",
+        "analyses": [{"local_id": "a1", "tasks": ["tsk_missing"]}],
+        "tasks": [{"local_id": lid, "name": field(name)} for lid, name in tasks],
+    }
+
+
+def test_a_transcription_slip_is_repaired_outright(sch):
+    """Nothing is decided: the id differs only in case and punctuation."""
+    record = _with_tasks(("tsk_cue_exposure", "cue exposure"))
+    record["analyses"][0]["tasks"] = ["tsk_Cue-Exposure"]
+    assert builder.repair_references(record, sch)
+    assert record["analyses"][0]["tasks"] == ["tsk_cue_exposure"]
+
+
+def test_the_only_candidate_is_taken_when_the_names_agree(sch):
+    record = _with_tasks(("tsk_cue_exposure_fmri", "cue exposure fMRI task"))
+    record["analyses"][0]["tasks"] = ["tsk_cue_exposure"]
+    assert builder.repair_references(record, sch)
+    assert record["analyses"][0]["tasks"] == ["tsk_cue_exposure_fmri"]
+
+
+def test_the_only_candidate_is_refused_when_the_names_do_not(sch):
+    """`asm_mini` onto `asm_ftnd` -- a psychiatric interview onto a nicotine scale -- is
+    what taking the sole candidate on its own did."""
+    record = _with_tasks(("tsk_fear_conditioning", "fear conditioning"))
+    record["analyses"][0]["tasks"] = ["tsk_resting_state"]
+    assert builder.repair_references(record, sch) == []
+    assert record["analyses"][0]["tasks"] == ["tsk_resting_state"]
+
+
+def test_an_initialism_of_the_target_name_agrees(sch):
+    """8% of the references this resolves. `asm_scid` shares no word with "Structured
+    Clinical Interview for DSM-V" and plainly means it."""
+    record = {
+        "local_id": "S1",
+        "groups": [{"local_id": "g1", "diagnostic_instrument": ["asm_scid"]}],
+        "assessments": [{"local_id": "asm_structured_clinical",
+                         "name": field("Structured Clinical Interview for DSM-V")}],
+    }
+    assert builder.repair_references(record, sch)
+    assert record["groups"][0]["diagnostic_instrument"] == ["asm_structured_clinical"]
+
+
+def test_two_differently_named_references_do_not_collapse_onto_one_target(sch):
+    """A record declaring one term whose cells name three is a record missing two, and an
+    interaction term shares a word with the main effect inside it -- so
+    `trm_smoking_opportunity_cue` and `trm_quitting_motivation_cue` both pass the name test
+    against a term called "cue"."""
+    record = {
+        "local_id": "S1",
+        "analyses": [{"local_id": "a1", "model_estimation": "mod1", "effect": {"cells": [
+            {"term": "trm_smoking_opportunity_cue"}, {"term": "trm_quitting_motivation_cue"}]}}],
+        "model_estimations": [{"local_id": "mod1", "terms": [
+            {"local_id": "trm_cue_1", "name": field("cue")}]}],
+    }
+    assert builder.repair_references(record, sch) == []
+    terms = [cell["term"] for cell in record["analyses"][0]["effect"]["cells"]]
+    assert terms == ["trm_smoking_opportunity_cue", "trm_quitting_motivation_cue"]
+
+
+def test_one_reference_repeated_across_analyses_is_not_a_collapse(sch):
+    """The guard counts distinct NAMES, not occurrences: the same dangling id in four
+    analyses is one thing named once."""
+    record = _with_tasks(("tsk_cue_exposure_fmri", "cue exposure fMRI task"))
+    record["analyses"] = [
+        {"local_id": f"a{n}", "tasks": ["tsk_cue_exposure"]} for n in range(4)]
+    assert len(builder.repair_references(record, sch)) == 4
+    assert all(a["tasks"] == ["tsk_cue_exposure_fmri"] for a in record["analyses"])
+
+
+def test_a_reference_is_never_repointed_at_its_own_owner(sch):
+    record = {"local_id": "S1", "analyses": [
+        {"local_id": "a1", "name": field("A > B"), "mirror_of": "a_missing"}]}
+    assert builder.repair_references(record, sch) == []
+
+
+def test_declared_ids_are_read_schema_guided(sch):
+    """Sweeping the Study-level lists misses every ModelTerm and Condition -- 10,867 ids
+    over 1,817 records -- so a `Cell.term` reference looked dangling and was repaired by
+    guesswork or not at all."""
+    record = {
+        "local_id": "S1",
+        "analyses": [{"local_id": "a1", "model_estimation": "mod1", "effect": {"cells": [
+            {"term": "trm_Condition"}]}}],
+        "model_estimations": [{"local_id": "mod1", "terms": [
+            {"local_id": "trm_condition", "name": field("condition")}]}],
+    }
+    assert builder.repair_references(record, sch)
+    assert record["analyses"][0]["effect"]["cells"][0]["term"] == "trm_condition"

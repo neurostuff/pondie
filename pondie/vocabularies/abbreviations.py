@@ -79,8 +79,12 @@ def _initialism(short: str, window: str) -> str | None:
     return " ".join(tail).strip(" ,;:()")
 
 
-def _matches(short: str, long: str) -> str | None:
+def matches(short: str, long: str) -> str | None:
     """The shortest suffix of `long` that `short` abbreviates, or None.
+
+    Public because `builder.names_agree` asks it whether a dangling local_id is an
+    initialism of the entity it might have meant -- `asm_scid` against "Structured Clinical
+    Interview for DSM-V" -- which is 8% of the references that repair resolves.
 
     Schwartz & Hearst, walked from the ends: every character of the short form must be
     found in the long form in reverse order, and the short form's first character must
@@ -191,7 +195,7 @@ def mine_builtin(text: str) -> dict[str, str]:
         if short.isdigit() or not any(c.isupper() for c in short):
             continue
         window = _words_before(text, match.start(), min(len(short) + 5, 12))
-        long = _initialism(short, window) or _matches(short, window)
+        long = _initialism(short, window) or matches(short, window)
         if long and long.lower() != short.lower():
             found.setdefault(short, long)
     return found

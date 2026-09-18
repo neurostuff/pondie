@@ -30,13 +30,14 @@ from typing import Any
 from linkml_runtime.linkml_model.meta import SlotDefinition
 
 from pondie import schema
-from pondie.extraction.record import direction, repairs, walk
+from pondie.extraction.record import direction, ids, repairs, walk
 from pondie.extraction.record import spans as span_tools
 
 # Imported as the function rather than the module: `effect` is a local name
 # throughout this file, and the module would be shadowed on first assignment.
 from pondie.extraction.record.effect import terms_in_scope
 from pondie.formats import parse_keys, text_index, values
+from pondie.vocabularies import abbreviations
 from pondie.schema import reader
 from pondie.schema.reader import Schema
 
@@ -1027,6 +1028,12 @@ def _fold_name(text: Any) -> str:
     return re.sub(r"[^a-z0-9]+", "", str(text or "").lower())
 
 
+def _restates(one: Any, other: Any) -> bool:
+    """Whether either name says no more than the other: `BMI` against term `BMI`."""
+    left, right = _fold_name(one), _fold_name(other)
+    return bool(left and right) and (left in right or right in left)
+
+
 def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
     """Drop a `Cell.level` that a continuous term cannot have and that says nothing new.
 
@@ -1091,8 +1098,7 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
             if declared:
                 continue
             path = f"analyses[{index}].effect.cells[{position}].level"
-            folded, term_name = _fold_name(level), _fold_name(values.read(term.get("name")))
-            if folded and term_name and (folded == term_name or folded in term_name or term_name in folded):
+            if _restates(level, values.read(term.get("name"))):
                 cell.pop("level", None)
                 fixed.append(f"{path}: {level!r} restated term {term_id!r} -- dropped")
                 continue
@@ -1108,7 +1114,7 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
             # product column. The level belongs to a term the cell does not name, which is
             # `check_cell_terms`' finding and not something to resolve here.
             if any(
-                folded == _fold_name(values.read(entry.get("level")))
+                _fold_name(level) == _fold_name(values.read(entry.get("level")))
                 for other in terms.values()
                 for entry in (other.get("levels") or [])
                 if isinstance(entry, Mapping)
@@ -1688,152 +1694,163 @@ def repoint_out_of_scope_terms(body: dict[str, Any]) -> list[str]:
     return fixed
 
 
-def fold_id(name: str) -> str:
-    """Case and punctuation off an id, for the one rule that folds them."""
-    return re.sub(r"[^a-z0-9]+", "", name.lower())
+#: The minted part of a local_id, once its class prefix is off. `ids.mint` builds it from
+#: the paper's own wording, which is what lets a dangling id be compared to a real name.
+_PREFIXES = tuple(prefix for prefix in ids.PREFIX.values() if prefix)
+
+#: Words that name no entity, so sharing one is not agreement.
+_EMPTY_WORDS = frozenset(
+    {"the", "of", "a", "and", "main", "effect", "condition", "conditions", "group",
+     "groups", "task", "tasks", "all", "1", "2", "3"}
+)
+
+
+def _minted_part(local_id: str) -> str:
+    for prefix in _PREFIXES:
+        if local_id.startswith(prefix):
+            return local_id[len(prefix):]
+    return local_id
+
+
+def _words(text: Any) -> frozenset[str]:
+    found = re.sub(r"[^a-z0-9]+", " ", str(text or "").lower()).split()
+    return frozenset(word for word in found if word not in _EMPTY_WORDS)
+
+
+def _same_id(one: str, other: str) -> bool:
+    squash = lambda name: re.sub(r"[^a-z0-9]+", "", name.lower())  # noqa: E731
+    return squash(one) == squash(other)
+
+
+def names_agree(dangling: str, target: str, target_name: Any) -> bool:
+    """Does the name a dangling id carries refer to what the target is called?
+
+    A local_id is minted from the paper's wording, so `trm_three_way_interaction` says the
+    model meant a term it called "three way interaction". Measured over the 120 references
+    `the_only_candidate` proposes: 70% share a word, 8% more are an initialism of the
+    target's name -- `asm_scid` against "Structured Clinical Interview for DSM-V" -- and the
+    18% that share nothing are the wrong repoints, `reg_caudate` and `reg_insula` and
+    `reg_thalamus` each onto one "Gain versus nongain reward-processing regions".
+    """
+    asked = _minted_part(dangling)
+    offered = _words(_minted_part(target)) | _words(target_name)
+
+    if _words(asked) & offered:
+        return True
+    name = str(target_name or "")
+    return bool(name and abbreviations.matches(asked.replace("_", ""), name))
+
+
+@dataclass(frozen=True, eq=False)
+class _Reference:
+    """One id in one slot, and where to write its replacement."""
+
+    slot: walk.Slot
+    position: int
+    id: str
+
+    def repoint_to(self, target: str) -> str:
+        if isinstance(self.slot.value, list):
+            self.slot.value[self.position] = target
+            return f"{self.slot.path}[{self.position}]: {self.id!r} -> {target!r}"
+        self.slot.owner[self.slot.key] = target
+        return f"{self.slot.path}: {self.id!r} -> {target!r}"
+
+
+def _dangling(body: dict[str, Any], sch: Schema, declared: Mapping[str, str]):
+    for slot in walk.references(body, sch):
+        for position, local_id in enumerate(walk.ids_of(slot.value)):
+            if local_id not in declared:
+                yield _Reference(slot=slot, position=position, id=local_id)
+
+
+def _transcription_slip(reference: _Reference, declared: Mapping[str, str]) -> str | None:
+    """The one declared id this differs from only in case and punctuation."""
+    same = [name for name in declared if _same_id(name, reference.id) and name != reference.id]
+    return same[0] if len(same) == 1 else None
+
+
+def _the_only_candidate(
+    reference: _Reference, declared: Mapping[str, str], sch: Schema
+) -> str | None:
+    """The one declared entity of the kind this slot holds, where there is only one."""
+    wanted = reference.slot.range
+    if not isinstance(wanted, str):
+        return None
+    of_that_kind = [
+        name
+        for name, class_name in declared.items()
+        if class_name == wanted or sch.resolves_to(class_name, wanted)
+    ]
+    return of_that_kind[0] if len(of_that_kind) == 1 else None
+
+
+def _without_collapses(proposed: dict[_Reference, str]) -> dict[_Reference, str]:
+    """Drop any target that two differently-named references both want.
+
+    An interaction term shares a word with the main effect inside it, so
+    `trm_smoking_opportunity_cue` and `trm_quitting_motivation_cue` both pass the name test
+    against a term called "cue". A record declaring one term whose cells name three is a
+    record missing two, and repointing all three at the survivor invents an effect.
+    """
+    wanted_by = {}
+    for reference, target in proposed.items():
+        wanted_by.setdefault(target, set()).add(reference.id)
+    return {
+        reference: target
+        for reference, target in proposed.items()
+        if len(wanted_by[target]) == 1
+    }
 
 
 def repair_references(body: dict[str, Any], sch: Schema) -> list[str]:
     """Repoint a cross-reference that names a local_id nothing declares, where forced.
 
-    A dangling reference is the commonest reason a build reports a defect, and it is
-    always the same shape: the model wrote `inf_baseline` for an entity it declared as
+    A dangling reference is the commonest reason a build reports a defect, and it is always
+    the same shape: the model wrote `inf_baseline` for an entity it declared as
     `inference_wholebrain_dti`. The record is written either way -- the exit code says the
-    record has a fault, not that the paper was skipped -- but a reference that resolves
-    nowhere costs an analysis its inference settings, and downstream that reads as a
-    missing field rather than a naming slip.
+    record has a fault, not that the paper was skipped -- but a reference resolving nowhere
+    costs an analysis its inference settings, and downstream that reads as a missing field
+    rather than a naming slip.
 
-    Repaired only where the choice is not a choice, which is the rule
-    `align_cell_levels` already follows for levels:
+    A transcription slip is repaired outright. Anything else is repaired only when all three
+    hold, and each condition was earned by a wrong repoint the previous version made:
 
-      fold      the dangling id folds to exactly one declared id -- case, underscores and
-                hyphens removed. A transcription slip, and nothing is being decided.
-      sole      the slot's own Study-level list holds exactly one entity. There is only
-                one thing the reference could have meant.
+      the only candidate    exactly one declared entity of the slot's kind exists. Alone
+                            this repointed `asm_mini` to `asm_ftnd`, a psychiatric interview
+                            onto a nicotine-dependence scale.
+      the names agree       and it is called something the dangling id names. This is what
+                            makes the rest safe, and it is deterministic because a local_id
+                            is minted from the paper's own wording.
+      no collapse           and no differently-named reference wants the same target.
 
-    Anything else is left dangling and reported. Two candidates and a guess about which
-    inference settings an analysis used is a claim about the paper, and the point of the
-    report is that a human sees it.
-
-    WHAT IT CONSIDERS DECLARED IS NARROWER THAN THE SCHEMA, deliberately, for now. The
-    index below sweeps the Study-level lists, so it never sees a `ModelTerm` under
-    `model_estimations[].terms` or a `Condition` under `tasks[].conditions`: measured over
-    1,817 records it misses 10,867 declared ids -- 4,895 ModelTerms, 3,010 Conditions, 696
-    Timepoints, 448 Arms -- while `validate.index_ids` descends and has disagreed with it
-    all along. `walk.declared_ids` is the schema-guided index and the two differ.
-
-    Widening it was tried and reverted, because it makes `sole` reach slots it was only
-    safe never to reach. Given the whole schema as a pool it repointed `asm_mini` to
-    `asm_ftnd` -- a psychiatric interview onto a nicotine-dependence scale -- and
-    collapsed `trm_three_way_interaction` and `trm_quitting_motivation_main` onto the same
-    `trm_cue_1`, on a record declaring one term whose cells name three. A guard refusing
-    targets that two distinct names reach removed the collapses and kept
-    `asm_diagnostic_interview -> asm_heroin_craving_questionnaire`, so the guard is not the
-    discriminator either. 88 of the 90 repairs this makes come from `sole`, so it cannot
-    simply go.
-
-    WHAT WOULD SETTLE IT. Decomposed by rule and index, `fold` repairs 2 references either
-    way -- the index change buys the safe rule nothing and the guessing rule everything, so
-    the question is only ever about `sole`:
-
-        narrow + fold    2        wide + fold    2
-        narrow + sole   88        wide + sole  120
-
-    And `sole` fires only when exactly one entity of the slot's range exists, so what
-    matters is whether a pool of one is NORMAL for that kind or SUSPICIOUS. Measured over
-    1,817 records, P(pool = 1) is bimodal with nothing in between:
-
-        tasks 81%   measure 79%   inference_settings 74%     <- one is the usual case
-        --------------------------------------------------
-        diagnostic_instrument 31%   regions 28%   group 27%
-        assessment 27%   term 25%   tables 24%   arm 21%     <- several is the usual case
-
-    That gap was not chosen as a threshold and it separates the sampled errors exactly. A
-    paper has one task, so a dangling `Analysis.tasks` has one thing it could have meant. A
-    paper always has several terms, so a record declaring ONE ModelTerm whose cells name
-    three is a record missing two, and `sole` there repoints all three at the survivor --
-    which is how `trm_three_way_interaction` became `trm_cue_1`. The slots the wide index
-    newly reaches are the nested kinds, and a kind is nested because its parent has several
-    of it, so widening reaches the suspicious half by construction.
-
-    AND THE ADJUDICATION IS DETERMINISTIC, which is the answer and needs no model. `ids.mint`
-    builds a local_id from "the shortest thing the *paper* fixes", so a DANGLING ID CARRIES
-    THE NAME THE MODEL MEANT. Deciding whether a repoint is right is therefore comparing two
-    names, not judging a paper. Over the 120 firings:
-
-        70%  the id's tokens overlap the target's id or name          ACCEPT
-         8%  the id is an initialism of the target's name             ACCEPT
-             (`asm_scid` -> "Structured Clinical Interview for DSM-V",
-              `tsk_midt` -> "Monetary Incentive Delay Task"; Schwartz & Hearst,
-              already implemented in `vocabularies.abbreviations._matches`)
-        18%  the two names share nothing                              REJECT
-         4%  one side has no name                                     look at the record
-
-    96% decided without a model, and the 21 rejections are inspectably right: `reg_caudate`,
-    `reg_insula` and `reg_thalamus` each onto one "Gain versus nongain reward-processing
-    regions", and `trm_three_way_interaction`, `trm_quitting_motivation_main` and
-    `trm_smoking_opportunity_main` each onto a term named "cue". The accepts hold up too --
-    `tsk_cue_exposure` -> "cue exposure fMRI task", `no_intervention` -> `arm_no_intervention`,
-    `reg_amygdala_right` -> "Amygdala".
-
-    So the name test SUBSUMES the pool-size prior and no labelled sample is needed. One
-    weakness remains and it is `term`: an interaction term shares a token with the main
-    effect it contains, so `trm_smoking_opportunity_cue` and `trm_quitting_motivation_cue`
-    both pass onto `trm_cue_1`. Refusing any target that two DISTINCT names reach removes
-    exactly that, and it is the guard that was too weak on its own.
-
-    The rule this licenses, then, is not "widen the index" and not "enable `sole` per slot".
-    It is: pool of one, AND the names agree by token or initialism, AND no two distinct names
-    reach the same target. A model would only be needed for genuine synonymy with no shared
-    token and no initialism link, and no case of that appears in the 120.
-
-    Not applied here because it is a behaviour change to the repair that most affects
-    references, and this pass was a refactor; `docs/extraction-data-flow.md` carries it as the
-    next step with the measurements above.
+    `declared` is read schema-guided. Sweeping the Study-level lists, as this did, misses
+    10,867 ids over 1,817 records -- every ModelTerm under `model_estimations[].terms`, every
+    Condition under `tasks[].conditions` -- so it repaired neither of the two slots that
+    dangle most, while `validate.index_ids` descended and disagreed with it all along.
     """
 
-    declared: dict[str, str] = {}
-    for key, value in body.items():
-        if not isinstance(value, list):
+    declared = walk.declared_ids(body, sch)
+    names = {
+        entity.local_id: values.read(entity.node.get("name"))
+        for entity in walk.entities(body, sch)
+        if entity.local_id
+    }
+
+    proposed: dict[_Reference, str] = {}
+    slips: dict[_Reference, str] = {}
+    for reference in _dangling(body, sch, declared):
+        slip = _transcription_slip(reference, declared)
+        if slip:
+            slips[reference] = slip
             continue
-        for entity in value:
-            if isinstance(entity, Mapping) and isinstance(entity.get("local_id"), str):
-                declared[entity["local_id"]] = key
+        candidate = _the_only_candidate(reference, declared, sch)
+        if candidate and candidate != reference.slot.owner.get("local_id"):
+            if names_agree(reference.id, candidate, names.get(candidate)):
+                proposed[reference] = candidate
 
-    by_fold: dict[str, list[str]] = {}
-    for name in declared:
-        by_fold.setdefault(fold_id(name), []).append(name)
-
-    def pool_for(slot: str) -> list[str]:
-        # `model_estimation` is a reference to something in `model_estimations`; the
-        # slot is singular and the Study list is not.
-        for candidate in (slot, f"{slot}s", slot.rstrip("s")):
-            if candidate in body and isinstance(body[candidate], list):
-                return [n for n, owner in declared.items() if owner == candidate]
-        return []
-
-    def repoint(dangling: str, slot: str) -> str | None:
-        same = [n for n in by_fold.get(fold_id(dangling), []) if n != dangling]
-        if len(same) == 1:
-            return same[0]
-        pool = pool_for(slot)
-        return pool[0] if len(pool) == 1 else None
-
-    fixed: list[str] = []
-    for slot in walk.references(body, sch):
-        for index, dangling in enumerate(walk.ids_of(slot.value)):
-            if dangling in declared:
-                continue
-            target = repoint(dangling, slot.key)
-            if target is None:
-                continue
-            if isinstance(slot.value, list):
-                slot.value[index] = target
-                fixed.append(f"{slot.path}[{index}]: {dangling!r} -> {target!r}")
-            else:
-                slot.owner[slot.key] = target
-                fixed.append(f"{slot.path}: {dangling!r} -> {target!r}")
-    return fixed
+    settled = {**slips, **_without_collapses(proposed)}
+    return [reference.repoint_to(target) for reference, target in settled.items()]
 
 
 def check_local_ids(body: dict[str, Any], sch: Schema) -> list[str]:

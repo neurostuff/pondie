@@ -158,14 +158,29 @@ Delay Task", using the Schwartz & Hearst matcher already in `vocabularies.abbrev
 **18% rejected because the names share nothing**, 4% needing a look at the record. **96%
 without a model**, and the 21 rejections are inspectably right.
 
-So the rule to apply is: a pool of one, **and** the names agree by token or initialism, **and**
-no two distinct names reach the same target — the last because an interaction term shares a
-token with the main effect it contains. A model is needed only for genuine synonymy with no
-shared token and no initialism, which none of the 120 exhibits.
+**Applied.** `repair_references` now repairs a transcription slip outright, and anything else
+only when all three hold: the slot's kind has exactly one declared entity, its name agrees
+with the dangling id by shared word or initialism, and no differently-named reference wants
+the same target. `declared` is read schema-guided, which is what the name test makes safe.
 
-Not applied in this pass, which was a refactor: the function uses the shared walk and keeps
-its narrow index, 90 repairs before and after, 0 differences, with the whole measurement in
-its docstring.
+Measured against the previous version over the 1,817 records: **90 repairs → 89. 81 kept, 8
+gained, 9 dropped.**
+
+All 8 gained are unambiguous: `trm_film_condition` onto a term *named* "film condition",
+`asm_scid` onto "Structured Clinical Interview for DSM-V", `no_intervention` onto
+`arm_no_intervention`, `r_nucleus_accumbens` onto `reg_nucleus_accumbens`,
+`reg_amygdala_right` onto "Amygdala".
+
+6 of the 9 dropped are the wrong repoints the rule exists to stop — `reg_vs`, `reg_caudate`,
+`reg_insula` and `reg_thalamus` each onto one "Gain versus nongain reward-processing regions",
+and `tsk_resting_state` onto `tsk_fear_conditioning_task`.
+
+The other 3 are a conservative loss and worth naming: `tsk_esom` and `tsk_esom_nf` both want
+the one task, named "Emotion Self-Other Morph Neurofeedback (ESOM_NF)", and the collapse guard
+refuses both because they are differently named. Exempting competing names that are variants
+of each other would recover them and would also re-admit
+`trm_smoking_opportunity_cue`/`trm_quitting_motivation_cue`, which likewise share a word — so
+the exemption is unsafe and 3 lines in 90 is the right price for the guard.
 
 ## Found: the prompt renderer imported the record builder for a schema question
 

@@ -36,7 +36,7 @@ from pondie.formats import values
 from pondie.schema.reader import Schema
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class Slot:
     """One slot of one entity, and what the schema declares it should hold."""
 
@@ -71,7 +71,7 @@ class Slot:
         return (schema.attributes(wrapper) or {}).get("value")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class Entity:
     """One node the schema treats as an entity, with the class it is an instance of."""
 
