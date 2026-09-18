@@ -28,7 +28,12 @@ import sys
 from pathlib import Path
 
 EXP = Path("/data/james/pondie-vs-fulltext")
-REPO = Path(__file__).resolve().parents[2]
+#: Where the baseline runs live, whose coordinate parses this transports. Not derived from
+#: `__file__` any more: this script used to sit inside autonima-results, where `parents[2]`
+#: was that repo's root. It now lives in pondie, where the same expression resolved to `/home`
+#: and every parse silently went missing -- "baseline coordinate parses: 0 pmids", and every
+#: paper built with no analyses.
+REPO = Path(os.environ.get("AUTONIMA_RESULTS", EXP / "repos" / "autonima-results"))
 
 #: pubget's `keep_tables` lives only in the vendored checkout; the wheel in the venv is
 #: upstream 0.0.8 and predates it. Imported the way `pondie.extraction.corpus.rebuild`
@@ -40,6 +45,19 @@ PROJECT_RUNS = {
     "cue_reactivity": ("v5-gpt", "v5-annotation-only-gpt"),
     "vbm_of_substance_use": ("v2", "v2-annotation-only-gpt"),
     "vbm_of_ptsd": ("v1", "v1-annotation-only"),
+    # The remaining benchmarks. Their parses are transported the same way, but note the
+    # yield: of 3,619 papers screened across these five, 1,294 have both text and a parse.
+    # A paper without one still builds -- it just reaches the extractor with no analyses
+    # enumerated, which is the state that cost `22453299` its VBM contrast.
+    "decision_making": ("v2", "v2-annotation-only"),
+    "dementia": ("v3", "v3-annotation-only"),
+    "executive_function": ("v1", "v1-annotation-only"),
+    "problem_solving": ("v1", "v1-annotation-only"),
+    "social": ("v2", "v2-annotation-only"),
+    # Registry `best` for this project's canonical family is v4 (run_categories.yaml), and it
+    # is the one benchmark whose baseline was already gateway-namespaced, so a record arm
+    # derived from it carries no provider difference.
+    "emotion_regulation_2022": ("v4", "v4-annotation-only"),
 }
 
 
@@ -154,6 +172,71 @@ def build_elsevier(pmid: str, src: Path) -> tuple[str, list[dict]]:
     return text, manifest
 
 
+def ace_table_blocks(pmid: str, ace_tables: dict[str, list[dict]],
+                     tables_root: Path) -> tuple[list[str], list[dict]]:
+    """ACE's parsed tables for one paper, as prose blocks and a manifest.
+
+    Shared by both ACE routes: the tables come from ACE's export either way, and only
+    the body text differs between a saved page and a row of `processed/text.csv`.
+    """
+    manifest, blocks, ordinal = [], [], 1
+    for row in ace_tables.get(pmid, []):
+        raw_file = row.get("table_raw_file") or ""
+        path = tables_root.parent / raw_file if raw_file else None
+        body = ""
+        if path is not None and path.is_file():
+            body = html_table_to_markdown(
+                path.read_text(encoding="utf-8", errors="replace"))
+        # `table_id` is ACE's internal database key, not anything the paper printed, so a
+        # missing label becomes a positional "Table N" in the prose and stays null in the
+        # manifest -- pondie's Tables stage falls back to `tbl{index}` on its own.
+        label = row.get("table_label") or None
+        caption = row.get("table_caption") or None
+        footer = row.get("table_foot") or None
+        blocks.append(table_block(label or f"Table {ordinal}", caption, body, footer))
+        manifest.append({
+            "table_id": str(row["table_id"]),
+            "table_number": label,
+            "caption": caption,
+            "footer": footer,
+            "contains_coordinates": None,
+            "metadata": {"table_label": label, "data_path": raw_file},
+        })
+        ordinal += 1
+    return blocks, manifest
+
+
+def build_ace_text(pmid: str, text_rows: dict[str, dict],
+                   ace_tables: dict[str, list[dict]],
+                   tables_root: Path) -> tuple[str, list[dict]]:
+    """Build from ACE's `processed/text.csv` rather than from a saved journal page.
+
+    The saved pages cover 97 papers; the text export covers 6,632, and that gap is the whole
+    reason five projects had no corpus at all. What it costs is structure: the export is
+    `title,abstract,body` with no headings, so the render carries none and pondie's `Source:`
+    line will report "0 headings" -- the prose passes lose the section a sentence came from.
+    Tables are unaffected, because both ACE routes take them from the same export.
+    """
+    row = text_rows.get(pmid)
+    if row is None:
+        raise ValueError("pmid not in ace text.csv")
+    title = (row.get("title") or "").strip()
+    abstract = (row.get("abstract") or "").strip()
+    body = (row.get("body") or "").strip()
+    if not body and not abstract:
+        raise ValueError("ace text.csv row carries neither abstract nor body")
+    parts = ([f"# {title}"] if title else [])
+    if abstract:
+        parts.append(f"## Abstract\n\n{abstract}")
+    if body:
+        parts.append(body)
+    text = "\n\n".join(parts)
+    blocks, manifest = ace_table_blocks(pmid, ace_tables, tables_root)
+    if blocks:
+        text = text.rstrip() + "\n\n## Tables\n\n" + "\n\n".join(blocks) + "\n"
+    return text, manifest
+
+
 def build_ace(pmid: str, html_path: Path, ace_tables: dict[str, list[dict]],
               tables_root: Path) -> tuple[str, list[dict]]:
     """A journal page, so the article has to be found before it can be converted.
@@ -183,33 +266,29 @@ def build_ace(pmid: str, html_path: Path, ace_tables: dict[str, list[dict]],
             lines.append(body)
     text = "\n\n".join(lines)
 
-    manifest, blocks, ordinal = [], [], 1
-    for row in ace_tables.get(pmid, []):
-        raw_file = row.get("table_raw_file") or ""
-        path = tables_root.parent / raw_file if raw_file else None
-        body = ""
-        if path is not None and path.is_file():
-            body = html_table_to_markdown(
-                path.read_text(encoding="utf-8", errors="replace"))
-        # `table_id` is ACE's internal database key, not anything the paper printed, so a
-        # missing label becomes a positional "Table N" in the prose and stays null in the
-        # manifest -- pondie's Tables stage falls back to `tbl{index}` on its own.
-        label = row.get("table_label") or None
-        caption = row.get("table_caption") or None
-        footer = row.get("table_foot") or None
-        blocks.append(table_block(label or f"Table {ordinal}", caption, body, footer))
-        manifest.append({
-            "table_id": str(row["table_id"]),
-            "table_number": label,
-            "caption": caption,
-            "footer": footer,
-            "contains_coordinates": None,
-            "metadata": {"table_label": label, "data_path": raw_file},
-        })
-        ordinal += 1
+    blocks, manifest = ace_table_blocks(pmid, ace_tables, tables_root)
     if blocks:
         text = text.rstrip() + "\n\n## Tables\n\n" + "\n\n".join(blocks) + "\n"
     return text, manifest
+
+
+def build_pubget_text(pmid: str, src: Path) -> tuple[str, list[dict]]:
+    """The plain text pubget already extracted, when its article.xml is not on this machine.
+
+    `build_pmc` parses `article.xml` and recovers tables from it. The pubget mirror here
+    holds only `text.txt` -- zero of 1,590 directories carry the XML -- so that route fails
+    for every paper and this one is what the mirror can actually support.
+
+    No tables, by construction: pubget's `text_extraction.xsl` deletes `table`, `thead`,
+    `tbody`, `tr`, `td` and `th`, which `pondie.extraction.corpus.rebuild` exists to work
+    around given the XML. Without the XML there is nothing to rebuild from, so a paper on
+    this route reaches the extractor table-less -- the state measured to halve the analyses
+    a record carries. Prefer `elsevier` or `ace_text` wherever the paper is in either.
+    """
+    text = (src / "text.txt").read_text(encoding="utf-8", errors="replace")
+    if not text.strip():
+        raise ValueError("pubget text.txt is empty")
+    return text, []
 
 
 def build_pmc(pmid: str, src: Path) -> tuple[str, list[dict]]:
@@ -319,6 +398,16 @@ def main() -> int:
             ace_tables.setdefault(str(row["pmid"]), []).append(row)
     tables_root = EXP / "articles" / "ace_outputs" / "processed" / "tables"
 
+    # Loaded once and only when something asks for it: the export is 236 MB, and the three
+    # projects whose corpus was built from saved pages never touch it.
+    ace_text_rows: dict[str, dict] = {}
+    if any(r["build_source"] == "ace_text" for r in rows):
+        csv.field_size_limit(sys.maxsize)
+        with (EXP / "articles/ace_outputs/processed/text.csv").open() as fh:
+            for row in csv.DictReader(fh):
+                ace_text_rows[str(row.get("pmid") or "")] = row
+        print(f"ace text export: {len(ace_text_rows)} pmids")
+
     baseline = load_baseline_analyses()
     print(f"baseline coordinate parses: {len(baseline)} pmids")
 
@@ -333,8 +422,12 @@ def main() -> int:
                 text, manifest = build_elsevier(pmid, src)
             elif route == "ace":
                 text, manifest = build_ace(pmid, src, ace_tables, tables_root)
+            elif route == "ace_text":
+                text, manifest = build_ace_text(pmid, ace_text_rows, ace_tables, tables_root)
             elif route == "pmc":
                 text, manifest = build_pmc(pmid, src)
+            elif route == "pubget_text":
+                text, manifest = build_pubget_text(pmid, src)
             else:
                 raise ValueError(f"unknown route {route!r}")
             if not text.strip():

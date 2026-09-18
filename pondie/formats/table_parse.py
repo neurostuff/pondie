@@ -4,21 +4,6 @@
 `text_extraction.xsl` deletes `table`, `thead`, `tbody`, `tr`, `td` and `th`, so the
 corpus text carries a table's *caption* at the position it occupied and nothing else --
 and a reviewer cannot draw a span on a coordinate that is not in the document.
-
-Markdown rather than the tab-separated values pubget's own `_insert_tables` emits,
-because the paper pane is a `<Text>` tag rendering plain text: the grid has to *read* as
-a table without being rendered as one, which pipes and a delimiter row do and tabs do
-not.
-
-**The id join.** ns-pond sanitizes table ids, so `processed/pubget/tables.jsonl` says
-`t2` while the sibling `table_001_info.json` says `T2`, and every id that flows through
-pondie is the sanitized one. Joining on `info["table_id"]` returns nothing for either
-coordinate table of `4cRnHYtfSwuK`. The stable key is the CSV filename, which the
-manifest carries directly.
-
-This is the parsing half. Attributing each row to the analysis that reports it, and
-rendering the result as a reviewable grid, belong to the review layer and live in
-`ns-validate`, which has its own superset of this module.
 """
 
 from __future__ import annotations

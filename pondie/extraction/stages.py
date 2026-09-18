@@ -56,57 +56,34 @@ class Stage(Protocol):
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome: ...
 
     def depends_on(self, paper: Paper, settings: Settings) -> Mapping[str, Any]:
-        """Everything whose change should make this stage's output stale.
-
-        On the protocol rather than left to `_Base`, because the scheduler asks every stage
-        for it and a stage that answers with less than it depends on gets a cache that
-        serves stale answers -- the failure this replaced, and one nothing reports.
-        """
+        """What the stage reads, and subsequently, what invalidates their cache."""
         ...
 
 
 @dataclass(frozen=True)
 class _Base:
-    """Skip logic shared by every stage: a stage that has already produced is done."""
+    """Logic shared by every stage"""
 
     name: StageName
 
     def produces(self, paper: Paper, settings: Settings) -> Path:
-        """One file per stage, flat, beside its siblings.
-
-        Flat because `builder.merge_payloads` globs `<payload_dir>/*.json` and merges
-        what it finds -- a stage writing `<stage>/payload.json` produces a file the builder
-        never sees, and the record comes out with metadata and an empty body. It is also
-        the layout the evidence pass reads and writes back through, and the one every
-        archived run on disk already uses.
-        """
+        """Each Stage outputs a single file."""
         return settings.payloads / paper.study_id / f"{self.name.value}.json"
 
     #: The stages whose output this one reads. Their digests go into this stage's, so a
-    #: re-run cascades: `satisfy` cannot be fresh over a `demands` that was recomputed.
+    #: re-run cascades down to the rest of the stages.
     reads: tuple[StageName, ...] = ()
 
     #: Whether the stage sends the paper to a model. A model pass depends on which model and
     #: at what effort; `tables` copies a manifest and does not care.
     asks_a_model: bool = False
 
-    #: Whether the stage reads the stage-1 parse. `Tables` does, now that it falls back to
-    #: the parse when a flavour ships no manifest, so a re-parse has to invalidate it --
-    #: otherwise the Table records describe tables the parse no longer reports. `Demands`
-    #: reads it too and inherits the dependency through `reads`, because `Tables` writes the
-    #: `table_map` its prompt prints.
+    #: Whether the stage reads the stage-1 parse.
     reads_the_parse: bool = False
 
     def depends_on(self, paper: Paper, settings: Settings) -> dict[str, Any]:
-        """Everything whose change should produce a different answer.
+        """Every input that would change this stage's answer."""
 
-        Naming too little is the dangerous direction, and it is the one this replaced: a
-        stage used to be done when its file existed, so a changed prompt, model, effort or
-        schema reused every stale payload without saying so.
-
-        The paper enters by content hash rather than by path, because a corpus re-sync that
-        rewrites the same filename with different text is exactly the case a mtime misses.
-        """
         parts: dict[str, Any] = {
             "text": (
                 text_index.text_hash(
@@ -161,13 +138,8 @@ class _Base:
 @functools.lru_cache(maxsize=1)
 def prompt_digest() -> str:
     """A digest of everything that decides what the model is asked.
-
-    The rendered prompt would be the exact answer and is the wrong one: it embeds the paper,
-    so it is per-item, and building it to decide whether to build it is circular. These are
-    the files it is assembled from -- the renderer, the conventions, the worked models, the
-    schema projection -- so the digest turns over when the ask changes and not when a paper
-    does. Coarser than necessary: editing a comment in `render.py` recomputes the corpus.
-    That is the safe direction, and the alternative is a cache that misses a real change.
+    
+    Allows us to track prompt changes that would invalidate the cache.
     """
     sources = [
         Path(render.__file__),
@@ -187,12 +159,8 @@ def prompt_digest() -> str:
 
 
 def _manifest_value(text: str | None) -> dict:
-    """A literal copied from a table source, in the shape the schema declares.
-
-    `not_applicable` because there is no sentence to quote: the value came from the
-    manifest or the parse, not from the paper's prose. Blank and absent both become
-    `not_reported` -- an empty caption and a missing one make the same claim, and an empty
-    string would read as a blank one the paper printed.
+    """A literal copied from a table source wrapped in the evidence class
+    from the extraction schema.
     """
     return values.wrap(text or None, source="reported", evidence="not_applicable")
 
@@ -204,27 +172,6 @@ class Tables(_Base):
     `table_number`, `caption` and `footer` are literal strings in the manifest, so retyping
     them through a model can only introduce error. It runs first because the analyses pass
     is told the local_ids and every `Analysis.tables` reference points at one.
-
-    Omitting this stage is the regression that motivated writing it down: a rewritten
-    pipeline dropped it and 155 of 156 records ended up with no tables declared while 1,076
-    of 1,084 analyses referenced one. Direction scoring never noticed -- polarity needs the
-    parse, not the Table entity -- so the fault stayed invisible until a coordinate query
-    asked for the join.
-
-    TWO SOURCES, IN ORDER. The manifest is read from the same flavour the text came from;
-    hardcoding `processed/pubget/tables.jsonl` finds nothing for a paper staged from `ace`
-    or `elsevier`, and this corpus is mostly those. When there is no manifest the stage
-    falls back to the **stage-1 parse**, whose entries carry `table_id`, `table_number`,
-    `table_label`, `table_caption` and `table_footer` -- everything a Table needs.
-
-    The fallback exists because writing `{"tables": []}` was not neutral. The prompt groups
-    the parse listing by `table_id` and states that `tables` is REQUIRED because "under one
-    of these headings there is always something to point at", so the model was shown table
-    identities no Table entity declared and cited them: 654 of the 1,143 dangling
-    `Analysis.tables` references in the 1,817-record corpus come from papers with an empty
-    `tables` container and a populated parse. Two independent sources of table identity and
-    only one of them gated. A Table carrying the parse's caption and number is both true
-    and a valid reference target.
     """
 
     name: StageName = StageName.tables
@@ -288,17 +235,9 @@ class Tables(_Base):
 
 @dataclass(frozen=True)
 class ProseFoci(_Base):
-    """Append coordinates the paper states in prose and no table reports, to the parse.
+    """Append coordinates the paper states in prose and not in tables.
 
-    The schema stores no coordinates: `Analysis.source_table_analysis` addresses the parse
-    and that is the only route from an analysis to its foci. A coordinate found in prose
-    therefore has to become a parse entry, or the analysis that reports it can be extracted
-    and its location cannot be stored anywhere.
-
-    Runs before `SignSplit`, which rewrites the whole document, so the splitter owns the
-    final shape and there is one writer of the analyses list at a time.
-
-    Its artefact is the parse it appended to, so `done` cannot be the file existing.
+    Note: this could still miss legitimate analyses that report the same coordinates.
     """
 
     name: StageName = StageName.prose_foci
@@ -338,17 +277,12 @@ class ProseFoci(_Base):
 
 @dataclass(frozen=True)
 class SignSplit(_Base):
-    """Partition a parse that reports both signs, and withhold the reversed half.
+    """Split a parse that reports both positive and negative statistics into inverse analyses.
 
     Runs before anything reads the parse, because it changes what the extraction pass is
     shown. A table holding effects of both signs is two contrasts and only one of them has
     prose in the paper: the positive half keeps the parsed name and is extracted, the
     negative half is marked `withhold` and rebuilt afterwards by the mirror repair.
-
-    Its artefact is the parse it rewrote, so `done` cannot be the file existing -- it always
-    does. `sign_split_applied` alone is not enough either: a corpus partitioned before the
-    mirror existed carries that flag and still holds both halves as ordinary entries, which
-    is exactly the case the mirror was built for. Both conditions are checked.
     """
 
     name: StageName = StageName.sign_split
@@ -395,10 +329,7 @@ class _ModelPass(_Base):
 
     mode: str = ""
     #: The deterministic repairs whose inputs this pass's own payload holds, run on it
-    #: before it is written. They used to wait for the merge at `build`, two stages after
-    #: `fill` asks a model about the very slots they fill: over 15 papers, 215 of the 1,774
-    #: slots offered were repairable, 100 of them `source_table_analysis` -- a join key read
-    #: off the stage-1 parse, which a model can only guess at.
+    #: before it is written.
     repair_stage: tuple[str, ...] = ()
 
     def context(self, paper: Paper, settings: Settings) -> str:
@@ -422,12 +353,7 @@ class _ModelPass(_Base):
         # Retry names the fault rather than resampling blindly. The failure is stochastic --
         # the same prompt succeeds on the next draw most of the time -- but a model told what
         # was wrong with its last answer does better than one asked the same question twice.
-        #
-        # Without this the pass accepted whatever came back. A payload of
-        # `{"groups": [], "measures": [], ...}` is well formed, legally empty, and builds
-        # and validates into a record about no study at all -- 2 runs in 10 of the best
-        # configuration measured, and silent: `finish=stop`, nothing truncated, no validator
-        # objection. `attempts` was reaching only the gateway's network retry.
+        
         cost, traces, notes = Cost(), [], []
         payload: dict = {}
         failures: list[str] = []
@@ -452,30 +378,20 @@ class _ModelPass(_Base):
                         max_output_tokens=settings.max_output_tokens,
                         effort=settings.effort,
                         service_tier=settings.service_tier,
-                        # One network attempt per post-condition attempt: the two retries
-                        # answer different questions, and multiplying them spends the
-                        # budget twice.
                         attempts=1,
                     ),
                     paper=paper.study_id,
                     stage=self.name.value,
                 )
             except MalformedReply as error:
-                # A reply that will not parse is a rejected answer, not a broken run. It is
-                # the same stochastic fault the post-condition loop already absorbs -- an
-                # unbalanced bracket a few thousand characters in -- so it goes round again
-                # carrying the note, and only a paper that cannot produce JSON in
-                # `settings.attempts` tries fails.
+                # A malformed reply is a rejected answer.
                 cost = cost + error.cost
                 failures = [str(error)]
                 parse_failures.append(str(error))
                 continue
             cost = cost + reply.cost
             traces.append((reply.trace_id, reply.cache_status))
-            # A reply can be cut off and still parse: the model closes what it has open and
-            # the body is valid JSON describing half a paper. Nothing downstream can tell,
-            # and the post-condition only objects when a list is empty rather than short.
-            # `stop_reason` is the only witness, and it was written and never read.
+            # A reply can be cut off and still parse.
             if reply.stop_reason and reply.stop_reason != "stop":
                 truncation_notes.append(
                     f"attempt {attempt} finished on {reply.stop_reason!r}, not 'stop'; "
@@ -489,9 +405,7 @@ class _ModelPass(_Base):
             if not failures:
                 break
 
-        # Never parsed is not the same as parsed-but-imperfect. Writing `{}` here would
-        # build a record about no study at all, which is the exact silent failure the
-        # post-condition was added to stop.
+        # Never parsed is not the same as parsed-but-imperfect.
         if not parsed:
             raise MalformedReply(
                 f"{self.name.value} for {paper.study_id}: no valid JSON in "
@@ -508,9 +422,7 @@ class _ModelPass(_Base):
                 f"post-condition still failing after {settings.attempts} attempt(s): "
                 + "; ".join(failures)
             )
-        # Reported, never retried on: measured at 64% recall with 27 real findings against
-        # one false alarm, which is a good signal to show a reviewer and a bad one to
-        # re-ask a model about.
+
         outcome_notes += [f"suspect: {w}" for w in render.design_model_mismatch(payload)]
 
         outcome_notes += self._repair(paper, payload)
@@ -544,7 +456,7 @@ class _ModelPass(_Base):
 
 @dataclass(frozen=True)
 class Demands(_ModelPass):
-    """Analyses first: each declares the entities it needs, before any exist."""
+    """Analyses from the table/prose declare what entities are needed to describe them."""
 
     name: StageName = StageName.demands
     #: `context` prints the `table_map` that `Tables` wrote, so a change to the Table
@@ -557,16 +469,7 @@ class Demands(_ModelPass):
     repair_stage: tuple[str, ...] = ("shape", "demands")
 
     def context(self, paper: Paper, settings: Settings) -> str:
-        """The stage-1 parse, rendered as instructions rather than dumped as JSON.
-
-        This used to be `paper.parse.read_text()`. The file is a machine artefact, and
-        handing it over raw drops everything `stage1_block` exists to say: the parse key
-        each analysis must carry back in `source_table_analysis` -- the only exact join
-        from an analysis to its coordinates -- the table `local_id`s that `Analysis.tables`
-        is required to hold, which entries were sign-split and must not be re-merged, and
-        the zero-foci rule, which is worth **+16 points** paired with this ordering and
-        **-25** on its own. None of that survives being serialised back to JSON.
-        """
+        """Reading the Table->Analyses parse."""
         parse = TableParse.read(paper.parse)
         block = ""
         if parse.document:
@@ -590,15 +493,7 @@ class Demands(_ModelPass):
 
 @dataclass(frozen=True)
 class Satisfy(_ModelPass):
-    """Build exactly the entities the demands pass asked for, and nothing else.
-
-    What it leaves open is `Fill`'s: this pass decides which entities exist and answers what
-    it can, and a slot-level loop finishes the rest. A second entity-shaped pass used to run
-    here and was removed -- re-rendering a class schema to add one field is judged on whether
-    the entity came back rather than on whether the slot did, and measured over five papers
-    three rounds of it bought 18 filled fields for 11% more input, inside the noise of two
-    runs of one configuration.
-    """
+    """Build the entities the demands pass asked for."""
 
     name: StageName = StageName.satisfy
     reads: tuple[StageName, ...] = (StageName.demands,)
@@ -613,13 +508,7 @@ class Satisfy(_ModelPass):
         return json.loads(demands.read_text("utf-8")).get("required_entities") or ()
 
     def context(self, paper: Paper, settings: Settings) -> str:
-        """The shopping list the demands pass wrote, as this pass's contract.
-
-        Raw JSON again before: `requirements_block` is what turns the declared entities
-        into "emit one of each, with EXACTLY the local_id given", which is the whole point
-        of asking the analyses first. Without it the pass is free to invent its own ids and
-        every cell that points at one dangles.
-        """
+        """The shopping list the demands pass wrote, as this pass's contract."""
         demands = Demands().produces(paper, settings)
         if not demands.is_file():
             return ""
@@ -628,27 +517,7 @@ class Satisfy(_ModelPass):
 
 @dataclass(frozen=True)
 class Fill(_Base):
-    """Ask for the slots still open, round after round, until none are.
-
-    The pass `Satisfy` runs is shaped around entities: it renders a class schema and asks
-    for records. That is the right shape for deciding what exists and the wrong one for
-    finishing what already does -- to add one field it re-emits a whole entity, and its
-    answer is judged by whether the entity came back rather than by whether the slot did.
-    Measured on five papers, repeating it up to three times cost 11% more input and
-    returned 18 more filled fields, inside the ~9% two runs of one configuration differ by,
-    and three of five papers finished with `groups` still thin. Iterating that shape does
-    not converge because nothing in it says what "done" is.
-
-    This one names the slots, and a slot is done when it holds a value or an
-    `unreported_reason`. So the loop's exit is a fact about the record rather than a guess
-    about progress: it stops when `fill.unsettled` is empty. `fill_rounds` bounds the case
-    that does not get there -- `undetermined` is the one answer that leaves a slot open, and
-    a model that keeps giving it would otherwise be asked forever.
-
-    Writes back into the same payloads, so `Evidence` and `Build` see one record and not a
-    pile of rounds. A value it adds carries no evidence block; the quote pass adds those,
-    and a reason needs none.
-    """
+    """Fill the slots that are still open."""
 
     name: StageName = StageName.fill
     reads: tuple[StageName, ...] = (StageName.demands, StageName.satisfy)
@@ -658,8 +527,9 @@ class Fill(_Base):
         return settings.payloads / paper.study_id / "fill.json"
 
     def _targets(self, paper: Paper, settings: Settings) -> list[Path]:
-        """The payloads holding entities. `tables.json` is deterministic and off limits."""
+        """The payloads holding entities."""
         directory = settings.payloads / paper.study_id
+        # tables are filled deterministically
         skip = {"tables.json", "fill.json"}
         return sorted(p for p in directory.glob("*.json") if p.name not in skip)
 
@@ -719,10 +589,6 @@ class Fill(_Base):
                     notes.append(
                         f"{target.name} round {round_number} stopped on " f"{reply.stop_reason}"
                     )
-                # Shape only, and after each round: the loop writes values from a model
-                # reply, so a numeric string or a lone scalar in a multivalued slot arrives
-                # here exactly as it does from `satisfy`. These are idempotent, which is
-                # what lets them run per round rather than once.
                 from pondie.extraction.record import fix as _fix
 
                 _fix.apply_all(
@@ -755,62 +621,22 @@ class Fill(_Base):
 
 @dataclass(frozen=True)
 class Evidence(_Base):
-    """A supporting quote for every value the earlier passes emitted.
-
-    45% of the pipeline's input tokens. Omitting it leaves a record that is structurally
-    complete and unreviewable, which is a different thing from an incomplete one.
-
-    It does not write a payload of its own: `evidence` is a REQUIRED block on every
-    `ExtractedValue`, so the blocks go onto the fields in the payloads the earlier stages
-    wrote, and those payloads are rewritten in place. `noev/` is a copy taken first, so the
-    stage can be re-run without re-running `satisfy`.
-
-    The model reads the whole paper -- handing it a retrieved shortlist instead was measured
-    and cost 21 points -- and what it cannot place is left `not_found` for `repair` to go
-    looking for.
-
-    A second, local locator used to run here and was unioned with this one. It is gone, but
-    the reason it was moved out first still holds: a stage that spends tokens *and* holds a
-    card can have neither half improved without paying for the other. When the retriever got
-    5.4x faster mid-run, the 353 papers already extracted could not take the improvement
-    without re-running the quote pass, and the corpus ended up built two ways.
-    """
+    """A supporting quote for every value the earlier passes emitted."""
 
     name: StageName = StageName.evidence
     reads: tuple[StageName, ...] = (StageName.demands, StageName.satisfy, StageName.fill)
     asks_a_model: bool = True
-    #: Fields per call. Every batch re-sends the whole paper -- 29k of the 36-42k tokens a
-    #: call carries -- so the batch count, not the field count, is what this stage costs.
-    #: Measured over the 89 records of `depression-full`: a median paper has 123 extracted
-    #: fields, p90 189, max 360. At 60 that is 2.66 calls per paper (237 over the corpus);
-    #: at 200 it is 1.07 (95), and the papers needing a second call are the p90 tail.
-    #:
-    #: Bounded by the reply, not the request: 200 quotes is on the order of 10k output
-    #: tokens against a 48k ceiling, and the largest paper here would still fit in one.
-    #: Raising it was unsafe while a cut-off reply was silent -- the fields past the cut
-    #: take `not_found` from `apply_evidence` and read as a paper with nothing to cite --
-    #: so it went up only once the loop below started reading `stop_reason`.
+
     batch: int = 200
 
     def produces(self, paper: Paper, settings: Settings) -> Path:
         return settings.payloads / paper.study_id / "noev"
 
     def done(self, paper: Paper, settings: Settings) -> bool:
-        """Did the evidence get written, or did the stage merely start?
+        """Did the evidence get written?
 
         `noev/` is the pre-evidence backup and is made BEFORE any evidence is, so its
-        presence proves only that the stage began. Reading it as "done" cost seventeen
-        papers their evidence: the stage died early, the backup was already on disk, and
-        every resume skipped it and built records with no evidence at all.
-
-        Nor can the payloads answer it. `retrieve_evidence` also selects the prompt rule
-        that asks the extraction passes to emit `evidence` inline, so on the default
-        settings every extracted field already carries a block in exactly the shape this
-        pass writes -- there is nothing in a payload that distinguishes what the model said
-        from what this stage did. Any content check is answering a different question.
-
-        The stage records this state in a file it writes last. The file exists only if the loop
-        over every payload completed.
+        presence only proves that the stage began.
         """
         return not settings.redo and self._marker(paper, settings).is_file()
 
@@ -819,14 +645,7 @@ class Evidence(_Base):
         return self.produces(paper, settings) / ".complete"
 
     def _payloads(self, paper: Paper, settings: Settings) -> list[Path]:
-        """The payloads a model pass wrote, which are the ones needing warrant.
-
-        `tables.json` is excluded rather than merely skipped: its values are literals copied
-        from the table manifest and are born `not_applicable`, so asking a model to quote
-        them spends tokens to replace a correct claim with `not_found` -- which
-        `values.py` documents as "a defect a reviewer should see". Three manufactured
-        defects per table, per paper.
-        """
+        """Write the evidence payloads."""
         directory = settings.payloads / paper.study_id
         deterministic = {"aliases.json", f"{StageName.tables.value}.json"}
         if not directory.is_dir():
@@ -850,8 +669,6 @@ class Evidence(_Base):
         if not targets:
             return self._skip(paper, "no payloads to warrant")
 
-        # Taken before anything is written, so a re-run starts from the payloads as the
-        # extraction passes left them rather than from ones already carrying evidence.
         backup = self.produces(paper, settings)
         restoring = backup.is_dir()
         backup.mkdir(parents=True, exist_ok=True)
@@ -871,9 +688,9 @@ class Evidence(_Base):
 
         for target in targets:
             payload = json.loads(target.read_text(encoding="utf-8"))
-            # Settled without a call first, so the model is asked only about what is
-            # actually in doubt. A value occurring exactly once in the paper determines
-            # its own sentence, and `apply_evidence` cannot tell where a quote came from.
+            # Try finding a unique quote first.
+            # If the value only occurs once in the paper,
+            # then that's likely the evidence for that value.
             quotes: dict[str, str] = literal_quotes(payload, text)
             literal = set(quotes)
             wanted = [
@@ -888,10 +705,6 @@ class Evidence(_Base):
                 reply = caller(
                     ModelCall(
                         model=settings.model,
-                        # The instructions on the `system` half like every other pass. They
-                        # were concatenated into the user turn, which left the largest pass
-                        # in the pipeline -- 45% of input tokens -- sending nothing on the
-                        # one half a prompt cache can hit.
                         system=SYSTEM,
                         prompt=f"# Paper\n\n{text}\n\n"
                         f"# Facts needing a supporting quote\n\n{listing}\n\n"
@@ -905,14 +718,6 @@ class Evidence(_Base):
                     stage=self.name.value,
                 )
                 returned = {k: v for k, v in reply.payload.items() if isinstance(v, str)}
-                # The hazard `_ModelPass.run` already names, on the one pass that never
-                # checked for it. A cut-off reply still parses -- the model closes the
-                # object it has open and the body is a valid map of the fields it reached
-                # -- and the fields it never reached take `not_found` from
-                # `apply_evidence`, which reads exactly like a paper with no sentence to
-                # cite. This is the largest pass in the pipeline and the one whose reply
-                # grows with `batch`, so it is where truncation is likeliest and where it
-                # was least visible.
                 if reply.stop_reason and reply.stop_reason != "stop":
                     truncated.append(
                         f"{target.name} batch {begin // self.batch + 1} finished on "
@@ -945,17 +750,7 @@ class Evidence(_Base):
 
 @dataclass(frozen=True)
 class Build(_Base):
-    """Merge the payloads, repair, resolve quotes to offsets, validate. No model.
-
-    The validation is the part that had gone missing. `Validator` was constructed only by
-    its own CLI and by tests, so a run printed `N paper(s), 0 failed` for records carrying
-    dangling references, directions outside their vocabulary and spans that do not verify
-    against the declared hash.
-
-    Findings are notes, never a `reason`. A record is written either way: a defect is a
-    field for a reviewer rather than a paper to discard, and treating one as a failure is
-    what made five of sixteen papers read as lost when all sixteen had been built and
-    scored.
+    """Merge the payloads, repair, resolve quotes to offsets, validate.
     """
 
     name: StageName = StageName.build
@@ -975,11 +770,6 @@ class Build(_Base):
             return self._skip(paper)
         from pondie.extraction.record.builder import build
 
-        # `build` and not `merge_payloads`: merging assembles the body, and the record is
-        # the body plus the three things only the builder can supply -- every quote
-        # resolved to an offset into the normalized text, the `source_text_hash` those
-        # offsets are relative to, and the `local_id` the schema requires on Study. A
-        # record without them is not a partial record, it is an unvalidatable one.
         record, report = build(
             paper.study_id,
             paper.text,
@@ -996,17 +786,11 @@ class Build(_Base):
 
         notes = [f"repairs: {', '.join(report.repair_log.fired()) or 'none fired'}"]
         if report.warrant.unresolved:
-            # Both halves, because the note is where a run is read and one number could
-            # not say which fault it was: a field with no quote is a recall failure and a
-            # field whose quote was rejected is a fidelity one.
             notes.append(
                 f"{len(report.warrant.unresolved)} quote(s) did not resolve, leaving "
                 f"{report.warrant.unlocated} field(s) unevidenced despite a quote"
             )
         if report.warrant.case_insensitive:
-            # The measurement for the case-insensitive pass. A corpus already built cannot
-            # be asked what it bought, since a resolved span keeps the document's text and
-            # not the quote that located it.
             notes.append(
                 f"{report.warrant.case_insensitive} span(s) placed only by ignoring case")
         if report.dangling:
@@ -1017,12 +801,7 @@ class Build(_Base):
         )
 
     def _validate(self, record: dict, paper: Paper, settings: Settings) -> list[str]:
-        """Check the record against the schema, with the accepted findings suppressed.
-
-        Never fatal, and never a `reason`: this reports, and the record is already written.
-        The text is passed so spans are checked against the document they claim to address,
-        which is the invariant the whole evidence design rests on.
-        """
+        """Check the record against the schema."""
         from pondie.extraction.record import validate
         from pondie.schema import reader
 
@@ -1033,10 +812,6 @@ class Build(_Base):
             )
             validator.check_record(record)
         except Exception as error:  # noqa: BLE001
-            # The docstring above says never fatal and the code has to mean it. The record
-            # is already written at this point, so a fault in the checker must not turn a
-            # built paper into a failed one -- a validator bug reported as a paper failure
-            # is the worst of both: the paper looks lost and the bug looks like the data.
             return [f"validation could not run ({type(error).__name__}: {error})"]
         notes = []
         if validator.errors:
@@ -1050,30 +825,14 @@ class Build(_Base):
 
 @dataclass(frozen=True)
 class Repair(_Base):
-    """Improve a built record, and report anything the attempt broke.
-
-    Runs on the record `build` wrote, not on a payload, so its own artefact is the report:
-    `done()` keys on that rather than on the record, which already exists by the time this
-    starts.
-
-    Both halves -- the proposal sweep and the adjudication -- are on by default and
-    independent, so a run given no caller still applies the deterministic repairs. A missing
-    half is a note rather than a failure: a record that could not be improved is the record
-    `build` wrote, which is a worse outcome than repairing it and a much better one than
-    losing the paper.
-    """
+    """Improve a built record, and report anything the attempt broke."""
 
     name: StageName = StageName.repair
     reads: tuple[StageName, ...] = (StageName.build,)
     asks_a_model: bool = True
 
     def produces(self, paper: Paper, settings: Settings) -> Path:
-        """Beside the payloads, not among them.
-
-        `merge_payloads` globs `<payload_dir>/*.json`, so a report written there is merged
-        into the next build as four unexpected payload keys -- and those land in the very
-        report line added to catch an entity list going missing silently.
-        """
+        """Beside the payloads, not among them."""
         return settings.payloads.parent / "repairs" / f"{paper.study_id}.json"
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
@@ -1094,29 +853,16 @@ class Repair(_Base):
                 reason="no record to repair; build did not produce one",
             )
         record = json.loads(record_path.read_text())
-        # Kept before anything is changed, because this stage writes the record in place and
-        # the record is the only copy of what `build` produced. Without it, asking "did the
-        # repair help?" means running the repair again -- forty seconds a paper and a
-        # different answer each time the models move. Written once: a re-run must diff
-        # against the original extraction, not against the previous repair.
         kept = settings.records.parent / "unrepaired" / f"{paper.study_id}.extraction.json"
         if not kept.is_file():
             kept.parent.mkdir(parents=True, exist_ok=True)
             kept.write_text(record_path.read_text(), encoding="utf-8")
-        # `text_index.load`, not `read_text`: every offset in the record is measured against
-        # the normalized text and hashed into `source_text_hash`, so a span this pass writes
-        # against the raw file would address a different string. `Paper.text` is a property
-        # returning a Path -- calling it raised TypeError on the first line of real work,
-        # and the test stub had a `text()` method, so nothing caught it.
         text, _digest, _sections = text_index.load(paper.text)
 
         proposer = None
         notes: list[str] = []
         if settings.repair:
             if caller is None:
-                # Nothing to propose with. The deterministic half of the pass -- the guards,
-                # the casts, the differential validation -- still runs, so this is a note
-                # rather than a failure.
                 notes.append("no caller for the proposer; repairing deterministically")
             else:
                 from pondie.extraction.repair.propose_with_extractor import ModelProposer
@@ -1131,11 +877,6 @@ class Repair(_Base):
                 notes.append(f"proposer: {settings.model}")
 
         report = repair_pass.run(
-            # The schema this validates against, not the storage one. They differ --
-            # `Table.coordinate_space` exists in storage and not in extraction -- so
-            # editing against one and checking against the other offered the proposer
-            # slots the record may not carry. Harmless while every template held only
-            # `local_id`; four invalid writes on the first paper once they did not.
             record,
             text,
             reader.load(EXTRACTION_SCHEMA),
@@ -1161,16 +902,6 @@ class Repair(_Base):
             )
             + "\n"
         )
-        # A finding this pass introduced is a defect in the pass rather than in the paper.
-        # It is a note and not a `reason`, for the same reason `build` treats its findings
-        # that way: the repaired record is still better than no record, and failing the
-        # paper would discard the whole extraction over a field a reviewer can see.
-        # `cost` only where there was one: an adjudication that found no contradiction makes
-        # no call, and StageOutcome's own default is the empty Cost.
-        # The proposer's spend as well as the adjudication's. The local proposer this
-        # replaced cost a card and nothing a ledger could see, which is why only the
-        # adjudication was ever summed; a served proposer bills per class per paper, and
-        # reported 0 calls for a stage that had made hundreds.
         spent = report.cost
         proposed = getattr(proposer, "cost", None)
         if proposed is not None:
@@ -1199,5 +930,5 @@ DEMAND_DRIVEN: tuple[Stage, ...] = (
 
 
 def sequence(settings: Settings) -> tuple[Stage, ...]:
-    """The stages this run will attempt, in order, filtered to those it asked for."""
+    """The stages this run will attempt, in order."""
     return tuple(s for s in DEMAND_DRIVEN if s.name in settings.stages)
