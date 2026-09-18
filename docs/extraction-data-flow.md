@@ -240,3 +240,54 @@ aliases, run the sequence, warrant, assemble.
 
 The move was verified over the 1,817 records in `record_arms`: the `AT_MERGE` group run
 under both trees produced byte-identical bodies and identical repair logs on every record.
+
+## Found: five places knew what a stage-1 parse is
+
+Invariant 2 says the parse is the only route to coordinates, so "what a parse holds and how
+to address it" is one of the load-bearing facts in the package. It was in five places:
+
+| where | what it knew |
+| --- | --- |
+| `extraction/parse.py` | `TableParse`, `ParsedAnalysis` — the document and one entry |
+| `formats/parse_keys.py` | `<table_id>#<ordinal>`, moved here to stop `query` importing `extraction` |
+| `stages._parsed_points` | every coordinate the parse holds |
+| `stages._parsed_tables` | every table the parse read |
+| `render.PROSE_TABLE_ID` + two bare `"prose"` literals | the id a prose entry carries |
+
+Two readers of the document lived in the 1,272-line file that runs the pipeline, reached by
+whichever stage needed them first. They are now `TableParse.coordinates` and
+`TableParse.source_tables()`, beside the class they read, and `ParsedAnalysis` gained the
+`coordinates` and `is_prose` its callers were computing from `.raw`.
+
+`PROSE_TABLE_ID` went to `formats/parse_keys.py` rather than to `extraction/parse.py`,
+because `benchmark` and `query` both compare against it and neither imports `extraction` —
+the same argument that put `parse_keys` there.
+
+## Found: the `tables` stage hand-rolled the manifest reader that `formats` already had
+
+`stages._manifest_tables` read `<study>/processed/<flavour>/tables.jsonl` line by line and
+lifted `metadata.table_label` — which is `formats.table_parse.read_manifest`, twelve lines
+further down the same path. This is the failure mode the `formats` docstring is written
+about, and the two had already drifted: `read_manifest` returns `""` for an absent caption
+and the stage's copy returned `None`, which the stage's own `_manifest_value` then wrapped
+as a blank string rather than `not_reported`.
+
+`_manifest_value` now treats blank and absent alike — an empty caption and a missing one
+make the same claim, which is the argument `Tables.run` already makes for a manifest with
+no rows — and the stage calls `read_manifest`. Verified over the 79 manifests and 210 table
+rows on disk: **0 differences** on the five fields the stage reads.
+
+`Paper` gained `study_dir`, since `read_manifest` takes the study rather than the file, and
+`Paper`'s docstring already claims to be "the only filesystem knowledge a stage needs".
+
+## Found: `benchmark.backfill.entry_id` was `parse_keys` again, already drifted
+
+It computed `<table>#<n>` for one position, defaulting a missing `table_id` to `prose` where
+`parse_keys` leaves it empty — so the two disagreed on any entry without one, and its own
+docstring says the join has to match what candidates write. None of the 4,280
+`source_table_analysis` values in the corpus has an empty prefix, so the divergence never
+fired. It delegates now.
+
+`stages.py` is 1,209 lines and holds a Protocol, a base, nine stage classes in pipeline
+order, and `sequence()`. It is not split further: the order is the thing the file
+communicates, and nine files would hide it.

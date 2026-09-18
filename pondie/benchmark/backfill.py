@@ -41,6 +41,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from pondie import paths
+from pondie.formats import parse_keys
 from pondie.benchmark import REFERENCE
 
 SLOT = "source_table_analysis"
@@ -64,10 +65,15 @@ def entry_id(entries: list[Mapping[str, Any]], position: int) -> str:
     table 3, which on `ngDTY5BgJUuX` is the parse's third. Numbering globally produced
     `t3#3` -- an id no candidate writes, so the join it was meant to enable would have
     matched nothing while reporting 78 successes.
+
+    Which is `parse_keys` for one position, and was a second implementation of it that had
+    already drifted: it defaulted a missing `table_id` to `prose` where `parse_keys` leaves
+    it empty, so the two disagreed on any entry without one. None of the 4,280
+    `source_table_analysis` values in the corpus has an empty prefix, so the divergence
+    never fired -- and a join asserted against what candidates write should be computed by
+    the thing that writes them.
     """
-    table = entries[position].get("table_id") or "prose"
-    nth = sum(1 for e in entries[: position + 1] if (e.get("table_id") or "prose") == table)
-    return f"{table}#{nth}"
+    return parse_keys.parse_keys(list(entries))[position]
 
 
 def _by_name(entries: Iterable[Mapping[str, Any]]) -> dict[str, list[int]]:

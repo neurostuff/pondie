@@ -13,6 +13,14 @@ pipelines the package advertises.
 from __future__ import annotations
 
 
+#: The `table_id` a prose-derived parse entry carries, making its keys `prose#1`, `prose#2`,
+#: distinct from any real table's. Here and not with the stage that writes it, because
+#: `benchmark` and `query` both compare against it and neither imports `extraction` -- the
+#: same argument this module exists for. It was a constant in the prompt renderer and a bare
+#: literal in the two places that write it.
+PROSE_TABLE_ID = "prose"
+
+
 def parse_keys(analyses: list[dict]) -> list[str]:
     """A stable address per parsed entry, positionally aligned with `analyses`.
 

@@ -38,7 +38,7 @@ from pondie.extraction.models import (
 from pondie.extraction.parse import TableParse
 from pondie.extraction.record.ids import table_local_id
 from pondie.extraction.prompt import preprocess, render, worked
-from pondie.formats import text_index, values
+from pondie.formats import table_parse, text_index, values
 from pondie.schema import reader
 
 #: Written into every record's `extraction_metadata`, so a record says which pipeline made
@@ -186,62 +186,14 @@ def prompt_digest() -> str:
 
 
 def _manifest_value(text: str | None) -> dict:
-    """A literal copied from the table manifest, in the shape the schema declares.
+    """A literal copied from a table source, in the shape the schema declares.
 
     `not_applicable` because there is no sentence to quote: the value came from the
-    manifest, not from the paper's prose. `None` becomes `not_reported` -- a claim that the
-    manifest carried no caption -- rather than an empty string, which reads as a blank one.
+    manifest or the parse, not from the paper's prose. Blank and absent both become
+    `not_reported` -- an empty caption and a missing one make the same claim, and an empty
+    string would read as a blank one the paper printed.
     """
-    return values.wrap(text, source="reported", evidence="not_applicable")
-
-
-def _manifest_tables(manifest: Path) -> list[dict]:
-    """The staging manifest's tables, in one shape both sources share."""
-    out = []
-    for line in manifest.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        source = json.loads(line)
-        metadata = source.get("metadata") or {}
-        out.append(
-            {
-                "table_id": source.get("table_id"),
-                "table_number": source.get("table_number"),
-                "table_label": metadata.get("table_label"),
-                "caption": source.get("caption") or None,
-                "footer": source.get("footer") or None,
-            }
-        )
-    return out
-
-
-def _parsed_tables(parse: Path) -> list[dict]:
-    """The tables the stage-1 parse read, one entry each, first mention winning.
-
-    `corpus.tables` stamps every parsed analysis with the table it came from, so the parse
-    carries the same five fields the manifest does. The prose pseudo-table is excluded: it
-    is not a table, and `stage1_block` already renders it under a heading that tells the
-    model to omit `tables`.
-    """
-    if not parse.is_file():
-        return []
-    try:
-        analyses = json.loads(parse.read_text(encoding="utf-8")).get("analyses") or []
-    except (OSError, json.JSONDecodeError):
-        return []
-    out: dict[str, dict] = {}
-    for analysis in analyses:
-        table_id = str(analysis.get("table_id") or "")
-        if not table_id or table_id == render.PROSE_TABLE_ID or table_id in out:
-            continue
-        out[table_id] = {
-            "table_id": table_id,
-            "table_number": analysis.get("table_number"),
-            "table_label": analysis.get("table_label"),
-            "caption": analysis.get("table_caption") or None,
-            "footer": analysis.get("table_footer") or None,
-        }
-    return list(out.values())
+    return values.wrap(text or None, source="reported", evidence="not_applicable")
 
 
 @dataclass(frozen=True)
@@ -281,14 +233,16 @@ class Tables(_Base):
         if self.done(paper, settings):
             return self._skip(paper)
 
-        manifest = paper.text.parent / "tables.jsonl"
-        sources = _manifest_tables(manifest) if manifest.is_file() else []
+        sources = list(
+            table_parse.read_manifest(paper.study_dir, paper.flavour.value).values()
+        )
         origin = f"{paper.flavour.value}/tables.jsonl"
         if not sources:
             # On emptiness as well as absence. A manifest with no rows makes the same claim
             # an absent one does, and the fallback is what keeps the prompt's table headings
             # backed by a declared entity either way.
-            sources, origin = _parsed_tables(paper.parse), "the stage-1 parse"
+            sources = TableParse.read(paper.parse).source_tables()
+            origin = "the stage-1 parse"
 
         tables, id_map, taken = [], {}, set()
         for index, source in enumerate(sources, start=1):
@@ -365,7 +319,7 @@ class ProseFoci(_Base):
         before = parse.document.get("analyses") or []
         entries = preprocess.prose_parse_entries(
             paper.text.read_text(encoding="utf-8", errors="replace"),
-            _parsed_points({"analyses": before}),
+            parse.coordinates,
         )
         parse.document["analyses"] = [*before, *entries]
         parse.document["prose_foci_applied"] = True
@@ -619,15 +573,14 @@ class Demands(_ModelPass):
         the zero-foci rule, which is worth **+16 points** paired with this ordering and
         **-25** on its own. None of that survives being serialised back to JSON.
         """
-        parsed: dict[str, Any] = {}
+        parse = TableParse.read(paper.parse)
         block = ""
-        if paper.parse.is_file():
-            parsed = json.loads(paper.parse.read_text("utf-8"))
+        if parse.document:
             table_ids = (
                 json.loads(paper.table_map.read_text("utf-8")) if paper.table_map.is_file() else {}
             )
             block = render.stage1_block(
-                parsed,
+                parse.document,
                 table_ids,
                 zero_foci_rule=settings.zero_foci_rule,
             )
@@ -637,24 +590,8 @@ class Demands(_ModelPass):
         # parse would withhold the list from exactly those.
         return block + preprocess.prose_coordinate_block(
             paper.text.read_text(encoding="utf-8", errors="replace"),
-            _parsed_points(parsed),
+            parse.coordinates,
         )
-
-
-def _parsed_points(parsed: Mapping[str, Any]) -> list[tuple[float, float, float]]:
-    """Every coordinate the stage-1 parse already holds, so prose does not repeat it."""
-    out = []
-    for analysis in parsed.get("analyses") or []:
-        for point in analysis.get("points") or []:
-            coords = point.get("coordinates")
-            if isinstance(coords, Mapping):
-                coords = [coords.get("x"), coords.get("y"), coords.get("z")]
-            if isinstance(coords, (list, tuple)) and len(coords) == 3:
-                try:
-                    out.append(tuple(float(v) for v in coords))
-                except (TypeError, ValueError):
-                    continue
-    return out
 
 
 @dataclass(frozen=True)

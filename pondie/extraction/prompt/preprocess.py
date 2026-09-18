@@ -26,6 +26,8 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
+from pondie.formats import parse_keys
+
 # --------------------------------------------------------------- section segmentation
 
 #: `text.py` writes the corpus text with its headings as `## `/`### ` markdown and
@@ -580,8 +582,8 @@ def prose_parse_entries(text: str, known: Iterable[tuple[float, float, float]] =
     has to become a parse entry or it has nowhere to be stored: adding a coordinate field to
     the schema for prose alone would give the same fact two homes.
 
-    `table_id` is "prose", which makes the keys `prose#1`, `prose#2` under the existing
-    `<table_id>#<ordinal>` format, distinct from any real table's.
+    `table_id` is `parse_keys.PROSE_TABLE_ID`, making the keys `prose#1`, `prose#2` under the
+    existing `<table_id>#<ordinal>` format, distinct from any real table's.
     """
     entries = []
     for sentence, found in prose_coordinates(text, known):
@@ -589,7 +591,7 @@ def prose_parse_entries(text: str, known: Iterable[tuple[float, float, float]] =
             {
                 "name": "",  # named by the extraction pass, from the sentence
                 "description": sentence,
-                "table_id": "prose",
+                "table_id": parse_keys.PROSE_TABLE_ID,
                 "table_number": None,
                 "table_caption": sentence[:300],
                 "table_footer": "",

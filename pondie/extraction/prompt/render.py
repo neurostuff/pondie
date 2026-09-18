@@ -227,9 +227,9 @@ def render_schema(sch: Schema, names: set[str], study_keep: list[str]) -> str:
 # ---------------------------------------------------------------- pass-2 context
 
 
-#: The `table_id` prose-derived parse entries carry. Not a real table, and rendered under
-#: its own heading because the rules for a table entry do not hold for one.
-PROSE_TABLE_ID = "prose"
+#: Re-exported from the format that owns it. Rendered under its own heading here, because
+#: the rules for a table entry do not hold for a sentence.
+PROSE_TABLE_ID = parse_keys.PROSE_TABLE_ID
 
 PROSE_GROUP_NOTE = """
 Reported in PROSE and in no table — proposals, not parse output

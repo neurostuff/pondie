@@ -73,6 +73,11 @@ class Paper(Strict):
         return paths.text(self.study_id, self.flavour, self.root)
 
     @property
+    def study_dir(self) -> Path:
+        """Everything staged for this study, of every flavour. What `read_manifest` takes."""
+        return self.root / self.study_id
+
+    @property
     def parse(self) -> Path:
         return paths.stage1(self.study_id, self.root)
 
