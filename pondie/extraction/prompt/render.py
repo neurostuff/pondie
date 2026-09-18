@@ -50,12 +50,18 @@ REPO = paths.REPO
 EXTRACTION_SCHEMA = schema.EXTRACTION
 README = schema.ROOT / "extraction-readme.md"
 
-#: Payload keys merge_payloads() accepts, taken from the schema through the same
-#: function build_record uses. Hardcoding this list is how `conditions` and `terms`
-#: survived here for a schema version after Condition moved under Task and Term
-#: became ModelTerm under ModelEstimation -- both would have been merged as
-#: "unexpected payload key" and dropped.
-ENTITY_LISTS = schema.entity_lists()
+# Payload keys merge_payloads() accepts are read from the schema through the same
+# function build_record uses -- `schema.entity_lists()`, called where it is needed rather
+# than bound to a constant here. Hardcoding the list is how `conditions` and `terms`
+# survived a schema version after Condition moved under Task and Term became ModelTerm
+# under ModelEstimation; both would have been merged as "unexpected payload key" and
+# dropped.
+#
+# Not a module-level constant, which is the part that took two tries. `entity_lists()`
+# parses the LinkML schema, `extraction/__init__` imports `driver` imports `stages`
+# imports this module -- so binding it here made importing ANY name under
+# `pondie.extraction` parse eleven schema modules and cost 750 ms. The function is
+# `lru_cache`d, so calling it per use costs one parse for the process and none after.
 
 #: Filled by the builder from the source text, never by the model.
 SCAFFOLDING_CLASSES = {"ExtractionMetadata", "PaperSection"}
@@ -699,7 +705,7 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
     analysis_side = MODE_SCHEMA.get(mode, mode) == "analyses"
     payload_keys = [
         k
-        for k, v in ENTITY_LISTS.items()
+        for k, v in schema.entity_lists().items()
         if "." not in v and v != "tables" and (v == "analyses") == analysis_side
     ]
     if mode == "demands":
@@ -759,7 +765,7 @@ def postcondition_failures(
     # 'name {' -- the local_id and the first key of the whole-brain VBM analysis, which the
     # paper reports as tested and null. Non-emptiness passed, so nothing retried, and the
     # one analysis that decided the paper's inclusion was dropped downstream as unparseable.
-    for key in ("analyses", "required_entities", *ENTITY_LISTS):
+    for key in ("analyses", "required_entities", *schema.entity_lists()):
         entries = payload.get(key)
         if not isinstance(entries, list):
             continue
@@ -780,7 +786,7 @@ def postcondition_failures(
             )
         failures.extend(unreachable_term_demands(payload))
     else:
-        if not any(payload.get(key) for key in ENTITY_LISTS):
+        if not any(payload.get(key) for key in schema.entity_lists()):
             failures.append(
                 "every entity list is empty: no group, acquisition, measure or "
                 "model estimation was emitted for a paper that has them"
@@ -941,7 +947,7 @@ def normalize(payload: dict[str, Any], mode: str) -> tuple[dict[str, Any], list[
     # sibling empty list at the top level shadows it. Hoist it and say so: the model
     # emitting both shapes at once is a prompt problem worth seeing.
     for key in list(study):
-        if key in ENTITY_LISTS and isinstance(study[key], list):
+        if key in schema.entity_lists() and isinstance(study[key], list):
             hoisted = study.pop(key)
             if hoisted:
                 if payload.get(key):
@@ -952,7 +958,7 @@ def normalize(payload: dict[str, Any], mode: str) -> tuple[dict[str, Any], list[
     for key in list(payload):
         # `required_entities` is a top-level output of the demands pass, not a stray Study
         # attribute; sweeping it under `study` would hide it and the next line drops it.
-        if key in ENTITY_LISTS or key in ("study", "required_entities"):
+        if key in schema.entity_lists() or key in ("study", "required_entities"):
             continue
         study[key] = payload.pop(key)
         notes.append(f"moved top-level {key!r} under study")

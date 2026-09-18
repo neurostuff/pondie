@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from pondie import paths
-from pondie.extraction import recall
+from pondie.extraction.repair import propose as recall
 from pondie.extraction.prompt import render
 from pondie.schema import reader
 

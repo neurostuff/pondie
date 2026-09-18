@@ -190,7 +190,7 @@ def test_a_repair_that_damages_the_record_is_reported(sch):
 def test_a_class_is_swept_after_what_it_points_at(sch):
     """16508348: analyses were swept first, so four correctly named regions were refused for
     having no target, and the regions sweep ran afterwards."""
-    from pondie.extraction import recall
+    from pondie.extraction.repair import propose as recall
 
     order = recall.sweep_order(sch, ["analyses", "groups", "inference_settings", "regions"])
     assert order.index("regions") < order.index("analyses")
@@ -432,7 +432,7 @@ def test_only_a_settleable_contradiction_reaches_the_model(sch):
 def test_a_template_offers_the_slots_a_class_declares(sch):
     """`local_id` on every class, not only Analysis: without it the model can name an entity
     but never address one, so every correction had to be matched by label."""
-    from pondie.extraction.recall import template_for
+    from pondie.extraction.repair.propose import template_for
 
     template = template_for(sch, "Region")
     fields = template["regions"][0]
@@ -445,7 +445,7 @@ def test_a_template_offers_the_slots_a_class_declares(sch):
 
 
 def test_a_reference_slot_is_offered_by_name_not_as_a_nested_record(sch):
-    from pondie.extraction.recall import template_for
+    from pondie.extraction.repair.propose import template_for
 
     fields = template_for(sch, "Analysis")["analyses"][0]
     assert fields["regions"] == ["verbatim-string"]
@@ -456,7 +456,7 @@ def test_the_call_carries_a_directive_naming_what_to_list():
     """16508348: the same template and premise returned nothing without one, and three
     correct regions with it. A template says what an answer must look like, not what
     question it answers."""
-    from pondie.extraction.recall import directive
+    from pondie.extraction.repair.propose import directive
 
     assert "brain region" in directive("Region")
     assert "statistical analysis" in directive("Analysis")
@@ -607,7 +607,7 @@ def test_a_nested_slot_is_not_stringified(sch):
 def test_the_analysis_directive_is_not_circular():
     """ "List every statistical analysis ... used by one of its statistical analyses" asks
     the sweep to find analyses by their relation to analyses."""
-    from pondie.extraction.recall import directive
+    from pondie.extraction.repair.propose import directive
 
     said = directive("Analysis")
     assert "tied to an analysis" not in said
@@ -1198,7 +1198,7 @@ def test_a_nested_object_the_record_does_not_have_is_not_invented(sch):
 def test_a_structure_a_flat_reply_cannot_carry_is_still_left_alone(sch):
     """`Analysis.effect` nests cells nesting statistics. `recall.flat` is what separates the
     two cases, and it must keep saying no to this one."""
-    from pondie.extraction.recall import flat
+    from pondie.extraction.repair.propose import flat
 
     assert flat(sch, "Condition")
     assert not flat(sch, "Effect")

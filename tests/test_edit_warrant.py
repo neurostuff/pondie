@@ -216,7 +216,7 @@ def test_a_cited_quote_grounds_a_value_too_short_to_search_for(sch):
     """`_wrap` looks for a span only when the value is twenty characters or more, which is
     why no count or mean age it wrote was ever grounded. A proposer that returns the
     sentence it read the value from retires the floor: the search is for the sentence."""
-    from pondie.extraction import recall
+    from pondie.extraction.repair import propose as recall
 
     text = "Participants were 12 opioid-dependent patients recruited from a detox unit."
     entity = {"local_id": "grp_a"}
@@ -271,7 +271,7 @@ def test_a_table_an_analysis_cites_reports_that_analysis_effect():
 def test_the_proposer_is_not_asked_for_a_derived_table_kind():
     """Withdrawn from the template, not merely filtered afterwards: the pass answered it for
     almost every table it was shown, and the right answer is usually to say nothing."""
-    from pondie.extraction import recall
+    from pondie.extraction.repair import propose as recall
 
     assert "purpose" in recall._SKIP
 

@@ -24,8 +24,14 @@ from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from typing import Any, Callable, Mapping, MutableMapping
 
+from pondie.extraction.record import ids, spans as span_tools
+from pondie.extraction.record.effect import terms_in_scope
 from pondie.extraction.record.ids import from_local_id, label_of
+from pondie.extraction.record.validate import EXTRACTION_SCHEMA
+from pondie.extraction.repair import propose
+from pondie.extraction.repair.propose import flat
 from pondie.formats import values
+from pondie.schema import reader
 from pondie.schema.reader import Schema
 
 
@@ -295,8 +301,6 @@ def refuses_orphaning_cell_terms(edit: Edit) -> Refusal | None:
     }
     if not named:
         return None
-    from pondie.extraction.record.effect import terms_in_scope
-
     models = {
         m.get("local_id"): m
         for m in edit.record.get("model_estimations") or []
@@ -349,9 +353,6 @@ class EditLog:
 @functools.lru_cache(maxsize=1)
 def ADDRESSABLE() -> frozenset[str]:
     """Classes a record addresses by `local_id`, read from the extraction projection."""
-    from pondie.extraction.record.validate import EXTRACTION_SCHEMA
-    from pondie.schema import reader
-
     schema = reader.load(EXTRACTION_SCHEMA)
     return frozenset(name for name in schema.classes if "local_id" in schema.attributes(name))
 
@@ -460,8 +461,6 @@ def create(
     come from the table parse, so an invented one would not match the analysis the parse
     produced.
     """
-    from pondie.extraction.record import ids
-
     taken = {
         e.get("local_id")
         for e in record.get(_container(sch, class_name)) or []
@@ -585,9 +584,7 @@ def apply(
 ) -> EditLog:
     """Write the slots of `proposal` this entity may take. Returns what happened."""
     log = EditLog()
-    from pondie.extraction import recall
-
-    quotes = proposal.get(recall.QUOTES) or {}
+    quotes = proposal.get(propose.QUOTES) or {}
     if not isinstance(quotes, Mapping):
         quotes = {}
     # The class the entity says it is, not the one its container declares. An acquisition is
@@ -607,7 +604,7 @@ def apply(
     # the guard has run is a sibling the guard did not see.
     ordered = sorted(proposal, key=lambda name: kinds.get(name) != "reference")
     for name in ordered:
-        if name in ("local_id", "id", designator, recall.QUOTES) or name not in kinds:
+        if name in ("local_id", "id", designator, propose.QUOTES) or name not in kinds:
             continue
         cited = str(quotes.get(name) or "")
         proposed = proposal[name]
@@ -618,7 +615,7 @@ def apply(
             # reply cannot express -- `Analysis.effect` carries cells carrying statistics --
             # and `cast` would stringify one, so those are still left to whatever builds
             # them. `Task.conditions` is not that: a Condition is an id, a name, a kind and
-            # a description, and `recall.flat` says which classes are of that shape.
+            # a description, and `propose.flat` says which classes are of that shape.
             #
             # Reached late. The template began offering conditions before this could write
             # them, so the proposer was asked and its answer discarded -- and the one field
@@ -692,8 +689,6 @@ def _nested(
     filled -- an extracted value with a sentence behind it outranks a proposal without one,
     and that ordering is what stops a second pass quietly rewriting the first.
     """
-    from pondie.extraction.recall import flat
-
     if not inner or inner not in sch or not flat(sch, inner):
         return 0
     items = proposed if isinstance(proposed, list) else [proposed]
@@ -839,8 +834,6 @@ def _placed(value: Any, text: str, quote: str = "") -> dict | None:
     all: a guard that decided groundedness differently from the wrapper would refuse edits
     the record then shows as evidenced, or admit ones it shows as bare.
     """
-    from pondie.extraction.record import spans as span_tools
-
     # The proposer's own citation when it gave one, the value itself otherwise. A cited
     # sentence retires the twenty-character floor, which exists only because a bare value
     # is too short to search for safely -- and it is what makes a numeric groundable at all.

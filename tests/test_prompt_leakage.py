@@ -23,7 +23,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 GOLD = ROOT / "benchmarks" / "gold"
-from pondie.extraction import recall, recall_llm
+from pondie.extraction.repair import propose as recall, propose_with_extractor as recall_llm
 from pondie.extraction.prompt import preprocess
 from pondie.extraction.prompt import render as er
 from pondie.schema import reader

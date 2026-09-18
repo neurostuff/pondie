@@ -1119,7 +1119,7 @@ class Repair(_Base):
                 # rather than a failure.
                 notes.append("no caller for the proposer; repairing deterministically")
             else:
-                from pondie.extraction.recall_llm import ModelProposer
+                from pondie.extraction.repair.propose_with_extractor import ModelProposer
 
                 proposer = ModelProposer(
                     caller,
