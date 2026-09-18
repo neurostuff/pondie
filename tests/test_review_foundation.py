@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from pondie import paths, schema
+from pondie.extraction.evidence import warrant
 from pondie.extraction.record import builder, rules
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import validate as validate_record
@@ -1085,7 +1086,7 @@ def test_example_record_validates(record: dict, normalized: str, classes: dict) 
 @requires_paper
 def test_every_span_addresses_the_source_text(record: dict, normalized: str) -> None:
     checked = 0
-    for evidence_set in builder._iter_sets(record):
+    for evidence_set in warrant._iter_sets(record):
         for span in evidence_set["spans"]:
             span_tools.verify(normalized, span)
             checked += 1
@@ -1108,7 +1109,7 @@ def test_section_index_covers_every_span(record: dict, normalized: str) -> None:
     """Every span must fall inside an indexed section, or reviewers get no hint."""
 
     sections = text_index.build_sections(normalized)
-    for evidence_set in builder._iter_sets(record):
+    for evidence_set in warrant._iter_sets(record):
         for span in evidence_set["spans"]:
             assert text_index.section_path(sections, span["start_char"]) is not None
 
@@ -1186,7 +1187,7 @@ def test_validator_rejects_shifted_span_offset(
     record: dict, normalized: str, classes: dict
 ) -> None:
     broken = copy.deepcopy(record)
-    for evidence_set in builder._iter_sets(broken):
+    for evidence_set in warrant._iter_sets(broken):
         evidence_set["spans"][0]["start_char"] += 3
         break
 
@@ -1200,7 +1201,7 @@ def test_validator_rejects_evidence_set_without_spans(
     record: dict, normalized: str, classes: dict
 ) -> None:
     broken = copy.deepcopy(record)
-    for evidence_set in builder._iter_sets(broken):
+    for evidence_set in warrant._iter_sets(broken):
         evidence_set["spans"] = []
         break
 
@@ -1232,8 +1233,8 @@ def test_build_is_reproducible_and_gated_on_offsets() -> None:
     )
     second, _ = builder.build(PAPER, TEXT, PAYLOADS, "test-model", "test-version", "2026-08-02")
     assert first == second
-    assert report.resolved_exact + report.resolved_tolerant > 0
-    for failure in report.failures:
+    assert report.warrant.exact + report.warrant.whitespace_tolerant > 0
+    for failure in report.warrant.unresolved:
         assert ":" in failure and "quote" in failure, failure
 
 

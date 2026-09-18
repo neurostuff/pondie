@@ -191,18 +191,39 @@ module-level constant, **importing `builder` parsed the LinkML schema as a side 
 `reader.entity_lists(schema)` now owns it, `builder` caches it lazily, and `render` no longer
 imports `builder` at all.
 
-## Named, not done: `builder.py` is three modules
+## Done: warranting has a home
 
-At 1,954 lines it holds three unrelated responsibilities, and the line that separates them is
-already visible in the layer list above:
+`extraction/evidence/warrant.py` is the third arrow of the model, and the package's own
+`__init__` already described the job — "which characters of the paper say so" — with `quote`
+asking for a sentence and `record.spans` locating one string. What was missing was the step
+that applies the second to the output of the first.
 
-| what | lines | belongs |
-|---|---|---|
-| merge and orchestration | ~250 | stays: this is `build` |
-| **warranting** — `_resolve_field`, `_walk`, `_iter_sets` | ~150 | `extraction/evidence/`, whose `__init__` already says "which characters of the paper say so" |
-| ~20 repair implementations | ~1,400 | beside `repairs.py`, which holds the sequence and lazily imports `builder` to get the functions — a cycle papered over with a deferred import |
+It owned **thirteen of `BuildReport`'s sixteen counters** while the build owned three, so the
+counters moved with it into a `Warrant` the report holds. The names lost a prefix they no
+longer need:
 
-The warranting move is the clean one and it is not free: those three functions own **twelve of
-`BuildReport`'s fields**, so they should take an `EvidenceReport` that `BuildReport` holds, and
-that ripples into `summary()` and the stage notes. Worth doing as its own pass with its own
-verification rather than appended to this one.
+| was | is |
+|---|---|
+| `report.resolved_exact` | `report.warrant.exact` |
+| `report.resolved_cased` | `report.warrant.case_insensitive` |
+| `report.failures` | `report.warrant.unresolved` |
+| `report.fields_quote_unlocated` | `report.warrant.unlocated` |
+
+`BuildReport` is now three fields and a `Warrant`, `summary()` delegates, and `build` reads
+`report.warrant = evidence.warrant(body, normalized)` — one line where the text re-enters the
+pipeline, which is the fact the model exists to make visible.
+
+`_STATUSES` was duplicated in the move and is now `values.STATUSES`, beside the wrapper
+contract that owns it: both `repair_wrappers` and `warrant` ask.
+
+## Named, not done: the repair implementations
+
+`builder.py` is 1,854 lines and still holds two responsibilities. ~20 repair implementations
+sit beside the orchestration, while `repairs.py` holds the sequence and **lazily imports
+`builder` to get the functions** — a cycle papered over with a deferred import and a comment
+explaining why the import is deferred.
+
+Moving them beside the sequence removes the cycle. It is a larger and more mechanical change
+than the warranting move, and worth doing when the shared `walk` has absorbed more of their
+bodies: five are already loops over a generator, and the fewer lines each one is, the cheaper
+the move.

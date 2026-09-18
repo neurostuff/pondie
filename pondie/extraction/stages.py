@@ -1064,19 +1064,20 @@ class Build(_Base):
         out.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
 
         notes = [f"repairs: {', '.join(report.repair_log.fired()) or 'none fired'}"]
-        if report.failures:
+        if report.warrant.unresolved:
             # Both halves, because the note is where a run is read and one number could
             # not say which fault it was: a field with no quote is a recall failure and a
             # field whose quote was rejected is a fidelity one.
             notes.append(
-                f"{len(report.failures)} quote(s) did not resolve, leaving "
-                f"{report.fields_quote_unlocated} field(s) unevidenced despite a quote"
+                f"{len(report.warrant.unresolved)} quote(s) did not resolve, leaving "
+                f"{report.warrant.unlocated} field(s) unevidenced despite a quote"
             )
-        if report.resolved_cased:
+        if report.warrant.case_insensitive:
             # The measurement for the case-insensitive pass. A corpus already built cannot
             # be asked what it bought, since a resolved span keeps the document's text and
             # not the quote that located it.
-            notes.append(f"{report.resolved_cased} span(s) placed only by ignoring case")
+            notes.append(
+                f"{report.warrant.case_insensitive} span(s) placed only by ignoring case")
         if report.dangling:
             notes.append(f"{len(report.dangling)} cross-reference(s) need a human")
         notes += self._validate(record, paper, settings)

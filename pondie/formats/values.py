@@ -68,6 +68,10 @@ EvidenceStatus = Literal["present", "not_found", "not_applicable"]
 #: prevent: absent means nothing was asked.
 ExtractionStatus = Literal["extracted", "not_reported"]
 
+#: The same two, as a tuple to test membership against. Named here because this module owns
+#: the wrapper contract, and `builder.repair_wrappers` and `evidence.warrant` both ask.
+STATUSES: tuple[str, str] = ("extracted", "not_reported")
+
 #: Why a `not_reported` slot has no value, where the reason is not the plain one. A qualifier
 #: on the status, not a second status: missingness keeps one encoding, so a query asking what
 #: is missing still reads `extraction_status` alone and never has to know this vocabulary.

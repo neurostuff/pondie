@@ -30,6 +30,7 @@ from typing import Any
 from linkml_runtime.linkml_model.meta import SlotDefinition
 
 from pondie import schema
+from pondie.extraction.evidence import warrant as evidence
 from pondie.extraction.record import direction, ids, repairs, walk
 from pondie.extraction.record import spans as span_tools
 
@@ -71,31 +72,15 @@ _CONSUMED_ELSEWHERE = {"required_entities"}
 
 @dataclass
 class BuildReport:
-    resolved_exact: int = 0
-    resolved_tolerant: int = 0
-    #: Spans only the case-insensitive pass could place. Separate from `resolved_tolerant`
-    #: because it is the measurement for adding that pass: a corpus already built cannot be
-    #: asked what ignoring case would have bought, since a resolved span keeps the
-    #: document's text and not the quote that located it.
-    resolved_cased: int = 0
-    #: Spans recovered by splitting an elided quote into the fragments it cites.
-    resolved_elided: int = 0
-    failures: list[str] = field(default_factory=list)
-    fields_total: int = 0
-    fields_extracted: int = 0
-    fields_not_reported: int = 0
-    fields_evidence_present: int = 0
-    fields_evidence_not_found: int = 0
-    #: Fields left `not_found` after a quote WAS offered and no locator placed it, against
-    #: `fields_evidence_not_found` which counts both that and the fields nobody quoted. The
-    #: two are opposite faults with opposite fixes, and `status: not_found` said only that
-    #: one of them happened.
-    fields_quote_unlocated: int = 0
-    #: Fields that kept some evidence and lost some. Invisible in every field-level count,
-    #: including `fields_quote_unlocated`: the field reads as fully evidenced, and only the
-    #: quote-level tally shows the loss.
-    fields_quote_partly_unlocated: int = 0
-    downgraded: list[str] = field(default_factory=list)
+    """What `build` did to one paper. Warranting keeps its own tally, which it owns.
+
+    Thirteen of the sixteen counters here belonged to span resolution and three to the
+    build, and `warrant` now holds the thirteen: `report.warrant.exact` rather than
+    `report.resolved_exact`, and `report.warrant.unresolved` rather than
+    `report.failures`.
+    """
+
+    warrant: evidence.Warrant = field(default_factory=evidence.Warrant)
 
     #: The repairs, one list each, and the two hard faults. Counted rather than printed and
     #: forgotten: the counts are how a prompt regression becomes visible, and nothing
@@ -121,16 +106,7 @@ class BuildReport:
 
     def summary(self) -> str:
         return (
-            f"fields={self.fields_total} "
-            f"(extracted={self.fields_extracted}, not_reported={self.fields_not_reported})\n"
-            f"evidence: present={self.fields_evidence_present}, "
-            f"not_found={self.fields_evidence_not_found}\n"
-            f"spans: exact={self.resolved_exact}, whitespace-tolerant={self.resolved_tolerant}, "
-            f"case-insensitive={self.resolved_cased}, elided={self.resolved_elided}, "
-            f"unresolved={len(self.failures)}\n"
-            f"fields unevidenced despite a quote={self.fields_quote_unlocated}, "
-            f"partly={self.fields_quote_partly_unlocated}\n"
-            f"downgraded fields={len(self.downgraded)}\n"
+            f"{self.warrant.summary()}\n"
             f"repairs={self.repairs} ("
             + ", ".join(
                 f"{name}={len(self.repair_log.changes(name))}"
@@ -138,10 +114,6 @@ class BuildReport:
             )
             + ")"
         )
-
-
-#: The only two things `extraction_status` may say.
-_STATUSES = ("extracted", "not_reported")
 
 
 def repair_wrappers(node: Any, path: str = "") -> list[str]:
@@ -166,7 +138,7 @@ def repair_wrappers(node: Any, path: str = "") -> list[str]:
     if isinstance(node, dict):
         status = node.get("extraction_status") if "extraction_status" in node else None
 
-        if "extraction_status" in node and status not in _STATUSES:
+        if "extraction_status" in node and status not in values.STATUSES:
             if "value" not in node or node["value"] in (None, ""):
                 node["value"] = status
             node["extraction_status"] = "extracted"
@@ -213,136 +185,6 @@ def derive_acquisition_types(body: dict[str, Any]) -> list[str]:
             acquisition["acquisition_type"] = target
             filled.append(f"acquisitions[{index}]: {value} -> {target}")
     return filled
-
-
-def _resolve_field(
-    node: dict[str, Any], normalized: str, folded: str, path: str, report: BuildReport
-) -> None:
-    """Rewrite one FIELD object's evidence quotes into verified spans, in place."""
-
-    report.fields_total += 1
-    status = node.get("extraction_status")
-    if status == "extracted":
-        report.fields_extracted += 1
-    elif status == "not_reported":
-        report.fields_not_reported += 1
-
-    evidence = node.get("evidence")
-    if not isinstance(evidence, dict):
-        # A field with no `evidence` object at all is the same defect as one claiming the
-        # wrong status: `evidence` is REQUIRED on every ExtractedValue, so returning here
-        # left the record to fail validation at the end of the run rather than be fixed and
-        # counted. `repair_wrappers` produces exactly this shape.
-        #
-        # Branching on the status, because the two answers are different claims and an
-        # earlier version of this wrote `not_found` for both. A `not_reported` field is one
-        # the paper never mentioned; saying its support could not be located is the exact
-        # conflation `values.py` exists to prevent, and the schema rejects the pair outright
-        # ("not_reported fields must have evidence.status not_applicable"). That shape is
-        # what `--no-evidence` instructs the model to emit, so every such run produced it.
-        located = status == "extracted"
-        node["evidence"] = evidence = {"status": "not_found" if located else "not_applicable"}
-        report.downgraded.append(f"{path}: {status} with no evidence block")
-
-    raw_sets = evidence.get("sets")
-    if not isinstance(raw_sets, list):
-        # An extracted field may not claim its evidence is not_applicable: the value is
-        # asserted, so support for it was either found or not. The branch below enforces
-        # this once a set has been tried; a field that arrived with no `sets` at all has
-        # never been through it, and used to keep the contradiction all the way into the
-        # record.
-        if status == "extracted" and evidence.get("status") == "not_applicable":
-            evidence["status"] = "not_found"
-            report.downgraded.append(path)
-        if evidence.get("status") == "not_found":
-            report.fields_evidence_not_found += 1
-        return
-
-    rebuilt: list[dict[str, Any]] = []
-    unlocated = 0
-    for index, evidence_set in enumerate(raw_sets):
-        quotes = evidence_set.get("quotes") if isinstance(evidence_set, dict) else None
-        if not isinstance(quotes, list):
-            continue
-        resolved: list[dict[str, object]] = []
-        for quote in quotes:
-            try:
-                placed = [span_tools.resolve(normalized, quote, folded_text=folded)]
-            except span_tools.SpanResolutionError as error:
-                # A quote joining two non-adjacent fragments with "..." is not in the
-                # document and never can be, but each fragment is, and an EvidenceSet
-                # already holds several spans. Tried only after the whole quote fails.
-                try:
-                    placed = span_tools.resolve_elided(normalized, quote, folded_text=folded)
-                    report.resolved_elided += len(placed)
-                except span_tools.SpanResolutionError:
-                    report.failures.append(f"{path} set[{index}]: {error}")
-                    unlocated += 1
-                    continue
-            else:
-                found = placed[0]
-                if found.exact:
-                    report.resolved_exact += 1
-                elif found.cased:
-                    report.resolved_cased += 1
-                else:
-                    report.resolved_tolerant += 1
-            resolved.extend(span.as_record() for span in placed)
-
-        # An EvidenceSet requires at least one span (minimum_cardinality: 1), so a
-        # set whose every quote failed to resolve cannot be emitted at all.
-        if resolved:
-            # `source` says which locator found this set. Rebuilding the set without it
-            # would drop the distinction the evidence pass just recorded, leaving the two
-            # locators told apart only by position again.
-            rebuilt.append(
-                {"spans": resolved}
-                if not evidence_set.get("source")
-                else {"source": evidence_set["source"], "spans": resolved}
-            )
-
-    # Written whenever a quote was dropped, not only when every one was. A field offering
-    # two quotes and keeping one is `present` and fully evidenced to any reader, and the
-    # dropped half is exactly the thing this slot exists to count -- recording it only on
-    # total failure would measure unevidenced FIELDS while claiming to measure dropped
-    # QUOTES, and the two differ by every partial loss.
-    if unlocated:
-        evidence["unlocated_quotes"] = unlocated
-
-    if rebuilt:
-        evidence["sets"] = rebuilt
-        evidence["status"] = "present"
-        report.fields_evidence_present += 1
-        if unlocated:
-            report.fields_quote_partly_unlocated += 1
-    else:
-        # No usable evidence survived. The value may still be right, so keep it
-        # and record that support was not located rather than deleting the field.
-        evidence.pop("sets", None)
-        if status == "extracted":
-            evidence["status"] = "not_found"
-            report.fields_evidence_not_found += 1
-            report.downgraded.append(path)
-            # Which of the two faults this was. A field nobody quoted keeps the slot
-            # absent, so the slot's presence is the claim that support WAS proposed and
-            # nothing could place it -- a fidelity failure rather than a recall one.
-            if unlocated:
-                report.fields_quote_unlocated += 1
-        else:
-            evidence["status"] = "not_applicable"
-
-
-def _walk(node: Any, normalized: str, folded: str, path: str, report: BuildReport) -> None:
-    if values.is_field(node):
-        _resolve_field(node, normalized, folded, path, report)
-        return
-    if isinstance(node, dict):
-        for key, value in node.items():
-            _walk(value, normalized, folded, f"{path}.{key}" if path else str(key), report)
-        return
-    if isinstance(node, list):
-        for index, value in enumerate(node):
-            _walk(value, normalized, folded, f"{path}[{index}]", report)
 
 
 def merge_payloads(payload_dir: Path) -> tuple[dict[str, Any], list[str]]:
@@ -1940,7 +1782,6 @@ def build(
     table_map: Path | None = None,
 ) -> tuple[dict[str, Any], BuildReport]:
     normalized, digest, sections = text_index.load(text_path)
-    folded = span_tools.fold(normalized)
     report = BuildReport()
 
     sch = reader.load(EXTRACTION_SCHEMA)
@@ -1972,7 +1813,7 @@ def build(
     )
     report.repair_log = log
 
-    _walk(body, normalized, folded, "", report)
+    report.warrant = evidence.warrant(body, normalized)
 
     # The body first, then the builder's own fields over the top -- not the reverse.
     # `_entity_lists()` maps `paper_sections` to `extraction_metadata.paper_sections`, and
@@ -2008,19 +1849,6 @@ def build(
 
     # Integrity gate: nothing leaves this function unless every span addresses the
     # document it claims to.
-    for evidence_set in _iter_sets(record):
-        for span in evidence_set.get("spans", []):
-            span_tools.verify(normalized, span)
+    evidence.verify(record, normalized)
 
     return record, report
-
-
-def _iter_sets(node: Any):
-    if isinstance(node, dict):
-        if "spans" in node and isinstance(node["spans"], list):
-            yield node
-        for value in node.values():
-            yield from _iter_sets(value)
-    elif isinstance(node, list):
-        for value in node:
-            yield from _iter_sets(value)

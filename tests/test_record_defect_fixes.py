@@ -10,6 +10,7 @@ from __future__ import annotations
 import pytest
 
 from pondie import schema
+from pondie.extraction.evidence import warrant
 from pondie.extraction.record import builder, rules
 from pondie.schema import reader
 
@@ -404,14 +405,14 @@ def test_build_records_which_evidence_fault_occurred(quote, expect_status, expec
     to tell which fault it was, so the warning firing on 98.6% of papers was unactionable.
     """
     from pondie.extraction.record import spans
-    from pondie.extraction.record.builder import BuildReport, _resolve_field
+    from pondie.extraction.evidence.warrant import Warrant, _resolve_field
 
     text = _text()
     node = {
         "extraction_status": "extracted", "value": "x", "value_source": "reported",
         "evidence": {"status": "present", "sets": [{"quotes": [quote]}]},
     }
-    report = BuildReport()
+    report = Warrant()
     _resolve_field(node, text, spans.fold(text), "Study.x", report)
     assert node["evidence"]["status"] == expect_status
     assert node["evidence"].get("unlocated_quotes") == expect_unlocated
@@ -420,15 +421,15 @@ def test_build_records_which_evidence_fault_occurred(quote, expect_status, expec
 def test_a_field_that_offered_no_quote_carries_no_marker():
     """The slot's presence is the claim, so silence must stay silent."""
     from pondie.extraction.record import spans
-    from pondie.extraction.record.builder import BuildReport, _resolve_field
+    from pondie.extraction.evidence.warrant import Warrant, _resolve_field
 
     text = _text()
     node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
             "evidence": {"status": "not_found"}}
-    report = BuildReport()
+    report = Warrant()
     _resolve_field(node, text, spans.fold(text), "Study.y", report)
     assert "unlocated_quotes" not in node["evidence"]
-    assert report.fields_quote_unlocated == 0
+    assert report.unlocated == 0
 
 
 def test_the_honesty_warning_says_which_fault_it_is():
@@ -507,19 +508,19 @@ def test_an_elided_quote_resolves_as_the_spans_it_cites():
     every fragment resolves alone. An `EvidenceSet` already holds several spans, so an
     elided quote is two citations written as one rather than a malformed quote."""
     from pondie.extraction.record import spans
-    from pondie.extraction.record.builder import BuildReport, _resolve_field
+    from pondie.extraction.evidence.warrant import Warrant, _resolve_field
 
     text = _elided_text()
     node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
             "evidence": {"status": "present", "sets": [
                 {"quotes": ["Our design ... allows us to identify significant effects"]}]}}
-    report = BuildReport()
+    report = Warrant()
     _resolve_field(node, text, spans.fold(text), "Study.x", report)
     placed = node["evidence"]["sets"][0]["spans"]
     assert node["evidence"]["status"] == "present"
     assert [span["text"] for span in placed] == [
         "Our design", "allows us to identify significant effects"]
-    assert report.resolved_elided == 2
+    assert report.elided == 2
     for span in placed:
         assert text[span["start_char"]:span["end_char"]] == span["text"]
 
@@ -527,17 +528,17 @@ def test_an_elided_quote_resolves_as_the_spans_it_cites():
 def test_an_elided_quote_with_one_invented_fragment_is_a_drop():
     """All or nothing: half the support offered is not the support offered."""
     from pondie.extraction.record import spans
-    from pondie.extraction.record.builder import BuildReport, _resolve_field
+    from pondie.extraction.evidence.warrant import Warrant, _resolve_field
 
     text = _elided_text()
     node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
             "evidence": {"status": "present", "sets": [
                 {"quotes": ["Our design ... proves causation"]}]}}
-    report = BuildReport()
+    report = Warrant()
     _resolve_field(node, text, spans.fold(text), "Study.x", report)
     assert node["evidence"]["status"] == "not_found"
     assert node["evidence"]["unlocated_quotes"] == 1
-    assert report.resolved_elided == 0
+    assert report.elided == 0
 
 
 def test_a_partly_lost_field_records_the_loss_while_staying_present():
@@ -545,18 +546,18 @@ def test_a_partly_lost_field_records_the_loss_while_staying_present():
     Recording the count only on total failure would measure unevidenced FIELDS while
     claiming to measure dropped QUOTES."""
     from pondie.extraction.record import spans
-    from pondie.extraction.record.builder import BuildReport, _resolve_field
+    from pondie.extraction.evidence.warrant import Warrant, _resolve_field
 
     text = _elided_text()
     node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
             "evidence": {"status": "present", "sets": [
                 {"quotes": ["Our design is fully factorial", "a claim the paper never makes"]}]}}
-    report = BuildReport()
+    report = Warrant()
     _resolve_field(node, text, spans.fold(text), "Study.x", report)
     assert node["evidence"]["status"] == "present"
     assert node["evidence"]["unlocated_quotes"] == 1
-    assert report.fields_quote_partly_unlocated == 1
-    assert report.fields_quote_unlocated == 0
+    assert report.partly_unlocated == 1
+    assert report.unlocated == 0
 
 
 # --- the shared schema-guided walk ------------------------------------------------------
