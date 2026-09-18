@@ -534,11 +534,11 @@ class _ModelPass(_Base):
         """The payload-local repairs, run where their inputs are rather than at the merge."""
         if not self.repair_stage:
             return []
-        from pondie.extraction.record import repairs
+        from pondie.extraction.record import fix
 
-        log = repairs.apply_all(
+        log = fix.apply_all(
             payload,
-            repairs.Context(
+            fix.Context(
                 schema=reader.load(schema.STORAGE),
                 stage1=paper.parse if paper.parse.is_file() else None,
                 table_map=paper.table_map if paper.table_map.is_file() else None,
@@ -729,12 +729,12 @@ class Fill(_Base):
                 # reply, so a numeric string or a lone scalar in a multivalued slot arrives
                 # here exactly as it does from `satisfy`. These are idempotent, which is
                 # what lets them run per round rather than once.
-                from pondie.extraction.record import repairs as _repairs
+                from pondie.extraction.record import fix as _fix
 
-                _repairs.apply_all(
+                _fix.apply_all(
                     payload,
-                    _repairs.Context(schema=reader.load(schema.STORAGE)),
-                    stage=_repairs.AFTER_FILL,
+                    _fix.Context(schema=reader.load(schema.STORAGE)),
+                    stage=_fix.AFTER_FILL,
                 )
                 target.write_text(
                     json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"

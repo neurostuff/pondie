@@ -5,7 +5,7 @@ anything: a slot holding a wrapper where a bare id belongs, or a bare scalar whe
 belongs, is not a record the schema can be applied to. `listify_nested` and `repair_wrappers`
 therefore cannot use the schema-guided `walk` -- they exist to make the schema applicable.
 
-Each of these is a `Repair` in `repairs.build_sequence`, which holds the order and the reason
+Each of these is a `Repair` in `fix.build_sequence`, which holds the order and the reason
 each one sits where it does.
 """
 

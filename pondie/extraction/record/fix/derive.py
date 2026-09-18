@@ -7,7 +7,7 @@ is what makes them deterministic, and it is why `Table.purpose`, `Cell.direction
 kinds of non-analysis and no way to say "it is an analysis" answered with the nearest one and
 was wrong on 16 of 18 tables.
 
-Each of these is a `Repair` in `repairs.build_sequence`, which holds the order and the reason
+Each of these is a `Repair` in `fix.build_sequence`, which holds the order and the reason
 each one sits where it does.
 """
 

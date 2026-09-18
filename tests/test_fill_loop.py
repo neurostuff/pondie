@@ -168,7 +168,7 @@ def test_every_offered_slot_can_be_written_back(sch):
 
 def test_a_bare_unwrapped_value_is_an_answer_not_an_empty_slot(sch):
     """The extraction passes emit some slots unwrapped -- `Cell.direction` arrives as
-    `"positive"`, not an ExtractedValue -- and `repairs.wrappers` reshapes them at build
+    `"positive"`, not an ExtractedValue -- and the `wrappers` fix reshapes them at build
     time, which is after this stage runs.
 
     Reading the bare form as absence made the loop destructive rather than merely wasteful:

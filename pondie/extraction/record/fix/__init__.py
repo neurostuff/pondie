@@ -1,4 +1,4 @@
-"""The deterministic fixes, in three kinds. `repairs` holds the order; this holds the work.
+"""The deterministic fixes: what each one does, and the order they run in.
 
 A fix takes a record and returns one line per change, mutating in place. Three kinds recur and
 the difference is what each may assume about its input:
@@ -10,8 +10,14 @@ the difference is what each may assume about its input:
   link     make the references resolve, and refuse a guess. A fix decides nothing: where two
            answers are possible the record keeps its defect and `rules` tells a human
 
-Re-exported flat because `repairs.build_sequence` names them and a caller should not have to
-know which kind a given fix is to call it. The kinds are for the reader.
+`sequence` holds the order as data, and names each fix by its kind -- `shape.repair_wrappers`,
+`derive.derive_denominators` -- so the one place a reader wants to know which kind a fix is
+says so. The flat re-export below is for everyone else, who should not have to know.
+
+Named `fix` and not `repairs`, because `repair` is the model-driven stage that runs after
+`build` and decides what the record cannot settle from its own contents. These decide
+nothing: where two answers are possible the record keeps its defect and `rules` tells a
+human. One word for two opposite things had every caller of the stage aliasing its import.
 """
 
 from pondie.extraction.record.fix.derive import (
@@ -45,7 +51,30 @@ from pondie.extraction.record.fix.shape import (
     unwrap_singleton_lists,
 )
 
+from pondie.extraction.record.fix.sequence import (
+    AFTER_DEMANDS,
+    AFTER_FILL,
+    AFTER_SATISFY,
+    AT_MERGE,
+    Context,
+    Repair,
+    RepairLog,
+    apply_all,
+    build_sequence,
+    check_order,
+)
+
 __all__ = [
+    "AFTER_DEMANDS",
+    "AFTER_FILL",
+    "AFTER_SATISFY",
+    "AT_MERGE",
+    "Context",
+    "Repair",
+    "RepairLog",
+    "apply_all",
+    "build_sequence",
+    "check_order",
     "align_cell_levels",
     "check_local_ids",
     "coerce_numeric_values",

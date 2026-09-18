@@ -1,6 +1,10 @@
-"""The deterministic transformations applied to a record, in order, with their reasons.
+"""The order the fixes run in, as data, with the constraint that binds each one.
 
-`build_record` performs nine of these and its ordering carries real constraints -- the
+Each entry names its fix by kind -- `shape.repair_wrappers`, `derive.derive_denominators`,
+`link.repair_references` -- so the one place a reader wants to know which of the three kinds
+a fix is says so in the call.
+
+`build` performs nine of these and its ordering carries real constraints -- the
 direction fill matches a level against a contrast name and so must run after levels are
 aligned; the mirror is taken from the corrected record and so must run last. Those
 constraints lived in comments beside consecutive statements, which is a fine place to
@@ -19,7 +23,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
-from pondie.extraction.record import fix
+from pondie.extraction.record.fix import derive, link, shape
 from pondie.schema.reader import Schema
 
 
@@ -99,117 +103,117 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "wrappers",
             "put a malformed ExtractedValue back into wrapper shape",
-            lambda body, ctx: fix.repair_wrappers(body),
+            lambda body, ctx: shape.repair_wrappers(body),
             stage="shape",
         ),
         Repair(
             "unwrapped",
             "unwrap a wrapper the model put in a bare-scalar slot",
-            lambda body, ctx: fix.unwrap_plain_slots(body, ctx.schema),
+            lambda body, ctx: shape.unwrap_plain_slots(body, ctx.schema),
             after="wrappers",
             stage="merged",
         ),
         Repair(
             "table_effects",
             "mark a table an analysis cites as reporting that analysis's effect",
-            lambda body, ctx: fix.derive_table_effects(body),
+            lambda body, ctx: derive.derive_table_effects(body),
             stage="merged",
         ),
         Repair(
             "denominators",
             "fill a distribution's denominator from its count and percentage",
-            lambda body, ctx: fix.derive_denominators(body),
+            lambda body, ctx: derive.derive_denominators(body),
             stage="satisfy",
         ),
         Repair(
             "numbers",
             "turn a numeric string into the number its slot declares",
-            lambda body, ctx: fix.coerce_numeric_values(body, ctx.schema),
+            lambda body, ctx: shape.coerce_numeric_values(body, ctx.schema),
             after="unwrapped",
             stage="merged",
         ),
         Repair(
             "stray_tables",
             "move a Table written as a Study attribute into tables[]",
-            lambda body, ctx: fix.rehome_stray_tables(body, ctx.schema),
+            lambda body, ctx: shape.rehome_stray_tables(body, ctx.schema),
             stage="merged",
         ),
         Repair(
             "acquisition_type",
             "fill an acquisition's type from its own modality",
-            lambda body, ctx: fix.derive_acquisition_types(body),
+            lambda body, ctx: derive.derive_acquisition_types(body),
             stage="satisfy",
         ),
         Repair(
             "coordinate_space",
             "fill the space stage 1 already read off the table",
-            lambda body, ctx: fix.derive_coordinate_spaces(body, ctx.stage1, ctx.table_map),
+            lambda body, ctx: derive.derive_coordinate_spaces(body, ctx.stage1, ctx.table_map),
             stage="merged",
         ),
         Repair(
             "listified",
             "unwrap a nested slot the model wrote as an object",
-            lambda body, ctx: fix.listify_nested(body, ctx.schema),
+            lambda body, ctx: shape.listify_nested(body, ctx.schema),
             stage="shape",
         ),
         Repair(
             "unwrap_singletons",
             "unwrap a one-item list in a wrapper whose value is declared scalar",
-            lambda body, ctx: fix.unwrap_singleton_lists(body, ctx.schema),
+            lambda body, ctx: shape.unwrap_singleton_lists(body, ctx.schema),
             after="listified",
             stage="shape",
         ),
         Repair(
             "listified_scalars",
             "wrap a lone scalar the slot declares multivalued",
-            lambda body, ctx: fix.listify_scalars(body, ctx.schema),
+            lambda body, ctx: shape.listify_scalars(body, ctx.schema),
             after="listified",
             stage="shape",
         ),
         Repair(
             "cell_levels",
             "rewrite a cell's level to the declared level it folds to",
-            lambda body, ctx: fix.align_cell_levels(body),
+            lambda body, ctx: link.align_cell_levels(body),
             after="listified",
             stage="merged",
         ),
         Repair(
             "scoped_terms",
             "scope two models' identically-named terms by their model",
-            lambda body, ctx: fix.scope_duplicate_terms(body),
+            lambda body, ctx: link.scope_duplicate_terms(body),
             stage="satisfy",
         ),
         Repair(
             "references",
             "repoint a dangling reference where the choice is forced",
-            lambda body, ctx: fix.repair_references(body, ctx.schema),
+            lambda body, ctx: link.repair_references(body, ctx.schema),
             after="scoped_terms",
             stage="merged",
         ),
         Repair(
             "cell_terms",
             "repoint a cell at the same-named term its model reaches",
-            lambda body, ctx: fix.repoint_out_of_scope_terms(body),
+            lambda body, ctx: link.repoint_out_of_scope_terms(body),
             after="listified",
             stage="merged",
         ),
         Repair(
             "source_links",
             "verify or fill each analysis's link to its parsed rows",
-            lambda body, ctx: fix.resolve_source_table_analysis(body, ctx.stage1),
+            lambda body, ctx: derive.resolve_source_table_analysis(body, ctx.stage1),
             stage="demands",
         ),
         Repair(
             "derived_ids",
             "rename each analysis to an id the parse determines",
-            lambda body, ctx: fix.derive_analysis_ids(body),
+            lambda body, ctx: derive.derive_analysis_ids(body),
             after="source_links",
             stage="demands",
         ),
         Repair(
             "name_links",
             "write a reference where a name settles which declared entity it means",
-            lambda body, ctx: fix.link_entities_by_name(body, ctx.schema),
+            lambda body, ctx: link.link_entities_by_name(body, ctx.schema),
             # After `cell_levels`, which rewrites a level to the declared form: matching on
             # the pre-aligned string would look up a name the record does not use. And
             # after `derived_ids`, so a link is written to the id the record keeps.
@@ -219,14 +223,14 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "directions",
             "fill a cell's direction from the contrast's own name",
-            lambda body, ctx: fix.fill_directions(body),
+            lambda body, ctx: derive.fill_directions(body),
             after="cell_levels",
             stage="merged",
         ),
         Repair(
             "redundant_levels",
             "drop a cell level a continuous term cannot have and that says nothing new",
-            lambda body, ctx: fix.drop_redundant_cell_levels(body),
+            lambda body, ctx: link.drop_redundant_cell_levels(body),
             # After `directions`, which is what fills the slot this compares against: run
             # first and a cell whose direction was about to be written reads as having none.
             after="directions",
@@ -235,7 +239,7 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "conclusions",
             "say `generated` where the record claims a conclusion was `reported`",
-            lambda body, ctx: fix.relabel_conclusions(body, ctx.schema),
+            lambda body, ctx: derive.relabel_conclusions(body, ctx.schema),
             # After `directions`, which writes some of these: relabelling first would leave
             # the ones it then wrote still saying `reported`.
             after="directions",
@@ -244,7 +248,7 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "mirrored",
             "rebuild the reversed half of every sign-split contrast",
-            lambda body, ctx: fix.mirror_withheld(body, ctx.stage1),
+            lambda body, ctx: derive.mirror_withheld(body, ctx.stage1),
             after="directions",
             stage="merged",
         ),

@@ -10,7 +10,7 @@ folds to exactly one declared level and `check_cell_terms` reports one that does
 `repair_references` repoints a transcription slip and refuses a guess. Where two answers are
 possible the record keeps its defect and a human is told.
 
-Each of these is a `Repair` in `repairs.build_sequence`, which holds the order and the reason
+Each of these is a `Repair` in `fix.build_sequence`, which holds the order and the reason
 each one sits where it does.
 """
 

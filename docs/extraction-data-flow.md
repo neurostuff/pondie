@@ -291,3 +291,23 @@ fired. It delegates now.
 `stages.py` is 1,209 lines and holds a Protocol, a base, nine stage classes in pipeline
 order, and `sequence()`. It is not split further: the order is the thing the file
 communicates, and nine files would hide it.
+
+## Found: `repair` named two opposite things
+
+`record/repairs.py` held the deterministic sequence run inside `build`. `extraction/repair.py`
+is the stage that runs after `build` and asks a model to settle contradictions. Invariant 4 —
+"a repair decides nothing" — is true of the first and is precisely the opposite of the second's
+job, and all four import sites of the stage aliased it (`import repair as repair_pass`) to get
+a name they could read.
+
+The stage keeps the name: it is `StageName.repair`, `--stages repair`, its output directory,
+and `EvidenceSource: repair_pass` in every record already written. The inner one moves, to
+`record/fix/sequence.py`, so `fix/` is now the whole of the deterministic half — what each
+fix does and the order they run in — and `repair` means one thing in the package.
+
+The sequence now names each fix by kind (`shape.repair_wrappers`, `derive.derive_denominators`,
+`link.repair_references`) rather than reaching through the flat re-export, so the one place a
+reader wants to know which kind a fix is says so in the call. The flat `fix.<name>` re-export
+stays for everyone else.
+
+Verified over the 1,817 records: byte-identical bodies and identical logs.

@@ -14,27 +14,27 @@ import json
 
 import pytest
 
-from pondie.extraction.record import fix, repairs as repair_module
+from pondie.extraction.record import fix
 
 
 def test_the_declared_repair_order_holds():
-    assert repair_module.check_order(repair_module.build_sequence()) == []
+    assert fix.check_order(fix.build_sequence()) == []
 
 
 def test_an_order_that_violates_its_own_constraint_is_refused():
-    late = repair_module.Repair("a", "", lambda body, ctx: [], after="b")
-    early = repair_module.Repair("b", "", lambda body, ctx: [])
-    assert repair_module.check_order((late, early))
+    late = fix.Repair("a", "", lambda body, ctx: [], after="b")
+    early = fix.Repair("b", "", lambda body, ctx: [])
+    assert fix.check_order((late, early))
     with pytest.raises(ValueError):
-        repair_module.apply_all({}, repair_module.Context(schema={}), (late, early))
+        fix.apply_all({}, fix.Context(schema={}), (late, early))
 
 
 def test_the_log_says_which_repairs_fired():
     sequence = (
-        repair_module.Repair("noisy", "", lambda body, ctx: ["did a thing"]),
-        repair_module.Repair("quiet", "", lambda body, ctx: []),
+        fix.Repair("noisy", "", lambda body, ctx: ["did a thing"]),
+        fix.Repair("quiet", "", lambda body, ctx: []),
     )
-    log = repair_module.apply_all({}, repair_module.Context(schema={}), sequence)
+    log = fix.apply_all({}, fix.Context(schema={}), sequence)
     assert log.fired() == ["noisy"]
     assert log.total == 1
     assert "did a thing" in log.explain()
@@ -43,7 +43,7 @@ def test_the_log_says_which_repairs_fired():
 def test_the_mirror_runs_after_the_direction_fill():
     # The mirror copies the corrected contrast; taking it before the fill would copy a
     # cell the builder was about to sign.
-    names = [r.name for r in repair_module.build_sequence()]
+    names = [r.name for r in fix.build_sequence()]
     assert names.index("mirrored") > names.index("directions")
     assert names.index("directions") > names.index("cell_levels")
 
@@ -488,7 +488,7 @@ def test_a_derived_id_already_taken_leaves_both_alone():
 def test_every_repair_names_a_stage_that_runs():
     """A repair with no group never runs, and nothing would say so: `apply_all` filters by
     stage and a typo simply matches nothing."""
-    from pondie.extraction.record import repairs as r
+    from pondie.extraction.record import fix as r
 
     groups = set(r.AFTER_DEMANDS) | set(r.AFTER_SATISFY) | set(r.AFTER_FILL) | set(r.AT_MERGE)
     for repair in r.build_sequence():
@@ -504,7 +504,7 @@ def test_each_repair_runs_exactly_once_across_the_stages():
     347jHLHiWNjT."""
     from collections import Counter
 
-    from pondie.extraction.record import repairs as r
+    from pondie.extraction.record import fix as r
 
     ran = Counter()
     for group in (r.AFTER_DEMANDS, r.AFTER_SATISFY, r.AFTER_FILL, r.AT_MERGE):

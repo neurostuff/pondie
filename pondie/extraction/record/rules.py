@@ -10,7 +10,7 @@ They need nothing from the validator but somewhere to put a finding, which is wh
 is. Measured before the split: no rule mutates the record (16 records, each rule run alone,
 re-serialised), none reads validator state, and 187 runs over 12 random orderings per record
 produced identical finding sets. `RULES` therefore carries no ordering constraint, unlike
-`repairs.build_sequence()` where later repairs read what earlier ones wrote -- copying that
+`fix.build_sequence()` where later repairs read what earlier ones wrote -- copying that
 mechanism here would assert a dependency that does not exist.
 
 The *order* of the output does follow `RULES`, and nothing consumes it -- but a consumer that
@@ -1117,7 +1117,7 @@ def check_acquisition_devices(record: Mapping[str, Any], findings: Findings) -> 
 #: `check_record` used to hand-call each one by name, so adding a rule meant editing
 #: two places and forgetting the second silently disabled it.
 #:
-#: No `after` field, deliberately. `repairs.build_sequence()` has one because repairs mutate
+#: No `after` field, deliberately. `fix.build_sequence()` has one because repairs mutate
 #: the record and later ones read what earlier ones wrote; these mutate nothing and read no
 #: shared state, measured. An ordering constraint written here would assert a dependency
 #: that does not exist, and the next person would maintain it.

@@ -169,7 +169,7 @@ def unsettled(payload: Mapping[str, Any], sch: Schema) -> list[dict[str, Any]]:
             elif held not in (None, "", [], {}):
                 # An answer in the wrong shape is still an answer. The extraction passes
                 # emit some slots as bare scalars -- `Cell.direction` comes back as
-                # `"positive"` rather than a wrapper -- and `repairs.wrappers` puts them
+                # `"positive"` rather than a wrapper -- and the `wrappers` fix puts them
                 # right at build time, which is after this stage. Reading the bare form as
                 # absence made this loop destructive: on pMZeVGA2rQQi it offered all 12
                 # cell directions as open and overwrote them with `ambiguous`, six of which

@@ -31,7 +31,7 @@ from linkml_runtime.linkml_model.meta import SlotDefinition
 
 from pondie import schema
 from pondie.extraction.evidence import warrant as evidence
-from pondie.extraction.record import fix, repairs
+from pondie.extraction.record import fix
 from pondie.extraction.record import spans as span_tools
 
 # Imported as the function rather than the module: `effect` is a local name
@@ -88,7 +88,7 @@ class BuildReport:
     payload_notes: list[str] = field(default_factory=list)
 
     #: What each repair did, under the repair's own name. The one record of it.
-    repair_log: repairs.RepairLog | None = None
+    repair_log: fix.RepairLog | None = None
 
     #: Every repair the builder performed, for the one-line report and the threshold.
     @property
@@ -329,7 +329,7 @@ def build(
             f"reconciled {rewrites} cross-reference(s) through aliases.json"
         )
 
-    # The order and its constraints live in `record/repairs.py` as data, and are
+    # The order and its constraints live in `record/fix/sequence.py` as data, and are
     # checked before anything runs. They were nine consecutive statements with the
     # constraints in comments beside them, which states an ordering without enforcing it.
     #
@@ -337,10 +337,10 @@ def build(
     # pass that wrote it, so what is left here is the group that needs analyses, entities and
     # tables together. Running the earlier groups again would be harmless for the idempotent
     # ones and wrong for `mirrored`, which appends.
-    log = repairs.apply_all(
+    log = fix.apply_all(
         body,
-        repairs.Context(schema=sch, stage1=stage1, table_map=table_map),
-        stage=repairs.AT_MERGE,
+        fix.Context(schema=sch, stage1=stage1, table_map=table_map),
+        stage=fix.AT_MERGE,
     )
     report.repair_log = log
 
@@ -368,7 +368,7 @@ def build(
         }
     )
 
-    # A check, not a repair, which is why it is here and not in `repairs.build_sequence()`:
+    # A check, not a repair, which is why it is here and not in `fix.build_sequence()`:
     # the sequence's contract is that every entry may change the record, and this one only
     # looks. It runs after the sequence because `repoint_dangling_references` resolves the
     # ones it can, so what survives is what a human has to settle.

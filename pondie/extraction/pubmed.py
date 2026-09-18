@@ -13,7 +13,7 @@ written verbatim, which is what the slot's description asks for.
 
 Not a repair's own business. A repair takes a record and returns changes; this needs the
 network and batches 200 ids per request, so the caller fetches and `fill` applies. That is
-the shape `stage1` and `table_map` already have on `repairs.Context`.
+the shape `stage1` and `table_map` already have on `fix.Context`.
 """
 
 from __future__ import annotations
