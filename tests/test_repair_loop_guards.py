@@ -16,7 +16,11 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent))
+# `repair_loop` and `render_record` are scripts, not package modules, so there is no
+# import path to them. Here rather than in `scripts/` because `pytest tests/` -- the
+# natural thing to type -- otherwise runs 39 fewer tests than the bare `pytest` the
+# README documents, and the difference was invisible.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import repair_loop as R  # noqa: E402
 import render_record as RR  # noqa: E402

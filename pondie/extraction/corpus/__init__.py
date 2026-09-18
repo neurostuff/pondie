@@ -12,4 +12,9 @@ which is what makes two runs comparable at all.
 
 `tables` is the one step here that costs money -- one model call per table -- and the one the
 pipeline treats as load-bearing input rather than regenerating.
+
+The claim in the first paragraph was false until the sign-split rule moved out. It was in
+`tables.py`, and the `sign_split` stage reached it through a deferred import, so a stage did
+run from here. It is `extraction/sign_split.py` now. Nothing in the pipeline imports this
+package, which is the form the claim takes that a reader can check.
 """

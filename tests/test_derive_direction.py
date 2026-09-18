@@ -16,7 +16,7 @@ import json
 
 import pytest
 
-from pondie.extraction.corpus.tables import split_opposite_signs  # noqa: E402
+from pondie.extraction.sign_split import split_opposite_signs  # noqa: E402
 from pondie.extraction.record import direction as dd, fix
 
 # --- reading a contrast's own name ------------------------------------------

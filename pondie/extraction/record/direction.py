@@ -4,7 +4,7 @@ The statistic cannot do this. 76% of reviewed analyses carry a statistic with an
 unambiguous sign, but the sign is the same either way round: a table of "FESZ > NC" and
 a table of "NC > FESZ" both print positive t-values, and in the gold two analyses with
 identical `sign=+1` assign opposite directions to the same two groups. Sign is enough to
-split a mixed-sign table -- which is what `tables.split_opposite_signs` uses it for
+split a mixed-sign table -- which is what `sign_split.split_opposite_signs` uses it for
 -- and not enough to direct a cell.
 
 The polarity is written in the contrast's name: `FESZ>NC`, `AD < HC reduced GM volume`,
@@ -173,7 +173,7 @@ _UNSIGNED_STATISTICS = frozenset({"p", "p-value", "pvalue", "cluster_size", "vox
 def mirror_analysis(described: dict, withheld: dict, parse_key: str = "") -> dict:
     """Rebuild the half of a sign-split contrast the paper never describes.
 
-    `tables.split_opposite_signs` partitions a mixed-sign table and hands the
+    `sign_split.split_opposite_signs` partitions a mixed-sign table and hands the
     extraction pass only the positive half, because that is the half the paper's prose is
     about: "FESZ > NC" prints positive statistics for the effects it names. The negative
     rows are the same contrast read the other way, and asking a model to name and define

@@ -36,6 +36,7 @@ from pondie.extraction.models import (
     StageOutcome,
 )
 from pondie.extraction.parse import TableParse
+from pondie.extraction.sign_split import adopt_withholding, split_opposite_signs
 from pondie.extraction.record.ids import table_local_id
 from pondie.extraction.prompt import preprocess, render, worked
 from pondie.formats import table_parse, text_index, values
@@ -358,8 +359,6 @@ class SignSplit(_Base):
     def done(self, paper: Paper, settings: Settings) -> bool:
         if settings.redo or not paper.parse.is_file():
             return False
-        from pondie.extraction.corpus.tables import adopt_withholding
-
         parse = TableParse.load(paper.parse)
         if not parse.sign_split_applied:
             return False
@@ -369,11 +368,6 @@ class SignSplit(_Base):
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
-        from pondie.extraction.corpus.tables import (
-            adopt_withholding,
-            split_opposite_signs,
-        )
-
         parse = TableParse.load(paper.parse)
         before = parse.document.get("analyses") or []
         split = split_opposite_signs(before)

@@ -50,7 +50,7 @@ def test_the_mirror_runs_after_the_direction_fill():
 
 # --- adopting a corpus split by the earlier rule -----------------------------
 
-from pondie.extraction.corpus.tables import adopt_withholding  # noqa: E402
+from pondie.extraction.sign_split import adopt_withholding  # noqa: E402
 
 
 def _part(parent, direction, points=1):

@@ -2124,7 +2124,7 @@ def _point(*values: tuple[float, str]) -> dict:
 
 
 def _split(points: list[dict], name: str = "contrast"):
-    from pondie.extraction.corpus.tables import split_opposite_signs
+    from pondie.extraction.sign_split import split_opposite_signs
 
     split = split_opposite_signs([{"name": name, "points": points}])
     return list(split.analyses), list(split.notes)
@@ -2187,7 +2187,7 @@ def test_an_unsignable_row_flags_rather_than_splitting_part_of_the_table() -> No
 
 
 def test_statistics_disagreeing_within_one_row_give_no_sign() -> None:
-    from pondie.extraction.corpus.tables import _point_sign
+    from pondie.extraction.sign_split import _point_sign
 
     assert _point_sign(_point((3.0, "t-statistic"), (-0.4, "correlation"))) is None
     assert _point_sign(_point((0.0, "t-statistic"))) is None
@@ -2195,7 +2195,7 @@ def test_statistics_disagreeing_within_one_row_give_no_sign() -> None:
 
 def test_splitting_twice_changes_nothing() -> None:
     """Re-running over a corpus already split must be a no-op, since `--resplit` is rerun."""
-    from pondie.extraction.corpus.tables import split_opposite_signs
+    from pondie.extraction.sign_split import split_opposite_signs
 
     once, _ = _split([_point((1.0, "beta")), _point((-1.0, "beta"))])
     split = split_opposite_signs(once)

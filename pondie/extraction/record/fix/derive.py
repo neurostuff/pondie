@@ -301,7 +301,7 @@ def fill_directions(body: dict[str, Any]) -> list[str]:
 def mirror_withheld(body: dict[str, Any], stage1: Path | None) -> list[str]:
     """Rebuild the reversed half of every sign-split contrast, from the corrected record.
 
-    `tables.split_opposite_signs` hands the extraction pass only the half the paper
+    `sign_split.split_opposite_signs` hands the extraction pass only the half the paper
     describes and marks the other `withhold`. This runs last, on the assembled record, so
     the mirror is taken from the contrast the model actually settled on -- including
     whatever the wrapper repairs, level alignment and direction fill changed about it.
