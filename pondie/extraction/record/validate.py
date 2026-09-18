@@ -6,7 +6,7 @@ every value match its declared range, does a wrapper carry the evidence block th
 requires, does a span address the document it claims to. It knows nothing about
 neuroimaging.
 
-The thirteen things a record can be that are structurally legal and scientifically wrong --
+The nineteen things a record can be that are structurally legal and scientifically wrong --
 an interaction the prose names but the encoding does not, a contrast whose name carries a
 sign its cells do not -- are `rules.py`, and `check_record` runs them from a registry rather
 than by hand. The two halves have different readers: this one needs LinkML, that one needs

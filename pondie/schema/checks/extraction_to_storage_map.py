@@ -42,6 +42,7 @@ import yaml
 
 from pondie.schema import EXTRACTION, ROOT, STORAGE
 from pondie.schema.authoring import (
+    load_yaml,
     LOCAL_ID,
     attribute_ranges,
     is_marked,
@@ -56,14 +57,6 @@ DEVIATIONS = ROOT / "extraction-deviations.yaml"
 
 EXTRACTED_SUBSET = "model_extracted"
 DETERMINISTIC_SUBSET = "deterministic"
-
-
-def load_yaml(path: Path) -> dict:
-    with path.open(encoding="utf-8") as stream:
-        document = yaml.safe_load(stream)
-    if not isinstance(document, Mapping):
-        raise ValueError(f"{path.name} must contain a YAML mapping.")
-    return dict(document)
 
 
 def extraction_name(attribute_name: str, attribute: Mapping[str, object]) -> str:

@@ -1,4 +1,4 @@
-"""The thirteen things a record can be that are structurally legal and scientifically wrong.
+"""The nineteen things a record can be that are structurally legal and scientifically wrong.
 
 Separate from `validate.py` because they answer a different question for a different reader.
 That module asks "does this conform to the LinkML schema" and knows only the language; these
@@ -18,7 +18,7 @@ started to would be depending on something arbitrary.
 
 Each rule recomputes what it needs. `_model_index` is rebuilt 5 times per record and
 `terms_in_scope` 20 times, for 8ms across the whole rule half; threading a shared index
-through thirteen signatures would buy none of that back and would reintroduce exactly the
+through nineteen signatures would buy none of that back and would reintroduce exactly the
 shared mutable state the measurements above rule out.
 """
 
@@ -943,7 +943,7 @@ def check_table_purpose(record: Mapping[str, Any], findings: Findings) -> None:
             )
 
 
-def check_references_resolve(
+def _references_resolve(
     record: Mapping[str, Any],
     findings: Findings,
     *,
@@ -954,6 +954,10 @@ def check_references_resolve(
     multivalued: bool = False,
 ) -> None:
     """Every id in `owner[].slot` must name an entry of `container`.
+
+    Private, and not `check_`-prefixed: that prefix means a rule in `RULES`, and this is a
+    parameterised traversal four of them call. Counting the `check_` functions is how a
+    reader counts the rules, and a helper wearing the prefix made that answer 20 for 19.
 
     `tail` completes "names {id}, which is not ...", so each caller keeps its own account
     of what the dangling id costs. That wording is the whole value of the check to a
@@ -1036,7 +1040,7 @@ def check_group_instruments(record: Mapping[str, Any], findings: Findings) -> No
     is not an instrument that classified").
     """
 
-    check_references_resolve(
+    _references_resolve(
         record,
         findings,
         owner="groups",
@@ -1060,7 +1064,7 @@ def check_analysis_inference_settings(record: Mapping[str, Any], findings: Findi
     several analyses name.
     """
 
-    check_references_resolve(
+    _references_resolve(
         record,
         findings,
         owner="analyses",
@@ -1082,7 +1086,7 @@ def check_analysis_measures(record: Mapping[str, Any], findings: Findings) -> No
     queryable; a dangling id is not.
     """
 
-    check_references_resolve(
+    _references_resolve(
         record,
         findings,
         owner="analyses",
@@ -1102,7 +1106,7 @@ def check_acquisition_devices(record: Mapping[str, Any], findings: Findings) -> 
     lost the reference.
     """
 
-    check_references_resolve(
+    _references_resolve(
         record,
         findings,
         owner="acquisitions",

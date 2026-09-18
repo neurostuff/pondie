@@ -48,6 +48,7 @@ import yaml
 
 from pondie.schema import ROOT, STORAGE
 from pondie.schema.authoring import (
+    load_yaml,
     IN_SUBSET,
     LOCAL_ID,
     attribute_ranges,
@@ -154,14 +155,6 @@ def dump_schema(document: Mapping[str, object], source: str) -> str:
     if yaml.safe_load(text) != document:
         raise AssertionError(f"dump of {source} does not round-trip; refusing to write it")
     return text
-
-
-def load_yaml(path: Path) -> dict:
-    with path.open(encoding="utf-8") as stream:
-        document = yaml.safe_load(stream)
-    if not isinstance(document, Mapping):
-        raise ValueError(f"{path.name} must contain a YAML mapping.")
-    return dict(document)
 
 
 # --------------------------------------------------------------------------------------

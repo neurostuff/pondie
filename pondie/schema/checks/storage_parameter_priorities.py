@@ -10,18 +10,10 @@ from pathlib import Path
 import yaml
 
 from pondie.schema import ROOT, STORAGE
-from pondie.schema.authoring import load_imported_classes
+from pondie.schema.authoring import load_yaml, load_imported_classes
 
 PRIORITIES = ROOT / "storage-parameter-priorities.yaml"
 VALID_PRIORITIES = {0, 1, 2, 3, "n/a"}
-
-
-def load_yaml(path: Path) -> Mapping[str, object]:
-    with path.open(encoding="utf-8") as stream:
-        contents = yaml.safe_load(stream)
-    if not isinstance(contents, Mapping):
-        raise ValueError(f"{path.name} must contain a YAML mapping.")
-    return contents
 
 
 def field_paths(class_definitions: Mapping[str, object]) -> set[str]:

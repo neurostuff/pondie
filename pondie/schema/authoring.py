@@ -34,6 +34,21 @@ LOCAL_ID = "local_id"
 IN_SUBSET = "in_subset"
 
 
+def load_yaml(path: Path) -> dict:
+    """One YAML document from disk, as a mapping or not at all.
+
+    Three copies of this existed -- `generate` and two of the `checks` -- which is two more
+    readers than there are ways to read a YAML file. The `ValueError` is the reason it is a
+    function rather than a `yaml.safe_load` call: a schema file that parses to a list or to
+    `None` would otherwise fail later, somewhere that cannot say which file was wrong.
+    """
+    with path.open(encoding="utf-8") as stream:
+        document = yaml.safe_load(stream)
+    if not isinstance(document, Mapping):
+        raise ValueError(f"{path.name} must contain a YAML mapping.")
+    return dict(document)
+
+
 def own_attributes(classes: Mapping[str, object], class_name: str) -> dict[str, Mapping]:
     """Return a class's own attributes, ignoring anything it inherits."""
 
