@@ -557,3 +557,61 @@ def test_a_partly_lost_field_records_the_loss_while_staying_present():
     assert node["evidence"]["unlocated_quotes"] == 1
     assert report.fields_quote_partly_unlocated == 1
     assert report.fields_quote_unlocated == 0
+
+
+# --- the shared schema-guided walk ------------------------------------------------------
+
+
+def test_the_walk_finds_what_the_schema_declares(sch):
+    """Ten functions in `builder` each walked the record, and they diverged. The point of
+    one walk is that `declared_ids` descends -- `repair_references` swept the top-level
+    lists and missed 10,867 declared ids over the corpus, every ModelTerm and Condition
+    among them, while `validate.index_ids` descended and disagreed with it."""
+    from pondie.extraction.record import walk
+
+    record = {
+        "local_id": "S1",
+        "tasks": [{"local_id": "tsk1", "name": field("go/no-go"),
+                   "conditions": [{"local_id": "cond_go", "name": field("go")}]}],
+        "model_estimations": [{"local_id": "mod1", "terms": [
+            {"local_id": "trm1", "name": field("condition")}]}],
+    }
+    ids = walk.declared_ids(record, sch)
+    assert ids["cond_go"] == "Condition", "a Condition nests under tasks[].conditions"
+    assert ids["trm1"] == "ModelTerm", "a ModelTerm nests under model_estimations[].terms"
+    assert ids["tsk1"] == "Task"
+
+
+def test_the_walk_yields_a_slots_own_declaration(sch):
+    """`attribute.range` on a field is the wrapper, not the value. Five repairs needed the
+    inner declaration and each reached for it differently."""
+    from pondie.extraction.record import walk
+
+    record = {"local_id": "S1", "groups": [
+        {"local_id": "g1", "medical_condition": field(["obesity"]), "age_mean": field(31.0)}]}
+    by_key = {slot.key: slot for slot in walk.fields(record, sch)}
+    assert by_key["medical_condition"].declared_value(sch).multivalued is True
+    assert by_key["age_mean"].declared_value(sch).multivalued in (None, False)
+
+
+def test_a_caller_may_mutate_while_walking(sch):
+    """Every repair assigns to or deletes the slot it is looking at, so the walk
+    materialises each node's items before yielding."""
+    from pondie.extraction.record import walk
+
+    record = {"local_id": "S1", "analyses": [
+        {"local_id": "a1", "spatial_scope": field(["whole_brain"]),
+         "prespecification": field(["preregistered"])}]}
+    for slot in walk.fields(record, sch):
+        del slot.owner[slot.key]
+    assert record["analyses"][0] == {"local_id": "a1"}
+
+
+def test_references_are_yielded_with_their_ids(sch):
+    from pondie.extraction.record import walk
+
+    record = {"local_id": "S1", "analyses": [
+        {"local_id": "a1", "tables": ["tbl1", "tbl2"], "inference_settings": "inf1"}]}
+    found = {slot.key: walk.ids_of(slot.value) for slot in walk.references(record, sch)}
+    assert found["tables"] == ["tbl1", "tbl2"]
+    assert found["inference_settings"] == ["inf1"]

@@ -36,10 +36,10 @@ from typing import Any
 from pondie import paths, schema
 from pondie.extraction.models import Prompt
 
-# `builder` for the payload contract (see ENTITY_LISTS); `preprocess` for the
+# `preprocess` for the
 # deterministic text transforms selected by --preprocess.
 from pondie.extraction.prompt import worked
-from pondie.extraction.record import builder, ids
+from pondie.extraction.record import ids
 from pondie.formats import parse_keys
 from pondie.schema import reader
 from pondie.schema.reader import Schema
@@ -55,7 +55,7 @@ README = schema.ROOT / "extraction-readme.md"
 #: survived here for a schema version after Condition moved under Task and Term
 #: became ModelTerm under ModelEstimation -- both would have been merged as
 #: "unexpected payload key" and dropped.
-ENTITY_LISTS = builder._entity_lists()
+ENTITY_LISTS = reader.entity_lists(reader.load(schema.EXTRACTION))
 
 #: Filled by the builder from the source text, never by the model.
 SCAFFOLDING_CLASSES = {"ExtractionMetadata", "PaperSection"}

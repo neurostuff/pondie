@@ -370,3 +370,46 @@ def load(path: Path | str) -> Schema:
 @functools.lru_cache(maxsize=4)
 def _load(resolved: str) -> Schema:
     return Schema(resolved)
+
+def entity_lists(schema: "Schema") -> dict[str, str]:
+    """Payload key -> dotted path to the Study attribute holding the inlined list.
+
+    A schema question, so it lives with the schema reader. It sat in `builder` as a
+    private function and was reached from `prompt.render` as `builder._entity_lists()`,
+    which made the prompt renderer import the record builder for a fact neither of them
+    owns -- and, because the result was cached in a module-level constant, made importing
+    the builder load and parse the LinkML schema as a side effect.
+
+    Derived rather than written out, because a hardcoded list silently drops whatever it
+    has not caught up with: `arms` and `timepoints` were added to Study and every
+    intervention and longitudinal paper's payload lost them, reported only as an
+    "unexpected payload key" note.
+
+    An extractor emits one file per entity kind, so the payload key is a bare entity name
+    however deep the schema puts the list. Most sit directly on Study and the mapping is
+    the identity; `arms` and `timepoints` sit one level down under `design`, so a single
+    level of inlined singleton is followed. Deeper nesting is not: the payload would need
+    a path of its own to be unambiguous.
+    """
+
+    study = schema.attributes("Study")
+
+    def lists_on(attributes: Mapping[str, SlotDefinition], prefix: str = "") -> dict[str, str]:
+        return {
+            name: f"{prefix}{name}"
+            for name, attribute in attributes.items()
+            if attribute is not None and attribute.multivalued
+        }
+
+    found = lists_on(study)
+    for name, attribute in study.items():
+        if attribute is None or attribute.multivalued:
+            continue
+        if attribute.inlined is not True:
+            continue
+        nested = attribute.range
+        if nested not in schema:
+            continue
+        for key, path in lists_on(schema.attributes(nested), f"{name}.").items():
+            found.setdefault(key, path)
+    return found

@@ -30,7 +30,7 @@ from typing import Any
 from linkml_runtime.linkml_model.meta import SlotDefinition
 
 from pondie import schema
-from pondie.extraction.record import direction, repairs
+from pondie.extraction.record import direction, repairs, walk
 from pondie.extraction.record import spans as span_tools
 
 # Imported as the function rather than the module: `effect` is a local name
@@ -46,45 +46,15 @@ EXTRACTION_SCHEMA = schema.EXTRACTION
 
 
 def _entity_lists() -> dict[str, str]:
-    """Payload key -> dotted path to the Study attribute holding the inlined list.
-
-    Derived from the schema rather than written out, because a hardcoded list
-    silently drops whatever it has not caught up with: `arms` and `timepoints`
-    were added to Study and every intervention and longitudinal paper's payload
-    lost them, reported only as an "unexpected payload key" note.
-
-    An extractor emits one file per entity kind, so the payload key is a bare
-    entity name however deep the schema puts the list. Most sit directly on Study
-    and the mapping is the identity; `arms` and `timepoints` sit one level down
-    under `design`, so a single level of inlined singleton is followed. Deeper
-    nesting is not: the payload would need a path of its own to be unambiguous.
-    """
-
-    sch = reader.load(EXTRACTION_SCHEMA)
-    study = sch.attributes("Study")
-
-    def lists_on(attributes: Mapping[str, SlotDefinition], prefix: str = "") -> dict[str, str]:
-        return {
-            name: f"{prefix}{name}"
-            for name, attribute in attributes.items()
-            if attribute is not None and attribute.multivalued
-        }
-
-    found = lists_on(study)
-    for name, attribute in study.items():
-        if attribute is None or attribute.multivalued:
-            continue
-        if attribute.inlined is not True:
-            continue
-        nested = attribute.range
-        if nested not in sch:
-            continue
-        for key, path in lists_on(sch.attributes(nested), f"{name}.").items():
-            found.setdefault(key, path)
-    return found
+    """`reader.entity_lists` over the extraction schema. Kept as a name because
+    `prompt.render` and two tests ask for it, and cached because it parses the schema."""
+    global _ENTITY_LISTS_CACHE
+    if _ENTITY_LISTS_CACHE is None:
+        _ENTITY_LISTS_CACHE = reader.entity_lists(reader.load(EXTRACTION_SCHEMA))
+    return _ENTITY_LISTS_CACHE
 
 
-_ENTITY_LISTS = _entity_lists()
+_ENTITY_LISTS_CACHE: dict[str, str] | None = None
 
 # Keys that are extractor scaffolding, not schema content.
 _SCAFFOLDING = {"cross_reference_notes"}
@@ -398,7 +368,7 @@ def merge_payloads(payload_dir: Path) -> tuple[dict[str, Any], list[str]]:
                     if attr in study:
                         collisions.append(f"{attr} (from {path.name})")
                     study[attr] = attr_value
-            elif key in _ENTITY_LISTS and isinstance(value, list):
+            elif key in _entity_lists() and isinstance(value, list):
                 # An entity list holds objects. 16023086's `analyses` came back as
                 # [{...}, "required_entities"] -- one stray token from the reply, which
                 # `derive_coordinate_spaces` then called `.get` on, losing a paper that had
@@ -411,7 +381,7 @@ def merge_payloads(payload_dir: Path) -> tuple[dict[str, Any], list[str]]:
                         f"entr{'y' if len(value) - len(kept) == 1 else 'ies'} "
                         f"(from {path.name})"
                     )
-                lists.setdefault(_ENTITY_LISTS[key], []).extend(kept)
+                lists.setdefault(_entity_lists()[key], []).extend(kept)
             elif key not in _CONSUMED_ELSEWHERE:
                 # The one signal that an entity list was silently lost. `arms` and
                 # `timepoints` were added to Study, every intervention and longitudinal
@@ -482,7 +452,7 @@ def apply_aliases(body: dict[str, Any], sch: Schema, aliases: dict[str, str]) ->
                         visit(item, target)
 
     # From Study, the way `check_local_ids`, `listify_scalars` and `unwrap_plain_slots`
-    # already do. This walked `_ENTITY_LISTS.values()` and looked each up on Study by name
+    # already do. This walked `_entity_lists().values()` and looked each up on Study by name
     # -- and three of those values are dotted paths (`design.arms`, `design.timepoints`,
     # `extraction_metadata.paper_sections`) that `Study` has no attribute for. Three
     # iterations resolved to nothing, silently, every build. Harmless only for as long as
@@ -712,7 +682,7 @@ def listify_nested(body: dict[str, Any], sch: Schema) -> list[str]:
                         visit(item, target, f"{path}.{key}[{index}]")
 
     study_attributes = sch.attributes("Study")
-    for attr in _ENTITY_LISTS.values():
+    for attr in _entity_lists().values():
         attribute = study_attributes.get(attr)
         target = attribute.range if attribute is not None else None
         if isinstance(target, str):
@@ -1206,34 +1176,15 @@ def relabel_conclusions(body: dict[str, Any], sch: Schema) -> list[str]:
     """
 
     fixed: list[str] = []
-
-    def visit(node: Any, class_name: str, path: str) -> None:
-        if not isinstance(node, dict) or values.is_field(node):
-            return
-        class_name = sch.designated_type(node, class_name)
-        attributes = sch.attributes(class_name)
-        for key, value in node.items():
-            attribute = attributes.get(key)
-            if attribute is None:
-                continue
-            kind = sch.classify(key, attribute)
-            if kind == "evidence" and values.is_field(value):
-                if (class_name, key) not in CONCLUSION_SLOTS:
-                    continue
-                if value.get("value_source") != "reported":
-                    continue
-                if (value.get("evidence") or {}).get("status") != "not_found":
-                    continue
-                value["value_source"] = "generated"
-                fixed.append(f"{path}.{key}: reported -> generated")
-            elif kind == "nested":
-                target = attribute.range
-                if isinstance(target, str):
-                    for index, item in enumerate(value if isinstance(value, list) else [value]):
-                        suffix = f"[{index}]" if isinstance(value, list) else ""
-                        visit(item, target, f"{path}.{key}{suffix}")
-
-    visit(body, "Study", "Study")
+    for slot in walk.fields(body, sch):
+        if (slot.owner_class, slot.key) not in CONCLUSION_SLOTS:
+            continue
+        if not values.is_field(slot.value) or slot.value.get("value_source") != "reported":
+            continue
+        if (slot.value.get("evidence") or {}).get("status") != "not_found":
+            continue
+        slot.value["value_source"] = "generated"
+        fixed.append(f"{slot.path}: reported -> generated")
     return fixed
 
 
@@ -1259,38 +1210,14 @@ def unwrap_singleton_lists(body: dict[str, Any], sch: Schema) -> list[str]:
     """
 
     fixed: list[str] = []
-
-    def visit(node: Any, class_name: str, path: str) -> None:
-        if not isinstance(node, dict) or values.is_field(node):
-            return
-        class_name = sch.designated_type(node, class_name)
-        attributes = sch.attributes(class_name)
-        for key, value in node.items():
-            attribute = attributes.get(key)
-            if attribute is None:
-                continue
-            kind = sch.classify(key, attribute)
-            if kind == "evidence" and values.is_field(value):
-                wrapper = attribute.range
-                declared = (
-                    (sch.attributes(wrapper) or {}).get("value", {})
-                    if isinstance(wrapper, str)
-                    else {}
-                )
-                if not declared or declared.multivalued:
-                    continue
-                inner = value.get("value")
-                if isinstance(inner, list) and len(inner) == 1:
-                    value["value"] = inner[0]
-                    fixed.append(f"{path}.{key}: [{inner[0]!r}] -> {inner[0]!r}")
-            elif kind == "nested":
-                target = attribute.range
-                if isinstance(target, str):
-                    for index, item in enumerate(value if isinstance(value, list) else [value]):
-                        suffix = f"[{index}]" if isinstance(value, list) else ""
-                        visit(item, target, f"{path}.{key}{suffix}")
-
-    visit(body, "Study", "Study")
+    for slot in walk.fields(body, sch):
+        declared = slot.declared_value(sch)
+        if declared is None or declared.multivalued or not values.is_field(slot.value):
+            continue
+        inner = slot.value.get("value")
+        if isinstance(inner, list) and len(inner) == 1:
+            slot.value["value"] = inner[0]
+            fixed.append(f"{slot.path}: [{inner[0]!r}] -> {inner[0]!r}")
     return fixed
 
 
@@ -1308,40 +1235,18 @@ def listify_scalars(body: dict[str, Any], sch: Schema) -> list[str]:
     """
 
     fixed: list[str] = []
-
-    def visit(node: Any, class_name: str, path: str) -> None:
-        if not isinstance(node, dict) or values.is_field(node):
-            return
-        class_name = sch.designated_type(node, class_name)
-        attributes = sch.attributes(class_name)
-        for key, value in node.items():
-            attribute = attributes.get(key)
-            if attribute is None:
-                continue
-            kind = sch.classify(key, attribute)
-            if kind == "evidence" and values.is_field(value):
-                wrapper = attribute.range
-                declared = (
-                    (sch.attributes(wrapper) or {}).get("value", {})
-                    if isinstance(wrapper, str)
-                    else {}
-                )
-                if not declared.multivalued or "value" not in value:
-                    continue
-                inner = value["value"]
-                # A missing value is a different fault and stays visible as one; only a
-                # present scalar is the shape this repairs.
-                if inner is not None and not isinstance(inner, list):
-                    value["value"] = [inner]
-                    fixed.append(f"{path}.{key}")
-            elif kind == "nested":
-                target = attribute.range
-                if isinstance(target, str):
-                    for index, item in enumerate(value if isinstance(value, list) else [value]):
-                        suffix = f"[{index}]" if isinstance(value, list) else ""
-                        visit(item, target, f"{path}.{key}{suffix}")
-
-    visit(body, "Study", "Study")
+    for slot in walk.fields(body, sch):
+        declared = slot.declared_value(sch)
+        if declared is None or not declared.multivalued or not values.is_field(slot.value):
+            continue
+        if "value" not in slot.value:
+            continue
+        inner = slot.value["value"]
+        # A missing value is a different fault and stays visible as one; only a present
+        # scalar is the shape this repairs.
+        if inner is not None and not isinstance(inner, list):
+            slot.value["value"] = [inner]
+            fixed.append(slot.path)
     return fixed
 
 
@@ -1470,60 +1375,40 @@ def unwrap_plain_slots(body: dict[str, Any], sch: Schema) -> list[str]:
     """
 
     fixed: list[str] = []
-
-    def visit(node: Any, class_name: str, path: str) -> None:
-        if not isinstance(node, dict) or values.is_field(node):
-            return
-        class_name = sch.designated_type(node, class_name)
-        attributes = sch.attributes(class_name)
-        for key, value in list(node.items()):
-            attribute = attributes.get(key)
-            if attribute is None:
-                continue
-            here = f"{path}.{key}"
-            kind = sch.classify(key, attribute)
-            if kind in ("reference", "native"):
-                if values.is_field(value) and "value" in value:
-                    node[key] = value["value"]
-                    fixed.append(f"{here}: unwrapped a wrapper into a {kind} slot")
-                elif values.is_field(value):
-                    # A wrapper with no `value` says `not_reported`, which is the right
-                    # encoding for an evidence slot and meaningless here: a reference has
-                    # no wrapper form, so "not reported" is simply absence. Dropped
-                    # rather than left, because the validator reads it as a malformed
-                    # cross-reference and the paper said nothing either way.
-                    del node[key]
-                    fixed.append(
-                        f"{here}: dropped an empty "
-                        f"{value.get('extraction_status', 'valueless')!r} wrapper "
-                        f"from a {kind} slot"
-                    )
-                elif isinstance(value, list):
-                    for index, item in enumerate(value):
-                        if values.is_field(item) and "value" in item:
-                            value[index] = item["value"]
-                            fixed.append(
-                                f"{here}[{index}]: unwrapped a wrapper into a " f"{kind} slot"
-                            )
-                continue
-            if kind == "evidence" and value is not None and not isinstance(value, (dict, list)):
-                # The inverse slip: a bare scalar in a slot that holds an ExtractedValue.
-                # The value is the model's answer and it offered no span for it, so the
-                # evidence is honestly `not_found` rather than invented.
-                node[key] = values.wrap(value, source="reported", evidence="not_found")
+    for slot in walk.slots(body, sch, kinds=("reference", "native", "evidence")):
+        if slot.kind in ("reference", "native"):
+            if values.is_field(slot.value) and "value" in slot.value:
+                slot.owner[slot.key] = slot.value["value"]
+                fixed.append(f"{slot.path}: unwrapped a wrapper into a {slot.kind} slot")
+            elif values.is_field(slot.value):
+                # A wrapper with no `value` says `not_reported`, which is the right encoding
+                # for an evidence slot and meaningless here: a reference has no wrapper form,
+                # so "not reported" is simply absence. Dropped rather than left, because the
+                # validator reads it as a malformed cross-reference and the paper said
+                # nothing either way.
+                del slot.owner[slot.key]
+                status = slot.value.get("extraction_status", "valueless")
                 fixed.append(
-                    f"{here}: wrapped a bare {type(value).__name__} into an " f"ExtractedValue"
+                    f"{slot.path}: dropped an empty {status!r} wrapper from a "
+                    f"{slot.kind} slot"
                 )
-                continue
-            if kind == "nested":
-                target = attribute.range or class_name
-                if isinstance(value, list):
-                    for index, item in enumerate(value):
-                        visit(item, target, f"{here}[{index}]")
-                else:
-                    visit(value, target, here)
-
-    visit(body, "Study", "Study")
+            elif isinstance(slot.value, list):
+                for index, item in enumerate(slot.value):
+                    if values.is_field(item) and "value" in item:
+                        slot.value[index] = item["value"]
+                        fixed.append(
+                            f"{slot.path}[{index}]: unwrapped a wrapper into a "
+                            f"{slot.kind} slot"
+                        )
+        elif slot.value is not None and not isinstance(slot.value, (dict, list)):
+            # The inverse slip: a bare scalar in a slot that holds an ExtractedValue. The
+            # value is the model's answer and it offered no span for it, so the evidence is
+            # honestly `not_found` rather than invented.
+            slot.owner[slot.key] = values.wrap(
+                slot.value, source="reported", evidence="not_found")
+            fixed.append(
+                f"{slot.path}: wrapped a bare {type(slot.value).__name__} into an "
+                f"ExtractedValue")
     return fixed
 
 
@@ -1539,43 +1424,27 @@ def coerce_numeric_values(body: dict[str, Any], sch: Schema) -> list[str]:
     because inventing a number is worse than reporting a string.
     """
 
+    NUMERIC = ("float", "double", "decimal", "integer")
     fixed: list[str] = []
-
-    def visit(node: Any, class_name: str, path: str) -> None:
-        if not isinstance(node, dict):
-            return
-        class_name = sch.designated_type(node, class_name)
-        attributes = sch.attributes(class_name)
-        for key, value in node.items():
-            attribute = attributes.get(key)
-            if attribute is None:
-                continue
-            here = f"{path}.{key}"
-            wrapper = attribute.range
-            if values.is_field(value) and isinstance(wrapper, str):
-                declared = (sch.attributes(wrapper) or {}).get("value")
-                # `getattr`, not `.range`: the fallback for a wrapper class that declares
-                # no `value` slot was a bare `{}`, which has no `.range` and took the whole
-                # build down with an AttributeError -- one paper in 89, at the last stage,
-                # after every model call it needed had been paid for.
-                wants = getattr(declared, "range", None)
-                inner = value.get("value")
-                if wants in ("float", "double", "decimal", "integer") and isinstance(inner, str):
-                    cleaned = re.sub(r"[^0-9eE.+-]", "", inner.strip())
-                    try:
-                        number = float(cleaned)
-                    except ValueError:
-                        continue
-                    value["value"] = int(number) if wants == "integer" else number
-                    fixed.append(f"{here}: {inner!r} -> {value['value']}")
-                continue
-            if isinstance(value, list):
-                for index, item in enumerate(value):
-                    visit(item, attribute.range or class_name, f"{here}[{index}]")
-            elif isinstance(value, dict):
-                visit(value, attribute.range or class_name, here)
-
-    visit(body, "Study", "Study")
+    for slot in walk.fields(body, sch):
+        if not values.is_field(slot.value):
+            continue
+        declared = slot.declared_value(sch)
+        # `getattr`, not `.range`: the fallback for a wrapper class that declares no `value`
+        # slot was a bare `{}`, which has no `.range` and took the whole build down with an
+        # AttributeError -- one paper in 89, at the last stage, after every model call it
+        # needed had been paid for. `declared_value` returns None there instead.
+        wants = getattr(declared, "range", None)
+        inner = slot.value.get("value")
+        if wants not in NUMERIC or not isinstance(inner, str):
+            continue
+        cleaned = re.sub(r"[^0-9eE.+-]", "", inner.strip())
+        try:
+            number = float(cleaned)
+        except ValueError:
+            continue
+        slot.value["value"] = int(number) if wants == "integer" else number
+        fixed.append(f"{slot.path}: {inner!r} -> {slot.value['value']}")
     return fixed
 
 
@@ -1819,6 +1688,11 @@ def repoint_out_of_scope_terms(body: dict[str, Any]) -> list[str]:
     return fixed
 
 
+def fold_id(name: str) -> str:
+    """Case and punctuation off an id, for the one rule that folds them."""
+    return re.sub(r"[^a-z0-9]+", "", name.lower())
+
+
 def repair_references(body: dict[str, Any], sch: Schema) -> list[str]:
     """Repoint a cross-reference that names a local_id nothing declares, where forced.
 
@@ -1840,10 +1714,28 @@ def repair_references(body: dict[str, Any], sch: Schema) -> list[str]:
     Anything else is left dangling and reported. Two candidates and a guess about which
     inference settings an analysis used is a claim about the paper, and the point of the
     report is that a human sees it.
-    """
 
-    def fold(name: str) -> str:
-        return re.sub(r"[^a-z0-9]+", "", name.lower())
+    WHAT IT CONSIDERS DECLARED IS NARROWER THAN THE SCHEMA, deliberately, for now. The
+    index below sweeps the Study-level lists, so it never sees a `ModelTerm` under
+    `model_estimations[].terms` or a `Condition` under `tasks[].conditions`: measured over
+    1,817 records it misses 10,867 declared ids -- 4,895 ModelTerms, 3,010 Conditions, 696
+    Timepoints, 448 Arms -- while `validate.index_ids` descends and has disagreed with it
+    all along. `walk.declared_ids` is the schema-guided index and the two differ.
+
+    Widening it was tried and reverted, because it makes `sole` reach slots it was only
+    safe never to reach. Given the whole schema as a pool it repointed `asm_mini` to
+    `asm_ftnd` -- a psychiatric interview onto a nicotine-dependence scale -- and
+    collapsed `trm_three_way_interaction` and `trm_quitting_motivation_main` onto the same
+    `trm_cue_1`, on a record declaring one term whose cells name three. A guard refusing
+    targets that two distinct names reach removed the collapses and kept
+    `asm_diagnostic_interview -> asm_heroin_craving_questionnaire`, so the guard is not the
+    discriminator either. 88 of the 90 repairs this makes come from `sole`, so it cannot
+    simply go.
+
+    What is missing is a ground truth for "was this repoint right", which the benchmark
+    does not carry. Until there is one, widening the index is tuning a heuristic against
+    nothing, and the narrow index stays with its divergence written down.
+    """
 
     declared: dict[str, str] = {}
     for key, value in body.items():
@@ -1855,7 +1747,7 @@ def repair_references(body: dict[str, Any], sch: Schema) -> list[str]:
 
     by_fold: dict[str, list[str]] = {}
     for name in declared:
-        by_fold.setdefault(fold(name), []).append(name)
+        by_fold.setdefault(fold_id(name), []).append(name)
 
     def pool_for(slot: str) -> list[str]:
         # `model_estimation` is a reference to something in `model_estimations`; the
@@ -1865,46 +1757,27 @@ def repair_references(body: dict[str, Any], sch: Schema) -> list[str]:
                 return [n for n, owner in declared.items() if owner == candidate]
         return []
 
-    fixed: list[str] = []
-
     def repoint(dangling: str, slot: str) -> str | None:
-        same = [n for n in by_fold.get(fold(dangling), []) if n != dangling]
+        same = [n for n in by_fold.get(fold_id(dangling), []) if n != dangling]
         if len(same) == 1:
             return same[0]
         pool = pool_for(slot)
         return pool[0] if len(pool) == 1 else None
 
-    def visit(node: Any, class_name: str, path: str) -> None:
-        if not isinstance(node, dict) or values.is_field(node):
-            return
-        class_name = sch.designated_type(node, class_name)
-        attributes = sch.attributes(class_name)
-        for key, value in list(node.items()):
-            attribute = attributes.get(key)
-            if attribute is None:
+    fixed: list[str] = []
+    for slot in walk.references(body, sch):
+        for index, dangling in enumerate(walk.ids_of(slot.value)):
+            if dangling in declared:
                 continue
-            here = f"{path}.{key}"
-            if sch.classify(key, attribute) == "reference":
-                if isinstance(value, str) and value not in declared:
-                    target = repoint(value, key)
-                    if target:
-                        node[key] = target
-                        fixed.append(f"{here}: {value!r} -> {target!r}")
-                elif isinstance(value, list):
-                    for index, item in enumerate(value):
-                        if isinstance(item, str) and item not in declared:
-                            target = repoint(item, key)
-                            if target:
-                                value[index] = target
-                                fixed.append(f"{here}[{index}]: {item!r} -> {target!r}")
+            target = repoint(dangling, slot.key)
+            if target is None:
                 continue
-            if isinstance(value, Mapping):
-                visit(value, attribute.range or class_name, here)
-            elif isinstance(value, list):
-                for index, item in enumerate(value):
-                    visit(item, attribute.range or class_name, f"{here}[{index}]")
-
-    visit(body, "Study", "Study")
+            if isinstance(slot.value, list):
+                slot.value[index] = target
+                fixed.append(f"{slot.path}[{index}]: {dangling!r} -> {target!r}")
+            else:
+                slot.owner[slot.key] = target
+                fixed.append(f"{slot.path}: {dangling!r} -> {target!r}")
     return fixed
 
 
@@ -1979,7 +1852,7 @@ def check_local_ids(body: dict[str, Any], sch: Schema) -> list[str]:
 
     # From Study rather than from the entity lists, so that references living under a
     # non-list slot -- `design.arms[].`, and anything added there later -- are checked
-    # too. `_ENTITY_LISTS` holds dotted paths that `body.get()` cannot resolve.
+    # too. `_entity_lists()` holds dotted paths that `body.get()` cannot resolve.
     visit(body, "Study", "Study")
     return problems
 
@@ -2030,7 +1903,7 @@ def build(
     _walk(body, normalized, folded, "", report)
 
     # The body first, then the builder's own fields over the top -- not the reverse.
-    # `_ENTITY_LISTS` maps `paper_sections` to `extraction_metadata.paper_sections`, and
+    # `_entity_lists()` maps `paper_sections` to `extraction_metadata.paper_sections`, and
     # `merge_payloads` materialises a dotted path into a nested dict, so a payload carrying
     # a top-level `paper_sections` produces a `body["extraction_metadata"]` that
     # `record.update(body)` substituted wholesale -- taking `source_text_hash` with it.

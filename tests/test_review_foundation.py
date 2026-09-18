@@ -308,15 +308,15 @@ def test_entity_lists_cover_every_study_entity_list(classes: dict) -> None:
     study = classes.attributes("Study")
     declared = {name for name, attribute in study.items() if attribute.multivalued}
     assert declared, "Study should declare multivalued entity lists"
-    assert declared <= set(builder._ENTITY_LISTS)
+    assert declared <= set(builder._entity_lists())
     # A list directly on Study maps to itself.
-    assert all(builder._ENTITY_LISTS[name] == name for name in declared)
+    assert all(builder._entity_lists()[name] == name for name in declared)
 
     # A list one level down keeps its bare payload key and gains a dotted path, so an
     # extractor that emits arms.json does not have to know where the schema puts them.
     nested = classes.attributes(study["design"]["range"])
     for name in (n for n, a in nested.items() if a.multivalued):
-        assert builder._ENTITY_LISTS[name] == f"design.{name}"
+        assert builder._entity_lists()[name] == f"design.{name}"
 
 
 def test_merge_payloads_keeps_arms_and_timepoints(tmp_path: Path) -> None:
