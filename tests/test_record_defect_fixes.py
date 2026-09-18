@@ -25,7 +25,8 @@ class Sink:
         self.warnings.append((path, message))
 
 
-def field(value, source="reported", evidence="present"):
+def warranted(value, source="reported", evidence="present"):
+    """A reported value whose evidence is `present` unless a caller says otherwise."""
     return {
         "value": value,
         "extraction_status": "extracted",
@@ -46,7 +47,7 @@ def test_a_cited_table_marked_reported_effect_is_not_a_contradiction():
     """
     record = {
         "analyses": [{"local_id": "a1", "tables": ["tbl1"]}],
-        "tables": [{"local_id": "tbl1", "purpose": field("reported_effect", "generated")}],
+        "tables": [{"local_id": "tbl1", "purpose": warranted("reported_effect", "generated")}],
     }
     sink = Sink()
     rules.check_table_purpose(record, sink)
@@ -57,7 +58,7 @@ def test_a_cited_table_marked_something_else_is_still_a_contradiction():
     """The check's actual purpose, which the exemption must not remove."""
     record = {
         "analyses": [{"local_id": "a1", "tables": ["tbl1"]}],
-        "tables": [{"local_id": "tbl1", "purpose": field("roi_definition", "reported")}],
+        "tables": [{"local_id": "tbl1", "purpose": warranted("roi_definition", "reported")}],
     }
     sink = Sink()
     rules.check_table_purpose(record, sink)
@@ -83,9 +84,9 @@ def _level_record(level_name, **entities):
                 "terms": [
                     {
                         "local_id": "trm1",
-                        "name": field("condition"),
-                        "type": field("categorical"),
-                        "levels": [{"level": field(level_name)}],
+                        "name": warranted("condition"),
+                        "type": warranted("categorical"),
+                        "levels": [{"level": warranted(level_name)}],
                     }
                 ],
             }
@@ -100,7 +101,7 @@ def test_a_level_links_to_the_condition_it_names(extraction_schema):
     record = _level_record(
         "smoking cue",
         tasks=[{"local_id": "tsk1", "conditions": [
-            {"local_id": "cond_smoking_cue", "name": field("Smoking Cue")}]}],
+            {"local_id": "cond_smoking_cue", "name": warranted("Smoking Cue")}]}],
     )
     changed = fix.link_entities_by_name(record, extraction_schema)
     level = record["model_estimations"][0]["terms"][0]["levels"][0]
@@ -111,7 +112,7 @@ def test_a_level_links_to_the_condition_it_names(extraction_schema):
 def test_a_level_links_to_the_timepoint_it_names(extraction_schema):
     record = _level_record(
         "predose",
-        design={"timepoints": [{"local_id": "tp_predose", "name": field("predose")}]},
+        design={"timepoints": [{"local_id": "tp_predose", "name": warranted("predose")}]},
     )
     fix.link_entities_by_name(record, extraction_schema)
     assert record["model_estimations"][0]["terms"][0]["levels"][0]["timepoints"] == ["tp_predose"]
@@ -122,8 +123,8 @@ def test_a_name_matching_both_an_arm_and_a_cohort_writes_both(extraction_schema)
     exists to say so, and writing one and not the other would lose half the fact."""
     record = _level_record(
         "Exercise",
-        groups=[{"local_id": "grp_exercise", "name": field("Exercise")}],
-        design={"arms": [{"local_id": "arm_exercise", "name": field("Exercise")}]},
+        groups=[{"local_id": "grp_exercise", "name": warranted("Exercise")}],
+        design={"arms": [{"local_id": "arm_exercise", "name": warranted("Exercise")}]},
     )
     fix.link_entities_by_name(record, extraction_schema)
     level = record["model_estimations"][0]["terms"][0]["levels"][0]
@@ -134,8 +135,8 @@ def test_a_name_matching_both_an_arm_and_a_cohort_writes_both(extraction_schema)
 def test_two_candidates_of_one_kind_are_left_alone(extraction_schema):
     record = _level_record(
         "controls",
-        groups=[{"local_id": "grp_a", "name": field("controls")},
-                {"local_id": "grp_b", "name": field("Controls")}],
+        groups=[{"local_id": "grp_a", "name": warranted("controls")},
+                {"local_id": "grp_b", "name": warranted("Controls")}],
     )
     assert fix.link_entities_by_name(record, extraction_schema) == []
     assert "groups" not in record["model_estimations"][0]["terms"][0]["levels"][0]
@@ -150,8 +151,8 @@ def test_a_relation_slot_is_never_filled_from_a_name(extraction_schema):
     """
     record = {
         "model_estimations": [
-            {"local_id": "mod1", "terms": [{"local_id": "trm_a", "name": field("group")}]},
-            {"local_id": "mod2", "terms": [{"local_id": "trm_b", "name": field("group")}]},
+            {"local_id": "mod1", "terms": [{"local_id": "trm_a", "name": warranted("group")}]},
+            {"local_id": "mod2", "terms": [{"local_id": "trm_b", "name": warranted("group")}]},
         ]
     }
     assert fix.link_entities_by_name(record, extraction_schema) == []
@@ -160,7 +161,7 @@ def test_a_relation_slot_is_never_filled_from_a_name(extraction_schema):
 
 def test_an_entity_is_never_linked_to_itself(extraction_schema):
     """9,151 self-links without this: a name trivially matches its own owner."""
-    record = {"analyses": [{"local_id": "a1", "name": field("A > B")}]}
+    record = {"analyses": [{"local_id": "a1", "name": warranted("A > B")}]}
     assert fix.link_entities_by_name(record, extraction_schema) == []
     assert "mirror_of" not in record["analyses"][0]
 
@@ -172,8 +173,8 @@ def test_the_written_shape_is_the_one_multivalued_declares(extraction_schema):
     """
     record = _level_record(
         "patients",
-        groups=[{"local_id": "grp_p", "name": field("patients")}],
-        design={"arms": [{"local_id": "arm_p", "name": field("patients")}]},
+        groups=[{"local_id": "grp_p", "name": warranted("patients")}],
+        design={"arms": [{"local_id": "arm_p", "name": warranted("patients")}]},
     )
     fix.link_entities_by_name(record, extraction_schema)
     level = record["model_estimations"][0]["terms"][0]["levels"][0]
@@ -183,7 +184,7 @@ def test_the_written_shape_is_the_one_multivalued_declares(extraction_schema):
 
 def test_a_slot_that_already_holds_a_reference_is_not_touched(extraction_schema):
     record = _level_record(
-        "patients", groups=[{"local_id": "grp_p", "name": field("patients")}]
+        "patients", groups=[{"local_id": "grp_p", "name": warranted("patients")}]
     )
     record["model_estimations"][0]["terms"][0]["levels"][0]["groups"] = ["grp_other"]
     fix.link_entities_by_name(record, extraction_schema)
@@ -196,7 +197,7 @@ def test_a_slot_that_already_holds_a_reference_is_not_touched(extraction_schema)
 def test_a_one_item_list_in_a_scalar_wrapper_is_unwrapped(extraction_schema):
     """21,701 fields. `values.read` returns the list, so a filter on `spatial_scope`
     matches nothing on 4,470 analyses."""
-    record = {"analyses": [{"local_id": "a1", "spatial_scope": field(["whole_brain"])}]}
+    record = {"analyses": [{"local_id": "a1", "spatial_scope": warranted(["whole_brain"])}]}
     changed = fix.unwrap_singleton_lists(record, extraction_schema)
     assert record["analyses"][0]["spatial_scope"]["value"] == "whole_brain"
     assert changed
@@ -205,13 +206,13 @@ def test_a_one_item_list_in_a_scalar_wrapper_is_unwrapped(extraction_schema):
 def test_a_longer_list_in_a_scalar_wrapper_is_left_for_the_check(extraction_schema):
     """730 of them, and `spatial_scope: ['whole_brain', 'roi']` 31 times -- the two exclude
     each other, so picking one would be deciding which."""
-    record = {"analyses": [{"local_id": "a1", "spatial_scope": field(["whole_brain", "roi"])}]}
+    record = {"analyses": [{"local_id": "a1", "spatial_scope": warranted(["whole_brain", "roi"])}]}
     assert fix.unwrap_singleton_lists(record, extraction_schema) == []
     assert record["analyses"][0]["spatial_scope"]["value"] == ["whole_brain", "roi"]
 
 
 def test_a_multivalued_wrapper_keeps_its_list(extraction_schema):
-    record = {"groups": [{"local_id": "g1", "medical_condition": field(["obesity"])}]}
+    record = {"groups": [{"local_id": "g1", "medical_condition": warranted(["obesity"])}]}
     assert fix.unwrap_singleton_lists(record, extraction_schema) == []
     assert record["groups"][0]["medical_condition"]["value"] == ["obesity"]
 
@@ -227,7 +228,7 @@ def test_the_validator_reports_a_list_in_a_scalar_wrapper(value, expect):
 
     validator = Validator(reader.load(schema.EXTRACTION), None)
     validator.check_record({"local_id": "S1", "analyses": [
-        {"local_id": "a1", "spatial_scope": field(value)}]})
+        {"local_id": "a1", "spatial_scope": warranted(value)}]})
     said = [e for e in validator.errors if "value must be a single" in e]
     assert bool(said) is bool(expect)
     if expect:
@@ -240,7 +241,7 @@ def test_the_validator_reports_a_list_in_a_scalar_wrapper(value, expect):
 def test_a_conclusion_with_no_sentence_is_relabelled_generated(extraction_schema):
     """`ModelTerm.type` 3,037 of 3,041. No paper writes down that a term is continuous."""
     record = {"model_estimations": [{"local_id": "m1", "terms": [
-        {"local_id": "t1", "type": field("continuous", "reported", "not_found")}]}]}
+        {"local_id": "t1", "type": warranted("continuous", "reported", "not_found")}]}]}
     changed = fix.relabel_conclusions(record, extraction_schema)
     assert record["model_estimations"][0]["terms"][0]["type"]["value_source"] == "generated"
     assert changed
@@ -250,7 +251,7 @@ def test_a_conclusion_with_a_sentence_keeps_reported(extraction_schema):
     """"the interaction was negative" is a direction read off prose, and the label is
     earned. Relabelling it would throw away the only case where it is."""
     record = {"analyses": [{"local_id": "a1", "effect": {"cells": [
-        {"term": "t1", "direction": field("negative", "reported", "present")}]}}]}
+        {"term": "t1", "direction": warranted("negative", "reported", "present")}]}}]}
     assert fix.relabel_conclusions(record, extraction_schema) == []
     cells = record["analyses"][0]["effect"]["cells"]
     assert cells[0]["direction"]["value_source"] == "reported"
@@ -260,7 +261,7 @@ def test_a_slot_a_paper_could_have_stated_is_left_for_the_warning(extraction_sch
     """`tfce_used` at 57% and `Statistic.family` at 31% are things a results section
     prints, so an unevidenced one is a reviewer's business rather than a relabel."""
     record = {"inference_settings": [
-        {"local_id": "i1", "tfce_used": field(True, "reported", "not_found")}]}
+        {"local_id": "i1", "tfce_used": warranted(True, "reported", "not_found")}]}
     assert fix.relabel_conclusions(record, extraction_schema) == []
     assert record["inference_settings"][0]["tfce_used"]["value_source"] == "reported"
 
@@ -269,14 +270,14 @@ def test_a_slot_a_paper_could_have_stated_is_left_for_the_warning(extraction_sch
 
 
 def _continuous(level, direction=None):
-    cell = {"term": "trm_bmi", "level": field(level)}
+    cell = {"term": "trm_bmi", "level": warranted(level)}
     if direction is not None:
-        cell["direction"] = field(direction)
+        cell["direction"] = warranted(direction)
     return {
         "analyses": [{"local_id": "a1", "model_estimation": "mod1",
                       "effect": {"cells": [cell]}}],
         "model_estimations": [{"local_id": "mod1", "terms": [
-            {"local_id": "trm_bmi", "name": field("BMI"), "type": field("continuous")}]}],
+            {"local_id": "trm_bmi", "name": warranted("BMI"), "type": warranted("continuous")}]}],
     }
 
 
@@ -336,9 +337,9 @@ def test_a_sign_word_another_term_declares_as_a_level_is_a_level():
     """
     record = _continuous("negative")
     record["model_estimations"][0]["terms"].append(
-        {"local_id": "trm_emotion", "name": field("emotion"), "type": field("categorical"),
-         "levels": [{"level": field("negative")}, {"level": field("positive")},
-                    {"level": field("neutral")}]}
+        {"local_id": "trm_emotion", "name": warranted("emotion"), "type": warranted("categorical"),
+         "levels": [{"level": warranted("negative")}, {"level": warranted("positive")},
+                    {"level": warranted("neutral")}]}
     )
     assert fix.drop_redundant_cell_levels(record) == []
     cell = record["analyses"][0]["effect"]["cells"][0]
@@ -356,7 +357,7 @@ def test_an_undirected_cell_is_not_overwritten():
 
 def test_a_level_on_a_term_that_declares_levels_is_left_alone():
     record = _continuous("BMI")
-    record["model_estimations"][0]["terms"][0]["levels"] = [{"level": field("high")}]
+    record["model_estimations"][0]["terms"][0]["levels"] = [{"level": warranted("high")}]
     assert fix.drop_redundant_cell_levels(record) == []
 
 
@@ -371,14 +372,16 @@ def test_a_rule_that_raises_becomes_a_finding_rather_than_an_abort():
             {
                 "local_id": "a1",
                 "model_estimation": "mod1",
-                "name": field("x"),
+                "name": warranted("x"),
                 "effect": {"cells": [{"term": "t1", "direction": {"value": "positive"}}]},
             }
         ],
         "model_estimations": [
             {
                 "local_id": "mod1",
-                "terms": [{"local_id": "t1", "name": field("g"), "type": field("categorical")}],
+                "terms": [
+                    {"local_id": "t1", "name": warranted("g"), "type": warranted("categorical")}
+                ],
             }
         ],
     }
@@ -548,7 +551,7 @@ def test_an_elided_quote_with_one_invented_fragment_is_a_drop():
 
 
 def test_a_partly_lost_field_records_the_loss_while_staying_present():
-    """A field offering two quotes and keeping one reads as fully evidenced to any consumer.
+    """A warranted offering two quotes and keeping one reads as fully evidenced to any consumer.
     Recording the count only on total failure would measure unevidenced FIELDS while
     claiming to measure dropped QUOTES."""
     from pondie.extraction.record import spans
@@ -578,10 +581,10 @@ def test_the_walk_finds_what_the_schema_declares(extraction_schema):
 
     record = {
         "local_id": "S1",
-        "tasks": [{"local_id": "tsk1", "name": field("go/no-go"),
-                   "conditions": [{"local_id": "cond_go", "name": field("go")}]}],
+        "tasks": [{"local_id": "tsk1", "name": warranted("go/no-go"),
+                   "conditions": [{"local_id": "cond_go", "name": warranted("go")}]}],
         "model_estimations": [{"local_id": "mod1", "terms": [
-            {"local_id": "trm1", "name": field("condition")}]}],
+            {"local_id": "trm1", "name": warranted("condition")}]}],
     }
     ids = walk.declared_ids(record, extraction_schema)
     assert ids["cond_go"] == "Condition", "a Condition nests under tasks[].conditions"
@@ -590,12 +593,20 @@ def test_the_walk_finds_what_the_schema_declares(extraction_schema):
 
 
 def test_the_walk_yields_a_slots_own_declaration(extraction_schema):
-    """`attribute.range` on a field is the wrapper, not the value. Five repairs needed the
+    """`attribute.range` on a warranted is the wrapper, not the value. Five repairs needed the
     inner declaration and each reached for it differently."""
     from pondie.extraction.record import walk
 
-    record = {"local_id": "S1", "groups": [
-        {"local_id": "g1", "medical_condition": field(["obesity"]), "age_mean": field(31.0)}]}
+    record = {
+        "local_id": "S1",
+        "groups": [
+            {
+                "local_id": "g1",
+                "medical_condition": warranted(["obesity"]),
+                "age_mean": warranted(31.0),
+            }
+        ],
+    }
     by_key = {slot.key: slot for slot in walk.fields(record, extraction_schema)}
     assert by_key["medical_condition"].declared_value(extraction_schema).multivalued is True
     assert by_key["age_mean"].declared_value(extraction_schema).multivalued in (None, False)
@@ -607,8 +618,8 @@ def test_a_caller_may_mutate_while_walking(extraction_schema):
     from pondie.extraction.record import walk
 
     record = {"local_id": "S1", "analyses": [
-        {"local_id": "a1", "spatial_scope": field(["whole_brain"]),
-         "prespecification": field(["preregistered"])}]}
+        {"local_id": "a1", "spatial_scope": warranted(["whole_brain"]),
+         "prespecification": warranted(["preregistered"])}]}
     for slot in walk.fields(record, extraction_schema):
         del slot.owner[slot.key]
     assert record["analyses"][0] == {"local_id": "a1"}
@@ -633,7 +644,7 @@ def _with_tasks(*tasks):
     return {
         "local_id": "S1",
         "analyses": [{"local_id": "a1", "tasks": ["tsk_missing"]}],
-        "tasks": [{"local_id": lid, "name": field(name)} for lid, name in tasks],
+        "tasks": [{"local_id": lid, "name": warranted(name)} for lid, name in tasks],
     }
 
 
@@ -668,7 +679,7 @@ def test_an_initialism_of_the_target_name_agrees(extraction_schema):
         "local_id": "S1",
         "groups": [{"local_id": "g1", "diagnostic_instrument": ["asm_scid"]}],
         "assessments": [{"local_id": "asm_structured_clinical",
-                         "name": field("Structured Clinical Interview for DSM-V")}],
+                         "name": warranted("Structured Clinical Interview for DSM-V")}],
     }
     assert fix.repair_references(record, extraction_schema)
     assert record["groups"][0]["diagnostic_instrument"] == ["asm_structured_clinical"]
@@ -684,7 +695,7 @@ def test_two_differently_named_references_do_not_collapse_onto_one_target(extrac
         "analyses": [{"local_id": "a1", "model_estimation": "mod1", "effect": {"cells": [
             {"term": "trm_smoking_opportunity_cue"}, {"term": "trm_quitting_motivation_cue"}]}}],
         "model_estimations": [{"local_id": "mod1", "terms": [
-            {"local_id": "trm_cue_1", "name": field("cue")}]}],
+            {"local_id": "trm_cue_1", "name": warranted("cue")}]}],
     }
     assert fix.repair_references(record, extraction_schema) == []
     terms = [cell["term"] for cell in record["analyses"][0]["effect"]["cells"]]
@@ -703,7 +714,7 @@ def test_one_reference_repeated_across_analyses_is_not_a_collapse(extraction_sch
 
 def test_a_reference_is_never_repointed_at_its_own_owner(extraction_schema):
     record = {"local_id": "S1", "analyses": [
-        {"local_id": "a1", "name": field("A > B"), "mirror_of": "a_missing"}]}
+        {"local_id": "a1", "name": warranted("A > B"), "mirror_of": "a_missing"}]}
     assert fix.repair_references(record, extraction_schema) == []
 
 
@@ -716,7 +727,7 @@ def test_declared_ids_are_read_schema_guided(extraction_schema):
         "analyses": [{"local_id": "a1", "model_estimation": "mod1", "effect": {"cells": [
             {"term": "trm_Condition"}]}}],
         "model_estimations": [{"local_id": "mod1", "terms": [
-            {"local_id": "trm_condition", "name": field("condition")}]}],
+            {"local_id": "trm_condition", "name": warranted("condition")}]}],
     }
     assert fix.repair_references(record, extraction_schema)
     assert record["analyses"][0]["effect"]["cells"][0]["term"] == "trm_condition"

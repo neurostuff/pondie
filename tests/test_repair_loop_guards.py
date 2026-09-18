@@ -47,14 +47,15 @@ def wired(storage_schema):
     return True
 
 
-def field(value, evidence=None):
+def unwarranted(value, evidence=None):
+    """A reported value with `evidence.status: not_found` unless a caller supplies a set."""
     return {"extraction_status": "extracted", "value": value, "value_source": "reported",
             "evidence": evidence or {"status": "not_found"}}
 
 
 def cited(value, quote, at=0):
     """`at` is the span's offset in the document, which is what orders the passage list."""
-    return field(value, {"status": "present",
+    return unwarranted(value, {"status": "present",
                          "sets": [{"source": "model_quote",
                                    "spans": [{"text": quote, "start_char": at,
                                               "end_char": at + len(quote)}]}]})
@@ -153,7 +154,7 @@ def test_a_slot_is_swept_after_what_it_points_at():
 def test_nothing_references_itself():
     """27082610, 19942229: `inputs_from` resolved to the model being edited."""
 
-    record = {"model_estimations": [{"local_id": "m1", "name": field("ANCOVA")}]}
+    record = {"model_estimations": [{"local_id": "m1", "name": unwarranted("ANCOVA")}]}
     target = record["model_estimations"][0]
     R.apply_edit(target, {"local_id": "m1", "inputs_from": ["ANCOVA"]},
                  "model_estimations", record, 0)
@@ -165,9 +166,9 @@ def test_repointing_an_analysis_may_not_orphan_the_terms_its_cells_name():
 
     record = {
         "model_estimations": [
-            {"local_id": "mod_a", "terms": [{"local_id": "t_a"}], "name": field("A")},
-            {"local_id": "mod_b", "terms": [{"local_id": "t_b"}], "name": field("B")}],
-        "analyses": [{"local_id": "a1", "name": field("contrast"),
+            {"local_id": "mod_a", "terms": [{"local_id": "t_a"}], "name": unwarranted("A")},
+            {"local_id": "mod_b", "terms": [{"local_id": "t_b"}], "name": unwarranted("B")}],
+        "analyses": [{"local_id": "a1", "name": unwarranted("contrast"),
                       "model_estimation": "mod_a",
                       "effect": {"cells": [{"term": "t_a"}]}}]}
     analysis = record["analyses"][0]
@@ -179,10 +180,15 @@ def test_a_multivalued_reference_gains_without_losing_what_was_there():
     """12853571: `assessments` was replaced by four new ids, dropping `asm_caps` -- the CAPS
     total score, which is the one thing that correlation is of."""
 
-    record = {"assessments": [{"local_id": "asm_caps", "name": field("CAPS total score")},
-                              {"local_id": "asm_ies", "name": field("impact of event scale")}],
-              "analyses": [{"local_id": "a1", "name": field("correlation"),
-                            "assessments": ["asm_caps"]}]}
+    record = {
+        "assessments": [
+            {"local_id": "asm_caps", "name": unwarranted("CAPS total score")},
+            {"local_id": "asm_ies", "name": unwarranted("impact of event scale")},
+        ],
+        "analyses": [
+            {"local_id": "a1", "name": unwarranted("correlation"), "assessments": ["asm_caps"]}
+        ],
+    }
     target = record["analyses"][0]
     R.apply_edit(target, {"local_id": "a1", "assessments": ["impact of event scale"]},
                  "analyses", record, 0)
@@ -192,8 +198,8 @@ def test_a_multivalued_reference_gains_without_losing_what_was_there():
 def test_a_reference_list_holds_each_target_once():
     """23021615: four preprocessing names all resolved to `prp_vbm`, written four times."""
 
-    record = {"preprocessings": [{"local_id": "prp_vbm", "name": field("VBM pipeline")}],
-              "model_estimations": [{"local_id": "m1", "name": field("group model")}]}
+    record = {"preprocessings": [{"local_id": "prp_vbm", "name": unwarranted("VBM pipeline")}],
+              "model_estimations": [{"local_id": "m1", "name": unwarranted("group model")}]}
     target = record["model_estimations"][0]
     R.apply_edit(target, {"local_id": "m1",
                           "preprocessing": ["VBM pipeline", "VBM pipeline", "VBM pipeline"]},
@@ -211,8 +217,8 @@ def test_a_reference_list_holds_each_target_once():
     ("whole_brain", [], "whole_brain"),
 ])
 def test_a_scope_and_the_regions_beside_it_must_agree(scope, regions, written):
-    record = {"regions": [{"local_id": "reg_x", "name": field("amygdala"),
-                           "definition_method": field("atlas")}],
+    record = {"regions": [{"local_id": "reg_x", "name": unwarranted("amygdala"),
+                           "definition_method": unwarranted("atlas")}],
               "inference_settings": [{"local_id": "i1",
                                       "correction_regions": list(regions)}]}
     target = record["inference_settings"][0]
@@ -223,10 +229,10 @@ def test_a_scope_and_the_regions_beside_it_must_agree(scope, regions, written):
 
 
 def test_a_whole_brain_analysis_is_not_given_regions_to_search():
-    record = {"regions": [{"local_id": "reg_x", "name": field("sgACC"),
-                           "definition_method": field("atlas")}],
-              "analyses": [{"local_id": "a1", "name": field("VBM"),
-                            "spatial_scope": field("whole_brain"), "regions": []}]}
+    record = {"regions": [{"local_id": "reg_x", "name": unwarranted("sgACC"),
+                           "definition_method": unwarranted("atlas")}],
+              "analyses": [{"local_id": "a1", "name": unwarranted("VBM"),
+                            "spatial_scope": unwarranted("whole_brain"), "regions": []}]}
     target = record["analyses"][0]
     R.apply_edit(target, {"local_id": "a1", "regions": ["sgACC"]}, "analyses", record, 0)
     assert target["regions"] == []
@@ -236,7 +242,7 @@ def test_a_slot_is_written_only_on_a_class_that_declares_it():
     """23021615: `correction_scope` was written onto three analyses; it belongs to
     InferenceSettings, which those analyses already referenced."""
 
-    record = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
+    record = {"analyses": [{"local_id": "a1", "name": unwarranted("VBM")}]}
     target = record["analyses"][0]
     R.apply_edit(target, {"local_id": "a1", "correction_scope": "roi"}, "analyses", record, 0)
     assert "correction_scope" not in target
@@ -245,7 +251,7 @@ def test_a_slot_is_written_only_on_a_class_that_declares_it():
 def test_an_edit_that_only_shortens_a_value_is_not_a_correction():
     """22952599: "compared to traumatized controls." became "compared to traumatized"."""
 
-    record = {"analyses": [{"local_id": "a1", "name": field("contrast"),
+    record = {"analyses": [{"local_id": "a1", "name": unwarranted("contrast"),
                             "definition": cited(
                                 "Decreased gray matter volume in PTSD patients compared to "
                                 "traumatized controls.",
@@ -299,9 +305,9 @@ def test_the_loops_own_bookkeeping_does_not_travel_in_the_record():
 def test_a_repair_that_damages_the_record_is_reported():
     """The check that did not exist while 665 violations accumulated across 15 records."""
 
-    before = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
+    before = {"analyses": [{"local_id": "a1", "name": unwarranted("VBM")}]}
     after = json.loads(json.dumps(before))
-    after["analyses"][0]["correction_scope"] = field("roi")   # not a slot on Analysis
+    after["analyses"][0]["correction_scope"] = unwarranted("roi")   # not a slot on Analysis
     assert any("correction_scope" in line for line in R.introduced(before, after))
     assert R.introduced(before, before) == []
 

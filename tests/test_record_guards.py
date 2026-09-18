@@ -18,7 +18,9 @@ from pondie.formats import values
 from pondie.schema import reader
 
 
-def field(value, evidence=None):
+def unwarranted(value, evidence=None):
+    """A reported value with `evidence.status: not_found` unless a caller supplies a set --
+    the state a proposal arrives in, and what the guards are deciding about."""
     return {
         "extraction_status": "extracted",
         "value": value,
@@ -28,7 +30,7 @@ def field(value, evidence=None):
 
 
 def cited(value, quote):
-    return field(
+    return unwarranted(
         value,
         {"status": "present", "sets": [{"source": "model_quote", "spans": [{"text": quote}]}]},
     )
@@ -104,7 +106,7 @@ def test_an_edit_that_drops_the_warrant_is_refused(storage_schema):
 
 def test_one_value_does_not_replace_several(storage_schema):
     """16701903 acquires MP-RAGE at TE 4.4 ms and FLASH at TE 5 ms."""
-    entity = {"local_id": "acq", "echo_time_seconds": field([0.0044, 0.005])}
+    entity = {"local_id": "acq", "echo_time_seconds": unwarranted([0.0044, 0.005])}
     e = edit(storage_schema, "MRI", entity, "echo_time_seconds", 0.0044)
     assert "drops values" in why(edit_module.refusals(e))
 
@@ -128,7 +130,7 @@ def test_a_scope_and_the_regions_beside_it_must_agree(storage_schema, scope, reg
 
 
 def test_a_whole_brain_analysis_is_not_given_regions_to_search(storage_schema):
-    entity = {"local_id": "a1", "spatial_scope": field("whole_brain"), "regions": []}
+    entity = {"local_id": "a1", "spatial_scope": unwarranted("whole_brain"), "regions": []}
     e = edit(storage_schema, "Analysis", entity, "regions", ["reg_sgacc"])
     assert "not restricted to a region" in why(edit_module.refusals(e))
 
@@ -173,9 +175,11 @@ def test_a_repair_that_damages_the_record_is_reported(storage_schema):
     """The check that did not exist while 665 findings accumulated across fifteen records."""
     from pondie.extraction.record.validate import Validator
 
-    before = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
+    before = {"analyses": [{"local_id": "a1", "name": unwarranted("VBM")}]}
     after = {
-        "analyses": [{"local_id": "a1", "name": field("VBM"), "correction_scope": field("roi")}]
+        "analyses": [
+            {"local_id": "a1", "name": unwarranted("VBM"), "correction_scope": unwarranted("roi")}
+        ]
     }
     validator = Validator(storage_schema, None)
     assert any("correction_scope" in line for line in validator.diff(before, after))
@@ -204,11 +208,11 @@ def test_a_reference_gains_without_losing_what_was_there(storage_schema):
 
     record = {
         "assessments": [
-            {"local_id": "asm_caps", "name": field("CAPS total score")},
-            {"local_id": "asm_ies", "name": field("impact of event scale")},
+            {"local_id": "asm_caps", "name": unwarranted("CAPS total score")},
+            {"local_id": "asm_ies", "name": unwarranted("impact of event scale")},
         ],
         "analyses": [
-            {"local_id": "a1", "name": field("correlation"), "assessments": ["asm_caps"]}
+            {"local_id": "a1", "name": unwarranted("correlation"), "assessments": ["asm_caps"]}
         ],
     }
     log = edit_module.apply(
@@ -227,8 +231,8 @@ def test_a_reference_list_holds_each_target_once(storage_schema):
     from pondie.extraction.repair import guard as edit_module
 
     record = {
-        "preprocessings": [{"local_id": "prp_vbm", "name": field("VBM pipeline")}],
-        "model_estimations": [{"local_id": "m1", "name": field("group model")}],
+        "preprocessings": [{"local_id": "prp_vbm", "name": unwarranted("VBM pipeline")}],
+        "model_estimations": [{"local_id": "m1", "name": unwarranted("group model")}],
     }
     edit_module.apply(
         storage_schema,
@@ -247,7 +251,7 @@ def test_a_value_that_will_not_fit_its_slot_is_refused_not_coerced(storage_schem
     `tfce_used` is the same shape and still asked for."""
     from pondie.extraction.repair import guard as edit_module
 
-    record = {"groups": [{"local_id": "g1", "name": field("patients")}]}
+    record = {"groups": [{"local_id": "g1", "name": unwarranted("patients")}]}
     log = edit_module.apply(
         storage_schema, record, "Group", record["groups"][0], {"is_healthy": "mostly"}
     )
@@ -267,8 +271,8 @@ def test_references_are_written_before_the_values_that_guard_against_them(storag
         "regions": [
             {
                 "local_id": "reg_stg",
-                "name": field("superior temporal gyrus"),
-                "definition_method": field("anatomical_a_priori"),
+                "name": unwarranted("superior temporal gyrus"),
+                "definition_method": unwarranted("anatomical_a_priori"),
             }
         ],
         "inference_settings": [{"local_id": "i1"}],
@@ -314,14 +318,14 @@ def corpus(tmp_path):
                 "regions": [
                     {
                         "local_id": "reg_stg",
-                        "name": field("superior temporal gyrus"),
-                        "definition_method": field("anatomical_a_priori"),
+                        "name": unwarranted("superior temporal gyrus"),
+                        "definition_method": unwarranted("anatomical_a_priori"),
                     }
                 ],
                 "inference_settings": [
                     {
                         "local_id": "i1",
-                        "correction_scope": field("whole_brain"),
+                        "correction_scope": unwarranted("whole_brain"),
                         "correction_regions": ["reg_stg"],
                     }
                 ],
@@ -391,7 +395,7 @@ def test_repair_reports_what_it_introduced(storage_schema, tmp_path):
     """A finding the pass caused is a defect in the pass, not in the paper."""
     from pondie.extraction import repair as repair_pass
 
-    record = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
+    record = {"analyses": [{"local_id": "a1", "name": unwarranted("VBM")}]}
     report = repair_pass.run(record, "", storage_schema, study_id="p")
     assert report.introduced == []
     assert report.summary().startswith("wrote 0")
@@ -406,14 +410,14 @@ def test_only_a_settleable_contradiction_reaches_the_model(storage_schema):
         "regions": [
             {
                 "local_id": "reg_stg",
-                "name": field("superior temporal gyrus"),
-                "definition_method": field("anatomical_a_priori"),
+                "name": unwarranted("superior temporal gyrus"),
+                "definition_method": unwarranted("anatomical_a_priori"),
             }
         ],
         "inference_settings": [
             {
                 "local_id": "i1",
-                "correction_scope": field("whole_brain"),
+                "correction_scope": unwarranted("whole_brain"),
                 "correction_regions": ["reg_stg"],
             }
         ],
@@ -426,7 +430,11 @@ def test_only_a_settleable_contradiction_reaches_the_model(storage_schema):
 
     consistent = {
         "inference_settings": [
-            {"local_id": "i1", "correction_scope": field("whole_brain"), "correction_regions": []}
+            {
+                "local_id": "i1",
+                "correction_scope": unwarranted("whole_brain"),
+                "correction_regions": [],
+            }
         ]
     }
     assert repair_pass.contradictions(consistent, storage_schema) == []
@@ -591,7 +599,7 @@ def test_an_instrument_already_in_the_record_is_not_minted_again(storage_schema)
                 "PTSD": "posttraumatic stress disorder",
             }.get(short)
 
-    record = {"assessments": [{"local_id": "asm_caps", "name": field("CAPS total score")}]}
+    record = {"assessments": [{"local_id": "asm_caps", "name": unwarranted("CAPS total score")}]}
     entity, why = edit_module.create(
         storage_schema,
         record,
@@ -608,7 +616,7 @@ def test_a_nested_slot_is_not_stringified(storage_schema):
     """`Analysis.groups` holds AnalysisGroup objects; casting one would make it a string."""
     from pondie.extraction.repair import guard as edit_module
 
-    record = {"analyses": [{"local_id": "a1", "name": field("contrast")}]}
+    record = {"analyses": [{"local_id": "a1", "name": unwarranted("contrast")}]}
     edit_module.apply(
         storage_schema,
         record,
@@ -635,7 +643,7 @@ def test_a_repaired_record_says_it_was_repaired(storage_schema):
     metadata alone makes two records that differ look comparable."""
     from pondie.extraction import repair as repair_pass
 
-    untouched = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
+    untouched = {"analyses": [{"local_id": "a1", "name": unwarranted("VBM")}]}
     repair_pass.run(untouched, "", storage_schema, study_id="p")
     assert "repaired_by" not in untouched.get("extraction_metadata", {})
 
@@ -643,14 +651,14 @@ def test_a_repaired_record_says_it_was_repaired(storage_schema):
         "regions": [
             {
                 "local_id": "reg_stg",
-                "name": field("superior temporal gyrus"),
-                "definition_method": field("anatomical_a_priori"),
+                "name": unwarranted("superior temporal gyrus"),
+                "definition_method": unwarranted("anatomical_a_priori"),
             }
         ],
         "inference_settings": [
             {
                 "local_id": "i1",
-                "correction_scope": field("whole_brain"),
+                "correction_scope": unwarranted("whole_brain"),
                 "correction_regions": ["reg_stg"],
             }
         ],
@@ -692,7 +700,9 @@ def test_a_slot_of_a_subclass_is_written_against_that_subclass(storage_schema):
 
     designator = storage_schema.type_designator("Acquisition")
     record = {
-        "acquisitions": [{"local_id": "acq", designator: "MRI", "name": field("structural scan")}]
+        "acquisitions": [
+            {"local_id": "acq", designator: "MRI", "name": unwarranted("structural scan")}
+        ]
     }
     edit_module.apply(
         storage_schema,
@@ -712,7 +722,7 @@ def test_the_type_designator_is_never_rewritten(storage_schema):
     from pondie.extraction.repair import guard as edit_module
 
     designator = storage_schema.type_designator("Acquisition")
-    entity = {"local_id": "acq", designator: "MRI", "name": field("structural scan")}
+    entity = {"local_id": "acq", designator: "MRI", "name": unwarranted("structural scan")}
     record = {"acquisitions": [entity]}
     edit_module.apply(
         storage_schema,
@@ -839,12 +849,12 @@ def test_a_reasoned_value_claimed_as_reported_is_flagged():
 
 
 def test_a_measure_the_scanner_could_not_have_produced():
-    """The error is only in the pair: either field alone reads fine."""
+    """The error is only in the pair: either unwarranted alone reads fine."""
     from pondie.extraction.record import rules
 
     record = {
-        "acquisitions": [{"local_id": "a", "modality": field("fMRI")}],
-        "measures": [{"local_id": "m", "family": field("electrophysiology")}],
+        "acquisitions": [{"local_id": "a", "modality": unwarranted("fMRI")}],
+        "measures": [{"local_id": "m", "family": unwarranted("electrophysiology")}],
     }
     found = _Findings()
     rules.check_modality_measures(record, found)
@@ -852,8 +862,8 @@ def test_a_measure_the_scanner_could_not_have_produced():
     assert "electrophysiology" in found.warnings[0][1]
 
     ok = {
-        "acquisitions": [{"local_id": "a", "modality": field("fMRI")}],
-        "measures": [{"local_id": "m", "family": field("functional_bold")}],
+        "acquisitions": [{"local_id": "a", "modality": unwarranted("fMRI")}],
+        "measures": [{"local_id": "m", "family": unwarranted("functional_bold")}],
     }
     clean = _Findings()
     rules.check_modality_measures(ok, clean)
@@ -867,12 +877,12 @@ def test_two_modalities_do_not_forbid_each_other_s_measures():
 
     record = {
         "acquisitions": [
-            {"local_id": "a1", "modality": field("fMRI")},
-            {"local_id": "a2", "modality": field("sMRI")},
+            {"local_id": "a1", "modality": unwarranted("fMRI")},
+            {"local_id": "a2", "modality": unwarranted("sMRI")},
         ],
         "measures": [
-            {"local_id": "m1", "family": field("functional_bold")},
-            {"local_id": "m2", "family": field("structural_morphometry")},
+            {"local_id": "m1", "family": unwarranted("functional_bold")},
+            {"local_id": "m2", "family": unwarranted("structural_morphometry")},
         ],
     }
     found = _Findings()
@@ -886,7 +896,7 @@ def test_a_breakdown_that_does_not_sum_to_its_own_denominator():
     from pondie.extraction.record import rules
 
     def entry(count, denominator):
-        return {"count": field(count), "denominator": field(denominator)}
+        return {"count": unwarranted(count), "denominator": unwarranted(denominator)}
 
     over = {"groups": [{"local_id": "g", "sex_distribution": [entry(12, 20), entry(14, 20)]}]}
     found = _Findings()
@@ -913,7 +923,9 @@ def test_an_enrolment_funnel_that_grows():
     from pondie.extraction.record import rules
 
     record = {
-        "groups": [{"local_id": "g", "enrolled_count": field(20), "acquired_count": field(24)}]
+        "groups": [
+            {"local_id": "g", "enrolled_count": unwarranted(20), "acquired_count": unwarranted(24)}
+        ]
     }
     found = _Findings()
     rules.check_counts_add_up(record, found)
@@ -924,9 +936,9 @@ def test_an_enrolment_funnel_that_grows():
         "groups": [
             {
                 "local_id": "g",
-                "approached_count": field(40),
-                "enrolled_count": field(24),
-                "acquired_count": field(20),
+                "approached_count": unwarranted(40),
+                "enrolled_count": unwarranted(24),
+                "acquired_count": unwarranted(20),
             }
         ]
     }
@@ -977,11 +989,12 @@ def test_a_declared_name_still_wins_over_the_id():
     from pondie.extraction.record.ids import label_of
 
     assert (
-        label_of({"local_id": "acq_fmri", "name": field("resting-state scan")})
+        label_of({"local_id": "acq_fmri", "name": unwarranted("resting-state scan")})
         == "resting-state scan"
     )
     assert (
-        label_of({"local_id": "mod_glm", "model_type": field("mixed effects")}) == "mixed effects"
+        label_of({"local_id": "mod_glm", "model_type": unwarranted("mixed effects")})
+        == "mixed effects"
     )
     assert label_of({"local_id": "dev_siemens_trio"}) == "siemens trio"
 
@@ -1009,7 +1022,7 @@ def test_a_value_the_pass_could_not_place_is_marked_generated(storage_schema):
     """
     from pondie.extraction.repair import guard as edit_module
 
-    record = {"groups": [{"local_id": "g", "name": field("patients")}]}
+    record = {"groups": [{"local_id": "g", "name": unwarranted("patients")}]}
     entity = record["groups"][0]
     edit_module.apply(
         storage_schema,
@@ -1030,7 +1043,7 @@ def test_a_value_the_pass_did_place_stays_reported(storage_schema):
     from pondie.extraction.repair import guard as edit_module
 
     quote = "Participants were recruited by newspaper advertisement in the local area."
-    record = {"groups": [{"local_id": "g", "name": field("patients")}]}
+    record = {"groups": [{"local_id": "g", "name": unwarranted("patients")}]}
     entity = record["groups"][0]
     edit_module.apply(
         storage_schema,
@@ -1108,8 +1121,8 @@ def test_a_nested_object_gains_prose_it_was_missing(storage_schema):
         "tasks": [
             {
                 "local_id": "tsk",
-                "name": field("picture viewing"),
-                "conditions": [{"local_id": "c1", "name": field("Neutral")}],
+                "name": unwarranted("picture viewing"),
+                "conditions": [{"local_id": "c1", "name": unwarranted("Neutral")}],
             }
         ]
     }
@@ -1139,8 +1152,8 @@ def test_a_nested_classification_is_left_to_the_pass_that_read_the_paper(storage
         "tasks": [
             {
                 "local_id": "tsk",
-                "name": field("picture viewing"),
-                "conditions": [{"local_id": "c2", "name": field("Disgust")}],
+                "name": unwarranted("picture viewing"),
+                "conditions": [{"local_id": "c2", "name": unwarranted("Disgust")}],
             }
         ]
     }
@@ -1168,9 +1181,9 @@ def test_a_nested_object_keeps_what_it_already_had(storage_schema):
         "tasks": [
             {
                 "local_id": "tsk",
-                "name": field("picture viewing"),
+                "name": unwarranted("picture viewing"),
                 "conditions": [
-                    {"local_id": "c1", "name": field("Neutral"), "condition_kind": kept}
+                    {"local_id": "c1", "name": unwarranted("Neutral"), "condition_kind": kept}
                 ],
             }
         ]
@@ -1197,8 +1210,8 @@ def test_a_nested_object_the_record_does_not_have_is_not_invented(storage_schema
         "tasks": [
             {
                 "local_id": "tsk",
-                "name": field("picture viewing"),
-                "conditions": [{"local_id": "c1", "name": field("Neutral")}],
+                "name": unwarranted("picture viewing"),
+                "conditions": [{"local_id": "c1", "name": unwarranted("Neutral")}],
             }
         ]
     }
@@ -1239,18 +1252,20 @@ def test_a_cell_naming_a_term_its_model_declares_under_a_prefix_is_repointed():
         "model_estimations": [
             {
                 "local_id": "mod_a",
-                "terms": [{"local_id": "mod_a.trm_modality", "name": field("modalities")}],
+                "terms": [{"local_id": "mod_a.trm_modality", "name": unwarranted("modalities")}],
             },
             {
                 "local_id": "mod_b",
-                "terms": [{"local_id": "mod_b.trm_modality", "name": field("modalities")}],
+                "terms": [{"local_id": "mod_b.trm_modality", "name": unwarranted("modalities")}],
             },
         ],
         "analyses": [
             {
                 "local_id": "an1",
                 "model_estimation": "mod_a",
-                "effect": {"cells": [{"term": "trm_modality", "direction": field("positive")}]},
+                "effect": {
+                    "cells": [{"term": "trm_modality", "direction": unwarranted("positive")}]
+                },
             }
         ],
     }
@@ -1270,15 +1285,18 @@ def test_the_prefix_repair_leaves_an_ambiguous_reference_alone():
             {
                 "local_id": "mod_a",
                 "inputs_from": ["mod_b"],
-                "terms": [{"local_id": "mod_a.trm_x", "name": field("x")}],
+                "terms": [{"local_id": "mod_a.trm_x", "name": unwarranted("x")}],
             },
-            {"local_id": "mod_b", "terms": [{"local_id": "mod_b.trm_x", "name": field("x")}]},
+            {
+                "local_id": "mod_b",
+                "terms": [{"local_id": "mod_b.trm_x", "name": unwarranted("x")}],
+            },
         ],
         "analyses": [
             {
                 "local_id": "an1",
                 "model_estimation": "mod_a",
-                "effect": {"cells": [{"term": "trm_x", "direction": field("positive")}]},
+                "effect": {"cells": [{"term": "trm_x", "direction": unwarranted("positive")}]},
             }
         ],
     }

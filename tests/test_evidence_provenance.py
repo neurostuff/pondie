@@ -12,12 +12,13 @@ from __future__ import annotations
 from pondie.extraction.evidence import quote as qz
 
 
-def field(value="3 T"):
+def reported(value="3 T"):
+    """A reported value with no evidence record, which is the state these tests examine."""
     return {"extraction_status": "extracted", "value": value, "value_source": "reported"}
 
 
 def payload():
-    return {"acquisitions": [{"local_id": "acq1", "magnetic_strength": field()}]}
+    return {"acquisitions": [{"local_id": "acq1", "magnetic_strength": reported()}]}
 
 
 def sources(doc):
@@ -32,8 +33,8 @@ def test_a_model_quote_is_labelled_as_one():
 
 
 def test_a_literally_located_quote_is_not_labelled_a_model_quote():
-    """`literal_quotes` settles a field before any model is asked, so calling the result a
-    `model_quote` claims a reading that never happened -- on the one field whose purpose is
+    """`literal_quotes` settles a reported before any model is asked, so calling the result a
+    `model_quote` claims a reading that never happened -- on the one reported whose purpose is
     telling the locators apart, and which a reviewer weighs a span by."""
     doc = payload()
     path = "acquisitions[0].magnetic_strength"

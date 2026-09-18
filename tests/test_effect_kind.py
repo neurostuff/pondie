@@ -21,7 +21,8 @@ from pondie.extraction.record.effect import (
 from pondie.extraction.record.rules import check_effect_kind
 
 
-def field(value):
+def stated(value):
+    """A wrapper with no provenance at all: these tests read `value` and nothing else."""
     return {"extraction_status": "extracted", "value": value}
 
 
@@ -42,10 +43,10 @@ class Findings:
 
 CLASSES = {
     "local_id": "trm-class",
-    "name": field("classification task"),
-    "type": field("categorical"),
-    "variation_level": field("within_subject"),
-    "levels": [{"level": field("synchronous")}, {"level": field("asynchronous")}],
+    "name": stated("classification task"),
+    "type": stated("categorical"),
+    "variation_level": stated("within_subject"),
+    "levels": [{"level": stated("synchronous")}, {"level": stated("asynchronous")}],
 }
 
 
@@ -72,7 +73,7 @@ def test_one_signed_cell_is_a_simple_effect():
     takes none, because absence is the zero weight."""
     terms = {"trm-class": CLASSES}
     kind, _why = derive_effect_kind(
-        [{"term": "trm-class", "level": field("synchronous"), "direction": field("positive")}],
+        [{"term": "trm-class", "level": stated("synchronous"), "direction": stated("positive")}],
         terms,
     )
     assert kind == "simple_effect"
@@ -82,8 +83,12 @@ def test_two_signed_cells_on_one_term_are_a_contrast():
     terms = {"trm-class": CLASSES}
     kind, _why = derive_effect_kind(
         [
-            {"term": "trm-class", "level": field("synchronous"), "direction": field("positive")},
-            {"term": "trm-class", "level": field("asynchronous"), "direction": field("negative")},
+            {"term": "trm-class", "level": stated("synchronous"), "direction": stated("positive")},
+            {
+                "term": "trm-class",
+                "level": stated("asynchronous"),
+                "direction": stated("negative"),
+            },
         ],
         terms,
     )
@@ -95,8 +100,8 @@ def test_cells_with_no_direction_at_all_describe_no_test():
     terms = {"trm-class": CLASSES}
     kind, why = derive_effect_kind(
         [
-            {"term": "trm-class", "level": field("synchronous"), "direction": unreported()},
-            {"term": "trm-class", "level": field("asynchronous"), "direction": unreported()},
+            {"term": "trm-class", "level": stated("synchronous"), "direction": unreported()},
+            {"term": "trm-class", "level": stated("asynchronous"), "direction": unreported()},
         ],
         terms,
     )
@@ -108,9 +113,9 @@ def test_cells_with_no_direction_at_all_describe_no_test():
 
 def test_a_stated_kind_that_matches_its_cells_is_silent():
     record = decoding_record(
-        [{"term": "trm-class", "level": field("synchronous"), "direction": field("positive")}]
+        [{"term": "trm-class", "level": stated("synchronous"), "direction": stated("positive")}]
     )
-    record["analyses"][0]["effect"]["kind"] = field("simple_effect")
+    record["analyses"][0]["effect"]["kind"] = stated("simple_effect")
     findings = Findings()
     check_effect_kind(record, findings)
     assert findings.errors == []
@@ -121,11 +126,11 @@ def test_the_decoding_analysis_encoded_as_a_contrast_is_reported():
     thing the paper actually reports. Before `kind` existed there was nothing to compare."""
     record = decoding_record(
         [
-            {"term": "trm-class", "level": field("synchronous"), "direction": unreported()},
-            {"term": "trm-class", "level": field("asynchronous"), "direction": unreported()},
+            {"term": "trm-class", "level": stated("synchronous"), "direction": unreported()},
+            {"term": "trm-class", "level": stated("asynchronous"), "direction": unreported()},
         ]
     )
-    record["analyses"][0]["effect"]["kind"] = field("simple_effect")
+    record["analyses"][0]["effect"]["kind"] = stated("simple_effect")
     findings = Findings()
     check_effect_kind(record, findings)
     assert findings.errors, "a stated simple_effect over a two-level contrast must be reported"
@@ -138,8 +143,8 @@ def test_an_unstated_kind_disagrees_with_nothing():
     """The slot is new, so most records do not carry it yet. Absence is not a contradiction."""
     record = decoding_record(
         [
-            {"term": "trm-class", "level": field("synchronous"), "direction": unreported()},
-            {"term": "trm-class", "level": field("asynchronous"), "direction": unreported()},
+            {"term": "trm-class", "level": stated("synchronous"), "direction": unreported()},
+            {"term": "trm-class", "level": stated("asynchronous"), "direction": unreported()},
         ]
     )
     findings = Findings()
