@@ -14,7 +14,7 @@ import json
 
 import pytest
 
-from pondie.extraction.record import repairs as repair_module
+from pondie.extraction.record import fix, repairs as repair_module
 
 
 def test_the_declared_repair_order_holds():
@@ -132,7 +132,7 @@ def test_a_wrapper_in_a_reference_slot_is_unwrapped(classes):
             }
         ]
     }
-    changed = br.unwrap_plain_slots(body, classes)
+    changed = fix.unwrap_plain_slots(body, classes)
     assert body["analyses"][0]["model_estimation"] == "m1"
     assert changed
 
@@ -152,7 +152,7 @@ def test_a_wrapper_in_an_evidence_slot_is_left_alone(classes):
             }
         ]
     }
-    br.unwrap_plain_slots(body, classes)
+    fix.unwrap_plain_slots(body, classes)
     assert isinstance(body["groups"][0]["name"], dict)
     assert body["groups"][0]["name"]["value"] == "controls"
 
@@ -170,7 +170,7 @@ def test_a_numeric_string_becomes_the_number_its_slot_declares(classes):
             }
         ]
     }
-    changed = br.coerce_numeric_values(body, classes)
+    changed = fix.coerce_numeric_values(body, classes)
     assert body["acquisitions"][0]["acquisition_duration_seconds"]["value"] == 252.0
     assert changed
 
@@ -189,7 +189,7 @@ def test_a_value_that_is_not_a_number_is_left_for_the_validator(classes):
             }
         ]
     }
-    assert br.coerce_numeric_values(body, classes) == []
+    assert fix.coerce_numeric_values(body, classes) == []
     assert body["acquisitions"][0]["acquisition_duration_seconds"]["value"] == "not stated"
 
 
@@ -200,7 +200,7 @@ def test_a_table_written_as_a_study_attribute_is_rehomed(classes):
         "analyses": [{"local_id": "a1", "tables": ["tab4"]}],
         "tab4": {"table_number": {"extraction_status": "extracted", "value": 4}},
     }
-    moved = br.rehome_stray_tables(body, classes)
+    moved = fix.rehome_stray_tables(body, classes)
     assert "tab4" not in body
     assert [t["local_id"] for t in body["tables"]] == ["tab4"]
     assert moved
@@ -208,7 +208,7 @@ def test_a_table_written_as_a_study_attribute_is_rehomed(classes):
 
 def test_an_unreferenced_stray_key_is_left_reported(classes):
     body = {"analyses": [], "somethingElse": {"x": 1}}
-    assert br.rehome_stray_tables(body, classes) == []
+    assert fix.rehome_stray_tables(body, classes) == []
     assert "somethingElse" in body
 
 
@@ -240,14 +240,14 @@ def test_a_cell_is_repointed_to_the_same_named_term_in_scope():
     # `t_other` names "group" but sits in a model the analysis does not reach; `t_low`
     # names "group" and is reachable through inputs_from.
     body = _scoped("t_other")
-    changed = br.repoint_out_of_scope_terms(body)
+    changed = fix.repoint_out_of_scope_terms(body)
     assert body["analyses"][0]["effect"]["cells"][0]["term"] == "t_low"
     assert changed
 
 
 def test_a_cell_already_in_scope_is_untouched():
     body = _scoped("t_high")
-    assert br.repoint_out_of_scope_terms(body) == []
+    assert fix.repoint_out_of_scope_terms(body) == []
     assert body["analyses"][0]["effect"]["cells"][0]["term"] == "t_high"
 
 
@@ -255,14 +255,14 @@ def test_no_same_named_term_in_scope_is_left_reported():
     body = _scoped("t_other")
     # Rename the reachable term so nothing in scope matches.
     body["model_estimations"][0]["terms"][0]["name"]["value"] = "timepoint"
-    assert br.repoint_out_of_scope_terms(body) == []
+    assert fix.repoint_out_of_scope_terms(body) == []
     assert body["analyses"][0]["effect"]["cells"][0]["term"] == "t_other"
 
 
 def test_two_same_named_terms_in_scope_are_not_guessed_between():
     body = _scoped("t_other")
     body["model_estimations"][1]["terms"].append({"local_id": "t_dup", "name": _wrapped("group")})
-    assert br.repoint_out_of_scope_terms(body) == []
+    assert fix.repoint_out_of_scope_terms(body) == []
 
 
 def test_a_valueless_wrapper_in_a_reference_slot_is_dropped(classes):
@@ -286,7 +286,7 @@ def test_a_valueless_wrapper_in_a_reference_slot_is_dropped(classes):
             }
         ]
     }
-    changed = br.unwrap_plain_slots(body, classes)
+    changed = fix.unwrap_plain_slots(body, classes)
     assert "assessment" not in body["model_estimations"][0]["terms"][0]
     assert changed and "dropped" in changed[0]
 
@@ -302,7 +302,7 @@ def test_a_bare_scalar_in_an_evidence_slot_is_wrapped(classes):
             }
         ]
     }
-    changed = br.unwrap_plain_slots(body, classes)
+    changed = fix.unwrap_plain_slots(body, classes)
     cell = body["analyses"][0]["effect"]["cells"][0]
     assert cell["direction"]["value"] == "held"
     assert cell["direction"]["extraction_status"] == "extracted"
@@ -346,7 +346,7 @@ def test_a_present_key_that_names_a_row_group_is_left_alone(tmp_path):
             }
         ]
     }
-    assert br.resolve_source_table_analysis(body, stage1) == []
+    assert fix.resolve_source_table_analysis(body, stage1) == []
     assert body["analyses"][0]["source_table_analysis"]["value"] == "t1#2"
 
 
@@ -363,7 +363,7 @@ def test_an_invented_key_is_dropped(tmp_path):
             }
         ]
     }
-    notes = br.resolve_source_table_analysis(body, stage1)
+    notes = fix.resolve_source_table_analysis(body, stage1)
     assert "source_table_analysis" not in body["analyses"][0]
     assert notes and "names no parsed row group" in notes[0]
 
@@ -374,7 +374,7 @@ def test_a_missing_key_is_filled_from_a_unique_name_match(tmp_path):
         [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t1", "name": "HC > SZ"}],
     )
     body = {"analyses": [{"local_id": "a1", "tables": ["t1"], "name": _wrapped("HC>SZ")}]}
-    notes = br.resolve_source_table_analysis(body, stage1)
+    notes = fix.resolve_source_table_analysis(body, stage1)
     assert body["analyses"][0]["source_table_analysis"]["value"] == "t1#2"
     # Filled, not read off the page, so the provenance says so.
     assert body["analyses"][0]["source_table_analysis"]["value_source"] == "generated"
@@ -388,7 +388,7 @@ def test_an_ambiguous_name_leaves_the_analysis_honestly_unjoinable(tmp_path):
         [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t2", "name": "SZ > HC"}],
     )
     body = {"analyses": [{"local_id": "a1", "tables": ["t1", "t2"], "name": _wrapped("SZ > HC")}]}
-    assert br.resolve_source_table_analysis(body, stage1) == []
+    assert fix.resolve_source_table_analysis(body, stage1) == []
     assert "source_table_analysis" not in body["analyses"][0]
 
 
@@ -398,13 +398,13 @@ def test_the_key_is_scoped_to_the_tables_the_analysis_cites(tmp_path):
         [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t2", "name": "SZ > HC"}],
     )
     body = {"analyses": [{"local_id": "a1", "tables": ["t2"], "name": _wrapped("SZ > HC")}]}
-    br.resolve_source_table_analysis(body, stage1)
+    fix.resolve_source_table_analysis(body, stage1)
     assert body["analyses"][0]["source_table_analysis"]["value"] == "t2#1"
 
 
 def test_no_parse_means_nothing_is_invented(tmp_path):
     body = {"analyses": [{"local_id": "a1", "name": _wrapped("x")}]}
-    assert br.resolve_source_table_analysis(body, tmp_path / "missing.json") == []
+    assert fix.resolve_source_table_analysis(body, tmp_path / "missing.json") == []
     assert "source_table_analysis" not in body["analyses"][0]
 
 
@@ -422,16 +422,16 @@ def test_an_analysis_id_is_derived_from_its_parse_key():
             }
         ]
     }
-    notes = br.derive_analysis_ids(body)
+    notes = fix.derive_analysis_ids(body)
     assert body["analyses"][0]["local_id"] == "a_t0035_2"
     assert notes and "t0035#2" in notes[0]
 
 
 def test_deriving_ids_is_idempotent():
     body = {"analyses": [{"local_id": "a_x", "source_table_analysis": _wrapped("t1#1")}]}
-    br.derive_analysis_ids(body)
+    fix.derive_analysis_ids(body)
     first = body["analyses"][0]["local_id"]
-    assert br.derive_analysis_ids(body) == []
+    assert fix.derive_analysis_ids(body) == []
     assert body["analyses"][0]["local_id"] == first
 
 
@@ -443,7 +443,7 @@ def test_analyses_sharing_a_key_are_numbered_apart():
             {"local_id": "a2", "source_table_analysis": _wrapped("t1#1")},
         ]
     }
-    br.derive_analysis_ids(body)
+    fix.derive_analysis_ids(body)
     assert [a["local_id"] for a in body["analyses"]] == ["a_t1_1", "a_t1_1_2"]
 
 
@@ -451,7 +451,7 @@ def test_an_analysis_with_no_key_keeps_the_models_id():
     # 25% of analyses cannot be tied to a row group; inventing a stable-looking id for
     # them would claim the parse identifies something it does not.
     body = {"analyses": [{"local_id": "a_hand_named", "name": _wrapped("x")}]}
-    assert br.derive_analysis_ids(body) == []
+    assert fix.derive_analysis_ids(body) == []
     assert body["analyses"][0]["local_id"] == "a_hand_named"
 
 
@@ -467,7 +467,7 @@ def test_mirror_of_is_repointed_to_the_new_id():
             },
         ]
     }
-    br.derive_analysis_ids(body)
+    fix.derive_analysis_ids(body)
     assert body["analyses"][0]["local_id"] == "a_t1_1"
     assert body["analyses"][1]["mirror_of"] == "a_t1_1"
 
@@ -480,7 +480,7 @@ def test_a_derived_id_already_taken_leaves_both_alone():
             {"local_id": "a_other", "source_table_analysis": _wrapped("t1#1")},
         ]
     }
-    notes = br.derive_analysis_ids(body)
+    notes = fix.derive_analysis_ids(body)
     assert body["analyses"][1]["local_id"] == "a_other"
     assert notes and "already taken" in notes[0]
 

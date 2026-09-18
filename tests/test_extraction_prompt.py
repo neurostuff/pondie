@@ -21,6 +21,7 @@ from __future__ import annotations
 import pytest
 
 from pondie.extraction.prompt import render, worked
+from pondie import schema
 from pondie.extraction.record import builder
 from pondie.schema import reader
 
@@ -145,11 +146,11 @@ def test_payload_keys_split_cleanly(classes) -> None:
     """Every direct `Study` list is a payload key of exactly one mode, except
     `tables`, which is nobody's."""
 
-    direct = {k for k, v in builder._entity_lists().items() if "." not in v}
+    direct = {k for k, v in schema.entity_lists().items() if "." not in v}
     offered = {
         mode: {
             k
-            for k, v in builder._entity_lists().items()
+            for k, v in schema.entity_lists().items()
             if "." not in v and v != "tables" and (v == "analyses") == (mode == "analyses")
         }
         for mode in ("entities", "analyses")

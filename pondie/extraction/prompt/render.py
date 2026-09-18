@@ -55,7 +55,7 @@ README = schema.ROOT / "extraction-readme.md"
 #: survived here for a schema version after Condition moved under Task and Term
 #: became ModelTerm under ModelEstimation -- both would have been merged as
 #: "unexpected payload key" and dropped.
-ENTITY_LISTS = reader.entity_lists(reader.load(schema.EXTRACTION))
+ENTITY_LISTS = schema.entity_lists()
 
 #: Filled by the builder from the source text, never by the model.
 SCAFFOLDING_CLASSES = {"ExtractionMetadata", "PaperSection"}
@@ -820,7 +820,7 @@ def unreachable_term_demands(payload: Mapping[str, Any]) -> list[str]:
     Two ways to write it so a record exists: declare one term per model that uses it, or
     declare `inputs_from` on the upper model so it reaches the lower one's terms (§5.12).
     Both are the pass's own to choose, which is why this is a retry and not a repair --
-    `builder.repoint_out_of_scope_terms` cleans up afterwards, and cleaning up afterwards
+    `fix.repoint_out_of_scope_terms` cleans up afterwards, and cleaning up afterwards
     means the cells and the terms disagreed in the record that was written.
     """
 

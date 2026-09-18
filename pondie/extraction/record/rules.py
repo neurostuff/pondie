@@ -755,7 +755,7 @@ def check_cell_terms(record: Mapping[str, Any], findings: Findings) -> None:
 
 
 #: `Cell.level` words that state a sign, by polarity. Shared with
-#: `builder._LEVEL_POLARITY`'s intent: there the duplicates are dropped, here the
+#: `fix.link._LEVEL_POLARITY`'s intent: there the duplicates are dropped, here the
 #: contradictions are reported, and both need the same reading of "higher" as positive.
 _LEVEL_POLARITY = {
     **{w: "positive" for w in ("positive", "higher", "greater", "more", "increase",

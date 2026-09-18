@@ -82,7 +82,7 @@ def _initialism(short: str, window: str) -> str | None:
 def matches(short: str, long: str) -> str | None:
     """The shortest suffix of `long` that `short` abbreviates, or None.
 
-    Public because `builder.names_agree` asks it whether a dangling local_id is an
+    Public because `fix.names_agree` asks it whether a dangling local_id is an
     initialism of the entity it might have meant -- `asm_scid` against "Structured Clinical
     Interview for DSM-V" -- which is 8% of the references that repair resolves.
 

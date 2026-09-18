@@ -19,7 +19,7 @@ def parse_keys(analyses: list[dict]) -> list[str]:
     `Analysis.source_table_analysis` holds one of these, and it is the only exact route
     from an analysis to the coordinate rows it was read off. Both sides of that contract
     must number identically: `render.stage1_block` prints the key to the model and
-    `builder.resolve_source_table_analysis` resolves what comes back.
+    `fix.resolve_source_table_analysis` resolves what comes back.
 
     Numbered over EVERY entry, including the withheld half of a sign-split. The prompt
     hides withheld entries -- the paper has no prose for them -- and numbering only what

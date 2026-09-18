@@ -386,16 +386,16 @@ def main() -> int:
         body = body.get("study") or body
         if args.repair:
             from pondie import schema
-            from pondie.extraction.record import builder as br
+            from pondie.extraction.record import builder as br, fix
             from pondie.schema import reader
             global _SCH
             try:
                 _SCH
             except NameError:
                 _SCH = reader.load(schema.EXTRACTION)
-            br.unwrap_singleton_lists(body, _SCH)
-            br.link_entities_by_name(body, _SCH)
-            br.drop_redundant_cell_levels(body)
+            fix.unwrap_singleton_lists(body, _SCH)
+            fix.link_entities_by_name(body, _SCH)
+            fix.drop_redundant_cell_levels(body)
         records[Path(path).parent.name][Path(path).name.split(".")[0]] = body
 
     for meta_pmid, (project, predicates) in QUERIES.items():

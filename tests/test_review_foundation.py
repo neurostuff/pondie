@@ -21,7 +21,8 @@ import pytest
 
 from pondie import paths, schema
 from pondie.extraction.evidence import warrant
-from pondie.extraction.record import builder, rules
+from pondie import schema
+from pondie.extraction.record import builder, fix, rules
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import validate as validate_record
 from pondie.formats import table_parse as tables
@@ -309,15 +310,15 @@ def test_entity_lists_cover_every_study_entity_list(classes: dict) -> None:
     study = classes.attributes("Study")
     declared = {name for name, attribute in study.items() if attribute.multivalued}
     assert declared, "Study should declare multivalued entity lists"
-    assert declared <= set(builder._entity_lists())
+    assert declared <= set(schema.entity_lists())
     # A list directly on Study maps to itself.
-    assert all(builder._entity_lists()[name] == name for name in declared)
+    assert all(schema.entity_lists()[name] == name for name in declared)
 
     # A list one level down keeps its bare payload key and gains a dotted path, so an
     # extractor that emits arms.json does not have to know where the schema puts them.
     nested = classes.attributes(study["design"]["range"])
     for name in (n for n, a in nested.items() if a.multivalued):
-        assert builder._entity_lists()[name] == f"design.{name}"
+        assert schema.entity_lists()[name] == f"design.{name}"
 
 
 def test_merge_payloads_keeps_arms_and_timepoints(tmp_path: Path) -> None:
@@ -1101,7 +1102,7 @@ def test_recorded_hash_matches_the_text(record: dict, normalized: str) -> None:
 
 @requires_paper
 def test_no_dangling_cross_references(record: dict, classes: dict) -> None:
-    assert builder.check_local_ids(record, classes) == []
+    assert fix.check_local_ids(record, classes) == []
 
 
 @requires_paper
@@ -1619,7 +1620,7 @@ def test_listify_reaches_a_slot_declared_on_a_payload_subclass(classes: dict) ->
             }
         ]
     }
-    fixed = builder.listify_nested(body, classes)
+    fixed = fix.listify_nested(body, classes)
     assert body["analyses"][0]["details"]["seed_regions"] == ["reg_1"]
     assert any("seed_regions" in line for line in fixed)
 
@@ -1640,7 +1641,7 @@ def test_a_scalar_in_a_multivalued_wrapper_is_listified(classes: dict) -> None:
             }
         ]
     }
-    fixed = builder.listify_scalars(body, classes)
+    fixed = fix.listify_scalars(body, classes)
     assert body["analyses"][0]["interpretations"]["value"] == ["one finding"]
     assert fixed == ["Study.analyses[0].interpretations"]
 
@@ -1660,7 +1661,7 @@ def test_a_missing_value_is_left_for_the_validator(classes: dict) -> None:
             }
         ]
     }
-    assert builder.listify_scalars(body, classes) == []
+    assert fix.listify_scalars(body, classes) == []
 
 
 def test_a_scalar_where_an_enum_list_belongs_is_an_error(classes: dict) -> None:
@@ -1771,7 +1772,7 @@ def test_a_level_differing_only_in_case_is_repaired_not_reported(classes: dict) 
         [_levelled("healthy controls")],
         [("dx", [_cell("t_group", "positive", "Healthy controls")])],
     )
-    fixed = builder.align_cell_levels(record)
+    fixed = fix.align_cell_levels(record)
     assert len(fixed) == 1 and "'Healthy controls' -> 'healthy controls'" in fixed[0]
     assert record["analyses"][0]["effect"]["cells"][0]["level"]["value"] == "healthy controls"
     assert _cell_errors(record, classes) == []
@@ -1784,7 +1785,7 @@ def test_a_level_that_merely_shortens_a_declared_one_is_not_repaired(classes: di
     record = _record(
         [_levelled("AD group", "HC group")], [("dx", [_cell("t_group", "positive", "AD")])]
     )
-    assert builder.align_cell_levels(record) == []
+    assert fix.align_cell_levels(record) == []
 
 
 def test_an_ambiguous_fold_is_left_alone(classes: dict) -> None:
@@ -1793,7 +1794,7 @@ def test_an_ambiguous_fold_is_left_alone(classes: dict) -> None:
     record = _record(
         [_levelled("Controls", "controls")], [("dx", [_cell("t_group", "positive", "CONTROLS")])]
     )
-    assert builder.align_cell_levels(record) == []
+    assert fix.align_cell_levels(record) == []
 
 
 # -- resolving the coordinate columns --------------------------------------
@@ -2434,7 +2435,7 @@ def test_a_denominator_is_derived_from_the_count_and_the_percentage() -> None:
         }
 
     body = {"groups": [{"local_id": "g", "sex_distribution": [entry(12, 60), entry(8, 40)]}]}
-    filled = builder.derive_denominators(body)
+    filled = fix.derive_denominators(body)
 
     assert filled == ["groups[0].sex_distribution.denominator = 20"]
     for e in body["groups"][0]["sex_distribution"]:
@@ -2466,7 +2467,7 @@ def test_a_rounded_percentage_still_yields_its_base_when_it_round_trips() -> Non
         }
 
     body = {"groups": [{"local_id": "g", "sex_distribution": [entry(1, 33), entry(2, 67)]}]}
-    assert builder.derive_denominators(body) == ["groups[0].sex_distribution.denominator = 3"]
+    assert fix.derive_denominators(body) == ["groups[0].sex_distribution.denominator = 3"]
     assert body["groups"][0]["sex_distribution"][0]["denominator"]["value"] == 3
 
 
@@ -2492,7 +2493,7 @@ def test_a_base_that_does_not_reproduce_the_percentages_is_refused() -> None:
         }
 
     body = {"groups": [{"local_id": "g", "sex_distribution": [entry(5, 51), entry(5, 49)]}]}
-    assert builder.derive_denominators(body) == []
+    assert fix.derive_denominators(body) == []
 
 
 def test_entries_that_disagree_on_the_base_are_left_alone() -> None:
@@ -2517,7 +2518,7 @@ def test_entries_that_disagree_on_the_base_are_left_alone() -> None:
         }
 
     body = {"groups": [{"local_id": "g", "sex_distribution": [entry(12, 60), entry(8, 20)]}]}
-    assert builder.derive_denominators(body) == []
+    assert fix.derive_denominators(body) == []
 
 
 def test_a_stated_denominator_is_never_overwritten() -> None:
@@ -2554,5 +2555,5 @@ def test_a_stated_denominator_is_never_overwritten() -> None:
             }
         ]
     }
-    assert builder.derive_denominators(body) == []
+    assert fix.derive_denominators(body) == []
     assert body["groups"][0]["sex_distribution"][0]["denominator"]["value"] == 25

@@ -216,14 +216,27 @@ pipeline, which is the fact the model exists to make visible.
 `_STATUSES` was duplicated in the move and is now `values.STATUSES`, beside the wrapper
 contract that owns it: both `repair_wrappers` and `warrant` ask.
 
-## Named, not done: the repair implementations
+## Where the repairs live
 
-`builder.py` is 1,854 lines and still holds two responsibilities. ~20 repair implementations
-sit beside the orchestration, while `repairs.py` holds the sequence and **lazily imports
-`builder` to get the functions** — a cycle papered over with a deferred import and a comment
-explaining why the import is deferred.
+A repair is a function from a record to a changed record plus a note. The sequence that
+orders them is data, in `record/repairs.py`. The implementations are in
+`record/fix/`, split by what they do to the record:
 
-Moving them beside the sequence removes the cycle. It is a larger and more mechanical change
-than the warranting move, and worth doing when the shared `walk` has absorbed more of their
-bodies: five are already loops over a generator, and the fewer lines each one is, the cheaper
-the move.
+| module | what its repairs do | examples |
+| --- | --- | --- |
+| `fix/shape.py` | make a payload match the wrapper contract | `repair_wrappers`, `unwrap_singleton_lists`, `coerce_numeric_values` |
+| `fix/derive.py` | compute a value the paper fixes but no pass wrote down | `derive_denominators`, `derive_table_effects`, `derive_coordinate_spaces` |
+| `fix/link.py` | make a reference point at the entity it names | `repair_references`, `link_entities_by_name`, `scope_duplicate_terms` |
+
+The split follows the changes of representation above: `shape` works in the payload
+representation, `derive` and `link` in the record. A reader asking "why is this field
+wrong" knows which of the three to open from the shape of the wrongness.
+
+This is where the `builder ↔ repairs` cycle was. `builder.py` held the implementations and
+`repairs.py` lazily imported `builder` to reach them, with a comment explaining the
+deferral. Now `repairs` imports `fix` at module level, `builder` imports both, and nothing
+imports `builder`. `builder.py` is 385 lines and orchestrates: merge payloads, apply
+aliases, run the sequence, warrant, assemble.
+
+The move was verified over the 1,817 records in `record_arms`: the `AT_MERGE` group run
+under both trees produced byte-identical bodies and identical repair logs on every record.

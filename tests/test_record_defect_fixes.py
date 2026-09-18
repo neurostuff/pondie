@@ -11,7 +11,7 @@ import pytest
 
 from pondie import schema
 from pondie.extraction.evidence import warrant
-from pondie.extraction.record import builder, rules
+from pondie.extraction.record import builder, fix, rules
 from pondie.schema import reader
 
 
@@ -108,7 +108,7 @@ def test_a_level_links_to_the_condition_it_names(sch):
         tasks=[{"local_id": "tsk1", "conditions": [
             {"local_id": "cond_smoking_cue", "name": field("Smoking Cue")}]}],
     )
-    changed = builder.link_entities_by_name(record, sch)
+    changed = fix.link_entities_by_name(record, sch)
     level = record["model_estimations"][0]["terms"][0]["levels"][0]
     assert level["conditions"] == ["cond_smoking_cue"]
     assert changed and "cond_smoking_cue" in changed[0]
@@ -119,7 +119,7 @@ def test_a_level_links_to_the_timepoint_it_names(sch):
         "predose",
         design={"timepoints": [{"local_id": "tp_predose", "name": field("predose")}]},
     )
-    builder.link_entities_by_name(record, sch)
+    fix.link_entities_by_name(record, sch)
     assert record["model_estimations"][0]["terms"][0]["levels"][0]["timepoints"] == ["tp_predose"]
 
 
@@ -131,7 +131,7 @@ def test_a_name_matching_both_an_arm_and_a_cohort_writes_both(sch):
         groups=[{"local_id": "grp_exercise", "name": field("Exercise")}],
         design={"arms": [{"local_id": "arm_exercise", "name": field("Exercise")}]},
     )
-    builder.link_entities_by_name(record, sch)
+    fix.link_entities_by_name(record, sch)
     level = record["model_estimations"][0]["terms"][0]["levels"][0]
     assert level["groups"] == ["grp_exercise"]
     assert level["arms"] == ["arm_exercise"]
@@ -143,7 +143,7 @@ def test_two_candidates_of_one_kind_are_left_alone(sch):
         groups=[{"local_id": "grp_a", "name": field("controls")},
                 {"local_id": "grp_b", "name": field("Controls")}],
     )
-    assert builder.link_entities_by_name(record, sch) == []
+    assert fix.link_entities_by_name(record, sch) == []
     assert "groups" not in record["model_estimations"][0]["terms"][0]["levels"][0]
 
 
@@ -160,14 +160,14 @@ def test_a_relation_slot_is_never_filled_from_a_name(sch):
             {"local_id": "mod2", "terms": [{"local_id": "trm_b", "name": field("group")}]},
         ]
     }
-    assert builder.link_entities_by_name(record, sch) == []
+    assert fix.link_entities_by_name(record, sch) == []
     assert "interaction_with" not in record["model_estimations"][0]["terms"][0]
 
 
 def test_an_entity_is_never_linked_to_itself(sch):
     """9,151 self-links without this: a name trivially matches its own owner."""
     record = {"analyses": [{"local_id": "a1", "name": field("A > B")}]}
-    assert builder.link_entities_by_name(record, sch) == []
+    assert fix.link_entities_by_name(record, sch) == []
     assert "mirror_of" not in record["analyses"][0]
 
 
@@ -181,7 +181,7 @@ def test_the_written_shape_is_the_one_multivalued_declares(sch):
         groups=[{"local_id": "grp_p", "name": field("patients")}],
         design={"arms": [{"local_id": "arm_p", "name": field("patients")}]},
     )
-    builder.link_entities_by_name(record, sch)
+    fix.link_entities_by_name(record, sch)
     level = record["model_estimations"][0]["terms"][0]["levels"][0]
     assert level["groups"] == ["grp_p"]          # multivalued -> bare list
     assert record["groups"][0]["arm"] == "arm_p"  # scalar -> bare string
@@ -192,7 +192,7 @@ def test_a_slot_that_already_holds_a_reference_is_not_touched(sch):
         "patients", groups=[{"local_id": "grp_p", "name": field("patients")}]
     )
     record["model_estimations"][0]["terms"][0]["levels"][0]["groups"] = ["grp_other"]
-    builder.link_entities_by_name(record, sch)
+    fix.link_entities_by_name(record, sch)
     assert record["model_estimations"][0]["terms"][0]["levels"][0]["groups"] == ["grp_other"]
 
 
@@ -203,7 +203,7 @@ def test_a_one_item_list_in_a_scalar_wrapper_is_unwrapped(sch):
     """21,701 fields. `values.read` returns the list, so a filter on `spatial_scope`
     matches nothing on 4,470 analyses."""
     record = {"analyses": [{"local_id": "a1", "spatial_scope": field(["whole_brain"])}]}
-    changed = builder.unwrap_singleton_lists(record, sch)
+    changed = fix.unwrap_singleton_lists(record, sch)
     assert record["analyses"][0]["spatial_scope"]["value"] == "whole_brain"
     assert changed
 
@@ -212,13 +212,13 @@ def test_a_longer_list_in_a_scalar_wrapper_is_left_for_the_check(sch):
     """730 of them, and `spatial_scope: ['whole_brain', 'roi']` 31 times -- the two exclude
     each other, so picking one would be deciding which."""
     record = {"analyses": [{"local_id": "a1", "spatial_scope": field(["whole_brain", "roi"])}]}
-    assert builder.unwrap_singleton_lists(record, sch) == []
+    assert fix.unwrap_singleton_lists(record, sch) == []
     assert record["analyses"][0]["spatial_scope"]["value"] == ["whole_brain", "roi"]
 
 
 def test_a_multivalued_wrapper_keeps_its_list(sch):
     record = {"groups": [{"local_id": "g1", "medical_condition": field(["obesity"])}]}
-    assert builder.unwrap_singleton_lists(record, sch) == []
+    assert fix.unwrap_singleton_lists(record, sch) == []
     assert record["groups"][0]["medical_condition"]["value"] == ["obesity"]
 
 
@@ -247,7 +247,7 @@ def test_a_conclusion_with_no_sentence_is_relabelled_generated(sch):
     """`ModelTerm.type` 3,037 of 3,041. No paper writes down that a term is continuous."""
     record = {"model_estimations": [{"local_id": "m1", "terms": [
         {"local_id": "t1", "type": field("continuous", "reported", "not_found")}]}]}
-    changed = builder.relabel_conclusions(record, sch)
+    changed = fix.relabel_conclusions(record, sch)
     assert record["model_estimations"][0]["terms"][0]["type"]["value_source"] == "generated"
     assert changed
 
@@ -257,7 +257,7 @@ def test_a_conclusion_with_a_sentence_keeps_reported(sch):
     earned. Relabelling it would throw away the only case where it is."""
     record = {"analyses": [{"local_id": "a1", "effect": {"cells": [
         {"term": "t1", "direction": field("negative", "reported", "present")}]}}]}
-    assert builder.relabel_conclusions(record, sch) == []
+    assert fix.relabel_conclusions(record, sch) == []
     cells = record["analyses"][0]["effect"]["cells"]
     assert cells[0]["direction"]["value_source"] == "reported"
 
@@ -267,7 +267,7 @@ def test_a_slot_a_paper_could_have_stated_is_left_for_the_warning(sch):
     prints, so an unevidenced one is a reviewer's business rather than a relabel."""
     record = {"inference_settings": [
         {"local_id": "i1", "tfce_used": field(True, "reported", "not_found")}]}
-    assert builder.relabel_conclusions(record, sch) == []
+    assert fix.relabel_conclusions(record, sch) == []
     assert record["inference_settings"][0]["tfce_used"]["value_source"] == "reported"
 
 
@@ -289,7 +289,7 @@ def _continuous(level, direction=None):
 def test_a_level_restating_its_own_term_is_dropped():
     """547 of 1,185 (46%): `BMI` on term `BMI`, `age` on `age`, `pack-years` on itself."""
     record = _continuous("BMI")
-    changed = builder.drop_redundant_cell_levels(record)
+    changed = fix.drop_redundant_cell_levels(record)
     assert "level" not in record["analyses"][0]["effect"]["cells"][0]
     assert changed and "restated" in changed[0]
 
@@ -297,7 +297,7 @@ def test_a_level_restating_its_own_term_is_dropped():
 def test_a_level_duplicating_its_direction_is_dropped():
     """185 of 1,185. The sign is already in the slot that holds signs."""
     record = _continuous("positive", "positive")
-    builder.drop_redundant_cell_levels(record)
+    fix.drop_redundant_cell_levels(record)
     cell = record["analyses"][0]["effect"]["cells"][0]
     assert "level" not in cell
     assert cell["direction"]["value"] == "positive"
@@ -305,7 +305,7 @@ def test_a_level_duplicating_its_direction_is_dropped():
 
 def test_a_level_that_is_the_only_sign_is_moved_not_dropped():
     record = _continuous("higher")
-    builder.drop_redundant_cell_levels(record)
+    fix.drop_redundant_cell_levels(record)
     cell = record["analyses"][0]["effect"]["cells"][0]
     assert "level" not in cell
     assert cell["direction"]["value"] == "positive"
@@ -316,7 +316,7 @@ def test_a_level_contradicting_its_direction_is_left_for_the_check():
     """26 cells. Dropping the level resolves a contradiction about the sign of an effect by
     picking a side silently, and the sign decides which map a coordinate enters."""
     record = _continuous("positive", "negative")
-    assert builder.drop_redundant_cell_levels(record) == []
+    assert fix.drop_redundant_cell_levels(record) == []
     assert record["analyses"][0]["effect"]["cells"][0]["level"]["value"] == "positive"
     sink = Sink()
     rules.check_cell_level_polarity(record, sink)
@@ -328,7 +328,7 @@ def test_a_categorical_level_on_a_mistyped_term_is_left_alone():
     """424 of 1,185. Flipping `type` means synthesising the levels the term should have
     declared, which is a claim about the model rather than a tidy-up."""
     record = _continuous("bvFTD")
-    assert builder.drop_redundant_cell_levels(record) == []
+    assert fix.drop_redundant_cell_levels(record) == []
     assert record["analyses"][0]["effect"]["cells"][0]["level"]["value"] == "bvFTD"
 
 
@@ -346,7 +346,7 @@ def test_a_sign_word_another_term_declares_as_a_level_is_a_level():
          "levels": [{"level": field("negative")}, {"level": field("positive")},
                     {"level": field("neutral")}]}
     )
-    assert builder.drop_redundant_cell_levels(record) == []
+    assert fix.drop_redundant_cell_levels(record) == []
     cell = record["analyses"][0]["effect"]["cells"][0]
     assert cell["level"]["value"] == "negative"
     assert "direction" not in cell
@@ -356,14 +356,14 @@ def test_an_undirected_cell_is_not_overwritten():
     """`undirected` is an answer, not a gap. Overwriting it replaces a stated fact with an
     inference, which is how the product-column case above went wrong."""
     record = _continuous("positive", "undirected")
-    assert builder.drop_redundant_cell_levels(record) == []
+    assert fix.drop_redundant_cell_levels(record) == []
     assert record["analyses"][0]["effect"]["cells"][0]["direction"]["value"] == "undirected"
 
 
 def test_a_level_on_a_term_that_declares_levels_is_left_alone():
     record = _continuous("BMI")
     record["model_estimations"][0]["terms"][0]["levels"] = [{"level": field("high")}]
-    assert builder.drop_redundant_cell_levels(record) == []
+    assert fix.drop_redundant_cell_levels(record) == []
 
 
 # --- the guard that keeps one broken rule from hiding the others -----------------------
@@ -633,14 +633,14 @@ def test_a_transcription_slip_is_repaired_outright(sch):
     """Nothing is decided: the id differs only in case and punctuation."""
     record = _with_tasks(("tsk_cue_exposure", "cue exposure"))
     record["analyses"][0]["tasks"] = ["tsk_Cue-Exposure"]
-    assert builder.repair_references(record, sch)
+    assert fix.repair_references(record, sch)
     assert record["analyses"][0]["tasks"] == ["tsk_cue_exposure"]
 
 
 def test_the_only_candidate_is_taken_when_the_names_agree(sch):
     record = _with_tasks(("tsk_cue_exposure_fmri", "cue exposure fMRI task"))
     record["analyses"][0]["tasks"] = ["tsk_cue_exposure"]
-    assert builder.repair_references(record, sch)
+    assert fix.repair_references(record, sch)
     assert record["analyses"][0]["tasks"] == ["tsk_cue_exposure_fmri"]
 
 
@@ -649,7 +649,7 @@ def test_the_only_candidate_is_refused_when_the_names_do_not(sch):
     what taking the sole candidate on its own did."""
     record = _with_tasks(("tsk_fear_conditioning", "fear conditioning"))
     record["analyses"][0]["tasks"] = ["tsk_resting_state"]
-    assert builder.repair_references(record, sch) == []
+    assert fix.repair_references(record, sch) == []
     assert record["analyses"][0]["tasks"] == ["tsk_resting_state"]
 
 
@@ -662,7 +662,7 @@ def test_an_initialism_of_the_target_name_agrees(sch):
         "assessments": [{"local_id": "asm_structured_clinical",
                          "name": field("Structured Clinical Interview for DSM-V")}],
     }
-    assert builder.repair_references(record, sch)
+    assert fix.repair_references(record, sch)
     assert record["groups"][0]["diagnostic_instrument"] == ["asm_structured_clinical"]
 
 
@@ -678,7 +678,7 @@ def test_two_differently_named_references_do_not_collapse_onto_one_target(sch):
         "model_estimations": [{"local_id": "mod1", "terms": [
             {"local_id": "trm_cue_1", "name": field("cue")}]}],
     }
-    assert builder.repair_references(record, sch) == []
+    assert fix.repair_references(record, sch) == []
     terms = [cell["term"] for cell in record["analyses"][0]["effect"]["cells"]]
     assert terms == ["trm_smoking_opportunity_cue", "trm_quitting_motivation_cue"]
 
@@ -689,14 +689,14 @@ def test_one_reference_repeated_across_analyses_is_not_a_collapse(sch):
     record = _with_tasks(("tsk_cue_exposure_fmri", "cue exposure fMRI task"))
     record["analyses"] = [
         {"local_id": f"a{n}", "tasks": ["tsk_cue_exposure"]} for n in range(4)]
-    assert len(builder.repair_references(record, sch)) == 4
+    assert len(fix.repair_references(record, sch)) == 4
     assert all(a["tasks"] == ["tsk_cue_exposure_fmri"] for a in record["analyses"])
 
 
 def test_a_reference_is_never_repointed_at_its_own_owner(sch):
     record = {"local_id": "S1", "analyses": [
         {"local_id": "a1", "name": field("A > B"), "mirror_of": "a_missing"}]}
-    assert builder.repair_references(record, sch) == []
+    assert fix.repair_references(record, sch) == []
 
 
 def test_declared_ids_are_read_schema_guided(sch):
@@ -710,5 +710,5 @@ def test_declared_ids_are_read_schema_guided(sch):
         "model_estimations": [{"local_id": "mod1", "terms": [
             {"local_id": "trm_condition", "name": field("condition")}]}],
     }
-    assert builder.repair_references(record, sch)
+    assert fix.repair_references(record, sch)
     assert record["analyses"][0]["effect"]["cells"][0]["term"] == "trm_condition"

@@ -17,7 +17,7 @@ import json
 import pytest
 
 from pondie.extraction.corpus.tables import split_opposite_signs  # noqa: E402
-from pondie.extraction.record import direction as dd
+from pondie.extraction.record import direction as dd, fix
 
 # --- reading a contrast's own name ------------------------------------------
 
@@ -229,7 +229,7 @@ def test_the_build_fills_only_the_cells_the_model_gave_up_on():
             }
         ]
     }
-    filled = builder.fill_directions(body)
+    filled = fix.fill_directions(body)
     cells = body["analyses"][0]["effect"]["cells"]
     assert cells[0]["direction"]["value"] == "positive"
     assert cells[0]["direction"]["value_source"] == "generated"
@@ -250,7 +250,7 @@ def test_the_build_leaves_a_level_the_contrast_does_not_name():
             }
         ]
     }
-    assert builder.fill_directions(body) == []
+    assert fix.fill_directions(body) == []
     assert body["analyses"][0]["effect"]["cells"][0]["direction"]["value"] == "absent"
 
 
@@ -280,7 +280,7 @@ def test_the_mirror_is_built_from_the_corrected_record(tmp_path):
             }
         ]
     }
-    made = builder.mirror_withheld(body, stage1)
+    made = fix.mirror_withheld(body, stage1)
     assert len(made) == 1 and len(body["analyses"]) == 2
     mirrored = body["analyses"][1]
     assert [c["direction"]["value"] for c in mirrored["effect"]["cells"]] == [
@@ -303,7 +303,7 @@ def test_a_withheld_half_whose_partner_vanished_is_reported_not_invented(tmp_pat
         )
     )
     body = {"analyses": []}
-    made = builder.mirror_withheld(body, stage1)
+    made = fix.mirror_withheld(body, stage1)
     assert body["analyses"] == []
     assert made and made[0].startswith("MISSING")
 
@@ -355,7 +355,7 @@ def test_two_tables_reporting_the_same_contrast_each_get_their_own_mirror(tmp_pa
             analysis("a_t2_1", "t2#1", "WHOLE-BRAIN"),
         ]
     }
-    made = builder.mirror_withheld(body, stage1)
+    made = fix.mirror_withheld(body, stage1)
 
     assert len(made) == 2, "both tables' reversed halves are built"
     ids = [a["local_id"] for a in body["analyses"]]

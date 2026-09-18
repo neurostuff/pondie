@@ -26,6 +26,7 @@ as a missing-file error from whichever module happened to read first.
 from __future__ import annotations
 
 import os
+from functools import lru_cache
 from pathlib import Path
 
 
@@ -53,4 +54,14 @@ ROOT = _root()
 EXTRACTION = ROOT / "neuroimaging-study-extraction.yaml"
 STORAGE = ROOT / "neuroimaging-study-storage.yaml"
 
-__all__ = ["ROOT", "EXTRACTION", "STORAGE"]
+@lru_cache(maxsize=1)
+def entity_lists() -> dict[str, str]:
+    """Payload key -> the Study attribute holding that entity list, over the extraction
+    schema. Cached because it parses the schema, and asked for by three layers: the payload
+    merge, the prompt renderer, and the shape fixes."""
+    from pondie.schema import reader
+
+    return reader.entity_lists(reader.load(EXTRACTION))
+
+
+__all__ = ["ROOT", "EXTRACTION", "STORAGE", "entity_lists"]

@@ -69,7 +69,7 @@ EvidenceStatus = Literal["present", "not_found", "not_applicable"]
 ExtractionStatus = Literal["extracted", "not_reported"]
 
 #: The same two, as a tuple to test membership against. Named here because this module owns
-#: the wrapper contract, and `builder.repair_wrappers` and `evidence.warrant` both ask.
+#: the wrapper contract, and `fix.repair_wrappers` and `evidence.warrant` both ask.
 STATUSES: tuple[str, str] = ("extracted", "not_reported")
 
 #: Why a `not_reported` slot has no value, where the reason is not the plain one. A qualifier

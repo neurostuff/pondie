@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 
 from pondie import schema
-from pondie.extraction.record import edit
+from pondie.extraction.record import edit, fix
 from pondie.schema import reader
 
 PAPER = (
@@ -259,7 +259,7 @@ def test_a_table_an_analysis_cites_reports_that_analysis_effect():
             },
         ],
     }
-    filled = builder.derive_table_effects(body)
+    filled = fix.derive_table_effects(body)
     assert values.read(body["tables"][0]["purpose"]) == "reported_effect"
     assert body["tables"][0]["purpose"]["value_source"] == "generated"
     # tbl2 is cited by nothing, so its own answer stands

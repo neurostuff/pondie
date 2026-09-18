@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
+from pondie.extraction.record import fix
 from pondie.schema.reader import Schema
 
 
@@ -92,129 +93,123 @@ class RepairLog:
 
 
 def build_sequence() -> tuple[Repair, ...]:
-    """The order, with each constraint stated next to the repair it binds.
-
-    Imported lazily so this module can be read, and its ordering checked, without pulling
-    in the schema loader.
-    """
-
-    from pondie.extraction.record import builder as br
+    """The order, with each constraint stated next to the repair it binds."""
 
     return (
         Repair(
             "wrappers",
             "put a malformed ExtractedValue back into wrapper shape",
-            lambda body, ctx: br.repair_wrappers(body),
+            lambda body, ctx: fix.repair_wrappers(body),
             stage="shape",
         ),
         Repair(
             "unwrapped",
             "unwrap a wrapper the model put in a bare-scalar slot",
-            lambda body, ctx: br.unwrap_plain_slots(body, ctx.schema),
+            lambda body, ctx: fix.unwrap_plain_slots(body, ctx.schema),
             after="wrappers",
             stage="merged",
         ),
         Repair(
             "table_effects",
             "mark a table an analysis cites as reporting that analysis's effect",
-            lambda body, ctx: br.derive_table_effects(body),
+            lambda body, ctx: fix.derive_table_effects(body),
             stage="merged",
         ),
         Repair(
             "denominators",
             "fill a distribution's denominator from its count and percentage",
-            lambda body, ctx: br.derive_denominators(body),
+            lambda body, ctx: fix.derive_denominators(body),
             stage="satisfy",
         ),
         Repair(
             "numbers",
             "turn a numeric string into the number its slot declares",
-            lambda body, ctx: br.coerce_numeric_values(body, ctx.schema),
+            lambda body, ctx: fix.coerce_numeric_values(body, ctx.schema),
             after="unwrapped",
             stage="merged",
         ),
         Repair(
             "stray_tables",
             "move a Table written as a Study attribute into tables[]",
-            lambda body, ctx: br.rehome_stray_tables(body, ctx.schema),
+            lambda body, ctx: fix.rehome_stray_tables(body, ctx.schema),
             stage="merged",
         ),
         Repair(
             "acquisition_type",
             "fill an acquisition's type from its own modality",
-            lambda body, ctx: br.derive_acquisition_types(body),
+            lambda body, ctx: fix.derive_acquisition_types(body),
             stage="satisfy",
         ),
         Repair(
             "coordinate_space",
             "fill the space stage 1 already read off the table",
-            lambda body, ctx: br.derive_coordinate_spaces(body, ctx.stage1, ctx.table_map),
+            lambda body, ctx: fix.derive_coordinate_spaces(body, ctx.stage1, ctx.table_map),
             stage="merged",
         ),
         Repair(
             "listified",
             "unwrap a nested slot the model wrote as an object",
-            lambda body, ctx: br.listify_nested(body, ctx.schema),
+            lambda body, ctx: fix.listify_nested(body, ctx.schema),
             stage="shape",
         ),
         Repair(
             "unwrap_singletons",
             "unwrap a one-item list in a wrapper whose value is declared scalar",
-            lambda body, ctx: br.unwrap_singleton_lists(body, ctx.schema),
+            lambda body, ctx: fix.unwrap_singleton_lists(body, ctx.schema),
             after="listified",
             stage="shape",
         ),
         Repair(
             "listified_scalars",
             "wrap a lone scalar the slot declares multivalued",
-            lambda body, ctx: br.listify_scalars(body, ctx.schema),
+            lambda body, ctx: fix.listify_scalars(body, ctx.schema),
             after="listified",
             stage="shape",
         ),
         Repair(
             "cell_levels",
             "rewrite a cell's level to the declared level it folds to",
-            lambda body, ctx: br.align_cell_levels(body),
+            lambda body, ctx: fix.align_cell_levels(body),
             after="listified",
             stage="merged",
         ),
         Repair(
             "scoped_terms",
             "scope two models' identically-named terms by their model",
-            lambda body, ctx: br.scope_duplicate_terms(body),
+            lambda body, ctx: fix.scope_duplicate_terms(body),
             stage="satisfy",
         ),
         Repair(
             "references",
             "repoint a dangling reference where the choice is forced",
-            lambda body, ctx: br.repair_references(body, ctx.schema),
+            lambda body, ctx: fix.repair_references(body, ctx.schema),
             after="scoped_terms",
             stage="merged",
         ),
         Repair(
             "cell_terms",
             "repoint a cell at the same-named term its model reaches",
-            lambda body, ctx: br.repoint_out_of_scope_terms(body),
+            lambda body, ctx: fix.repoint_out_of_scope_terms(body),
             after="listified",
             stage="merged",
         ),
         Repair(
             "source_links",
             "verify or fill each analysis's link to its parsed rows",
-            lambda body, ctx: br.resolve_source_table_analysis(body, ctx.stage1),
+            lambda body, ctx: fix.resolve_source_table_analysis(body, ctx.stage1),
             stage="demands",
         ),
         Repair(
             "derived_ids",
             "rename each analysis to an id the parse determines",
-            lambda body, ctx: br.derive_analysis_ids(body),
+            lambda body, ctx: fix.derive_analysis_ids(body),
             after="source_links",
             stage="demands",
         ),
         Repair(
             "name_links",
             "write a reference where a name settles which declared entity it means",
-            lambda body, ctx: br.link_entities_by_name(body, ctx.schema),
+            lambda body, ctx: fix.link_entities_by_name(body, ctx.schema),
             # After `cell_levels`, which rewrites a level to the declared form: matching on
             # the pre-aligned string would look up a name the record does not use. And
             # after `derived_ids`, so a link is written to the id the record keeps.
@@ -224,14 +219,14 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "directions",
             "fill a cell's direction from the contrast's own name",
-            lambda body, ctx: br.fill_directions(body),
+            lambda body, ctx: fix.fill_directions(body),
             after="cell_levels",
             stage="merged",
         ),
         Repair(
             "redundant_levels",
             "drop a cell level a continuous term cannot have and that says nothing new",
-            lambda body, ctx: br.drop_redundant_cell_levels(body),
+            lambda body, ctx: fix.drop_redundant_cell_levels(body),
             # After `directions`, which is what fills the slot this compares against: run
             # first and a cell whose direction was about to be written reads as having none.
             after="directions",
@@ -240,7 +235,7 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "conclusions",
             "say `generated` where the record claims a conclusion was `reported`",
-            lambda body, ctx: br.relabel_conclusions(body, ctx.schema),
+            lambda body, ctx: fix.relabel_conclusions(body, ctx.schema),
             # After `directions`, which writes some of these: relabelling first would leave
             # the ones it then wrote still saying `reported`.
             after="directions",
@@ -249,7 +244,7 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "mirrored",
             "rebuild the reversed half of every sign-split contrast",
-            lambda body, ctx: br.mirror_withheld(body, ctx.stage1),
+            lambda body, ctx: fix.mirror_withheld(body, ctx.stage1),
             after="directions",
             stage="merged",
         ),

@@ -36,7 +36,7 @@ from pathlib import Path
 
 from pondie import schema
 from pondie.extraction import pubmed
-from pondie.extraction.record import builder as br
+from pondie.extraction.record import builder as br, fix
 from pondie.schema import reader
 
 STAMP = "backfill-1"
@@ -69,13 +69,13 @@ def main() -> int:
         body = raw.get("study") or raw
         before = json.dumps(body, sort_keys=True)
         counts = {
-            "unwrap_singletons": len(br.unwrap_singleton_lists(body, sch)),
+            "unwrap_singletons": len(fix.unwrap_singleton_lists(body, sch)),
             "study_type": len(pubmed.fill(body, types)),
         }
         if args.all_repairs:
-            counts["name_links"] = len(br.link_entities_by_name(body, sch))
-            counts["redundant_levels"] = len(br.drop_redundant_cell_levels(body))
-            counts["conclusions"] = len(br.relabel_conclusions(body, sch))
+            counts["name_links"] = len(fix.link_entities_by_name(body, sch))
+            counts["redundant_levels"] = len(fix.drop_redundant_cell_levels(body))
+            counts["conclusions"] = len(fix.relabel_conclusions(body, sch))
         changed.update({k: v for k, v in counts.items() if v})
         if json.dumps(body, sort_keys=True) == before:
             continue
