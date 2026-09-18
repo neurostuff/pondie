@@ -19,8 +19,7 @@ from pondie.extraction.record import direction
 from pondie.extraction.record import ids
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import walk
-from pondie.formats import parse_keys
-from pondie.formats import values
+from pondie.formats import parse_keys, values
 from pondie.schema import reader
 from pondie.schema.reader import Schema
 from typing import Any
@@ -107,8 +106,6 @@ def derive_table_effects(body: dict[str, Any]) -> list[str]:
     analysis's result, so it takes `reported_effect` and the eight other kinds cannot apply.
     `generated`, because the record states this and the paper does not.
     """
-    from pondie.formats import values as value_tools
-
     cited: set[str] = set()
     for analysis in body.get("analyses") or []:
         if not isinstance(analysis, dict):
@@ -121,15 +118,15 @@ def derive_table_effects(body: dict[str, Any]) -> list[str]:
     for index, table in enumerate(body.get("tables") or []):
         if not isinstance(table, dict):
             continue
-        local_id = str(value_tools.read(table.get("local_id")) or "")
+        local_id = str(values.read(table.get("local_id")) or "")
         if local_id not in cited:
             continue
-        held = value_tools.read(table.get("purpose"))
+        held = values.read(table.get("purpose"))
         if held == "reported_effect":
             continue
         # An analysis cites it, so any other kind contradicts the record rather than
         # describing it -- which is the contradiction `check_table_content` reports.
-        table["purpose"] = value_tools.wrap(
+        table["purpose"] = values.wrap(
             "reported_effect", source="generated", evidence="not_applicable"
         )
         filled.append(f"tables[{index}].purpose" + (f": was {held!r}" if held else ""))
@@ -151,8 +148,6 @@ def derive_denominators(body: dict[str, Any]) -> list[str]:
     percentage on a small sample is ambiguous -- 1 of 3 prints as 33% and implies 3.03.
     `value_source` is `generated`, since the paper stated a percentage and not this.
     """
-    from pondie.formats import values as value_tools
-
     filled: list[str] = []
     for owner in ("groups",):
         for index, group in enumerate(body.get(owner) or []):
@@ -162,11 +157,11 @@ def derive_denominators(body: dict[str, Any]) -> list[str]:
                 entries = [e for e in (group.get(slot) or []) if isinstance(e, dict)]
                 bases: list[float] = []
                 for entry in entries:
-                    if value_tools.read(entry.get("denominator")) is not None:
+                    if values.read(entry.get("denominator")) is not None:
                         bases = []
                         break
-                    count = value_tools.read(entry.get("count"))
-                    share = value_tools.read(entry.get("percentage"))
+                    count = values.read(entry.get("count"))
+                    share = values.read(entry.get("percentage"))
                     if not isinstance(count, (int, float)) or not isinstance(share, (int, float)):
                         continue
                     if not 0 < float(share) <= 100:
@@ -183,8 +178,8 @@ def derive_denominators(body: dict[str, Any]) -> list[str]:
                 # is what separates a base the paper implies from one arithmetic invented:
                 # 1 of 3 prints as 33% and 2 of 3 as 67%, and only 3 gives back both.
                 if base <= 0 or any(
-                    round(float(value_tools.read(entry.get("count"))) / base * 100)
-                    != round(float(value_tools.read(entry.get("percentage"))))
+                    round(float(values.read(entry.get("count"))) / base * 100)
+                    != round(float(values.read(entry.get("percentage"))))
                     for entry in entries
                 ):
                     continue

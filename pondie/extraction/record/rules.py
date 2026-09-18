@@ -1149,9 +1149,7 @@ def check_value_source_honesty(record: Mapping[str, Any], findings: Findings) ->
     `generated` is a judgement this cannot make. What it can do is stop the two kinds of
     value being indistinguishable in the output.
     """
-    from pondie.formats.values import iter_fields
-
-    for path, node in iter_fields(record):
+    for path, node in values.iter_fields(record):
         if not isinstance(node, Mapping):
             continue
         if node.get("extraction_status") != "extracted":
@@ -1224,10 +1222,8 @@ def check_modality_measures(record: Mapping[str, Any], findings: Findings) -> No
     `acquisitions.modality` of fMRI without complaint -- on a paper that measured BOLD.
     A reviewer reading either field alone sees nothing wrong; the error is only in the pair.
     """
-    from pondie.formats import values as value_tools
-
     modalities = {
-        str(value_tools.read(a.get("modality")) or "").strip()
+        str(values.read(a.get("modality")) or "").strip()
         for a in record.get("acquisitions") or []
         if isinstance(a, Mapping)
     }
@@ -1244,7 +1240,7 @@ def check_modality_measures(record: Mapping[str, Any], findings: Findings) -> No
         if not isinstance(measure, Mapping):
             continue
         for slot in ("family", "type"):
-            named = str(value_tools.read(measure.get(slot)) or "").strip()
+            named = str(values.read(measure.get(slot)) or "").strip()
             if named and named in forbidden:
                 findings.warn(
                     f"measures[{index}].{slot}",
@@ -1267,10 +1263,8 @@ def check_counts_add_up(record: Mapping[str, Any], findings: Findings) -> None:
     to the wrong rung of the funnel, and both are worth a reviewer's eye rather than a
     rejected record.
     """
-    from pondie.formats import values as value_tools
-
     def whole(node: Any) -> int | None:
-        read = value_tools.read(node)
+        read = values.read(node)
         if isinstance(read, bool) or not isinstance(read, (int, float)):
             return None
         return int(read) if float(read).is_integer() else None
