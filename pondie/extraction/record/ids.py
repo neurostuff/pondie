@@ -1,4 +1,4 @@
-"""What a `local_id` is, and who is allowed to choose one.
+"""What a `local_id` is, who is allowed to choose one, and how to read one back.
 
 A local_id is an ADDRESS. The review layer keys an answer on
 `paper|value|<Class>|<local_id>|<path>`, so an id that changes between extractions of the
@@ -9,12 +9,18 @@ phrase anyone composed.
 The table lives here rather than in the prompt that used to state it, because two things now
 mint ids -- the extracting model, told the convention in prose, and the repair pass, which
 needs it as data. Two copies of a convention is one copy and one drift.
+
+`from_local_id` is `mint` run backwards, and `label_of` is what falls back to it. They lived
+in the repair stage's guard, which reached `PREFIX` through a deferred import to get them --
+so the convention had one writer and a reader somewhere else.
 """
 
 from __future__ import annotations
 
 import re
 from typing import Any, Mapping
+
+from pondie.formats import values
 
 #: Class -> the prefix its ids carry.
 PREFIX: dict[str, str] = {
@@ -113,3 +119,48 @@ def mint(class_name: str, label: str, taken: Mapping[str, Any] | set[str]) -> st
     while f"{candidate}_{n}" in taken:
         n += 1
     return f"{candidate}_{n}"
+
+
+#: Below this a derived label is a fragment, not a name. `mea_fa` would otherwise offer "fa",
+#: which appears inside "factor" and "surface" -- and `same_entity` merging on that is the
+#: opposite of the duplicate it exists to prevent.
+_SHORTEST_DERIVED = 4
+
+
+def from_local_id(local_id: str) -> str:
+    """A readable label out of a minted id: `dev_siemens_trio` -> "siemens trio".
+
+    `Measure`, `Acquisition`, `Device` and `ModelEstimation` declare no `name`, and only
+    `Device` has no usable fallback either, so `label_of` below fell through to the raw id for a
+    third of all entities -- 336 of 1,032 over eighty papers. Nothing matches
+    `dev_siemens_trio` in a paper, so every mechanism that reads a label was working blind
+    on those: `resolve` turning a proposed name into an id, `same_entity` deduplicating, and
+    the locator's bonus for a sentence that mentions the entity.
+
+    The ids are minted from content, so the content is recoverable. Of the 333 whose label
+    was absent from their paper, 57.7% match verbatim once derived and a further 35.7% have
+    every token present. Short results are refused rather than guessed at.
+    """
+    text = local_id.strip()
+    for prefix in sorted(PREFIX.values(), key=len, reverse=True):
+        if text.startswith(prefix):
+            text = text[len(prefix) :]
+            break
+    text = re.sub(r"[_\-]+", " ", text).strip()
+    return text if len(text) >= _SHORTEST_DERIVED else ""
+
+
+def label_of(entity: Mapping[str, Any]) -> str:
+    """What a source would call this entity: its name, else its definition, else its id.
+
+    The id is read through `from_local_id` rather than returned raw, because a minted id is
+    not a string any paper contains. It is a label for matching and never a name to store:
+    `acq_fmri` yields "fmri", which is the modality rather than what the paper calls that
+    acquisition.
+    """
+    for slot in ("name", "definition", "model_type", "type"):
+        text = values.read(entity.get(slot))
+        if isinstance(text, str) and text.strip():
+            return text.strip()
+    local_id = str(entity.get("local_id") or "")
+    return from_local_id(local_id) or local_id

@@ -1,11 +1,14 @@
 """Repair a built record: propose, guard, and put what is left to a model.
 
+    __init__   the three steps, and the model calls two of them make
+    guard      write a proposed change into a record, or say why not
+
 Runs after `build`, on a record that already exists, and changes it in place. Four steps,
 narrowing at each one:
 
   1. **propose** -- the model reads the methods and results and returns entities of one
      class at a time, with the entities it may point at listed per reference slot.
-  2. **guard** -- `record.edit` refuses the writes that would damage the record, and says
+  2. **guard** -- `repair.guard` refuses the writes that would damage the record, and says
      why. Every write goes past it, step 3 included.
   3. **adjudicate** -- what is left is a contradiction the record cannot settle from its own
      contents. That goes to the model, once, with the paper, and its answer is written
@@ -26,9 +29,9 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Mapping, MutableMapping
 
-from pondie.extraction.record import edit as edit_module
-from pondie.extraction.record.edit import UNRESTRICTED, Edit, Refusal, refusals
 from pondie.extraction.record.validate import Validator
+from pondie.extraction.repair import guard as edit_module
+from pondie.extraction.repair.guard import UNRESTRICTED, Edit, Refusal, refusals
 from pondie.formats import values
 from pondie.schema.reader import Schema
 

@@ -311,3 +311,26 @@ reader wants to know which kind a fix is says so in the call. The flat `fix.<nam
 stays for everyone else.
 
 Verified over the 1,817 records: byte-identical bodies and identical logs.
+
+## Found: the guard layer was in the package whose own map excluded it
+
+`record/__init__.py` lists the modules that turn payloads into a record and says
+"`builder.build` is the whole of it: everything else is called from there." `record/edit.py`
+was 923 lines in that directory, absent from the list, and never called from `build` — its
+only production callers were the `repair` stage and one `label_of` in `recall`. Its docstring
+opens "every write a repair pass makes goes past the same refusals," and the stage's own
+docstring names its three steps "propose, guard, adjudicate."
+
+So `extraction/repair/` is a package now: `__init__` proposes and adjudicates, `guard.py`
+refuses. A reader tracing the stage finds all three steps in one directory.
+
+Two pieces did not go with it. `from_local_id` is `mint` run backwards and reached
+`ids.PREFIX` through a deferred import to do its job; `label_of` is what falls back to it.
+Both are in `record/ids.py` now, beside the convention they read, which is also how `recall`
+stops importing another stage's guard for a display name.
+
+`record/__init__.py` gained the two lines it was missing — `walk` and `ids` were as absent
+from the map as `edit` was, and unlike `edit` they belong there.
+
+The guard's docstring had its second paragraph twice, from an earlier edit. Now it says which
+of the three steps it is.

@@ -27,7 +27,7 @@ from __future__ import annotations
 import re
 from typing import Any, Mapping, Sequence
 
-from pondie.extraction.record.edit import label_of
+from pondie.extraction.record.ids import label_of
 from pondie.formats import values
 from pondie.schema.reader import Schema
 

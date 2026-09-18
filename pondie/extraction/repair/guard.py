@@ -1,12 +1,11 @@
 """Write a proposed change into a record, or say why not -- and what stops a bad write.
 
-One entry point, `apply`, so every write a repair pass makes goes past the same refusals.
-They live here rather than in a module of their own because they have exactly one caller and
-share its vocabulary: a `Refusal` is what an `EditLog` carries, and an `Edit` is `apply`'s
-own arguments named.
+Step 2 of the three this package performs. One entry point, `apply`, so every write the pass
+makes goes past the same refusals. They live here rather than in a module of their own
+because they have exactly one caller and share its vocabulary: a `Refusal` is what an
+`EditLog` carries, and an `Edit` is `apply`'s own arguments named.
 
-One entry point, `apply`, so every write a repair pass makes goes past the same refusals.
-It returns what it did and what it refused rather than logging, because a pass that declines
+`apply` returns what it did and what it refused rather than logging, because a pass that declines
 silently is indistinguishable from one that was never asked -- which is how an admission gate
 turned away an unknown number of candidates for the life of a run.
 
@@ -25,6 +24,7 @@ from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from typing import Any, Callable, Mapping, MutableMapping
 
+from pondie.extraction.record.ids import from_local_id, label_of
 from pondie.formats import values
 from pondie.schema.reader import Schema
 
@@ -354,53 +354,6 @@ def ADDRESSABLE() -> frozenset[str]:
 
     schema = reader.load(EXTRACTION_SCHEMA)
     return frozenset(name for name in schema.classes if "local_id" in schema.attributes(name))
-
-
-#: Below this a derived label is a fragment, not a name. `mea_fa` would otherwise offer "fa",
-#: which appears inside "factor" and "surface" -- and `same_entity` merging on that is the
-#: opposite of the duplicate it exists to prevent.
-_SHORTEST_DERIVED = 4
-
-
-def from_local_id(local_id: str) -> str:
-    """A readable label out of a minted id: `dev_siemens_trio` -> "siemens trio".
-
-    `Measure`, `Acquisition`, `Device` and `ModelEstimation` declare no `name`, and only
-    `Device` has no usable fallback either, so `label_of` fell through to the raw id for a
-    third of all entities -- 336 of 1,032 over eighty papers. Nothing matches
-    `dev_siemens_trio` in a paper, so every mechanism that reads a label was working blind
-    on those: `resolve` turning a proposed name into an id, `same_entity` deduplicating, and
-    the locator's bonus for a sentence that mentions the entity.
-
-    The ids are minted from content, so the content is recoverable. Of the 333 whose label
-    was absent from their paper, 57.7% match verbatim once derived and a further 35.7% have
-    every token present. Short results are refused rather than guessed at.
-    """
-    from pondie.extraction.record.ids import PREFIX
-
-    text = local_id.strip()
-    for prefix in sorted(PREFIX.values(), key=len, reverse=True):
-        if text.startswith(prefix):
-            text = text[len(prefix) :]
-            break
-    text = re.sub(r"[_\-]+", " ", text).strip()
-    return text if len(text) >= _SHORTEST_DERIVED else ""
-
-
-def label_of(entity: Mapping[str, Any]) -> str:
-    """What a source would call this entity: its name, else its definition, else its id.
-
-    The id is read through `from_local_id` rather than returned raw, because a minted id is
-    not a string any paper contains. It is a label for matching and never a name to store:
-    `acq_fmri` yields "fmri", which is the modality rather than what the paper calls that
-    acquisition.
-    """
-    for slot in ("name", "definition", "model_type", "type"):
-        text = values.read(entity.get(slot))
-        if isinstance(text, str) and text.strip():
-            return text.strip()
-    local_id = str(entity.get("local_id") or "")
-    return from_local_id(local_id) or local_id
 
 
 def same_entity(one: str, other: str, abbreviations: Any = None) -> bool:

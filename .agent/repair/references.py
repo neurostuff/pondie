@@ -134,7 +134,7 @@ def as_list(value: Any) -> list[str]:
 
 
 def label(record: Mapping[str, Any], local_id: str) -> str:
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     for items in record.values():
         if not isinstance(items, list):

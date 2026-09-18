@@ -12,7 +12,8 @@ import json
 import pytest
 
 from pondie import schema
-from pondie.extraction.record import edit as edit_module, fix
+from pondie.extraction.record import fix
+from pondie.extraction.repair import guard as edit_module
 from pondie.formats import values
 from pondie.schema import reader
 
@@ -202,7 +203,7 @@ def test_a_class_is_swept_after_what_it_points_at(sch):
 def test_a_reference_gains_without_losing_what_was_there(sch):
     """12853571: `assessments` was replaced by four new ids, dropping `asm_caps` -- the CAPS
     total score, which is the one thing that correlation is of."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     record = {
         "assessments": [
@@ -222,7 +223,7 @@ def test_a_reference_gains_without_losing_what_was_there(sch):
 
 def test_a_reference_list_holds_each_target_once(sch):
     """23021615: four preprocessing names all resolved to one entity, written four times."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     record = {
         "preprocessings": [{"local_id": "prp_vbm", "name": field("VBM pipeline")}],
@@ -243,7 +244,7 @@ def test_a_value_that_will_not_fit_its_slot_is_refused_not_coerced(sch):
 
     Was `Group.is_healthy` until that slot became derived and left the extraction schema;
     `tfce_used` is the same shape and still asked for."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     record = {"groups": [{"local_id": "g1", "name": field("patients")}]}
     log = edit_module.apply(sch, record, "Group", record["groups"][0], {"is_healthy": "mostly"})
@@ -257,7 +258,7 @@ def test_a_value_that_will_not_fit_its_slot_is_refused_not_coerced(sch):
 def test_references_are_written_before_the_values_that_guard_against_them(sch):
     """11950456: the scope landed beside a named region because the guard on the regions
     side ran while the scope was still unset, and the scope was set afterwards."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     record = {
         "regions": [
@@ -468,7 +469,7 @@ def test_the_call_carries_a_directive_naming_what_to_list():
 def test_a_region_the_proposal_fully_specifies_is_created(sch):
     """The live proposer returns definition_method with the name, so a Region is
     constructible as valid -- hippocampus, on 16508348."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     record = {"regions": []}
     entity, why = edit_module.create(
@@ -490,7 +491,7 @@ def test_an_entity_that_could_not_be_valid_is_refused_by_the_slots_it_lacks(sch)
     """Analysis requires eight slots including `effect`, a nested structure no flat template
     carries. The refusal names them, so making analyses creatable is a matter of supplying
     what the message asks for rather than of changing a policy."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     entity, why = edit_module.create(
         sch, {"analyses": []}, "Analysis", {"name": "PTSD < controls", "definition": "a contrast"}
@@ -531,7 +532,7 @@ def test_the_prompt_and_the_repair_pass_share_one_id_convention():
 def test_one_instrument_under_two_names_is_not_created_twice(sch):
     """12853571: "clinician-administered PTSD scale (CAPS)" minted a second copy of
     `asm_caps` ("CAPS total score"), and analyses then linked to the copy."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     class Abbrev:
         def expand(self, short):
@@ -570,7 +571,7 @@ def test_a_multivalued_slot_keeps_its_values_separate(sch):
 def test_an_instrument_already_in_the_record_is_not_minted_again(sch):
     """The dedupe has to run before the id is minted: stems differ where labels agree, so
     "CAPS total score" and "clinician-administered PTSD scale (CAPS)" collided nowhere."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     class Abbrev:
         def expand(self, short):
@@ -594,7 +595,7 @@ def test_an_instrument_already_in_the_record_is_not_minted_again(sch):
 
 def test_a_nested_slot_is_not_stringified(sch):
     """`Analysis.groups` holds AnalysisGroup objects; casting one would make it a string."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     record = {"analyses": [{"local_id": "a1", "name": field("contrast")}]}
     edit_module.apply(
@@ -672,7 +673,7 @@ def test_a_slot_of_a_subclass_is_written_against_that_subclass(sch):
     """An acquisition is an `MRI` by type designator, and `magnetic_field_strength_tesla` is
     a slot of that subclass. Written against the container's declared class it is an
     attribute `Acquisition` does not have -- three of three spot-checked papers."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     designator = sch.type_designator("Acquisition")
     record = {
@@ -693,7 +694,7 @@ def test_the_type_designator_is_never_rewritten(sch):
     every other native slot gets, leaving a dict in a slot declared `string`. The class was
     already resolved from that designator, so rewriting it re-types the entity after every
     other slot in the same proposal has been checked against the old class."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     designator = sch.type_designator("Acquisition")
     entity = {"local_id": "acq", designator: "MRI", "name": field("structural scan")}
@@ -932,7 +933,7 @@ def test_a_minted_id_becomes_a_label_a_paper_could_contain():
     `Device` has no usable fallback either, so `label_of` returned the raw id for 336 of
     1,032 entities over eighty papers. Nothing matches `dev_siemens_trio` in a paper, so
     `resolve`, `same_entity` and the locator's entity bonus were all working blind."""
-    from pondie.extraction.record.edit import from_local_id
+    from pondie.extraction.repair.guard import from_local_id
 
     assert from_local_id("dev_siemens_trio") == "siemens trio"
     assert from_local_id("mea_cerebral_blood_flow") == "cerebral blood flow"
@@ -942,7 +943,7 @@ def test_a_minted_id_becomes_a_label_a_paper_could_contain():
 
 def test_a_derived_label_too_short_to_be_a_name_is_refused():
     """`mea_fa` would offer "fa", which appears inside "factor" and "surface"."""
-    from pondie.extraction.record.edit import from_local_id
+    from pondie.extraction.repair.guard import from_local_id
 
     assert from_local_id("mea_fa") == ""
     assert from_local_id("dev_ge") == ""
@@ -950,7 +951,7 @@ def test_a_derived_label_too_short_to_be_a_name_is_refused():
 
 def test_the_raw_id_survives_when_nothing_can_be_derived():
     """A label is better than no label for a report, and the id is what it always was."""
-    from pondie.extraction.record.edit import label_of
+    from pondie.extraction.record.ids import label_of
 
     assert label_of({"local_id": "mea_fa"}) == "mea_fa"
 
@@ -958,7 +959,7 @@ def test_the_raw_id_survives_when_nothing_can_be_derived():
 def test_a_declared_name_still_wins_over_the_id():
     """Derivation is the fourth fallback, not a replacement: `acq_fmri` yields "fmri", the
     modality rather than what the paper calls that acquisition."""
-    from pondie.extraction.record.edit import label_of
+    from pondie.extraction.record.ids import label_of
 
     assert (
         label_of({"local_id": "acq_fmri", "name": field("resting-state scan")})
@@ -973,7 +974,7 @@ def test_a_declared_name_still_wins_over_the_id():
 def test_a_one_word_derived_label_cannot_merge_two_entities():
     """`same_entity` needs two words in common, so "fmri" and "fmri" never merge two
     acquisitions on the strength of a modality they share."""
-    from pondie.extraction.record.edit import same_entity
+    from pondie.extraction.repair.guard import same_entity
 
     assert not same_entity("fmri", "fmri")
     assert same_entity("siemens trio", "siemens trio scanner")
@@ -991,7 +992,7 @@ def test_a_value_the_pass_could_not_place_is_marked_generated(sch):
     "advertisement" is under `_wrap`'s twenty-character floor, so no span is even looked
     for, which is exactly the case the document check has to keep.
     """
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     record = {"groups": [{"local_id": "g", "name": field("patients")}]}
     entity = record["groups"][0]
@@ -1011,7 +1012,7 @@ def test_a_value_the_pass_could_not_place_is_marked_generated(sch):
 
 def test_a_value_the_pass_did_place_stays_reported(sch):
     """The label follows the evidence, so a value with a span keeps its provenance."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     quote = "Participants were recruited by newspaper advertisement in the local area."
     record = {"groups": [{"local_id": "g", "name": field("patients")}]}
@@ -1080,7 +1081,7 @@ def test_a_string_answer_lands_in_the_type_its_slot_declares(sch):
 def test_a_nested_object_gains_prose_it_was_missing(sch):
     """The template began offering `Task.conditions` before `apply` could write them, so the
     proposer was asked and its answer discarded. Prose it can place in the paper lands."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     said = "the neutral condition showed household objects matched for visual complexity"
     record = {
@@ -1112,7 +1113,7 @@ def test_a_nested_classification_is_left_to_the_pass_that_read_the_paper(sch):
     line to draw. `satisfy` classifies, having read the whole document, and got `Neutral`
     right on 16038771; this sweep, asked the same from a template, answered `fixation` for
     three picture-viewing conditions."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     record = {
         "tasks": [
@@ -1140,7 +1141,7 @@ def test_a_nested_classification_is_left_to_the_pass_that_read_the_paper(sch):
 def test_a_nested_object_keeps_what_it_already_had(sch):
     """An extracted value with a sentence behind it outranks a proposal without one, which
     is what stops a second pass quietly rewriting the first."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     kept = cited("control_state", "a neutral condition served as the comparison")
     record = {
@@ -1170,7 +1171,7 @@ def test_a_nested_object_keeps_what_it_already_had(sch):
 def test_a_nested_object_the_record_does_not_have_is_not_invented(sch):
     """Completing what `satisfy` left thin is not the same as adding a condition the paper
     never ran, and this pass is in no position to tell the difference."""
-    from pondie.extraction.record import edit as edit_module
+    from pondie.extraction.repair import guard as edit_module
 
     record = {
         "tasks": [

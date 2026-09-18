@@ -16,7 +16,8 @@ from __future__ import annotations
 import pytest
 
 from pondie import schema
-from pondie.extraction.record import edit, fix
+from pondie.extraction.record import fix
+from pondie.extraction.repair import guard as edit
 from pondie.schema import reader
 
 PAPER = (
@@ -299,7 +300,7 @@ def test_an_unwarranted_value_may_not_overwrite_another_unwarranted_one():
     estimator reads "Pearson partial correlation", for a paper where the word `robust` does
     not occur. `refuses_losing_the_warrant` could not see it -- there was no span to lose --
     and 110 of that run's 230 replacements sat on slots in the same state."""
-    from pondie.extraction.record.edit import Edit, refuses_an_unwarranted_replacement
+    from pondie.extraction.repair.guard import Edit, refuses_an_unwarranted_replacement
 
     entity = {"local_id": "me1", "model_family": _generated("glm")}
     edit = Edit({}, entity, "model_family", "robust_regression", PAPER, "")
@@ -308,7 +309,7 @@ def test_an_unwarranted_value_may_not_overwrite_another_unwarranted_one():
 
 
 def test_a_replacement_the_paper_does_place_is_allowed():
-    from pondie.extraction.record.edit import Edit, refuses_an_unwarranted_replacement
+    from pondie.extraction.repair.guard import Edit, refuses_an_unwarranted_replacement
 
     entity = {"local_id": "me1", "model_family": _generated("glm")}
     edit = Edit(
@@ -325,7 +326,7 @@ def test_a_replacement_the_paper_does_place_is_allowed():
 def test_adding_to_a_value_is_not_replacing_it():
     """The six model-derived improvements in that run were all supersets -- a family gaining
     `ancova`, a description gaining a verified clause. Groundedness is not asked of them."""
-    from pondie.extraction.record.edit import Edit, refuses_an_unwarranted_replacement
+    from pondie.extraction.repair.guard import Edit, refuses_an_unwarranted_replacement
 
     entity = {"local_id": "g1", "description": _generated("Children with ASD")}
     edit = Edit({}, entity, "description", "Children with ASD, all male and right-handed", "", "")
@@ -336,7 +337,7 @@ def test_a_multi_element_list_is_left_to_the_list_guards():
     """kzMj26hGWacQ's preprocessing gained the paper's DARTEL smoothing in the same write
     that reworded a neighbouring step. Judged as one value it is neither a superset nor
     locatable, and refusing it lost a correct recovery."""
-    from pondie.extraction.record.edit import Edit, refuses_an_unwarranted_replacement
+    from pondie.extraction.repair.guard import Edit, refuses_an_unwarranted_replacement
 
     entity = {"local_id": "p1", "steps": _generated(["slice timing", "co-registration"])}
     edit = Edit(
@@ -353,7 +354,7 @@ def test_a_multi_element_list_is_left_to_the_list_guards():
 def test_a_warranted_value_is_still_the_other_guard_s_business():
     """When the value being replaced has a span, `refuses_losing_the_warrant` decides; this
     guard standing down is what keeps one refusal per reason."""
-    from pondie.extraction.record.edit import Edit, refuses_an_unwarranted_replacement
+    from pondie.extraction.repair.guard import Edit, refuses_an_unwarranted_replacement
 
     entity = {
         "local_id": "me1",
