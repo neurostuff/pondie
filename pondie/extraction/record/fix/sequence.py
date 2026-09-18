@@ -264,8 +264,9 @@ def build_sequence() -> tuple[Repair, ...]:
 #: the slot empties: five settled slots on 84rGLhCbUJTh became open, which is work handed to
 #: a model rather than taken from it. `numbers` is constrained after it and follows it there.
 #:
-#: `shape` runs after every pass that writes, including `fill`; the others run once, at the earliest payload holding their
-#: inputs. Names a group rather than open-coding a set at each call site, so adding a
+#: `shape` runs after every pass that writes, including `fill`; the others run once, at the
+#: earliest payload holding their inputs. Names a group rather than open-coding a set at
+#: each call site, so adding a
 #: repair means choosing a stage and nothing else.
 AFTER_DEMANDS = ("shape", "demands")
 AFTER_SATISFY = ("shape", "satisfy")
