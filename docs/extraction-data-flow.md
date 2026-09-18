@@ -358,3 +358,77 @@ is in the right place: `surface_forms` takes the paper's abbreviations, so putti
     onvoc -> abbreviations -> labels -> folding
 
 Four suppressions gone, and no function-body imports left in the package.
+
+---
+
+# A second pass, and what the layout looks like now
+
+## The stage's three steps are in the stage
+
+`repair/` names "propose, guard, adjudicate" and held only the last two. `propose` was
+`extraction/recall.py` and `extraction/recall_llm.py`, outside the package, with the stage as
+their only production caller — and "recall" is also the benchmark's metric, a key in
+`scoring.py` read seventeen times, so the name said two things the way `repair` did.
+
+    repair/stage.py                    the three steps
+    repair/propose.py                  what to ask for, per class, from the schema
+    repair/propose_with_extractor.py   the extraction model answering it
+    repair/guard.py                    write it, or say why not
+
+`__init__` is a map and four re-exports. All twelve deferred imports in the package were
+checked and none was load-bearing, so no function body in `repair/` imports anything.
+
+## The import-time schema parse survived the fix that named it
+
+Checking those twelve turned up the better finding. `render.py` bound
+`schema.entity_lists()` to a module-level constant, and since `extraction/__init__` imports
+`driver` imports `stages` imports `render`, importing **any** name under `pondie.extraction`
+parsed eleven LinkML modules. That is the exact side effect the earlier `entity_lists` move
+claimed to remove — moving where a function lives does not move when it runs. Called at each
+use now, and it is `lru_cache`d.
+
+    import pondie.extraction   521 ms, 0 schema parses  (was 750 ms, 1)
+
+## Two normalisation bugs of the same shape, and one that must not be fixed
+
+`folding.fold`'s docstring is about having won a fold-duplication fight ("`Étude` folds to
+`tude`"). Two more copies of that bug were still live:
+
+- `scoring.normalize` finished its accent handling with `.encode("ascii", "ignore")`, which
+  deletes every non-ASCII character rather than only the combining marks — and ran *before*
+  the rule that turns punctuation into a space. So `age 18-65` keyed as `age 18 65` and
+  `age 18–65` as `age 1865`. **2,078 of 60,290 record strings** keyed differently from their
+  own ASCII spelling, 1,583 on the en-dash alone, all of them ranges. Now 0.
+- `direction._tokens` was a bare `[a-z0-9]+` character class, so `same_level` scored
+  `Fagerström Test for Nicotine Dependence` against `Fagerstrom ...` as **False**. Likewise
+  `Montgomery-Åsberg` and `drug-naïve`. 32 of 18,824 level and name strings; all three True
+  now.
+
+**And `scoring.normalize` must stay a second fold.** Measured over 60,088 distinct record
+strings it disagrees with `fold` on 18.9%, deliberately and in both directions — it keeps `_`
+so an id stays one token and maps `<` to a word because in a contrast name the operator is
+the whole claim, where `fold` splits on both because it produces the key a vocabulary is
+indexed by. Both docstrings now say so, because the next reader will see two folds and merge
+them.
+
+## Smaller, same kind
+
+- `split_opposite_signs`/`adopt_withholding` are `extraction/sign_split.py`, not the corpus
+  builder. `corpus/__init__.py` claims "Nothing here runs during an extraction" and the
+  `SignSplit` stage reached into it, which made the claim false. Nothing in the pipeline
+  imports the corpus package now, which is the form of that claim a reader can check.
+- 39 tests were in `scripts/`. Bare `pytest` collected them and `pytest tests/` did not, so
+  the two differed by 39 and nothing said so. Both collect 971.
+- `check_references_resolve` wore the `check_` prefix without being a rule — it is a
+  traversal four rules call — so counting `check_` functions gave 20 against a 19-entry
+  `RULES`, and three docstrings said "thirteen". The counts agree by construction now.
+- `load_yaml` had three byte-identical definitions; it is in `schema/authoring.py`, whose
+  docstring is its job description already.
+
+## What was left big on purpose
+
+`stages.py` (1,209), `scoring.py` (1,953) and `rules.py` (1,454). The stage order is what the
+first communicates; the second's docstring argues correctly that it is one measurement over
+one shared entity map; the third is 19 order-free predicates and a registry, and its docstring
+makes a measured case against threading shared state through them. A structural-similarity
+scan over every function in the package now finds no duplicated body at all.
