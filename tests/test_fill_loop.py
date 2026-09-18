@@ -11,16 +11,9 @@ stops with work left, and neither is visible from a run that merely completes.
 
 from __future__ import annotations
 
-import pytest
 
 from pondie import schema
 from pondie.extraction.prompt import fill
-from pondie.schema import reader
-
-
-@pytest.fixture(scope="module")
-def sch():
-    return reader.load(schema.EXTRACTION)
 
 
 def group(**slots):
@@ -31,7 +24,7 @@ def ids(rows):
     return [r["id"] for r in rows]
 
 
-def test_a_value_and_a_stated_reason_both_settle_a_slot(sch):
+def test_a_value_and_a_stated_reason_both_settle_a_slot(extraction_schema):
     """The two ways of being done. A bare `not_reported` is an answer -- the status says the
     attribute was examined and nothing found -- and a loop that re-asked it would invite the
     model to overwrite a finding."""
@@ -39,32 +32,32 @@ def test_a_value_and_a_stated_reason_both_settle_a_slot(sch):
         name={"extraction_status": "extracted", "value": "MDD"},
         age_median={"extraction_status": "not_reported"},
     )
-    open_ids = ids(fill.unsettled(doc, sch))
+    open_ids = ids(fill.unsettled(doc, extraction_schema))
     assert "groups[g1].name" not in open_ids
     assert "groups[g1].age_median" not in open_ids
 
 
-def test_undetermined_is_the_one_reason_that_leaves_a_slot_open(sch):
+def test_undetermined_is_the_one_reason_that_leaves_a_slot_open(extraction_schema):
     """It reports on the pass, not the paper: the model could not work the slot out. That is
     the claim a further round exists to revisit, and the reason the cap is needed at all."""
     doc = group(
         age_median={"extraction_status": "not_reported", "unreported_reason": "undetermined"}
     )
-    assert "groups[g1].age_median" in ids(fill.unsettled(doc, sch))
+    assert "groups[g1].age_median" in ids(fill.unsettled(doc, extraction_schema))
 
 
-def test_a_slot_with_no_wrapper_at_all_is_open(sch):
+def test_a_slot_with_no_wrapper_at_all_is_open(extraction_schema):
     """`thin` counts these and nothing else. They are open for the same reason a
     `undetermined` one is: nothing has been established about them either way."""
     doc = group(name={"extraction_status": "extracted", "value": "MDD"})
-    assert "groups[g1].species" in ids(fill.unsettled(doc, sch))
+    assert "groups[g1].species" in ids(fill.unsettled(doc, extraction_schema))
 
 
-def test_answering_shrinks_the_open_set(sch):
+def test_answering_shrinks_the_open_set(extraction_schema):
     """The property the loop's termination rests on. If answering did not shrink it, the
     cap would be the only thing stopping the loop and every run would pay it in full."""
     doc = group(name={"extraction_status": "extracted", "value": "MDD"})
-    before = ids(fill.unsettled(doc, sch))
+    before = ids(fill.unsettled(doc, extraction_schema))
     filled, reasoned, dropped = fill.apply_fill(
         doc,
         {
@@ -73,7 +66,7 @@ def test_answering_shrinks_the_open_set(sch):
         },
         before,
     )
-    after = ids(fill.unsettled(doc, sch))
+    after = ids(fill.unsettled(doc, extraction_schema))
     assert (filled, reasoned, dropped) == (1, 1, 0)
     assert len(after) == len(before) - 2
     assert doc["groups"][0]["species"]["value"] == "human"
@@ -83,11 +76,11 @@ def test_answering_shrinks_the_open_set(sch):
     assert doc["groups"][0]["age_median"]["extraction_status"] == "not_reported"
 
 
-def test_an_answer_under_an_id_that_was_not_asked_is_discarded(sch):
+def test_an_answer_under_an_id_that_was_not_asked_is_discarded(extraction_schema):
     """A model answering under a path of its own invention is describing a record that does
     not exist. Writing it would put a field on an entity the schema never gave one."""
     doc = group(name={"extraction_status": "extracted", "value": "MDD"})
-    open_ids = ids(fill.unsettled(doc, sch))
+    open_ids = ids(fill.unsettled(doc, extraction_schema))
     filled, reasoned, dropped = fill.apply_fill(
         doc, {"groups[g1].invented_slot": {"value": "x"}}, open_ids
     )
@@ -95,29 +88,29 @@ def test_an_answer_under_an_id_that_was_not_asked_is_discarded(sch):
     assert "invented_slot" not in doc["groups"][0]
 
 
-def test_an_answer_that_is_neither_a_value_nor_a_reason_is_discarded(sch):
+def test_an_answer_that_is_neither_a_value_nor_a_reason_is_discarded(extraction_schema):
     """Rule 2 of the prompt: never both, never neither. An empty object settles nothing and
     must not be written as though it had, or the slot leaves the open set unanswered."""
     doc = group(name={"extraction_status": "extracted", "value": "MDD"})
-    open_ids = ids(fill.unsettled(doc, sch))
+    open_ids = ids(fill.unsettled(doc, extraction_schema))
     filled, reasoned, dropped = fill.apply_fill(doc, {"groups[g1].species": {}}, open_ids)
     assert (filled, reasoned, dropped) == (0, 0, 1)
-    assert "groups[g1].species" in ids(fill.unsettled(doc, sch))
+    assert "groups[g1].species" in ids(fill.unsettled(doc, extraction_schema))
 
 
-def test_the_listing_names_the_value_type_not_the_wrapper(sch):
+def test_the_listing_names_the_value_type_not_the_wrapper(extraction_schema):
     """A slot's range is `ExtractedSpecies`; what the model must return is a `Species`.
     Naming the wrapper asks for the wrong shape -- the failure `render_schema` calls the
     most easily confused thing in this schema."""
     doc = group(name={"extraction_status": "extracted", "value": "MDD"})
-    rows = {r["id"]: r for r in fill.unsettled(doc, sch)}
+    rows = {r["id"]: r for r in fill.unsettled(doc, extraction_schema)}
     species = rows["groups[g1].species"]
     assert species["range"] == "Species"
     assert "human" in species["vocabulary"]
     assert "human" in fill.block([species])
 
 
-def test_nested_entities_are_reached(sch):
+def test_nested_entities_are_reached(extraction_schema):
     """A Condition hangs off Task and carries its own slots. Walking only the top-level
     lists would leave every one of them permanently open, and the loop would never finish."""
     doc = {
@@ -129,10 +122,10 @@ def test_nested_entities_are_reached(sch):
             }
         ]
     }
-    assert any(r["id"].startswith("tasks[t1].conditions[c1].") for r in fill.unsettled(doc, sch))
+    assert any(r["id"].startswith("tasks[t1].conditions[c1].") for r in fill.unsettled(doc, extraction_schema))
 
 
-def test_a_singular_nested_object_takes_no_subscript(sch):
+def test_a_singular_nested_object_takes_no_subscript(extraction_schema):
     """`Analysis.effect` is one object, not a list of one.
 
     Written `effect[0]` the path went out to the model and came back to nothing: `_resolve`
@@ -141,7 +134,7 @@ def test_a_singular_nested_object_takes_no_subscript(sch):
     the residue read as "the model declined to answer" -- the reverse of what happened.
     """
     doc = {"analyses": [{"local_id": "an1", "effect": {"cells": [{"term": "t1"}]}}]}
-    rows = ids(fill.unsettled(doc, sch))
+    rows = ids(fill.unsettled(doc, extraction_schema))
     direction = "analyses[an1].effect.cells[0].direction"
     assert direction in rows, rows
     assert not any("effect[0]" in r for r in rows), "a singular nested slot took a subscript"
@@ -152,7 +145,7 @@ def test_a_singular_nested_object_takes_no_subscript(sch):
     assert cell["direction"]["value"] == "positive"
 
 
-def test_every_offered_slot_can_be_written_back(sch):
+def test_every_offered_slot_can_be_written_back(extraction_schema):
     """The invariant the bug above broke, over a record shaped like a real one. `unsettled`
     and `_resolve` have to agree about addressing or the loop asks for what it cannot keep."""
     doc = {
@@ -160,13 +153,13 @@ def test_every_offered_slot_can_be_written_back(sch):
         "groups": [{"local_id": "g1"}],
         "tasks": [{"local_id": "t1", "conditions": [{"local_id": "c1"}]}],
     }
-    for row in fill.unsettled(doc, sch):
+    for row in fill.unsettled(doc, extraction_schema):
         target, name = fill._resolve(doc, row["id"])
         assert target is not None, f"offered but unresolvable: {row['id']}"
         assert name, row["id"]
 
 
-def test_a_bare_unwrapped_value_is_an_answer_not_an_empty_slot(sch):
+def test_a_bare_unwrapped_value_is_an_answer_not_an_empty_slot(extraction_schema):
     """The extraction passes emit some slots unwrapped -- `Cell.direction` arrives as
     `"positive"`, not an ExtractedValue -- and the `wrappers` fix reshapes them at build
     time, which is after this stage runs.
@@ -181,11 +174,11 @@ def test_a_bare_unwrapped_value_is_an_answer_not_an_empty_slot(sch):
             {"local_id": "an1", "effect": {"cells": [{"term": "t1", "direction": "positive"}]}}
         ]
     }
-    open_ids = ids(fill.unsettled(doc, sch))
+    open_ids = ids(fill.unsettled(doc, extraction_schema))
     assert "analyses[an1].effect.cells[0].direction" not in open_ids, open_ids
 
 
-def test_a_held_value_is_never_overwritten_even_if_it_is_offered(sch):
+def test_a_held_value_is_never_overwritten_even_if_it_is_offered(extraction_schema):
     """The second guard. `unsettled` should never offer an answered slot, but it did once,
     and the writer is the last place to stop a correct value being replaced by a reason."""
     doc = {
@@ -201,7 +194,7 @@ def test_a_held_value_is_never_overwritten_even_if_it_is_offered(sch):
     assert doc["analyses"][0]["effect"]["cells"][0]["direction"] == "positive"
 
 
-def test_an_undetermined_slot_is_still_revisable(sch):
+def test_an_undetermined_slot_is_still_revisable(extraction_schema):
     """The guard must not close the one door the loop needs: `undetermined` is the model
     saying it could not tell, and a later round exists to replace exactly that."""
     doc = group(
@@ -213,7 +206,7 @@ def test_an_undetermined_slot_is_still_revisable(sch):
     assert doc["groups"][0]["age_median"]["value"] == 41
 
 
-def test_a_reason_outside_the_vocabulary_leaves_the_slot_untouched(sch):
+def test_a_reason_outside_the_vocabulary_leaves_the_slot_untouched(extraction_schema):
     """Refusing an answer and settling the slot anyway is worse than either alone.
 
     The first cut wrote the bare `not_reported` before checking the reason, so a rejected
@@ -222,29 +215,29 @@ def test_a_reason_outside_the_vocabulary_leaves_the_slot_untouched(sch):
     strength of an answer it had just thrown away.
     """
     doc = group(name={"extraction_status": "extracted", "value": "MDD"})
-    open_ids = ids(fill.unsettled(doc, sch))
+    open_ids = ids(fill.unsettled(doc, extraction_schema))
     filled, reasoned, dropped = fill.apply_fill(
         doc, {"groups[g1].age_mean": {"unreported_reason": "silent"}}, open_ids
     )
     assert (filled, reasoned, dropped) == (0, 0, 1)
     assert "age_mean" not in doc["groups"][0]
-    assert "groups[g1].age_mean" in ids(fill.unsettled(doc, sch))
+    assert "groups[g1].age_mean" in ids(fill.unsettled(doc, extraction_schema))
 
 
-def test_plain_silence_is_written_as_the_bare_status(sch):
+def test_plain_silence_is_written_as_the_bare_status(extraction_schema):
     """There is no schema token for the ordinary case, because `not_reported` already says
     the attribute was examined and the source carries no value. The prompt still needs a name
     for it -- a model offered only the unusual reasons reaches for the nearest one -- so it
     answers `PLAIN` and that lands as the status alone."""
     doc = group(name={"extraction_status": "extracted", "value": "MDD"})
-    open_ids = ids(fill.unsettled(doc, sch))
+    open_ids = ids(fill.unsettled(doc, extraction_schema))
     filled, reasoned, dropped = fill.apply_fill(
         doc, {"groups[g1].age_mean": {"unreported_reason": fill.PLAIN}}, open_ids
     )
     assert (filled, reasoned, dropped) == (0, 1, 0)
     held = doc["groups"][0]["age_mean"]
     assert held == {"extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}
-    assert "groups[g1].age_mean" not in ids(fill.unsettled(doc, sch))
+    assert "groups[g1].age_mean" not in ids(fill.unsettled(doc, extraction_schema))
     assert fill.PLAIN not in fill.VOCABULARY
 
 

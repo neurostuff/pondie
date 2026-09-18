@@ -18,11 +18,6 @@ from pondie.formats import values
 from pondie.schema import reader
 
 
-@pytest.fixture(scope="module")
-def sch():
-    return reader.load(schema.STORAGE)
-
-
 def field(value, evidence=None):
     return {
         "extraction_status": "extracted",
@@ -39,7 +34,7 @@ def cited(value, quote):
     )
 
 
-def edit(sch, class_name, entity, slot, value, record=None):
+def edit(storage_schema, class_name, entity, slot, value, record=None):
     return edit_module.Edit(record=record or {}, entity=entity, slot=slot, value=value)
 
 
@@ -50,7 +45,7 @@ def why(refusals):
 # --------------------------------------------------------------------------------- values
 
 
-def test_an_edit_that_only_shortens_is_refused(sch):
+def test_an_edit_that_only_shortens_is_refused(storage_schema):
     """22952599: "compared to traumatized controls." became "compared to traumatized"."""
     entity = {
         "local_id": "a1",
@@ -60,7 +55,7 @@ def test_an_edit_that_only_shortens_is_refused(sch):
         ),
     }
     e = edit(
-        sch,
+        storage_schema,
         "Analysis",
         entity,
         "definition",
@@ -69,7 +64,7 @@ def test_an_edit_that_only_shortens_is_refused(sch):
     assert "shortens" in why(edit_module.refusals(e))
 
 
-def test_an_edit_that_extends_and_keeps_its_span_is_allowed(sch):
+def test_an_edit_that_extends_and_keeps_its_span_is_allowed(storage_schema):
     """23021615: the restored full sentence was already the cited span."""
     quote = (
         "Relative to the non-PTSD group, the PTSD group showed reduced gray matter in "
@@ -83,7 +78,7 @@ def test_an_edit_that_extends_and_keeps_its_span_is_allowed(sch):
         ),
     }
     e = edit(
-        sch,
+        storage_schema,
         "Analysis",
         entity,
         "definition",
@@ -93,7 +88,7 @@ def test_an_edit_that_extends_and_keeps_its_span_is_allowed(sch):
     assert edit_module.refusals(e) == []
 
 
-def test_an_edit_that_drops_the_warrant_is_refused(sch):
+def test_an_edit_that_drops_the_warrant_is_refused(storage_schema):
     """12853571: a cited, true "whole volume analyzed and a priori small volumes" was
     coerced to the bare enum "whole_brain", losing the small-volume half."""
     entity = {
@@ -103,14 +98,14 @@ def test_an_edit_that_drops_the_warrant_is_refused(sch):
             "Correction was applied to the whole volume analyzed and to a priori small volumes.",
         ),
     }
-    e = edit(sch, "InferenceSettings", entity, "correction_scope", "whole_brain")
+    e = edit(storage_schema, "InferenceSettings", entity, "correction_scope", "whole_brain")
     assert "warrant" in why(edit_module.refusals(e))
 
 
-def test_one_value_does_not_replace_several(sch):
+def test_one_value_does_not_replace_several(storage_schema):
     """16701903 acquires MP-RAGE at TE 4.4 ms and FLASH at TE 5 ms."""
     entity = {"local_id": "acq", "echo_time_seconds": field([0.0044, 0.005])}
-    e = edit(sch, "MRI", entity, "echo_time_seconds", 0.0044)
+    e = edit(storage_schema, "MRI", entity, "echo_time_seconds", 0.0044)
     assert "drops values" in why(edit_module.refusals(e))
 
 
@@ -126,29 +121,29 @@ def test_one_value_does_not_replace_several(sch):
         ("whole_brain", [], False),
     ],
 )
-def test_a_scope_and_the_regions_beside_it_must_agree(sch, scope, regions, refused):
+def test_a_scope_and_the_regions_beside_it_must_agree(storage_schema, scope, regions, refused):
     entity = {"local_id": "i1", "correction_regions": list(regions)}
-    e = edit(sch, "InferenceSettings", entity, "correction_scope", scope)
+    e = edit(storage_schema, "InferenceSettings", entity, "correction_scope", scope)
     assert bool(edit_module.refusals(e)) is refused
 
 
-def test_a_whole_brain_analysis_is_not_given_regions_to_search(sch):
+def test_a_whole_brain_analysis_is_not_given_regions_to_search(storage_schema):
     entity = {"local_id": "a1", "spatial_scope": field("whole_brain"), "regions": []}
-    e = edit(sch, "Analysis", entity, "regions", ["reg_sgacc"])
+    e = edit(storage_schema, "Analysis", entity, "regions", ["reg_sgacc"])
     assert "not restricted to a region" in why(edit_module.refusals(e))
 
 
 # ----------------------------------------------------------------------------- references
 
 
-def test_nothing_references_itself(sch):
+def test_nothing_references_itself(storage_schema):
     """27082610, 19942229: `inputs_from` resolved to the model being edited."""
     entity = {"local_id": "mod_adc"}
-    e = edit(sch, "ModelEstimation", entity, "inputs_from", ["mod_adc"])
+    e = edit(storage_schema, "ModelEstimation", entity, "inputs_from", ["mod_adc"])
     assert "names the entity it is written on" in why(edit_module.refusals(e))
 
 
-def test_repointing_may_not_orphan_the_terms_a_cell_names(sch):
+def test_repointing_may_not_orphan_the_terms_a_cell_names(storage_schema):
     """19942229: `a_793_1` was moved to a model that does not reach `trm_group_r_nr`."""
     record = {
         "model_estimations": [
@@ -161,9 +156,9 @@ def test_repointing_may_not_orphan_the_terms_a_cell_names(sch):
         "model_estimation": "mod_a",
         "effect": {"cells": [{"term": "t_a"}]},
     }
-    away = edit(sch, "Analysis", entity, "model_estimation", "mod_b", record)
+    away = edit(storage_schema, "Analysis", entity, "model_estimation", "mod_b", record)
     assert "does not reach" in why(edit_module.refusals(away))
-    home = edit(sch, "Analysis", entity, "model_estimation", "mod_a", record)
+    home = edit(storage_schema, "Analysis", entity, "model_estimation", "mod_a", record)
     assert edit_module.refusals(home) == []
 
 
@@ -174,7 +169,7 @@ def test_every_guard_is_registered_and_documented():
     assert all(check.__doc__ for check in edit_module.GUARDS)
 
 
-def test_a_repair_that_damages_the_record_is_reported(sch):
+def test_a_repair_that_damages_the_record_is_reported(storage_schema):
     """The check that did not exist while 665 findings accumulated across fifteen records."""
     from pondie.extraction.record.validate import Validator
 
@@ -182,17 +177,17 @@ def test_a_repair_that_damages_the_record_is_reported(sch):
     after = {
         "analyses": [{"local_id": "a1", "name": field("VBM"), "correction_scope": field("roi")}]
     }
-    validator = Validator(sch, None)
+    validator = Validator(storage_schema, None)
     assert any("correction_scope" in line for line in validator.diff(before, after))
     assert validator.diff(before, before) == []
 
 
-def test_a_class_is_swept_after_what_it_points_at(sch):
+def test_a_class_is_swept_after_what_it_points_at(storage_schema):
     """16508348: analyses were swept first, so four correctly named regions were refused for
     having no target, and the regions sweep ran afterwards."""
     from pondie.extraction.repair import propose as recall
 
-    order = recall.sweep_order(sch, ["analyses", "groups", "inference_settings", "regions"])
+    order = recall.sweep_order(storage_schema, ["analyses", "groups", "inference_settings", "regions"])
     assert order.index("regions") < order.index("analyses")
     assert set(order) == {"analyses", "groups", "inference_settings", "regions"}
 
@@ -200,7 +195,7 @@ def test_a_class_is_swept_after_what_it_points_at(sch):
 # --------------------------------------------------------------------------- the write path
 
 
-def test_a_reference_gains_without_losing_what_was_there(sch):
+def test_a_reference_gains_without_losing_what_was_there(storage_schema):
     """12853571: `assessments` was replaced by four new ids, dropping `asm_caps` -- the CAPS
     total score, which is the one thing that correlation is of."""
     from pondie.extraction.repair import guard as edit_module
@@ -215,13 +210,13 @@ def test_a_reference_gains_without_losing_what_was_there(sch):
         ],
     }
     log = edit_module.apply(
-        sch, record, "Analysis", record["analyses"][0], {"assessments": ["impact of event scale"]}
+        storage_schema, record, "Analysis", record["analyses"][0], {"assessments": ["impact of event scale"]}
     )
     assert record["analyses"][0]["assessments"] == ["asm_caps", "asm_ies"]
     assert log.changed
 
 
-def test_a_reference_list_holds_each_target_once(sch):
+def test_a_reference_list_holds_each_target_once(storage_schema):
     """23021615: four preprocessing names all resolved to one entity, written four times."""
     from pondie.extraction.repair import guard as edit_module
 
@@ -230,7 +225,7 @@ def test_a_reference_list_holds_each_target_once(sch):
         "model_estimations": [{"local_id": "m1", "name": field("group model")}],
     }
     edit_module.apply(
-        sch,
+        storage_schema,
         record,
         "ModelEstimation",
         record["model_estimations"][0],
@@ -239,7 +234,7 @@ def test_a_reference_list_holds_each_target_once(sch):
     assert record["model_estimations"][0]["preprocessing"] == ["prp_vbm"]
 
 
-def test_a_value_that_will_not_fit_its_slot_is_refused_not_coerced(sch):
+def test_a_value_that_will_not_fit_its_slot_is_refused_not_coerced(storage_schema):
     """28416565: a boolean slot was given the word, and `bool("false")` is True.
 
     Was `Group.is_healthy` until that slot became derived and left the extraction schema;
@@ -247,15 +242,15 @@ def test_a_value_that_will_not_fit_its_slot_is_refused_not_coerced(sch):
     from pondie.extraction.repair import guard as edit_module
 
     record = {"groups": [{"local_id": "g1", "name": field("patients")}]}
-    log = edit_module.apply(sch, record, "Group", record["groups"][0], {"is_healthy": "mostly"})
+    log = edit_module.apply(storage_schema, record, "Group", record["groups"][0], {"is_healthy": "mostly"})
     assert "is_healthy" not in record["groups"][0]
     assert any(r.slot == "is_healthy" for r in log.refused)
 
-    edit_module.apply(sch, record, "Group", record["groups"][0], {"is_healthy": "no"})
+    edit_module.apply(storage_schema, record, "Group", record["groups"][0], {"is_healthy": "no"})
     assert values.read(record["groups"][0]["is_healthy"]) is False
 
 
-def test_references_are_written_before_the_values_that_guard_against_them(sch):
+def test_references_are_written_before_the_values_that_guard_against_them(storage_schema):
     """11950456: the scope landed beside a named region because the guard on the regions
     side ran while the scope was still unset, and the scope was set afterwards."""
     from pondie.extraction.repair import guard as edit_module
@@ -271,7 +266,7 @@ def test_references_are_written_before_the_values_that_guard_against_them(sch):
         "inference_settings": [{"local_id": "i1"}],
     }
     log = edit_module.apply(
-        sch,
+        storage_schema,
         record,
         "InferenceSettings",
         record["inference_settings"][0],
@@ -384,17 +379,17 @@ def test_the_stage_runs_against_a_real_paper(tmp_path, corpus):
     assert resolved["evidence"]["status"] == "present"
 
 
-def test_repair_reports_what_it_introduced(sch, tmp_path):
+def test_repair_reports_what_it_introduced(storage_schema, tmp_path):
     """A finding the pass caused is a defect in the pass, not in the paper."""
     from pondie.extraction import repair as repair_pass
 
     record = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
-    report = repair_pass.run(record, "", sch, study_id="p")
+    report = repair_pass.run(record, "", storage_schema, study_id="p")
     assert report.introduced == []
     assert report.summary().startswith("wrote 0")
 
 
-def test_only_a_settleable_contradiction_reaches_the_model(sch):
+def test_only_a_settleable_contradiction_reaches_the_model(storage_schema):
     """A case is adjudicable when it can be put as "choose one of these and quote the
     sentence". A dangling reference cannot, and is the largest group by count."""
     from pondie.extraction import repair as repair_pass
@@ -415,7 +410,7 @@ def test_only_a_settleable_contradiction_reaches_the_model(sch):
             }
         ],
     }
-    cases = repair_pass.contradictions(contradictory, sch)
+    cases = repair_pass.contradictions(contradictory, storage_schema)
     assert len(cases) == 1
     assert cases[0].slot == "correction_scope"
     assert "superior temporal gyrus" in cases[0].question
@@ -426,15 +421,15 @@ def test_only_a_settleable_contradiction_reaches_the_model(sch):
             {"local_id": "i1", "correction_scope": field("whole_brain"), "correction_regions": []}
         ]
     }
-    assert repair_pass.contradictions(consistent, sch) == []
+    assert repair_pass.contradictions(consistent, storage_schema) == []
 
 
-def test_a_template_offers_the_slots_a_class_declares(sch):
+def test_a_template_offers_the_slots_a_class_declares(storage_schema):
     """`local_id` on every class, not only Analysis: without it the model can name an entity
     but never address one, so every correction had to be matched by label."""
     from pondie.extraction.repair.propose import template_for
 
-    template = template_for(sch, "Region")
+    template = template_for(storage_schema, "Region")
     fields = template["regions"][0]
     assert list(fields)[0] == "local_id"
     assert "name" in fields
@@ -444,10 +439,10 @@ def test_a_template_offers_the_slots_a_class_declares(sch):
     assert "anatomical" in fields["region_type"]
 
 
-def test_a_reference_slot_is_offered_by_name_not_as_a_nested_record(sch):
+def test_a_reference_slot_is_offered_by_name_not_as_a_nested_record(storage_schema):
     from pondie.extraction.repair.propose import template_for
 
-    fields = template_for(sch, "Analysis")["analyses"][0]
+    fields = template_for(storage_schema, "Analysis")["analyses"][0]
     assert fields["regions"] == ["verbatim-string"]
     assert fields["measure"] == "verbatim-string"
 
@@ -466,14 +461,14 @@ def test_the_call_carries_a_directive_naming_what_to_list():
 # -------------------------------------------------------------------------------- creation
 
 
-def test_a_region_the_proposal_fully_specifies_is_created(sch):
+def test_a_region_the_proposal_fully_specifies_is_created(storage_schema):
     """The live proposer returns definition_method with the name, so a Region is
     constructible as valid -- hippocampus, on 16508348."""
     from pondie.extraction.repair import guard as edit_module
 
     record = {"regions": []}
     entity, why = edit_module.create(
-        sch,
+        storage_schema,
         record,
         "Region",
         {
@@ -487,20 +482,20 @@ def test_a_region_the_proposal_fully_specifies_is_created(sch):
     assert values.read(entity["definition_method"]) == "anatomical_a_priori"
 
 
-def test_an_entity_that_could_not_be_valid_is_refused_by_the_slots_it_lacks(sch):
+def test_an_entity_that_could_not_be_valid_is_refused_by_the_slots_it_lacks(storage_schema):
     """Analysis requires eight slots including `effect`, a nested structure no flat template
     carries. The refusal names them, so making analyses creatable is a matter of supplying
     what the message asks for rather than of changing a policy."""
     from pondie.extraction.repair import guard as edit_module
 
     entity, why = edit_module.create(
-        sch, {"analyses": []}, "Analysis", {"name": "PTSD < controls", "definition": "a contrast"}
+        storage_schema, {"analyses": []}, "Analysis", {"name": "PTSD < controls", "definition": "a contrast"}
     )
     assert entity is None
     assert "table parse" in why or "effect" in why
 
 
-def test_ids_nobody_chooses_are_not_chosen(sch):
+def test_ids_nobody_chooses_are_not_chosen(storage_schema):
     """A Table id comes from the parse, so an invented one would not match the table the
     parse produced. An Analysis id is minted only where there is no parse to take one
     from -- see `test_an_analysis_reported_only_in_prose_can_be_named`."""
@@ -529,7 +524,7 @@ def test_the_prompt_and_the_repair_pass_share_one_id_convention():
 # ------------------------------------------------------------------- grounding what can be
 
 
-def test_one_instrument_under_two_names_is_not_created_twice(sch):
+def test_one_instrument_under_two_names_is_not_created_twice(storage_schema):
     """12853571: "clinician-administered PTSD scale (CAPS)" minted a second copy of
     `asm_caps` ("CAPS total score"), and analyses then linked to the copy."""
     from pondie.extraction.repair import guard as edit_module
@@ -547,7 +542,7 @@ def test_one_instrument_under_two_names_is_not_created_twice(sch):
     assert not edit_module.same_entity("PTSD checklist", "PTSD symptom scale", Abbrev())
 
 
-def test_an_analysis_reported_only_in_prose_can_be_named(sch):
+def test_an_analysis_reported_only_in_prose_can_be_named(storage_schema):
     """16038682 reports three peaks in a sentence and has no coordinate table at all.
     Refusing to name such an analysis is refusing to record it."""
     from pondie.extraction.record import ids
@@ -556,19 +551,19 @@ def test_an_analysis_reported_only_in_prose_can_be_named(sch):
     assert ids.mint("Table", "Table 2", set()) is None
 
 
-def test_a_multivalued_slot_keeps_its_values_separate(sch):
+def test_a_multivalued_slot_keeps_its_values_separate(storage_schema):
     """`str()` of a list is the list's repr, so a slot given ["a", "b"] took the single
     string "['a', 'b']" -- one bogus value where two belong, legal enough to pass the
     validator."""
-    assert values.cast(sch, "Group", "inclusion_criteria", ["right-handed", "aged 25-45"]) == [
+    assert values.cast(storage_schema, "Group", "inclusion_criteria", ["right-handed", "aged 25-45"]) == [
         "right-handed",
         "aged 25-45",
     ]
     # all or nothing: one element that will not cast refuses the whole list
-    assert values.cast(sch, "Group", "medications", ["fluoxetine", 42]) == ["fluoxetine", "42"]
+    assert values.cast(storage_schema, "Group", "medications", ["fluoxetine", 42]) == ["fluoxetine", "42"]
 
 
-def test_an_instrument_already_in_the_record_is_not_minted_again(sch):
+def test_an_instrument_already_in_the_record_is_not_minted_again(storage_schema):
     """The dedupe has to run before the id is minted: stems differ where labels agree, so
     "CAPS total score" and "clinician-administered PTSD scale (CAPS)" collided nowhere."""
     from pondie.extraction.repair import guard as edit_module
@@ -582,7 +577,7 @@ def test_an_instrument_already_in_the_record_is_not_minted_again(sch):
 
     record = {"assessments": [{"local_id": "asm_caps", "name": field("CAPS total score")}]}
     entity, why = edit_module.create(
-        sch,
+        storage_schema,
         record,
         "Assessment",
         {"name": "clinician-administered PTSD scale (CAPS)"},
@@ -593,13 +588,13 @@ def test_an_instrument_already_in_the_record_is_not_minted_again(sch):
     assert "already holds" in why and "asm_caps" in why
 
 
-def test_a_nested_slot_is_not_stringified(sch):
+def test_a_nested_slot_is_not_stringified(storage_schema):
     """`Analysis.groups` holds AnalysisGroup objects; casting one would make it a string."""
     from pondie.extraction.repair import guard as edit_module
 
     record = {"analyses": [{"local_id": "a1", "name": field("contrast")}]}
     edit_module.apply(
-        sch, record, "Analysis", record["analyses"][0], {"groups": [{"group": "grp_ptsd"}]}
+        storage_schema, record, "Analysis", record["analyses"][0], {"groups": [{"group": "grp_ptsd"}]}
     )
     assert "groups" not in record["analyses"][0]
 
@@ -615,13 +610,13 @@ def test_the_analysis_directive_is_not_circular():
     assert "tied to an analysis" in directive("Region")
 
 
-def test_a_repaired_record_says_it_was_repaired(sch):
+def test_a_repaired_record_says_it_was_repaired(storage_schema):
     """A repaired record is not the record the extractor produced, and leaving the extractor
     metadata alone makes two records that differ look comparable."""
     from pondie.extraction import repair as repair_pass
 
     untouched = {"analyses": [{"local_id": "a1", "name": field("VBM")}]}
-    repair_pass.run(untouched, "", sch, study_id="p")
+    repair_pass.run(untouched, "", storage_schema, study_id="p")
     assert "repaired_by" not in untouched.get("extraction_metadata", {})
 
     changed = {
@@ -661,7 +656,7 @@ def test_a_repaired_record_says_it_was_repaired(sch):
     repair_pass.run(
         changed,
         "A region of interest analysis was performed.",
-        sch,
+        storage_schema,
         study_id="p",
         caller=Caller(),
         model="m",
@@ -669,18 +664,18 @@ def test_a_repaired_record_says_it_was_repaired(sch):
     assert changed["extraction_metadata"]["repaired_by"] == repair_pass.REPAIRER
 
 
-def test_a_slot_of_a_subclass_is_written_against_that_subclass(sch):
+def test_a_slot_of_a_subclass_is_written_against_that_subclass(storage_schema):
     """An acquisition is an `MRI` by type designator, and `magnetic_field_strength_tesla` is
     a slot of that subclass. Written against the container's declared class it is an
     attribute `Acquisition` does not have -- three of three spot-checked papers."""
     from pondie.extraction.repair import guard as edit_module
 
-    designator = sch.type_designator("Acquisition")
+    designator = storage_schema.type_designator("Acquisition")
     record = {
         "acquisitions": [{"local_id": "acq", designator: "MRI", "name": field("structural scan")}]
     }
     edit_module.apply(
-        sch,
+        storage_schema,
         record,
         "Acquisition",
         record["acquisitions"][0],
@@ -689,18 +684,18 @@ def test_a_slot_of_a_subclass_is_written_against_that_subclass(sch):
     assert "magnetic_field_strength_tesla" in record["acquisitions"][0]
 
 
-def test_the_type_designator_is_never_rewritten(sch):
+def test_the_type_designator_is_never_rewritten(storage_schema):
     """19914045: the repair wrote `acquisition_type` through the ExtractedValue wrapper that
     every other native slot gets, leaving a dict in a slot declared `string`. The class was
     already resolved from that designator, so rewriting it re-types the entity after every
     other slot in the same proposal has been checked against the old class."""
     from pondie.extraction.repair import guard as edit_module
 
-    designator = sch.type_designator("Acquisition")
+    designator = storage_schema.type_designator("Acquisition")
     entity = {"local_id": "acq", designator: "MRI", "name": field("structural scan")}
     record = {"acquisitions": [entity]}
     edit_module.apply(
-        sch,
+        storage_schema,
         record,
         "Acquisition",
         entity,
@@ -980,7 +975,7 @@ def test_a_one_word_derived_label_cannot_merge_two_entities():
     assert same_entity("siemens trio", "siemens trio scanner")
 
 
-def test_a_value_the_pass_could_not_place_is_marked_generated(sch):
+def test_a_value_the_pass_could_not_place_is_marked_generated(storage_schema):
     """Marked `reported` regardless, the pass asserted the source said things it may not
     have. Nine of thirteen findings on the first paper where the proposer could write values
     at all were that pairing -- species, recruitment_method, is_healthy, spatial_scope, each
@@ -997,7 +992,7 @@ def test_a_value_the_pass_could_not_place_is_marked_generated(sch):
     record = {"groups": [{"local_id": "g", "name": field("patients")}]}
     entity = record["groups"][0]
     edit_module.apply(
-        sch,
+        storage_schema,
         record,
         "Group",
         entity,
@@ -1010,7 +1005,7 @@ def test_a_value_the_pass_could_not_place_is_marked_generated(sch):
     assert written["value_source"] == "generated", "no sentence, so not reported"
 
 
-def test_a_value_the_pass_did_place_stays_reported(sch):
+def test_a_value_the_pass_did_place_stays_reported(storage_schema):
     """The label follows the evidence, so a value with a span keeps its provenance."""
     from pondie.extraction.repair import guard as edit_module
 
@@ -1018,7 +1013,7 @@ def test_a_value_the_pass_did_place_stays_reported(sch):
     record = {"groups": [{"local_id": "g", "name": field("patients")}]}
     entity = record["groups"][0]
     edit_module.apply(
-        sch, record, "Group", entity, {"recruitment_method": quote}, text=f"Methods. {quote}"
+        storage_schema, record, "Group", entity, {"recruitment_method": quote}, text=f"Methods. {quote}"
     )
 
     written = entity["recruitment_method"]
@@ -1040,7 +1035,7 @@ def test_the_repair_stage_edits_against_the_schema_it_checks_against():
     assert "schema.STORAGE" not in source
 
 
-def test_a_wrapper_is_resolved_to_what_it_wraps(sch):
+def test_a_wrapper_is_resolved_to_what_it_wraps(storage_schema):
     """`InferenceSettings.tfce_used` declares `ExtractedBoolean`, so reading `range` gives a
     class name and concludes "reference". Two consumers did that independently: `nu_type`
     offered nothing but `local_id` for every class, and `cast` skipped the coercion branch
@@ -1060,7 +1055,7 @@ def test_a_wrapper_is_resolved_to_what_it_wraps(sch):
     }
 
 
-def test_a_string_answer_lands_in_the_type_its_slot_declares(sch):
+def test_a_string_answer_lands_in_the_type_its_slot_declares(storage_schema):
     """The model answers in the paper's words: "true" for a boolean, "31" for a count. Eight
     of eleven findings on the first paper where the proposer could write values were this --
     `ExtractedBoolean.value must be a boolean, got str`."""
@@ -1078,7 +1073,7 @@ def test_a_string_answer_lands_in_the_type_its_slot_declares(sch):
         schema, "InferenceSettings", "tfce_used", "mostly") is None
 
 
-def test_a_nested_object_gains_prose_it_was_missing(sch):
+def test_a_nested_object_gains_prose_it_was_missing(storage_schema):
     """The template began offering `Task.conditions` before `apply` could write them, so the
     proposer was asked and its answer discarded. Prose it can place in the paper lands."""
     from pondie.extraction.repair import guard as edit_module
@@ -1095,7 +1090,7 @@ def test_a_nested_object_gains_prose_it_was_missing(sch):
     }
     entity = record["tasks"][0]
     edit_module.apply(
-        sch,
+        storage_schema,
         record,
         "Task",
         entity,
@@ -1108,7 +1103,7 @@ def test_a_nested_object_gains_prose_it_was_missing(sch):
     assert written["evidence"]["status"] == "present"
 
 
-def test_a_nested_classification_is_left_to_the_pass_that_read_the_paper(sch):
+def test_a_nested_classification_is_left_to_the_pass_that_read_the_paper(storage_schema):
     """An enum term is vocabulary, not a quote, so it can never be placed -- which is the
     line to draw. `satisfy` classifies, having read the whole document, and got `Neutral`
     right on 16038771; this sweep, asked the same from a template, answered `fixation` for
@@ -1126,7 +1121,7 @@ def test_a_nested_classification_is_left_to_the_pass_that_read_the_paper(sch):
     }
     entity = record["tasks"][0]
     log = edit_module.apply(
-        sch,
+        storage_schema,
         record,
         "Task",
         entity,
@@ -1138,7 +1133,7 @@ def test_a_nested_classification_is_left_to_the_pass_that_read_the_paper(sch):
     assert any("nothing in the paper places this value" in r.why for r in log.refused)
 
 
-def test_a_nested_object_keeps_what_it_already_had(sch):
+def test_a_nested_object_keeps_what_it_already_had(storage_schema):
     """An extracted value with a sentence behind it outranks a proposal without one, which
     is what stops a second pass quietly rewriting the first."""
     from pondie.extraction.repair import guard as edit_module
@@ -1157,7 +1152,7 @@ def test_a_nested_object_keeps_what_it_already_had(sch):
     }
     entity = record["tasks"][0]
     edit_module.apply(
-        sch,
+        storage_schema,
         record,
         "Task",
         entity,
@@ -1168,7 +1163,7 @@ def test_a_nested_object_keeps_what_it_already_had(sch):
     assert values.read(entity["conditions"][0]["condition_kind"]) == "control_state"
 
 
-def test_a_nested_object_the_record_does_not_have_is_not_invented(sch):
+def test_a_nested_object_the_record_does_not_have_is_not_invented(storage_schema):
     """Completing what `satisfy` left thin is not the same as adding a condition the paper
     never ran, and this pass is in no position to tell the difference."""
     from pondie.extraction.repair import guard as edit_module
@@ -1184,7 +1179,7 @@ def test_a_nested_object_the_record_does_not_have_is_not_invented(sch):
     }
     entity = record["tasks"][0]
     edit_module.apply(
-        sch,
+        storage_schema,
         record,
         "Task",
         entity,
@@ -1195,13 +1190,13 @@ def test_a_nested_object_the_record_does_not_have_is_not_invented(sch):
     assert [values.read(c["name"]) for c in entity["conditions"]] == ["Neutral"]
 
 
-def test_a_structure_a_flat_reply_cannot_carry_is_still_left_alone(sch):
+def test_a_structure_a_flat_reply_cannot_carry_is_still_left_alone(storage_schema):
     """`Analysis.effect` nests cells nesting statistics. `recall.flat` is what separates the
     two cases, and it must keep saying no to this one."""
     from pondie.extraction.repair.propose import flat
 
-    assert flat(sch, "Condition")
-    assert not flat(sch, "Effect")
+    assert flat(storage_schema, "Condition")
+    assert not flat(storage_schema, "Effect")
 
 
 def test_a_cell_naming_a_term_its_model_declares_under_a_prefix_is_repointed():

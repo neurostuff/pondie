@@ -8,19 +8,12 @@ and the proposers rather than about the pass that was removed.
 
 from __future__ import annotations
 
-import pytest
 
 from pondie import paths
 from pondie.extraction.repair import propose as recall
 from pondie.extraction.prompt import render
-from pondie.schema import reader
 
 GOLD = paths.REPO / "benchmarks" / "gold" / "xevP8UDRAVh9.extraction.json"
-
-
-@pytest.fixture(scope="module")
-def sch():
-    return reader.load(render.EXTRACTION_SCHEMA)
 
 
 def wrapper(value):
@@ -35,11 +28,11 @@ def wrapper(value):
 NOT_REPORTED = {"extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}
 
 
-def test_the_condition_vocabulary_reaches_the_model(sch):
+def test_the_condition_vocabulary_reaches_the_model(extraction_schema):
     """`condition_kind` is the slot the vocabulary block was written for, and it lives on
     `Condition`, reachable only through `Task.conditions`. A sweep that skipped nested slots
     documented every enum except that one: 0 of 1,571 filled across 610 papers."""
-    said = recall.vocabulary(sch, "Task")
+    said = recall.vocabulary(extraction_schema, "Task")
     assert "task_state" in said and "control_state" in said
 
 

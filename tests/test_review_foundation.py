@@ -149,13 +149,6 @@ def record() -> dict:
 
 
 @pytest.fixture(scope="module")
-def classes():
-    """The schema reader. Named `classes` because that is what it stands in for, and the
-    fixture is threaded through eighty tests."""
-    return reader.load(schema.EXTRACTION)
-
-
-@pytest.fixture(scope="module")
 def enums() -> dict:
     """The vocabularies, which `Validator` now takes from the schema by default.
 
@@ -268,13 +261,13 @@ def test_verify_rejects_out_of_range_offsets() -> None:
 # -- schema-driven slot classification ------------------------------------
 
 
-def test_classify_slot_separates_references_from_pipeline_scalars(classes: dict) -> None:
-    analysis = classes.attributes("Analysis")
-    metadata = classes.attributes("ExtractionMetadata")
-    analysis_group = classes.attributes("AnalysisGroup")
+def test_classify_slot_separates_references_from_pipeline_scalars(extraction_schema: dict) -> None:
+    analysis = extraction_schema.attributes("Analysis")
+    metadata = extraction_schema.attributes("ExtractionMetadata")
+    analysis_group = extraction_schema.attributes("AnalysisGroup")
 
     def kind(attrs: dict, name: str) -> str:
-        return classes.classify(name, attrs[name])
+        return extraction_schema.classify(name, attrs[name])
 
     # Both range on a class; only the inlined one is owned rather than pointed at.
     assert kind(analysis, "model_estimation") == "reference"
@@ -289,16 +282,16 @@ def test_classify_slot_separates_references_from_pipeline_scalars(classes: dict)
     assert kind(analysis_group, "n") == "evidence"
 
 
-def test_attributes_for_includes_is_a_ancestors_and_slot_usage(classes: dict) -> None:
-    extracted_string = classes.attributes("ExtractedString")
+def test_attributes_for_includes_is_a_ancestors_and_slot_usage(extraction_schema: dict) -> None:
+    extracted_string = extraction_schema.attributes("ExtractedString")
     # inherited from ExtractedValue
     assert "extraction_status" in extracted_string
     # narrowed by slot_usage from Any to string
     assert extracted_string["value"]["range"] == "string"
-    assert classes.attributes("ExtractedValue")["value"]["range"] == "Any"
+    assert extraction_schema.attributes("ExtractedValue")["value"]["range"] == "Any"
 
 
-def test_entity_lists_cover_every_study_entity_list(classes: dict) -> None:
+def test_entity_lists_cover_every_study_entity_list(extraction_schema: dict) -> None:
     """The payload merge has to accept every entity list Study declares.
 
     A hardcoded list does not fail loudly when the schema grows: an unlisted key
@@ -307,7 +300,7 @@ def test_entity_lists_cover_every_study_entity_list(classes: dict) -> None:
     intervention and longitudinal paper its arms and occasions.
     """
 
-    study = classes.attributes("Study")
+    study = extraction_schema.attributes("Study")
     declared = {name for name, attribute in study.items() if attribute.multivalued}
     assert declared, "Study should declare multivalued entity lists"
     assert declared <= set(schema.entity_lists())
@@ -316,7 +309,7 @@ def test_entity_lists_cover_every_study_entity_list(classes: dict) -> None:
 
     # A list one level down keeps its bare payload key and gains a dotted path, so an
     # extractor that emits arms.json does not have to know where the schema puts them.
-    nested = classes.attributes(study["design"]["range"])
+    nested = extraction_schema.attributes(study["design"]["range"])
     for name in (n for n, a in nested.items() if a.multivalued):
         assert schema.entity_lists()[name] == f"design.{name}"
 
@@ -346,10 +339,10 @@ def test_merge_payloads_keeps_arms_and_timepoints(tmp_path: Path) -> None:
     assert [tp["local_id"] for tp in body["design"]["timepoints"]] == ["baseline"]
 
 
-def test_resolves_to_follows_is_a(classes: dict) -> None:
-    assert classes.resolves_to("ExtractedInteger", "ExtractedValue")
-    assert classes.resolves_to("ExtractedValue", "ExtractedValue")
-    assert not classes.resolves_to("Group", "ExtractedValue")
+def test_resolves_to_follows_is_a(extraction_schema: dict) -> None:
+    assert extraction_schema.resolves_to("ExtractedInteger", "ExtractedValue")
+    assert extraction_schema.resolves_to("ExtractedValue", "ExtractedValue")
+    assert not extraction_schema.resolves_to("Group", "ExtractedValue")
 
 
 # -- product columns and the crossings they record -------------------------
@@ -401,8 +394,8 @@ def _record(terms: list[dict], analyses: list[tuple[str, list[dict]]], model: st
     }
 
 
-def _flags(record: dict, classes: dict) -> list[str]:
-    validator = validate_record.Validator(classes, None)
+def _flags(record: dict, extraction_schema: dict) -> list[str]:
+    validator = validate_record.Validator(extraction_schema, None)
     rules.check_crossings(record, validator)
     rules.check_product_columns(record, validator)
     rules.check_unsigned_cells(record, validator)
@@ -422,11 +415,11 @@ def test_reduplication_is_not_a_crossing() -> None:
     assert not rules.names_a_crossing(None, {"extraction_status": "not_reported"})
 
 
-def test_interaction_without_a_product_column_is_flagged(classes: dict) -> None:
+def test_interaction_without_a_product_column_is_flagged(extraction_schema: dict) -> None:
     """QQCjAAT6SwwQ's defect: an unsigned interaction test with nowhere to sit."""
 
     flags = _flags(
-        _record([GROUP, STAGE], [("Group-by-stage interaction", UNSIGNED_GROUP)]), classes
+        _record([GROUP, STAGE], [("Group-by-stage interaction", UNSIGNED_GROUP)]), extraction_schema
     )
 
     assert len(flags) == 1
@@ -434,18 +427,18 @@ def test_interaction_without_a_product_column_is_flagged(classes: dict) -> None:
     assert "Study.analyses[0].effect.cells" in flags[0]
 
 
-def test_an_unsigned_cell_on_the_product_column_satisfies_it(classes: dict) -> None:
+def test_an_unsigned_cell_on_the_product_column_satisfies_it(extraction_schema: dict) -> None:
     flags = _flags(
         _record(
             [GROUP, STAGE, PRODUCT], [("Group-by-stage interaction", [_cell("t_gxs", "unstated")])]
         ),
-        classes,
+        extraction_schema,
     )
 
     assert flags == []
 
 
-def test_crossed_levels_need_no_product_column(classes: dict) -> None:
+def test_crossed_levels_need_no_product_column(extraction_schema: dict) -> None:
     """extraction-readme.md's converse: two crossed categorical factors say it themselves."""
 
     cells = [
@@ -455,16 +448,16 @@ def test_crossed_levels_need_no_product_column(classes: dict) -> None:
         _cell("t_stage", "negative", "n3"),
     ]
 
-    assert _flags(_record([GROUP, STAGE], [("Group-by-stage interaction", cells)]), classes) == []
+    assert _flags(_record([GROUP, STAGE], [("Group-by-stage interaction", cells)]), extraction_schema) == []
 
 
-def test_a_simple_effect_within_one_level_is_not_flagged(classes: dict) -> None:
+def test_a_simple_effect_within_one_level_is_not_flagged(extraction_schema: dict) -> None:
     """representing-models.md §5.5's last row, named after the interaction it came from."""
 
     cells = UNSIGNED_GROUP + [_cell("t_stage", "held", "wake")]
 
     assert (
-        _flags(_record([GROUP, STAGE], [("Group-by-stage interaction at wake", cells)]), classes)
+        _flags(_record([GROUP, STAGE], [("Group-by-stage interaction at wake", cells)]), extraction_schema)
         == []
     )
 
@@ -479,7 +472,7 @@ LOAD = {
 }
 
 
-def test_a_levelless_cell_may_not_be_held(classes: dict) -> None:
+def test_a_levelless_cell_may_not_be_held(extraction_schema: dict) -> None:
     """§4's first corollary: a product column or a slope has no level, so it has nothing
     to put on both sides of the comparison. An undirected test of one is `undirected`."""
 
@@ -487,7 +480,7 @@ def test_a_levelless_cell_may_not_be_held(classes: dict) -> None:
         _record(
             [GROUP, STAGE, PRODUCT], [("Group-by-stage interaction", [_cell("t_gxs", "held")])]
         ),
-        classes,
+        extraction_schema,
     )
 
     assert len(flags) == 1
@@ -495,27 +488,27 @@ def test_a_levelless_cell_may_not_be_held(classes: dict) -> None:
     assert "undirected" in flags[0]
 
 
-def test_a_factor_held_at_every_level_is_flagged(classes: dict) -> None:
+def test_a_factor_held_at_every_level_is_flagged(extraction_schema: dict) -> None:
     """An omnibus F miscoded. Celling every level `held` says the factor was held on
     both sides of its own test."""
 
     cells = [_cell("t_load", "held", "high"), _cell("t_load", "held", "low")]
 
-    flags = _flags(_record([LOAD], [("Main effect of load", cells)]), classes)
+    flags = _flags(_record([LOAD], [("Main effect of load", cells)]), extraction_schema)
 
     assert len(flags) == 1
     assert "every declared level" in flags[0]
 
 
-def test_the_same_factor_undirected_at_every_level_is_not(classes: dict) -> None:
+def test_the_same_factor_undirected_at_every_level_is_not(extraction_schema: dict) -> None:
     """Which is the shape that replaced it, and the one §5.8 now writes down."""
 
     cells = [_cell("t_load", "undirected", "high"), _cell("t_load", "undirected", "low")]
 
-    assert _flags(_record([LOAD], [("Main effect of load", cells)]), classes) == []
+    assert _flags(_record([LOAD], [("Main effect of load", cells)]), extraction_schema) == []
 
 
-def test_a_held_level_leaves_the_others_absent_and_is_not_flagged(classes: dict) -> None:
+def test_a_held_level_leaves_the_others_absent_and_is_not_flagged(extraction_schema: dict) -> None:
     """The one shape `held` has: one level celled, the rest weighted out."""
 
     cells = [
@@ -524,10 +517,10 @@ def test_a_held_level_leaves_the_others_absent_and_is_not_flagged(classes: dict)
         _cell("t_load", "held", "high"),
     ]
 
-    assert _flags(_record([GROUP, LOAD], [("Group effect at high load", cells)]), classes) == []
+    assert _flags(_record([GROUP, LOAD], [("Group effect at high load", cells)]), extraction_schema) == []
 
 
-def test_identical_cells_disagreeing_about_a_crossing_is_flagged(classes: dict) -> None:
+def test_identical_cells_disagreeing_about_a_crossing_is_flagged(extraction_schema: dict) -> None:
     """The visible cost: an interaction and a main effect became the same record."""
 
     flags = _flags(
@@ -538,7 +531,7 @@ def test_identical_cells_disagreeing_about_a_crossing_is_flagged(classes: dict) 
                 ("Group effect", list(UNSIGNED_GROUP)),
             ],
         ),
-        classes,
+        extraction_schema,
     )
 
     # All three fire, which is the raw QQCjAAT6SwwQ record in miniature: the cells
@@ -549,7 +542,7 @@ def test_identical_cells_disagreeing_about_a_crossing_is_flagged(classes: dict) 
     assert [flag for flag in flags if "carries no cell" in flag]
 
 
-def test_a_product_column_may_name_a_lower_stage_term(classes: dict) -> None:
+def test_a_product_column_may_name_a_lower_stage_term(extraction_schema: dict) -> None:
     """A group stage crossing a cohort factor with a first-level condition."""
 
     record = {
@@ -579,10 +572,10 @@ def test_a_product_column_may_name_a_lower_stage_term(classes: dict) -> None:
         ],
     }
 
-    assert _flags(record, classes) == []
+    assert _flags(record, extraction_schema) == []
 
 
-def test_a_component_in_a_sibling_model_is_flagged(classes: dict) -> None:
+def test_a_component_in_a_sibling_model_is_flagged(extraction_schema: dict) -> None:
     """What check_local_ids cannot see: the reference resolves, to the wrong model."""
 
     record = {
@@ -611,22 +604,22 @@ def test_a_component_in_a_sibling_model_is_flagged(classes: dict) -> None:
         ],
     }
 
-    flags = _flags(record, classes)
+    flags = _flags(record, extraction_schema)
 
     assert len(flags) == 1
     assert "'t_group' is not a term of 'mine'" in flags[0]
 
 
-def test_a_product_column_no_cell_names_is_flagged(classes: dict) -> None:
+def test_a_product_column_no_cell_names_is_flagged(extraction_schema: dict) -> None:
     """A declared crossing whose analysis was never extracted."""
 
-    flags = _flags(_record([GROUP, STAGE, PRODUCT], [("Group effect", UNSIGNED_GROUP)]), classes)
+    flags = _flags(_record([GROUP, STAGE, PRODUCT], [("Group effect", UNSIGNED_GROUP)]), extraction_schema)
 
     assert len(flags) == 1
     assert "carries no cell" in flags[0]
 
 
-def test_the_checks_survive_a_cyclic_stage_chain(classes: dict) -> None:
+def test_the_checks_survive_a_cyclic_stage_chain(extraction_schema: dict) -> None:
     """Invariant 6's violation is an error elsewhere; here it must not hang."""
 
     record = {
@@ -637,7 +630,7 @@ def test_the_checks_survive_a_cyclic_stage_chain(classes: dict) -> None:
         "analyses": [],
     }
 
-    assert _flags(record, classes) == []
+    assert _flags(record, extraction_schema) == []
 
 
 # -- occasions, and the factors that should carry them ---------------------
@@ -689,21 +682,21 @@ def test_names_a_comparison_reads_contrast_syntax() -> None:
     assert not rules.names_a_comparison(None, {"extraction_status": "not_reported"})
 
 
-def test_a_contrast_shaped_continuous_term_is_flagged(classes: dict) -> None:
+def test_a_contrast_shaped_continuous_term_is_flagged(extraction_schema: dict) -> None:
     """TgcHKMRfrVog's defect: the occasion axis recorded as one continuous column."""
 
     record = _record(
         [COLLAPSED], [("CBT change: rsFC with aSCC, pre > post", [_cell("t_prepost", "positive")])]
     )
 
-    flags = _flags(record, classes)
+    flags = _flags(record, extraction_schema)
 
     assert len(flags) == 1
     assert "Study.model_estimations[0].terms[0].name" in flags[0]
     assert "states a comparison" in flags[0]
 
 
-def test_an_occasion_factor_satisfies_it(classes: dict) -> None:
+def test_an_occasion_factor_satisfies_it(extraction_schema: dict) -> None:
     """§5.6's encoding of the same result raises nothing."""
 
     record = _record(
@@ -717,10 +710,10 @@ def test_an_occasion_factor_satisfies_it(classes: dict) -> None:
     )
     record["design"] = TWO_OCCASIONS
 
-    assert _flags(record, classes) == []
+    assert _flags(record, extraction_schema) == []
 
 
-def test_a_per_participant_difference_score_is_not_flagged(classes: dict) -> None:
+def test_a_per_participant_difference_score_is_not_flagged(extraction_schema: dict) -> None:
     """ModelTerm.type's stated exception. Its name says `change in` and it is right:
     one number per participant, entered across the sample, is a slope."""
 
@@ -729,10 +722,10 @@ def test_a_per_participant_difference_score_is_not_flagged(classes: dict) -> Non
         [("CBT change: rsFC with aSCC, percent reduction in BDI", [_cell("t_dbdi", "positive")])],
     )
 
-    assert _flags(record, classes) == []
+    assert _flags(record, extraction_schema) == []
 
 
-def test_a_product_column_named_for_its_crossing_is_not_flagged(classes: dict) -> None:
+def test_a_product_column_named_for_its_crossing_is_not_flagged(extraction_schema: dict) -> None:
     """A product column has no levels either, and is named for what it multiplies."""
 
     term = {
@@ -743,39 +736,39 @@ def test_a_product_column_named_for_its_crossing_is_not_flagged(classes: dict) -
     }
     record = _record([GROUP, term], [("Age × diagnosis", [_cell("t_x", "positive")])])
 
-    assert [flag for flag in _flags(record, classes) if "states a comparison" in flag] == []
+    assert [flag for flag in _flags(record, extraction_schema) if "states a comparison" in flag] == []
 
 
-def test_declared_occasions_that_no_level_names_are_flagged(classes: dict) -> None:
+def test_declared_occasions_that_no_level_names_are_flagged(extraction_schema: dict) -> None:
     """The defect from the design end: the scans are recorded, the comparison is not."""
 
     record = _record([GROUP], [("CBT change in rsFC, pre > post", UNSIGNED_GROUP)])
     record["design"] = TWO_OCCASIONS
 
-    flags = _flags(record, classes)
+    flags = _flags(record, extraction_schema)
 
     assert len(flags) == 1
     assert "Study.design.timepoints" in flags[0]
     assert "the comparison between them is not" in flags[0]
 
 
-def test_a_baseline_only_record_is_not_flagged(classes: dict) -> None:
+def test_a_baseline_only_record_is_not_flagged(extraction_schema: dict) -> None:
     """A study that scanned twice and reported once is the legitimate reading, which
     is why the trigger needs prose claiming a change and `baseline` is not it."""
 
     record = _record([GROUP], [("Baseline rsFC with aSCC", UNSIGNED_GROUP)])
     record["design"] = TWO_OCCASIONS
 
-    assert _flags(record, classes) == []
+    assert _flags(record, extraction_schema) == []
 
 
-def test_one_declared_occasion_cannot_be_compared(classes: dict) -> None:
+def test_one_declared_occasion_cannot_be_compared(extraction_schema: dict) -> None:
     """Nothing to flag: a single occasion has no second side to have lost."""
 
     record = _record([GROUP], [("Change in rsFC after treatment", UNSIGNED_GROUP)])
     record["design"] = {"timepoints": [{"local_id": "tp_base"}]}
 
-    assert _flags(record, classes) == []
+    assert _flags(record, extraction_schema) == []
 
 
 # -- derived columns, and where they came from -----------------------------
@@ -819,31 +812,31 @@ def test_names_a_derivation_reads_construction_not_measurement() -> None:
     assert not rules.names_a_derivation(_text("BDI"))
 
 
-def test_a_fully_sourced_derived_column_is_not_flagged(classes: dict) -> None:
-    assert _flags(_derived_record(_derived()), classes) == []
+def test_a_fully_sourced_derived_column_is_not_flagged(extraction_schema: dict) -> None:
+    assert _flags(_derived_record(_derived()), extraction_schema) == []
 
 
-def test_a_derived_column_with_no_derivation_recorded_is_flagged(classes: dict) -> None:
+def test_a_derived_column_with_no_derivation_recorded_is_flagged(extraction_schema: dict) -> None:
     """TgcHKMRfrVog's `term_bdi_percent_change`: the occasions it spans are nowhere."""
 
-    flags = _flags(_derived_record(_derived(source_definition=None)), classes)
+    flags = _flags(_derived_record(_derived(source_definition=None)), extraction_schema)
 
     assert len(flags) == 1
     assert "Study.model_estimations[0].terms[0].source_definition" in flags[0]
     assert "derivation is not recorded" in flags[0]
 
 
-def test_a_derived_column_still_names_its_instrument(classes: dict) -> None:
+def test_a_derived_column_still_names_its_instrument(extraction_schema: dict) -> None:
     """Deriving a column does not break the link to what supplied it."""
 
-    flags = _flags(_derived_record(_derived(assessment=None)), classes)
+    flags = _flags(_derived_record(_derived(assessment=None)), extraction_schema)
 
     assert len(flags) == 1
     assert "Study.model_estimations[0].terms[0].assessment" in flags[0]
     assert "names no assessment" in flags[0]
 
 
-def test_a_derived_column_with_no_assessment_to_name_is_not_flagged(classes: dict) -> None:
+def test_a_derived_column_with_no_assessment_to_name_is_not_flagged(extraction_schema: dict) -> None:
     """A record declaring no instrument has none for the column to have dropped, so
     the assessment half stays quiet and only the derivation is asked for."""
 
@@ -852,13 +845,13 @@ def test_a_derived_column_with_no_assessment_to_name_is_not_flagged(classes: dic
         [("Change score", [_cell("t_dbdi", "positive")])],
     )
 
-    flags = _flags(record, classes)
+    flags = _flags(record, extraction_schema)
 
     assert len(flags) == 1
     assert "derivation is not recorded" in flags[0]
 
 
-def test_a_factor_over_occasions_is_not_a_derived_column(classes: dict) -> None:
+def test_a_factor_over_occasions_is_not_a_derived_column(extraction_schema: dict) -> None:
     """`TIME` compares occasions rather than being computed across them, so it needs
     no source_definition however its levels are labelled."""
 
@@ -873,7 +866,7 @@ def test_a_factor_over_occasions_is_not_a_derived_column(classes: dict) -> None:
     )
     record["design"] = TWO_OCCASIONS
 
-    assert _flags(record, classes) == []
+    assert _flags(record, extraction_schema) == []
 
 
 # -- arms, and the analyses that cannot say which one they are -------------
@@ -907,7 +900,7 @@ def _arm_record(analyses: list[tuple[str, list[dict]]], **extra) -> dict:
     return record
 
 
-def test_an_analysis_naming_an_arm_it_cannot_reach_is_flagged(classes: dict) -> None:
+def test_an_analysis_naming_an_arm_it_cannot_reach_is_flagged(extraction_schema: dict) -> None:
     """xevP8UDRAVh9's defect: the cell says `heroin`, the level says
     `heroin-associated perfusion`, and the join to the arm breaks on the string."""
 
@@ -920,14 +913,14 @@ def test_an_analysis_naming_an_arm_it_cannot_reach_is_flagged(classes: dict) -> 
                 )
             ]
         ),
-        classes,
+        extraction_schema,
     )
 
     assert len(flags) == 1
     assert "arm_heroin" in flags[0]
 
 
-def test_a_cell_reaching_the_level_that_names_the_arm_satisfies_it(classes: dict) -> None:
+def test_a_cell_reaching_the_level_that_names_the_arm_satisfies_it(extraction_schema: dict) -> None:
     flags = _flags(
         _arm_record(
             [
@@ -937,13 +930,13 @@ def test_a_cell_reaching_the_level_that_names_the_arm_satisfies_it(classes: dict
                 )
             ]
         ),
-        classes,
+        extraction_schema,
     )
 
     assert flags == []
 
 
-def test_an_analysed_cohort_assigned_to_the_arm_satisfies_it(classes: dict) -> None:
+def test_an_analysed_cohort_assigned_to_the_arm_satisfies_it(extraction_schema: dict) -> None:
     """The parallel-group route: no cell names the arm, but the cohort was assigned
     to it, so `Group.arm` carries what the contrast does not."""
 
@@ -953,10 +946,10 @@ def test_an_analysed_cohort_assigned_to_the_arm_satisfies_it(classes: dict) -> N
     )
     record["analyses"][0]["groups"] = [{"group": "g1"}]
 
-    assert _flags(record, classes) == []
+    assert _flags(record, extraction_schema) == []
 
 
-def test_an_analysis_naming_no_arm_is_left_alone(classes: dict) -> None:
+def test_an_analysis_naming_no_arm_is_left_alone(extraction_schema: dict) -> None:
     """A baseline contrast in a study that has arms is not about either of them,
     which is what keeps 84rGLhCbUJTh's four pre-medication analyses silent."""
 
@@ -964,13 +957,13 @@ def test_an_analysis_naming_no_arm_is_left_alone(classes: dict) -> None:
         _arm_record(
             [("Areas of abnormal FA before medication", [_cell("t_arm", "positive", "heroin")])]
         ),
-        classes,
+        extraction_schema,
     )
 
     assert flags == []
 
 
-def test_a_short_arm_name_does_not_match_everything(classes: dict) -> None:
+def test_a_short_arm_name_does_not_match_everything(extraction_schema: dict) -> None:
     """A two-character arm name would appear inside unrelated prose, so it is not
     vocabulary. The arm is then unreachable in the same way and silently so."""
 
@@ -979,7 +972,7 @@ def test_a_short_arm_name_does_not_match_everything(classes: dict) -> None:
     )
     record["design"] = {"arms": [{"local_id": "arm_iv", "name": _text("IV")}]}
 
-    assert _flags(record, classes) == []
+    assert _flags(record, extraction_schema) == []
 
 
 # -- the storage schema's class rules --------------------------------------
@@ -989,13 +982,13 @@ def test_a_short_arm_name_does_not_match_everything(classes: dict) -> None:
 #: the failure mode is a rule that reads correctly and never fires.
 
 
-def _rule_errors(node: dict, classes: dict) -> list[str]:
-    validator = validate_record.Validator(classes, None)
+def _rule_errors(node: dict, extraction_schema: dict) -> list[str]:
+    validator = validate_record.Validator(extraction_schema, None)
     validator.check_rules(node, "Analysis", "Study.analyses[0]")
     return validator.errors
 
 
-def test_the_storage_rules_are_found(classes: dict) -> None:
+def test_the_storage_rules_are_found(extraction_schema: dict) -> None:
     """The inventory is pinned because `rules` is the one thing the projection drops: a rule
     added to storage and not reaching `check_rules` is a constraint that reads correctly and
     never fires, which is the failure this whole section exists to catch."""
@@ -1006,15 +999,15 @@ def test_the_storage_rules_are_found(classes: dict) -> None:
     assert len(found["Effect"]) == 1, "cells cannot be empty"
 
 
-def test_an_effect_with_no_cells_is_rejected(classes: dict) -> None:
+def test_an_effect_with_no_cells_is_rejected(extraction_schema: dict) -> None:
     """`required: true` on `cells` catches an absent key and nothing else -- LinkML has no
     minimum cardinality here, so an effect that compared nothing used to validate."""
 
-    validator = validate_record.Validator(classes, None)
+    validator = validate_record.Validator(extraction_schema, None)
     validator.check_rules({"cells": []}, "Effect", "Study.analyses[0].effect")
     assert len(validator.errors) == 1 and "cells cannot be empty" in validator.errors[0]
 
-    ok = validate_record.Validator(classes, None)
+    ok = validate_record.Validator(extraction_schema, None)
     ok.check_rules({"cells": [{"term": "t1"}]}, "Effect", "Study.analyses[0].effect")
     assert ok.errors == []
 
@@ -1034,17 +1027,17 @@ def test_an_effect_with_no_cells_is_rejected(classes: dict) -> None:
     ],
 )
 def test_spatial_scope_and_regions_agree(
-    classes: dict, scope: str, regions: list | None, fails: bool
+    extraction_schema: dict, scope: str, regions: list | None, fails: bool
 ) -> None:
     node = {"spatial_scope": {"extraction_status": "extracted", "value": scope}}
     if regions is not None:
         node["regions"] = regions
 
-    assert bool(_rule_errors(node, classes)) is fails
+    assert bool(_rule_errors(node, extraction_schema)) is fails
 
 
 def test_a_rule_construct_the_evaluator_cannot_read_is_reported(
-    classes: dict, monkeypatch
+    extraction_schema: dict, monkeypatch
 ) -> None:
     """Silently skipping one turns the rule into a check that always passes."""
 
@@ -1065,7 +1058,7 @@ def test_a_rule_construct_the_evaluator_cannot_read_is_reported(
     )
     errors = _rule_errors(
         {"spatial_scope": {"extraction_status": "extracted", "value": "roi"}, "regions": ["r1"]},
-        classes,
+        extraction_schema,
     )
 
     assert any("maximum_cardinality" in error and "not implemented" in error for error in errors)
@@ -1076,8 +1069,8 @@ def test_a_rule_construct_the_evaluator_cannot_read_is_reported(
 
 @requires_current_record
 @requires_paper
-def test_example_record_validates(record: dict, normalized: str, classes: dict) -> None:
-    validator = validate_record.Validator(classes, normalized)
+def test_example_record_validates(record: dict, normalized: str, extraction_schema: dict) -> None:
+    validator = validate_record.Validator(extraction_schema, normalized)
     validator.check_record(record)
     assert validator.errors == []
     assert validator.fields > 0
@@ -1101,8 +1094,8 @@ def test_recorded_hash_matches_the_text(record: dict, normalized: str) -> None:
 
 
 @requires_paper
-def test_no_dangling_cross_references(record: dict, classes: dict) -> None:
-    assert fix.check_local_ids(record, classes) == []
+def test_no_dangling_cross_references(record: dict, extraction_schema: dict) -> None:
+    assert fix.check_local_ids(record, extraction_schema) == []
 
 
 @requires_paper
@@ -1171,12 +1164,12 @@ def test_section_index_covers_every_span(record: dict, normalized: str) -> None:
     ],
 )
 def test_validator_rejects_corrupted_record(
-    record: dict, normalized: str, classes: dict, mutate, expected: str
+    record: dict, normalized: str, extraction_schema: dict, mutate, expected: str
 ) -> None:
     broken = copy.deepcopy(record)
     mutate(broken)
 
-    validator = validate_record.Validator(classes, normalized)
+    validator = validate_record.Validator(extraction_schema, normalized)
     validator.check_record(broken)
 
     assert validator.errors, f"expected an error containing {expected!r}"
@@ -1185,28 +1178,28 @@ def test_validator_rejects_corrupted_record(
 
 @requires_paper
 def test_validator_rejects_shifted_span_offset(
-    record: dict, normalized: str, classes: dict
+    record: dict, normalized: str, extraction_schema: dict
 ) -> None:
     broken = copy.deepcopy(record)
     for evidence_set in warrant._iter_sets(broken):
         evidence_set["spans"][0]["start_char"] += 3
         break
 
-    validator = validate_record.Validator(classes, normalized)
+    validator = validate_record.Validator(extraction_schema, normalized)
     validator.check_record(broken)
     assert any("disagrees with source" in error for error in validator.errors), validator.errors
 
 
 @requires_paper
 def test_validator_rejects_evidence_set_without_spans(
-    record: dict, normalized: str, classes: dict
+    record: dict, normalized: str, extraction_schema: dict
 ) -> None:
     broken = copy.deepcopy(record)
     for evidence_set in warrant._iter_sets(broken):
         evidence_set["spans"] = []
         break
 
-    validator = validate_record.Validator(classes, normalized)
+    validator = validate_record.Validator(extraction_schema, normalized)
     validator.check_record(broken)
     assert any("at least one span" in error for error in validator.errors), validator.errors
 
@@ -1240,7 +1233,7 @@ def test_build_is_reproducible_and_gated_on_offsets() -> None:
 
 
 @requires_paper
-def test_aliases_only_rewrite_reference_slots(classes: dict) -> None:
+def test_aliases_only_rewrite_reference_slots(extraction_schema: dict) -> None:
     """An alias must never touch an extracted value that shares a string with an id."""
 
     body = {
@@ -1256,7 +1249,7 @@ def test_aliases_only_rewrite_reference_slots(classes: dict) -> None:
             }
         ]
     }
-    rewrites = builder.apply_aliases(body, classes, {"old_id": "new_id"})
+    rewrites = builder.apply_aliases(body, extraction_schema, {"old_id": "new_id"})
 
     assert rewrites == 1
     assert body["analyses"][0]["model_estimation"] == "new_id"
@@ -1593,22 +1586,22 @@ def test_the_markdown_table_columns_line_up() -> None:
 # the declared range therefore never sees it, which on the corpus hid 40 shape errors.
 
 
-def test_designated_type_follows_the_declaration(classes: dict) -> None:
+def test_designated_type_follows_the_declaration(extraction_schema: dict) -> None:
     payload = {"details_type": "ConnectivityDetails"}
-    assert classes.designated_type(payload, "AnalysisDetails") == "ConnectivityDetails"
-    assert classes.type_designator("AnalysisDetails") == "details_type"
-    assert classes.type_designator("Group") is None
+    assert extraction_schema.designated_type(payload, "AnalysisDetails") == "ConnectivityDetails"
+    assert extraction_schema.type_designator("AnalysisDetails") == "details_type"
+    assert extraction_schema.type_designator("Group") is None
 
 
 @pytest.mark.parametrize("named", [None, "", "NotAClass", "Group", 7])
-def test_designated_type_falls_back_rather_than_raising(classes: dict, named) -> None:
+def test_designated_type_falls_back_rather_than_raising(extraction_schema: dict, named) -> None:
     """Silent by contract: a repair pass wants the best available answer, and `Group` is
     not an AnalysisDetails so naming it must not smuggle Group's slots in."""
 
-    assert classes.designated_type({"details_type": named}, "AnalysisDetails") == "AnalysisDetails"
+    assert extraction_schema.designated_type({"details_type": named}, "AnalysisDetails") == "AnalysisDetails"
 
 
-def test_listify_reaches_a_slot_declared_on_a_payload_subclass(classes: dict) -> None:
+def test_listify_reaches_a_slot_declared_on_a_payload_subclass(extraction_schema: dict) -> None:
     """The 40-error regression guard. `seed_regions` is multivalued and lives on
     ConnectivityDetails, two hops down through a single-valued nested slot."""
 
@@ -1620,12 +1613,12 @@ def test_listify_reaches_a_slot_declared_on_a_payload_subclass(classes: dict) ->
             }
         ]
     }
-    fixed = fix.listify_nested(body, classes)
+    fixed = fix.listify_nested(body, extraction_schema)
     assert body["analyses"][0]["details"]["seed_regions"] == ["reg_1"]
     assert any("seed_regions" in line for line in fixed)
 
 
-def test_a_scalar_in_a_multivalued_wrapper_is_listified(classes: dict) -> None:
+def test_a_scalar_in_a_multivalued_wrapper_is_listified(extraction_schema: dict) -> None:
     """`interpretations` is an ExtractedStringList: one wrapper holding a list."""
 
     body = {
@@ -1641,12 +1634,12 @@ def test_a_scalar_in_a_multivalued_wrapper_is_listified(classes: dict) -> None:
             }
         ]
     }
-    fixed = fix.listify_scalars(body, classes)
+    fixed = fix.listify_scalars(body, extraction_schema)
     assert body["analyses"][0]["interpretations"]["value"] == ["one finding"]
     assert fixed == ["Study.analyses[0].interpretations"]
 
 
-def test_a_missing_value_is_left_for_the_validator(classes: dict) -> None:
+def test_a_missing_value_is_left_for_the_validator(extraction_schema: dict) -> None:
     """`extracted` with no value is a different fault and stays visible as one."""
 
     body = {
@@ -1661,14 +1654,14 @@ def test_a_missing_value_is_left_for_the_validator(classes: dict) -> None:
             }
         ]
     }
-    assert fix.listify_scalars(body, classes) == []
+    assert fix.listify_scalars(body, extraction_schema) == []
 
 
-def test_a_scalar_where_an_enum_list_belongs_is_an_error(classes: dict) -> None:
+def test_a_scalar_where_an_enum_list_belongs_is_an_error(extraction_schema: dict) -> None:
     """`ExtractedResponseModalityList` declares its `value` with `any_of` and no `range`, so
     the shape check used to be unreachable and a bare string passed silently."""
 
-    validator = validate_record.Validator(classes, None)
+    validator = validate_record.Validator(extraction_schema, None)
     validator.check_field(
         {
             "extraction_status": "extracted",
@@ -1689,8 +1682,8 @@ def test_a_scalar_where_an_enum_list_belongs_is_an_error(classes: dict) -> None:
 # those survived a careful hand review, so this is the class a reader cannot see.
 
 
-def _cell_errors(record: dict, classes: dict) -> list[str]:
-    validator = validate_record.Validator(classes, None)
+def _cell_errors(record: dict, extraction_schema: dict) -> list[str]:
+    validator = validate_record.Validator(extraction_schema, None)
     rules.check_cell_terms(record, validator)
     return validator.errors
 
@@ -1703,26 +1696,26 @@ def _levelled(*names: str) -> dict:
     }
 
 
-def test_a_cell_level_naming_a_declared_level_is_accepted(classes: dict) -> None:
+def test_a_cell_level_naming_a_declared_level_is_accepted(extraction_schema: dict) -> None:
     record = _record(
         [_levelled("patients", "controls")], [("dx", [_cell("t_group", "positive", "patients")])]
     )
-    assert _cell_errors(record, classes) == []
+    assert _cell_errors(record, extraction_schema) == []
 
 
-def test_a_cell_level_naming_no_declared_level_is_an_error(classes: dict) -> None:
+def test_a_cell_level_naming_no_declared_level_is_an_error(extraction_schema: dict) -> None:
     """`AD` against a declared `AD group`: the mapper's join finds nothing, and the record
     looks like it recorded which cohort was compared."""
 
     record = _record(
         [_levelled("AD group", "HC group")], [("dx", [_cell("t_group", "positive", "AD")])]
     )
-    errors = _cell_errors(record, classes)
+    errors = _cell_errors(record, extraction_schema)
     assert len(errors) == 1 and "matches none of term" in errors[0]
     assert "'AD group'" in errors[0], "the declared levels are offered, not just refused"
 
 
-def test_a_cell_naming_a_term_of_another_model_is_an_error(classes: dict) -> None:
+def test_a_cell_naming_a_term_of_another_model_is_an_error(extraction_schema: dict) -> None:
     """Invariant 2. The term exists, so `check_local_ids` is satisfied and the record is
     structurally fine -- it is the *scope* that is wrong, and the message says whose."""
 
@@ -1733,11 +1726,11 @@ def test_a_cell_naming_a_term_of_another_model_is_an_error(classes: dict) -> Non
     record["model_estimations"].append(
         {"local_id": "m2", "terms": [{"local_id": "t_elsewhere", "type": _text("categorical")}]}
     )
-    errors = _cell_errors(record, classes)
+    errors = _cell_errors(record, extraction_schema)
     assert len(errors) == 1 and "'m2'" in errors[0] and "inputs_from" in errors[0]
 
 
-def test_a_cell_naming_a_term_of_a_lower_stage_is_accepted(classes: dict) -> None:
+def test_a_cell_naming_a_term_of_a_lower_stage_is_accepted(extraction_schema: dict) -> None:
     """The converse, and the reason the walk follows `inputs_from`: a group contrast of a
     first-level column is a cell on that stage's term, not a copy hoisted upward."""
 
@@ -1755,16 +1748,16 @@ def test_a_cell_naming_a_term_of_a_lower_stage_is_accepted(classes: dict) -> Non
             ],
         }
     )
-    assert _cell_errors(record, classes) == []
+    assert _cell_errors(record, extraction_schema) == []
 
 
-def test_a_term_naming_nothing_at_all_is_an_error(classes: dict) -> None:
+def test_a_term_naming_nothing_at_all_is_an_error(extraction_schema: dict) -> None:
     record = _record([], [("dx", [_cell("t_missing", "positive", "patients")])])
-    errors = _cell_errors(record, classes)
+    errors = _cell_errors(record, extraction_schema)
     assert len(errors) == 1 and "names no ModelTerm anywhere" in errors[0]
 
 
-def test_a_level_differing_only_in_case_is_repaired_not_reported(classes: dict) -> None:
+def test_a_level_differing_only_in_case_is_repaired_not_reported(extraction_schema: dict) -> None:
     """A transcription slip, not a claim about the paper, so the builder settles it and
     says so -- and `check_cell_terms` then has nothing to report."""
 
@@ -1775,10 +1768,10 @@ def test_a_level_differing_only_in_case_is_repaired_not_reported(classes: dict) 
     fixed = fix.align_cell_levels(record)
     assert len(fixed) == 1 and "'Healthy controls' -> 'healthy controls'" in fixed[0]
     assert record["analyses"][0]["effect"]["cells"][0]["level"]["value"] == "healthy controls"
-    assert _cell_errors(record, classes) == []
+    assert _cell_errors(record, extraction_schema) == []
 
 
-def test_a_level_that_merely_shortens_a_declared_one_is_not_repaired(classes: dict) -> None:
+def test_a_level_that_merely_shortens_a_declared_one_is_not_repaired(extraction_schema: dict) -> None:
     """`AD` is not a folding of `AD group`. Shortening a level is a claim, and guessing
     which cohort was meant is the one thing this field must not contain."""
 
@@ -1788,7 +1781,7 @@ def test_a_level_that_merely_shortens_a_declared_one_is_not_repaired(classes: di
     assert fix.align_cell_levels(record) == []
 
 
-def test_an_ambiguous_fold_is_left_alone(classes: dict) -> None:
+def test_an_ambiguous_fold_is_left_alone(extraction_schema: dict) -> None:
     """Two declared levels folding to the same string makes the rewrite a coin toss."""
 
     record = _record(
@@ -1921,52 +1914,52 @@ def test_normalize_number_closes_the_sign_digit_gap() -> None:
 # encoded as an analysis with a fabricated cell rather than left unowned.
 
 
-def _purpose_flags(record: dict, classes: dict) -> tuple[list[str], list[str]]:
-    validator = validate_record.Validator(classes, None)
+def _purpose_flags(record: dict, extraction_schema: dict) -> tuple[list[str], list[str]]:
+    validator = validate_record.Validator(extraction_schema, None)
     rules.check_table_purpose(record, validator)
     return validator.errors, validator.warnings
 
 
-def test_a_table_an_analysis_names_needs_no_purpose(classes: dict) -> None:
+def test_a_table_an_analysis_names_needs_no_purpose(extraction_schema: dict) -> None:
     record = {
         "tables": [{"local_id": "tbl1"}],
         "analyses": [{"local_id": "a1", "tables": ["tbl1"]}],
     }
-    assert _purpose_flags(record, classes) == ([], [])
+    assert _purpose_flags(record, extraction_schema) == ([], [])
 
 
-def test_a_table_nobody_names_and_nothing_explains_is_flagged(classes: dict) -> None:
+def test_a_table_nobody_names_and_nothing_explains_is_flagged(extraction_schema: dict) -> None:
     """The missed-analysis case, and the one this field exists to separate."""
 
     record = {"tables": [{"local_id": "tbl4"}], "analyses": []}
-    errors, warnings = _purpose_flags(record, classes)
+    errors, warnings = _purpose_flags(record, extraction_schema)
     assert errors == []
     assert len(warnings) == 1 and "deliberately not encoded or missed" in warnings[0]
 
 
-def test_a_table_that_says_what_it_reports_is_accepted(classes: dict) -> None:
+def test_a_table_that_says_what_it_reports_is_accepted(extraction_schema: dict) -> None:
     record = {
         "tables": [{"local_id": "tbl4", "purpose": _text("component_peaks")}],
         "analyses": [],
     }
-    assert _purpose_flags(record, classes) == ([], [])
+    assert _purpose_flags(record, extraction_schema) == ([], [])
 
 
-def test_a_table_cannot_both_be_an_analysis_and_not_one(classes: dict) -> None:
+def test_a_table_cannot_both_be_an_analysis_and_not_one(extraction_schema: dict) -> None:
     record = {
         "tables": [{"local_id": "tbl4", "purpose": _text("component_peaks")}],
         "analyses": [{"local_id": "a1", "tables": ["tbl4"]}],
     }
-    errors, warnings = _purpose_flags(record, classes)
+    errors, warnings = _purpose_flags(record, extraction_schema)
     assert warnings == []
     assert len(errors) == 1 and "an analysis names it" in errors[0]
 
 
-def test_the_purpose_vocabulary_is_open(classes: dict, enums: dict) -> None:
+def test_the_purpose_vocabulary_is_open(extraction_schema: dict, enums: dict) -> None:
     """An unanticipated purpose is written down rather than forced into the nearest value,
     which is what `any_of: [TablePurpose, string]` buys."""
 
-    validator = validate_record.Validator(classes, None, enums)
+    validator = validate_record.Validator(extraction_schema, None, enums)
     validator.check_field(
         {
             "extraction_status": "extracted",
@@ -1987,8 +1980,8 @@ def test_the_purpose_vocabulary_is_open(classes: dict, enums: dict) -> None:
 # -- missingness has one encoding -------------------------------------------
 
 
-def _vocabulary_flags(wrapper: str, value: str, classes: dict, enums: dict) -> tuple[list, list]:
-    validator = validate_record.Validator(classes, None, enums)
+def _vocabulary_flags(wrapper: str, value: str, extraction_schema: dict, enums: dict) -> tuple[list, list]:
+    validator = validate_record.Validator(extraction_schema, None, enums)
     validator.check_field(
         {
             "extraction_status": "extracted",
@@ -2002,27 +1995,27 @@ def _vocabulary_flags(wrapper: str, value: str, classes: dict, enums: dict) -> t
     return validator.errors, validator.warnings
 
 
-def test_unstated_is_rejected_on_a_closed_vocabulary(classes: dict, enums: dict) -> None:
+def test_unstated_is_rejected_on_a_closed_vocabulary(extraction_schema: dict, enums: dict) -> None:
     """`Prespecification` is closed, so an off-vocabulary value is already an error. The
     check still has to fire, because the membership error would name the wrong defect."""
 
-    errors, _ = _vocabulary_flags("ExtractedPrespecification", "unstated", classes, enums)
+    errors, _ = _vocabulary_flags("ExtractedPrespecification", "unstated", extraction_schema, enums)
     assert len(errors) == 1 and "not_reported" in errors[0]
 
 
-def test_unstated_is_rejected_on_an_open_vocabulary(classes: dict, enums: dict) -> None:
+def test_unstated_is_rejected_on_an_open_vocabulary(extraction_schema: dict, enums: dict) -> None:
     """The case a membership check cannot catch: an open field keeps a free-text escape
     hatch, so `unstated` would pass with a warning rather than be rejected."""
 
-    errors, warnings = _vocabulary_flags("ExtractedSpatialScope", "unstated", classes, enums)
+    errors, warnings = _vocabulary_flags("ExtractedSpatialScope", "unstated", extraction_schema, enums)
     assert len(errors) == 1 and "not_reported" in errors[0]
     assert warnings == [], "it is rejected as missingness, not reported as off-vocabulary"
 
 
-def test_not_reported_is_how_a_silent_source_is_recorded(classes: dict, enums: dict) -> None:
+def test_not_reported_is_how_a_silent_source_is_recorded(extraction_schema: dict, enums: dict) -> None:
     """The other half: the encoding the check sends people to has to pass."""
 
-    validator = validate_record.Validator(classes, None, enums)
+    validator = validate_record.Validator(extraction_schema, None, enums)
     validator.check_field(
         {"extraction_status": "not_reported", "evidence": {"status": "not_applicable"}},
         "ExtractedPrespecification",
@@ -2031,13 +2024,13 @@ def test_not_reported_is_how_a_silent_source_is_recorded(classes: dict, enums: d
     assert validator.errors == []
 
 
-def test_a_reported_value_that_is_not_a_sign_still_passes(classes: dict, enums: dict) -> None:
+def test_a_reported_value_that_is_not_a_sign_still_passes(extraction_schema: dict, enums: dict) -> None:
     """`undirected` is a test that yields no sign, which the source does report, and
     `not_applicable` is a concept that does not apply. Neither is missingness, and folding
     them in would undo the Direction re-cut."""
 
     for value in ("undirected", "held", "positive"):
-        errors, _ = _vocabulary_flags("ExtractedDirection", value, classes, enums)
+        errors, _ = _vocabulary_flags("ExtractedDirection", value, extraction_schema, enums)
         assert errors == [], f"{value} is a reported fact, not a silence"
 
 
@@ -2055,7 +2048,7 @@ def test_no_vocabulary_offers_unstated(enums: dict) -> None:
 # -- the allowlist, and the stage-chain invariants --------------------------
 
 
-def test_a_cyclic_inputs_from_is_reported_and_not_merely_survived(classes: dict) -> None:
+def test_a_cyclic_inputs_from_is_reported_and_not_merely_survived(extraction_schema: dict) -> None:
     """`_terms_in_scope` already guards against the hang. Surviving bad input is not
     reporting it, and a model fitted on its own output is not a stage order."""
 
@@ -2066,12 +2059,12 @@ def test_a_cyclic_inputs_from_is_reported_and_not_merely_survived(classes: dict)
         ],
         "analyses": [],
     }
-    validator = validate_record.Validator(classes, None)
+    validator = validate_record.Validator(extraction_schema, None)
     rules.check_model_stages(record, validator)
     assert any("cyclic" in error for error in validator.errors)
 
 
-def test_one_term_name_twice_in_a_stage_chain_is_reported(classes: dict) -> None:
+def test_one_term_name_twice_in_a_stage_chain_is_reported(extraction_schema: dict) -> None:
     """A first-level `motion` and a group-level `motion` are two columns with one name in
     one term list, and a reader cannot tell a refit from a mistake."""
 
@@ -2086,12 +2079,12 @@ def test_one_term_name_twice_in_a_stage_chain_is_reported(classes: dict) -> None
         ],
         "analyses": [],
     }
-    validator = validate_record.Validator(classes, None)
+    validator = validate_record.Validator(extraction_schema, None)
     rules.check_model_stages(record, validator)
     assert any("appears on both" in error for error in validator.errors)
 
 
-def test_the_same_name_on_one_model_is_not_a_chain_collision(classes: dict) -> None:
+def test_the_same_name_on_one_model_is_not_a_chain_collision(extraction_schema: dict) -> None:
     """The invariant is about a *chain*. Two same-named terms on one record are a different
     fault, and `unique_keys` is what would catch it."""
 
@@ -2107,7 +2100,7 @@ def test_the_same_name_on_one_model_is_not_a_chain_collision(classes: dict) -> N
         ],
         "analyses": [],
     }
-    validator = validate_record.Validator(classes, None)
+    validator = validate_record.Validator(extraction_schema, None)
     rules.check_model_stages(record, validator)
     assert validator.errors == []
 

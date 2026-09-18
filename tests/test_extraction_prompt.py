@@ -22,13 +22,11 @@ import pytest
 
 from pondie.extraction.prompt import render, worked
 from pondie import schema
-from pondie.extraction.record import builder
-from pondie.schema import reader
 
 #: Rendered separately or filled by the builder, so neither pass describes them.
 #: `ExtractedValue` subclasses and the evidence types are the wrapper vocabulary,
 #: emitted by `render_schema` from its own branch; the scaffolding and
-#: deterministic classes never reach a model at all.
+#: deterministic extraction_schema never reach a model at all.
 NOT_A_PASS_CLASS = (
     render.SCAFFOLDING_CLASSES
     | render.DETERMINISTIC_CLASSES
@@ -37,14 +35,9 @@ NOT_A_PASS_CLASS = (
 
 
 @pytest.fixture(scope="module")
-def classes():
-    return reader.load(render.EXTRACTION_SCHEMA)
-
-
-@pytest.fixture(scope="module")
-def passes(classes) -> dict:
-    entities, entity_keep = render.mode_classes(classes, "entities")
-    analyses, analysis_keep = render.mode_classes(classes, "analyses")
+def passes(extraction_schema) -> dict:
+    entities, entity_keep = render.mode_classes(extraction_schema, "entities")
+    analyses, analysis_keep = render.mode_classes(extraction_schema, "analyses")
     return {
         "entities": entities,
         "analyses": analyses,
@@ -53,8 +46,8 @@ def passes(classes) -> dict:
     }
 
 
-def _wrapper(classes, name: str) -> bool:
-    return name.startswith("Extracted") or classes.resolves_to(name, "ExtractedValue")
+def _wrapper(extraction_schema, name: str) -> bool:
+    return name.startswith("Extracted") or extraction_schema.resolves_to(name, "ExtractedValue")
 
 
 def test_the_passes_are_disjoint(passes: dict) -> None:
@@ -63,26 +56,26 @@ def test_the_passes_are_disjoint(passes: dict) -> None:
     assert passes["entities"] & passes["analyses"] == set()
 
 
-def test_every_described_class_lands_in_a_pass(classes, passes: dict) -> None:
+def test_every_described_class_lands_in_a_pass(extraction_schema, passes: dict) -> None:
     """Nothing owned by Study may go unrendered: a reference to an undescribed
     class asks the model for the id of something it has never been shown."""
 
     covered = passes["entities"] | passes["analyses"] | NOT_A_PASS_CLASS
-    orphaned = {name for name in classes if name not in covered and not _wrapper(classes, name)}
+    orphaned = {name for name in extraction_schema if name not in covered and not _wrapper(extraction_schema, name)}
 
     assert orphaned == set(), f"described by neither pass: {sorted(orphaned)}"
 
 
-def test_every_payload_key_has_its_class_rendered(classes, passes: dict) -> None:
+def test_every_payload_key_has_its_class_rendered(extraction_schema, passes: dict) -> None:
     """`Study.regions` offered as a payload key while `Region` is rendered in the
     other pass is the failure this whole file exists to catch."""
 
-    study = classes.attributes("Study")
+    study = extraction_schema.attributes("Study")
     for attr in passes["entity_keep"]:
         spec = study.get(attr, {})
-        if classes.classify(attr, spec) != "nested":
+        if extraction_schema.classify(attr, spec) != "nested":
             continue
-        for target in classes.ranges(spec):
+        for target in extraction_schema.ranges(spec):
             assert (
                 target in passes["entities"]
             ), f"the entities pass is asked for {attr!r} but {target} is not rendered in it"
@@ -142,7 +135,7 @@ def test_the_entities_pass_is_told_a_level_may_name_an_occasion() -> None:
     assert "FactorLevel.timepoints" in note
 
 
-def test_payload_keys_split_cleanly(classes) -> None:
+def test_payload_keys_split_cleanly(extraction_schema) -> None:
     """Every direct `Study` list is a payload key of exactly one mode, except
     `tables`, which is nobody's."""
 

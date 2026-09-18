@@ -13,11 +13,6 @@ from pondie import schema as schema_paths
 from pondie.schema import reader
 
 
-@pytest.fixture(scope="module")
-def sch():
-    return reader.load(schema_paths.EXTRACTION)
-
-
 #: Every slot that holds another entity's `local_id` rather than the entity itself.
 #:
 #: Pinned as a list, because the distinction rests on a property of the schema that nothing
@@ -71,11 +66,11 @@ REFERENCE_SLOTS = frozenset(
 )
 
 
-def test_the_reference_slots_are_exactly_these(sch):
+def test_the_reference_slots_are_exactly_these(extraction_schema):
     found = frozenset(
         f"{name}.{slot}"
-        for name in sch
-        for slot, _spec, kind in sch.iter_slots(name)
+        for name in extraction_schema
+        for slot, _spec, kind in extraction_schema.iter_slots(name)
         if kind == "reference"
     )
     assert found == REFERENCE_SLOTS, (
@@ -85,11 +80,11 @@ def test_the_reference_slots_are_exactly_these(sch):
     )
 
 
-def test_attributes_cannot_be_mutated_by_a_caller(sch):
+def test_attributes_cannot_be_mutated_by_a_caller(extraction_schema):
     """The mapping is shared by every later reader in the process."""
     with pytest.raises(TypeError):
-        sch.attributes("Group")["injected"] = None  # type: ignore[index]
+        extraction_schema.attributes("Group")["injected"] = None  # type: ignore[index]
 
 
-def test_the_schema_is_loaded_once_however_the_path_is_spelled(sch):
+def test_the_schema_is_loaded_once_however_the_path_is_spelled(extraction_schema):
     assert reader.load(schema_paths.EXTRACTION) is reader.load(str(schema_paths.EXTRACTION))

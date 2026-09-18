@@ -29,27 +29,19 @@ import render_record as RR  # noqa: E402
 # --------------------------------------------------------------------------- fixtures
 
 
-@pytest.fixture(scope="module")
-def schema():
-    from pondie import schema as ps
-    from pondie.schema import reader as rd
-
-    return rd.load(ps.STORAGE)
-
-
 @pytest.fixture(scope="module", autouse=True)
-def wired(schema):
+def wired(storage_schema):
     """The module-level tables the guards read, filled as `main` fills them."""
     from nuextract_recall import CLASSES
 
-    keys = {**R.study_keys(schema), **CLASSES}
-    R.REF_SLOTS = {k: R.reference_slots(schema, c) for k, c in CLASSES.items()}
-    R.DECLARED = {k: R.declared_slots(schema, c) for k, c in keys.items()}
-    R.REQUIRED = {k: R.unfillable(schema, c) for k, c in keys.items()}
+    keys = {**R.study_keys(storage_schema), **CLASSES}
+    R.REF_SLOTS = {k: R.reference_slots(storage_schema, c) for k, c in CLASSES.items()}
+    R.DECLARED = {k: R.declared_slots(storage_schema, c) for k, c in keys.items()}
+    R.REQUIRED = {k: R.unfillable(storage_schema, c) for k, c in keys.items()}
     R.ENUMS = {n: set(getattr(e, "permissible_values", {}) or {})
-               for n, e in schema.enums.items()}
+               for n, e in storage_schema.enums.items()}
     R.RANGES = {k: {n: getattr(sl, "range", None)
-                    for n, sl in (getattr(schema.classes.get(c), "attributes", None)
+                    for n, sl in (getattr(storage_schema.classes.get(c), "attributes", None)
                                   or {}).items()}
                 for k, c in keys.items()}
     return True
@@ -363,5 +355,5 @@ def test_a_correction_may_not_shorten_a_list():
 ])
 def test_a_correction_keeps_the_type_the_value_had(old, new, expected):
     """The evidence pass writes into a node resolved by path, so it knows no class or slot
-    and cannot consult the schema. The old value's own type is enough."""
+    and cannot consult the storage_schema. The old value's own type is enough."""
     assert R.like(old, new) == expected

@@ -13,22 +13,15 @@ Measured on 18823721: 26 fields kept their value and lost their citation that wa
 
 from __future__ import annotations
 
-import pytest
 
 from pondie import schema
 from pondie.extraction.record import fix
 from pondie.extraction.repair import guard as edit
-from pondie.schema import reader
 
 PAPER = (
     "Participants were 12 opioid-dependent patients (mean age = 44.5 years, "
     "S.D. = 3.9) recruited from a detoxification unit."
 )
-
-
-@pytest.fixture(scope="module")
-def sch():
-    return reader.load(schema.EXTRACTION)
 
 
 def cited(value, text, source="reported"):
@@ -48,22 +41,22 @@ def cited(value, text, source="reported"):
     }
 
 
-def test_re_proposing_the_same_value_is_not_an_edit(sch):
+def test_re_proposing_the_same_value_is_not_an_edit(extraction_schema):
     """The commonest case, and the one that did the damage: the proposer offers a value the
     record already holds. Rewriting it can only lose what warranted it."""
     entity = {"local_id": "grp_a", "age_mean": cited(44.5, "mean age = 44.5 years")}
-    log = edit.apply(sch, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER)
+    log = edit.apply(extraction_schema, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER)
     assert entity["age_mean"]["evidence"]["status"] == "present"
     assert entity["age_mean"]["value_source"] == "reported"
     assert not log.written, "a no-op was recorded as a write"
     assert any("already recorded" in r.why for r in log.refused)
 
 
-def test_an_edit_the_old_span_still_warrants_inherits_it(sch):
+def test_an_edit_the_old_span_still_warrants_inherits_it(extraction_schema):
     """`refuses_losing_the_warrant` lets this through *because* the span still contains the
     value. Dropping the span afterwards makes the guard's certification meaningless."""
     entity = {"local_id": "grp_a", "age_mean": cited(44.0, "mean age = 44.5 years")}
-    edit.apply(sch, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER)
+    edit.apply(extraction_schema, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER)
     node = entity["age_mean"]
     assert node["value"] == 44.5
     assert node["evidence"]["status"] == "present", "the warrant was thrown away"
@@ -71,26 +64,26 @@ def test_an_edit_the_old_span_still_warrants_inherits_it(sch):
     assert node["value_source"] == "reported"
 
 
-def test_a_value_no_span_supports_is_still_honestly_ungrounded(sch):
+def test_a_value_no_span_supports_is_still_honestly_ungrounded(extraction_schema):
     """The inheritance must not manufacture a warrant. A value the old span does not
     contain gets what it earns: `not_found`, and `generated` rather than `reported`."""
     entity = {"local_id": "grp_a", "age_mean": cited(44.5, "mean age = 44.5 years")}
-    edit.apply(sch, {"groups": [entity]}, "Group", entity, {"age_mean": 61.2}, PAPER)
+    edit.apply(extraction_schema, {"groups": [entity]}, "Group", entity, {"age_mean": 61.2}, PAPER)
     node = entity["age_mean"]
     if node["value"] == 61.2:  # a guard may refuse it outright, which is fine
         assert node["evidence"]["status"] == "not_found"
         assert node["value_source"] == "generated"
 
 
-def test_an_absent_field_is_still_filled(sch):
+def test_an_absent_field_is_still_filled(extraction_schema):
     """The counterweight: none of this may turn repair into a pass that writes nothing."""
     entity = {"local_id": "grp_a"}
-    log = edit.apply(sch, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER)
+    log = edit.apply(extraction_schema, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER)
     assert entity["age_mean"]["value"] == 44.5
     assert log.written
 
 
-def test_a_one_element_list_is_still_a_list(sch):
+def test_a_one_element_list_is_still_a_list(extraction_schema):
     """`["DSM-IV heroin dependence"] -> "heroin dependence"` on 18823721 dropped both the
     diagnostic system and the list type. `refuses_truncation` compared strings and saw a
     list; `refuses_shortening_a_list` required more than one element. It passed both, and
@@ -103,7 +96,7 @@ def test_a_one_element_list_is_still_a_list(sch):
         ),
     }
     log = edit.apply(
-        sch,
+        extraction_schema,
         {"groups": [entity]},
         "Group",
         entity,
@@ -114,14 +107,14 @@ def test_a_one_element_list_is_still_a_list(sch):
     assert not log.written
 
 
-def test_a_list_slot_is_written_as_a_list(sch):
+def test_a_list_slot_is_written_as_a_list(extraction_schema):
     """Multiplicity on the extraction schema lives in the range name, not on the attribute:
     `medications` ranges on `ExtractedStringList`, whose own `multivalued` is False. Reading
     it raw wrote bare strings into four list slots -- four of the five findings the pass
     introduced on 18823721."""
     entity = {"local_id": "grp_a"}
     edit.apply(
-        sch,
+        extraction_schema,
         {"groups": [entity]},
         "Group",
         entity,
@@ -131,7 +124,7 @@ def test_a_list_slot_is_written_as_a_list(sch):
     assert entity["medications"]["value"] == ["methadone"]
 
 
-def test_a_digit_inside_a_number_is_not_a_warrant(sch):
+def test_a_digit_inside_a_number_is_not_a_warrant(extraction_schema):
     """`acquired_count: 12 -> 1` inherited "consisted of 12 opioid-dependent patients",
     because "1" is inside "12". The span said the opposite of the value it was made to
     warrant, and the edit passed every gate. Numbers are compared as numbers."""
@@ -139,20 +132,20 @@ def test_a_digit_inside_a_number_is_not_a_warrant(sch):
         "local_id": "grp_a",
         "acquired_count": cited(12, "consisted of 12 opioid-dependent patients"),
     }
-    edit.apply(sch, {"groups": [entity]}, "Group", entity, {"acquired_count": 1}, PAPER)
+    edit.apply(extraction_schema, {"groups": [entity]}, "Group", entity, {"acquired_count": 1}, PAPER)
     node = entity["acquired_count"]
     if node["value"] == 1:
         assert node["evidence"]["status"] == "not_found", "a digit substring bought a span"
 
 
-def test_extending_a_grounded_list_is_allowed(sch):
+def test_extending_a_grounded_list_is_allowed(extraction_schema):
     """`["SPM2"] -> ["SPM2", "FSL"]` with both named in the paper is the edit this pass
     exists for. `_bare` stringified the list repr, so extension looked unwarranted while
     dropping a value looked fine -- exactly backwards."""
     text = "Analysis used SPM2 and FSL."
     entity = {"local_id": "prp", "software": cited(["SPM2"], "Analysis used SPM2 and FSL.")}
     edit.apply(
-        sch,
+        extraction_schema,
         {"preprocessings": [entity]},
         "Preprocessing",
         entity,
@@ -163,7 +156,7 @@ def test_extending_a_grounded_list_is_allowed(sch):
     assert entity["software"]["evidence"]["status"] == "present"
 
 
-def test_shortening_a_list_is_refused_whatever_shape_it_arrives_in(sch):
+def test_shortening_a_list_is_refused_whatever_shape_it_arrives_in(extraction_schema):
     """`shape` resolves multiplicity through the wrapper now, so the new value is always a
     list and the old `isinstance` test never fired -- switching the guard off on the very
     slot it was written for."""
@@ -172,7 +165,7 @@ def test_shortening_a_list_is_refused_whatever_shape_it_arrives_in(sch):
         "software": cited(["SPM2", "FSL"], "Analysis used SPM2 and FSL."),
     }
     log = edit.apply(
-        sch,
+        extraction_schema,
         {"preprocessings": [entity]},
         "Preprocessing",
         entity,
@@ -192,13 +185,13 @@ def _named(label):
     }
 
 
-def test_a_minted_entity_does_not_stringify_its_nested_slots(sch):
+def test_a_minted_entity_does_not_stringify_its_nested_slots(extraction_schema):
     """A Task minted on 12860777 came out with `conditions` as a wrapper whose value was a
     list of stringified dicts. `shape` renders an object as its repr, and entity creation
     skipped only reference slots -- so a nested one took the scalar path. Valid JSON,
     nothing the schema declares, and the last finding repair introduced across 15 records."""
     entity, why = edit.create(
-        sch,
+        extraction_schema,
         {"tasks": []},
         "Task",
         {
@@ -212,7 +205,7 @@ def test_a_minted_entity_does_not_stringify_its_nested_slots(sch):
     assert "conditions" not in entity or isinstance(entity["conditions"], list)
 
 
-def test_a_cited_quote_grounds_a_value_too_short_to_search_for(sch):
+def test_a_cited_quote_grounds_a_value_too_short_to_search_for(extraction_schema):
     """`_wrap` looks for a span only when the value is twenty characters or more, which is
     why no count or mean age it wrote was ever grounded. A proposer that returns the
     sentence it read the value from retires the floor: the search is for the sentence."""
@@ -221,7 +214,7 @@ def test_a_cited_quote_grounds_a_value_too_short_to_search_for(sch):
     text = "Participants were 12 opioid-dependent patients recruited from a detox unit."
     entity = {"local_id": "grp_a"}
     edit.apply(
-        sch,
+        extraction_schema,
         {"groups": [entity]},
         "Group",
         entity,

@@ -106,18 +106,9 @@ def test_adoption_is_idempotent():
 
 # --- the deterministic repairs added for validator findings -------------------
 
-from pondie.extraction.record import builder as br
 
 
-@pytest.fixture(scope="module")
-def classes():
-    from pondie.extraction.record.builder import EXTRACTION_SCHEMA
-    from pondie.schema import reader
-
-    return reader.load(EXTRACTION_SCHEMA)
-
-
-def test_a_wrapper_in_a_reference_slot_is_unwrapped(classes):
+def test_a_wrapper_in_a_reference_slot_is_unwrapped(extraction_schema):
     # The model has just written twenty wrappers and writes a twenty-first into a slot
     # that holds a bare local_id. The wrapper's own value is the answer.
     body = {
@@ -132,12 +123,12 @@ def test_a_wrapper_in_a_reference_slot_is_unwrapped(classes):
             }
         ]
     }
-    changed = fix.unwrap_plain_slots(body, classes)
+    changed = fix.unwrap_plain_slots(body, extraction_schema)
     assert body["analyses"][0]["model_estimation"] == "m1"
     assert changed
 
 
-def test_a_wrapper_in_an_evidence_slot_is_left_alone(classes):
+def test_a_wrapper_in_an_evidence_slot_is_left_alone(extraction_schema):
     # An evidence slot is supposed to hold a wrapper; unwrapping it destroys the value
     # and the span that warrants it.
     body = {
@@ -152,12 +143,12 @@ def test_a_wrapper_in_an_evidence_slot_is_left_alone(classes):
             }
         ]
     }
-    fix.unwrap_plain_slots(body, classes)
+    fix.unwrap_plain_slots(body, extraction_schema)
     assert isinstance(body["groups"][0]["name"], dict)
     assert body["groups"][0]["name"]["value"] == "controls"
 
 
-def test_a_numeric_string_becomes_the_number_its_slot_declares(classes):
+def test_a_numeric_string_becomes_the_number_its_slot_declares(extraction_schema):
     body = {
         "acquisitions": [
             {
@@ -170,12 +161,12 @@ def test_a_numeric_string_becomes_the_number_its_slot_declares(classes):
             }
         ]
     }
-    changed = fix.coerce_numeric_values(body, classes)
+    changed = fix.coerce_numeric_values(body, extraction_schema)
     assert body["acquisitions"][0]["acquisition_duration_seconds"]["value"] == 252.0
     assert changed
 
 
-def test_a_value_that_is_not_a_number_is_left_for_the_validator(classes):
+def test_a_value_that_is_not_a_number_is_left_for_the_validator(extraction_schema):
     # Inventing a number is worse than reporting a string.
     body = {
         "acquisitions": [
@@ -189,26 +180,26 @@ def test_a_value_that_is_not_a_number_is_left_for_the_validator(classes):
             }
         ]
     }
-    assert fix.coerce_numeric_values(body, classes) == []
+    assert fix.coerce_numeric_values(body, extraction_schema) == []
     assert body["acquisitions"][0]["acquisition_duration_seconds"]["value"] == "not stated"
 
 
-def test_a_table_written_as_a_study_attribute_is_rehomed(classes):
+def test_a_table_written_as_a_study_attribute_is_rehomed(extraction_schema):
     # The stray key is dropped on load, so every analysis pointing at it loses the table
     # its coordinates join through and the paper contributes nothing.
     body = {
         "analyses": [{"local_id": "a1", "tables": ["tab4"]}],
         "tab4": {"table_number": {"extraction_status": "extracted", "value": 4}},
     }
-    moved = fix.rehome_stray_tables(body, classes)
+    moved = fix.rehome_stray_tables(body, extraction_schema)
     assert "tab4" not in body
     assert [t["local_id"] for t in body["tables"]] == ["tab4"]
     assert moved
 
 
-def test_an_unreferenced_stray_key_is_left_reported(classes):
+def test_an_unreferenced_stray_key_is_left_reported(extraction_schema):
     body = {"analyses": [], "somethingElse": {"x": 1}}
-    assert fix.rehome_stray_tables(body, classes) == []
+    assert fix.rehome_stray_tables(body, extraction_schema) == []
     assert "somethingElse" in body
 
 
@@ -265,7 +256,7 @@ def test_two_same_named_terms_in_scope_are_not_guessed_between():
     assert fix.repoint_out_of_scope_terms(body) == []
 
 
-def test_a_valueless_wrapper_in_a_reference_slot_is_dropped(classes):
+def test_a_valueless_wrapper_in_a_reference_slot_is_dropped(extraction_schema):
     # Every valueless wrapper in the corpus says `not_reported`, which is correct in an
     # evidence slot and meaningless in a reference slot: a reference has no wrapper form,
     # so "not reported" is simply absence.
@@ -286,12 +277,12 @@ def test_a_valueless_wrapper_in_a_reference_slot_is_dropped(classes):
             }
         ]
     }
-    changed = fix.unwrap_plain_slots(body, classes)
+    changed = fix.unwrap_plain_slots(body, extraction_schema)
     assert "assessment" not in body["model_estimations"][0]["terms"][0]
     assert changed and "dropped" in changed[0]
 
 
-def test_a_bare_scalar_in_an_evidence_slot_is_wrapped(classes):
+def test_a_bare_scalar_in_an_evidence_slot_is_wrapped(extraction_schema):
     body = {
         "analyses": [
             {
@@ -302,7 +293,7 @@ def test_a_bare_scalar_in_an_evidence_slot_is_wrapped(classes):
             }
         ]
     }
-    changed = fix.unwrap_plain_slots(body, classes)
+    changed = fix.unwrap_plain_slots(body, extraction_schema)
     cell = body["analyses"][0]["effect"]["cells"][0]
     assert cell["direction"]["value"] == "held"
     assert cell["direction"]["extraction_status"] == "extracted"

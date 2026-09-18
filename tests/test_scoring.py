@@ -18,15 +18,9 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 
 from pondie.benchmark import scoring as ce
-from pondie.schema import reader
 
 GOLD = ROOT / "benchmarks" / "gold" / "xevP8UDRAVh9.extraction.json"
 FLIP = {"positive": "negative", "negative": "positive"}
-
-
-@pytest.fixture(scope="module")
-def schema():
-    return reader.load(ce.SCHEMA)
 
 
 @pytest.fixture(scope="module")
@@ -34,8 +28,8 @@ def gold():
     return json.loads(GOLD.read_text(encoding="utf-8"))
 
 
-def run(gold_doc, candidate, schema):
-    return ce.compare(gold_doc, candidate, schema, "test")
+def run(gold_doc, candidate, extraction_schema):
+    return ce.compare(gold_doc, candidate, extraction_schema, "test")
 
 
 def rename_ids(record):
@@ -48,8 +42,8 @@ def rename_ids(record):
     return json.loads(blob)
 
 
-def test_identity_is_perfect(gold, schema):
-    result = run(gold, json.loads(json.dumps(gold)), schema)
+def test_identity_is_perfect(gold, extraction_schema):
+    result = run(gold, json.loads(json.dumps(gold)), extraction_schema)
     assert result["entities"]["micro"]["f1"] == 1.0
     assert result["relationships"]["micro"]["f1"] == 1.0
     assert result["fields"]["overall"]["value_accuracy"] == 1.0
@@ -60,23 +54,23 @@ def test_identity_is_perfect(gold, schema):
     assert result["composite"]["score"] == 1.0
 
 
-def test_renaming_every_identifier_changes_nothing(gold, schema):
+def test_renaming_every_identifier_changes_nothing(gold, extraction_schema):
     """The point of matching rather than joining: two extractors never agree on names."""
 
-    result = run(gold, rename_ids(json.loads(json.dumps(gold))), schema)
+    result = run(gold, rename_ids(json.loads(json.dumps(gold))), extraction_schema)
     assert result["entities"]["micro"]["f1"] == 1.0
     assert result["relationships"]["micro"]["f1"] == 1.0
     assert result["direction"]["primary"]["accuracy_term_grounded"] == 1.0
 
 
-def test_flipped_signs_are_reported_as_reversed(gold, schema):
+def test_flipped_signs_are_reported_as_reversed(gold, extraction_schema):
     candidate = json.loads(json.dumps(gold))
     target = candidate["analyses"][4]
     for cell in target["effect"]["cells"]:
         if cell["direction"].get("value") in FLIP:
             cell["direction"]["value"] = FLIP[cell["direction"]["value"]]
 
-    primary = run(gold, candidate, schema)["direction"]["primary"]
+    primary = run(gold, candidate, extraction_schema)["direction"]["primary"]
     assert primary["contrast"]["counts"].get("reversed") == 1
     assert primary["sign_flip_rate"] > 0
     assert primary["accuracy_term_grounded"] < 1.0
@@ -84,7 +78,7 @@ def test_flipped_signs_are_reported_as_reversed(gold, schema):
     assert primary["cells"]["term_grounded"] == primary["cells"]["gold"]
 
 
-def test_a_right_sign_on_the_wrong_term_earns_nothing(gold, schema):
+def test_a_right_sign_on_the_wrong_term_earns_nothing(gold, extraction_schema):
     """The grounding requirement, which is the whole reason direction is scored this way."""
 
     candidate = json.loads(json.dumps(gold))
@@ -93,12 +87,12 @@ def test_a_right_sign_on_the_wrong_term_earns_nothing(gold, schema):
         if len(cells) == 2:
             cells[0]["term"], cells[1]["term"] = cells[1]["term"], cells[0]["term"]
 
-    primary = run(gold, candidate, schema)["direction"]["primary"]
+    primary = run(gold, candidate, extraction_schema)["direction"]["primary"]
     assert primary["cell_prf"]["f1"] < 1.0
     assert primary["cells"]["term_grounded"] < primary["cells"]["aligned"]
 
 
-def test_a_cell_missing_its_level_still_aligns_on_its_term(gold, schema):
+def test_a_cell_missing_its_level_still_aligns_on_its_term(gold, extraction_schema):
     """A missing `level` is a field error, not grounds for refusing to score the cell.
 
     If it prevented alignment, the cell would vanish from the direction metrics instead
@@ -114,36 +108,36 @@ def test_a_cell_missing_its_level_still_aligns_on_its_term(gold, schema):
                 stripped += 1
     assert stripped, "fixture has no levelled cells to strip"
 
-    primary = run(gold, candidate, schema)["direction"]["primary"]
+    primary = run(gold, candidate, extraction_schema)["direction"]["primary"]
     assert primary["cells"]["term_grounded"] == primary["cells"]["gold"]
     assert primary["accuracy_term_grounded"] == 1.0
 
 
-def test_dropping_cells_costs_recall_not_just_accuracy(gold, schema):
+def test_dropping_cells_costs_recall_not_just_accuracy(gold, extraction_schema):
     """Accuracy alone would let an extractor win by emitting only the easy cell."""
 
     candidate = json.loads(json.dumps(gold))
     for analysis in candidate["analyses"]:
         analysis["effect"]["cells"] = analysis["effect"]["cells"][:1]
 
-    primary = run(gold, candidate, schema)["direction"]["primary"]
+    primary = run(gold, candidate, extraction_schema)["direction"]["primary"]
     assert primary["accuracy_term_grounded"] == 1.0
     assert primary["cell_prf"]["recall"] < 1.0
     assert primary["cell_prf"]["f1"] < 1.0
 
 
-def test_a_deleted_entity_is_a_recall_miss_and_takes_its_edges_with_it(gold, schema):
+def test_a_deleted_entity_is_a_recall_miss_and_takes_its_edges_with_it(gold, extraction_schema):
     candidate = json.loads(json.dumps(gold))
     dropped = candidate["regions"].pop()["local_id"]
 
-    result = run(gold, candidate, schema)
+    result = run(gold, candidate, extraction_schema)
     region = result["entities"]["per_type"]["Region"]
     assert region["recall"] < 1.0
     assert dropped in region["missed"]
     assert any(edge[2] == dropped for edge in result["relationships"]["false_negatives"])
 
 
-def test_an_invented_entity_is_a_precision_hit(gold, schema):
+def test_an_invented_entity_is_a_precision_hit(gold, extraction_schema):
     candidate = json.loads(json.dumps(gold))
     candidate["regions"].append(
         {
@@ -152,21 +146,21 @@ def test_an_invented_entity_is_a_precision_hit(gold, schema):
         }
     )
 
-    entities = run(gold, candidate, schema)["entities"]["per_type"]["Region"]
+    entities = run(gold, candidate, extraction_schema)["entities"]["per_type"]["Region"]
     assert entities["precision"] < 1.0
     assert entities["spurious"] == ["region_invented"]
 
 
-def test_a_reference_to_an_unmatched_entity_can_never_be_a_true_positive(gold, schema):
+def test_a_reference_to_an_unmatched_entity_can_never_be_a_true_positive(gold, extraction_schema):
     candidate = json.loads(json.dumps(gold))
     candidate["analyses"][0]["regions"] = ["region_that_does_not_exist"]
 
-    rel = run(gold, candidate, schema)["relationships"]
+    rel = run(gold, candidate, extraction_schema)["relationships"]
     assert rel["unmatched_endpoint_edges"] >= 1
     assert any(t.startswith("?") for _, _, t in rel["false_positives"])
 
 
-def test_edges_out_of_a_hallucinated_entity_are_false_positives_too(gold, schema):
+def test_edges_out_of_a_hallucinated_entity_are_false_positives_too(gold, extraction_schema):
     """Precision and recall have to describe the same graph difference."""
 
     candidate = json.loads(json.dumps(gold))
@@ -180,31 +174,31 @@ def test_edges_out_of_a_hallucinated_entity_are_false_positives_too(gold, schema
         }
     )
 
-    rel = run(gold, candidate, schema)["relationships"]
+    rel = run(gold, candidate, extraction_schema)["relationships"]
     assert ("?analysis_invented", "measure", "measure_cbf") in rel["false_positives"]
 
 
-def test_numbers_are_coerced_before_they_are_compared(gold, schema):
+def test_numbers_are_coerced_before_they_are_compared(gold, extraction_schema):
     candidate = json.loads(json.dumps(gold))
     candidate["groups"][0]["age_mean"]["value"] = "40.7"
     candidate["acquisitions"][0]["magnetic_field_strength_tesla"]["value"] = 3.0
 
-    fields = run(gold, candidate, schema)["fields"]["overall"]
+    fields = run(gold, candidate, extraction_schema)["fields"]["overall"]
     assert fields["value_accuracy"] == 1.0
     assert fields["numeric"]["mae"] == 0.0
 
 
-def test_a_number_outside_tolerance_is_wrong_and_measured(gold, schema):
+def test_a_number_outside_tolerance_is_wrong_and_measured(gold, extraction_schema):
     candidate = json.loads(json.dumps(gold))
     candidate["groups"][0]["age_mean"]["value"] = 44.0
 
-    numeric = run(gold, candidate, schema)["fields"]["per_type"]["Group"]["numeric"]
+    numeric = run(gold, candidate, extraction_schema)["fields"]["per_type"]["Group"]["numeric"]
     assert numeric["within_tolerance"] < 1.0
     assert numeric["mae"] == pytest.approx(3.3 / numeric["n"], abs=1e-6)
     assert numeric["bias"] > 0
 
 
-def test_missingness_is_scored_apart_from_value(gold, schema):
+def test_missingness_is_scored_apart_from_value(gold, extraction_schema):
     """`not_reported` is a claim about the paper, and getting it wrong is its own defect."""
 
     candidate = json.loads(json.dumps(gold))
@@ -212,13 +206,13 @@ def test_missingness_is_scored_apart_from_value(gold, schema):
     group["age_mean"] = {"extraction_status": "not_reported"}
     group["age_minimum"] = {"extraction_status": "extracted", "value": 19}
 
-    stats = run(gold, candidate, schema)["fields"]["per_type"]["Group"]
+    stats = run(gold, candidate, extraction_schema)["fields"]["per_type"]["Group"]
     assert stats["presence"]["fn"] >= 1  # a value the paper had and the candidate dropped
     assert stats["presence"]["fp"] >= 1  # a value the candidate supplied from nowhere
     assert stats["presence"]["f1"] < 1.0
 
 
-def test_entities_match_across_different_names(schema):
+def test_entities_match_across_different_names(extraction_schema):
     """`dev_verio` and `dev_magnetom_verio` are the same scanner."""
 
     gold_doc = {
@@ -245,15 +239,15 @@ def test_entities_match_across_different_names(schema):
         ],
     }
 
-    result = run(gold_doc, candidate, schema)
+    result = run(gold_doc, candidate, extraction_schema)
     assert result["entities"]["per_type"]["Device"]["f1"] == 1.0
 
 
-def test_subclass_mismatch_is_a_wrong_field_not_an_unmatched_object(gold, schema):
+def test_subclass_mismatch_is_a_wrong_field_not_an_unmatched_object(gold, extraction_schema):
     candidate = json.loads(json.dumps(gold))
     candidate["analyses"][0]["details"]["details_type"] = "OtherAnalysisDetails"
 
-    result = run(gold, candidate, schema)
+    result = run(gold, candidate, extraction_schema)
     assert result["entities"]["per_type"]["Analysis"]["f1"] == 1.0
     wrong = [w for row in result["fields"]["per_entity"] for w in row["wrong"]]
     assert any(w["path"] == "details.details_type" for w in wrong)
@@ -262,7 +256,7 @@ def test_subclass_mismatch_is_a_wrong_field_not_an_unmatched_object(gold, schema
 # -- the matcher ------------------------------------------------------------
 
 
-def test_a_term_is_matched_by_who_references_it_not_only_by_its_name(gold, schema):
+def test_a_term_is_matched_by_who_references_it_not_only_by_its_name(gold, extraction_schema):
     """The failure this matcher was built for.
 
     A continuous ModelTerm declares no levels and so makes no references at all. Matched on
@@ -277,7 +271,7 @@ def test_a_term_is_matched_by_who_references_it_not_only_by_its_name(gold, schem
             if term["local_id"] == "term_perfusion_condition":
                 term["name"]["value"] = "cerebral perfusion"
 
-    result = run(gold, candidate, schema)
+    result = run(gold, candidate, extraction_schema)
     matched = [
         r for r in result["structure"]["per_entity"] if r["gold_id"] == "term_perfusion_condition"
     ]
@@ -286,10 +280,10 @@ def test_a_term_is_matched_by_who_references_it_not_only_by_its_name(gold, schem
     assert result["direction"]["primary"]["cell_prf"]["f1"] == 1.0
 
 
-def test_incoming_references_include_those_held_by_inline_objects(gold, schema):
+def test_incoming_references_include_those_held_by_inline_objects(gold, extraction_schema):
     """`Cell.term` and `AnalysisGroup.group` are the references that identify a term."""
 
-    record = ce.flatten(gold, schema, "g")
+    record = ce.flatten(gold, extraction_schema, "g")
     sources = {source for source, path in record.incoming["term_gray_matter_volume"]}
     assert sources, "no incoming references found for a term every cell names"
     assert all(record.entities[s].etype == "Analysis" for s in sources)
@@ -298,7 +292,7 @@ def test_incoming_references_include_those_held_by_inline_objects(gold, schema):
     )
 
 
-def test_an_object_wired_into_the_wrong_place_is_reported_as_misplaced(gold, schema):
+def test_an_object_wired_into_the_wrong_place_is_reported_as_misplaced(gold, extraction_schema):
     """Right attributes, wrong neighbourhood -- the failure a flat edge count averages out."""
 
     candidate = json.loads(json.dumps(gold))
@@ -306,14 +300,14 @@ def test_an_object_wired_into_the_wrong_place_is_reported_as_misplaced(gold, sch
         if analysis.get("measure") == "measure_cbf":
             analysis["measure"] = "measure_gray_matter_volume"
 
-    result = run(gold, candidate, schema)
+    result = run(gold, candidate, extraction_schema)
     misplaced = {r["gold_id"] for r in result["structure"]["misplaced"]}
     assert "measure_cbf" in misplaced
     assert result["structure"]["mean_neighbourhood_f1"] < 1.0
 
 
-def test_containment_separates_terms_of_different_models(gold, schema):
-    record = ce.flatten(gold, schema, "g")
+def test_containment_separates_terms_of_different_models(gold, extraction_schema):
+    record = ce.flatten(gold, extraction_schema, "g")
     parents = {
         t: record.entities[t].parent
         for t in ("term_perfusion_condition", "term_treatment_condition")
@@ -322,16 +316,16 @@ def test_containment_separates_terms_of_different_models(gold, schema):
     assert parents["term_treatment_condition"] == "model_glm_paired"
 
 
-def test_discriminative_weight_is_zero_for_a_field_every_instance_agrees_on(gold, schema):
-    record = ce.flatten(gold, schema, "g")
+def test_discriminative_weight_is_zero_for_a_field_every_instance_agrees_on(gold, extraction_schema):
+    record = ce.flatten(gold, extraction_schema, "g")
     weights = ce.discriminative_weights(record)
     # Both gold regions are atlas-defined anatomical regions, and both have distinct names.
     assert weights[("Region", "region_type")] == 0.0
     assert weights[("Region", "name")] == 1.0
 
 
-def test_identical_records_still_align_perfectly_under_the_structural_matcher(gold, schema):
-    result = run(gold, json.loads(json.dumps(gold)), schema)
+def test_identical_records_still_align_perfectly_under_the_structural_matcher(gold, extraction_schema):
+    result = run(gold, json.loads(json.dumps(gold)), extraction_schema)
     assert result["structure"]["mean_neighbourhood_f1"] == 1.0
     assert result["structure"]["misplaced"] == []
 

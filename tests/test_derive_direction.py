@@ -209,7 +209,6 @@ def test_a_flipped_direction_is_marked_generated():
 
 # --- wired into the build ---------------------------------------------------
 
-from pondie.extraction.record import builder
 
 
 def _cell(level, direction):

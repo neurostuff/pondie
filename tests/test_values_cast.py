@@ -10,14 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from pondie import schema
 from pondie.formats import values
-from pondie.schema import reader
-
-
-@pytest.fixture(scope="module")
-def sch():
-    return reader.load(schema.STORAGE)
 
 
 @pytest.mark.parametrize(
@@ -41,24 +34,24 @@ def sch():
         ("Region", "name", "hippocampus", "hippocampus"),
     ],
 )
-def test_a_value_fits_its_slot_or_is_refused(sch, class_name, slot, value, expected):
-    assert values.cast(sch, class_name, slot, value) == expected
+def test_a_value_fits_its_slot_or_is_refused(storage_schema, class_name, slot, value, expected):
+    assert values.cast(storage_schema, class_name, slot, value) == expected
 
 
-def test_a_slot_the_class_does_not_declare_takes_nothing(sch):
+def test_a_slot_the_class_does_not_declare_takes_nothing(storage_schema):
     """23021615: `correction_scope` was written onto three analyses; it belongs to
     InferenceSettings, which those analyses already referenced."""
 
-    assert values.cast(sch, "Analysis", "correction_scope", "roi") is None
+    assert values.cast(storage_schema, "Analysis", "correction_scope", "roi") is None
 
 
-def test_a_multivalued_slot_gets_a_list(sch):
+def test_a_multivalued_slot_gets_a_list(storage_schema):
     """`Task.response_modality` is multivalued, and the scalar produced
     "ExtractedResponseModalityList.value must be a list of ResponseModality or string, got str"."""
 
-    assert values.shape(sch, "Task", "response_modality", "button press") == ["button press"]
-    assert values.shape(sch, "Group", "acquired_count", "31") == 31
+    assert values.shape(storage_schema, "Task", "response_modality", "button press") == ["button press"]
+    assert values.shape(storage_schema, "Group", "acquired_count", "31") == 31
 
 
-def test_shape_refuses_what_cast_refuses(sch):
-    assert values.shape(sch, "Group", "is_healthy", "mostly") is None
+def test_shape_refuses_what_cast_refuses(storage_schema):
+    assert values.shape(storage_schema, "Group", "is_healthy", "mostly") is None

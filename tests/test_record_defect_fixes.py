@@ -10,14 +10,8 @@ from __future__ import annotations
 import pytest
 
 from pondie import schema
-from pondie.extraction.evidence import warrant
 from pondie.extraction.record import builder, fix, rules
 from pondie.schema import reader
-
-
-@pytest.fixture(scope="module")
-def sch():
-    return reader.load(schema.EXTRACTION)
 
 
 class Sink:
@@ -101,29 +95,29 @@ def _level_record(level_name, **entities):
     return record
 
 
-def test_a_level_links_to_the_condition_it_names(sch):
+def test_a_level_links_to_the_condition_it_names(extraction_schema):
     """715 of 1,713 unjoined levels fold to an entity the same record declares."""
     record = _level_record(
         "smoking cue",
         tasks=[{"local_id": "tsk1", "conditions": [
             {"local_id": "cond_smoking_cue", "name": field("Smoking Cue")}]}],
     )
-    changed = fix.link_entities_by_name(record, sch)
+    changed = fix.link_entities_by_name(record, extraction_schema)
     level = record["model_estimations"][0]["terms"][0]["levels"][0]
     assert level["conditions"] == ["cond_smoking_cue"]
     assert changed and "cond_smoking_cue" in changed[0]
 
 
-def test_a_level_links_to_the_timepoint_it_names(sch):
+def test_a_level_links_to_the_timepoint_it_names(extraction_schema):
     record = _level_record(
         "predose",
         design={"timepoints": [{"local_id": "tp_predose", "name": field("predose")}]},
     )
-    fix.link_entities_by_name(record, sch)
+    fix.link_entities_by_name(record, extraction_schema)
     assert record["model_estimations"][0]["terms"][0]["levels"][0]["timepoints"] == ["tp_predose"]
 
 
-def test_a_name_matching_both_an_arm_and_a_cohort_writes_both(sch):
+def test_a_name_matching_both_an_arm_and_a_cohort_writes_both(extraction_schema):
     """112 of the 122 two-kind matches. The cohort was allocated to the arm; `Group.arm`
     exists to say so, and writing one and not the other would lose half the fact."""
     record = _level_record(
@@ -131,23 +125,23 @@ def test_a_name_matching_both_an_arm_and_a_cohort_writes_both(sch):
         groups=[{"local_id": "grp_exercise", "name": field("Exercise")}],
         design={"arms": [{"local_id": "arm_exercise", "name": field("Exercise")}]},
     )
-    fix.link_entities_by_name(record, sch)
+    fix.link_entities_by_name(record, extraction_schema)
     level = record["model_estimations"][0]["terms"][0]["levels"][0]
     assert level["groups"] == ["grp_exercise"]
     assert level["arms"] == ["arm_exercise"]
 
 
-def test_two_candidates_of_one_kind_are_left_alone(sch):
+def test_two_candidates_of_one_kind_are_left_alone(extraction_schema):
     record = _level_record(
         "controls",
         groups=[{"local_id": "grp_a", "name": field("controls")},
                 {"local_id": "grp_b", "name": field("Controls")}],
     )
-    assert fix.link_entities_by_name(record, sch) == []
+    assert fix.link_entities_by_name(record, extraction_schema) == []
     assert "groups" not in record["model_estimations"][0]["terms"][0]["levels"][0]
 
 
-def test_a_relation_slot_is_never_filled_from_a_name(sch):
+def test_a_relation_slot_is_never_filled_from_a_name(extraction_schema):
     """The guard the whole design rests on.
 
     `interaction_with` means *crossed with*. Matched on a name it proposes 708 links of
@@ -160,18 +154,18 @@ def test_a_relation_slot_is_never_filled_from_a_name(sch):
             {"local_id": "mod2", "terms": [{"local_id": "trm_b", "name": field("group")}]},
         ]
     }
-    assert fix.link_entities_by_name(record, sch) == []
+    assert fix.link_entities_by_name(record, extraction_schema) == []
     assert "interaction_with" not in record["model_estimations"][0]["terms"][0]
 
 
-def test_an_entity_is_never_linked_to_itself(sch):
+def test_an_entity_is_never_linked_to_itself(extraction_schema):
     """9,151 self-links without this: a name trivially matches its own owner."""
     record = {"analyses": [{"local_id": "a1", "name": field("A > B")}]}
-    assert fix.link_entities_by_name(record, sch) == []
+    assert fix.link_entities_by_name(record, extraction_schema) == []
     assert "mirror_of" not in record["analyses"][0]
 
 
-def test_the_written_shape_is_the_one_multivalued_declares(sch):
+def test_the_written_shape_is_the_one_multivalued_declares(extraction_schema):
     """A reference is a bare id or a bare list of them, never an ExtractedValue.
 
     The first prototype wrapped them, which would have written 838 malformed fields.
@@ -181,44 +175,44 @@ def test_the_written_shape_is_the_one_multivalued_declares(sch):
         groups=[{"local_id": "grp_p", "name": field("patients")}],
         design={"arms": [{"local_id": "arm_p", "name": field("patients")}]},
     )
-    fix.link_entities_by_name(record, sch)
+    fix.link_entities_by_name(record, extraction_schema)
     level = record["model_estimations"][0]["terms"][0]["levels"][0]
     assert level["groups"] == ["grp_p"]          # multivalued -> bare list
     assert record["groups"][0]["arm"] == "arm_p"  # scalar -> bare string
 
 
-def test_a_slot_that_already_holds_a_reference_is_not_touched(sch):
+def test_a_slot_that_already_holds_a_reference_is_not_touched(extraction_schema):
     record = _level_record(
         "patients", groups=[{"local_id": "grp_p", "name": field("patients")}]
     )
     record["model_estimations"][0]["terms"][0]["levels"][0]["groups"] = ["grp_other"]
-    fix.link_entities_by_name(record, sch)
+    fix.link_entities_by_name(record, extraction_schema)
     assert record["model_estimations"][0]["terms"][0]["levels"][0]["groups"] == ["grp_other"]
 
 
 # --- 3. a scalar enum slot holding a one-item list ------------------------------------
 
 
-def test_a_one_item_list_in_a_scalar_wrapper_is_unwrapped(sch):
+def test_a_one_item_list_in_a_scalar_wrapper_is_unwrapped(extraction_schema):
     """21,701 fields. `values.read` returns the list, so a filter on `spatial_scope`
     matches nothing on 4,470 analyses."""
     record = {"analyses": [{"local_id": "a1", "spatial_scope": field(["whole_brain"])}]}
-    changed = fix.unwrap_singleton_lists(record, sch)
+    changed = fix.unwrap_singleton_lists(record, extraction_schema)
     assert record["analyses"][0]["spatial_scope"]["value"] == "whole_brain"
     assert changed
 
 
-def test_a_longer_list_in_a_scalar_wrapper_is_left_for_the_check(sch):
+def test_a_longer_list_in_a_scalar_wrapper_is_left_for_the_check(extraction_schema):
     """730 of them, and `spatial_scope: ['whole_brain', 'roi']` 31 times -- the two exclude
     each other, so picking one would be deciding which."""
     record = {"analyses": [{"local_id": "a1", "spatial_scope": field(["whole_brain", "roi"])}]}
-    assert fix.unwrap_singleton_lists(record, sch) == []
+    assert fix.unwrap_singleton_lists(record, extraction_schema) == []
     assert record["analyses"][0]["spatial_scope"]["value"] == ["whole_brain", "roi"]
 
 
-def test_a_multivalued_wrapper_keeps_its_list(sch):
+def test_a_multivalued_wrapper_keeps_its_list(extraction_schema):
     record = {"groups": [{"local_id": "g1", "medical_condition": field(["obesity"])}]}
-    assert fix.unwrap_singleton_lists(record, sch) == []
+    assert fix.unwrap_singleton_lists(record, extraction_schema) == []
     assert record["groups"][0]["medical_condition"]["value"] == ["obesity"]
 
 
@@ -243,31 +237,31 @@ def test_the_validator_reports_a_list_in_a_scalar_wrapper(value, expect):
 # --- 4. derived values labelled reported ----------------------------------------------
 
 
-def test_a_conclusion_with_no_sentence_is_relabelled_generated(sch):
+def test_a_conclusion_with_no_sentence_is_relabelled_generated(extraction_schema):
     """`ModelTerm.type` 3,037 of 3,041. No paper writes down that a term is continuous."""
     record = {"model_estimations": [{"local_id": "m1", "terms": [
         {"local_id": "t1", "type": field("continuous", "reported", "not_found")}]}]}
-    changed = fix.relabel_conclusions(record, sch)
+    changed = fix.relabel_conclusions(record, extraction_schema)
     assert record["model_estimations"][0]["terms"][0]["type"]["value_source"] == "generated"
     assert changed
 
 
-def test_a_conclusion_with_a_sentence_keeps_reported(sch):
+def test_a_conclusion_with_a_sentence_keeps_reported(extraction_schema):
     """"the interaction was negative" is a direction read off prose, and the label is
     earned. Relabelling it would throw away the only case where it is."""
     record = {"analyses": [{"local_id": "a1", "effect": {"cells": [
         {"term": "t1", "direction": field("negative", "reported", "present")}]}}]}
-    assert fix.relabel_conclusions(record, sch) == []
+    assert fix.relabel_conclusions(record, extraction_schema) == []
     cells = record["analyses"][0]["effect"]["cells"]
     assert cells[0]["direction"]["value_source"] == "reported"
 
 
-def test_a_slot_a_paper_could_have_stated_is_left_for_the_warning(sch):
+def test_a_slot_a_paper_could_have_stated_is_left_for_the_warning(extraction_schema):
     """`tfce_used` at 57% and `Statistic.family` at 31% are things a results section
     prints, so an unevidenced one is a reviewer's business rather than a relabel."""
     record = {"inference_settings": [
         {"local_id": "i1", "tfce_used": field(True, "reported", "not_found")}]}
-    assert fix.relabel_conclusions(record, sch) == []
+    assert fix.relabel_conclusions(record, extraction_schema) == []
     assert record["inference_settings"][0]["tfce_used"]["value_source"] == "reported"
 
 
@@ -563,7 +557,7 @@ def test_a_partly_lost_field_records_the_loss_while_staying_present():
 # --- the shared schema-guided walk ------------------------------------------------------
 
 
-def test_the_walk_finds_what_the_schema_declares(sch):
+def test_the_walk_finds_what_the_schema_declares(extraction_schema):
     """Ten functions in `builder` each walked the record, and they diverged. The point of
     one walk is that `declared_ids` descends -- `repair_references` swept the top-level
     lists and missed 10,867 declared ids over the corpus, every ModelTerm and Condition
@@ -577,25 +571,25 @@ def test_the_walk_finds_what_the_schema_declares(sch):
         "model_estimations": [{"local_id": "mod1", "terms": [
             {"local_id": "trm1", "name": field("condition")}]}],
     }
-    ids = walk.declared_ids(record, sch)
+    ids = walk.declared_ids(record, extraction_schema)
     assert ids["cond_go"] == "Condition", "a Condition nests under tasks[].conditions"
     assert ids["trm1"] == "ModelTerm", "a ModelTerm nests under model_estimations[].terms"
     assert ids["tsk1"] == "Task"
 
 
-def test_the_walk_yields_a_slots_own_declaration(sch):
+def test_the_walk_yields_a_slots_own_declaration(extraction_schema):
     """`attribute.range` on a field is the wrapper, not the value. Five repairs needed the
     inner declaration and each reached for it differently."""
     from pondie.extraction.record import walk
 
     record = {"local_id": "S1", "groups": [
         {"local_id": "g1", "medical_condition": field(["obesity"]), "age_mean": field(31.0)}]}
-    by_key = {slot.key: slot for slot in walk.fields(record, sch)}
-    assert by_key["medical_condition"].declared_value(sch).multivalued is True
-    assert by_key["age_mean"].declared_value(sch).multivalued in (None, False)
+    by_key = {slot.key: slot for slot in walk.fields(record, extraction_schema)}
+    assert by_key["medical_condition"].declared_value(extraction_schema).multivalued is True
+    assert by_key["age_mean"].declared_value(extraction_schema).multivalued in (None, False)
 
 
-def test_a_caller_may_mutate_while_walking(sch):
+def test_a_caller_may_mutate_while_walking(extraction_schema):
     """Every repair assigns to or deletes the slot it is looking at, so the walk
     materialises each node's items before yielding."""
     from pondie.extraction.record import walk
@@ -603,17 +597,17 @@ def test_a_caller_may_mutate_while_walking(sch):
     record = {"local_id": "S1", "analyses": [
         {"local_id": "a1", "spatial_scope": field(["whole_brain"]),
          "prespecification": field(["preregistered"])}]}
-    for slot in walk.fields(record, sch):
+    for slot in walk.fields(record, extraction_schema):
         del slot.owner[slot.key]
     assert record["analyses"][0] == {"local_id": "a1"}
 
 
-def test_references_are_yielded_with_their_ids(sch):
+def test_references_are_yielded_with_their_ids(extraction_schema):
     from pondie.extraction.record import walk
 
     record = {"local_id": "S1", "analyses": [
         {"local_id": "a1", "tables": ["tbl1", "tbl2"], "inference_settings": "inf1"}]}
-    found = {slot.key: walk.ids_of(slot.value) for slot in walk.references(record, sch)}
+    found = {slot.key: walk.ids_of(slot.value) for slot in walk.references(record, extraction_schema)}
     assert found["tables"] == ["tbl1", "tbl2"]
     assert found["inference_settings"] == ["inf1"]
 
@@ -629,31 +623,31 @@ def _with_tasks(*tasks):
     }
 
 
-def test_a_transcription_slip_is_repaired_outright(sch):
+def test_a_transcription_slip_is_repaired_outright(extraction_schema):
     """Nothing is decided: the id differs only in case and punctuation."""
     record = _with_tasks(("tsk_cue_exposure", "cue exposure"))
     record["analyses"][0]["tasks"] = ["tsk_Cue-Exposure"]
-    assert fix.repair_references(record, sch)
+    assert fix.repair_references(record, extraction_schema)
     assert record["analyses"][0]["tasks"] == ["tsk_cue_exposure"]
 
 
-def test_the_only_candidate_is_taken_when_the_names_agree(sch):
+def test_the_only_candidate_is_taken_when_the_names_agree(extraction_schema):
     record = _with_tasks(("tsk_cue_exposure_fmri", "cue exposure fMRI task"))
     record["analyses"][0]["tasks"] = ["tsk_cue_exposure"]
-    assert fix.repair_references(record, sch)
+    assert fix.repair_references(record, extraction_schema)
     assert record["analyses"][0]["tasks"] == ["tsk_cue_exposure_fmri"]
 
 
-def test_the_only_candidate_is_refused_when_the_names_do_not(sch):
+def test_the_only_candidate_is_refused_when_the_names_do_not(extraction_schema):
     """`asm_mini` onto `asm_ftnd` -- a psychiatric interview onto a nicotine scale -- is
     what taking the sole candidate on its own did."""
     record = _with_tasks(("tsk_fear_conditioning", "fear conditioning"))
     record["analyses"][0]["tasks"] = ["tsk_resting_state"]
-    assert fix.repair_references(record, sch) == []
+    assert fix.repair_references(record, extraction_schema) == []
     assert record["analyses"][0]["tasks"] == ["tsk_resting_state"]
 
 
-def test_an_initialism_of_the_target_name_agrees(sch):
+def test_an_initialism_of_the_target_name_agrees(extraction_schema):
     """8% of the references this resolves. `asm_scid` shares no word with "Structured
     Clinical Interview for DSM-V" and plainly means it."""
     record = {
@@ -662,11 +656,11 @@ def test_an_initialism_of_the_target_name_agrees(sch):
         "assessments": [{"local_id": "asm_structured_clinical",
                          "name": field("Structured Clinical Interview for DSM-V")}],
     }
-    assert fix.repair_references(record, sch)
+    assert fix.repair_references(record, extraction_schema)
     assert record["groups"][0]["diagnostic_instrument"] == ["asm_structured_clinical"]
 
 
-def test_two_differently_named_references_do_not_collapse_onto_one_target(sch):
+def test_two_differently_named_references_do_not_collapse_onto_one_target(extraction_schema):
     """A record declaring one term whose cells name three is a record missing two, and an
     interaction term shares a word with the main effect inside it -- so
     `trm_smoking_opportunity_cue` and `trm_quitting_motivation_cue` both pass the name test
@@ -678,28 +672,28 @@ def test_two_differently_named_references_do_not_collapse_onto_one_target(sch):
         "model_estimations": [{"local_id": "mod1", "terms": [
             {"local_id": "trm_cue_1", "name": field("cue")}]}],
     }
-    assert fix.repair_references(record, sch) == []
+    assert fix.repair_references(record, extraction_schema) == []
     terms = [cell["term"] for cell in record["analyses"][0]["effect"]["cells"]]
     assert terms == ["trm_smoking_opportunity_cue", "trm_quitting_motivation_cue"]
 
 
-def test_one_reference_repeated_across_analyses_is_not_a_collapse(sch):
+def test_one_reference_repeated_across_analyses_is_not_a_collapse(extraction_schema):
     """The guard counts distinct NAMES, not occurrences: the same dangling id in four
     analyses is one thing named once."""
     record = _with_tasks(("tsk_cue_exposure_fmri", "cue exposure fMRI task"))
     record["analyses"] = [
         {"local_id": f"a{n}", "tasks": ["tsk_cue_exposure"]} for n in range(4)]
-    assert len(fix.repair_references(record, sch)) == 4
+    assert len(fix.repair_references(record, extraction_schema)) == 4
     assert all(a["tasks"] == ["tsk_cue_exposure_fmri"] for a in record["analyses"])
 
 
-def test_a_reference_is_never_repointed_at_its_own_owner(sch):
+def test_a_reference_is_never_repointed_at_its_own_owner(extraction_schema):
     record = {"local_id": "S1", "analyses": [
         {"local_id": "a1", "name": field("A > B"), "mirror_of": "a_missing"}]}
-    assert fix.repair_references(record, sch) == []
+    assert fix.repair_references(record, extraction_schema) == []
 
 
-def test_declared_ids_are_read_schema_guided(sch):
+def test_declared_ids_are_read_schema_guided(extraction_schema):
     """Sweeping the Study-level lists misses every ModelTerm and Condition -- 10,867 ids
     over 1,817 records -- so a `Cell.term` reference looked dangling and was repaired by
     guesswork or not at all."""
@@ -710,5 +704,5 @@ def test_declared_ids_are_read_schema_guided(sch):
         "model_estimations": [{"local_id": "mod1", "terms": [
             {"local_id": "trm_condition", "name": field("condition")}]}],
     }
-    assert fix.repair_references(record, sch)
+    assert fix.repair_references(record, extraction_schema)
     assert record["analyses"][0]["effect"]["cells"][0]["term"] == "trm_condition"
