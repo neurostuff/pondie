@@ -316,7 +316,9 @@ def test_containment_separates_terms_of_different_models(gold, extraction_schema
     assert parents["term_treatment_condition"] == "model_glm_paired"
 
 
-def test_discriminative_weight_is_zero_for_a_field_every_instance_agrees_on(gold, extraction_schema):
+def test_discriminative_weight_is_zero_for_a_field_every_instance_agrees_on(
+    gold, extraction_schema
+):
     record = ce.flatten(gold, extraction_schema, "g")
     weights = ce.discriminative_weights(record)
     # Both gold regions are atlas-defined anatomical regions, and both have distinct names.
@@ -324,7 +326,9 @@ def test_discriminative_weight_is_zero_for_a_field_every_instance_agrees_on(gold
     assert weights[("Region", "name")] == 1.0
 
 
-def test_identical_records_still_align_perfectly_under_the_structural_matcher(gold, extraction_schema):
+def test_identical_records_still_align_perfectly_under_the_structural_matcher(
+    gold, extraction_schema
+):
     result = run(gold, json.loads(json.dumps(gold)), extraction_schema)
     assert result["structure"]["mean_neighbourhood_f1"] == 1.0
     assert result["structure"]["misplaced"] == []

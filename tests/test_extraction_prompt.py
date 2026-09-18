@@ -61,7 +61,11 @@ def test_every_described_class_lands_in_a_pass(extraction_schema, passes: dict) 
     class asks the model for the id of something it has never been shown."""
 
     covered = passes["entities"] | passes["analyses"] | NOT_A_PASS_CLASS
-    orphaned = {name for name in extraction_schema if name not in covered and not _wrapper(extraction_schema, name)}
+    orphaned = {
+        name
+        for name in extraction_schema
+        if name not in covered and not _wrapper(extraction_schema, name)
+    }
 
     assert orphaned == set(), f"described by neither pass: {sorted(orphaned)}"
 

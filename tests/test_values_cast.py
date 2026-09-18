@@ -49,7 +49,9 @@ def test_a_multivalued_slot_gets_a_list(storage_schema):
     """`Task.response_modality` is multivalued, and the scalar produced
     "ExtractedResponseModalityList.value must be a list of ResponseModality or string, got str"."""
 
-    assert values.shape(storage_schema, "Task", "response_modality", "button press") == ["button press"]
+    assert values.shape(storage_schema, "Task", "response_modality", "button press") == [
+        "button press"
+    ]
     assert values.shape(storage_schema, "Group", "acquired_count", "31") == 31
 
 

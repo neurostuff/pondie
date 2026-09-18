@@ -187,7 +187,9 @@ def test_a_class_is_swept_after_what_it_points_at(storage_schema):
     having no target, and the regions sweep ran afterwards."""
     from pondie.extraction.repair import propose as recall
 
-    order = recall.sweep_order(storage_schema, ["analyses", "groups", "inference_settings", "regions"])
+    order = recall.sweep_order(
+        storage_schema, ["analyses", "groups", "inference_settings", "regions"]
+    )
     assert order.index("regions") < order.index("analyses")
     assert set(order) == {"analyses", "groups", "inference_settings", "regions"}
 
@@ -210,7 +212,11 @@ def test_a_reference_gains_without_losing_what_was_there(storage_schema):
         ],
     }
     log = edit_module.apply(
-        storage_schema, record, "Analysis", record["analyses"][0], {"assessments": ["impact of event scale"]}
+        storage_schema,
+        record,
+        "Analysis",
+        record["analyses"][0],
+        {"assessments": ["impact of event scale"]},
     )
     assert record["analyses"][0]["assessments"] == ["asm_caps", "asm_ies"]
     assert log.changed
@@ -242,7 +248,9 @@ def test_a_value_that_will_not_fit_its_slot_is_refused_not_coerced(storage_schem
     from pondie.extraction.repair import guard as edit_module
 
     record = {"groups": [{"local_id": "g1", "name": field("patients")}]}
-    log = edit_module.apply(storage_schema, record, "Group", record["groups"][0], {"is_healthy": "mostly"})
+    log = edit_module.apply(
+        storage_schema, record, "Group", record["groups"][0], {"is_healthy": "mostly"}
+    )
     assert "is_healthy" not in record["groups"][0]
     assert any(r.slot == "is_healthy" for r in log.refused)
 
@@ -489,7 +497,10 @@ def test_an_entity_that_could_not_be_valid_is_refused_by_the_slots_it_lacks(stor
     from pondie.extraction.repair import guard as edit_module
 
     entity, why = edit_module.create(
-        storage_schema, {"analyses": []}, "Analysis", {"name": "PTSD < controls", "definition": "a contrast"}
+        storage_schema,
+        {"analyses": []},
+        "Analysis",
+        {"name": "PTSD < controls", "definition": "a contrast"},
     )
     assert entity is None
     assert "table parse" in why or "effect" in why
@@ -555,12 +566,17 @@ def test_a_multivalued_slot_keeps_its_values_separate(storage_schema):
     """`str()` of a list is the list's repr, so a slot given ["a", "b"] took the single
     string "['a', 'b']" -- one bogus value where two belong, legal enough to pass the
     validator."""
-    assert values.cast(storage_schema, "Group", "inclusion_criteria", ["right-handed", "aged 25-45"]) == [
+    assert values.cast(
+        storage_schema, "Group", "inclusion_criteria", ["right-handed", "aged 25-45"]
+    ) == [
         "right-handed",
         "aged 25-45",
     ]
     # all or nothing: one element that will not cast refuses the whole list
-    assert values.cast(storage_schema, "Group", "medications", ["fluoxetine", 42]) == ["fluoxetine", "42"]
+    assert values.cast(storage_schema, "Group", "medications", ["fluoxetine", 42]) == [
+        "fluoxetine",
+        "42",
+    ]
 
 
 def test_an_instrument_already_in_the_record_is_not_minted_again(storage_schema):
@@ -594,7 +610,11 @@ def test_a_nested_slot_is_not_stringified(storage_schema):
 
     record = {"analyses": [{"local_id": "a1", "name": field("contrast")}]}
     edit_module.apply(
-        storage_schema, record, "Analysis", record["analyses"][0], {"groups": [{"group": "grp_ptsd"}]}
+        storage_schema,
+        record,
+        "Analysis",
+        record["analyses"][0],
+        {"groups": [{"group": "grp_ptsd"}]},
     )
     assert "groups" not in record["analyses"][0]
 
@@ -1013,7 +1033,12 @@ def test_a_value_the_pass_did_place_stays_reported(storage_schema):
     record = {"groups": [{"local_id": "g", "name": field("patients")}]}
     entity = record["groups"][0]
     edit_module.apply(
-        storage_schema, record, "Group", entity, {"recruitment_method": quote}, text=f"Methods. {quote}"
+        storage_schema,
+        record,
+        "Group",
+        entity,
+        {"recruitment_method": quote},
+        text=f"Methods. {quote}",
     )
 
     written = entity["recruitment_method"]

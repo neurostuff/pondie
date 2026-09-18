@@ -122,7 +122,10 @@ def test_nested_entities_are_reached(extraction_schema):
             }
         ]
     }
-    assert any(r["id"].startswith("tasks[t1].conditions[c1].") for r in fill.unsettled(doc, extraction_schema))
+    assert any(
+        r["id"].startswith("tasks[t1].conditions[c1].")
+        for r in fill.unsettled(doc, extraction_schema)
+    )
 
 
 def test_a_singular_nested_object_takes_no_subscript(extraction_schema):

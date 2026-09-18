@@ -366,10 +366,22 @@ def test_a_level_on_a_term_that_declares_levels_is_left_alone():
 def test_a_rule_that_raises_becomes_a_finding_rather_than_an_abort():
     """`check_crossings` raises on 3 of 1,817 records, where a wrapper carries `value` and
     no `extraction_status`, so those records silently lost the 17 checks after it."""
-    record = {"analyses": [{"local_id": "a1", "model_estimation": "mod1", "name": field("x"),
-                            "effect": {"cells": [{"term": "t1", "direction": {"value": "positive"}}]}}],
-              "model_estimations": [{"local_id": "mod1", "terms": [
-                  {"local_id": "t1", "name": field("g"), "type": field("categorical")}]}]}
+    record = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "model_estimation": "mod1",
+                "name": field("x"),
+                "effect": {"cells": [{"term": "t1", "direction": {"value": "positive"}}]},
+            }
+        ],
+        "model_estimations": [
+            {
+                "local_id": "mod1",
+                "terms": [{"local_id": "t1", "name": field("g"), "type": field("categorical")}],
+            }
+        ],
+    }
     sink = Sink()
     rules.check_all(record, sink)          # must not raise
     raised = [m for _p, m in sink.errors if "check raised" in m]
@@ -607,7 +619,9 @@ def test_references_are_yielded_with_their_ids(extraction_schema):
 
     record = {"local_id": "S1", "analyses": [
         {"local_id": "a1", "tables": ["tbl1", "tbl2"], "inference_settings": "inf1"}]}
-    found = {slot.key: walk.ids_of(slot.value) for slot in walk.references(record, extraction_schema)}
+    found = {
+        slot.key: walk.ids_of(slot.value) for slot in walk.references(record, extraction_schema)
+    }
     assert found["tables"] == ["tbl1", "tbl2"]
     assert found["inference_settings"] == ["inf1"]
 

@@ -419,7 +419,8 @@ def test_interaction_without_a_product_column_is_flagged(extraction_schema: dict
     """QQCjAAT6SwwQ's defect: an unsigned interaction test with nowhere to sit."""
 
     flags = _flags(
-        _record([GROUP, STAGE], [("Group-by-stage interaction", UNSIGNED_GROUP)]), extraction_schema
+        _record([GROUP, STAGE], [("Group-by-stage interaction", UNSIGNED_GROUP)]),
+        extraction_schema,
     )
 
     assert len(flags) == 1
@@ -448,7 +449,10 @@ def test_crossed_levels_need_no_product_column(extraction_schema: dict) -> None:
         _cell("t_stage", "negative", "n3"),
     ]
 
-    assert _flags(_record([GROUP, STAGE], [("Group-by-stage interaction", cells)]), extraction_schema) == []
+    assert (
+        _flags(_record([GROUP, STAGE], [("Group-by-stage interaction", cells)]), extraction_schema)
+        == []
+    )
 
 
 def test_a_simple_effect_within_one_level_is_not_flagged(extraction_schema: dict) -> None:
@@ -457,7 +461,10 @@ def test_a_simple_effect_within_one_level_is_not_flagged(extraction_schema: dict
     cells = UNSIGNED_GROUP + [_cell("t_stage", "held", "wake")]
 
     assert (
-        _flags(_record([GROUP, STAGE], [("Group-by-stage interaction at wake", cells)]), extraction_schema)
+        _flags(
+            _record([GROUP, STAGE], [("Group-by-stage interaction at wake", cells)]),
+            extraction_schema,
+        )
         == []
     )
 
@@ -517,7 +524,10 @@ def test_a_held_level_leaves_the_others_absent_and_is_not_flagged(extraction_sch
         _cell("t_load", "held", "high"),
     ]
 
-    assert _flags(_record([GROUP, LOAD], [("Group effect at high load", cells)]), extraction_schema) == []
+    assert (
+        _flags(_record([GROUP, LOAD], [("Group effect at high load", cells)]), extraction_schema)
+        == []
+    )
 
 
 def test_identical_cells_disagreeing_about_a_crossing_is_flagged(extraction_schema: dict) -> None:
@@ -613,7 +623,9 @@ def test_a_component_in_a_sibling_model_is_flagged(extraction_schema: dict) -> N
 def test_a_product_column_no_cell_names_is_flagged(extraction_schema: dict) -> None:
     """A declared crossing whose analysis was never extracted."""
 
-    flags = _flags(_record([GROUP, STAGE, PRODUCT], [("Group effect", UNSIGNED_GROUP)]), extraction_schema)
+    flags = _flags(
+        _record([GROUP, STAGE, PRODUCT], [("Group effect", UNSIGNED_GROUP)]), extraction_schema
+    )
 
     assert len(flags) == 1
     assert "carries no cell" in flags[0]
@@ -736,7 +748,9 @@ def test_a_product_column_named_for_its_crossing_is_not_flagged(extraction_schem
     }
     record = _record([GROUP, term], [("Age × diagnosis", [_cell("t_x", "positive")])])
 
-    assert [flag for flag in _flags(record, extraction_schema) if "states a comparison" in flag] == []
+    assert [
+        flag for flag in _flags(record, extraction_schema) if "states a comparison" in flag
+    ] == []
 
 
 def test_declared_occasions_that_no_level_names_are_flagged(extraction_schema: dict) -> None:
@@ -836,7 +850,9 @@ def test_a_derived_column_still_names_its_instrument(extraction_schema: dict) ->
     assert "names no assessment" in flags[0]
 
 
-def test_a_derived_column_with_no_assessment_to_name_is_not_flagged(extraction_schema: dict) -> None:
+def test_a_derived_column_with_no_assessment_to_name_is_not_flagged(
+    extraction_schema: dict,
+) -> None:
     """A record declaring no instrument has none for the column to have dropped, so
     the assessment half stays quiet and only the derivation is asked for."""
 
@@ -920,7 +936,9 @@ def test_an_analysis_naming_an_arm_it_cannot_reach_is_flagged(extraction_schema:
     assert "arm_heroin" in flags[0]
 
 
-def test_a_cell_reaching_the_level_that_names_the_arm_satisfies_it(extraction_schema: dict) -> None:
+def test_a_cell_reaching_the_level_that_names_the_arm_satisfies_it(
+    extraction_schema: dict,
+) -> None:
     flags = _flags(
         _arm_record(
             [
@@ -1598,7 +1616,10 @@ def test_designated_type_falls_back_rather_than_raising(extraction_schema: dict,
     """Silent by contract: a repair pass wants the best available answer, and `Group` is
     not an AnalysisDetails so naming it must not smuggle Group's slots in."""
 
-    assert extraction_schema.designated_type({"details_type": named}, "AnalysisDetails") == "AnalysisDetails"
+    assert (
+        extraction_schema.designated_type({"details_type": named}, "AnalysisDetails")
+        == "AnalysisDetails"
+    )
 
 
 def test_listify_reaches_a_slot_declared_on_a_payload_subclass(extraction_schema: dict) -> None:
@@ -1771,7 +1792,9 @@ def test_a_level_differing_only_in_case_is_repaired_not_reported(extraction_sche
     assert _cell_errors(record, extraction_schema) == []
 
 
-def test_a_level_that_merely_shortens_a_declared_one_is_not_repaired(extraction_schema: dict) -> None:
+def test_a_level_that_merely_shortens_a_declared_one_is_not_repaired(
+    extraction_schema: dict,
+) -> None:
     """`AD` is not a folding of `AD group`. Shortening a level is a claim, and guessing
     which cohort was meant is the one thing this field must not contain."""
 
@@ -1980,7 +2003,9 @@ def test_the_purpose_vocabulary_is_open(extraction_schema: dict, enums: dict) ->
 # -- missingness has one encoding -------------------------------------------
 
 
-def _vocabulary_flags(wrapper: str, value: str, extraction_schema: dict, enums: dict) -> tuple[list, list]:
+def _vocabulary_flags(
+    wrapper: str, value: str, extraction_schema: dict, enums: dict
+) -> tuple[list, list]:
     validator = validate_record.Validator(extraction_schema, None, enums)
     validator.check_field(
         {
@@ -1999,7 +2024,9 @@ def test_unstated_is_rejected_on_a_closed_vocabulary(extraction_schema: dict, en
     """`Prespecification` is closed, so an off-vocabulary value is already an error. The
     check still has to fire, because the membership error would name the wrong defect."""
 
-    errors, _ = _vocabulary_flags("ExtractedPrespecification", "unstated", extraction_schema, enums)
+    errors, _ = _vocabulary_flags(
+        "ExtractedPrespecification", "unstated", extraction_schema, enums
+    )
     assert len(errors) == 1 and "not_reported" in errors[0]
 
 
@@ -2007,12 +2034,16 @@ def test_unstated_is_rejected_on_an_open_vocabulary(extraction_schema: dict, enu
     """The case a membership check cannot catch: an open field keeps a free-text escape
     hatch, so `unstated` would pass with a warning rather than be rejected."""
 
-    errors, warnings = _vocabulary_flags("ExtractedSpatialScope", "unstated", extraction_schema, enums)
+    errors, warnings = _vocabulary_flags(
+        "ExtractedSpatialScope", "unstated", extraction_schema, enums
+    )
     assert len(errors) == 1 and "not_reported" in errors[0]
     assert warnings == [], "it is rejected as missingness, not reported as off-vocabulary"
 
 
-def test_not_reported_is_how_a_silent_source_is_recorded(extraction_schema: dict, enums: dict) -> None:
+def test_not_reported_is_how_a_silent_source_is_recorded(
+    extraction_schema: dict, enums: dict
+) -> None:
     """The other half: the encoding the check sends people to has to pass."""
 
     validator = validate_record.Validator(extraction_schema, None, enums)
@@ -2024,7 +2055,9 @@ def test_not_reported_is_how_a_silent_source_is_recorded(extraction_schema: dict
     assert validator.errors == []
 
 
-def test_a_reported_value_that_is_not_a_sign_still_passes(extraction_schema: dict, enums: dict) -> None:
+def test_a_reported_value_that_is_not_a_sign_still_passes(
+    extraction_schema: dict, enums: dict
+) -> None:
     """`undirected` is a test that yields no sign, which the source does report, and
     `not_applicable` is a concept that does not apply. Neither is missingness, and folding
     them in would undo the Direction re-cut."""

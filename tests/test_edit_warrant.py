@@ -45,7 +45,9 @@ def test_re_proposing_the_same_value_is_not_an_edit(extraction_schema):
     """The commonest case, and the one that did the damage: the proposer offers a value the
     record already holds. Rewriting it can only lose what warranted it."""
     entity = {"local_id": "grp_a", "age_mean": cited(44.5, "mean age = 44.5 years")}
-    log = edit.apply(extraction_schema, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER)
+    log = edit.apply(
+        extraction_schema, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER
+    )
     assert entity["age_mean"]["evidence"]["status"] == "present"
     assert entity["age_mean"]["value_source"] == "reported"
     assert not log.written, "a no-op was recorded as a write"
@@ -78,7 +80,9 @@ def test_a_value_no_span_supports_is_still_honestly_ungrounded(extraction_schema
 def test_an_absent_field_is_still_filled(extraction_schema):
     """The counterweight: none of this may turn repair into a pass that writes nothing."""
     entity = {"local_id": "grp_a"}
-    log = edit.apply(extraction_schema, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER)
+    log = edit.apply(
+        extraction_schema, {"groups": [entity]}, "Group", entity, {"age_mean": 44.5}, PAPER
+    )
     assert entity["age_mean"]["value"] == 44.5
     assert log.written
 
@@ -132,7 +136,9 @@ def test_a_digit_inside_a_number_is_not_a_warrant(extraction_schema):
         "local_id": "grp_a",
         "acquired_count": cited(12, "consisted of 12 opioid-dependent patients"),
     }
-    edit.apply(extraction_schema, {"groups": [entity]}, "Group", entity, {"acquired_count": 1}, PAPER)
+    edit.apply(
+        extraction_schema, {"groups": [entity]}, "Group", entity, {"acquired_count": 1}, PAPER
+    )
     node = entity["acquired_count"]
     if node["value"] == 1:
         assert node["evidence"]["status"] == "not_found", "a digit substring bought a span"
