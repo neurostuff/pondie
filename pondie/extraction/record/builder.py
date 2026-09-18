@@ -1732,9 +1732,46 @@ def repair_references(body: dict[str, Any], sch: Schema) -> list[str]:
     discriminator either. 88 of the 90 repairs this makes come from `sole`, so it cannot
     simply go.
 
-    What is missing is a ground truth for "was this repoint right", which the benchmark
-    does not carry. Until there is one, widening the index is tuning a heuristic against
-    nothing, and the narrow index stays with its divergence written down.
+    WHAT WOULD SETTLE IT. Decomposed by rule and index, `fold` repairs 2 references either
+    way -- the index change buys the safe rule nothing and the guessing rule everything, so
+    the question is only ever about `sole`:
+
+        narrow + fold    2        wide + fold    2
+        narrow + sole   88        wide + sole  120
+
+    And `sole` fires only when exactly one entity of the slot's range exists, so what
+    matters is whether a pool of one is NORMAL for that kind or SUSPICIOUS. Measured over
+    1,817 records, P(pool = 1) is bimodal with nothing in between:
+
+        tasks 81%   measure 79%   inference_settings 74%     <- one is the usual case
+        --------------------------------------------------
+        diagnostic_instrument 31%   regions 28%   group 27%
+        assessment 27%   term 25%   tables 24%   arm 21%     <- several is the usual case
+
+    That gap was not chosen as a threshold and it separates the sampled errors exactly. A
+    paper has one task, so a dangling `Analysis.tasks` has one thing it could have meant. A
+    paper always has several terms, so a record declaring ONE ModelTerm whose cells name
+    three is a record missing two, and `sole` there repoints all three at the survivor --
+    which is how `trm_three_way_interaction` became `trm_cue_1`. The slots the wide index
+    newly reaches are the nested kinds, and a kind is nested because its parent has several
+    of it, so widening reaches the suspicious half by construction.
+
+    So the decision needs, in order of what it would cost to get:
+
+      1. per-slot precision on a labelled sample. 120 firings over 10 slots, concentrated in
+         four (`tasks` 59, `group` 22, `term` 17, `regions` 10); ~60 judgements against the
+         paper texts would resolve it. This is the direct answer and nothing here substitutes
+         for it.
+      2. whether the prior above may stand in for most of it. It predicts every case sampled
+         so far, and it is cheap.
+      3. the cost asymmetry, which needs no data: a dangling reference is REPORTED by
+         `check_local_ids` and a repointed one is silently trusted, so a wrong repoint turns
+         a visible defect into an invisible wrong answer. That is `fold_label`'s argument and
+         it says the bar for `sole` should be high.
+
+    Until 1 exists the narrow index stays, with its divergence written down. The change it
+    would license is not "widen the index" but "enable `sole` per slot, where a pool of one
+    is the usual case".
     """
 
     declared: dict[str, str] = {}
