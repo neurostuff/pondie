@@ -171,3 +171,45 @@ def test_a_build_that_would_replace_a_different_text_is_refused(tmp_path):
 
     info = build_one(study, None, "", allow_drift=False, overwrite=True)
     assert info["tables_parsed"] > 0
+
+
+def test_pdf_flavour_reads_text_txt():
+    """PDF is a fetched render, so its text is text.txt like the other fetched ones."""
+    from pondie.paths import Flavour
+
+    assert Flavour.pdf.filename == "text.txt"
+
+
+def test_pdf_ranks_below_xml_renders_and_above_ace():
+    """Ordering is load-bearing: Paper.best and best_text take the first hit."""
+    from pondie.paths import Flavour
+
+    order = [f.name for f in Flavour]
+    assert order.index("pubget") < order.index("pdf")
+    assert order.index("elsevier") < order.index("pdf")
+    assert order.index("pdf") < order.index("ace")
+
+
+def test_best_prefers_an_xml_render_over_pdf(tmp_path):
+    from pondie.extraction.models import Flavour, Paper
+
+    study = tmp_path / "s1"
+    for flavour in ("pdf", "elsevier"):
+        target = study / "processed" / flavour
+        target.mkdir(parents=True)
+        (target / "text.txt").write_text(flavour, encoding="utf-8")
+
+    assert Paper.best("s1", tmp_path).flavour is Flavour.elsevier
+
+
+def test_best_prefers_pdf_over_ace(tmp_path):
+    """ace ships no tables at all, so a PDF render is worth more than it."""
+    from pondie.extraction.models import Flavour, Paper
+
+    study = tmp_path / "s2"
+    for flavour in ("pdf", "ace"):
+        target = study / "processed" / flavour
+        target.mkdir(parents=True)
+        (target / "text.txt").write_text(flavour, encoding="utf-8")
+
+    assert Paper.best("s2", tmp_path).flavour is Flavour.pdf
