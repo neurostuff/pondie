@@ -16,6 +16,17 @@ from pondie import paths, schema
 from pondie.extraction.record import validate
 from pondie.schema import reader
 
+from conftest import (  # the shared paper harness
+    requires_current_record,
+    requires_paper,
+)
+import copy
+from pondie.extraction.record import fix
+from pondie.extraction.record import spans as span_tools
+from pondie.formats import text_index
+from pondie.extraction.record import validate as validate_record
+from pondie.extraction.evidence import warrant
+
 RECORDS = sorted((paths.REPO / "benchmarks" / "candidate").glob("*.extraction.json"))
 RECORDS += sorted((paths.REPO / "benchmarks" / "gold").glob("*.extraction.json"))
 
@@ -133,3 +144,144 @@ def test_a_wrapped_type_designator_still_names_the_subclass():
     validator = validate.Validator(sch, None)
     validator.check_instance(node, "Acquisition", "Study.acquisitions[]")
     assert not [e for e in validator.errors if "is not declared" in e], validator.errors
+
+
+# -- a real record, and records the validator must refuse ------------------
+#
+# The positive cases run against the shipped paper: every span addresses the text, the hash
+# matches, nothing dangles. The negative ones matter as much and are easier to forget -- a
+# validator that accepts a corrupted record reports the same thing as one that works.
+
+
+@requires_current_record
+@requires_paper
+def test_example_record_validates(record: dict, normalized: str, extraction_schema: dict) -> None:
+    validator = validate_record.Validator(extraction_schema, normalized)
+    validator.check_record(record)
+    assert validator.errors == []
+    assert validator.fields > 0
+    assert validator.spans > 0
+
+
+@requires_paper
+def test_every_span_addresses_the_source_text(record: dict, normalized: str) -> None:
+    checked = 0
+    for evidence_set in warrant._iter_sets(record):
+        for span in evidence_set["spans"]:
+            span_tools.verify(normalized, span)
+            checked += 1
+    assert checked > 0
+
+
+@requires_paper
+def test_recorded_hash_matches_the_text(record: dict, normalized: str) -> None:
+    declared = record["extraction_metadata"]["source_text_hash"]
+    assert declared == text_index.text_hash(normalized)
+
+
+@requires_paper
+def test_no_dangling_cross_references(record: dict, extraction_schema: dict) -> None:
+    assert fix.check_local_ids(record, extraction_schema) == []
+
+
+@requires_paper
+def test_section_index_covers_every_span(record: dict, normalized: str) -> None:
+    """Every span must fall inside an indexed section, or reviewers get no hint."""
+
+    sections = text_index.build_sections(normalized)
+    for evidence_set in warrant._iter_sets(record):
+        for span in evidence_set["spans"]:
+            assert text_index.section_path(sections, span["start_char"]) is not None
+
+
+@requires_paper
+@pytest.mark.parametrize(
+    "mutate, expected",
+    [
+        pytest.param(
+            lambda r: r["groups"][0].update({"not_a_real_attribute": 1}),
+            "is not declared",
+            id="undeclared-attribute",
+        ),
+        pytest.param(
+            lambda r: r["groups"][0].pop("local_id"),
+            "required attribute 'local_id' is missing",
+            id="missing-required",
+        ),
+        pytest.param(
+            lambda r: r["groups"][0]["age_mean"].update({"value": ["not", "a", "number"]}),
+            "must be a float, got a list",
+            id="list-in-scalar",
+        ),
+        pytest.param(
+            lambda r: r["groups"][0]["age_mean"].update({"extraction_status": "maybe"}),
+            "extraction_status must be one of",
+            id="bad-enum",
+        ),
+        pytest.param(
+            # Any slot the extractor marked not_reported: the rule is about the
+            # wrapper, not about which field it happens to wrap.
+            lambda r: next(
+                node
+                for node in r["groups"][0].values()
+                if isinstance(node, dict) and node.get("extraction_status") == "not_reported"
+            ).update({"value": "smuggled in"}),
+            "not_reported fields must omit value",
+            id="not-reported-with-value",
+        ),
+        pytest.param(
+            lambda r: r["extraction_metadata"].update({"source_text_hash": "0" * 64}),
+            "does not match the supplied text",
+            id="wrong-hash",
+        ),
+        pytest.param(
+            lambda r: r["extraction_metadata"]["paper_sections"][0].update({"ordinal": -1}),
+            "must be >= 0",
+            id="negative-minimum",
+        ),
+        pytest.param(
+            lambda r: r["extraction_metadata"]["paper_sections"][0].update({"level": "one"}),
+            "must be a integer, got str",
+            id="wrong-native-type",
+        ),
+    ],
+)
+def test_validator_rejects_corrupted_record(
+    record: dict, normalized: str, extraction_schema: dict, mutate, expected: str
+) -> None:
+    broken = copy.deepcopy(record)
+    mutate(broken)
+
+    validator = validate_record.Validator(extraction_schema, normalized)
+    validator.check_record(broken)
+
+    assert validator.errors, f"expected an error containing {expected!r}"
+    assert any(expected in error for error in validator.errors), validator.errors
+
+
+@requires_paper
+def test_validator_rejects_shifted_span_offset(
+    record: dict, normalized: str, extraction_schema: dict
+) -> None:
+    broken = copy.deepcopy(record)
+    for evidence_set in warrant._iter_sets(broken):
+        evidence_set["spans"][0]["start_char"] += 3
+        break
+
+    validator = validate_record.Validator(extraction_schema, normalized)
+    validator.check_record(broken)
+    assert any("disagrees with source" in error for error in validator.errors), validator.errors
+
+
+@requires_paper
+def test_validator_rejects_evidence_set_without_spans(
+    record: dict, normalized: str, extraction_schema: dict
+) -> None:
+    broken = copy.deepcopy(record)
+    for evidence_set in warrant._iter_sets(broken):
+        evidence_set["spans"] = []
+        break
+
+    validator = validate_record.Validator(extraction_schema, normalized)
+    validator.check_record(broken)
+    assert any("at least one span" in error for error in validator.errors), validator.errors

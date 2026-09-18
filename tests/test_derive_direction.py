@@ -210,7 +210,6 @@ def test_a_flipped_direction_is_marked_generated():
 # --- wired into the build ---------------------------------------------------
 
 
-
 def _cell(level, direction):
     return {
         "level": {"extraction_status": "extracted", "value": level},

@@ -181,3 +181,38 @@ def enums() -> dict:
     """
 
     return reader.load(schema.EXTRACTION).enums
+
+
+#: The three papers under `data/corpus/` that ship real coordinate tables. Anchored on
+#: those rather than on invented fixtures because every defect the table tests guard
+#: against was found by running the code over real tables. Here because two files need
+#: them -- parsing the tables and rebuilding the text around them -- and splitting one
+#: file into both duplicated the harness before this.
+TABLE_PAPERS = ("4cRnHYtfSwuK", "5Rw4BhGBShSR", "HU6mqxmtySg3")
+
+requires_tables = pytest.mark.skipif(
+    not all(
+        (TEXTS / paper / "processed" / "pubget" / "tables.jsonl").is_file()
+        for paper in TABLE_PAPERS
+    ),
+    reason="the synced pubget tables are not present",
+)
+
+
+def _table_fixture(paper: str, table_id: str):
+    """One paper's table, straight off disk.
+
+    Attributing its rows to analyses, and rendering the result, belong to the review
+    layer -- `ns-validate` owns those and tests them against its own superset of this
+    module. What is left here is the parse: the grid, its header, and the markdown
+    `text.py` inlines into the paper.
+    """
+
+    root = TEXTS / paper
+    record = tables.read_manifest(root)[table_id]
+    return tables.read_table(
+        root / "source" / "pubget",
+        record["data_file"],
+        label=record["table_label"],
+        caption=record["caption"],
+    )

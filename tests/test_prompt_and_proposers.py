@@ -8,7 +8,6 @@ and the proposers rather than about the pass that was removed.
 
 from __future__ import annotations
 
-
 from pondie import paths
 from pondie.extraction.repair import propose as recall
 from pondie.extraction.prompt import render

@@ -100,8 +100,12 @@ def test_a_level_links_to_the_condition_it_names(extraction_schema):
     """715 of 1,713 unjoined levels fold to an entity the same record declares."""
     record = _level_record(
         "smoking cue",
-        tasks=[{"local_id": "tsk1", "conditions": [
-            {"local_id": "cond_smoking_cue", "name": warranted("Smoking Cue")}]}],
+        tasks=[
+            {
+                "local_id": "tsk1",
+                "conditions": [{"local_id": "cond_smoking_cue", "name": warranted("Smoking Cue")}],
+            }
+        ],
     )
     changed = fix.link_entities_by_name(record, extraction_schema)
     level = record["model_estimations"][0]["terms"][0]["levels"][0]
@@ -135,8 +139,10 @@ def test_a_name_matching_both_an_arm_and_a_cohort_writes_both(extraction_schema)
 def test_two_candidates_of_one_kind_are_left_alone(extraction_schema):
     record = _level_record(
         "controls",
-        groups=[{"local_id": "grp_a", "name": warranted("controls")},
-                {"local_id": "grp_b", "name": warranted("Controls")}],
+        groups=[
+            {"local_id": "grp_a", "name": warranted("controls")},
+            {"local_id": "grp_b", "name": warranted("Controls")},
+        ],
     )
     assert fix.link_entities_by_name(record, extraction_schema) == []
     assert "groups" not in record["model_estimations"][0]["terms"][0]["levels"][0]
@@ -178,7 +184,7 @@ def test_the_written_shape_is_the_one_multivalued_declares(extraction_schema):
     )
     fix.link_entities_by_name(record, extraction_schema)
     level = record["model_estimations"][0]["terms"][0]["levels"][0]
-    assert level["groups"] == ["grp_p"]          # multivalued -> bare list
+    assert level["groups"] == ["grp_p"]  # multivalued -> bare list
     assert record["groups"][0]["arm"] == "arm_p"  # scalar -> bare string
 
 
@@ -227,8 +233,9 @@ def test_the_validator_reports_a_list_in_a_scalar_wrapper(value, expect):
     from pondie.extraction.record.validate import Validator
 
     validator = Validator(reader.load(schema.EXTRACTION), None)
-    validator.check_record({"local_id": "S1", "analyses": [
-        {"local_id": "a1", "spatial_scope": warranted(value)}]})
+    validator.check_record(
+        {"local_id": "S1", "analyses": [{"local_id": "a1", "spatial_scope": warranted(value)}]}
+    )
     said = [e for e in validator.errors if "value must be a single" in e]
     assert bool(said) is bool(expect)
     if expect:
@@ -240,18 +247,36 @@ def test_the_validator_reports_a_list_in_a_scalar_wrapper(value, expect):
 
 def test_a_conclusion_with_no_sentence_is_relabelled_generated(extraction_schema):
     """`ModelTerm.type` 3,037 of 3,041. No paper writes down that a term is continuous."""
-    record = {"model_estimations": [{"local_id": "m1", "terms": [
-        {"local_id": "t1", "type": warranted("continuous", "reported", "not_found")}]}]}
+    record = {
+        "model_estimations": [
+            {
+                "local_id": "m1",
+                "terms": [
+                    {"local_id": "t1", "type": warranted("continuous", "reported", "not_found")}
+                ],
+            }
+        ]
+    }
     changed = fix.relabel_conclusions(record, extraction_schema)
     assert record["model_estimations"][0]["terms"][0]["type"]["value_source"] == "generated"
     assert changed
 
 
 def test_a_conclusion_with_a_sentence_keeps_reported(extraction_schema):
-    """"the interaction was negative" is a direction read off prose, and the label is
+    """ "the interaction was negative" is a direction read off prose, and the label is
     earned. Relabelling it would throw away the only case where it is."""
-    record = {"analyses": [{"local_id": "a1", "effect": {"cells": [
-        {"term": "t1", "direction": warranted("negative", "reported", "present")}]}}]}
+    record = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "effect": {
+                    "cells": [
+                        {"term": "t1", "direction": warranted("negative", "reported", "present")}
+                    ]
+                },
+            }
+        ]
+    }
     assert fix.relabel_conclusions(record, extraction_schema) == []
     cells = record["analyses"][0]["effect"]["cells"]
     assert cells[0]["direction"]["value_source"] == "reported"
@@ -260,8 +285,11 @@ def test_a_conclusion_with_a_sentence_keeps_reported(extraction_schema):
 def test_a_slot_a_paper_could_have_stated_is_left_for_the_warning(extraction_schema):
     """`tfce_used` at 57% and `Statistic.family` at 31% are things a results section
     prints, so an unevidenced one is a reviewer's business rather than a relabel."""
-    record = {"inference_settings": [
-        {"local_id": "i1", "tfce_used": warranted(True, "reported", "not_found")}]}
+    record = {
+        "inference_settings": [
+            {"local_id": "i1", "tfce_used": warranted(True, "reported", "not_found")}
+        ]
+    }
     assert fix.relabel_conclusions(record, extraction_schema) == []
     assert record["inference_settings"][0]["tfce_used"]["value_source"] == "reported"
 
@@ -274,10 +302,19 @@ def _continuous(level, direction=None):
     if direction is not None:
         cell["direction"] = warranted(direction)
     return {
-        "analyses": [{"local_id": "a1", "model_estimation": "mod1",
-                      "effect": {"cells": [cell]}}],
-        "model_estimations": [{"local_id": "mod1", "terms": [
-            {"local_id": "trm_bmi", "name": warranted("BMI"), "type": warranted("continuous")}]}],
+        "analyses": [{"local_id": "a1", "model_estimation": "mod1", "effect": {"cells": [cell]}}],
+        "model_estimations": [
+            {
+                "local_id": "mod1",
+                "terms": [
+                    {
+                        "local_id": "trm_bmi",
+                        "name": warranted("BMI"),
+                        "type": warranted("continuous"),
+                    }
+                ],
+            }
+        ],
     }
 
 
@@ -337,9 +374,16 @@ def test_a_sign_word_another_term_declares_as_a_level_is_a_level():
     """
     record = _continuous("negative")
     record["model_estimations"][0]["terms"].append(
-        {"local_id": "trm_emotion", "name": warranted("emotion"), "type": warranted("categorical"),
-         "levels": [{"level": warranted("negative")}, {"level": warranted("positive")},
-                    {"level": warranted("neutral")}]}
+        {
+            "local_id": "trm_emotion",
+            "name": warranted("emotion"),
+            "type": warranted("categorical"),
+            "levels": [
+                {"level": warranted("negative")},
+                {"level": warranted("positive")},
+                {"level": warranted("neutral")},
+            ],
+        }
     )
     assert fix.drop_redundant_cell_levels(record) == []
     cell = record["analyses"][0]["effect"]["cells"][0]
@@ -386,7 +430,7 @@ def test_a_rule_that_raises_becomes_a_finding_rather_than_an_abort():
         ],
     }
     sink = Sink()
-    rules.check_all(record, sink)          # must not raise
+    rules.check_all(record, sink)  # must not raise
     raised = [m for _p, m in sink.errors if "check raised" in m]
     assert len(raised) <= 1, "only the crashing rule should report a crash"
 
@@ -394,6 +438,9 @@ def test_a_rule_that_raises_becomes_a_finding_rather_than_an_abort():
 # --- the two faults `not_found` used to collapse ---------------------------------------
 
 
+#: Fixtures rather than a real record, because the defect being checked is one a
+#: real record wears invisibly: every reference resolves and every level agrees with
+#: its term, so the only way to test it is to build the shape by hand.
 def _text():
     return "Participants were 24 right-handed volunteers recruited from the community."
 
@@ -402,8 +449,8 @@ def _text():
     "quote,expect_status,expect_unlocated",
     [
         ("24 right-handed volunteers", "present", None),
-        ("participants were 24", "present", None),          # case only -- third pass
-        ("two dozen right handers", "not_found", 1),        # a paraphrase
+        ("participants were 24", "present", None),  # case only -- third pass
+        ("two dozen right handers", "not_found", 1),  # a paraphrase
     ],
 )
 def test_build_records_which_evidence_fault_occurred(quote, expect_status, expect_unlocated):
@@ -418,7 +465,9 @@ def test_build_records_which_evidence_fault_occurred(quote, expect_status, expec
 
     text = _text()
     node = {
-        "extraction_status": "extracted", "value": "x", "value_source": "reported",
+        "extraction_status": "extracted",
+        "value": "x",
+        "value_source": "reported",
         "evidence": {"status": "present", "sets": [{"quotes": [quote]}]},
     }
     report = Warrant()
@@ -433,8 +482,12 @@ def test_a_field_that_offered_no_quote_carries_no_marker():
     from pondie.extraction.evidence.warrant import Warrant, _resolve_field
 
     text = _text()
-    node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
-            "evidence": {"status": "not_found"}}
+    node = {
+        "extraction_status": "extracted",
+        "value": "x",
+        "value_source": "reported",
+        "evidence": {"status": "not_found"},
+    }
     report = Warrant()
     _resolve_field(node, text, spans.fold(text), "Study.y", report)
     assert "unlocated_quotes" not in node["evidence"]
@@ -442,14 +495,28 @@ def test_a_field_that_offered_no_quote_carries_no_marker():
 
 
 def test_the_honesty_warning_says_which_fault_it_is():
-    record = {"analyses": [
-        {"local_id": "a1", "name": {
-            "extraction_status": "extracted", "value": "A > B", "value_source": "reported",
-            "evidence": {"status": "not_found", "unlocated_quotes": 2}}},
-        {"local_id": "a2", "name": {
-            "extraction_status": "extracted", "value": "C > D", "value_source": "reported",
-            "evidence": {"status": "not_found"}}},
-    ]}
+    record = {
+        "analyses": [
+            {
+                "local_id": "a1",
+                "name": {
+                    "extraction_status": "extracted",
+                    "value": "A > B",
+                    "value_source": "reported",
+                    "evidence": {"status": "not_found", "unlocated_quotes": 2},
+                },
+            },
+            {
+                "local_id": "a2",
+                "name": {
+                    "extraction_status": "extracted",
+                    "value": "C > D",
+                    "value_source": "reported",
+                    "evidence": {"status": "not_found"},
+                },
+            },
+        ]
+    }
     sink = Sink()
     rules.check_value_source_honesty(record, sink)
     said = " | ".join(m for _p, m in sink.warnings)
@@ -464,8 +531,11 @@ def test_the_honesty_warning_says_which_fault_it_is():
     "text,quote,how",
     [
         (_text(), "24 right-handed volunteers", "exact"),
-        (_text().replace("handed volunteers", "handed\nvolunteers"),
-         "right-handed volunteers", "tolerant"),
+        (
+            _text().replace("handed volunteers", "handed\nvolunteers"),
+            "right-handed volunteers",
+            "tolerant",
+        ),
         (_text(), "participants were 24", "cased"),
         (_text(), "RIGHT-HANDED VOLUNTEERS", "cased"),
         (_text(), "two dozen right handers", None),
@@ -489,7 +559,7 @@ def test_resolve_tries_exact_then_whitespace_then_case(text, quote, how):
     }[how]
     # The invariant the whole design rests on: offsets address the document, and the span
     # text is the document's substring rather than the quote that located it.
-    assert text[found.start_char:found.end_char] == found.text
+    assert text[found.start_char : found.end_char] == found.text
 
 
 def test_the_case_insensitive_pass_cannot_move_an_existing_match():
@@ -500,7 +570,7 @@ def test_the_case_insensitive_pass_cannot_move_an_existing_match():
     text = "The GROUP was scanned. Later the group was rescanned."
     found = spans.resolve(text, "the group")
     assert found.cased is False
-    assert text[found.start_char:found.end_char] == "the group"
+    assert text[found.start_char : found.end_char] == "the group"
     assert found.start_char > 20
 
 
@@ -508,8 +578,10 @@ def test_the_case_insensitive_pass_cannot_move_an_existing_match():
 
 
 def _elided_text():
-    return ("Our design is fully factorial. It allows us to identify significant effects "
-            "of heroin injection and salient visual stimuli separately.")
+    return (
+        "Our design is fully factorial. It allows us to identify significant effects "
+        "of heroin injection and salient visual stimuli separately."
+    )
 
 
 def test_an_elided_quote_resolves_as_the_spans_it_cites():
@@ -520,18 +592,26 @@ def test_an_elided_quote_resolves_as_the_spans_it_cites():
     from pondie.extraction.evidence.warrant import Warrant, _resolve_field
 
     text = _elided_text()
-    node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
-            "evidence": {"status": "present", "sets": [
-                {"quotes": ["Our design ... allows us to identify significant effects"]}]}}
+    node = {
+        "extraction_status": "extracted",
+        "value": "x",
+        "value_source": "reported",
+        "evidence": {
+            "status": "present",
+            "sets": [{"quotes": ["Our design ... allows us to identify significant effects"]}],
+        },
+    }
     report = Warrant()
     _resolve_field(node, text, spans.fold(text), "Study.x", report)
     placed = node["evidence"]["sets"][0]["spans"]
     assert node["evidence"]["status"] == "present"
     assert [span["text"] for span in placed] == [
-        "Our design", "allows us to identify significant effects"]
+        "Our design",
+        "allows us to identify significant effects",
+    ]
     assert report.elided == 2
     for span in placed:
-        assert text[span["start_char"]:span["end_char"]] == span["text"]
+        assert text[span["start_char"] : span["end_char"]] == span["text"]
 
 
 def test_an_elided_quote_with_one_invented_fragment_is_a_drop():
@@ -540,9 +620,15 @@ def test_an_elided_quote_with_one_invented_fragment_is_a_drop():
     from pondie.extraction.evidence.warrant import Warrant, _resolve_field
 
     text = _elided_text()
-    node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
-            "evidence": {"status": "present", "sets": [
-                {"quotes": ["Our design ... proves causation"]}]}}
+    node = {
+        "extraction_status": "extracted",
+        "value": "x",
+        "value_source": "reported",
+        "evidence": {
+            "status": "present",
+            "sets": [{"quotes": ["Our design ... proves causation"]}],
+        },
+    }
     report = Warrant()
     _resolve_field(node, text, spans.fold(text), "Study.x", report)
     assert node["evidence"]["status"] == "not_found"
@@ -558,9 +644,17 @@ def test_a_partly_lost_field_records_the_loss_while_staying_present():
     from pondie.extraction.evidence.warrant import Warrant, _resolve_field
 
     text = _elided_text()
-    node = {"extraction_status": "extracted", "value": "x", "value_source": "reported",
-            "evidence": {"status": "present", "sets": [
-                {"quotes": ["Our design is fully factorial", "a claim the paper never makes"]}]}}
+    node = {
+        "extraction_status": "extracted",
+        "value": "x",
+        "value_source": "reported",
+        "evidence": {
+            "status": "present",
+            "sets": [
+                {"quotes": ["Our design is fully factorial", "a claim the paper never makes"]}
+            ],
+        },
+    }
     report = Warrant()
     _resolve_field(node, text, spans.fold(text), "Study.x", report)
     assert node["evidence"]["status"] == "present"
@@ -581,10 +675,16 @@ def test_the_walk_finds_what_the_schema_declares(extraction_schema):
 
     record = {
         "local_id": "S1",
-        "tasks": [{"local_id": "tsk1", "name": warranted("go/no-go"),
-                   "conditions": [{"local_id": "cond_go", "name": warranted("go")}]}],
-        "model_estimations": [{"local_id": "mod1", "terms": [
-            {"local_id": "trm1", "name": warranted("condition")}]}],
+        "tasks": [
+            {
+                "local_id": "tsk1",
+                "name": warranted("go/no-go"),
+                "conditions": [{"local_id": "cond_go", "name": warranted("go")}],
+            }
+        ],
+        "model_estimations": [
+            {"local_id": "mod1", "terms": [{"local_id": "trm1", "name": warranted("condition")}]}
+        ],
     }
     ids = walk.declared_ids(record, extraction_schema)
     assert ids["cond_go"] == "Condition", "a Condition nests under tasks[].conditions"
@@ -617,9 +717,16 @@ def test_a_caller_may_mutate_while_walking(extraction_schema):
     materialises each node's items before yielding."""
     from pondie.extraction.record import walk
 
-    record = {"local_id": "S1", "analyses": [
-        {"local_id": "a1", "spatial_scope": warranted(["whole_brain"]),
-         "prespecification": warranted(["preregistered"])}]}
+    record = {
+        "local_id": "S1",
+        "analyses": [
+            {
+                "local_id": "a1",
+                "spatial_scope": warranted(["whole_brain"]),
+                "prespecification": warranted(["preregistered"]),
+            }
+        ],
+    }
     for slot in walk.fields(record, extraction_schema):
         del slot.owner[slot.key]
     assert record["analyses"][0] == {"local_id": "a1"}
@@ -628,8 +735,10 @@ def test_a_caller_may_mutate_while_walking(extraction_schema):
 def test_references_are_yielded_with_their_ids(extraction_schema):
     from pondie.extraction.record import walk
 
-    record = {"local_id": "S1", "analyses": [
-        {"local_id": "a1", "tables": ["tbl1", "tbl2"], "inference_settings": "inf1"}]}
+    record = {
+        "local_id": "S1",
+        "analyses": [{"local_id": "a1", "tables": ["tbl1", "tbl2"], "inference_settings": "inf1"}],
+    }
     found = {
         slot.key: walk.ids_of(slot.value) for slot in walk.references(record, extraction_schema)
     }
@@ -678,8 +787,12 @@ def test_an_initialism_of_the_target_name_agrees(extraction_schema):
     record = {
         "local_id": "S1",
         "groups": [{"local_id": "g1", "diagnostic_instrument": ["asm_scid"]}],
-        "assessments": [{"local_id": "asm_structured_clinical",
-                         "name": warranted("Structured Clinical Interview for DSM-V")}],
+        "assessments": [
+            {
+                "local_id": "asm_structured_clinical",
+                "name": warranted("Structured Clinical Interview for DSM-V"),
+            }
+        ],
     }
     assert fix.repair_references(record, extraction_schema)
     assert record["groups"][0]["diagnostic_instrument"] == ["asm_structured_clinical"]
@@ -692,10 +805,21 @@ def test_two_differently_named_references_do_not_collapse_onto_one_target(extrac
     against a term called "cue"."""
     record = {
         "local_id": "S1",
-        "analyses": [{"local_id": "a1", "model_estimation": "mod1", "effect": {"cells": [
-            {"term": "trm_smoking_opportunity_cue"}, {"term": "trm_quitting_motivation_cue"}]}}],
-        "model_estimations": [{"local_id": "mod1", "terms": [
-            {"local_id": "trm_cue_1", "name": warranted("cue")}]}],
+        "analyses": [
+            {
+                "local_id": "a1",
+                "model_estimation": "mod1",
+                "effect": {
+                    "cells": [
+                        {"term": "trm_smoking_opportunity_cue"},
+                        {"term": "trm_quitting_motivation_cue"},
+                    ]
+                },
+            }
+        ],
+        "model_estimations": [
+            {"local_id": "mod1", "terms": [{"local_id": "trm_cue_1", "name": warranted("cue")}]}
+        ],
     }
     assert fix.repair_references(record, extraction_schema) == []
     terms = [cell["term"] for cell in record["analyses"][0]["effect"]["cells"]]
@@ -706,15 +830,16 @@ def test_one_reference_repeated_across_analyses_is_not_a_collapse(extraction_sch
     """The guard counts distinct NAMES, not occurrences: the same dangling id in four
     analyses is one thing named once."""
     record = _with_tasks(("tsk_cue_exposure_fmri", "cue exposure fMRI task"))
-    record["analyses"] = [
-        {"local_id": f"a{n}", "tasks": ["tsk_cue_exposure"]} for n in range(4)]
+    record["analyses"] = [{"local_id": f"a{n}", "tasks": ["tsk_cue_exposure"]} for n in range(4)]
     assert len(fix.repair_references(record, extraction_schema)) == 4
     assert all(a["tasks"] == ["tsk_cue_exposure_fmri"] for a in record["analyses"])
 
 
 def test_a_reference_is_never_repointed_at_its_own_owner(extraction_schema):
-    record = {"local_id": "S1", "analyses": [
-        {"local_id": "a1", "name": warranted("A > B"), "mirror_of": "a_missing"}]}
+    record = {
+        "local_id": "S1",
+        "analyses": [{"local_id": "a1", "name": warranted("A > B"), "mirror_of": "a_missing"}],
+    }
     assert fix.repair_references(record, extraction_schema) == []
 
 
@@ -724,10 +849,173 @@ def test_declared_ids_are_read_schema_guided(extraction_schema):
     guesswork or not at all."""
     record = {
         "local_id": "S1",
-        "analyses": [{"local_id": "a1", "model_estimation": "mod1", "effect": {"cells": [
-            {"term": "trm_Condition"}]}}],
-        "model_estimations": [{"local_id": "mod1", "terms": [
-            {"local_id": "trm_condition", "name": warranted("condition")}]}],
+        "analyses": [
+            {
+                "local_id": "a1",
+                "model_estimation": "mod1",
+                "effect": {"cells": [{"term": "trm_Condition"}]},
+            }
+        ],
+        "model_estimations": [
+            {
+                "local_id": "mod1",
+                "terms": [{"local_id": "trm_condition", "name": warranted("condition")}],
+            }
+        ],
     }
     assert fix.repair_references(record, extraction_schema)
     assert record["analyses"][0]["effect"]["cells"][0]["term"] == "trm_condition"
+
+
+# -- deriving a distribution's denominator ---------------------------------
+#
+# `fix.derive_denominators` fills a denominator from a count and a percentage, and refuses
+# where the arithmetic does not round-trip. The refusals are the point: a base that does not
+# reproduce the percentages it was derived from is a parse to look at, not a value to write.
+
+
+def test_a_denominator_is_derived_from_the_count_and_the_percentage() -> None:
+    """The slot records the base the paper divided by, which is often not the group's `n`.
+    It is populated in none of 200 records, so the count check had nothing to read -- but
+    where a paper writes "12 male (60%)" the base is stated twice and 12 / 0.60 is 20."""
+    from pondie.extraction.record import builder
+
+    def entry(count, share):
+        return {
+            "count": {
+                "extraction_status": "extracted",
+                "value": count,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+            "percentage": {
+                "extraction_status": "extracted",
+                "value": share,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+        }
+
+    body = {"groups": [{"local_id": "g", "sex_distribution": [entry(12, 60), entry(8, 40)]}]}
+    filled = fix.derive_denominators(body)
+
+    assert filled == ["groups[0].sex_distribution.denominator = 20"]
+    for e in body["groups"][0]["sex_distribution"]:
+        assert e["denominator"]["value"] == 20
+        assert (
+            e["denominator"]["value_source"] == "generated"
+        ), "the paper stated a percentage, not this"
+
+
+def test_a_rounded_percentage_still_yields_its_base_when_it_round_trips() -> None:
+    """1 of 3 prints as 33% and divides to 3.03, which looks like a guess -- but only 3
+    gives back both 33% and 67%, so the round trip decides it rather than a tolerance."""
+    from pondie.extraction.record import builder
+
+    def entry(count, share):
+        return {
+            "count": {
+                "extraction_status": "extracted",
+                "value": count,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+            "percentage": {
+                "extraction_status": "extracted",
+                "value": share,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+        }
+
+    body = {"groups": [{"local_id": "g", "sex_distribution": [entry(1, 33), entry(2, 67)]}]}
+    assert fix.derive_denominators(body) == ["groups[0].sex_distribution.denominator = 3"]
+    assert body["groups"][0]["sex_distribution"][0]["denominator"]["value"] == 3
+
+
+def test_a_base_that_does_not_reproduce_the_percentages_is_refused() -> None:
+    """The division can land near a whole number and still be wrong. 5 at 51% divides to
+    9.8, and 10 gives back 50% -- not what the paper printed."""
+    from pondie.extraction.record import builder
+
+    def entry(count, share):
+        return {
+            "count": {
+                "extraction_status": "extracted",
+                "value": count,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+            "percentage": {
+                "extraction_status": "extracted",
+                "value": share,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+        }
+
+    body = {"groups": [{"local_id": "g", "sex_distribution": [entry(5, 51), entry(5, 49)]}]}
+    assert fix.derive_denominators(body) == []
+
+
+def test_entries_that_disagree_on_the_base_are_left_alone() -> None:
+    """Two entries implying different bases means one of them was misread, and filling in
+    either would bury the disagreement the count check exists to surface."""
+    from pondie.extraction.record import builder
+
+    def entry(count, share):
+        return {
+            "count": {
+                "extraction_status": "extracted",
+                "value": count,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+            "percentage": {
+                "extraction_status": "extracted",
+                "value": share,
+                "value_source": "reported",
+                "evidence": {"status": "not_found"},
+            },
+        }
+
+    body = {"groups": [{"local_id": "g", "sex_distribution": [entry(12, 60), entry(8, 20)]}]}
+    assert fix.derive_denominators(body) == []
+
+
+def test_a_stated_denominator_is_never_overwritten() -> None:
+    """What the paper said outranks what arithmetic implies."""
+    from pondie.extraction.record import builder
+
+    stated = {
+        "extraction_status": "extracted",
+        "value": 25,
+        "value_source": "reported",
+        "evidence": {"status": "present", "sets": [{"spans": [{"text": "of 25"}]}]},
+    }
+    body = {
+        "groups": [
+            {
+                "local_id": "g",
+                "sex_distribution": [
+                    {
+                        "count": {
+                            "extraction_status": "extracted",
+                            "value": 12,
+                            "value_source": "reported",
+                            "evidence": {"status": "not_found"},
+                        },
+                        "percentage": {
+                            "extraction_status": "extracted",
+                            "value": 60,
+                            "value_source": "reported",
+                            "evidence": {"status": "not_found"},
+                        },
+                        "denominator": stated,
+                    }
+                ],
+            }
+        ]
+    }
+    assert fix.derive_denominators(body) == []
+    assert body["groups"][0]["sex_distribution"][0]["denominator"]["value"] == 25

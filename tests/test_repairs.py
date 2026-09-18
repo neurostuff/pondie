@@ -107,7 +107,6 @@ def test_adoption_is_idempotent():
 # --- the deterministic repairs added for validator findings -------------------
 
 
-
 def test_a_wrapper_in_a_reference_slot_is_unwrapped(extraction_schema):
     # The model has just written twenty wrappers and writes a twenty-first into a slot
     # that holds a bare local_id. The wrapper's own value is the answer.

@@ -11,7 +11,6 @@ stops with work left, and neither is visible from a run that merely completes.
 
 from __future__ import annotations
 
-
 from pondie import schema
 from pondie.extraction.prompt import fill
 

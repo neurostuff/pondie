@@ -13,7 +13,6 @@ Measured on 18823721: 26 fields kept their value and lost their citation that wa
 
 from __future__ import annotations
 
-
 from pondie import schema
 from pondie.extraction.record import fix
 from pondie.extraction.repair import guard as edit
