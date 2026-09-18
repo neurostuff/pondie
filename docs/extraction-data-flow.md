@@ -149,10 +149,23 @@ refusing any target two distinct names reach removed the collapses, kept
 looked right. **88 of the 90 repairs this function makes come from `sole`**, so it cannot
 simply go.
 
-What is missing is a ground truth for "was this repoint right", which the benchmark does not
-carry. Until there is one, widening the index is tuning a heuristic against nothing. The
-function now uses the shared walk for its traversal and keeps its narrow index, with the
-divergence written down in its docstring — 90 repairs before, 90 after, 0 differences.
+I first wrote that this needed a labelled ground truth. **It does not, and the reason is
+structural.** `ids.mint` builds a local_id from "the shortest thing the *paper* fixes", so a
+dangling id carries the name the model meant — adjudicating a repoint is comparing two names,
+not judging a paper. Over the 120 firings: **70% decided by token overlap, 8% by initialism**
+(`asm_scid` → "Structured Clinical Interview for DSM-V", `tsk_midt` → "Monetary Incentive
+Delay Task", using the Schwartz & Hearst matcher already in `vocabularies.abbreviations`),
+**18% rejected because the names share nothing**, 4% needing a look at the record. **96%
+without a model**, and the 21 rejections are inspectably right.
+
+So the rule to apply is: a pool of one, **and** the names agree by token or initialism, **and**
+no two distinct names reach the same target — the last because an interaction term shares a
+token with the main effect it contains. A model is needed only for genuine synonymy with no
+shared token and no initialism, which none of the 120 exhibits.
+
+Not applied in this pass, which was a refactor: the function uses the shared walk and keeps
+its narrow index, 90 repairs before and after, 0 differences, with the whole measurement in
+its docstring.
 
 ## Found: the prompt renderer imported the record builder for a schema question
 

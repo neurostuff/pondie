@@ -1756,22 +1756,40 @@ def repair_references(body: dict[str, Any], sch: Schema) -> list[str]:
     newly reaches are the nested kinds, and a kind is nested because its parent has several
     of it, so widening reaches the suspicious half by construction.
 
-    So the decision needs, in order of what it would cost to get:
+    AND THE ADJUDICATION IS DETERMINISTIC, which is the answer and needs no model. `ids.mint`
+    builds a local_id from "the shortest thing the *paper* fixes", so a DANGLING ID CARRIES
+    THE NAME THE MODEL MEANT. Deciding whether a repoint is right is therefore comparing two
+    names, not judging a paper. Over the 120 firings:
 
-      1. per-slot precision on a labelled sample. 120 firings over 10 slots, concentrated in
-         four (`tasks` 59, `group` 22, `term` 17, `regions` 10); ~60 judgements against the
-         paper texts would resolve it. This is the direct answer and nothing here substitutes
-         for it.
-      2. whether the prior above may stand in for most of it. It predicts every case sampled
-         so far, and it is cheap.
-      3. the cost asymmetry, which needs no data: a dangling reference is REPORTED by
-         `check_local_ids` and a repointed one is silently trusted, so a wrong repoint turns
-         a visible defect into an invisible wrong answer. That is `fold_label`'s argument and
-         it says the bar for `sole` should be high.
+        70%  the id's tokens overlap the target's id or name          ACCEPT
+         8%  the id is an initialism of the target's name             ACCEPT
+             (`asm_scid` -> "Structured Clinical Interview for DSM-V",
+              `tsk_midt` -> "Monetary Incentive Delay Task"; Schwartz & Hearst,
+              already implemented in `vocabularies.abbreviations._matches`)
+        18%  the two names share nothing                              REJECT
+         4%  one side has no name                                     look at the record
 
-    Until 1 exists the narrow index stays, with its divergence written down. The change it
-    would license is not "widen the index" but "enable `sole` per slot, where a pool of one
-    is the usual case".
+    96% decided without a model, and the 21 rejections are inspectably right: `reg_caudate`,
+    `reg_insula` and `reg_thalamus` each onto one "Gain versus nongain reward-processing
+    regions", and `trm_three_way_interaction`, `trm_quitting_motivation_main` and
+    `trm_smoking_opportunity_main` each onto a term named "cue". The accepts hold up too --
+    `tsk_cue_exposure` -> "cue exposure fMRI task", `no_intervention` -> `arm_no_intervention`,
+    `reg_amygdala_right` -> "Amygdala".
+
+    So the name test SUBSUMES the pool-size prior and no labelled sample is needed. One
+    weakness remains and it is `term`: an interaction term shares a token with the main
+    effect it contains, so `trm_smoking_opportunity_cue` and `trm_quitting_motivation_cue`
+    both pass onto `trm_cue_1`. Refusing any target that two DISTINCT names reach removes
+    exactly that, and it is the guard that was too weak on its own.
+
+    The rule this licenses, then, is not "widen the index" and not "enable `sole` per slot".
+    It is: pool of one, AND the names agree by token or initialism, AND no two distinct names
+    reach the same target. A model would only be needed for genuine synonymy with no shared
+    token and no initialism link, and no case of that appears in the 120.
+
+    Not applied here because it is a behaviour change to the repair that most affects
+    references, and this pass was a refactor; `docs/extraction-data-flow.md` carries it as the
+    next step with the measurements above.
     """
 
     declared: dict[str, str] = {}
