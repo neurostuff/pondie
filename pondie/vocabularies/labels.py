@@ -60,10 +60,19 @@ def tokens(text: str) -> frozenset[str]:
     return frozenset(fold(text).split())
 
 
-def content(text: str) -> frozenset[str]:
-    """Content tokens, or every token when the phrase is nothing but weak ones."""
+def content(text: str, stop: frozenset[str] = _WEAK) -> frozenset[str]:
+    """Content tokens, or every token when the phrase is nothing but weak ones.
+
+    `stop` is a parameter because there are two defensible lists and they should be
+    readable against each other. Vocabulary matching drops the domain nouns in `_WEAK` --
+    `scale`, `questionnaire`, `disorder` -- because an ONVOC label is made of them.
+    `record.direction` keeps those and drops `children` and `adults` instead, because a
+    cell level naming a cohort is the identity there. The fallback is what makes either
+    list safe: a phrase of nothing but stopwords keeps all of them, so "usual care"
+    survives `_WEAK` and "adults" survives direction's.
+    """
     every = tokens(text)
-    return (every - _WEAK) or every
+    return (every - stop) or every
 
 
 #: Suffixes stripped to relate `depression` to `Depressive Disorder`. ONVOC carries the

@@ -21,6 +21,7 @@ import json
 import re
 
 from pondie.formats import values
+from pondie.vocabularies import labels
 
 #: Ordered: the first pattern that matches wins, so the explicit operators are tried
 #: before the prose forms that could also match inside them.
@@ -92,13 +93,24 @@ _STOP = frozenset(
 
 
 def _tokens(text: str) -> frozenset[str]:
-    return frozenset(re.findall(r"[a-z0-9]+", (text or "").lower()))
+    """Through `labels`, not a local character class, and the accents are the reason.
+
+    This was `re.findall(r"[a-z0-9]+", text.lower())`, which splits a word on any letter
+    outside the class rather than folding it: `naive` came back as `na` and `ve`, and
+    `Etude` lost its first letter to become `tude`. `folding.fold` decomposes and drops the
+    combining mark instead, which is the failure its own docstring was written about.
+
+    32 of the corpus's 18,824 level and name strings were affected, and they are the ones
+    the literature turns on: `same_level` scored `Fagerstrom Test for Nicotine Dependence`
+    against its accented spelling as False, and likewise `Montgomery-Asberg Depression
+    Rating Scale` and `drug-naive controls`. One instrument, two spellings, two levels.
+    """
+    return labels.tokens(text or "")
 
 
 def _words(text: str) -> frozenset[str]:
     """The content words, or every word when the phrase is nothing but stopwords."""
-    tokens = _tokens(text)
-    return (tokens - _STOP) or tokens
+    return labels.content(text or "", stop=_STOP)
 
 
 def same_level(a: str, b: str) -> bool:
