@@ -1,5 +1,17 @@
 """What every test file shares: the two schemas, and the example paper.
 
+WHERE A TEST GOES. `test_<module>.py` for a module's own behaviour, and a file named for
+the subject where a test deliberately spans two modules -- `test_rules.py` holds three cases
+that check `fix.align_cell_levels` beside `rules.check_cell_terms`, because which of the two
+owns a given input is the boundary the design turns on, and testing them apart hides it.
+Two files are organised by purpose rather than by module and should stay that way:
+`test_repairs.py` is the fix sequence and its ordering constraints, `test_record_defect_fixes.py`
+is the five defect classes in docs/record-defects.md with the corpus count each occurred at.
+
+There was no such rule until one file reached 2,559 lines. It was named for a review layer
+that lives in another repo, so nothing said what belonged in it, and it collected tests for
+nine modules -- five of which already had a file of their own.
+
 Twelve fixtures across twelve files loaded one of these two, under three names -- `sch`,
 `classes` and `schema` -- and the names did not track the schemas. `sch` was the extraction
 schema in five files and the storage schema in two, so the same identifier meant a different
