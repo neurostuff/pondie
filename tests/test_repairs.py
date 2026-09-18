@@ -505,3 +505,127 @@ def test_each_repair_runs_exactly_once_across_the_stages():
     shape = {repair.name for repair in r.build_sequence() if repair.stage == "shape"}
     assert set(once) <= shape, f"a non-idempotent repair runs more than once: {once}"
     assert ran["mirrored"] == 1, "mirrored appends and must run exactly once"
+
+
+# -- repointing a cell's term by prefix ------------------------------------
+#
+# The other half of `repoint_out_of_scope_terms`, whose by-name cases are above. These were
+# in `test_record_guards.py`, which is about what the repair STAGE refuses to write -- a
+# different thing from what the deterministic fixes do before it.
+
+
+def unwarranted(value, evidence=None):
+    """A reported value with `evidence.status: not_found` unless a caller supplies a set --
+    the state a proposal arrives in, and what the guards are deciding about."""
+    return {
+        "extraction_status": "extracted",
+        "value": value,
+        "value_source": "reported",
+        "evidence": evidence or {"status": "not_found"},
+    }
+
+
+def test_a_cell_naming_a_term_its_model_declares_under_a_prefix_is_repointed():
+    """`demands` declares `trm_modality` and writes cells naming it; `satisfy` re-declares it
+    once per model that needs it, prefixed to keep the two apart, and the earlier pass's cells
+    are left pointing at an id nothing declares. 21 of 183 cells over the benchmark papers.
+
+    The cost is silent: nothing points at the surviving term, so the benchmark's aligner sees
+    no incoming edges and scores the pair below threshold despite matching names and a
+    matching parent model -- one paper lost 19 polarity cells that way.
+    """
+    from pondie.extraction.record import builder as br
+
+    body = {
+        "model_estimations": [
+            {
+                "local_id": "mod_a",
+                "terms": [{"local_id": "mod_a.trm_modality", "name": unwarranted("modalities")}],
+            },
+            {
+                "local_id": "mod_b",
+                "terms": [{"local_id": "mod_b.trm_modality", "name": unwarranted("modalities")}],
+            },
+        ],
+        "analyses": [
+            {
+                "local_id": "an1",
+                "model_estimation": "mod_a",
+                "effect": {
+                    "cells": [{"term": "trm_modality", "direction": unwarranted("positive")}]
+                },
+            }
+        ],
+    }
+    notes = fix.repoint_out_of_scope_terms(body)
+    assert notes, "an unresolvable cell term must be repaired or reported, not passed over"
+    assert body["analyses"][0]["effect"]["cells"][0]["term"] == "mod_a.trm_modality"
+    assert "mod_b" not in notes[0], "the analysis's own model decides which prefix is meant"
+
+
+def test_the_prefix_repair_leaves_an_ambiguous_reference_alone():
+    """Scoping by the analysis is what makes the suffix unique. Where it is not, the cell
+    keeps a reference the validator reports rather than gaining a guessed one."""
+    from pondie.extraction.record import builder as br
+
+    body = {
+        "model_estimations": [
+            {
+                "local_id": "mod_a",
+                "inputs_from": ["mod_b"],
+                "terms": [{"local_id": "mod_a.trm_x", "name": unwarranted("x")}],
+            },
+            {
+                "local_id": "mod_b",
+                "terms": [{"local_id": "mod_b.trm_x", "name": unwarranted("x")}],
+            },
+        ],
+        "analyses": [
+            {
+                "local_id": "an1",
+                "model_estimation": "mod_a",
+                "effect": {"cells": [{"term": "trm_x", "direction": unwarranted("positive")}]},
+            }
+        ],
+    }
+    fix.repoint_out_of_scope_terms(body)
+    assert body["analyses"][0]["effect"]["cells"][0]["term"] == "trm_x"
+
+
+# -- a table an analysis cites reports that analysis's effect --------------
+#
+# `derive_table_effects` was tested in `test_edit_warrant.py`, a file about whether a write
+# keeps the sentence that warranted it. This is a join between two entities the record
+# already holds, and settles without a model.
+
+
+def test_a_table_an_analysis_cites_reports_that_analysis_effect():
+    """`purpose` says what a table's rows are when they are NOT the foci of a
+    reported effect, and absence meant both "it reports results" and "nothing decided". A
+    proposer shown eight kinds of non-analysis and no way to say "it is an analysis" picks
+    the nearest: over twelve papers it marked 18 of 19 tables, and 16 of those were cited by
+    an analysis. The join settles it without a model."""
+    from pondie.extraction.record import builder
+    from pondie.formats import values
+
+    body = {
+        "analyses": [{"local_id": "a1", "tables": ["tbl1"]}],
+        "tables": [
+            {"local_id": "tbl1"},
+            {
+                "local_id": "tbl2",
+                "purpose": {
+                    "extraction_status": "extracted",
+                    "value": "demographics",
+                    "value_source": "reported",
+                    "evidence": {"status": "present"},
+                },
+            },
+        ],
+    }
+    filled = fix.derive_table_effects(body)
+    assert values.read(body["tables"][0]["purpose"]) == "reported_effect"
+    assert body["tables"][0]["purpose"]["value_source"] == "generated"
+    # tbl2 is cited by nothing, so its own answer stands
+    assert values.read(body["tables"][1]["purpose"]) == "demographics"
+    assert filled

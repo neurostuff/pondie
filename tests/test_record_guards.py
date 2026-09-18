@@ -534,9 +534,7 @@ def test_the_prompt_and_the_repair_pass_share_one_id_convention():
     # Every class a model mints an id for, and only those. A `DERIVED` class has its ids
     # assigned before the prompt is built and handed over by name, so printing its prefix
     # would read as permission to invent one that points at nothing.
-    assert all(
-        prefix in table for name, prefix in ids.PREFIX.items() if name not in ids.DERIVED
-    )
+    assert all(prefix in table for name, prefix in ids.PREFIX.items() if name not in ids.DERIVED)
     assert all(name not in table for name in ids.DERIVED)
 
 
@@ -1082,8 +1080,7 @@ def test_a_wrapper_is_resolved_to_what_it_wraps(storage_schema):
     from pondie.schema import reader
 
     schema = reader.load(EXTRACTION_SCHEMA)
-    assert schema.value_ranges(
-        schema.attributes("InferenceSettings")["tfce_used"]) == ["boolean"]
+    assert schema.value_ranges(schema.attributes("InferenceSettings")["tfce_used"]) == ["boolean"]
     assert schema.value_ranges(schema.attributes("Group")["acquired_count"]) == ["integer"]
     assert schema.value_ranges(schema.attributes("Region")["name"]) == ["string"]
     # An open vocabulary keeps both branches.
@@ -1107,8 +1104,7 @@ def test_a_string_answer_lands_in_the_type_its_slot_declares(storage_schema):
     assert value_tools.cast(schema, "Group", "age_mean", "24.6") == 24.6
     # And an answer that will not fit is still refused rather than coerced.
     assert value_tools.cast(schema, "Group", "acquired_count", "about twenty") is None
-    assert value_tools.cast(
-        schema, "InferenceSettings", "tfce_used", "mostly") is None
+    assert value_tools.cast(schema, "InferenceSettings", "tfce_used", "mostly") is None
 
 
 def test_a_nested_object_gains_prose_it_was_missing(storage_schema):
@@ -1235,70 +1231,3 @@ def test_a_structure_a_flat_reply_cannot_carry_is_still_left_alone(storage_schem
 
     assert flat(storage_schema, "Condition")
     assert not flat(storage_schema, "Effect")
-
-
-def test_a_cell_naming_a_term_its_model_declares_under_a_prefix_is_repointed():
-    """`demands` declares `trm_modality` and writes cells naming it; `satisfy` re-declares it
-    once per model that needs it, prefixed to keep the two apart, and the earlier pass's cells
-    are left pointing at an id nothing declares. 21 of 183 cells over the benchmark papers.
-
-    The cost is silent: nothing points at the surviving term, so the benchmark's aligner sees
-    no incoming edges and scores the pair below threshold despite matching names and a
-    matching parent model -- one paper lost 19 polarity cells that way.
-    """
-    from pondie.extraction.record import builder as br
-
-    body = {
-        "model_estimations": [
-            {
-                "local_id": "mod_a",
-                "terms": [{"local_id": "mod_a.trm_modality", "name": unwarranted("modalities")}],
-            },
-            {
-                "local_id": "mod_b",
-                "terms": [{"local_id": "mod_b.trm_modality", "name": unwarranted("modalities")}],
-            },
-        ],
-        "analyses": [
-            {
-                "local_id": "an1",
-                "model_estimation": "mod_a",
-                "effect": {
-                    "cells": [{"term": "trm_modality", "direction": unwarranted("positive")}]
-                },
-            }
-        ],
-    }
-    notes = fix.repoint_out_of_scope_terms(body)
-    assert notes, "an unresolvable cell term must be repaired or reported, not passed over"
-    assert body["analyses"][0]["effect"]["cells"][0]["term"] == "mod_a.trm_modality"
-    assert "mod_b" not in notes[0], "the analysis's own model decides which prefix is meant"
-
-
-def test_the_prefix_repair_leaves_an_ambiguous_reference_alone():
-    """Scoping by the analysis is what makes the suffix unique. Where it is not, the cell
-    keeps a reference the validator reports rather than gaining a guessed one."""
-    from pondie.extraction.record import builder as br
-
-    body = {
-        "model_estimations": [
-            {
-                "local_id": "mod_a",
-                "inputs_from": ["mod_b"],
-                "terms": [{"local_id": "mod_a.trm_x", "name": unwarranted("x")}],
-            },
-            {
-                "local_id": "mod_b",
-                "terms": [{"local_id": "mod_b.trm_x", "name": unwarranted("x")}],
-            },
-        ],
-        "analyses": [
-            {
-                "local_id": "an1",
-                "model_estimation": "mod_a",
-                "effect": {"cells": [{"term": "trm_x", "direction": unwarranted("positive")}]},
-            }
-        ],
-    }
-    fix.repoint_out_of_scope_terms(body)
-    assert body["analyses"][0]["effect"]["cells"][0]["term"] == "trm_x"
