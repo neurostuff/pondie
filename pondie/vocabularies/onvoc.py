@@ -33,59 +33,11 @@ from typing import Any, Iterable, Iterator
 
 from pondie import paths
 from pondie.formats import values
+from pondie.vocabularies.abbreviations import expansions_in
+from pondie.vocabularies.folding import fold
+from pondie.vocabularies.labels import acronym, content, stem, stems, tokens
 
 VOCAB_DIR = paths.VOCAB
-
-#: Words that carry no identity. Dropped only when comparing token sets, never when
-#: deciding whether a phrase exists -- "usual care" is made entirely of weak words.
-_WEAK = frozenset(
-    {
-        "the",
-        "a",
-        "an",
-        "of",
-        "in",
-        "and",
-        "or",
-        "for",
-        "with",
-        "group",
-        "groups",
-        "patients",
-        "subjects",
-        "participants",
-        "condition",
-        "conditions",
-        "task",
-        "tasks",
-        "test",
-        "tests",
-        "scale",
-        "inventory",
-        "questionnaire",
-        "disorder",
-        "arm",
-    }
-)
-
-
-#: True function words. Distinct from `_WEAK`, which also drops domain nouns for the
-#: purpose of comparing token sets; those nouns still carry a letter in an acronym.
-_FUNCTION = frozenset({"the", "a", "an", "of", "in", "and", "or", "for", "with", "on"})
-
-
-from pondie.vocabularies.folding import fold  # noqa: E402  (one fold, in folding)
-
-
-def tokens(text: str) -> frozenset[str]:
-    return frozenset(fold(text).split())
-
-
-def content(text: str) -> frozenset[str]:
-    """Content tokens, or every token when the phrase is nothing but weak ones."""
-    every = tokens(text)
-    return (every - _WEAK) or every
-
 
 @dataclass(frozen=True)
 class Concept:
@@ -100,61 +52,6 @@ class Concept:
 
     def surfaces(self) -> tuple[str, ...]:
         return (self.label,) + self.synonyms
-
-
-#: Suffixes stripped to relate `depression` to `Depressive Disorder`. ONVOC carries the
-#: clinical noun phrase and papers write the everyday noun, and no amount of containment
-#: bridges the two: neither string contains the other. Ordered longest first so
-#: `-ational` is tried before `-al`.
-_SUFFIXES = (
-    "ational",
-    "iveness",
-    "ically",
-    "ation",
-    "ities",
-    # After `ation`, so `agitation` stems to `agitat` and not `agitati`. Without it the
-    # nominalisation of a clinical noun does not reach its adjective -- `depression` stayed
-    # whole while `depressive` folded to `depress`, so a paper writing the commoner of the two
-    # missed `Depressive Disorder` entirely. 45 ONVOC labels contain a word this strips, and
-    # the resolvable stem count is unchanged at 744, so it collapses no concept into another.
-    "ion",
-    "ive",
-    "ity",
-    "ies",
-    "ing",
-    "ed",
-    "al",
-    "s",
-)
-
-
-def stem(word: str) -> str:
-    """A crude suffix strip. Crude on purpose: it only has to make two surface forms of
-    the same clinical noun collide, and a real stemmer would be a dependency for that."""
-    for suffix in _SUFFIXES:
-        if len(word) > len(suffix) + 3 and word.endswith(suffix):
-            return word[: -len(suffix)]
-    return word
-
-
-def stems(text: str) -> frozenset[str]:
-    return frozenset(stem(word) for word in content(text))
-
-
-def acronym(text: str) -> str:
-    """The initials of a multi-word label, or "" when it is not that kind of label.
-
-    Two words is too few -- `Drug Use` would claim `DU`. Single-letter tokens are dropped
-    before counting, because folding `Alzheimer's Disease` leaves a stray `s` that turns
-    a two-word name into the three-letter `ASD`, which is a different disorder entirely.
-    """
-    # Function words only, never the domain nouns `_WEAK` drops. `disorder`, `scale` and
-    # `test` are precisely the words a clinical acronym is built from -- dropping them
-    # turns `Autism Spectrum Disorder` into two words and no acronym at all.
-    words = [w for w in fold(text).split() if w not in _FUNCTION and len(w) > 1]
-    if len(words) < 3 or len(words) > 6:
-        return ""
-    return "".join(word[0] for word in words)
 
 
 #: `Autism Diagnostic Observation Schedule (ADOS)` is two surface forms, and the one a
@@ -210,10 +107,6 @@ def surface_forms(text: str, abbreviations: Any = None) -> list[str]:
         offer(stripped)
 
     if abbreviations is not None:
-        from pondie.vocabularies.abbreviations import (  # noqa: PLC0415
-            expansions_in,
-        )
-
         for candidate in list(out):
             replaced = candidate
             for short, expansion in expansions_in(candidate, abbreviations):
@@ -686,10 +579,6 @@ def normalize(
         concept, method, others = scoped.match(text, abbreviations)
         expanded: tuple[str, ...] = ()
         if abbreviations is not None:
-            from pondie.vocabularies.abbreviations import (  # noqa: PLC0415
-                expansions_in,
-            )
-
             expanded = tuple(e for _short, e in expansions_in(text, abbreviations))
         # An expansion the record never spells out is a guess, and a wrong mapping is
         # worse than a missing one -- it is the kind that gets queried across a corpus

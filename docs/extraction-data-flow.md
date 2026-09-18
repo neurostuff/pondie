@@ -334,3 +334,27 @@ from the map as `edit` was, and unlike `edit` they belong there.
 
 The guard's docstring had its second paragraph twice, from an earlier edit. Now it says which
 of the three steps it is.
+
+## Found: `onvoc` and `abbreviations` reached into each other
+
+A deferred import inside a function body is the signal all of the moves above were found by,
+so it is worth running deliberately. One mutual cycle turned up: `abbreviations.disagreements`
+deferred an import of `onvoc.stems` to tell two spellings of one expansion from two different
+expansions, while `onvoc` deferred one back — twice — for the paper's own abbreviations. Three
+`# noqa: PLC0415` suppressions, one per call site, and a fourth `# noqa: E402` on a mid-file
+`import fold`.
+
+What both wanted is neither module's. `folding` already claims the language-general job and
+says where the line is: "`use disorder -> dependence` and `affective -> mood` are claims about
+psychiatry and belong to a vocabulary." But `group`, `scale`, `questionnaire` and `disorder`
+carrying no identity is a claim about clinical writing rather than about English or about any
+one ontology — a third thing, and `vocabularies/labels.py` is it: `_WEAK`, `tokens`, `content`,
+`stem`, `stems`, `acronym`.
+
+`surface_forms` and its two regexes stayed in `onvoc`, and the reason is the test that the cut
+is in the right place: `surface_forms` takes the paper's abbreviations, so putting it in
+`labels` would make `labels` import `abbreviations` and rebuild the cycle one layer down.
+
+    onvoc -> abbreviations -> labels -> folding
+
+Four suppressions gone, and no function-body imports left in the package.

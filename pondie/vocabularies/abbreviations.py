@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Iterator
 
 from pondie import paths
+from pondie.vocabularies.labels import stems
 
 STORE = paths.VOCAB / "abbreviations.json"
 
@@ -311,8 +312,6 @@ class Abbreviations:
         disorder is. Compared on content words so the first kind stops being reported and
         the second keeps being.
         """
-        from pondie.vocabularies.onvoc import stems  # noqa: PLC0415
-
         out = []
         for short, slot in self.entries.items():
             variants = slot.get("variants") or []
