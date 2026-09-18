@@ -3,6 +3,13 @@
 Deliberately not domain rules. `use disorder -> dependence` and `affective -> mood` are
 claims about psychiatry and belong to a vocabulary or an encoder; case, punctuation, plurals
 and hyphenation are claims about English and belong here.
+
+`benchmark.scoring.normalize` is a second fold and is meant to be. It is the key two
+extractions of one paper are compared on, not the key a vocabulary is indexed by, and the
+two jobs want opposite answers: it keeps `_` so an id stays one token and maps `<` to a word
+because in a contrast name the operator is the whole claim, where `fold` splits on both.
+Measured over 60,088 distinct record strings they disagree on 18.9%. Merging them would
+break either the benchmark or vocabulary matching, so this is the note that says so.
 """
 
 from __future__ import annotations
