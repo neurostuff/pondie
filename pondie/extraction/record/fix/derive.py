@@ -14,12 +14,15 @@ each one sits where it does.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
 from pathlib import Path
+from pondie import schema
 from pondie.extraction.record import direction
 from pondie.extraction.record import ids
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import walk
 from pondie.formats import parse_keys, values
+from pondie.normalization.coordinate_space import normalize as normalize_space
 from pondie.schema import reader
 from pondie.schema.reader import Schema
 from typing import Any
@@ -57,6 +60,46 @@ CONCLUSION_SLOTS: frozenset[tuple[str, str]] = frozenset(
 )
 
 
+@lru_cache(maxsize=1)
+def modality_subclasses() -> dict[str, str]:
+    """Modality value -> the Acquisition subclass it instantiates.
+
+    Read out of the `Modality` enum rather than written down, so a new permissible value
+    arrives with its own subclass already attached. Shared with `repair.guard`, which mints
+    acquisitions and owes them the same type the builder derives here.
+    """
+    modality_enum = reader.load(schema.EXTRACTION).enums.get("Modality")
+    modality = (modality_enum.permissible_values or {}) if modality_enum else {}
+    return {
+        name: str(spec["instantiates"][0]).split(":")[-1]
+        for name, spec in modality.items()
+        if spec.instantiates
+    }
+
+
+#: Where a modality outside the vocabulary lands. Not a guess: `OtherModality` is described
+#: as "an acquisition whose modality has no class of its own ... this is where a modality the
+#: schema does not name keeps its parameters", and the vocabulary's own `other` instantiates
+#: it. It declares nothing modality-specific, so the fallback asserts nothing the source did
+#: not say -- unlike defaulting to MRI, which would declare a field strength and a TR.
+#:
+#: A fallback is needed at all because `acquisition_type` is required and `designates_type`,
+#: so an unset one is a validation error rather than a missing convenience. Opening the
+#: `modality` vocabulary is what made an unmapped value reachable.
+UNNAMED_MODALITY_CLASS = "OtherModality"
+
+
+def acquisition_subclass(modality: Any) -> str | None:
+    """The Acquisition subclass a modality names, or the fallback for one outside the list.
+
+    None only where there is no modality to read: that is the required-slot finding, and
+    inventing a class for it would hide it.
+    """
+    if modality in (None, "", []):
+        return None
+    return modality_subclasses().get(str(modality), UNNAMED_MODALITY_CLASS)
+
+
 def derive_acquisition_types(body: dict[str, Any]) -> list[str]:
     """Fill `Acquisition.acquisition_type` from each record's modality.
 
@@ -66,18 +109,12 @@ def derive_acquisition_types(body: dict[str, Any]) -> list[str]:
     it the record resolves only to the base `Acquisition`, where every modality-specific
     parameter the model *did* extract is undeclared: one omission, seven errors.
 
-    The mapping is read out of the `Modality` enum rather than written down here, so a
-    new permissible value arrives with its own subclass already attached.
+    A modality outside the vocabulary lands on `OtherModality`, whose required
+    `modality_label` is "the source's own name for the modality ... verbatim" -- which is
+    exactly what such a value is. Filling it here rather than leaving it empty swaps one
+    required-slot error for none; `rules.check_acquisition_subclass` still reports the
+    acquisition, because a fallback class is not the same claim as a named one.
     """
-
-    modality_enum = reader.load(EXTRACTION_SCHEMA).enums.get("Modality")
-    modality = (modality_enum.permissible_values or {}) if modality_enum else {}
-    instantiates = {
-        name: str(spec["instantiates"][0]).split(":")[-1]
-        for name, spec in modality.items()
-        if spec.instantiates
-    }
-
     filled: list[str] = []
     for index, acquisition in enumerate(body.get("acquisitions") or []):
         if not isinstance(acquisition, dict) or acquisition.get("acquisition_type"):
@@ -85,10 +122,24 @@ def derive_acquisition_types(body: dict[str, Any]) -> list[str]:
         value = acquisition.get("modality")
         if isinstance(value, Mapping):
             value = value.get("value")
-        target = instantiates.get(value)
-        if target:
-            acquisition["acquisition_type"] = target
-            filled.append(f"acquisitions[{index}]: {value} -> {target}")
+        target = acquisition_subclass(value)
+        if not target:
+            continue
+        acquisition["acquisition_type"] = target
+        filled.append(f"acquisitions[{index}]: {value} -> {target}")
+        if str(value) in modality_subclasses() or acquisition.get("modality_label"):
+            continue
+        # Only where the fallback fired. `MEG` and `SPECT` name `OtherModality` from inside
+        # the vocabulary, and their `modality_label` is a slot a model fills with what the
+        # source actually printed -- "306-channel MEG". Filling those from the bare enum
+        # token would replace a missing-required-slot finding with a worse answer.
+        #
+        # `generated` and `not_found`: the record copied its own field across and read no
+        # sentence to do it, which is the pairing `guard._wrap` documents.
+        acquisition["modality_label"] = values.wrap(
+            str(value), source="generated", evidence="not_found"
+        )
+        filled.append(f"acquisitions[{index}]: modality_label <- {value!r}")
     return filled
 
 
@@ -216,13 +267,18 @@ def derive_coordinate_spaces(
     parsed = json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
     mapping = json.loads(table_map.read_text(encoding="utf-8"))
 
+    # Read through the same lexicon `coordinate_space.resolve` reads with, rather than
+    # comparing the parser's raw tokens. Stage 1 writes "MNI" for one sentence and "MNI152"
+    # for the next, and a set of the raw strings calls two spellings of one space a mixed
+    # paper and declines to fill it. A token no rule matches fills nothing: an unrecognised
+    # space written into the authoritative slot is a wrong answer, not a missing one.
     spaces_by_table: dict[str, set[str]] = {}
     for analysis in parsed:
         local = mapping.get(analysis.get("table_id"))
         if not local:
             continue
-        seen = {p.get("space") for p in analysis.get("points") or [] if p.get("space")}
-        spaces_by_table.setdefault(local, set()).update(seen)
+        read = (normalize_space(p.get("space")) for p in analysis.get("points") or [])
+        spaces_by_table.setdefault(local, set()).update(d.value for d in read if d)
 
     filled: list[str] = []
     for index, analysis in enumerate(body.get("analyses") or []):

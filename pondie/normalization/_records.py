@@ -1,9 +1,7 @@
 """Reading records: iteration, and pulling a field out by a dotted path.
 
-The value access goes through `values.value_of`, which takes the wrapper and the
-slot's declared shape from the LinkML schema. Hand-rolling that unwrap conflates three
-different claims -- absent, `not_reported`, and reported-empty -- and each conflation is a
-silent wrong answer. See docs/pipeline-architecture.md, "The contract at each seam".
+Value access goes through `formats.values.value_of`, which takes the wrapper and the
+slot's declared shape from the LinkML schema. Why: docs/normalization-rationale.md, "_records".
 """
 
 from __future__ import annotations
@@ -41,8 +39,7 @@ def iter_records(patterns: tuple[str, ...] = DEFAULT) -> Iterator[tuple[str, dic
 def strings_at(body: dict, path: str) -> list[str]:
     """Every string a dotted path reaches, descending through lists as it goes.
 
-    `groups.medication_status` and `groups.sex_distribution.category` are both one path; the
-    walk does not care whether a step is a list, a wrapped value or a nested object.
+    `groups.medication_status` and `groups.sex_distribution.category` are both one path.
     """
     nodes: list[object] = [body]
     for step in path.split("."):
@@ -62,9 +59,7 @@ def _listed(value: object) -> list:
 def _descend(node: object, step: str) -> list:
     """One step of the walk, telling a wrapped value from a nested entity.
 
-    Both are mappings and only one has a `value`. `value_of` reads a mapping without one as
-    `not_reported`, which is right for a wrapper and wrong for an entity -- a Task is an
-    object to descend into, not a slot the paper declined to fill.
+    Why the distinction matters: docs/normalization-rationale.md, "_records".
     """
     if not isinstance(node, dict):
         return []

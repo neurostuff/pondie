@@ -137,7 +137,7 @@ made to its own earlier claims rather than quietly replacing them.
 | | |
 |---|---|
 | [docs/record-defects.md](docs/record-defects.md) | seven defect classes and what a deterministic fix closes. Errors 3,200 → 1,828 over the corpus. `scripts/audit_records.py` reproduces every number |
-| [docs/meta-analysis-queries.md](docs/meta-analysis-queries.md) | the sixteen published criteria in neurometabench, translated into predicates and scored against the benchmark's own included sets. Where the records cannot answer, and where the criteria cannot be written at all |
+| [docs/meta-analysis-queries.md](docs/meta-analysis-queries.md) | the sixteen published criteria in neurometabench, translated into predicates and scored against the benchmark's own included sets. Where the records cannot answer, where the criteria cannot be written at all, and what the two gates run in series recover of a published map's foci |
 | [docs/task-condition-normalization.md](docs/task-condition-normalization.md) | why neither task names nor condition names should be normalized as flat vocabularies, and what to curate instead |
 | [docs/normalization-pipelines.md](docs/normalization-pipelines.md) | how a field's shape decides its method, including the fourth shape and what rules provably cannot do |
 
@@ -170,7 +170,7 @@ A field's shape decides its method, and four shapes recur.
 
 | shape | fields | method |
 |---|---|---|
-| closed target | `coordinate_space`, `multiple_comparison_method`, `correction_scope`, `medication_status`, `sex_distribution`, `handedness_distribution` | rules over a fixed answer set |
+| closed target | `coordinate_space`, `multiple_comparison_method`, `correction_scope`, `medication_status`, `sex_distribution`, `handedness_distribution`, `modality`, `prespecification` | rules over a fixed answer set |
 | link | `medical_condition` | retrieval against MONDO, then UMLS |
 | cluster | `task` | the corpus clustered against itself |
 | partition | `population_characteristics` | one field holding two kinds of value; the non-selective ones move to `other_characteristics`, which no model is asked to fill |

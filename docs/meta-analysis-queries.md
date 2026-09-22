@@ -19,20 +19,25 @@ number and the schema then looks like it works.
 
 ## The result
 
-Recall against the benchmark's included set, over the papers that reached screening:
+Recall against the benchmark's included set, over the papers that reached screening. These
+are the current numbers, after the predicate audit recorded in
+[what the records changed](#what-interrogating-the-records-against-the-gold-changed); the
+column beside each says what it read before that audit, and the two that moved are the two
+where a predicate, not a record, was wrong.
 
-| | papers | gold present | strict recall | permissive recall |
-|---|---|---|---|---|
-| `vbm_of_ptsd` | 50 | 17 | **52.9%** | 82.4% |
-| `dementia` | 448 | 58 | **53.4%** | 89.7% |
-| `cue_reactivity` | 550 | 140 | **57.1%** | 72.9% |
-| `vbm_of_substance_use` | 244 | 76 | **59.2%** | 71.1% |
-| `emotion_regulation_2022` | 525 | 87 | **36.8%** | 59.8% |
+| | papers | gold present | strict recall | permissive recall | strict, before the audit |
+|---|---|---|---|---|---|
+| `vbm_of_ptsd` | 50 | 17 | **52.9%** | 82.4% | 52.9% |
+| `dementia` | 448 | 58 | **53.4%** | 89.7% | 53.4% |
+| `cue_reactivity` | 550 | 140 | **81.4%** | 95.0% | 57.1% |
+| `vbm_of_substance_use` | 244 | 76 | **22.4%** | 68.4% | 59.2% |
+| `emotion_regulation_2022` | 525 | 87 | **43.7%** | 73.6% | 36.8% |
 
 *strict* excludes a paper the record cannot answer for; *permissive* admits it. **The gap
-between the two columns is entirely records that cannot say**, and it is 20 to 36 points. On
-`emotion_regulation_2022`, 40 of 87 gold papers are unanswerable on at least one criterion and
-only 15 are contradicted.
+between the two columns is records that cannot say**, and it is 13 to 46 points.
+`vbm_of_substance_use` fell because its pharmacological-manipulation predicate stopped
+guessing from `StudyDesign.allocation`: it now answers from `Arm.arm_kind` where the record
+declares an arm and says "cannot say" where it does not, which is 49 of its 76 gold papers.
 
 ## What breaks a query, in order
 
@@ -40,7 +45,7 @@ only 15 are contradicted.
 
 `--literal` compares a scalar slot to a string the way a query actually does, instead of
 flattening a one-item list as the harness otherwise kindly does. The whole-brain criterion --
-the one criterion every meta-analysis in this benchmark states -- then becomes unanswerable on
+the criterion four of the five state -- then becomes unanswerable on
 most of the corpus:
 
 | | `whole brain` unanswerable | after `unwrap_singletons` |
@@ -94,11 +99,14 @@ and 17 of 58 of its gold. This is `docs/record-defects.md` finding 2 seen from t
 links it writes are mostly `conditions`, and the cohort half of the join is the half that is
 missing.
 
-### 5. `InferenceSettings.correction_scope`, for the SVC exclusion
+### 5. ~~`InferenceSettings.correction_scope`, for the SVC exclusion~~ -- withdrawn
 
-"we excluded studies using region of interest (ROI) or small volume correction (SVC)".
-Unanswerable on 113 of 550 cue records (21%) and **25 of 140** of its gold. The slot exists and
-is right -- the correction's own domain rather than the analysis's -- and is unfilled.
+This read "we excluded studies using region of interest (ROI) or small volume correction
+(SVC)" as cue reactivity's criterion, and it is not: that review **includes** small-volume
+corrected experiments and says so. The field is unanswerable on 113 of its 550 records, but
+the criterion never asked, so the predicate has been removed rather than counted. See
+[what the records changed](#what-interrogating-the-records-against-the-gold-changed),
+correction 3.
 
 ## What the schema has no slot for
 
@@ -352,7 +360,7 @@ And a sixth that is neither: **`21686071`**, "How grossed out are you? The neura
 
 `spatial_scope: roi` where the paper is whole-brain contradicts **38 gold papers**: 20 in cue
 reactivity, 12 in emotion regulation, 4 in dementia, 2 in PTSD. "Whole brain, not ROI" is the
-single criterion every meta-analysis in this benchmark states, so this one field decides more
+single criterion four of the five state, so this one field decides more
 inclusions than any other, and all three examples above share a shape: **the paper names
 regions because that is how a whole-brain result is reported, and the record reads the names
 as a restriction.**
@@ -397,74 +405,46 @@ A point of recall for no precision, which is the right direction and a small eff
 four rounds of correcting my own translations, what is left is dominated by two record
 defects rather than by the difficulty of writing the query.
 
-## The comparison again, after four predicate corrections
+## The comparison again, after the audit
 
-Two rounds of examining the query's own errors corrected four predicates -- `measures`,
-`group_contrast`, a wider grey-matter pattern, and a visual-cue test that admits text. The
-comparison with both autonima arms, rerun:
-
-| selector | precision | recall | F1 |
-|---|---|---|---|
-| autonima, full text | 40.1% | **95.3%** | 0.555 |
-| autonima, record + evidence | 44.4% | 84.1% | 0.566 |
-| autonima, record, no evidence | 45.3% | 82.3% | 0.569 |
-| query, strict | **54.3%** | 46.2% | 0.437 |
-| query, permissive | 40.5% | 70.0% | 0.441 |
-| full text → query veto | 52.1% | 68.2% | 0.537 |
-| record + evidence → query veto | 53.9% | 62.7% | 0.532 |
-
-Against the first run, the query's strict precision rose from 48.0% to 54.3% and its recall
-fell from 53.3% to 46.2%. **The whole of that recall loss is one project.**
-`vbm_of_substance_use` went from 58.1% / 66.2% to 87.5% / 21.5%, because reading "no
-pharmacological manipulations" off `allocation` rather than off declared Arms exposed the
-defect of finding 9: 45 of its 76 gold papers say `allocation: non_randomized` for a study
-that administered nothing. The predicate is now faithful to the criterion and the criterion
-is unanswerable from these records.
-
-Excluding that project, so the mean is not carrying one unanswerable criterion:
+Six predicate corrections later -- four found by reading the query's own errors, two more by
+reading the criteria against the records, all of them in
+[what the records changed](#what-interrogating-the-records-against-the-gold-changed) -- the
+comparison over the four projects that have all three arms:
 
 | selector | precision | recall | F1 |
 |---|---|---|---|
-| autonima, full text | 39.0% | **94.9%** | 0.541 |
-| autonima, record + evidence | 41.6% | 81.7% | 0.534 |
-| autonima, record, no evidence | 42.3% | 81.3% | 0.540 |
-| query, strict | 46.0% | 52.4% | 0.460 |
-| query, permissive | 33.6% | **81.0%** | 0.457 |
-| full text → query veto | 46.7% | 78.8% | **0.575** |
-| record + evidence → query veto | **49.2%** | 72.2% | 0.573 |
-
-Three things this says that the five-project mean does not.
-
-**The veto pipelines lead on F1 and the arms are indistinguishable from each other.** 0.575
-and 0.573 against 0.534 to 0.541 for all three arms, whose spread is 0.007 -- well inside the
-0.034 run-to-run noise `AUDIT.md` measured. The arm contrast this experiment was built to
-settle does not resolve at this precision, and the veto does.
+| autonima, full text | 43.3% | **95.2%** | 0.588 |
+| autonima, record + evidence | 48.6% | 84.2% | 0.606 |
+| autonima, record, no evidence | 49.4% | 82.0% | 0.606 |
+| query, strict | **60.2%** | 53.3% | 0.475 |
+| query, permissive | 41.6% | 85.8% | 0.529 |
+| full text → query veto | 53.5% | 84.5% | 0.634 |
+| record + evidence → query veto | 56.5% | 78.0% | **0.637** |
 
 **Where the records can answer, the deterministic criteria match a model reading the same
-records.** `query, permissive` reaches **81.0% recall against the record arms' 81.7% and
-81.3%** -- admitting the papers the record is silent about, the published criteria applied
-mechanically select as much of the gold as a language model reading the record does. It does
-so at 33.6% precision against their ~42%, so it is not a replacement; it is evidence that the
-criteria are expressible and that what the model adds over them is judgement about silence.
+records and now slightly beat them.** `query, permissive` reaches **85.8% recall against the
+record arms' 84.2% and 82.0%** -- admitting the papers the record is silent about, the
+published criteria applied mechanically select as much of the gold as a language model
+reading the record does. It does so at 41.6% precision against their ~49%, so it is not a
+replacement; it is evidence that the criteria are expressible and that what the model adds
+over them is judgement about silence.
 
 **`vbm_of_ptsd` is what this looks like when the records are good.** Query strict reaches
-**90.0% precision**, and `full text → query veto` reaches **F1 0.778**, the highest figure
-anywhere in this document and above full text's own 0.727. That project is 49 papers with
-records that answer most criteria, and it is the only place the composition is clearly worth
-deploying.
+88.9% precision there, and both veto compositions reach F1 0.70 against full text's 0.606.
 
 ### The conclusion does not change
 
-Full text still wins on recall -- 95.3%, or 94.9% without substance use -- and recall is the
-objective screening has. A missed study biases the pooled estimate and cannot be recovered
-downstream; a false positive costs the next reader some time. Every alternative in both
-tables buys precision with recall, the veto included, and the F1 column should not be read as
-a ranking.
+Full text still wins on recall -- 95.2% -- and recall is the objective screening has. A
+missed study biases the pooled estimate and cannot be recovered downstream; a false positive
+costs the next reader some time. Every alternative in the table buys precision with recall,
+the veto included, and the F1 column should not be read as a ranking.
 
-What four rounds of correction established is where the remaining gap lives. It is not in the
-difficulty of writing the criteria down: two record defects account for most of it --
-`spatial_scope: roi` on whole-brain papers, contradicting 38 gold, and
-`allocation: non_randomized` on observational studies, contradicting 39 in one project.
+What the corrections established is where the remaining gap lives. It is not in the
+difficulty of writing the criteria down -- every correction so far has been a predicate
+reading the wrong field or the wrong side of a negation, and each was worth 10 to 20 points
+of recall. What is left is two record defects: `spatial_scope: roi` on whole-brain papers,
+and a `pharmacological` arm that four fifths of the records do not declare either way.
 
 # Analysis selection, which is the stage that actually decides the map
 
@@ -476,26 +456,55 @@ this stage is `annotation_results.json` -- an `include` per analysis per key -- 
 been measured against that gold before now. `scripts/query_analysis_selection.py` does it,
 alongside a deterministic query over `Effect.cells`.
 
-Every key here is a directional between-group contrast, optionally restricted by modality, and
-both are things the schema encodes: a `Cell.direction` on a `FactorLevel` that reaches a
-`Group`, and `Analysis.measure` → `Measure.family`. So the question is not whether the schema
-can state the contrast. It can.
+Each key is a signed contrast -- between two cohorts, or between two conditions -- optionally
+restricted by modality, and all three are things the schema encodes: a `Cell.direction` on a
+`FactorLevel` that reaches a `Group` or a `Condition`, and `Analysis.measure` →
+`Measure.family`. So the question is not whether the schema can state the contrast. It can.
+The specs are in `scripts/query_contrasts.py`, one per key, read by both scripts that ask.
 
-| project / key | papers | autonima ≥1 | autonima = gold count | **autonima = gold foci** | query ≥1 | query = gold count |
-|---|---|---|---|---|---|---|
-| `vbm_of_ptsd` / non-PTSD > PTSD | 17 | 41% | 35% | **35%** | 53% | 35% |
-| `vbm_of_substance_use` / all drug classes | 74 | 64% | 41% | **32%** | 46% | 24% |
-| `dementia` / decrease | 14 | 57% | 29% | **21%** | 86% | 43% |
-| `dementia` / functional | 11 | 64% | 27% | **9%** | 82% | 27% |
-| `dementia` / structural | 9 | 56% | 33% | **11%** | 67% | 22% |
+**Both selectors go through one scorer.** An earlier version of this table read autonima's
+columns out of a csv built elsewhere and the query's from the records, which is how two
+numbers meant to be compared end up measuring different things. `query_analysis_selection.py`
+now reads each arm's own `annotation_results.json` and `coordinate_parsing_results.json`,
+runs the query over the same papers, and scores both the same way -- including the
+coordinates, which the first version could not do at all:
+
+| project / key | selector | saw | ≥1 | =count | coord P | coord R | coord F1 |
+|---|---|---|---|---|---|---|---|
+| `vbm_of_ptsd` / non-PTSD > PTSD (17) | autonima, full text | 8 | 41% | 35% | **93.2%** | 48.9% | 0.642 |
+| | autonima, record + evidence | 7 | 41% | 35% | 91.9% | 48.9% | 0.638 |
+| | query, strict | 17 | **94%** | **71%** | 88.6% | **50.4%** | **0.642** |
+| | query, permissive | 17 | 100% | 47% | 53.4% | 67.6% | 0.597 |
+| `dementia` / decrease (14) | autonima, record + evidence | 6 | 43% | 29% | **91.9%** | 26.8% | 0.415 |
+| | query, strict | 14 | **86%** | **43%** | 56.2% | **35.3%** | **0.433** |
+| `dementia` / functional (11) | autonima, record + evidence | 6 | 45% | **36%** | **95.6%** | 18.9% | 0.315 |
+| | query, strict | 11 | **82%** | 27% | 59.7% | **33.8%** | **0.431** |
+| `vbm_of_substance_use` / all drug classes (74) | autonima, record + evidence | 53 | 62% | **43%** | **83.9%** | **65.4%** | **0.735** |
+| | query, strict | 74 | **73%** | 32% | 71.5% | 62.2% | 0.665 |
+| `vbm_of_substance_use` / alcohol (19) | autonima, record + evidence | 16 | 74% | **53%** | **84.0%** | 72.4% | 0.778 |
+| | query, strict | 19 | **84%** | 32% | 74.4% | **86.8%** | **0.801** |
+| `cue_reactivity` / drug > neutral (106) | autonima, full text | 82 | **76%** | 25% | 54.3% | **65.1%** | **0.592** |
+| | autonima, record + evidence | 82 | 72% | 21% | 53.8% | 62.9% | 0.580 |
+| | query, strict | 105 | 60% | **32%** | **70.9%** | 41.7% | 0.525 |
+| | query, permissive | 105 | 86% | 23% | 49.6% | 52.7% | 0.511 |
+
+`saw` is how many of the gold papers the selector had anything to choose from, and it is the
+column that keeps the rest honest: **an annotation cannot include an analysis its own arm
+never parsed**. Autonima saw 6 to 16 of the between-group projects' gold papers and the query
+saw all of them, because the query reads a record that exists for every paper. The two
+selectors are therefore not competing on equal footing at this stage -- the comparison that
+does put them on one is the arms comparison below, where both run end to end.
+
+The full table, all nine keys and five selectors, is what the script prints.
 
 ## CORRECTION: this is not analysis selection, and the claim above was wrong
 
 I wrote that analysis selection is the bottleneck. **It is not.** Auditing the metric found
 two things, and the second overturns the conclusion.
 
-**First: where the annotation does select, the coordinates are exact.** The table above
-compares foci *counts*, which two different analyses can share. Comparing the coordinate
+**First: where the annotation does select, the coordinates are exact.** The first version of
+the table above compared foci *counts*, which two different analyses can share -- which is
+why the table now carries coordinate precision and recall instead. Comparing the coordinate
 *sets* for `vbm_of_ptsd`, over the 7 gold studies both the gold and the annotation contain:
 
 ```
@@ -553,10 +562,11 @@ dropped and counted -- 8 in dementia, 3 in substance use -- which is why dementi
 fall to 9-14 papers. PTSD is 22 single-paper studies and cue reactivity 191, so neither is
 affected.
 
-**The query has no foci column yet**, and it should. `Analysis.source_table_analysis` is the
+**The query had no foci column**, and it should have. `Analysis.source_table_analysis` is the
 exact join -- "the only exact route from an analysis to its coordinates", per its own repair --
-so the record can be taken to a focus count without a string match. Computing it needs the
-stage-1 parse beside the records, which is the one input this harness does not have locally.
+so the record can be taken to its coordinates without a string match. It needs the stage-1
+parse beside the records, and with that input the column is measured below in
+[Both gates at once](#both-gates-at-once-what-the-query-alone-produces).
 
 # What would make these queries simpler, and which normalizations to avoid
 
@@ -643,3 +653,648 @@ The fix was to add a value, not to map harder.
 The pattern across all six: **normalize a field whose target vocabulary exists outside the
 corpus, and leave alone any field that is a join key, a sign, or a judgement the corpus is the
 only evidence for.**
+
+# Both gates at once: what the query alone produces
+
+The two gates above were scored apart. `scripts/query_workflow.py` runs them in series --
+the published inclusion criteria over the record, then the published contrast over the
+analyses of the papers that passed -- joins each selected analysis to its coordinates
+through `Analysis.source_table_analysis`, and scores the pooled foci against the map the
+meta-analysis published. That is the whole workflow, and the foci column is the one the
+measurement notes above recorded as missing.
+
+```
+python scripts/query_workflow.py --records '<dir>/*/*.extraction.json' \
+    --bench <neurometabench>/data --stage1 <corpus>
+```
+
+**Both gates run strict and permissive, so each map is scored four ways.** Strict drops
+what the record cannot answer and permissive keeps it, and running the pair at each gate
+says where a silence costs something: a paper the screener cannot judge is a different
+loss from a contrast the record cannot sign.
+
+Three inputs and one pin. The records are the 1,817 in `record_arms`; the parse is
+`<pmid>/stage1/analyses.json` from the corpus; the benchmark is **pinned at 00398b9**,
+the commit the record-arms run scored against; its current head no longer carries emotion
+regulation at all. Foci are compared in MNI at a 2mm tolerance -- each side moves its own
+Talairach coordinates and the two transforms are not the same one, so the benchmark's
+(-54.7, -59.4, -15.8) and `tal2mni`'s (-55.5, -59.7, -15.2) are one focus.
+
+## The gates in series, per published map
+
+`anlys` is analyses selected and `nofoci` how many of them reached no coordinates. Paper and
+foci precision and recall are against the annotation's own key, over the gold papers that
+have a record.
+
+**vbm_of_ptsd**, `non-PTSD > PTSD`: 17 gold papers with a record, 139 gold foci, ceiling 67.6%.
+
+| screen / select | anlys | nofoci | paper P | paper R | foci P | foci R | foci F1 |
+|---|---|---|---|---|---|---|---|
+| strict / strict | 11 | 2 | **90.0%** | 52.9% | **89.7%** | 37.4% | 0.528 |
+| strict / permissive | 24 | 3 | **90.0%** | 52.9% | 61.0% | 54.0% | 0.573 |
+| permissive / strict | 38 | 9 | 70.0% | **82.4%** | 78.3% | 46.8% | **0.586** |
+| permissive / permissive | 83 | 19 | 58.3% | **82.4%** | 40.6% | **64.0%** | 0.497 |
+
+**dementia**, `bvFTD vs HC`, four keys: 16, 14, 9 and 11 gold papers with a record; ceilings
+37.6%, 37.6%, 48.6%, 40.8%.
+
+| key | screen / select | anlys | nofoci | paper P | paper R | foci P | foci R | foci F1 |
+|---|---|---|---|---|---|---|---|---|
+| all | strict / strict | 163 | 85 | 10.7% | 56.2% | 17.3% | 30.5% | **0.221** |
+| all | permissive / strict | 247 | 154 | 9.4% | 75.0% | 15.6% | 30.9% | 0.207 |
+| all | permissive / permissive | 867 | 529 | 5.0% | **81.2%** | 5.4% | **31.2%** | 0.093 |
+| decrease | strict / strict | 119 | 60 | 13.6% | 64.3% | **26.8%** | 28.8% | **0.278** |
+| decrease | permissive / strict | 169 | 99 | 11.2% | 78.6% | 22.9% | 28.8% | 0.255 |
+| decrease | permissive / permissive | 766 | 452 | 4.8% | **85.7%** | 5.7% | 29.2% | 0.096 |
+| structural | strict / strict | 73 | 39 | 9.1% | 44.4% | 5.0% | 11.5% | **0.070** |
+| structural | permissive / permissive | 526 | 323 | 2.7% | 55.6% | 1.3% | 11.5% | 0.024 |
+| functional | strict / strict | 79 | 39 | 19.0% | 72.7% | **42.7%** | 33.3% | **0.374** |
+| functional | permissive / strict | 106 | 60 | 16.7% | 81.8% | 41.6% | 33.8% | 0.373 |
+| functional | permissive / permissive | 307 | 196 | 10.0% | **90.9%** | 19.2% | **34.2%** | 0.246 |
+
+**cue_reactivity**, three keys: 118, 106 and 15 gold papers with a record; ceiling 66% on all
+three.
+
+| key | screen / select | anlys | nofoci | paper P | paper R | foci P | foci R | foci F1 |
+|---|---|---|---|---|---|---|---|---|
+| reward | strict / strict | 228 | 39 | **43.2%** | 48.3% | **37.0%** | 32.3% | 0.345 |
+| reward | permissive / strict | 255 | 47 | 42.5% | 52.5% | 36.3% | 36.0% | **0.361** |
+| reward | permissive / permissive | 932 | 232 | 29.4% | **81.4%** | 19.8% | **49.8%** | 0.283 |
+| drug | strict / strict | 169 | 29 | **54.6%** | 50.0% | 44.9% | 33.2% | 0.382 |
+| drug | permissive / strict | 191 | 36 | 53.2% | 54.7% | 44.4% | 36.4% | **0.400** |
+| drug | permissive / permissive | 934 | 235 | 26.1% | **80.2%** | 16.2% | **47.3%** | 0.242 |
+| natural | strict / strict | 65 | 13 | 12.2% | 33.3% | 15.3% | 26.9% | 0.195 |
+| natural | permissive / strict | 77 | 15 | **13.0%** | 40.0% | **16.7%** | 37.3% | **0.231** |
+| natural | permissive / permissive | 946 | 230 | 3.7% | **80.0%** | 3.6% | **64.6%** | 0.068 |
+
+**vbm_of_substance_use**, `all drug classes`: 74 gold papers with a record, 511 gold foci,
+ceiling 81.2%.
+
+| screen / select | anlys | nofoci | paper P | paper R | foci P | foci R | foci F1 |
+|---|---|---|---|---|---|---|---|
+| strict / strict | 35 | 0 | **88.2%** | 20.3% | 46.9% | 20.7% | 0.288 |
+| strict / permissive | 68 | 0 | **89.5%** | 23.0% | 38.4% | 25.0% | 0.303 |
+| permissive / strict | 129 | 35 | 65.3% | 63.5% | **53.4%** | 60.3% | **0.566** |
+| permissive / permissive | 285 | 76 | 61.0% | **67.6%** | 36.0% | **71.4%** | 0.478 |
+
+**emotion_regulation_2022** stops at screening: 43.7% strict and 73.6% permissive recall over
+87 gold papers, and the benchmark ships no analysis-level annotation for it, so there is no
+map to score against.
+
+## What the four cells say
+
+**Permissive costs little at the first gate and a great deal at the second.** Strict
+selection has the better foci F1 in sixteen of the eighteen comparisons -- nine maps by two
+screening modes -- and the losses from relaxing it are not small: foci precision falls from
+89.7% to 61.0% on PTSD, 44.9% to 16.4% on cue drug, 42.7% to 21.8% on dementia functional.
+The two silences are not equivalent. A record that cannot answer "was this whole-brain" is
+usually still the right paper; an analysis whose cells cannot be signed is usually not the
+contrast the map pooled, and admitting it pools the wrong coordinates.
+
+**Permissive screening is worth it where screening is the binding constraint.** It buys 3 to
+43 points of paper recall, and it improves foci F1 on five of the nine maps: PTSD 0.528 to
+0.586, all three cue keys, and substance use 0.288 to **0.566**, which is the largest single
+effect in this document and comes from one predicate that can only say "cannot say" (see
+below). It costs 0.001 to 0.023 on dementia, where selection was already losing more than
+screening was.
+
+**So the cell to run is permissive screening with strict selection.** It has the best foci F1
+on six of the nine maps and is within 0.002 on a seventh. It is the same shape as the veto
+argument above, reached from the other side: let a silent record through, and act only on
+what the record positively says.
+
+**The best map is still not the published one.** Foci recall tops out at 71.4% (substance
+use, permissive/permissive, at 36.0% precision) and foci F1 at 0.566 (substance use,
+permissive/strict). Four maps are under 0.25 either way.
+
+## Where the foci go, and it is not the query
+
+Of the 990 analyses the strict/strict pipelines select across the fourteen maps, **684 reach
+coordinates and 306 do not**:
+
+| | analyses |
+|---|---|
+| joined to coordinates | 684 |
+| **`source_table_analysis` empty** | **234** |
+| its address names no row group in the parse | 40 |
+| the row group it names carries no coordinates | 32 |
+
+The empty slot is dementia's: 75 of the 163 analyses selected for `all`, 52 of 119 for
+`decrease`, and 195 of the 234 in that project alone. Substance use loses none of its 83. `resolve_source_table_analysis` fills the slot only where exactly one parsed
+entry under the cited tables carries the analysis's name, and on that project it usually
+cannot -- which is the same dangling-`Analysis.tables` finding the `Tables` stage work
+measured, arriving at the map.
+
+The ceiling makes the same point without the query in the way. Taking **every** analysis of
+**every** gold paper and joining it to the parse:
+
+| map | foci recall at the ceiling |
+|---|---|
+| `vbm_of_substance_use` / all drug classes | **81.2%** |
+| `vbm_of_ptsd` / non-PTSD > PTSD | 67.6% |
+| `cue_reactivity` / drug | 66.3% |
+| `cue_reactivity` / reward | 66.3% |
+| `cue_reactivity` / natural | 66.4% |
+| `dementia` / structural | 48.6% |
+| `dementia` / functional | 40.8% |
+| `dementia` / all, decrease | **37.6%** |
+
+No selection rule can beat those numbers, and four of the nine are under half the published
+map. The gap between a cell in the tables above and its ceiling is what the two queries
+cost; the gap between the ceiling and 100% is extraction and parsing, and on dementia it is
+the larger of the two.
+
+## Two things this run had to fix to be measurable
+
+**The benchmark stores MNI where the paper published Talairach**, and the record stores what
+the paper said. Cue reactivity's studyset is 3,270 MNI points and nothing else, and on 35 of the
+123 gold records behind its drug key the record resolves to `TAL` instead; substance use
+disagrees on 15 of 74, dementia on 4 of 16, PTSD on 2 of 17. Moving both sides into MNI with `query.engine._points` -- the same transform `pondie
+query` uses -- is what makes the comparison mean anything: it took cue reactivity's ceiling
+from 47.9% to 66.3%. The residual disagreements are counted per map in the script's output
+rather than smoothed away, because a space the record and the benchmark disagree about
+displaces foci by 5-10mm and no tolerance short of a smoothing kernel recovers them.
+
+**Two of dementia's keys are not direction-restricted.** `structural` and `functional` are
+`all` split by modality, `all` contains five analyses `decrease` does not, and `decrease` is
+a subset of `all`. So the contrast spec for those three admits `bvFTD` on either side and
+only `decrease` requires it lower. The earlier analysis-selection table treated all four as
+lower-only; `scripts/query_contrasts.py` now holds one spec per key and both scripts read
+it, so the two cannot disagree again.
+
+# What interrogating the records against the gold changed
+
+Every number above the arms comparison was rerun after this. The method was the same each
+time: take the gold papers a query misses, put each miss in the channel that lost it, and
+read the records in the largest channel. Six of the predicates were wrong, and each was
+wrong in a way the criterion itself settles.
+
+**1. A control group is named after the condition it does not have.** "nonsmoking control
+subjects", "comparison group, non-use of marijuana", "cannabis non-consuming group",
+"healthy controls with no history of alcohol misuse". A cohort pattern matched on words
+alone puts both sides of the contrast in the cohort, which leaves the contrast with no
+other side. It cost 13 of the 15 gold papers under substance use's nicotine key, 4 more
+under cannabis, and 7 of PTSD's 17. `is_healthy` derives half of the distinction from
+`medical_condition`; `names_cohort` in `scripts/query_contrasts.py` reads the negated
+namings a parser does not see, because they are morphology rather than syntax. **115
+records in the five projects have a control group that matches their own cohort pattern.**
+
+**2. A neutral condition is described by what it is not.** Cue reactivity's records carry
+`Condition.description` like "pictures of people not smoking cigarettes" and "nonalcoholic
+beverage pictures matched to the alcohol pictures". A cue pattern run over that prose
+matches the control side too. Matching `Condition.name` instead -- the field whose job is
+to name the thing -- took the drug key from 46 to 67 of 106 gold papers.
+
+**3. Cue reactivity does not require whole-brain analyses, and I had made it.** Its
+criterion reads "experiments reporting coordinates from whole-brain **or small-volume
+corrected** analyses ... were included (studies involving regions of interest [ROIs]
+derived from a brain parcellation scheme were excluded **given the absence of
+coordinates**)". The predicate had `spatial_scope == whole_brain` and a second test that
+rejected SVC outright, which inverts the sentence. Strict recall on that project: 60.7% to
+**81.4%**. The other three projects do state whole-brain only -- "(5) performed a
+whole-brain analysis", "as ROI analyses violate the ALE null-hypothesis", "papers reporting
+a priori regions of interest (ROIs)" excluded -- so the predicate stays for them.
+
+**4. "Presence of pharmacological manipulations" has a field, and it is not `allocation`.**
+`ArmKind` has the value `pharmacological`, glossed "an administered drug or other agent".
+Reading the criterion off `StudyDesign.allocation in {not_applicable, single_arm}` vetoed
+**46 of substance use's 76 gold papers and 105 non-gold**, because an observational cohort
+study is recorded `non_randomized`. Five arms in that whole 244-record project are
+`pharmacological`, which is what a VBM literature should look like.
+
+**5. Half a contrast is not the other contrast.** A simple effect that carries the cue side
+and no comparison -- `heroin-related, positive`, in a paper whose table is a cue-minus-
+neutral map -- does not say what it was contrasted against. That is now "cannot say" rather
+than False, so permissive admits it and strict does not.
+
+**6. A level spelled `H` against `O`.** 111 conditions in the corpus have a name with no
+three-letter word in it, and the task's own "foods of high hedonic value" and "neutral
+nonfood objects" sit beside them unlinked. Reading the label as the other side of the
+contrast reports a contradiction where the record is silent, so those are unresolved.
+
+One more change is not a correction but a definition: the cue keys the benchmark maps are
+the `_wbonly` ones, so the contrast spec for them requires the analysis's own
+`spatial_scope` to be whole-brain. That is the key's meaning, not the review's criterion.
+
+## What the records got wrong
+
+Counted over all 1,817 records. Everything here is the record's side of a query that is now
+faithful to the criterion.
+
+| | count | of |
+|---|---|---|
+| cells naming a level no `ModelTerm` declares | **2,164** | 12,098 cells |
+| levels reaching no entity at all -- no group, no condition | **2,000** | 6,854 levels |
+| analyses with no `coordinate_space` | 1,187 | 5,989 analyses |
+| cells carrying no sign: `undirected` | 900 | 12,098 cells |
+| cells carrying no sign: `direction` absent | 212 | 12,098 cells |
+| selected analyses whose `source_table_analysis` is empty | 234 | 990 selected |
+| conditions whose `name` has no three-letter word in it | 111 | 3,013 conditions |
+| cells whose `direction` is double-wrapped -- `{"value": "positive"}` with no `extraction_status` | 30 | 12,098 cells |
+
+`held` is not in that table: 476 cells carry it and it is the vocabulary working -- a
+factor held constant while another is contrasted, which is how an interaction is written.
+
+The double-wrapped direction is a shape defect rather than a judgement: the wrapper is missing its status,
+so every consumer that unwraps an `ExtractedValue` reads a dict where a string belongs and
+the cell silently loses its sign. It is 30 cells in two records and it is worth fixing
+because it is free to detect.
+
+The join failures are the expensive ones, and they are the same failure twice. A `Cell`
+names `<term>|<level>`; 18% of cells name a level that does not exist, and 29% of the
+levels that do exist reach neither a `Group` nor a `Condition`. Either one leaves an
+analysis whose contrast cannot be read at all -- not contradicted, unreadable -- which is
+why the permissive column moves so much.
+
+**The sign of a contrast is relative to a polarity the record does not state.** 103
+analyses are named for a loss or an atrophy while their measure is a volume, a density or a
+thickness. `26673947` records "Regions of GM atrophy in bvFTD versus control subjects" as
+bvFTD **positive**; `19884571` records "bvFTD group greater frontal grey matter loss than
+SMD group" as bvFTD **positive** on a `gray_matter_volume` measure. A query asking for the
+contrast the meta-analysis pools -- patients lower on grey matter -- reads both as the
+opposite contrast. Three records go further and give the measure a deficit-polarity type,
+`gray_matter_atrophy`, which makes the sign correct and the vocabulary inconsistent.
+
+## What the schema could hold better
+
+Three of these are new fields and three are changes to fields that exist. Each is here
+because a query needed it and had to be written around its absence, and the cost is the
+measurement beside it.
+
+**~~`Group.role`~~, and why a field cannot hold it.** Implemented, measured and removed --
+the case below is real and the field is not where the answer goes. See
+[was it worth it](#was-grouprole-worth-it-not-to-the-queries). Every cohort
+criterion needs it, and the only route today is a lexicon: `is_healthy` over
+`medical_condition`, plus a negation reader over the group's own name. 115 records have a
+control group that matches their cohort pattern, and before the negation reader those
+records lost the contrast entirely. A two-value enum -- `case` / `comparison` -- would
+replace both readers with a field test. `is_healthy` is not a substitute: a study of
+depressed against schizophrenic cohorts has no healthy group and still has a comparison.
+
+**~~`Measure.polarity`~~, and the test that killed it.** "Higher value means more tissue"
+against "higher value means more deficit" decides which map a coordinate enters, and 103
+analyses are named for a loss while measuring a volume. Synthesising the field says the
+field is the wrong fix: only 3 records type a measure as a deficit, flipping those changed
+no key, and inferring polarity from the analysis name instead lost gold on four keys and
+gained it on one. What is left is a vocabulary defect -- drop `gray_matter_atrophy` from
+the type vocabulary, so the sign is always relative to the substance being measured.
+
+**`Analysis.spatial_scope` needs to split `roi`.** Cue reactivity's criterion admits an ROI
+analysis that reports coordinates (a small-volume correction) and excludes one that does
+not (a parcellation ROI). The record has one value for both, so the criterion is
+unanswerable as written; the predicate approximates it by asking whether the analysis
+reaches a parsed row group. `roi_small_volume` against `roi_parcellation`, or an
+`Analysis.reports_coordinates` boolean, answers it directly. 1,884 analyses say `roi`.
+
+**`FactorLevel` should be required to reach an entity, or to be readable without one.** The
+2,000 levels that link neither a group nor a condition are the single largest reason a
+contrast cannot be read, and 111 conditions carry a name a human cannot read either. The
+repair that would help is not a normalization -- `spans.fold_label` is right that
+canonicalising a join key hides the failure -- it is a builder check that a level either
+links an entity or spells its own name out.
+
+**An analysis-level coordinate count.** "Did this contrast report any foci" is a stated
+criterion in two of these reviews and cannot be answered: `Table.coordinate_count` is
+per-table and empty on all 2,267 tables. The count can be derived -- 3,601 of 5,989
+analyses join a row group -- and the criterion still should not be run, because the 2,388
+that do not join are unjoined rather than silent: applied to PTSD it drops 5.8 points of
+recall to remove one false positive. Fix the join first; the field is worth adding when
+something reads it.
+
+**The derived contrast summary, still the largest simplification.** Which cohorts, which
+conditions, which direction, per analysis. Three of the six corrections above are in code
+that walks `analyses → effect.cells → cell.term → model_estimations[].terms[].levels →
+groups/conditions`, and the walk is why they were possible to get wrong. It needs no model:
+every input is in the record.
+
+# The query as a fifth and sixth arm, in the record-arms figures
+
+The record-arms experiment compares full-text autonima against autonima reading the
+extraction record, and it compares them as *maps*: each arm's studyset goes through MKDA
+density and the result is correlated with the meta-analysis's published map. The query
+belongs in that comparison rather than beside it, so it is written as two more arms.
+
+`scripts/query_studysets.py` writes, per project and per mode, the two files a run needs --
+`nimads_studyset.json` and `nimads_annotation.json`, plus a
+`fulltext_screening_results.json` in the shape the experiment's scorer reads -- into
+`projects/<project>/query-{strict,permissive}/outputs/`. From there nothing is
+query-specific: `code/run_mkda.py` builds the maps, `recordarms score` writes the CSVs and
+`make_figure4_record_arms.py` and `make_record_arm_figures.py` draw them.
+
+**An arm is end to end**, so a query arm is both gates: the published inclusion criteria
+choose the papers, the published contrast chooses their analyses. Two conventions are
+copied from autonima rather than improved on, because the figure compares selectors and
+every other difference is noise in it: coordinates go in as the paper published them with a
+`space` label beside them, and the note keys are autonima's annotation names from
+`nmb_mappings.json`.
+
+Two things had to be decided to make the comparison fair:
+
+**A map from two experiments is not a meta-analysis.** Substance use's cannabis query-strict
+studyset is 2 analyses; its map has almost no suprathreshold voxel, reads dice 0.000 against
+the manual map and r2_nonzero **0.756**, because the masked correlation is computed over the
+handful of voxels either map left nonzero. `results.MIN_ANALYSES = 5` drops it and the
+4-analysis opioids map, and nothing else in the comparison: those two are the only maps in
+84 below five. Leaving them in put the query's mean advantage over the baseline at +0.132;
+taking them out puts it at +0.041, and the second is the honest number.
+
+**A query arm must not remove a column from the arms' own comparison.** `map_columns` used
+to require every arm before it would use a benchmark column, so a column where the query
+maps nothing would have dropped that column for full text too. It now requires the three
+model arms and a baseline, and includes a query arm where it exists.
+
+Mean ΔR² against each column's own re-estimated baseline, over the columns each arm maps:
+
+| arm | Δ R² vs best baseline | 95% CI | columns |
+|---|---|---|---|
+| autonima, full text | +0.114 | [+0.034, +0.225] | 17 |
+| autonima, record + evidence | **+0.116** | [+0.056, +0.231] | 17 |
+| autonima, record, no evidence | +0.112 | [+0.052, +0.222] | 17 |
+| query, strict | +0.041 | [−0.040, +0.124] | 12 |
+| query, permissive | +0.049 | [+0.035, +0.102] | 14 |
+
+Per project, mean R² against the manual map over the columns each arm maps -- which is what
+figure 7 panel b plots:
+
+| project | full text | record + ev. | record, no ev. | query, strict | query, permissive |
+|---|---|---|---|---|---|
+| `vbm_of_ptsd` | 0.185 | 0.179 | 0.148 | 0.185 | **0.219** |
+| `dementia` | 0.076 | 0.129 | 0.121 | **0.204** | 0.122 |
+| `cue_reactivity` | 0.332 | 0.332 | **0.339** | 0.279 | 0.290 |
+| `vbm_of_substance_use` | **0.158** | 0.124 | 0.124 | 0.014 | 0.091 |
+
+The query's map is better than every model arm's on dementia, level with full text on PTSD,
+somewhat behind on cue reactivity, and far behind on substance use -- where its screening
+gate admits 19 papers of 244 under strict and the maps it does build are small. There is no
+arm that wins everywhere, and the spread within a project is mostly larger than the spread
+between the three model arms, which is the same thing `AUDIT.md` found from the other
+direction.
+
+The funnel figure keeps three arms. The query has no search, no abstract screen and no
+retrieval -- it starts from the extracted corpus -- and drawing it as a flat line through
+three stages it never ran would say something false about where it loses papers.
+
+# Testing the proposed fields, and filling three of them
+
+The section above proposed six changes. Each was then synthesised over the 1,817 records
+and the query that failed without it was re-run. Three of the six do not survive that, and
+saying so is the point of running it.
+
+| proposal | what the test did | outcome |
+|---|---|---|
+| `Group.role` | derive case/comparison from the cohorts' own words, re-run every key | **built, measured, removed**: it reproduces the readers' 164 gold papers at 0.547 mean F1 against their 0.549, and cannot express a role that depends on which map is being built |
+| `Study.language` | fetch `lang` from PubMed for all 1,804 ids, apply the criterion | **kept**: 1,703 are `eng`, one is not, and the criterion six reviews state becomes expressible |
+| `Analysis.coordinate_count` | count through `source_table_analysis` into the parse | **built and dropped**: fillable on 3,601 of 5,989 analyses, and nothing reads it -- the consumers join the parse directly -- while its one criterion, PTSD's null-effects exclusion, costs 5.8 points of recall because the 40% that cannot be joined look silent |
+| `Measure.polarity` | flip the expected sign where the measure is a deficit | **dropped**: only 3 records type a measure that way and flipping changed nothing; inferring polarity from the analysis name instead lost gold on four keys and gained it on one |
+| `Analysis.coordinate_space` propagation | run `derive_coordinate_spaces` over the corpus | **dropped**: fills 0. The 1,187 analyses with no space are the analyses whose paper has no parsed coordinates either, and `coordinate_space.resolve` reaches only 11 of them |
+| `spatial_scope` split | replace the "reaches a parsed row group" approximation with the field | **deferred**: identical by construction, so it buys clarity and no recall |
+
+The deterministic repairs already in the package were tested the same way and are the
+clearest negative result here. `unwrap_singletons`, `link_entities_by_name` and
+`drop_redundant_cell_levels` write 876 links and 728 drops and take the levels that reach
+no entity from 2,000 to 1,399 -- and **change no screening number on any of the five
+projects and no selection outcome on any of the fourteen keys**. A prototype repair that
+declares the `FactorLevel` a `Cell` already names, where its term declares none, adds 1,092
+levels and 1,036 further links and also changes nothing: the levels it creates are bare,
+and the entity link is the half that is missing.
+
+## What is filled now, and by what
+
+| field | filled by | coverage |
+|---|---|---|
+| `Study.study_type` | `pondie.extraction.pubmed`, E-utilities `esummary` | 1,804 of 1,817 |
+| `Study.language` | the same call, same response | 1,804 of 1,817 |
+
+Two more were built and taken out again, each for the same reason -- a field nothing reads
+and no measurement supports is a slot to maintain. `Group.role` reproduced two readers and
+could not express a role that depends on the question; `Analysis.coordinate_count` filled
+correctly on 60% of analyses and had no consumer, because the workflow joins the parse
+itself. The derivation for the second is four lines and this paragraph is where to find
+that it was tried: count the points of the row group `source_table_analysis` names, and
+leave it absent where the join does not reach one.
+
+`scripts/backfill_records.py` applies both to a corpus extracted before they existed. The E-utilities call is now a POST: 200 ids is a 2kB URL and NCBI
+answers a GET of that length with a 500 often enough to lose a whole batch.
+
+## Old queries against new, on old records and new
+
+Four runs, one table. *strict* recall and precision against each benchmark's included set.
+
+| project | old queries, as extracted | new queries, as extracted | new queries, backfilled |
+|---|---|---|---|
+| `vbm_of_ptsd` | 52.9% / 90.0% | 0.0% / 0.0% | 52.9% / **90.0%** |
+| `dementia` | 53.4% / 31.6% | 53.4% / 31.6% | 53.4% / 31.6% |
+| `cue_reactivity` | 60.7% / 34.1% | 0.0% / 0.0% | **81.4%** / 30.1% |
+| `vbm_of_substance_use` | 18.4% / 87.5% | 0.0% / 0.0% | **22.4%** / **89.5%** |
+| `emotion_regulation_2022` | 43.7% / 28.6% | 43.7% / 28.6% | 43.7% / 28.6% |
+
+**The zeroes are the point.** The new query asks three of the five for a language, because
+three of them state one, and a record that does not carry `Study.language` cannot answer --
+so strict, which drops what a record cannot answer, drops everything. The same query over
+the same records, backfilled from PubMed, is back to where it was and one paper better: the
+permissive cue selection goes from 462 papers to 461, and the paper it loses is the Chinese
+one. That is the whole measured effect of the language criterion, and it is the honest
+shape of a criterion that is stated and nearly always satisfied.
+
+Old queries read the backfilled records identically to the as-extracted ones, on every
+project, because they ask for none of the three fields.
+
+At the second gate, coordinate precision and recall against each published map, old
+contrast specs and new, both through the same scorer:
+
+| project / key | old F1 | new F1 | what changed |
+|---|---|---|---|
+| `vbm_of_ptsd` / non-PTSD > PTSD | 0.306 | **0.642** | the cohort's negated naming |
+| `dementia` / all, decrease, structural, functional | 0.436, 0.433, 0.310, 0.431 | unchanged | no dementia control is named `non-FTD` |
+| `vbm_of_substance_use` / all drug classes | 0.476 | **0.661** | the cohort's negated naming |
+| `cue_reactivity` / reward | 0.372 | **0.503** | the condition matched by name, not description |
+| `cue_reactivity` / drug | 0.350 | **0.525** | the same |
+| `cue_reactivity` / natural | 0.500 | 0.418 | the `_wbonly` key's own whole-brain gate, which the old spec did not apply |
+| `vbm_of_substance_use` / 5 per-drug keys | none | 0.456 to 0.801 | the old specs did not cover them |
+
+The figures were rebuilt from the backfilled records with this code -- studysets, maps,
+scoring, all three figures -- and every arm number is the same to three decimals. Nothing
+the new fields change reaches a map: the language criterion removes one paper from a
+462-paper selection. The rebuild is worth having anyway, because the figures now come from
+the corpus the pipeline produces rather than from the one it produced before these fields
+existed.
+
+## Was `Group.role` worth it? Not to the queries
+
+Over the 11 cohort keys, 212 gold papers, four ways of deciding which cohort is the case:
+
+| | gold papers found | mean coordinate F1 |
+|---|---|---|
+| the cohort pattern alone | 120 | 0.445 |
+| **+ `is_healthy`** | **160** | **0.546** |
+| + the negated-naming rule | 164 | 0.549 |
+| `Group.role`, read off the record | 164 | 0.547 |
+
+**`is_healthy` is nearly the whole fix, and it already existed.** The queries were not
+reading a derived field the package had had all along; using it is worth 40 gold papers
+and 0.101 of F1. The negated-naming rule on top is worth four more papers -- one each on
+PTSD, the pooled substance-use key, nicotine and cannabis.
+
+**The field reproduces that and cannot do better, because a role is relative to the
+question.** 22445480 has `Control Smoker` beside `MA-dependent Smoker`: the same cohort is
+the comparison for the methamphetamine map and the case for the nicotine one. A per-group
+enum picks one, picks comparison, and loses the nicotine contrast; 19645730 loses its
+contrast to `Non-alcoholic control status`, where the denial is real and the word form
+(`alcoholic` against `alcohol`) hides it. So the queries keep the two readers, which have
+the pattern in hand, and the field stays for consumers that want the common two-cohort
+answer without a lexicon. On this corpus it is a convenience, not a result.
+
+# Which meta-analysis the query does worst on, and why
+
+`vbm_of_substance_use`, and not for the reason the other numbers suggest.
+
+| | screening recall (strict) | mean selection F1 | map R² (query, strict) | best model arm |
+|---|---|---|---|---|
+| `vbm_of_ptsd` | 52.9% | **0.642** | 0.185 | 0.185 |
+| `dementia` | 53.4% | 0.402 | **0.204** | 0.129 |
+| `cue_reactivity` | **81.4%** | 0.482 | 0.279 | 0.339 |
+| `vbm_of_substance_use` | **22.4%** | 0.627 | **0.014** | 0.158 |
+| `emotion_regulation_2022` | 43.7% | -- | -- | -- |
+
+It has the second-best contrast selection of the five and the worst map by an order of
+magnitude. Those two facts are consistent, and the thing joining them is one predicate.
+
+**The screening gate starves it.** "Presence of pharmacological manipulations" is answered
+from `Arm.arm_kind`, and 153 of the project's 244 records declare no arm at all, so the
+criterion reads "cannot say" on 45 of its 76 gold papers. Strict drops what a record
+cannot answer, so it admits 19 papers; the studysets that follow are 2 to 20 analyses per
+drug class and two of the six columns are too small to map at all.
+
+**Given the right papers, the same selection makes the best map on the project.** Running
+the query's contrast selection over the benchmark's own included set -- its screening gate
+replaced by the gold list, everything else identical -- gives 52 contributing papers and 97
+analyses against strict's 18 and 39:
+
+| key | analyses | query over gold papers | query, strict | query, permissive | full text | record + evidence |
+|---|---|---|---|---|---|---|
+| alcohol | 35 | **0.505** | 0.024 | 0.170 | 0.493 | 0.390 |
+| all drug classes | 84 | 0.176 | 0.006 | 0.174 | **0.277** | 0.226 |
+| cannabis | 9 | **0.285** | -- | 0.105 | 0.011 | 0.004 |
+| nicotine | 30 | 0.000 | 0.003 | 0.002 | **0.069** | 0.041 |
+| opioids | 13 | 0.012 | -- | 0.001 | 0.004 | 0.006 |
+| stimulants | 23 | 0.082 | 0.024 | 0.096 | **0.090** | 0.077 |
+| **mean** | | **0.177** | 0.014 | 0.091 | 0.158 | 0.124 |
+
+So the deterministic contrast is not what fails here. It reads this project's records better
+than it reads any other project's except PTSD's, and its map beats full text's when it is
+handed the papers. What fails is a single criterion answered from a field four fifths of the
+records leave empty -- and the honest reading of that field is what makes it fail, because
+the previous reading answered from `allocation` and was wrong on 46 gold papers instead of
+silent on 45.
+
+Two smaller notes from the same table. `nicotine` reads 0.000 even over the gold papers, and
+every arm is under 0.07 there, so that column is not a query problem. And the query's
+`cannabis` map is the best of any arm by a factor of twenty-five, on 9 analyses -- which is
+under the five-analysis floor for the arms and above it here only because the gold papers
+supply more of them.
+
+# Re-extracting five of the papers that have no arm
+
+The substance-use failure is one criterion -- "presence of pharmacological manipulations",
+answered from `Arm`, and 153 of that project's 244 records declare no arm. Two questions
+follow: can the pipeline extract an arm at all, and would it now.
+
+## The demands pass could not ask for one, and that was a mistake
+
+`demands` is the only pass that declares an entity; `satisfy` emits exactly what was
+declared, and `fill` walks existing entities and skips nested ranges, so it cannot create
+`design.arms`. Nothing in the code forbids declaring an `Arm` -- the only kind `satisfy`
+refuses is `Table` -- so the restriction was entirely in the prompt, in two places: the
+`required_entities` example showed four kinds and never an arm, and `satisfy` said "emit
+one entity per declared entry, under the right **top-level list**" while rule 2 puts
+`arms` inside `study.design`. A declared arm had nowhere the instructions agreed on.
+
+Both are fixed: the example now carries an `Arm` and a `Timepoint`, the declarable set is
+stated (everything except `Table`, which already exists), and `satisfy` names
+`study.design.arms` as their destination.
+
+## Running the five papers said the arms were never the problem
+
+Five gold substance-use papers with no arm, re-extracted end to end with today's pipeline
+-- once on the shipped prompt, once on the patched one, five workers each:
+
+| | committed corpus | re-extracted, shipped prompt | re-extracted, patched prompt |
+|---|---|---|---|
+| declared an `Arm` | 0 of 5 | 0 of 5 | 0 of 5 |
+| `assignment_structure` | `parallel` on 4 | `observational_cohorts` on 3 of 4 | **`observational_cohorts` on 5 of 5** |
+| `allocation` | `non_randomized` on 3 | mixed | `observational_cohorts` on 4 of 5 |
+
+**No arm is the right answer for these papers.** They are observational VBM studies;
+nobody was allocated to anything, so the patched instruction -- declare an arm whenever
+the paper administered something -- correctly does not fire. The prompt gap was real and
+worth closing for drug studies, and it is not what makes this project fail.
+
+**What makes it fail is a stale corpus.** `assignment_structure: observational_cohorts` is
+the value the schema added for exactly this design, and today's pipeline writes it on five
+of five. The committed records say `parallel` because they were extracted before the value
+existed. The criterion is answerable from these records and was not from those: over the
+five papers, "no pharmacological manipulation" answers on **4 of 5 re-extracted against 1
+of 5 committed**.
+
+**And a new defect, which the run found rather than the corpus.** Four of the five write
+`observational_cohorts` into `allocation`, which is `assignment_structure`'s vocabulary,
+not allocation's. The value is accepted because the vocabulary is open, and it answers a
+different question: `allocation` is the only record of whether anything was administered
+at all, and its own value for that is `not_applicable`.
+
+**Saying that in the slot fixed it, on five of five.** The slot's description now states
+that a study with no arms takes `not_applicable` here and says `observational_cohorts` in
+its neighbour, and that this slot is the only record of whether anything was administered.
+A third run of the same five papers:
+
+| paper | committed | re-extracted | + prompt fix | + the slot description |
+|---|---|---|---|---|
+| 11822992 | `not_applicable` / `parallel` | `observational_cohorts` / `observational_cohorts` | none / none | **`not_applicable` / `observational_cohorts`** |
+| 14706428 | `non_randomized` / `parallel` | `not_applicable` / `observational_cohorts` | `observational_cohorts` / `observational_cohorts` | **`not_applicable` / `observational_cohorts`** |
+| 15607838 | `non_randomized` / `parallel` | `not_applicable` / `observational_cohorts` | `observational_cohorts` / `observational_cohorts` | **`not_applicable` / `observational_cohorts`** |
+| 15982446 | none / none | none / none | `observational_cohorts` / `observational_cohorts` | **`not_applicable` / `observational_cohorts`** |
+| 16369836 | `non_randomized` / `parallel` | `observational_cohorts` / `observational_cohorts` | `observational_cohorts` / `observational_cohorts` | **`not_applicable` / `observational_cohorts`** |
+
+Five of five exactly right, against one of five in the committed corpus. The criterion
+answers on all five, and one of the five now passes strict screening outright; the four
+that do not are blocked by `Analysis.coordinate_space`, by `Study.language` (this harness
+did not run the PubMed backfill over these records), and on one paper by a cohort the
+record names but does not diagnose.
+
+## So: does this need a new field?
+
+No. The measurement says the field exists, is filled on 92% of the corpus, and was filled
+wrongly: on the 76 substance-use gold papers -- every one of which administered nothing,
+because the review excluded pharmacological manipulations -- 46 records say `randomized`
+or `non_randomized`, which the schema reads as "something was still administered".
+Coverage was never the problem and a new question would have inherited the same
+confusion. What the slot needed was to say which question it answers.
+
+`observational_cohorts` alone would not have been enough either. It covers the commonest
+design and not the criterion: `single_group` says nothing about administration, and
+`crossover` and `within_subject` take priority over it by the field's own description, so
+a cohort study with two sessions loses the signal -- 44 records corpus-wide read "the
+structure implies arms and none are declared".
+
+What is worth adding is not a question but a derivation: `StudyDesign.administered`,
+`deterministic`, true where any `Arm.arm_kind` is not `no_intervention` or an `Arm.agent`
+is named or `allocation` is an allocation, false where `allocation: not_applicable` or
+`assignment_structure: observational_cohorts`. One field to test instead of four to join,
+and it cannot contradict its sources. It would not have rescued the committed corpus --
+a derivation cannot repair its inputs -- which is why the fix that matters here is the
+slot description and a re-extraction.
+
+Two query changes follow from the run, both faithful to the criterion:
+
+* `no_pharmacological` reads `assignment_structure: observational_cohorts` as well as
+  `allocation: not_applicable` -- the schema glosses the first as "not assigned to
+  anything ... and nothing was administered", which is the criterion in its own words.
+* `group_condition` reads the cohort's **name** as well as its `medical_condition`, because
+  re-extracting 15607838 gives its case cohort the name "marijuana group" and an empty
+  condition. The name may only say yes: letting it say no contradicted two gold papers
+  whose cohorts are "successful quitters" and "all participants".
+
+The five re-extracted records still do not pass strict screening, and what blocks them is
+the rest of this document: `Analysis.coordinate_space` empty on two, `spatial_scope` on
+one, no analyses at all on one, and `Study.language` missing because this harness did not
+run the PubMed backfill over them.

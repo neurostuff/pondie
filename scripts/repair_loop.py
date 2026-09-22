@@ -343,7 +343,7 @@ def assert_on_gpu(holder, what: str, allow_cpu: bool) -> None:
             f"devices={torch.cuda.device_count()}")
 
 
-def paper_abbreviations(text: str):
+def paper_abbreviations(text: str, paper: str):
     """The paper's own abbreviation table, or None if scispacy is unavailable.
 
     pondie mines these with Schwartz & Hearst -- almost every abbreviation is defined on
@@ -354,7 +354,7 @@ def paper_abbreviations(text: str):
     """
     try:
         from pondie.vocabularies.abbreviations import Abbreviations
-        return Abbreviations.load().for_paper(text)
+        return Abbreviations.load().for_paper(text, paper)
     except Exception as exc:
         print(f"  warn: no abbreviation table ({exc})", flush=True)
         return None
@@ -1663,7 +1663,7 @@ def main() -> int:
         text = (args.corpus / pmid / "processed/local/text.tables.txt").read_text(errors="replace")
         method_results = sections(text)
         global ABBREV
-        ABBREV = paper_abbreviations(text)
+        ABBREV = paper_abbreviations(text, pmid)
         record = json.loads((args.records / f"{pmid}.extraction.json").read_text())
         parsed_foci = stage1_analyses(args.corpus, pmid)
         history = []

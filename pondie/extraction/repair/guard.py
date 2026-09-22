@@ -25,6 +25,7 @@ from dataclasses import field as dataclass_field
 from typing import Any, Callable, Mapping, MutableMapping
 
 from pondie.extraction.record import ids, spans as span_tools
+from pondie.extraction.record.fix import derive
 from pondie.extraction.record.effect import terms_in_scope
 from pondie.extraction.record.ids import from_local_id, label_of
 from pondie.extraction.record.validate import EXTRACTION_SCHEMA
@@ -508,16 +509,59 @@ def create(
             entity[name] = _wrap(value, text)
 
     entity.update(_nested_defaults(sch, record, class_name, proposal, text))
+    entity.update(_derived(sch, class_name, entity))
 
     required = {
         name
         for name, slot, _kind in sch.iter_slots(class_name)
         if slot.required and name not in ("local_id", "id")
     }
-    missing = sorted(required - set(entity) - _referenced_slots(sch, class_name))
+    missing = sorted(
+        required
+        - set(entity)
+        - _referenced_slots(sch, class_name)
+        - _deterministic_slots(sch, class_name)
+    )
     if missing:
         return None, f"{class_name} would be missing {', '.join(missing)}"
     return entity, ""
+
+
+def _deterministic_slots(sch: Schema, class_name: str) -> set[str]:
+    """Required slots code fills rather than a model, so a proposal cannot be asked for one.
+
+    Storage marks them `deterministic` and the extraction projection drops them, which is
+    the same reading `generate` takes. Requiring one of a proposal demands a value no
+    proposal can carry: `Acquisition.acquisition_type` is the only required deterministic
+    slot in any swept class, and it refused every acquisition the sweep proposed --
+    "would be missing acquisition_type" on a proposal that named its modality and wanted
+    nothing else.
+    """
+    return {
+        name
+        for name, slot, _kind in sch.iter_slots(class_name)
+        if "deterministic" in (getattr(slot, "in_subset", None) or [])
+    }
+
+
+def _derived(sch: Schema, class_name: str, entity: Mapping[str, Any]) -> dict[str, Any]:
+    """The deterministic slots a minted entity settles from what it already holds.
+
+    One today, and it is the type designator. `Acquisition.acquisition_type` names the
+    subclass carrying that modality's own parameters, so an acquisition minted without it
+    resolves to the base class where every modality-specific slot is undeclared -- and
+    `apply` reads the designator to decide which class the next write is checked against,
+    so the omission costs the entity its parameters twice.
+
+    Through `derive.modality_subclasses`, which `build` uses for the same fill, rather than
+    a second mapping here: two readings of one enum drift, and this one would drift silently
+    because the sweep is optional. Written bare, not wrapped -- the slot is a plain string,
+    and the record states this rather than the paper.
+    """
+    if not sch.resolves_to(class_name, "Acquisition"):
+        return {}
+    target = derive.acquisition_subclass(values.read(entity.get("modality")))
+    return {"acquisition_type": target} if target else {}
 
 
 def _referenced_slots(sch: Schema, class_name: str) -> set[str]:

@@ -40,6 +40,7 @@ from pondie.extraction.models import Prompt
 # deterministic text transforms selected by --preprocess.
 from pondie.extraction.prompt import worked
 from pondie.extraction.record import ids
+from pondie.extraction.record.fix import shape
 from pondie.formats import parse_keys
 from pondie.schema import reader
 from pondie.schema.reader import Schema
@@ -429,9 +430,8 @@ Rules that decide whether a record is usable:
       entirely: a reference is not an ExtractedValue, so it has no `not_reported` form,
       and neither `null` nor a wrapper is a valid value for one. Rule 5 does not apply
       to these.
-5. A field the paper does not report takes
-   {{"extraction_status": "not_reported"{absent_evidence}}}.
-   Use it rather than omitting a REQUIRED field, and never invent a value to fill one.
+5. Never omit a REQUIRED field and never invent a value to fill one. A field the paper
+   does not report takes the `not_reported` form rule 3 gives.
 6. `local_id` is a bare string you assign, unique within its class, referenced by other
    records. Every local_id referenced must exist.
 
@@ -463,31 +463,39 @@ Rules that decide whether a record is usable:
     after the comparison it was the subject of.
 """
 
-VALUE_RULE_EVIDENCE = """Every source-derived value is an ExtractedValue wrapper:
+#: The half of the value rule that does not depend on whether evidence is being collected.
+#: `{absent}` is the empty slot's own form, which does differ between the two.
+_UNREPORTED_TAIL = """   A slot with no value takes {absent} and nothing more; that alone
+   says the attribute was examined and the paper carries no value. Add `unreported_reason`
+   ONLY where the reason is not plain silence: ambiguous (the paper addresses it and
+   settles on no one value), outside_text (it is in a figure, an image-only table or an
+   unfetched supplement), cited_elsewhere (given by reference to another paper),
+   undetermined (you could not work it out -- use this rather than a bare `not_reported`
+   unless you established the page says nothing)."""
+
+#: The empty slot's own form, which is the one thing the tail does differ on.
+_ABSENT_WITH_EVIDENCE = (
+    '{"extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}'
+)
+_ABSENT_PLAIN = '{"extraction_status": "not_reported"}'
+
+_WRAPPER_WITH_EVIDENCE = """Every source-derived value is an ExtractedValue wrapper:
    {"extraction_status": "extracted", "value": <value>, "value_source": "reported",
     "evidence": {"status": "present", "sets": [{"quotes": ["<verbatim span>"]}]}}
    A quote MUST be copied character-for-character from the paper. It is located in the
    source text by exact match; a paraphrased or reconstructed quote is dropped.
-   A slot with no value takes `not_reported` and nothing more:
-   {"extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}
-   That alone says the attribute was examined and the paper carries no value. Add
-   `unreported_reason` ONLY where the reason is not plain silence: ambiguous (the paper
-   addresses it and settles on no one value), outside_text (it is in a figure, an
-   image-only table or an unfetched supplement), cited_elsewhere (given by reference to
-   another paper), undetermined (you could not work it out -- use this rather than a bare
-   `not_reported` unless you established the page says nothing)."""
+"""
 
-VALUE_RULE_NO_EVIDENCE = """Every source-derived value is an ExtractedValue wrapper:
+_WRAPPER_PLAIN = """Every source-derived value is an ExtractedValue wrapper:
    {"extraction_status": "extracted", "value": <value>, "value_source": "reported"}
    DO NOT emit an `evidence` key anywhere. Supporting spans are added by a separate later
    pass. Spend your output on getting the values right and complete, not on quotation.
-   A slot with no value takes {"extraction_status": "not_reported"} and nothing more; that
-   alone says the attribute was examined and the paper carries no value. Add
-   `unreported_reason` ONLY where the reason is not plain silence: ambiguous (the paper
-   addresses it and settles on no one value), outside_text (it is in a figure, an
-   image-only table or an unfetched supplement), cited_elsewhere (given by reference to
-   another paper), undetermined (you could not work it out -- use this rather than a bare
-   `not_reported` unless you established the page says nothing)."""
+"""
+
+VALUE_RULE_EVIDENCE = _WRAPPER_WITH_EVIDENCE + _UNREPORTED_TAIL.format(
+    absent=_ABSENT_WITH_EVIDENCE
+)
+VALUE_RULE_NO_EVIDENCE = _WRAPPER_PLAIN + _UNREPORTED_TAIL.format(absent=_ABSENT_PLAIN)
 
 DEMANDS_NOTE = """
 This pass emits `analyses`, and the SHOPPING LIST of entities those analyses need.
@@ -506,15 +514,22 @@ declared entity's own attributes; here you state only what it must be.
        "term_type": "continuous", "levels": [], "model": "m_group",
        "why": "the second analysis reports the sign of its slope"},
       {"local_id": "m_first_level", "kind": "ModelEstimation", "label": "subject-level GLM"},
-      {"local_id": "r_ffa", "kind": "Region", "label": "fusiform face area"}
+      {"local_id": "r_ffa", "kind": "Region", "label": "fusiform face area"},
+      {"local_id": "a_drug", "kind": "Arm", "label": "single 20mg dose of methylphenidate",
+       "why": "the contrast is over what was administered, so the level names an arm"},
+      {"local_id": "tp_post", "kind": "Timepoint", "label": "1 hour post-dose"}
     ]
 
 That example is a different study from the one you are reading. Take its shape and none of
 its content: no label, level or identifier from it belongs in your answer unless this paper
 independently says so.
 
-`kind` is a class name: ModelEstimation, ModelTerm, Measure, Region, Group, Acquisition,
-Preprocessing, InferenceSettings, Task, Assessment, Device, Arm, Timepoint.
+`kind` is a class name, and any class the schema declares may be named except `Table`,
+which already exists and is listed for you: ModelEstimation, ModelTerm, Measure, Region,
+Group, Condition, Acquisition, Preprocessing, InferenceSettings, Task, Assessment, Device,
+Arm, Timepoint. A level that names one of these must declare it. Declare an Arm whenever
+the paper administered something -- a drug, a stimulation protocol, a programme -- even
+where the contrast is between cohorts rather than between arms.
 
 For a ModelTerm, `term_type` and `levels` are REQUIRED and they are the load-bearing part
 of this pass. Decide them from what the contrast does, not from what the term is called:
@@ -541,8 +556,10 @@ SATISFY_NOTE = """
 This pass extracts the STUDY ENTITIES. The analyses were extracted first and have already
 declared, in the shopping list below, which entities they reference and what each must be.
 
-Emit one entity per declared entry, under the right top-level list, using EXACTLY the
-`local_id` given. A declared id you do not emit is a dangling reference and the record fails
+Emit one entity per declared entry, under the right list, using EXACTLY the `local_id`
+given. Most of them are top-level lists; `Arm` and `Timepoint` are the exceptions and go
+in `study.design.arms` and `study.design.timepoints`, which is where the Study class holds
+them. A declared id you do not emit is a dangling reference and the record fails
 to build; an id you rename is the same failure. Fill each entity's own attributes from the
 paper as usual -- the declaration says which entity it is, not what its attributes are.
 
@@ -566,43 +583,17 @@ group's demographics, an assessment, the scanner -- as usual. The list is a floo
 ceiling.
 """
 
-MODE_NOTE = {
-    "entities": """
-This pass extracts the STUDY ENTITIES only. Do NOT emit `analyses` or `tables`: a separate
-pass extracts the analyses and will refer to the `local_id`s you assign here, so every
-entity needs one. Describe the model the authors estimated -- its terms, their levels, and
-which conditions, cohorts, occasions, arms or regions those levels name -- even though the
-contrasts themselves come later.
-
-Occasions and cohorts are factors in exactly the sense conditions are: a study with no
-paradigm still has a categorical term if it measured the same people twice, its levels
-being the occasions, which `FactorLevel.timepoints` names. Do not let the absence of a
-task decide that there is no factor. Each level's label is the source's own wording.
-
-A Region is an entity in the sense a Group or a Task is, and THIS PASS IS THE ONLY PLACE
-ONE CAN BE CREATED. Emit a Region for each place the study delimited: every ROI or mask an
-analysis was restricted to, every connectivity seed and target, every atlas parcel used by
-name, every component or cluster reused as a node, and every sphere whose centre the paper
-gives. Each carries its own `definition_method` -- how *that* region was delimited -- and
-its coordinates, radius or atlas belong in its `description`.
-
-A paper that ran any ROI, seed, mask or parcel analysis and emits no `regions` leaves the
-analyses pass with nothing to point `Analysis.regions` at. The ROI information is then not
-misplaced but lost: there is no slot on Analysis for how a region was defined, so an
-analysis restricted to a region it cannot name has no way to say it was restricted at all.
-""",
-    "analyses": """
-This pass emits `analyses` and nothing else. The supporting entities were extracted
-separately and are listed below with their local_ids; refer to them, do not re-emit them.
-
-Two jobs, in this order. First settle the SET of analyses. The stage-1 listing below is a
-first pass over the coordinate tables made without seeing their rows, so it is the starting
-point and not the answer; the rules there say when one of its entries is really two and
-when it is none. Then annotate each analysis you kept: its scope, measure, statistic,
-effect cells, inference settings, method payload, and its links by local_id -- `tables`
-among them, and `regions` where the analysis was restricted to any.
-""",
-}
+#: Keyed by stage. `demands` runs first and emits the analyses plus the shopping list;
+#: `satisfy` builds the entities that list declares.
+#:
+#: There were two further entries, `entities` and `analyses`, left from the supply-driven
+#: ordering that `demands`/`satisfy` replaced. `build_prompt` is only ever called with a
+#: stage name so neither was reachable, and both had become wrong -- each told the model
+#: the other pass had not run yet. Their content is carried by the notes below and by the
+#: rendered schema; the region paragraph went with them deliberately, because
+#: docs/extraction-workflow-experiments.md records that it was in the prompt while the
+#: failure it warns about happened anyway, which is what motivated the reordering.
+MODE_NOTE = {"demands": DEMANDS_NOTE, "satisfy": SATISFY_NOTE}
 
 
 def requirements_block(declared: Mapping[str, Any]) -> str:
@@ -690,8 +681,6 @@ def worked_models() -> str:
 #: side, exactly as `analyses` and `entities` do; what differs is the order they run in and
 #: that the shopping list, not a guess, decides which entities exist.
 MODE_SCHEMA = {"demands": "analyses", "satisfy": "entities"}
-MODE_NOTE["demands"] = DEMANDS_NOTE
-MODE_NOTE["satisfy"] = SATISFY_NOTE
 
 
 def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
@@ -724,7 +713,6 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
             # the repair pass mints by cannot drift apart.
             id_prefixes=ids.prefix_table(),
             value_rule=VALUE_RULE_EVIDENCE if evidence else VALUE_RULE_NO_EVIDENCE,
-            absent_evidence=', "evidence": {"status": "not_applicable"}' if evidence else "",
         )
         + MODE_NOTE[mode]
     )
@@ -784,6 +772,8 @@ def postcondition_failures(
                 "no required_entities were declared, so the entity pass that "
                 "follows has nothing to be held to"
             )
+        if mode == "demands":
+            failures.extend(vacuous_entity_demands(payload))
         failures.extend(unreachable_term_demands(payload))
     else:
         if not any(payload.get(key) for key in schema.entity_lists()):
@@ -809,6 +799,35 @@ def postcondition_failures(
                 + ", ".join(sorted(missing)[:8])
             )
     return failures
+
+
+def vacuous_entity_demands(payload: Mapping[str, Any]) -> list[str]:
+    """Declared entities that identify nothing, reported only when none identify anything.
+
+    On `4UoCgF3UJSXq` the pass returned six fully populated analyses and a
+    `required_entities` list holding one all-null row. The payload was complete, valid
+    JSON closing on `stop`, 3,277 output tokens against 1,667 for the smallest reply that
+    succeeded, so it was not truncation -- the shape was filled with nulls instead of
+    content. `satisfy` read the row, built nothing, and the record came out with
+    `tasks: null` while `events.jsonl` said `"state": "done"`.
+
+    Retried only when *every* row is vacuous, because that is the case where no retry can
+    cost anything: there is nothing to preserve. Where good rows sit beside a vacuous one
+    the rows are dropped by the `vacuous_demands` repair instead, which keeps the good
+    ones exactly as the pass wrote them. A vacuous row cannot be re-asked on its own --
+    with `kind` null it names no entity class to ask about, so there is no narrower
+    question than the one the whole pass already answers.
+    """
+    entries = payload.get("required_entities")
+    if not isinstance(entries, list) or not entries:
+        return []
+    vacuous = [entry for entry in entries if shape.is_vacuous(entry)]
+    if len(vacuous) < len(entries):
+        return []
+    return [
+        f"all {len(entries)} required_entities have no local_id, kind or label: the "
+        "declaration names no entity, so the pass that follows has nothing to build"
+    ]
 
 
 def unreachable_term_demands(payload: Mapping[str, Any]) -> list[str]:

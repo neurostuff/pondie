@@ -103,11 +103,18 @@ vocabulary needs more than 200 to reach 55%. The heads are exactly what a query 
 `name_links` recovers 595 condition links on an exact name match; the rest is
 `record-defects.md` finding 7 and needs the extraction pass, not a normaliser.
 
-**2. Nothing needs adding.** `Condition.condition_kind` is the field and it is 100% filled;
-joined to `Cell.direction` it gives the target/baseline shape on 60% of contrasts. An earlier
-draft of this document proposed a `target`/`baseline` role on `Condition` instead, which is
-wrong twice over: the field exists, and the role is a property of the contrast rather than of
-the condition, which is what `ConditionKind`'s description already says.
+**2. Nothing needs adding.** `Condition.condition_kind` is the field and it is 92% filled on
+the 2,115-record corpus; joined to `Cell.direction` it gives the target/baseline shape on 60%
+of contrasts. An earlier draft of this document proposed a `target`/`baseline` role on
+`Condition` instead, which is wrong twice over: the field exists, and the role is a property
+of the contrast rather than of the condition, which is what `ConditionKind`'s description
+already says.
+
+Narrower than it reads, though: the field is a **within-paper** judgement and not a corpus-stable
+term. Of 206 condition names appearing three or more times, 24% get different kinds in
+different papers, covering 37% of mentions — `look neutral` is `task_state` in six papers and
+`control_state` in eight. Use it to pick sides inside one analysis; do not join on it across
+papers. [normalization-layer.md](normalization-layer.md) has the table.
 
 **3. Curate the target side, not the condition side.** 231 bags, ~100 terms for 77%
 coverage. That is a tractable list, unlike the 1,415-bag condition vocabulary or the 887-bag

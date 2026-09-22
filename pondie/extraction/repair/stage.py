@@ -274,7 +274,7 @@ def run(
     # to expand and cannot tell "CAPS total score" from "clinician-administered PTSD scale
     # (CAPS)" -- the check exists for that case and was unreachable in production while
     # every caller passed None.
-    abbreviations = _abbreviations(text)
+    abbreviations = _abbreviations(text, study_id)
     # Methods and results, not the whole paper. Both models take this as their premise, and
     # a proposer truncating the first 45,000 characters of a full document sees title,
     # abstract and introduction before it sees a method. `sectionize` falls back to the whole
@@ -343,14 +343,20 @@ def _premise(text: str) -> str:
     return joined if len(joined) >= max(2_000, len(text) // 10) else text
 
 
-def _abbreviations(text: str) -> Any:
+def _abbreviations(text: str, study_id: str) -> Any:
     """The paper's own expansions, or None where the vocabulary package is unavailable.
 
     Without it `same_entity` has nothing to expand and cannot tell "CAPS total score" from
     "clinician-administered PTSD scale (CAPS)".
+
+    Scoped to the study rather than to the text alone. `for_paper` needs the paper's name
+    to reach the store's own rows for it, and passing only the text left it re-mining and
+    nothing else.
     """
+    if not str(study_id or "").strip():
+        return None
     try:
-            return Abbreviations.load().for_paper(text)
+        return Abbreviations.load().for_paper(text, study_id)
     except Exception:  # noqa: BLE001 -- an optional vocabulary, not a failure
         return None
 

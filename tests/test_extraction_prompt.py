@@ -21,6 +21,8 @@ from __future__ import annotations
 import pytest
 
 from pondie.extraction.prompt import render, worked
+from pondie.extraction.record import fix
+from pondie.extraction.record.fix import shape
 from pondie import schema
 
 #: Rendered separately or filled by the builder, so neither pass describes them.
@@ -121,22 +123,28 @@ def test_the_worked_models_survive_the_slice() -> None:
 
 
 def test_both_passes_are_sent_the_worked_models() -> None:
-    for mode in ("entities", "analyses"):
+    for mode in render.MODE_NOTE:
         user = render.build_prompt("PAPER TEXT", mode, False, "").user
         assert "# Worked models" in user
         assert "5.6 A pre–post change with no paradigm" in user
 
 
-def test_the_entities_pass_is_told_a_level_may_name_an_occasion() -> None:
+def test_an_occasion_is_offered_as_a_level_to_the_pass_that_decides_levels() -> None:
     """The prompt used to name `conditions` and nothing else, so a resting-state
-    pre/post study read as having no factor at all -- TgcHKMRfrVog's defect, from
-    the instruction that produced it."""
+    pre/post study read as having no factor at all -- TgcHKMRfrVog's defect.
 
-    note = render.MODE_NOTE["entities"]
+    Asserted against the RENDERED prompt of the pass that now makes the call. Under
+    demand-driven ordering `demands` decides `term_type` and `levels`; the rule used to sit
+    in a `MODE_NOTE` entry keyed `entities`, which `build_prompt` never reaches, so that
+    test passed on text no model was sent.
+    """
 
-    for slot in ("conditions", "cohorts", "occasions", "arms", "regions"):
-        assert slot in note
-    assert "FactorLevel.timepoints" in note
+    demands = _unwrapped(render.build_prompt("PAPER", "demands", False, "").system)
+    assert "A condition, an occasion, an arm, a cohort" in demands
+
+    # and `satisfy` is told what a level links to when it builds the term
+    satisfy = _unwrapped(render.build_prompt("PAPER", "satisfy", False, "").system)
+    assert "arm, condition, timepoint or group carrying it" in satisfy
 
 
 def test_payload_keys_split_cleanly(extraction_schema) -> None:
@@ -163,17 +171,25 @@ def test_payload_keys_split_cleanly(extraction_schema) -> None:
 # Three instruction gaps, each measured on the 16-record corpus rather than imagined.
 
 
-def test_the_entities_pass_is_told_to_emit_regions() -> None:
-    """Eleven of sixteen papers emitted zero `regions`, and those eleven are exactly the
-    ones throwing `roi_definition` (61 errors), `roi_labels` (9) and the LinkML rule "an ROI
-    analysis must name the regions it ran over" (17) -- 87 of 143. This pass is the only
-    place a Region can be created and it never mentioned one.
+def test_a_region_is_reachable_by_declaration_rather_than_by_exhortation() -> None:
+    """Eleven of sixteen papers emitted zero `regions` -- 87 of 143 errors.
+
+    The entities-mode prompt already carried a paragraph warning about exactly that
+    failure and the failure happened anyway, which
+    docs/extraction-workflow-experiments.md §1 reads as evidence that this is a workflow
+    ordering problem and not a prompt-wording problem. The fix was demand-driven ordering,
+    so the guarantee to assert is structural: an analysis DECLARES the Region it needs and
+    `satisfy` is obliged to emit every declared entity. The paragraph went with the
+    ordering it belonged to.
     """
 
-    note = render.MODE_NOTE["entities"]
-    assert "Region" in note
-    assert "ONLY PLACE" in note.upper()
-    assert "definition_method" in note
+    demands = _unwrapped(render.build_prompt("PAPER", "demands", False, "").system)
+    assert '"kind": "Region"' in demands, "the shopping list can name a Region"
+    assert "Region," in demands, "Region is in the declarable class list"
+
+    satisfy = _unwrapped(render.build_prompt("PAPER", "satisfy", False, "").system)
+    assert "Emit one entity per declared entry" in satisfy
+    assert "dangling reference" in satisfy
 
 
 def _unwrapped(text: str) -> str:
@@ -318,3 +334,70 @@ def test_the_postcondition_reaches_the_demands_pass():
     than handing an unsatisfiable list to `satisfy`."""
     failures = render.postcondition_failures(_demand("mod_a", ["mod_a", "mod_b"]), "demands")
     assert any("trm_timing" in f for f in failures)
+
+
+# --------------------------------------------------- a declaration that names no entity
+
+
+def _vacuous_demand(*rows: dict) -> dict:
+    """A demands payload whose analyses are sound and whose entity list is the argument.
+
+    Shaped after `4UoCgF3UJSXq`, where six populated analyses travelled beside an entity
+    list holding one all-null row.
+    """
+    return {"analyses": [{"local_id": "a_1", "name": "an analysis"}], "required_entities": list(rows)}
+
+
+VACUOUS = {"local_id": None, "kind": None, "label": None}
+REAL = {"local_id": "grp_1", "kind": "Group", "label": "patients"}
+
+
+def test_an_all_null_declared_entity_is_vacuous():
+    assert shape.is_vacuous(VACUOUS)
+
+
+def test_blank_strings_are_as_vacuous_as_nulls():
+    """The model writes `""` as readily as `null`, and neither names an entity."""
+    assert shape.is_vacuous({"local_id": "", "kind": "   ", "label": None})
+
+
+def test_an_entity_naming_any_one_field_is_not_vacuous():
+    """`kind` alone is enough for `satisfy` to build something, so it is not a fault."""
+    assert not shape.is_vacuous({"local_id": None, "kind": "Task", "label": None})
+    assert not shape.is_vacuous(REAL)
+
+
+def test_a_wholly_vacuous_declaration_fails_the_post_condition():
+    """The observed failure: valid JSON, finish `stop`, and `satisfy` builds no task from it.
+
+    Caught inside the pass so the retry names the fault, rather than reaching a record
+    where `tasks` is null and `events.jsonl` says the stage is done.
+    """
+    failures = render.postcondition_failures(_vacuous_demand(VACUOUS), "demands")
+    assert any("no local_id, kind or label" in f for f in failures)
+
+
+def test_one_vacuous_row_beside_a_real_one_is_not_a_retry():
+    """Re-asking would resample the rows that came out fine. The repair drops the bad row
+    and leaves the good ones as the pass wrote them."""
+    assert render.postcondition_failures(_vacuous_demand(VACUOUS, REAL), "demands") == []
+
+
+def test_the_repair_drops_the_vacuous_row_and_keeps_the_rest():
+    body = _vacuous_demand(VACUOUS, REAL)
+    lines = shape.drop_vacuous_demands(body)
+    assert lines and "dropped 1" in lines[0]
+    assert body["required_entities"] == [REAL]
+
+
+def test_the_repair_is_silent_on_a_sound_declaration():
+    body = _vacuous_demand(REAL)
+    assert shape.drop_vacuous_demands(body) == []
+    assert body["required_entities"] == [REAL]
+
+
+def test_the_vacuous_repair_runs_after_the_demands_pass():
+    """Wired into the sequence at `demands`, not the merge: `satisfy` reads this list as
+    its contract, so the row has to be gone before that pass, not after it."""
+    names = [(r.name, r.stage) for r in fix.build_sequence()]
+    assert ("vacuous_demands", "demands") in names

@@ -26,15 +26,28 @@ def coordinates(study: Path, flavour: str) -> list[dict]:
 
 
 @pytest.mark.parametrize("name,flavour", CASES)
+def test_the_manifest_locates_its_own_raw_table(name, flavour):
+    """`data_file` must be filled from whichever key the flavour writes it under.
+
+    This test used to supply `table_id + suffix` when `data_file` came back empty, which it
+    always did for elsevier -- the reader looked only at `metadata.data_path` and elsevier
+    writes `metadata.raw_xml_path`. The workaround hid it: `read_table` was handed "" by
+    every real caller and returned None, so a paper with a full table manifest read as a
+    paper with no tables at all.
+    """
+
+    manifest = tp.read_manifest(FIXTURES / name, flavour)
+    assert manifest, f"no {flavour} manifest in the fixture"
+    assert all(record["data_file"] for record in manifest.values())
+
+
+@pytest.mark.parametrize("name,flavour", CASES)
 def test_every_manifest_table_is_readable(name, flavour):
     study = FIXTURES / name
     manifest = tp.read_manifest(study, flavour)
     assert manifest, f"no {flavour} manifest in the fixture"
     for table_id, record in manifest.items():
-        data_file = (
-            record["data_file"] or f"{table_id}{'.xml' if flavour == 'elsevier' else '.html'}"
-        )
-        table = tp.read_table(study / "source" / flavour, data_file, flavour=flavour)
+        table = tp.read_table(study / "source" / flavour, record["data_file"], flavour=flavour)
         assert table is not None, f"{flavour} {table_id} did not read"
         assert table["width"] > 1 and table["body"], f"{flavour} {table_id} came back empty"
 
@@ -213,3 +226,57 @@ def test_best_prefers_pdf_over_ace(tmp_path):
         (target / "text.txt").write_text(flavour, encoding="utf-8")
 
     assert Paper.best("s2", tmp_path).flavour is Flavour.pdf
+def test_stage_one_reads_the_best_flavour_that_has_a_manifest(tmp_path):
+    """Stage 1 read pubget and only pubget, and raised on a study that has no pubget."""
+
+    from pondie.extraction.corpus import tables as stage1
+
+    study = tmp_path / "s"
+    (study / "processed" / "elsevier").mkdir(parents=True)
+    (study / "source" / "elsevier" / "tables").mkdir(parents=True)
+    assert stage1.table_flavour(study) is None, "no manifest yet"
+
+    src = FIXTURES / "els"
+    (study / "processed" / "elsevier" / "tables.jsonl").write_text(
+        (src / "processed" / "elsevier" / "tables.jsonl").read_text(), encoding="utf-8"
+    )
+    for raw in (src / "source" / "elsevier" / "tables").glob("*.xml"):
+        (study / "source" / "elsevier" / "tables" / raw.name).write_text(
+            raw.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+    assert stage1.table_flavour(study) == "elsevier"
+    got = stage1.coordinate_tables(study)
+    assert got, "no coordinate table came back from an elsevier-only study"
+    assert all(t["csv_text"].strip() for t in got), "a table rendered to empty CSV"
+
+
+def test_a_manifest_naming_a_file_pubget_never_wrote_falls_back_to_the_id(tmp_path):
+    """Four of the hundred defect papers say `table_001.csv` and ship `t2.xml`."""
+
+    from pondie.extraction.corpus import tables as stage1
+
+    study = tmp_path / "s"
+    (study / "processed" / "pubget").mkdir(parents=True)
+    (study / "source" / "pubget" / "tables").mkdir(parents=True)
+    raw = next((FIXTURES / "ace" / "source" / "ace").rglob("*.html"), None)
+    if raw is None:
+        pytest.skip("no ace html fixture to stand in for an unrendered pubget table")
+    (study / "source" / "pubget" / "tables" / "t2.html").write_text(
+        raw.read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    (study / "processed" / "pubget" / "tables.jsonl").write_text(
+        json.dumps(
+            {
+                "table_id": "t2",
+                "table_number": 2,
+                "contains_coordinates": True,
+                "caption": "",
+                "footer": "",
+                "metadata": {"table_label": "Table 2", "data_path": "/nowhere/table_001.csv"},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    got = stage1.coordinate_tables(study)
+    assert len(got) == 1 and got[0]["csv_text"].strip()

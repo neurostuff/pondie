@@ -1,28 +1,10 @@
 """Ask one question across many records: which contrast is treatment against control?
 
-Normalization, not query, and the package docstring says why: "a record's own wording ->
-shared values". A trial names its arms `active iTBS`, `REAL`, `MPH`, `paroxetine 20mg`, and
-this resolves them to the roles a synthesis can pool on. It sat under `query/` where nothing
-in `query/` used it -- one import from `normalization.corpus`, pointing back up.
+An analysis qualifies only when one cell resolves to an intervention arm and another to
+a comparator arm. Levels are matched on words, never on a similarity score.
 
-A trial's record names its arms in its own words -- `active iTBS`, `REAL`, `MPH`,
-`paroxetine 20mg` -- and its contrasts in terms of levels that are those arms. Asking
-"what did treatment do relative to control" across a corpus therefore needs three things
-lined up, and only one of them is hard.
-
-  the role      already normalised. `ArmKind` is a schema enum and it splits cleanly:
-                pharmacological / stimulation / behavioural_intervention /
-                active_comparator are the intervention side, placebo / sham / usual_care /
-                no_intervention the comparator side.
-  the agent     free text, mapped onto ONVOC by `normalize.py` so `escitalopram` in one
-                paper and `Escitalopram` in another are the same row.
-  the link      a `Cell.level` is a string, and which arm it names is the open question.
-                Matched on words, never on a similarity score, for the reason
-                `derive_direction` gives: `men` is a substring of `women`.
-
-An analysis qualifies only when one cell resolves to an intervention arm and another to a
-comparator arm. An analysis contrasting two groups, or two timepoints, is not a treatment
-contrast however much it mentions a drug.
+Why it lives here and what has to line up:
+docs/normalization-rationale.md, "contrasts".
 """
 
 from __future__ import annotations

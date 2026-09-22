@@ -223,6 +223,11 @@ class Abbreviations:
     #: paper that used it needs no disambiguation model.
     entries: dict[str, dict] = field(default_factory=dict)
 
+    #: The paper this store is scoped to, set by `for_paper` and "" on the corpus store.
+    #: Carried on the object so the scoping cannot be lost between the call that
+    #: establishes it and the lookup that depends on it.
+    paper: str = ""
+
     @classmethod
     def load(cls, path: Path | None = None) -> "Abbreviations":
         path = path or STORE
@@ -238,9 +243,11 @@ class Abbreviations:
             json.dumps(
                 {
                     "about": "Abbreviation expansions used before vocabulary lookup. "
-                    "`mined` entries were defined by a paper in `long form (SF)` shape; "
-                    "`curated` entries were added by hand for abbreviations papers use "
-                    "without defining.",
+                    "Every entry was defined by a NAMED PAPER in `long form (SF)` shape "
+                    "and resolves only for that paper -- `by_paper` is the index, and "
+                    "there is no corpus-wide fallback. Hand-curated entries keyed to no "
+                    "paper were removed: they resolved for papers that never made the "
+                    "definition, which is a guess rather than a lookup.",
                     "entries": ordered,
                 },
                 indent=1,
@@ -296,13 +303,35 @@ class Abbreviations:
             slot.setdefault("by_paper", {})[paper] = expansion
 
     def expand(self, short: str, paper: str = "") -> str | None:
-        """The paper's own definition where it made one, the corpus consensus otherwise."""
+        """The paper's OWN definition of this short form, or nothing.
+
+        No corpus-wide fallback. `paper` defaults to the one this store is scoped to, and
+        without one from either source the answer is `None`.
+
+        This used to fall back to
+        `canonical`, a consensus across every paper that defined the short form, and that
+        fallback is the bug: an expansion is a fact about the paper that wrote it, and
+        applying one paper's definition to another is a guess dressed as a lookup. The
+        damage was visible in the store -- `PET` resolved to "P.F. Liddle, R.S.J.
+        FrackowiakComparing functional", mined from one paper's reference list and served to
+        every other paper that wrote PET.
+
+        This class's own measurement already said so: 21.4% of short forms are expanded
+        differently by different papers, and only 0.1% two ways inside one paper. The paper
+        is the unit at which an abbreviation is unambiguous. Off that unit there is no
+        answer, and `None` is the honest one.
+        """
+        paper = paper or self.paper
+        slot = self.entries.get(self.key(short))
+        if not slot:
+            return None
         if paper:
-            slot = self.entries.get(self.key(short))
-            own = (slot or {}).get("by_paper", {}).get(paper)
-            if own:
-                return own
-        return self.canonical(short)
+            return ((slot.get("by_paper") or {}).get(paper)) or None
+        # No paper named: answerable only on a store that already IS one paper's, which is
+        # what `for_paper` returns. A corpus-wide store has nothing to say without one.
+        if slot.get("source") == "paper":
+            return slot.get("expansion")
+        return None
 
     def disagreements(self) -> list[tuple[str, list[str]]]:
         """Short forms expanded to genuinely different things, not merely spelled apart.
@@ -322,24 +351,47 @@ class Abbreviations:
                 out.append((short, variants))
         return out
 
-    def for_paper(self, text: str) -> "Abbreviations":
-        """This store with the paper's own definitions taking precedence.
+    def for_paper(self, text: str, paper: str) -> "Abbreviations":
+        """Only what THIS paper defines: its own text, plus its own rows in the store.
 
-        Necessary, not a refinement. `FA` is fractional anisotropy in a diffusion paper
-        and flip angle in an acquisition section; `AD` is axial diffusivity or Alzheimer's
-        disease. A corpus-wide expansion picks whichever was commoner and is then wrong
-        for every paper that meant the other. A paper that defines its own abbreviation
-        has settled the question for itself, and that answer wins.
+        `FA` is fractional anisotropy in a diffusion paper and flip angle in an acquisition
+        section; `AD` is axial diffusivity or Alzheimer's disease. This used to start from a
+        copy of the whole corpus store and layer the paper's definitions on top, so a short
+        form the paper never defined still resolved -- to whichever expansion was commonest
+        elsewhere. That is not a fallback, it is a different paper's fact applied to this
+        one, and the store carries the evidence of how badly it goes: `PET` resolved to
+        "P.F. Liddle, R.S.J. FrackowiakComparing functional", mined from somebody's
+        reference list.
+
+        An abbreviation the paper does not define has no expansion here. The returned store
+        is empty of everything else, so a caller cannot reach past its own paper even by
+        accident.
         """
 
-        layered = Abbreviations({k: dict(v) for k, v in self.entries.items()})
+        if not str(paper or "").strip():
+            raise ValueError(
+                "for_paper needs the paper this text belongs to: without it the store's "
+                "own per-paper rows are unreachable and only re-mined text answers."
+            )
+        layered = Abbreviations({}, paper=paper)
+        if paper:
+            for short, slot in self.entries.items():
+                own = (slot.get("by_paper") or {}).get(paper)
+                if own:
+                    layered.entries[short] = {
+                        "expansion": own, "source": "paper",
+                        "papers": [paper], "count": 1,
+                        "by_paper": {paper: own},
+                    }
         for short, long in mine(text).items():
             if self.plausible(long):
-                layered.entries[layered.key(short)] = {
+                key = layered.key(short)
+                layered.entries[key] = {
                     "expansion": long,
                     "source": "paper",
-                    "papers": [],
+                    "papers": [paper] if paper else [],
                     "count": 1,
+                    "by_paper": {paper: long} if paper else {},
                 }
         return layered
 
@@ -358,10 +410,49 @@ class Abbreviations:
         return len(self.entries) - before
 
 
-def expansions_in(text: str, store: Abbreviations, paper: str = "") -> Iterator[tuple[str, str]]:
-    """(short form, expansion) for every abbreviation this phrase uses."""
+#: A token that is a short form rather than a capitalised word. Two or more capitals, so
+#: `PANSS`, `BDI`, `AUDIT`, `MID`, and the mixed-case ones the field actually writes --
+#: `fMRI`, `dlPFC`, `mPFC` -- all qualify, and `Positive`, `Control`, `Test`, `Frontal` do
+#: not.
+_TITLE_CASE = re.compile(r"^[A-Z][a-z]+$")
+
+
+def is_short_form(token: str) -> bool:
+    """Does this token look like an abbreviation, rather than a capitalised word?
+
+    "Has an uppercase letter" was the old test, and it is right for running prose and wrong
+    for every Title Case field in the record. `Positive and Negative Syndrome Scale` had
+    `Positive` expanded to "positive valence for favorable", `Trail Making Test` had `Test`
+    expanded to "multiple choice-vocabulary-intelligence test", and `Left Inferior Frontal
+    Gyrus` had `Frontal` expanded -- on `assessments.name`, `groups.name` and `regions.name`,
+    which are Title Case almost by definition.
+    """
+    return sum(1 for c in token if c.isupper()) >= 2 and not _TITLE_CASE.match(token)
+
+
+def expansions_in(
+    text: str, store: Abbreviations, paper: str = ""
+) -> Iterator[tuple[str, str]]:
+    """(short form, expansion) for every abbreviation THIS PAPER defined in this phrase.
+
+    The paper comes from `paper` or from a store `for_paper` already scoped, and one of
+    the two is required: without either this raises rather than yielding nothing. Raising
+    is right because the alternative failure is invisible -- an unexpanded acronym looks
+    exactly like a term the vocabulary lacks, and the candidate list is downstream.
+    """
+    if not (paper or store.paper):
+        raise ValueError(
+            "expansions_in needs a paper: pass `paper`, or pass a store from "
+            "`Abbreviations.for_paper`. An unscoped store expands nothing, which is "
+            "indistinguishable from a paper that defines nothing."
+        )
+    if paper and store.paper and paper != store.paper:
+        raise ValueError(
+            f"store is scoped to {store.paper!r} but was asked about {paper!r}: one "
+            "paper's definitions are not evidence about another's"
+        )
     for token in re.findall(r"[A-Za-z][A-Za-z0-9.-]{1,7}", str(text or "")):
-        if not any(c.isupper() for c in token):
+        if not is_short_form(token):
             continue
         expansion = store.expand(token, paper)
         if expansion:

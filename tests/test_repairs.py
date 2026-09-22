@@ -507,6 +507,78 @@ def test_each_repair_runs_exactly_once_across_the_stages():
     assert ran["mirrored"] == 1, "mirrored appends and must run exactly once"
 
 
+def _acquisition(modality):
+    return {
+        "acquisitions": [
+            {
+                "local_id": "acq1",
+                "modality": {
+                    "extraction_status": "extracted",
+                    "value": modality,
+                    "value_source": "reported",
+                    "evidence": {"status": "not_found"},
+                },
+            }
+        ]
+    }
+
+
+@pytest.mark.parametrize(
+    "modality,expected",
+    [("fMRI", "MRI"), ("sMRI", "MRI"), ("PET", "PET"), ("MEG", "OtherModality")],
+)
+def test_a_modality_names_the_class_holding_its_parameters(extraction_schema, modality, expected):
+    """The designator is derived, never extracted, and without it the record resolves to the
+    base `Acquisition` where every modality-specific parameter is undeclared."""
+    body = _acquisition(modality)
+    fix.apply_all(body, fix.Context(schema=extraction_schema), stage="satisfy")
+    assert body["acquisitions"][0]["acquisition_type"] == expected
+
+
+def test_a_modality_outside_the_vocabulary_falls_back_and_keeps_its_wording(extraction_schema):
+    """`modality` is open, so "near-infrared spectroscopy" survives where a closed range
+    discarded the acquisition. It names no class, and `acquisition_type` is required, so it
+    lands on `OtherModality` -- "where a modality the schema does not name keeps its
+    parameters" -- with the source's own wording in the `modality_label` that class requires.
+    `rules.check_acquisition_subclass` reports it; the record stays valid."""
+    body = _acquisition("near-infrared spectroscopy")
+    fix.apply_all(body, fix.Context(schema=extraction_schema), stage="satisfy")
+    acquisition = body["acquisitions"][0]
+    assert acquisition["acquisition_type"] == "OtherModality"
+    assert acquisition["modality_label"]["value"] == "near-infrared spectroscopy"
+    # Generated, not reported: the record copied its own field across and read no sentence.
+    assert acquisition["modality_label"]["value_source"] == "generated"
+
+
+def test_a_vocabulary_modality_on_the_fallback_class_keeps_its_missing_label(extraction_schema):
+    """`MEG` names `OtherModality` from *inside* the vocabulary, and its `modality_label` is
+    what the source printed -- "306-channel MEG". Filling that from the bare enum token would
+    replace a missing-required-slot finding with a worse answer, so the fallback fill is
+    narrowed to values the vocabulary does not cover."""
+    body = _acquisition("MEG")
+    fix.apply_all(body, fix.Context(schema=extraction_schema), stage="satisfy")
+    assert body["acquisitions"][0]["acquisition_type"] == "OtherModality"
+    assert "modality_label" not in body["acquisitions"][0]
+
+
+def test_every_registered_repair_actually_runs(extraction_schema):
+    """A repair that raises takes its whole stage with it, and the tests above check only
+    that the sequence is *declared* correctly.
+
+    `acquisition_type` referenced an `EXTRACTION_SCHEMA` that moved out from under it when
+    the implementations left `builder.py`, so every `satisfy` stage raised `NameError`
+    before reaching the repairs registered after it. The full suite stayed green: nothing
+    called the function, and registration is all the other sequence tests read.
+    """
+    from pondie.extraction.record import fix as r
+
+    ctx = r.Context(schema=extraction_schema)
+    for group in (r.AFTER_DEMANDS, r.AFTER_SATISFY, r.AFTER_FILL, r.AT_MERGE):
+        # An empty record: every repair has to tolerate one, and the point here is that the
+        # body runs at all rather than what it finds.
+        r.apply_all({}, ctx, stage=group)
+
+
 # -- repointing a cell's term by prefix ------------------------------------
 #
 # The other half of `repoint_out_of_scope_terms`, whose by-name cases are above. These were

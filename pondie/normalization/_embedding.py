@@ -1,23 +1,16 @@
 """Sentence encoders, chosen by input length rather than by domain.
 
-Measured on this corpus, the same two models invert completely:
+`for_phrases` for entity strings, `for_prose` for paragraphs. Encodings are cached on
+disk keyed by model and content.
 
-    short entity strings (17-30 chars)   SapBERT R@1 66.3% / 62.9%   MiniLM 50.6%
-    task descriptions (~400 words)       SapBERT R@1 24.5% (last)    MiniLM 58.5%
-
-SapBERT is trained on UMLS synonym pairs, so a paragraph is off-distribution for it and a
-30-character string is off-distribution for a sentence encoder. Neither is "the biomedical
-model"; `for_phrases` and `for_prose` name the choice so a caller states the input's shape
-instead of guessing a model.
-
-Encodings are cached on disk keyed by model and content, because the corpus side of a
-retrieval is the same on every run and re-encoding 32k MONDO labels is minutes each time.
+Which model wins on what, measured: docs/normalization-rationale.md, "_embedding".
 """
 
 from __future__ import annotations
 
 import functools
 import hashlib
+import os
 
 from pondie import paths
 
@@ -26,11 +19,29 @@ PROSE_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 CACHE = paths.CACHE / "embeddings"
 
 
+@functools.lru_cache(maxsize=1)
+def device() -> str:
+    """The accelerator if there is one. `PONDIE_EMBED_DEVICE` overrides.
+
+    Detected rather than pinned, and not part of the cache key. Why: docs/normalization-rationale.md, "_embedding".
+    """
+    override = os.environ.get("PONDIE_EMBED_DEVICE")
+    if override:
+        return override
+    import torch
+
+    if torch.cuda.is_available():
+        return "cuda"
+    if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
 @functools.lru_cache(maxsize=4)
 def _model(name: str):
     from sentence_transformers import SentenceTransformer
 
-    return SentenceTransformer(name, device="cpu")
+    return SentenceTransformer(name, device=device())
 
 
 def encode(texts: list[str], model: str, cache: bool = True):

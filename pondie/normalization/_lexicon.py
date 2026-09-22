@@ -1,19 +1,10 @@
 """The closed-target shape: free-text input, a small fixed set of answers.
 
-This module uses rules instead of an encoder for auditability, not accuracy. Sixteen
-surface forms over two coordinate spaces, or 293 over four correction methods, is a case
-where a rule can be read and argued with and a cosine cannot -- and where a wrong answer is
-acted on, not merely displayed.
+Rules rather than an encoder, for auditability. `UNKNOWN` is not `OTHER`: OTHER asserts
+an answer outside the known set, UNKNOWN asserts we cannot tell. An input no rule
+matches is UNKNOWN with `reason="unmatched"` and is reported, never bucketed silently.
 
-Two conventions every field here shares:
-
-  UNKNOWN is not OTHER.  OTHER asserts an answer outside the known set; UNKNOWN asserts we
-  cannot tell. They license different downstream actions -- a transform must refuse OTHER and
-  may fall back on a default for UNKNOWN -- so collapsing them loses the distinction that
-  matters.
-
-  Nothing is bucketed silently.  An input no rule matches is UNKNOWN with `reason="unmatched"`
-  and is reported by `residual`, so a new spelling forces a rule rather than vanishing.
+Why: docs/normalization-rationale.md, "_lexicon".
 """
 
 from __future__ import annotations
@@ -21,6 +12,7 @@ from __future__ import annotations
 import re
 from collections import Counter
 from dataclasses import dataclass
+from typing import Callable
 
 from pondie.normalization import OTHER, UNKNOWN
 
@@ -90,6 +82,34 @@ def summarize(decisions: list[Decision], values: tuple[str, ...]) -> str:
     return "\n".join(lines)
 
 
+def scan(
+    path: str,
+    decide: "Callable[[object], Decision]",
+    patterns: tuple[str, ...] | None = None,
+) -> list[Decision]:
+    """One `Decision` per string the dotted path reaches, over every record read."""
+
+    from pondie.normalization._records import DEFAULT, iter_records, strings_at
+
+    return [
+        decide(value)
+        for _study, body in iter_records(patterns or DEFAULT)
+        for value in strings_at(body, path)
+    ]
+
+
+def field_report(
+    path: str,
+    decide: "Callable[[object], Decision]",
+    values: tuple[str, ...],
+    patterns: tuple[str, ...] | None = None,
+) -> str:
+    """The residual report for one field. See docs/normalization-rationale.md."""
+
+    decisions = scan(path, decide, patterns)
+    return f"{path}: {len(decisions)} values\n" + summarize(decisions, values)
+
+
 @dataclass(frozen=True)
 class ClosedField:
     """A field whose answers are a small fixed set: where it lives, and how to read it."""
@@ -102,15 +122,5 @@ class ClosedField:
     def normalize(self, text: object) -> Decision:
         return classify(text, self.rules, self.ambiguous_to)
 
-    def scan(self, patterns: tuple[str, ...] | None = None) -> list[Decision]:
-        from pondie.normalization._records import DEFAULT, iter_records, strings_at
-
-        return [
-            self.normalize(s)
-            for _study, body in iter_records(patterns or DEFAULT)
-            for s in strings_at(body, self.path)
-        ]
-
     def report(self, patterns: tuple[str, ...] | None = None) -> str:
-        decisions = self.scan(patterns)
-        return f"{self.path}: {len(decisions)} values\n" + summarize(decisions, self.values)
+        return field_report(self.path, self.normalize, self.values, patterns)

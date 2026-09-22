@@ -1,10 +1,11 @@
-"""`Study.study_type`, filled from PubMed rather than from the paper.
+"""`Study.study_type` and `Study.language`, filled from PubMed rather than from the paper.
 
 Six of neurometabench's sixteen meta-analyses exclude by publication type -- "editorial
 letters, case-reports, systematic reviews, meta-analyses" -- and the slot was `None` on all
 1,817 committed records with no writer anywhere in the package, so the criterion could not
-be written. The network is not exercised here; `publication_types` is the seam and `fill` is
-what has the logic worth testing.
+be written. "English language" is stated by at least six of them and had no slot at all.
+The network is not exercised here; `summaries` is the seam and `fill` is what has the logic
+worth testing.
 """
 
 from __future__ import annotations
@@ -91,10 +92,9 @@ def test_is_healthy_is_declared_and_uses_a_permissible_value_source():
 def test_only_numeric_ids_are_asked_for(ids, expect, monkeypatch):
     seen: list[list[str]] = []
 
-    def fake_open(url, timeout=0):  # noqa: ARG001
-        import io
+    def fake_open(url, data=None, timeout=0):  # noqa: ARG001
         import urllib.parse
-        query = urllib.parse.parse_qs(url.split("?", 1)[1])
+        query = urllib.parse.parse_qs(data.decode())
         seen.append(query["id"][0].split(","))
 
         class R:
@@ -111,5 +111,41 @@ def test_only_numeric_ids_are_asked_for(ids, expect, monkeypatch):
 
     monkeypatch.setattr(pubmed.urllib.request, "urlopen", fake_open)
     monkeypatch.setattr(pubmed.time, "sleep", lambda _s: None)
-    pubmed.publication_types(ids)
+    pubmed.summaries(ids)
     assert seen == [expect]
+
+
+def test_fill_writes_language_from_the_same_answer():
+    """One `esummary` call carries both fields, so the second costs no second request."""
+    record = {"local_id": "34400176"}
+    changed = pubmed.fill(record, {"34400176": {"study_type": ["Journal Article"],
+                                                "language": ["eng"]}})
+    assert record["study_type"] == ["Journal Article"]
+    assert record["language"] == ["eng"]
+    assert len(changed) == 2
+
+
+def test_fill_still_takes_the_shape_publication_types_returns():
+    """That function was the whole module once and callers still hold its output."""
+    record = {"local_id": "1"}
+    assert pubmed.fill(record, {"1": ["Review"]})
+    assert record["study_type"] == ["Review"] and "language" not in record
+
+
+def test_an_empty_field_is_not_written():
+    """PubMed indexes every article in at least one language; an empty list would be a
+    claim that it did not."""
+    record = {"local_id": "1"}
+    pubmed.fill(record, {"1": {"study_type": ["Review"], "language": []}})
+    assert "language" not in record
+
+
+def test_language_is_declared_on_the_extraction_side():
+    from pondie import schema
+    from pondie.schema import reader
+
+    extraction = reader.load(schema.EXTRACTION)
+    slot = extraction.attributes("Study").get("language")
+    assert slot is not None, "language must be declared for a filled record to validate"
+    assert slot.multivalued
+    assert extraction.classify("language", slot) == "native"

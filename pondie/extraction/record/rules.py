@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Protocol
 
 from pondie.extraction.record import spans as span_tools
+from pondie.extraction.record.fix.derive import modality_subclasses
 from pondie.extraction.record.effect import (
     NO_LABEL,
     UNDETERMINED_VARIATION,
@@ -1028,6 +1029,39 @@ def check_one_protocol_per_acquisition(record: Mapping[str, Any], findings: Find
         )
 
 
+def check_acquisition_subclass(record: Mapping[str, Any], findings: Findings) -> None:
+    """An acquisition outside the Modality vocabulary carries none of its own parameters.
+
+    `modality` is an open vocabulary so that a source's own wording survives instead of
+    costing the whole acquisition. Only a vocabulary value carries an `instantiates`, though,
+    so such an acquisition falls back to `OtherModality` -- the schema's own destination for
+    "a modality the schema does not name" -- rather than reaching the named class whose
+    fields it may well have filled. An fNIRS study written as "near-infrared spectroscopy"
+    lands there with `FNIRS.optode_count` undeclared.
+
+    Reported here rather than left to the vocabulary warning beside it, which says the value
+    is off-list and not what the fallback costs. A warning, not an error: the acquisition is
+    intact, the wording is preserved in `modality_label`, and what it needs is
+    `normalization.modality` run over it -- not a correction to the paper.
+    """
+    subclasses = modality_subclasses()
+    for index, acquisition in enumerate(record.get("acquisitions") or []):
+        if not isinstance(acquisition, Mapping):
+            continue
+        modality = values.read(acquisition.get("modality"))
+        if modality in (None, "", []):
+            continue  # a missing modality is the required-slot finding, not this one
+        if str(modality) in subclasses:
+            continue
+        findings.warn(
+            f"acquisitions[{acquisition.get('local_id') or index}]",
+            f"modality {str(modality)!r} is outside the vocabulary "
+            f"({', '.join(sorted(subclasses))}), so it names no class and the acquisition "
+            f"falls back to OtherModality. Map the wording onto the vocabulary "
+            f"(`pondie normalize modality`) to reach the class holding its parameters",
+        )
+
+
 def check_group_instruments(record: Mapping[str, Any], findings: Findings) -> None:
     """A group's diagnostic instrument must be one of the study's assessments.
 
@@ -1434,6 +1468,11 @@ RULES: tuple[Rule, ...] = (
         check_modality_measures,
     ),
     Rule("counts_add_up", "a breakdown sums to the group it breaks down", check_counts_add_up),
+    Rule(
+        "acquisition_subclass",
+        "an acquisition's modality names the class holding its parameters",
+        check_acquisition_subclass,
+    ),
 )
 
 

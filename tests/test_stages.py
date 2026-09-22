@@ -1186,3 +1186,86 @@ def test_repair_keeps_the_record_it_started_from(tmp_path, monkeypatch) -> None:
     kept = tmp_path / "unrepaired" / "p1.extraction.json"
     assert kept.is_file(), "the pre-repair record must survive"
     assert json.loads(kept.read_text()) == original
+
+
+def test_a_vacuous_declaration_is_re_asked_and_the_answer_replaces_it(tmp_path):
+    """The retry re-answers; it does not patch, so nothing has to be merged afterwards.
+
+    `4UoCgF3UJSXq` returned six populated analyses beside one all-null `required_entities`
+    row -- valid JSON, finish `stop`, and `satisfy` built no task from it. The retry loop
+    sends only the fault, never the rejected payload, and the prompt says "emit the
+    complete object this time", so attempt 2 derives the whole list from the paper again
+    and `payload` is rebound to it. There is no path on which attempt 1's rows and
+    attempt 2's rows are both in the written file, which is why no de-duplication step
+    exists: the good row below appears once, not twice.
+    """
+    from pondie.extraction.stages import Demands
+
+    analyses = [{"local_id": "a1", "name": "Patients > controls", "effect": {"kind": "contrast"}}]
+
+    class NullsThenContent:
+        def __init__(self):
+            self.calls = 0
+            self.retry_notes = 0
+
+        def __call__(self, call, *, paper, stage):
+            self.calls += 1
+            if "previous answer was rejected" in call.prompt:
+                self.retry_notes += 1
+            entities = (
+                [{"local_id": None, "kind": None, "label": None}]
+                if self.calls == 1
+                else [{"local_id": "g1", "kind": "Group", "label": "patients"}]
+            )
+            return ModelReply(
+                payload={"analyses": analyses, "required_entities": entities},
+                cost=Cost(input_tokens=10, calls=1),
+            )
+
+    caller = NullsThenContent()
+    outcome = Demands().run(_paper(tmp_path), _settings(tmp_path), caller)
+
+    assert caller.calls == 2, "the all-null declaration was re-asked"
+    assert caller.retry_notes == 1, "the second call carried the named fault"
+    assert outcome.ok
+
+    written = json.loads(outcome.produced[0].read_text("utf-8"))
+    assert written["required_entities"] == [{"local_id": "g1", "kind": "Group", "label": "patients"}]
+
+
+def test_a_vacuous_row_beside_a_good_one_is_dropped_without_a_second_call(tmp_path):
+    """The other half of the same question: here there ARE good rows to preserve, and the
+    way they are preserved is that no retry happens at all.
+
+    Re-asking would resample rows that came out fine and spend a call to do it. The
+    post-condition stays quiet, the pass keeps its single answer, and the `vacuous_demands`
+    repair removes the information-free row before `satisfy` reads the list as its contract.
+    """
+    from pondie.extraction.stages import Demands
+
+    class Once:
+        def __init__(self):
+            self.calls = 0
+
+        def __call__(self, call, *, paper, stage):
+            self.calls += 1
+            return ModelReply(
+                payload={
+                    "analyses": [
+                        {"local_id": "a1", "name": "Patients > controls", "effect": {"kind": "contrast"}}
+                    ],
+                    "required_entities": [
+                        {"local_id": None, "kind": None, "label": None},
+                        {"local_id": "g1", "kind": "Group", "label": "patients"},
+                    ],
+                },
+                cost=Cost(input_tokens=10, calls=1),
+            )
+
+    caller = Once()
+    outcome = Demands().run(_paper(tmp_path), _settings(tmp_path), caller)
+
+    assert caller.calls == 1, "the good rows were kept rather than re-asked for"
+    written = json.loads(outcome.produced[0].read_text("utf-8"))
+    assert written["required_entities"] == [{"local_id": "g1", "kind": "Group", "label": "patients"}]
+    assert any("repaired vacuous_demands" in note for note in outcome.notes), outcome.notes

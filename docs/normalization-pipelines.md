@@ -1,5 +1,8 @@
 # Normalizing a field depends on the field's shape, not on the corpus
 
+> Per-module reasons and the measurement behind each live in
+> [normalization-rationale.md](normalization-rationale.md).
+
 > Where this sits: [pipeline-architecture.md](pipeline-architecture.md) covers extraction, up
 > to `data/runs/<run>/records/<id>.extraction.json`. This file starts there. The vocabulary-matching
 > layer common to several of these pipelines is [normalizing-across-papers.md](normalizing-across-papers.md);
@@ -69,9 +72,14 @@ Short strings, an existing target, and a long tail that is mostly not rare disea
 **Triage carries most of the value, and runs before any lookup.** Of 1565 `medical_condition`
 values, **315 (20%) are negations** — "no neurological or psychiatric disorder" — recording the
 *absence* of a condition. Matched against a disease ontology every one of them retrieves
-something at plausible similarity. `Group.is_healthy` agrees with the negation regex on
-**1070/1106 (97%)** of groups and should be the primary gate, with the regex as fallback for
-the 62 where it is unset.
+something at plausible similarity.
+
+The gate order stated here — `Group.is_healthy` first, the regex as fallback — is **wrong, and
+[normalization-layer.md](normalization-layer.md) has the measurement**. On the full 2,115-record
+corpus the two agree on 93% of the mentions where both are known, but where `is_healthy` is
+true and the string carries no negation the string is usually naming a trait the cohort was
+*selected for*: `obesity`, `cannabis use`, `postmenopause`. The string decides; the flag fills
+the mentions whose string says nothing either way.
 
 **The accept threshold cannot be a single cut.** On 1500 held-out MONDO synonym queries the
 score distributions overlap: correct matches have p10 = 0.807 while *wrong* top-1s have a
@@ -93,6 +101,9 @@ retrieval from the description alone tops out at R@1 62.9% with no threshold tha
 covered from new (81% of unmatched task signatures score above the 10th percentile of the
 known-covered set). The corpus is therefore clustered against itself.
 
+The method is written out in full, with the changes the re-measurement below asks for, in
+[task-clustering-method.md](task-clustering-method.md).
+
 ```
 1. name ladder   folded equality + bidirectional containment -> MUST-LINK,
                  and the weak labels stage 2 trains on
@@ -105,6 +116,64 @@ known-covered set). The corpus is therefore clustered against itself.
 Measured: name ladder alone resolves 50%; the pair model reaches **AUC 0.941** (0.888 with the
 name channel held out); clustering gives **167 identities / ~130 families, ARI 0.619, V 0.783**
 against name-derived gold.
+
+> **Re-measured 2026-09 on the full 2,115-record corpus, and the clustering numbers do not
+> hold.** Nothing in the checkout reproduced them -- there was no evaluation code. One was
+> written to get the numbers below and then removed with the rest of the superseded
+> clustering work; it scored `pondie.normalization.task`, which
+> [task-clustering-method.md](task-clustering-method.md) argues should be replaced. On 1,672 tasks: pair model
+> AUC **0.916** under a grouped 5-fold split (0.868 without the name channel), which is the
+> quoted figure within noise; but clustering gives **121 identities, ARI 0.474 / V 0.727**.
+>
+> More to the point, the gold those are scored against is the name-ladder components, and the
+> ladder is *also written into the distance matrix as must-link pairs at d=0* -- so the score
+> partly confirms that the constraints were applied.
+>
+> A second gold was tried and **is not independent either**. Scoring against the Cognitive
+> Atlas paradigm each name resolves to gives ARI 0.524 over the 493 tasks that carry one --
+> but measured against the ladder directly, the two golds agree at ARI 0.584 / V 0.841, and
+> **93% of the pairs the Cognitive Atlas links the ladder had already linked**. Only 959 of
+> its 15,842 same-paradigm pairs are new. It corrects the ladder at the margin -- `Go-NoGo
+> task` and `alcohol go/no-go task` share no token subsequence and do share a Cognitive Atlas
+> term -- and it is otherwise the same object. **There is no gold for task identity in this
+> repository, and no number here is scored against one.**
+>
+> What survives that is the part checkable by inspection rather than by a metric: **23 of the
+> clusterer's 52 paradigm-bearing clusters mix two or more paradigms**. One holds ten,
+> including `go/no-go task`, `Stroop task` and `Emotion Regulation Task` together; another
+> merges `go/no-go task`, `monetary incentive delay task` and `temporal discounting task`.
+> Those are different paradigms under any reading, and no choice of gold makes them one.
+>
+> The cause is the name ladder rather than the model, and it is one line. Containment over
+> **two-token** spans chains a 288-task component out of 120 distinct names -- `emotion
+> regulation` is a topic, not a task name, so containing it links `Emotion Regulation Task`
+> to `Facial Emotion Recognition Test` to `Decision-Making Task`. Requiring three tokens cuts
+> the largest component from 288 to 112:
+>
+> | containment minimum | components | largest |
+> |---|---|---|
+> | exact fold only | 1,057 | 87 |
+> | **>=2 tokens (shipped)** | 657 | **288** |
+> | >=3 tokens | 874 | 112 |
+> | >=4 tokens | 1,010 | 87 |
+>
+> And the shipped identity threshold of 0.50 may not be the best one: 0.30 scores ARI 0.611 /
+> V 0.834 against the Cognitive Atlas gold, against 0.524 / 0.793 at 0.50. Weak evidence,
+> given what that gold turned out to be.
+>
+> Neither change is made here, and the threshold one should not be made on this evidence:
+> tuning a parameter against a gold that is 93% the name ladder selects for agreeing with the
+> name ladder. The chaining fix stands on its own -- it is a structural fact about the input,
+> not a score -- but it too wants a real gold before and after.
+>
+> The replacement workflow is `pondie/normalization/task.py`.
+>
+> **What a real gold would be**: a sample of papers whose tasks a reader labels from the
+> Methods section, blind to the record. `benchmarks/gold/direction/` is the template and the
+> proof it is affordable here -- per-cell answers from numbered annotators, with `tier` and
+> `disputed` recorded so agreement is visible. That exists for contrast direction on five
+> papers and for nothing else. Two hundred hand-labelled tasks would settle every number
+> above, and until they exist these are machine-versus-machine agreement rates.
 
 Three design points that were arrived at by measurement and are easy to get wrong:
 

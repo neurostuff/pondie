@@ -1,5 +1,13 @@
 # Normalizing tasks and conditions against ONVOC
 
+> **Superseded for coverage numbers.** This file measures 328 records;
+> [normalization-layer.md](normalization-layer.md) measures all 2,115 and is the current
+> contract. Two of its conclusions were overturned there: ONVOC's substance terms sit under
+> `Behaviors` rather than `Disorders`, so the disorder-scoped route missed `alcohol
+> dependence` and `nicotine dependence` entirely; and "ONVOC has no task vocabulary" is true
+> of paradigms but false of the *process* a paradigm targets, which is what
+> `Psychological Concepts` is. The design points below (1-8) stand.
+
 Measured on 328 records — the 299 schizophrenia papers and the first 29 monetary-incentive-delay
 papers — using ``pondie.normalization._onvoc``.
 
