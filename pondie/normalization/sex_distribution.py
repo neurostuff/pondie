@@ -1,11 +1,8 @@
 """`Group.sex_distribution[].category` -> the sex a count is reported for.
 
-18 surface forms over 859 values for two answers -- `male`, `males`, `Male`, `men`. This is
-case and plural folding, not vocabulary work, and it is here rather than inline so that a
-query grouping by sex reads one value and not eight.
+OTHER holds a reported category outside the binary.
 
-The categories a paper reports are not always two: `OTHER` holds a reported category outside
-the binary, which is a value to preserve rather than a failure to classify.
+Why: docs/normalization-rationale.md, "sex_distribution and handedness_distribution".
 """
 
 from __future__ import annotations
@@ -24,11 +21,4 @@ RULES = (
 
 FIELD = ClosedField("groups.sex_distribution.category", RULES, VALUES)
 normalize = FIELD.normalize
-#: The residual, for `pondie normalize <field>`. `__init__` states the contract --
-#: "Every module exposes `normalize(...)` ... and `report(...)`" -- and five of the eight
-#: closed-target modules bound only the first, so the CLI verb raised for them.
 report = FIELD.report
-
-
-if __name__ == "__main__":
-    print(FIELD.report())

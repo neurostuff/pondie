@@ -1,11 +1,9 @@
 """Sentence encoders, chosen by input length rather than by domain.
 
-SapBERT is trained on UMLS synonym pairs and wins on short entity strings; MiniLM wins on
-paragraphs, and the two invert completely on this corpus. `for_phrases` and `for_prose`
-name the choice so a caller states the input's shape instead of guessing a model.
+`for_phrases` for entity strings, `for_prose` for paragraphs. Encodings are cached on
+disk keyed by model and content.
 
-Encodings are cached on disk keyed by model and content. Measurements in
-docs/normalization-layer.md.
+Which model wins on what, measured: docs/normalization-rationale.md, "_embedding".
 """
 
 from __future__ import annotations
@@ -25,9 +23,7 @@ CACHE = paths.CACHE / "embeddings"
 def device() -> str:
     """The accelerator if there is one. `PONDIE_EMBED_DEVICE` overrides.
 
-    Detected, not pinned: the machines this runs on differ and a hardcoded `cpu` left the
-    GPU host idle. Deliberately not part of the cache key, so a run on one machine may
-    reuse another's cache.
+    Detected rather than pinned, and not part of the cache key. Why: docs/normalization-rationale.md, "_embedding".
     """
     override = os.environ.get("PONDIE_EMBED_DEVICE")
     if override:

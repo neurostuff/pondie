@@ -1,23 +1,10 @@
 """`Group.medication_status` -> whether the cohort was on medication when scanned.
 
-493 surface forms over 711 values, the messiest field measured, and the standard moderator in
-schizophrenia and depression meta-analyses.
+Negation, not vocabulary, is the discriminating feature: scope comes from a dependency
+parse (`_negation`) and the domain part is the `CONCEPTS` lexicon. An unnegated mention
+settles it. NAIVE is kept apart from FREE.
 
-The discriminating feature is **negation**, not vocabulary. Every affirmative cue appears
-inside its own negation -- "not medicated" contains "medicated", "free of antipsychotics"
-contains "antipsychotics" -- so a keyword rule inverts the cohort it describes unless it
-models scope, and a proximity rule cannot tell `no` the negator from `no` the determiner.
-Scope therefore comes from a dependency parse (`_negation`), and the domain part shrinks to a
-lexicon of concept words. A phrasing nobody anticipated is then handled by syntax rather than
-by adding another regex.
-
-An unnegated mention settles it. A cohort described as taking something is taking it, whatever
-else the sentence goes on to deny -- "taking antidepressants; no medication changes" is a
-medicated cohort.
-
-NAIVE is kept apart from FREE deliberately: never-medicated and withdrawn-before-scanning are
-different populations, and a moderator analysis that merges them cannot see a treatment-history
-effect.
+Why, with the measurements: docs/normalization-rationale.md, "medication_status".
 """
 
 from __future__ import annotations
@@ -31,8 +18,9 @@ from pondie.normalization._negation import mentions
 MEDICATED, FREE, NAIVE, MIXED = "MEDICATED", "FREE", "NAIVE", "MIXED"
 VALUES = (MEDICATED, FREE, NAIVE, MIXED, OTHER, UNKNOWN)
 
-#: The domain lexicon: what counts as a medication mention. Small and stable -- growing it is
-#: how this field is extended, not by adding phrasings.
+#: Where the field lives. Named once; `report` and every caller read it from here.
+PATH = "groups.medication_status"
+
 CONCEPTS = re.compile(
     r"medicat|drug|antipsychot|antidepress|psychotrop|psychoactiv|neurolept|lithium|"
     r"stimulant|\bSSRI|\bSNRI|benzodiazep|anxiolytic|mood stabili[sz]|prescri|"
@@ -40,15 +28,11 @@ CONCEPTS = re.compile(
     re.I,
 )
 
-#: Morphological negation. A parse cannot see it -- "unmedicated" is one token with no
-#: syntactic negation to attach to -- so it is stripped to its scope-visible form first.
 MORPHOLOGICAL = re.compile(r"\b(?:un|non)[\s-]?(medicat|treated|prescribed)", re.I)
 
-#: The marker denied within a few words of itself, which is the only reading that inverts it.
 DENIED_NAIVE = re.compile(r"\b(?:not|never|non)\b[\s\w-]{0,16}?na[iï]ve", re.I)
 
-#: Read before scope, because each names a status that negation alone cannot express. Each is
-#: itself checked for negation: "not drug-naive" contains "naive" and means the opposite.
+#: Read before scope; see the doc named above.
 MARKERS = (
     Rule.of(
         NAIVE,
@@ -72,9 +56,6 @@ def normalize(text: object) -> Decision:
     text_ = MORPHOLOGICAL.sub(r"not \1", raw)
 
     marked = classify(text_, MARKERS)
-    #: "not drug-naive" carries the marker and denies it. Checked with an adjacency pattern
-    #: rather than parse scope, because scope reaches across clauses: in "never-medicated;
-    #: antipsychotic naive" the negation belongs to the first clause and not to the marker.
     if marked and not (marked.value == NAIVE and DENIED_NAIVE.search(text_)):
         return marked
     # No `available()` guard: without a parse this returned UNKNOWN, which is also what a
@@ -89,16 +70,6 @@ def normalize(text: object) -> Decision:
 
 
 def report(patterns: tuple[str, ...] | None = None) -> str:
-    from pondie.normalization._lexicon import summarize
-    from pondie.normalization._records import DEFAULT, iter_records, strings_at
+    from pondie.normalization._lexicon import field_report
 
-    decisions = [
-        normalize(s)
-        for _study, body in iter_records(patterns or DEFAULT)
-        for s in strings_at(body, "groups.medication_status")
-    ]
-    return f"groups.medication_status: {len(decisions)} values\n" + summarize(decisions, VALUES)
-
-
-if __name__ == "__main__":
-    print(report())
+    return field_report(PATH, normalize, VALUES, patterns)

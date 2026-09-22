@@ -1,25 +1,16 @@
 """`Task` -> a paradigm category, and the stimulus each task used.
 
-One module, three steps, and the order is the design:
+Three steps, and the order is the design:
 
     seed     match each task name against the normalised Cognitive Atlas (`atlas`)
     cluster  everything unmatched, on a paradigm distance over six channels
     label    the stimulus, read off `Condition.stimulus_content` as its own column
 
-**Seeding comes first because the Atlas is a target and clustering is not.** There used to
-be a second module here that skipped the seeds and clustered the whole corpus against
-itself with a fitted pair model. Both were reachable -- this one only through a script, so
-`pondie normalize task` ran the other one -- and they disagreed. On the 100-paper defect
-set the unseeded route merged `novelty oddball task`, `Go/No-go tasks` and `sustained
-attention task` into one identity called `stop signal task`; the Atlas names those as three
-separate paradigms and keeps them apart. The unseeded route also had no way not to: its
-pair model trained by distant supervision on name components of three or more members, and
-over 90 tasks only two such components exist, so 20 of 90 tasks appeared in any training
-pair and the model learned one axis -- resting-state or not.
+Only folded name EQUALITY is a hard constraint. Abbreviations are article-scoped: a store
+is one paper's, from `paper_stores`.
 
-So the seeds are the vocabulary and the clustering is the residual. Only folded name
-EQUALITY is used as a hard constraint: equality closes transitively, containment does not.
-Why it is shaped this way, with the measurements, is docs/task-clustering-method.md.
+Why it is shaped this way, with the measurements:
+docs/normalization-rationale.md, "task", and docs/task-clustering-method.md.
 
     python -m pondie.normalization.task --out data/task-facets
 """
@@ -33,18 +24,22 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING, Mapping
 
+from pondie import paths
 from pondie.normalization._embedding import for_phrases, for_prose
 from pondie.normalization._records import DEFAULT, iter_records, strings_at, value_of
 from pondie.normalization.atlas import (
     ATLAS,
     GENERIC_TOK,
-    build as build_seeds,
-    core,
-    fold,
-    sq,
 )
+from pondie.normalization.atlas import build as build_seeds
+from pondie.normalization.atlas import core, fold, sq
 from pondie.vocabularies.folding import squash
+
+if TYPE_CHECKING:  # the store is imported where it is used, so this is annotations only
+    from pondie.vocabularies.abbreviations import Abbreviations
+
 
 @dataclass
 class Task:
@@ -126,18 +121,51 @@ _NBACK = re.compile(r"\b(\d+|one|two|three|four|zero)([- ]?back)\b", re.I)
 
 #: British and American spellings of the same paradigm. `Balloon Analog Risk Task` against
 #: the Atlas's `balloon analogue risk task` is the whole list so far.
-_SPELLING = ((re.compile(r"\banalog\b", re.I), "analogue"),
-             (re.compile(r"\bcolor\b", re.I), "colour"))
+_SPELLING = (
+    (re.compile(r"\banalog\b", re.I), "analogue"),
+    (re.compile(r"\bcolor\b", re.I), "colour"),
+)
 
 #: Words too common to identify a paradigm on their own. A one-token seed core may only match
 #: if it is distinctive: a bare common word matching alone is how `art emotion test` became
 #: the Angling Risk Task under an earlier matcher.
 _COMMON = {
-    "memory", "recall", "attention", "control", "learning", "reward", "emotion", "faces",
-    "decision", "judgment", "perception", "imagery", "viewing", "naming", "reading",
-    "counting", "listening", "speech", "motor", "working", "risk", "choice", "search",
-    "span", "fluency", "discrimination", "detection", "matching", "rating", "induction",
-    "inhibition", "switching", "recognition", "identification", "generation", "processing",
+    "memory",
+    "recall",
+    "attention",
+    "control",
+    "learning",
+    "reward",
+    "emotion",
+    "faces",
+    "decision",
+    "judgment",
+    "perception",
+    "imagery",
+    "viewing",
+    "naming",
+    "reading",
+    "counting",
+    "listening",
+    "speech",
+    "motor",
+    "working",
+    "risk",
+    "choice",
+    "search",
+    "span",
+    "fluency",
+    "discrimination",
+    "detection",
+    "matching",
+    "rating",
+    "induction",
+    "inhibition",
+    "switching",
+    "recognition",
+    "identification",
+    "generation",
+    "processing",
 }
 
 #: A bare acronym alias -- `ART`, `BART`, `DMT`, `PVT` -- only counts when the name writes it
@@ -147,35 +175,44 @@ _COMMON = {
 _ACRONYM = re.compile(r"^[A-Z][A-Za-z]{1,5}$")
 
 
-_STORE = None
+def paper_stores(studies, texts: Path | None) -> "dict[str, Abbreviations]":
+    """One store per study, each scoped to that study. Never another paper's, never a guess.
 
+    A study whose text is not on disk is absent from the result -- no entry, so no
+    expansion. The corpus file is read once for the whole loop, not per study.
 
-def abbreviations():
-    """The corpus's own abbreviation store, loaded once. Empty if it was never built.
-
-    Schwartz-Hearst over each paper's text, mined by `pondie.extraction.corpus`. The papers
-    define their own short forms -- `MID`, `ERT`, `CR` -- and expanding them is what turns a
-    name nothing can match into one that matches exactly. It is the paper's own definition,
-    so it is a fact about that paper rather than a guess.
+    Why it is per paper and not a global:
+    docs/normalization-rationale.md, "task".
     """
-    global _STORE
-    if _STORE is None:
-        from pondie.vocabularies.abbreviations import Abbreviations
-        _STORE = Abbreviations.load()
-    return _STORE
+    from pondie.vocabularies.abbreviations import Abbreviations
+
+    if texts is None:
+        return {}
+    corpus = Abbreviations.load()
+    out: dict[str, Abbreviations] = {}
+    for study in sorted(set(studies)):
+        try:
+            body = paths.best_text(study, texts).read_text(encoding="utf-8", errors="replace")
+        except (FileNotFoundError, OSError):
+            continue
+        out[study] = corpus.for_paper(body, study)
+    return out
 
 
-def normalise(text: str, paper: str = "") -> str:
+def normalise(text: str, store: "Abbreviations | None" = None) -> str:
     """Case, separators, spelling, the n-back variable, and the paper's own acronyms.
 
     Everything here is orthography or a variable, never a judgement about what two
     paradigms have in common -- which is what lets the result be used as a hard constraint.
+
+    `store` is ONE PAPER'S, from `paper_stores`. Omitted, no expansion happens:
+    an Atlas label comes from no article, so there is no paper whose definitions could
+    apply to it, and the other stages run unchanged.
     """
     out = str(text or "")
-    # No paper, no expansion: an expansion is a fact about the article that wrote it, and an
-    # Atlas label comes from no article. Only the acronym stage is skipped.
     from pondie.vocabularies.abbreviations import expansions_in
-    for short, expansion in (expansions_in(out, abbreviations(), paper) if paper else ()):
+
+    for short, expansion in (expansions_in(out, store) if store is not None else ()):
         # A method word is dropped by `core` anyway, so expanding it can only add noise --
         # and the store's `fMRI` entry is a mining defect, two copies of "Functional
         # magnetic resonance imaging" run together with no separator.
@@ -222,7 +259,7 @@ class Seeds:
                 if c:
                     self.by_core.setdefault(c, n)
 
-    def match(self, name: str, paper: str = "") -> tuple[str | None, str]:
+    def match(self, name: str, store: "Abbreviations | None" = None) -> tuple[str | None, str]:
         """(seed, how) for one task name, or (None, "").
 
         Ranked by where the seed sits in the name, then by how much of it matched, then by
@@ -230,14 +267,13 @@ class Seeds:
         qualifier follows it -- ranking on length alone sent `Stop signal task with dot
         motion discrimination` to `dot motion task`.
 
-        `paper` expands that article's own abbreviations before matching, which is the
-        whole reason `normalise` takes one. This call did not pass it, so a task the paper
-        named only by its short form -- `MID`, `ERT`, `SST` -- reached a list of expanded
-        Atlas labels as an acronym and matched nothing, then went to the clustering as an
-        unmatched residual. The expansion is the paper's own definition, mined by
-        `extraction.corpus`, so it is a fact about that article and not a guess.
+        `store` is the paper's own abbreviations, and expanding them before matching is
+        the whole reason `normalise` takes a store. This call passed nothing, so a task
+        the paper named only by its short form -- `MID`, `ERT`, `SST` -- reached a list of
+        expanded Atlas labels as an acronym and matched nothing, then went to the
+        clustering as an unmatched residual.
         """
-        name = normalise(name, paper)
+        name = normalise(name, store)
         for token in re.findall(r"\b[A-Za-z]{2,6}\b", name):
             if token in self.acronyms and token.isupper():
                 return self.acronyms[token], "acronym"
@@ -258,8 +294,10 @@ class Seeds:
             if at is None:
                 # Squashed, to bridge hyphenation: `go/no-go task` against `GoNoGo`. Guarded
                 # on a word boundary, or `Motion processing` matches e-MOTIONPROCESSING-task.
-                if len(sq(c)) >= 6 and sq(c) in sq(plain) and any(
-                    w.startswith(c[0]) for w in plain
+                if (
+                    len(sq(c)) >= 6
+                    and sq(c) in sq(plain)
+                    and any(w.startswith(c[0]) for w in plain)
                 ):
                     at, how = len(plain), "squash"
                 else:
@@ -280,29 +318,24 @@ def _run_at(short: tuple, long: tuple) -> int | None:
 
 def _similarities(pairs, dense, lexical, overlap):
     """One row per pair, one column per channel: name, prose, apparatus, measures,
-    conditions, prose_lex.
+    conditions, prose_lex. The columns are returned rather than combined.
 
-    Six channels kept separate rather than concatenated: a sentence embedding is a mean
-    over its passage, so folding a weak field into one signature averages away the token
-    that discriminates. `prose` and `prose_lex` are dense and sparse views of the same
-    text; conditions are a set, compared by soft overlap.
-
-    The columns are returned rather than combined so the caller decides. `paradigm_distances`
-    means them; a fitted weighting is what the deleted unseeded route did instead, and the
-    module docstring says why that is not here. There was a `CHANNELS` tuple naming this
-    order and nothing read it -- the order is here, in the one place that builds it.
+    Why six and why separate: docs/normalization-rationale.md, "task".
     """
     import numpy as np
 
-    return np.asarray([
-        [float(dense[k][i] @ dense[k][j])
-         for k in ("name", "prose", "apparatus", "measures")]
-        + [overlap(i, j), float(lexical[i].multiply(lexical[j]).sum())]
-        for i, j in pairs
-    ])
+    return np.asarray(
+        [
+            [float(dense[k][i] @ dense[k][j]) for k in ("name", "prose", "apparatus", "measures")]
+            + [overlap(i, j), float(lexical[i].multiply(lexical[j]).sum())]
+            for i, j in pairs
+        ]
+    )
 
 
-def paradigm_distances(tasks, encoder: str = "minilm"):
+def paradigm_distances(
+    tasks, encoder: str = "minilm", stores: "Mapping[str, Abbreviations] | None" = None
+):
     """1 - the mean of six channel similarities, with identical folded names forced to 0.
 
     `Condition.stimulus_content` is deliberately not a channel -- the stimulus must not
@@ -348,18 +381,18 @@ def paradigm_distances(tasks, encoder: str = "minilm"):
 
     # The one constraint kept from the old name ladder. Equality is safe to close
     # transitively; its containment rule is not, and chained a 288-task component.
-    for group in same_name(tasks).values():
+    for group in same_name(tasks, stores).values():
         # EVERY pair, not a star from the first member. The star was anchored on group[0],
         # and the clustering runs on the unseeded submatrix -- so whenever group[0] was
         # seeded, every other member lost its only zero and the group scattered. 49 tasks
         # keyed `cuereactivitytask` ended up in seven categories that way.
         for x, a in enumerate(group):
-            for b in group[x + 1:]:
+            for b in group[x + 1 :]:
                 d[a, b] = d[b, a] = 0.0
     return d
 
 
-def same_name(tasks) -> dict[str, list[int]]:
+def same_name(tasks, stores: "Mapping[str, Abbreviations] | None" = None) -> dict[str, list[int]]:
     """Tasks whose names are the same once normalised, grouped. The one hard constraint.
 
     Equality after normalisation closes transitively without pathology, which is what makes
@@ -367,18 +400,21 @@ def same_name(tasks) -> dict[str, list[int]]:
     """
     groups: dict[str, list[int]] = collections.defaultdict(list)
     for i, task in enumerate(tasks):
-        groups[name_key(task)].append(i)
+        groups[name_key(task, stores)].append(i)
     return groups
 
 
-def name_key(task) -> str:
+def name_key(task, stores: "Mapping[str, Abbreviations] | None" = None) -> str:
     """The string two tasks must share to be forced together.
 
     The CORE, not the folded name: method words are not a distinction, so `cue reactivity`
     and `cue reactivity task` are one key. Orthographic throughout -- no rule here claims
     two differently-named paradigms are one.
+
+    `stores` is keyed by study, so the expansion applied to a name is the definition from
+    the paper that wrote it. Omitted, no name is expanded.
     """
-    c = core(normalise(task.name, task.study))
+    c = core(normalise(task.name, (stores or {}).get(task.study)))
     return squash(" ".join(c))
 
 
@@ -394,8 +430,11 @@ def rescue(labels, sizes, d, threshold: float):
     for i, c in list(labels.items()):
         if sizes[c] != 1:
             continue
-        near = [j for j in np.argsort(d[i]) if j != i and labels.get(j) is not None
-                and sizes[labels[j]] > 1]
+        near = [
+            j
+            for j in np.argsort(d[i])
+            if j != i and labels.get(j) is not None and sizes[labels[j]] > 1
+        ]
         if near and (1.0 - d[i][near[0]]) >= threshold:
             moved[i] = labels[near[0]]
     for i, c in moved.items():
@@ -403,7 +442,9 @@ def rescue(labels, sizes, d, threshold: float):
     return labels, moved
 
 
-def merge_on_name(groups: dict, origin: dict, tasks) -> tuple[dict, dict]:
+def merge_on_name(
+    groups: dict, origin: dict, tasks, stores: "Mapping[str, Abbreviations] | None" = None
+) -> tuple[dict, dict]:
     """Join two categories when a task in each has the same normalised name.
 
     Applied after clustering, because clustering sees only the unseeded half and a shared
@@ -411,17 +452,21 @@ def merge_on_name(groups: dict, origin: dict, tasks) -> tuple[dict, dict]:
     merging on `task` alone would join `emotional faces task` to `taste task`.
     """
     key_of: dict[int, str] = {}
-    for key, members in same_name(tasks).items():
-        c = core(normalise(tasks[members[0]].name, tasks[members[0]].study))
+    for key, members in same_name(tasks, stores).items():
+        first = tasks[members[0]]
+        c = core(normalise(first.name, (stores or {}).get(first.study)))
         if len(c) >= 2 or (len(c) == 1 and len(c[0]) >= 6 and c[0] not in _COMMON):
             for i in members:
                 key_of[i] = key
 
     parent = {label: label for label in groups}
+
     def find(a):
         while parent[a] != a:
-            parent[a] = parent[parent[a]]; a = parent[a]
+            parent[a] = parent[parent[a]]
+            a = parent[a]
         return a
+
     seen: dict[str, str] = {}
     for label, members in groups.items():
         for i in members:
@@ -443,17 +488,31 @@ def merge_on_name(groups: dict, origin: dict, tasks) -> tuple[dict, dict]:
     for root, members in merged.items():
         component = [l for l in groups if find(l) == root]
         named = [l for l in component if origin[l] == "cognitive atlas"]
-        label = min(named, key=len) if named else max(
-            component, key=lambda l: (len(groups[l]), -len(l)))
+        label = (
+            min(named, key=len)
+            if named
+            else max(component, key=lambda l: (len(groups[l]), -len(l)))
+        )
         out[label] = members
         out_origin[label] = "cognitive atlas" if named else "clustered"
     return out, out_origin
 
 
-def categorise(tasks, seeds: Seeds, cut: float, encoder: str, rescue_at: float = 0.0) -> dict:
+def categorise(
+    tasks,
+    seeds: Seeds,
+    cut: float,
+    encoder: str,
+    rescue_at: float = 0.0,
+    stores: "Mapping[str, Abbreviations] | None" = None,
+) -> dict:
+    """`stores` is one scoped store per study, from `paper_stores`. None means no
+    name is expanded, which is the honest answer when the papers are not on disk."""
+
     import numpy as np
     from sklearn.cluster import AgglomerativeClustering
 
+    stores = stores or {}
     matched = {}
     # Keyed by (name, study) and not by the name alone: an expansion is article-scoped, so
     # the same short form in two papers may expand to two different things and a
@@ -462,12 +521,12 @@ def categorise(tasks, seeds: Seeds, cut: float, encoder: str, rescue_at: float =
     for i, t in enumerate(tasks):
         key = (t.name.lower(), t.study)
         if key not in cache:
-            cache[key] = seeds.match(t.name, t.study)
+            cache[key] = seeds.match(t.name, stores.get(t.study))
         if cache[key][0]:
             matched[i] = cache[key]
     rest = [i for i in range(len(tasks)) if i not in matched]
 
-    d = paradigm_distances(tasks, encoder)
+    d = paradigm_distances(tasks, encoder, stores)
     labels = {}
     rescued: list[dict] = []
     if rest:
@@ -483,11 +542,14 @@ def categorise(tasks, seeds: Seeds, cut: float, encoder: str, rescue_at: float =
             # `report` and `main` are the only things here that write to a terminal.
             for i, c in moved.items():
                 home = [k for k, v in labels.items() if v == c and k != i]
-                rescued.append({
-                    "name": tasks[i].name,
-                    "joined": collections.Counter(
-                        tasks[k].name for k in home).most_common(1)[0][0],
-                })
+                rescued.append(
+                    {
+                        "name": tasks[i].name,
+                        "joined": collections.Counter(tasks[k].name for k in home).most_common(1)[
+                            0
+                        ][0],
+                    }
+                )
 
     groups: dict[str, list[int]] = collections.defaultdict(list)
     origin: dict[str, str] = {}
@@ -511,10 +573,7 @@ def categorise(tasks, seeds: Seeds, cut: float, encoder: str, rescue_at: float =
             "origin": origin[label],
             "n_tasks": len(members),
             "n_studies": len({tasks[i].study for i in members}),
-            "n_names": len({tasks[i].name for i in members}),
-            "stimuli": collections.Counter(
-                stimulus_of(tasks[i]) for i in members
-            ).most_common(),
+            "stimuli": collections.Counter(stimulus_of(tasks[i]) for i in members).most_common(),
             "members": [
                 {
                     "study": tasks[i].study,
@@ -526,8 +585,10 @@ def categorise(tasks, seeds: Seeds, cut: float, encoder: str, rescue_at: float =
             ],
         }
 
-    groups, origin = merge_on_name(groups, origin, tasks)
+    groups, origin = merge_on_name(groups, origin, tasks, stores)
     return {
+        # The settings this run used. Read by `summarise`, and the reason they are in the
+        # JSON at all: a category list is not interpretable without the cut that made it.
         "cut": cut,
         "encoder": encoder,
         "n_tasks": len(tasks),
@@ -548,6 +609,7 @@ def categorise(tasks, seeds: Seeds, cut: float, encoder: str, rescue_at: float =
         ],
     }
 
+
 # ---------------------------------------------------------------- the field contract
 #
 # `normalization.fields()` lists a module that exposes `normalize`, and the CLI verb calls
@@ -562,10 +624,19 @@ def normalize(
     encoder: str = "minilm",
     rescue_at: float = 0.0,
     atlas: Path = ATLAS,
+    texts: Path | None = None,
 ) -> dict:
-    """Every task in the records, seeded against the Atlas and then clustered."""
+    """Every task in the records, seeded against the Atlas and then clustered.
 
-    return categorise(load(patterns), Seeds(atlas), cut, encoder, rescue_at)
+    `texts` is the corpus directory. Given, each paper's own abbreviations are mined from
+    its own text and its short-form task names expand before matching; omitted, nothing
+    expands. Same argument and the same default as
+    `normalization.medical_condition.normalize`, for the same reason.
+    """
+
+    tasks = load(patterns)
+    stores = paper_stores({t.study for t in tasks}, texts)
+    return categorise(tasks, Seeds(atlas), cut, encoder, rescue_at, stores)
 
 
 def summarise(out: dict) -> str:
@@ -573,6 +644,7 @@ def summarise(out: dict) -> str:
 
     seeded = sum(1 for c in out["categories"] if c["origin"] == "cognitive atlas")
     lines = [
+        f"cut {out['cut']}, {out['encoder']} encoder",
         f"{out['n_tasks']} tasks, {out['n_seeds']} Atlas seeds -> "
         f"{len(out['categories'])} categories "
         f"({seeded} named by the Atlas, {len(out['categories']) - seeded} clustered), "
@@ -582,12 +654,13 @@ def summarise(out: dict) -> str:
     ]
     for entry in out["categories"]:
         stim = ", ".join(f"{s} ({n})" for s, n in entry["stimuli"][:3])
-        lines.append(f"{entry['n_studies']:7d}  {entry['origin']:<16s} "
-                     f"{entry['category'][:40]:42s}{stim[:44]}")
+        lines.append(
+            f"{entry['n_studies']:7d}  {entry['origin']:<16s} "
+            f"{entry['category'][:40]:42s}{stim[:44]}"
+        )
     if out.get("rescued"):
         lines += ["", f"{len(out['rescued'])} singleton(s) attached to a nearest category:"]
-        lines += [f"         {r['name'][:46]:48s} -> {r['joined'][:42]}"
-                  for r in out["rescued"]]
+        lines += [f"         {r['name'][:46]:48s} -> {r['joined'][:42]}" for r in out["rescued"]]
     if out["uncategorised"]:
         lines += ["", f"{len(out['uncategorised'])} task(s) in no category:"]
         lines += [f"         {s['name'][:60]}" for s in out["uncategorised"]]
@@ -605,15 +678,34 @@ def write(out: dict, directory: Path) -> None:
     (directory / "task-categories.json").write_text(json.dumps(out, indent=1))
     with (directory / "task-categories.tsv").open("w", newline="") as handle:
         w = csv.writer(handle, delimiter="\t")
-        w.writerow(["category", "origin", "category_studies", "study", "task_name",
-                    "stimulus", "conditions"])
+        w.writerow(
+            [
+                "category",
+                "origin",
+                "category_studies",
+                "study",
+                "task_name",
+                "stimulus",
+                "conditions",
+            ]
+        )
         for c in out["categories"]:
             for m in c["members"]:
-                w.writerow([c["category"], c["origin"], c["n_studies"], m["study"],
-                            m["name"], m["stimulus"], "; ".join(m["conditions"])])
+                w.writerow(
+                    [
+                        c["category"],
+                        c["origin"],
+                        c["n_studies"],
+                        m["study"],
+                        m["name"],
+                        m["stimulus"],
+                        "; ".join(m["conditions"]),
+                    ]
+                )
         for s in out["uncategorised"]:
-            w.writerow(["(none)", "", 0, s["study"], s["name"], s["stimulus"],
-                        "; ".join(s["conditions"])])
+            w.writerow(
+                ["(none)", "", 0, s["study"], s["name"], s["stimulus"], "; ".join(s["conditions"])]
+            )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -621,17 +713,34 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--records", nargs="*", default=list(DEFAULT))
     parser.add_argument("--cut", type=float, default=0.60)
     parser.add_argument("--encoder", choices=("minilm", "sapbert"), default="minilm")
-    parser.add_argument("--rescue", type=float, default=0.0,
-                        help="attach a singleton to its nearest category at this similarity")
+    parser.add_argument(
+        "--rescue",
+        type=float,
+        default=0.0,
+        help="attach a singleton to its nearest category at this similarity",
+    )
     parser.add_argument("--atlas", type=Path, default=ATLAS)
+    parser.add_argument(
+        "--texts",
+        type=Path,
+        default=paths.CORPUS,
+        help="the corpus the papers live in. Each paper's own abbreviations are mined "
+        "from its own text so a short-form task name can expand before matching; "
+        "pass an empty path to disable",
+    )
     parser.add_argument("--out", type=Path, help="directory for the JSON and TSV")
     args = parser.parse_args(argv)
 
     seeds = Seeds(args.atlas)
     tasks = load(tuple(args.records))
+    texts = args.texts if args.texts and Path(args.texts).is_dir() else None
+    stores = paper_stores({t.study for t in tasks}, texts)
     print(f"{len(seeds.source['all'])} Atlas labels -> {len(seeds.labels)} seeds")
-    print(f"{len(tasks)} tasks")
-    out = categorise(tasks, seeds, args.cut, args.encoder, args.rescue)
+    print(
+        f"{len(tasks)} tasks, abbreviations read for {len(stores)} of "
+        f"{len({t.study for t in tasks})} papers"
+    )
+    out = categorise(tasks, seeds, args.cut, args.encoder, args.rescue, stores)
     print(summarise(out))
     if args.out:
         write(out, args.out)

@@ -7,6 +7,7 @@ parents, wrong parent, eponyms -- are worked through in docs/cognitive-atlas-see
 
     python -m pondie.normalization.atlas
 """
+
 from __future__ import annotations
 
 import collections
@@ -20,10 +21,46 @@ from pondie import paths
 #: wants the same file, and `build()` stays overridable for a test fixture.
 ATLAS = paths.VOCAB / "cognitiveatlas-task.json"
 
-GENERIC_TOK = {"fmri","mri","task","tasks","paradigm","paradigms","test","tests","scan",
- "scanning","imaging","functional","version","modified","study","protocol","related",
- "based","trials","trial","block","blocks","event","design","procedure","experiment",
- "session","runs","run","combining","using","the","a","an","of","and","with","for"}
+GENERIC_TOK = {
+    "fmri",
+    "mri",
+    "task",
+    "tasks",
+    "paradigm",
+    "paradigms",
+    "test",
+    "tests",
+    "scan",
+    "scanning",
+    "imaging",
+    "functional",
+    "version",
+    "modified",
+    "study",
+    "protocol",
+    "related",
+    "based",
+    "trials",
+    "trial",
+    "block",
+    "blocks",
+    "event",
+    "design",
+    "procedure",
+    "experiment",
+    "session",
+    "runs",
+    "run",
+    "combining",
+    "using",
+    "the",
+    "a",
+    "an",
+    "of",
+    "and",
+    "with",
+    "for",
+}
 
 #: Auto-generated Atlas entries: a generic head with the apparatus bolted on. Never a seed.
 #: Tested against the ORIGINAL label, before `normalise_label` removes the scanner word --
@@ -46,44 +83,130 @@ def normalise_label(name: str) -> str:
     out = re.sub(r"\s{2,}", " ", SCANNER.sub(" ", name)).strip(" -,:")
     return out or name
 
+
 #: A variant that NEGATES its parent is a different task.
 NEGATED = re.compile(r"^(non|anti|un|in|no)[- ]", re.I)
 
 #: Eponyms and place names: the extra token names an instrument, not a variant.
-EPONYM = {"iowa","cambridge","penn","penns","benton","hayling","warrington","california",
- "american","wisconsin","wechsler","wais","wasi","eriksen","simon","posner","stockings",
- "toolbox","nih","salthouse","babcock","boston","rey","osterrieth","hopkins","corsi",
- "beery","buktenica","uznadze","stockings","catoon","comprehensive","early","wcst","ravlt"}
+EPONYM = {
+    "iowa",
+    "cambridge",
+    "penn",
+    "penns",
+    "benton",
+    "hayling",
+    "warrington",
+    "california",
+    "american",
+    "wisconsin",
+    "wechsler",
+    "wais",
+    "wasi",
+    "eriksen",
+    "simon",
+    "posner",
+    "stockings",
+    "toolbox",
+    "nih",
+    "salthouse",
+    "babcock",
+    "boston",
+    "rey",
+    "osterrieth",
+    "hopkins",
+    "corsi",
+    "beery",
+    "buktenica",
+    "uznadze",
+    "stockings",
+    "catoon",
+    "comprehensive",
+    "early",
+    "wcst",
+    "ravlt",
+}
 
 #: Paradigms I judge distinct from the parent the containment rule proposed, after reading
 #: every collapse. Curated because there is no rule: `Space Fortress with Oddball` uses an
 #: oddball but is the Space Fortress paradigm, and nothing in the string says so.
-KEEP_SEPARATE = {"Space Fortress with Oddball", "Biological Motion Perception (Passive Viewing) Paradigm",
- "Continuous Tapping Task", "finger tapping task", "Test of Early Language Development",
- "dual sensitization", "self ordered pointing task", "Comprehensive Test of Phonological Processing",
- "CAToon (cognitive and affective Theory of Mind Cartoon Task)", "Motor Screening Task",
- "Manipulation of predictability and acceptability", "dual-task weather prediction"}
+KEEP_SEPARATE = {
+    "Space Fortress with Oddball",
+    "Biological Motion Perception (Passive Viewing) Paradigm",
+    "Continuous Tapping Task",
+    "finger tapping task",
+    "Test of Early Language Development",
+    "dual sensitization",
+    "self ordered pointing task",
+    "Comprehensive Test of Phonological Processing",
+    "CAToon (cognitive and affective Theory of Mind Cartoon Task)",
+    "Motor Screening Task",
+    "Manipulation of predictability and acceptability",
+    "dual-task weather prediction",
+}
 
 #: Whole labels too generic to seed anything.
-GENERIC_WHOLE = {"maze","gating","drawing","vigilance","whistling","faces","recall test",
- "encoding task","semantic task","naming tasks","orientation test","reading","writing",
- "counting","tapping task","imitation","observation","planning","learning","video games",
- "decision making","judgment","discrimination","ataxia","time wall","cups task","shift task",
- "drawing from memory task","reading covert","reading overt","counting calculation",
- "eating drinking","dimensions task","categorization task","reaction time","motion processing"}
-INSTRUMENT = re.compile(r"(scale|inventory|questionnaire|battery|system|index|profile|"
-                        r"schedule|interview|checklist|survey|form)s?$", re.I)
+GENERIC_WHOLE = {
+    "maze",
+    "gating",
+    "drawing",
+    "vigilance",
+    "whistling",
+    "faces",
+    "recall test",
+    "encoding task",
+    "semantic task",
+    "naming tasks",
+    "orientation test",
+    "reading",
+    "writing",
+    "counting",
+    "tapping task",
+    "imitation",
+    "observation",
+    "planning",
+    "learning",
+    "video games",
+    "decision making",
+    "judgment",
+    "discrimination",
+    "ataxia",
+    "time wall",
+    "cups task",
+    "shift task",
+    "drawing from memory task",
+    "reading covert",
+    "reading overt",
+    "counting calculation",
+    "eating drinking",
+    "dimensions task",
+    "categorization task",
+    "reaction time",
+    "motion processing",
+}
+INSTRUMENT = re.compile(
+    r"(scale|inventory|questionnaire|battery|system|index|profile|"
+    r"schedule|interview|checklist|survey|form)s?$",
+    re.I,
+)
 COMPOUND = re.compile(r"\b(combining|combined with|followed by)\b", re.I)
 
 
 def fold(s):
     import unicodedata
+
     s = unicodedata.normalize("NFKD", str(s or ""))
     s = "".join(c for c in s if not unicodedata.combining(c))
     return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
 
-def core(s): return tuple(w for w in fold(s).split() if w not in GENERIC_TOK)
-def sq(c): return "".join(c)
+
+def core(s):
+    return tuple(w for w in fold(s).split() if w not in GENERIC_TOK)
+
+
+def sq(c):
+    return "".join(c)
+
+
 def build(path: Path = ATLAS):
     raw = json.load(open(path))
     ca = sorted({e["name"].strip() for e in raw if e.get("name")})
@@ -98,10 +221,19 @@ def build(path: Path = ATLAS):
             a = a.strip()
             if name and a and fold(a) != fold(name):
                 aliases[name].add(a)
-    kept_raw = [n for n in ca if not (
-        n in DROP_BY_NAME or fold(n) in GENERIC_WHOLE or INSTRUMENT.search(n)
-        or COMPOUND.search(n) or JUNK_PARENT.search(n)
-        or len(fold(n).replace(" ", "")) <= 6 or len(core(n)) > 6)]
+    kept_raw = [
+        n
+        for n in ca
+        if not (
+            n in DROP_BY_NAME
+            or fold(n) in GENERIC_WHOLE
+            or INSTRUMENT.search(n)
+            or COMPOUND.search(n)
+            or JUNK_PARENT.search(n)
+            or len(fold(n).replace(" ", "")) <= 6
+            or len(core(n)) > 6
+        )
+    ]
     # Filter on the original, then normalise. `renamed` keeps the Atlas's own spelling so a
     # mapping stays traceable to the term it came from.
     renamed = {n: normalise_label(n) for n in kept_raw if normalise_label(n) != n}
@@ -109,10 +241,10 @@ def build(path: Path = ATLAS):
 
     bysq = collections.defaultdict(list)
     for n in cand:
-        if core(n): bysq[sq(core(n))].append(n)
+        if core(n):
+            bysq[sq(core(n))].append(n)
     canon = {s: min(g, key=lambda x: (len(x), x)) for s, g in bysq.items()}
-    equal = {n: canon[sq(core(n))] for g in bysq.values() for n in g
-             if n != canon[sq(core(n))]}
+    equal = {n: canon[sq(core(n))] for g in bysq.values() for n in g if n != canon[sq(core(n))]}
 
     parents = list(canon.values())
     collapse, kept = {}, []
@@ -132,13 +264,17 @@ def build(path: Path = ATLAS):
             ca_ = core(a)
             if len(ca_) >= len(cb):
                 continue
-            at = next((k for k in range(len(cb) - len(ca_) + 1)
-                       if cb[k:k + len(ca_)] == ca_), None)
+            at = next(
+                (k for k in range(len(cb) - len(ca_) + 1) if cb[k : k + len(ca_)] == ca_), None
+            )
             if at is None:
-                if not (len(sq(ca_)) >= 6 and sq(ca_) in sq(cb)
-                        and any(w.startswith(ca_[0]) for w in cb)):
+                if not (
+                    len(sq(ca_)) >= 6
+                    and sq(ca_) in sq(cb)
+                    and any(w.startswith(ca_[0]) for w in cb)
+                ):
                     continue
-                at = len(cb)          # a squashed hit has no token position; rank it last
+                at = len(cb)  # a squashed hit has no token position; rank it last
             here = (at, -len(ca_))
             if rank is None or here < rank:
                 best, rank = a, here
@@ -158,12 +294,19 @@ def build(path: Path = ATLAS):
         label = equal.get(label, label)
         seen = set()
         while label in collapse and label not in seen:
-            seen.add(label); label = collapse[label]
+            seen.add(label)
+            label = collapse[label]
         if label in seeds:
             resolved[label] |= alts
-    return {"all": ca, "seeds": sorted(seeds), "equal": equal, "renamed": renamed,
-            "collapse": collapse, "kept": kept,
-            "aliases": {k: sorted(v) for k, v in resolved.items()}}
+    return {
+        "all": ca,
+        "seeds": sorted(seeds),
+        "equal": equal,
+        "renamed": renamed,
+        "collapse": collapse,
+        "kept": kept,
+        "aliases": {k: sorted(v) for k, v in resolved.items()},
+    }
 
 
 def report(path: Path = ATLAS) -> str:
@@ -184,10 +327,16 @@ def report(path: Path = ATLAS) -> str:
         f"| scanner word removed from {len(out['renamed'])}",
     ]
     lines += [f"   {a[:48]:50s} -> {b}" for a, b in sorted(out["renamed"].items())]
-    for probe in ("Go-No-Go Zoo Task", "Go-NoGo fMRI paradigm", "letter n-back task",
-                  "Motor Selective Stop Signal Task", "non-spatial cuing paradigm",
-                  "Stop signal task with dot motion discrimination", "Iowa Gambling Task",
-                  "Space Fortress with Oddball"):
+    for probe in (
+        "Go-No-Go Zoo Task",
+        "Go-NoGo fMRI paradigm",
+        "letter n-back task",
+        "Motor Selective Stop Signal Task",
+        "non-spatial cuing paradigm",
+        "Stop signal task with dot motion discrimination",
+        "Iowa Gambling Task",
+        "Space Fortress with Oddball",
+    ):
         label = out["renamed"].get(probe, probe)
         target = out["collapse"].get(out["equal"].get(label, label))
         if target is None and label not in out["seeds"]:

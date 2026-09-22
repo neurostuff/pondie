@@ -123,22 +123,28 @@ def test_the_worked_models_survive_the_slice() -> None:
 
 
 def test_both_passes_are_sent_the_worked_models() -> None:
-    for mode in ("entities", "analyses"):
+    for mode in render.MODE_NOTE:
         user = render.build_prompt("PAPER TEXT", mode, False, "").user
         assert "# Worked models" in user
         assert "5.6 A pre–post change with no paradigm" in user
 
 
-def test_the_entities_pass_is_told_a_level_may_name_an_occasion() -> None:
+def test_an_occasion_is_offered_as_a_level_to_the_pass_that_decides_levels() -> None:
     """The prompt used to name `conditions` and nothing else, so a resting-state
-    pre/post study read as having no factor at all -- TgcHKMRfrVog's defect, from
-    the instruction that produced it."""
+    pre/post study read as having no factor at all -- TgcHKMRfrVog's defect.
 
-    note = render.MODE_NOTE["entities"]
+    Asserted against the RENDERED prompt of the pass that now makes the call. Under
+    demand-driven ordering `demands` decides `term_type` and `levels`; the rule used to sit
+    in a `MODE_NOTE` entry keyed `entities`, which `build_prompt` never reaches, so that
+    test passed on text no model was sent.
+    """
 
-    for slot in ("conditions", "cohorts", "occasions", "arms", "regions"):
-        assert slot in note
-    assert "FactorLevel.timepoints" in note
+    demands = _unwrapped(render.build_prompt("PAPER", "demands", False, "").system)
+    assert "A condition, an occasion, an arm, a cohort" in demands
+
+    # and `satisfy` is told what a level links to when it builds the term
+    satisfy = _unwrapped(render.build_prompt("PAPER", "satisfy", False, "").system)
+    assert "arm, condition, timepoint or group carrying it" in satisfy
 
 
 def test_payload_keys_split_cleanly(extraction_schema) -> None:
@@ -165,17 +171,25 @@ def test_payload_keys_split_cleanly(extraction_schema) -> None:
 # Three instruction gaps, each measured on the 16-record corpus rather than imagined.
 
 
-def test_the_entities_pass_is_told_to_emit_regions() -> None:
-    """Eleven of sixteen papers emitted zero `regions`, and those eleven are exactly the
-    ones throwing `roi_definition` (61 errors), `roi_labels` (9) and the LinkML rule "an ROI
-    analysis must name the regions it ran over" (17) -- 87 of 143. This pass is the only
-    place a Region can be created and it never mentioned one.
+def test_a_region_is_reachable_by_declaration_rather_than_by_exhortation() -> None:
+    """Eleven of sixteen papers emitted zero `regions` -- 87 of 143 errors.
+
+    The entities-mode prompt already carried a paragraph warning about exactly that
+    failure and the failure happened anyway, which
+    docs/extraction-workflow-experiments.md §1 reads as evidence that this is a workflow
+    ordering problem and not a prompt-wording problem. The fix was demand-driven ordering,
+    so the guarantee to assert is structural: an analysis DECLARES the Region it needs and
+    `satisfy` is obliged to emit every declared entity. The paragraph went with the
+    ordering it belonged to.
     """
 
-    note = render.MODE_NOTE["entities"]
-    assert "Region" in note
-    assert "ONLY PLACE" in note.upper()
-    assert "definition_method" in note
+    demands = _unwrapped(render.build_prompt("PAPER", "demands", False, "").system)
+    assert '"kind": "Region"' in demands, "the shopping list can name a Region"
+    assert "Region," in demands, "Region is in the declarable class list"
+
+    satisfy = _unwrapped(render.build_prompt("PAPER", "satisfy", False, "").system)
+    assert "Emit one entity per declared entry" in satisfy
+    assert "dangling reference" in satisfy
 
 
 def _unwrapped(text: str) -> str:

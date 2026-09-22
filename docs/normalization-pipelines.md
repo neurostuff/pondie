@@ -1,5 +1,8 @@
 # Normalizing a field depends on the field's shape, not on the corpus
 
+> Per-module reasons and the measurement behind each live in
+> [normalization-rationale.md](normalization-rationale.md).
+
 > Where this sits: [pipeline-architecture.md](pipeline-architecture.md) covers extraction, up
 > to `data/runs/<run>/records/<id>.extraction.json`. This file starts there. The vocabulary-matching
 > layer common to several of these pipelines is [normalizing-across-papers.md](normalizing-across-papers.md);

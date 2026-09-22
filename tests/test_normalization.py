@@ -1,5 +1,7 @@
 """One test per shape, on the cases that were wrong before they were rules."""
 
+from pathlib import Path
+
 import pytest
 
 from pondie.normalization import (
@@ -171,24 +173,38 @@ def test_the_facet_is_the_stated_one_or_nothing():
 # ------------------------------------------- one module, and it seeds before it clusters
 
 
-def test_task_normalization_is_one_module_with_the_field_contract():
+def test_only_one_module_normalizes_tasks():
     """There were two: a seeded one reachable only from a script, and an unseeded one that
     `pondie normalize task` ran because it was the one exposing `normalize`. They
     disagreed -- the unseeded route merged `novelty oddball task`, `Go/No-go tasks` and
-    `sustained attention task` into `stop signal task`, which the Atlas names apart."""
+    `sustained attention task` into `stop signal task`, which the Atlas names apart.
+
+    Asserted as absence, because "both exist and one is preferred" is the state this is
+    meant to prevent and a test that only checks the survivor would pass in it.
+    """
+
+    import importlib.util
+    from pathlib import Path
 
     from pondie import normalization
     from pondie.normalization import task
 
+    package = Path(normalization.__file__).parent
+    others = sorted(
+        p.name for p in package.glob("*.py")
+        if p.stem not in {"task", "atlas"} and "task" in p.stem
+    )
+    assert others == [], f"a second task module is back: {others}"
+    assert importlib.util.find_spec("pondie.normalization._clustering") is None
+
+    # the whole workflow is reachable from the one module, so no script is needed
     assert "task" in normalization.fields()
-    assert callable(task.normalize) and callable(task.report)
-    assert callable(task.categorise) and callable(task.Seeds)
-    # the seeded route's own entry point, so no script is needed to reach it
-    assert callable(task.main)
+    for step in ("Seeds", "categorise", "paradigm_distances", "normalize", "report", "main"):
+        assert callable(getattr(task, step, None)), f"{step} is not on the module"
 
 
-def test_the_seed_match_expands_the_papers_own_abbreviations(monkeypatch):
-    """`normalise` has always taken a `paper`; `Seeds.match` did not pass one.
+def test_the_seed_match_expands_the_papers_own_abbreviations():
+    """`normalise` has always been able to expand; `Seeds.match` passed it nothing.
 
     So a task the paper named only by its short form reached a list of expanded Atlas
     labels as an acronym and matched nothing. Over the 100-paper defect set `SVF test`
@@ -199,28 +215,47 @@ def test_the_seed_match_expands_the_papers_own_abbreviations(monkeypatch):
     from pondie.normalization import task
     from pondie.vocabularies.abbreviations import Abbreviations
 
-    store = Abbreviations()
-    store.learn("SVF test is a semantic verbal fluency (SVF) measure", paper="p1")
-    monkeypatch.setattr(task, "_STORE", store)
+    scoped = Abbreviations().for_paper(
+        "We ran the semantic verbal fluency (SVF) test in the scanner.", "p1"
+    )
+    assert task.normalise("SVF test") == "SVF test", "no store, no expansion"
+    assert "verbal fluency" in task.normalise("SVF test", scoped).lower()
 
-    assert task.normalise("SVF test") == "SVF test", "no paper, no expansion"
-    assert "verbal fluency" in task.normalise("SVF test", "p1").lower()
 
+def test_a_store_a_caller_holds_cannot_reach_past_its_own_paper():
+    """`FA` is fractional anisotropy in one paper and flip angle in another.
 
-def test_an_expansion_is_scoped_to_the_paper_that_defined_it(monkeypatch):
-    """`FA` is fractional anisotropy in one paper and flip angle in another, so the match
-    cache may not be keyed on the name alone."""
+    There was a module-level `_STORE` here holding the whole corpus file, and `normalise`
+    looked up `(short, paper)` in it. Lookups were scoped so nothing leaked, but a global
+    abbreviation list is the shape this repository has ruled out -- and it never read the
+    paper, so a definition present only in the paper's own Methods resolved to nothing.
+    `paper_stores` returns stores that each ARE one paper's, so reaching past one is not
+    possible rather than merely not done.
+    """
 
-    from pondie.normalization import task
     from pondie.vocabularies.abbreviations import Abbreviations
 
-    store = Abbreviations()
-    store.learn("we ran the semantic verbal fluency (SVF) test", paper="p1")
-    monkeypatch.setattr(task, "_STORE", store)
+    corpus = Abbreviations()
+    corpus.learn("fractional anisotropy (FA) was computed", paper="p1")
+    corpus.learn("the flip angle (FA) was 90 degrees", paper="p2")
 
-    assert "verbal fluency" in task.normalise("SVF test", "p1").lower()
-    # p2 never defined it, so p1's fact is not evidence about p2
-    assert task.normalise("SVF test", "p2") == "SVF test"
+    one = corpus.for_paper("fractional anisotropy (FA) was computed", "p1")
+    assert one.paper == "p1"
+    assert "fractional anisotropy" in (one.expand("FA") or "").lower()
+    # p2's definition is not in p1's store at all
+    assert one.expand("FA", "p2") is None
+
+
+def test_no_paper_text_means_no_expansion_rather_than_a_guess():
+    """A study with no text on disk gets no store at all, and `normalise` with no store
+    leaves the name alone. A missing corpus must not silently fall back to whatever some
+    other paper meant."""
+
+    from pondie.normalization import task
+
+    assert task.paper_stores({"nosuchstudy"}, None) == {}
+    assert task.paper_stores({"nosuchstudy"}, Path("/nonexistent")) == {}
+    assert task.normalise("SVF test", None) == "SVF test"
 
 
 def test_rescue_attaches_a_singleton_and_reports_what_it_moved():

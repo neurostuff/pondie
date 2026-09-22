@@ -1,5 +1,8 @@
 # The normalization layer
 
+> Per-module reasons and the measurement behind each live in
+> [normalization-rationale.md](normalization-rationale.md).
+
 > Supersedes the coverage numbers in [normalizing-with-onvoc.md](normalizing-with-onvoc.md)
 > (measured on 328 records) and the `is_healthy` recommendation in
 > [normalization-pipelines.md](normalization-pipelines.md). The per-field *method* table in

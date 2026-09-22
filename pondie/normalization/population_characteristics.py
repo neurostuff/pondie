@@ -1,39 +1,11 @@
 """`Group.population_characteristics` -> the selective traits, with the rest set aside.
 
-The field holds what a study chose its cohort for: habitual exposure, training, occupation,
-lifestyle, atypical body habitus. Its value is that a query can filter on it, and that
-value survives only if every entry is discriminative.
+A value every plausible cohort could carry is moved to `Group.other_characteristics` --
+moved, not dropped. `EXPOSURE` is decisive against every other rule. Matching is
+full-string against a reduced core, never a substring search.
 
-Asking for that did not work. Three rewrites of the slot description, each tested by
-re-extracting the same ten papers, left non-selective entries at 24%, then 14%, then 7% --
-differences of two and three entries out of thirty, on a sample too small to tell the
-versions apart. `is_healthy` had already shown why: a description cannot outvote the
-source's own wording. So the question stays as it is and the answer is partitioned
-afterwards, which is a rule that can be read, tested against the whole corpus, and changed
-without a re-extraction.
-
-WHAT MOVES. A value goes to `other_characteristics` when every plausible cohort could carry
-it -- "normal weight", "right-handed", "normal or corrected-to-normal vision", "no
-psychiatric history", "MRI compatible", "native English speakers". Moved, not dropped: the
-value is not wrong, and a reader auditing a cohort wants to see it. It simply cannot share a
-field with a trait a filter would select on. `other_characteristics` is `deterministic` in
-the storage schema, so the generator never puts it to a model and nothing is asked twice.
-
-TWO ASYMMETRIES, both of which a blunter rule gets backwards:
-
-  Handedness. "right-handed" is normative; "left-handed" and "mixed-handed" are selective,
-  because a study recruiting left-handers recruited for that.
-
-  Negation. A negated *condition* is normative -- "no neurological or psychiatric disorder"
-  is carried by every control cohort in the corpus. A negated *exposure* is selective: "no
-  history of smoking" is the control arm of a smoking study, and "cannabis use less than 50
-  times" is how a cue-reactivity paper defines its comparison group. `EXPOSURE` is therefore
-  decisive against every rule here, which is what makes the negation rule safe to state
-  broadly.
-
-Matching is full-string against a reduced core, never a substring search. "Otherwise healthy
-adult smokers" reduces to "healthy smokers", which no rule matches in full, so it stays --
-where `search(r"healthy")` would have moved it and lost the cohort's defining trait.
+Why it is partitioned afterwards rather than asked for, with the measurements:
+docs/normalization-rationale.md, "population_characteristics".
 """
 
 from __future__ import annotations
@@ -410,9 +382,7 @@ def report(patterns: tuple[str, ...] = DEFAULT) -> str:
         for form, count in forms.most_common(6):
             lines.append(f"        {count:4d}  {form[:76]!r}")
     held = Counter(v.rule for v in verdicts if v.kind == KEPT)
-    lines.append(f"\n  kept: {held['unmatched']} unmatched, {held['exposure']} decided by EXPOSURE")
+    lines.append(
+        f"\n  kept: {held['unmatched']} unmatched, {held['exposure']} decided by EXPOSURE"
+    )
     return "\n".join(lines)
-
-
-if __name__ == "__main__":
-    print(report())

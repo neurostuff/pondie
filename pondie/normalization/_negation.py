@@ -1,18 +1,10 @@
 """Whether a mention falls inside the scope of a negation, from the sentence's own syntax.
 
-Written because the alternative does not generalize. A proximity regex -- a negation cue
-within N characters of a concept word -- has to be retuned for every new phrasing, and it
-cannot tell `no` the negator from `no` the determiner: in "taking antidepressant medication;
-no medication changes" the cohort *is* medicated, and a proximity rule reads it as the
-opposite. A dependency parse distinguishes them because they are different relations.
+A negation governs its syntactic subtree, so a mention is negated when the negation
+attaches to it or to any of its ancestors (Chapman et al., NegEx, 2001). Raises when no
+parser is installed rather than answering as though the text said nothing.
 
-The domain part shrinks to a lexicon of concept words, which is small and stable. The
-linguistic part is a general parser, so a phrasing nobody anticipated is handled by syntax
-rather than by another rule.
-
-Scope follows the standard clinical-NLP treatment (Chapman et al., NegEx, 2001): a negation
-governs its syntactic subtree, so a mention is negated when the negation attaches to it or to
-any of its ancestors.
+Why, and what the alternatives got wrong: docs/normalization-rationale.md, "_negation".
 """
 
 from __future__ import annotations
@@ -35,18 +27,22 @@ _DETERMINERS = {"no", "neither", "none"}
 #: depressive disorder" the negation IS the head noun and the disorder its `of`-complement,
 #: so nothing else in this module could see it.
 _NEGATORS = {
-    "no", "not", "never", "nor", "neither", "without", "none", "n't", "absence", "lack",
+    "no",
+    "not",
+    "never",
+    "nor",
+    "neither",
+    "without",
+    "none",
+    "n't",
+    "absence",
+    "lack",
 }
 
 
 @functools.lru_cache(maxsize=1)
 def _parser():
-    """The blank-parse pipeline, built once.
-
-    Raise an error if parsing is unavailable. Without scope, "not medicated" and
-    "medicated" contain the same words, so the field would read UNKNOWN. Papers that never
-    mention medication also read UNKNOWN, making a missing model look like missing data.
-    """
+    """The blank-parse pipeline, built once. Raises if parsing is unavailable."""
     spacy = require("spacy", "nlp", "negation scope cannot be read without a parse")
     try:
         return spacy.load("en_core_web_sm", exclude=["ner", "lemmatizer"])
@@ -69,9 +65,7 @@ def available() -> bool:
 def mentions(text: str, concepts: re.Pattern) -> list[tuple[str, bool]]:
     """(mention, is negated) for every concept word the text contains.
 
-    A caller decides what to do with a mixture. For a status field the usual reading is that
-    one unnegated mention settles it: a cohort described as taking something is taking it,
-    whatever else the sentence goes on to deny.
+    A caller decides what to do with a mixture.
     """
     nlp = _parser()
     found = []
@@ -85,14 +79,8 @@ def mentions(text: str, concepts: re.Pattern) -> list[tuple[str, bool]]:
 def _negated(token) -> bool:
     """A mention is negated when a negation attaches to it or governs one of its ancestors.
 
-    Ancestors are searched over their LEFT subtree only. English negation precedes what it
-    scopes over, and the restriction is what stops a later clause reaching back: in
-    "taking medication; no changes" the `no` is to the right of the mention and does not
-    negate it.
-
-    An ancestor that IS the negation is checked before its subtree: a preposition governs
-    its object and has nothing to its left, so `without` in "adults without neurologic
-    disorders" was invisible to the left-subtree scan.
+    Ancestors are searched over their LEFT subtree only, and an ancestor that IS the
+    negation is checked before its subtree. Why: docs/normalization-rationale.md, "_negation".
     """
     for node in (token, *token.ancestors):
         if node is not token and (node.dep_ == "neg" or node.lower_ in _NEGATORS):
@@ -116,7 +104,8 @@ def _negated(token) -> bool:
 #: A negation cue as a standalone word, for the residue pass and the no-parser fallback.
 #: Built from `_NEGATORS` so the two layers cannot drift.
 _CUE = re.compile(
-    r"(?<![\w-])(?:" + "|".join(sorted(_NEGATORS - {"n't"}, key=len, reverse=True))
+    r"(?<![\w-])(?:"
+    + "|".join(sorted(_NEGATORS - {"n't"}, key=len, reverse=True))
     + r"|free|absent|negative|unaffected)(?![\w])|-(?:free|negative)\b",
     re.I,
 )
@@ -125,10 +114,7 @@ _CUE = re.compile(
 def cue_forward_scope(text: str) -> str:
     """`text` with the first negation cue and everything after it removed.
 
-    NegEx's forward scope (Chapman et al. 2001). Two jobs: the residue a parse leaves when
-    it drops a cue's object but not the cue, and the whole negation layer where no parser
-    is installed. Scope runs to the end of the part because the caller has already split
-    on the separators that terminate one.
+    NegEx's forward scope (Chapman et al. 2001).
     """
     found = _CUE.search(text or "")
     if not found:
@@ -146,10 +132,8 @@ def cue_forward_scope(text: str) -> str:
 def scope(text: str) -> tuple[str, str] | None:
     """(what this phrase asserts, what it denies), or None with no parser installed.
 
-    The whole value is parsed BEFORE the caller splits it into heads, so a cue scopes over
-    a coordination. What survives is cut out of the ORIGINAL string by character offset:
-    a tokenizer does not round-trip, and rejoining turned `treatment-resistant` into
-    `treatment - resistant`. Cached, because the caller is a per-mention loop.
+    The whole value is parsed BEFORE the caller splits it into heads, and what survives is
+    cut out of the ORIGINAL string by character offset. Why: docs/normalization-rationale.md, "_negation".
     """
     try:
         nlp = _parser()
