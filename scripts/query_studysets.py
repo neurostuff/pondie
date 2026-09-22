@@ -17,6 +17,12 @@ choose the papers and the published contrast chooses their analyses. `query, str
 strict at both, `query, permissive` permissive at both -- a paper or an analysis the
 record cannot answer for is dropped by the first and kept by the second.
 
+`fulltext_screening_results.json` is written beside them in the shape autonima's own
+screening stage writes, because that is what `recordarms.scoring` reads to score an arm's
+papers. The query arm has no search, abstract or retrieval stage -- it starts from the
+extracted corpus -- so those three files are absent and the funnel figure, which needs all
+four, leaves the query arms out.
+
 Two conventions are copied from autonima rather than improved on, because the figure is a
 comparison of selectors and every other difference is noise in it:
 
@@ -159,6 +165,15 @@ def main() -> int:
                     for analysis_id in sorted(chosen)
                 ],
             }, indent=1))
+            (run / "fulltext_screening_results.json").write_text(json.dumps({
+                "screening_results": [
+                    {"study_id": pmid,
+                     "decision": "included_fulltext" if pmid in screened
+                                 else "excluded_fulltext"}
+                    for pmid in sorted(here)
+                ],
+            }, indent=1))
+
             counts = {auto: sum(1 for f in flags.values() if f.get(auto))
                       for auto in sorted(set(wanted.values()))}
             print(f"{project:24} {label:18} {len(by_study):4d} studies "

@@ -146,12 +146,33 @@ def between_group(record: dict) -> bool | None:
 
 def group_condition(record: dict, pattern: str) -> bool | None:
     """"included clinically diagnosed bvFTD patients" / "substance users and controls".
-    `Group.medical_condition`."""
-    seen = [s for g in record.get("groups") or [] if isinstance(g, dict)
-            for s in strings(g.get("medical_condition"))]
-    if not seen:
-        return UNANSWERABLE
-    return any(re.search(pattern, s, re.I) for s in seen)
+    `Group.medical_condition`.
+
+    Through `names_cohort`, because a control group is named after the condition it does
+    not have -- "nonsmoking control subjects", "no history of alcohol misuse" -- and a
+    criterion asking for a cohort is not satisfied by a paper that only has its negation.
+
+    `name` as well as `medical_condition`, because a cohort's identity is written in both
+    and not always in both at once: re-extracting 15607838 today gives its case cohort the
+    name "marijuana group" and an empty `medical_condition`, and a criterion about
+    marijuana users then reads the paper as having none.
+
+    THE NAME MAY ONLY SAY YES. A cohort field that names the condition settles it; a name
+    that does not is weak evidence of absence, because a name is a label and not a
+    diagnosis. Letting it say no contradicted two gold papers whose cohorts are
+    "successful quitters" and "all participants" -- both nicotine studies, neither naming
+    a substance anywhere a query can read. The asymmetry is `phrases.absent`'s: a weaker
+    source can add an assertion and never remove one.
+    """
+    from query_contrasts import names_cohort
+
+    conditions = [s for g in record.get("groups") or [] if isinstance(g, dict)
+                  for s in strings(g.get("medical_condition"))]
+    names = [s for g in record.get("groups") or [] if isinstance(g, dict)
+             for s in strings(g.get("name"))]
+    if any(names_cohort(s, pattern) for s in conditions + names):
+        return True
+    return False if conditions else UNANSWERABLE
 
 
 def a_healthy_cohort(record: dict) -> bool | None:
@@ -273,31 +294,80 @@ def has_direction(record: dict) -> bool | None:
     return any(s.lower() in ("positive", "negative") for s in seen)
 
 
-def no_pharmacological(record: dict) -> bool | None:
-    """"presence of pharmacological manipulations" excluded. `StudyDesign.allocation`.
+def english(record: dict) -> bool | None:
+    """"only empirical English language MRI studies" / "written in the English language".
 
-    Read off `allocation` and not off whether an Arm is declared. An earlier version used
-    arm presence and vetoed 7 of substance use's gold against 12 non-gold -- barely better
-    than chance -- because the records invent Arms for diagnostic cohorts: 47 of the 164
-    `parallel`-with-arms records have every arm name identical to a cohort name. That is the
-    defect `AssignmentStructure.observational_cohorts` was added for, and it reaches a query
-    here. `allocation: not_applicable` is glossed "Nothing was administered", which is the
-    criterion itself.
+    `Study.language`, filled from PubMed by `pondie.extraction.pubmed`. Stated by at least
+    six of the sixteen and unexpressible until the slot existed: a record that does not
+    carry the field cannot say, which is what an unfilled corpus should read as.
     """
-    allocation = strings((record.get("design") or {}).get("allocation"), "allocation")
-    if not allocation:
+    codes = [str(c).lower() for c in (record.get("language") or [])]
+    if not codes:
         return UNANSWERABLE
-    return all(a.lower() in ("not_applicable", "single_arm") for a in allocation)
+    return any(c.startswith("en") for c in codes)
 
 
-def whole_brain_correction(record: dict) -> bool | None:
-    """"we excluded studies using region of interest (ROI) or small volume correction (SVC)".
-    `InferenceSettings.correction_scope` -- the correction's own domain, not the analysis's."""
-    seen = [s for i in record.get("inference_settings") or [] if isinstance(i, dict)
-            for s in strings(i.get("correction_scope"), "correction_scope")]
-    if not seen:
+def no_pharmacological(record: dict) -> bool | None:
+    """"presence of pharmacological manipulations" excluded. `Arm.arm_kind`.
+
+    Read off the arm's own kind, which has a value for exactly this criterion:
+    `pharmacological`, "an administered drug or other agent", and `placebo`, its inert
+    comparator. Two earlier readings were wrong and each was measured. Arm PRESENCE vetoed
+    7 of substance use's gold against 12 non-gold, because the records declare arms for
+    diagnostic cohorts. `allocation in {not_applicable, single_arm}` vetoed 46 of its 76
+    gold and 105 non-gold, because an observational cohort study is recorded
+    `non_randomized` -- the defect `AssignmentStructure.observational_cohorts` was added
+    for. Five arms in the whole 244-record project are `pharmacological`, which is what a
+    VBM literature should look like.
+    """
+    design = record.get("design") or {}
+    kinds = [s.lower() for a in (design.get("arms") or [])
+             if isinstance(a, dict) for s in strings(a.get("arm_kind"), "arm_kind")]
+    if kinds:
+        return not any(k in ("pharmacological", "placebo") for k in kinds)
+
+    # No arm declared. Two fields say whether that means nothing was administered:
+    # `allocation: not_applicable` is glossed "Nothing was administered", and
+    # `assignment_structure: observational_cohorts` is glossed "not assigned to anything
+    # ... and nothing was administered", which is the criterion in the schema's own words.
+    # The second is here because re-extracting five of these papers with today's schema
+    # filled it correctly on five of five, where `allocation` was right on one: the model
+    # writes the assignment value into the allocation slot.
+    said = [s.lower() for s in strings(design.get("allocation"), "allocation")
+            + strings(design.get("assignment_structure"), "assignment_structure")]
+    if any(s in ("not_applicable", "observational_cohorts") for s in said):
+        return True
+    if any(s in ("single_arm",) for s in said):
+        return True
+    return UNANSWERABLE
+
+
+def whole_brain_or_svc(record: dict) -> bool | None:
+    """"experiments reporting coordinates from whole-brain or small-volume corrected
+    analyses ... were included (studies involving regions of interest [ROIs] derived from a
+    brain parcellation scheme were excluded given the absence of coordinates)".
+
+    Cue reactivity's spatial criterion, and it is NOT the whole-brain-only one the other
+    three state. It admits SVC explicitly, and the only ROI it excludes is the parcellation
+    kind, excluded *because it reports no coordinates*. So an ROI analysis that reaches a
+    parsed row group satisfies the criterion as written.
+
+    Read against the criterion rather than against the other projects' -- the predicate
+    here used to be `Analysis.spatial_scope == whole_brain` plus a second test on
+    `InferenceSettings.correction_scope` that rejected SVC outright, which inverts the
+    sentence above and contradicted 20 of the 140 gold papers.
+    """
+    scopes = [(a, [s.lower() for s in strings(a.get("spatial_scope"), "spatial_scope")])
+              for a in record.get("analyses") or [] if isinstance(a, dict)]
+    stated = [(a, ss) for a, ss in scopes if ss]
+    if not stated:
         return UNANSWERABLE
-    return any(s.lower() == "whole_brain" or not ROI_WORDS.search(s) for s in seen)
+    if any("whole_brain" in ss for _a, ss in stated):
+        return True
+    reaches_coordinates = any(
+        read(a.get("source_table_analysis")) or read(a.get("tables"))
+        for a, _ss in stated)
+    return bool(reaches_coordinates)
 
 
 Predicate = Callable[[dict], "bool | None"]
@@ -306,6 +376,7 @@ Predicate = Callable[[dict], "bool | None"]
 #: translated from are quoted in the predicate docstrings above.
 QUERIES: dict[str, tuple[str, list[tuple[str, Predicate]]]] = {
     "36100907": ("vbm_of_ptsd", [
+        ("English language", english),
         ("structural modality", lambda r: any_modality(r, r"structural|vbm|smri|\bMRI\b|T1")),
         ("whole brain", whole_brain),
         ("standard space", standard_space),
@@ -325,13 +396,16 @@ QUERIES: dict[str, tuple[str, list[tuple[str, Predicate]]]] = {
         ("signed contrast", has_direction),
     ]),
     "34400176": ("cue_reactivity", [
+        ("English language", english),
         ("fMRI", lambda r: any_modality(r, r"fMRI|functional")),
-        ("whole brain", whole_brain),
+        # Not `whole_brain`: this meta-analysis includes small-volume corrected
+        # experiments, and says so. See the predicate.
+        ("whole brain or SVC", whole_brain_or_svc),
         ("standard space", standard_space),
         ("visual cues", visual_stimuli),
-        ("whole-brain correction", whole_brain_correction),
     ]),
     "36115222": ("vbm_of_substance_use", [
+        ("English language", english),
         ("structural modality", lambda r: any_modality(r, r"structural|vbm|smri|\bMRI\b|T1")),
         ("whole brain", whole_brain),
         ("standard space", standard_space),

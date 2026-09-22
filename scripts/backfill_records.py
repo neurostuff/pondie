@@ -15,7 +15,9 @@ general, so both are checked rather than assumed:
                        multivalued then and scalar now would need a different argument.
 
   `study_type`         Comes from PubMed rather than from the paper, so it does not depend
-                       on the schema the record was extracted against at all.
+  `language`           on the schema the record was extracted against at all. One
+                       `esummary` call fills both.
+
 
 Everything else is left alone. `--all-repairs` runs the rest, and they are not the default
 because each carries its own staleness argument and this script should not make five at once.
@@ -59,7 +61,7 @@ def main() -> int:
     types: dict[str, list[str]] = {}
     if not args.no_pubmed:
         pmids = [p.name.split(".")[0] for p in bodies]
-        types = pubmed.publication_types(pmids)
+        types = pubmed.summaries(pmids)
         print(f"PubMed answered for {len(types):,} of {len(pmids):,} ids")
 
     sch = reader.load(schema.EXTRACTION)
@@ -70,7 +72,7 @@ def main() -> int:
         before = json.dumps(body, sort_keys=True)
         counts = {
             "unwrap_singletons": len(fix.unwrap_singleton_lists(body, sch)),
-            "study_type": len(pubmed.fill(body, types)),
+            "pubmed": len(pubmed.fill(body, types)),
         }
         if args.all_repairs:
             counts["name_links"] = len(fix.link_entities_by_name(body, sch))

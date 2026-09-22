@@ -8,6 +8,13 @@ from that script; rerun it to reproduce them.
 python scripts/audit_records.py --records '<records>/*/*.extraction.json'
 ```
 
+A second list, found the other way round -- by running published meta-analysis criteria
+over these records and reading the papers the query lost -- is in
+[docs/meta-analysis-queries.md](meta-analysis-queries.md#what-the-records-got-wrong). It
+covers what a query cannot read (2,164 cells naming a level no term declares, 2,000 levels
+reaching no entity), what the schema has no slot for (which group is the comparison, which
+way a measure points), and which of the two a given failure is.
+
 **All five deterministic fixes are implemented, tested and measured.** Over the 1,817
 records: **errors 3,200 → 1,828 (−43%)**, warnings 44,603 → 33,249 (−25%), and the
 queryability figures in finding 2 realised in full. `tests/test_record_defect_fixes.py`
