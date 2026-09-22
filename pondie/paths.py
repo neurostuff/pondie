@@ -79,11 +79,19 @@ class Flavour(str, Enum):
     manifest for 12,390 of its 13,313 papers and elsevier for all 10,595 of its own, while
     ace ships none. Taking ace when elsevier exists costs that paper its tables, and a
     locator searching a table-free flavour cannot find the sentence a group size came from.
+
+    `pdf` sits below the XML renders and above ace. It does ship tables -- the ingestion
+    workflow parses them out of the PDF with Docling -- so preferring it to ace keeps a
+    paper's tables, but its cells are reconstructed from page geometry rather than read
+    from markup, and that reconstruction has been measured losing minus signs and decimal
+    points where a text-layer repair did not catch them. Where an XML render exists it is
+    the more faithful source.
     """
 
     local = "local"
     pubget = "pubget"
     elsevier = "elsevier"
+    pdf = "pdf"
     ace = "ace"
 
     @property
