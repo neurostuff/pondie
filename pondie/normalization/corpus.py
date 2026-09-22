@@ -118,7 +118,24 @@ def main() -> int:
     )
     parser.add_argument("--abbreviations", type=Path, default=paths.VOCAB / "abbreviations.json")
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--min-support", type=int, default=2)
+    parser.add_argument(
+        "--min-support",
+        type=int,
+        default=2,
+        help="distinct STUDIES a value must appear in to be proposed as a term the "
+        "vocabulary lacks. Studies rather than mentions: a paper naming its cohort's "
+        "diagnosis once per group is one piece of evidence that the term exists.",
+    )
+    parser.add_argument(
+        "--min-grain",
+        type=int,
+        default=0,
+        help="also propose terms that DID map, by generalizing, when the finer term "
+        "appears in at least this many studies. ONVOC has `Dementia` and no subtype, so "
+        "`behavioural variant frontotemporal dementia` maps and loses the variant in 148 "
+        "studies. 0 turns this off, which is the default because it is a threshold "
+        "judgement rather than a fact.",
+    )
     parser.add_argument(
         "--cache",
         type=Path,
@@ -143,31 +160,45 @@ def main() -> int:
         if not path.name.endswith(".raw.json")
     ]
 
+    unexpanded: list[str] = []
+
     def mappings_for(path: Path) -> tuple[list, list]:
-        """One record's rows and contrasts, from cache when the cache is still good."""
+        """One record's rows and contrasts, from cache when the cache is still good.
+
+        The abbreviation store is scoped to THIS paper and named with it, or it is not
+        passed at all -- a paper whose text cannot be read gets `None` and is counted,
+        rather than the corpus store, which expands nothing for anybody. See
+        docs/condition-normalization.md.
+        """
         record = json.loads(path.read_text(encoding="utf-8"))
         study = path.name.split(".")[0]
-        store = corpus_store
+        store = None
         if args.texts:
             try:
                 store = corpus_store.for_paper(
-                    paths.best_text(study, args.texts).read_text(encoding="utf-8")
+                    paths.best_text(study, args.texts).read_text(encoding="utf-8"), study
                 )
             except (FileNotFoundError, OSError):
-                pass
+                unexpanded.append(study)
         return onvoc.normalize(record, vocabularies, store), list(treatment_contrasts(record))
 
     rows, contrasts, papers = _map_corpus(
         sources, mappings_for, _vocabulary_digest(vocabularies, corpus_store), args
     )
 
-    proposals = onvoc.candidates(rows, minimum=args.min_support)
+    proposals = onvoc.candidates(
+        rows, minimum=args.min_support, grain=args.min_grain or None
+    )
     matched = sum(1 for r in rows if r.matched)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
         json.dumps(
             {
                 "papers": papers,
+                # Papers whose text could not be read, so nothing was expanded for them.
+                # Reported, because an unexpanded acronym looks like a vocabulary gap.
+                "unexpanded_papers": sorted(set(unexpanded)),
+                "abbreviations": "off (no --texts)" if not args.texts else "per paper",
                 "routed": len(rows),
                 "matched": matched,
                 "methods": dict(Counter(r.method for r in rows if r.matched)),
@@ -176,11 +207,21 @@ def main() -> int:
                         "study": r.study_id,
                         "path": r.path,
                         "text": r.text,
+                        # What the row is about, when triage split a comorbidity list.
+                        "head": r.head,
                         "concept": r.concept.label if r.concept else None,
                         "concept_id": r.concept.id if r.concept else None,
                         "vocabulary": r.concept.vocabulary if r.concept else None,
                         "branch": r.concept.branch if r.concept else None,
+                        "facet": r.concept.facet if r.concept else None,
                         "method": r.method,
+                        # The other grain. `concept` is what ONVOC can say and this is what
+                        # the literature said; a query picks, because which one a
+                        # meta-analysis needs is not this layer's decision.
+                        "corpus_term": r.corpus_term,
+                        "rollup": r.rollup,
+                        "qualifiers": list(r.qualifiers),
+                        "sentinel": r.sentinel,
                         "expansions": list(r.expansions),
                     }
                     for r in rows
@@ -193,6 +234,9 @@ def main() -> int:
                         "papers": list(c.papers),
                         "support": c.support,
                         "expansions": list(c.expansions),
+                        # Set when the proposal is a gap in GRAIN rather than in coverage:
+                        # the value mapped, by generalizing, and the finer term recurs.
+                        "rolled_up_to": c.rolled_up_to,
                     }
                     for c in proposals
                 ],
@@ -226,7 +270,12 @@ def main() -> int:
         f"{papers} record(s): {matched}/{len(rows)} values mapped "
         f"({matched * 100 // max(len(rows), 1)}%)"
     )
-    print(f"{len(proposals)} term proposal(s) at support >= {args.min_support}")
+    gaps = sum(1 for c in proposals if not c.rolled_up_to)
+    print(f"{gaps} term proposal(s) at support >= {args.min_support}")
+    if args.min_grain:
+        print(
+            f"{len(proposals) - gaps} finer-grain proposal(s) at support >= {args.min_grain}"
+        )
     print(f"{len(contrasts)} treatment contrast(s)")
     print(f"wrote {args.out}")
     return 0

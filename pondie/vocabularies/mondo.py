@@ -1,23 +1,18 @@
-"""An external vocabulary, its surface forms, and its hierarchy.
+"""MONDO: diseases, their surface forms, the `is_a` hierarchy, and the crosswalks out.
 
-The link shape: a field whose answers already exist somewhere, so the work is reaching the
-right entry rather than inventing one. MONDO is the target for conditions -- 32,102 classes,
-90,374 surface forms, 21,658 carrying a UMLS CUI, plus the `is_a` edges the long tail needs.
+32,109 live classes and 102,615 exact surface forms, with a UMLS CUI on 67% and a SNOMED
+concept id on 28% -- so linking to MONDO does not give up SNOMED, it gives up only the
+SNOMED concepts no disease maps to. Why MONDO rather than SNOMED itself, and what the
+ONVOC crosswalk can and cannot be trusted for: docs/condition-normalization.md.
 
-Two things this module does that a plain string index does not:
-
-  Rollup, stopped by corpus support.  A rare subtype is mapped to itself and then walked up
-  to the nearest ancestor the CORPUS ITSELF uses often enough to be worth querying. Stopping
-  at a fixed ontology depth would produce a target no query asks for; stopping at observed
-  support makes the rollup target queryable by construction.
-
-  A residual that is evidence.  What could not be placed is returned with its support, so a
-  term used by ten papers and absent from the vocabulary is visible as a gap rather than
-  silently dropped.
+Three things this does that a plain string index does not: roll a rare subtype up to the
+nearest ancestor the CORPUS uses often enough to be worth querying; bridge to ONVOC by
+identifier and then by ancestor; and return what could not be placed, with its support.
 """
 
 from __future__ import annotations
 
+import csv
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -27,17 +22,25 @@ from pondie import paths
 from pondie.vocabularies.folding import fold
 
 MONDO = paths.VOCAB / "mondo.json"
+CROSSWALKS = paths.VOCAB / "onvoc-mappings"
 
 
 @dataclass
 class Vocabulary:
-    """Labels, every surface form that reaches one, UMLS crosswalk, and `is_a` edges."""
+    """Labels, every surface form that reaches one, the crosswalks, and `is_a` edges."""
 
     labels: list[str] = field(default_factory=list)
     ids: dict[int, str] = field(default_factory=dict)
     umls: dict[int, str] = field(default_factory=dict)
+    #: SNOMED CT concept id, where MONDO publishes one.
+    sctid: dict[int, str] = field(default_factory=dict)
     surface: dict[str, int] = field(default_factory=dict)
     parents: dict[int, list[int]] = field(default_factory=dict)
+    #: Every exact surface form, with `form_node[i]` naming the node the i-th belongs to.
+    #: Retrieval runs over this and not over `labels`: a label is one of the names a
+    #: disease goes by and the corpus writes the others.
+    forms: list[str] = field(default_factory=list)
+    form_node: list[int] = field(default_factory=list)
 
     def exact(self, text: object) -> int | None:
         return self.surface.get(fold(text))
@@ -62,8 +65,17 @@ class Vocabulary:
             return node
         return next((a for a in self.ancestors(node) if support.get(a, 0) >= minimum), node)
 
+    def curie(self, node: int) -> str:
+        return f"MONDO:{self.ids[node]}"
+
 
 def load_mondo(path: Path = MONDO) -> Vocabulary:
+    """MONDO as a Vocabulary. Raises with what to run when the file is not there."""
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"{path} is missing. Fetch the release with `python -m pondie.vocabularies.fetch "
+            f"mondo` (about 100 MB, CC-BY, from purl.obolibrary.org/obo/mondo.json)."
+        )
     graph = json.loads(path.read_text())["graphs"][0]
     vocab = Vocabulary()
     index_of: dict[str, int] = {}
@@ -80,20 +92,54 @@ def load_mondo(path: Path = MONDO) -> Vocabulary:
         index_of[node["id"]] = i
         vocab.labels.append(node["lbl"])
         vocab.ids[i] = node["id"].rsplit("_", 1)[-1]
-        vocab.surface.setdefault(fold(node["lbl"]), i)
+
+        def offer(form: str, node_index: int = i) -> None:
+            """Index one surface form, and keep it where retrieval can see it."""
+            key = fold(form)
+            if not key:
+                return
+            vocab.surface.setdefault(key, node_index)
+            vocab.forms.append(form)
+            vocab.form_node.append(node_index)
+
+        offer(node["lbl"])
         for syn in meta.get("synonyms") or []:
+            # Exact only: `hasRelatedSynonym` holds `schizophrenia 12` and
+            # `hasBroadSynonym` holds the parent's name.
             if syn.get("pred") == "hasExactSynonym" and syn.get("val"):
-                vocab.surface.setdefault(fold(syn["val"]), i)
-        cui = [
-            x["val"]
-            for x in (meta.get("xrefs") or [])
-            if str(x.get("val", "")).startswith("UMLS:")
-        ]
-        if cui:
-            vocab.umls[i] = cui[0].split(":", 1)[1]
+                offer(syn["val"])
+        for xref in meta.get("xrefs") or []:
+            value = str(xref.get("val", ""))
+            if value.startswith("UMLS:"):
+                vocab.umls.setdefault(i, value.split(":", 1)[1])
+            elif value.startswith("SCTID:"):
+                vocab.sctid.setdefault(i, value.split(":", 1)[1])
     parents = defaultdict(list)
     for edge in graph.get("edges") or []:
         if edge.get("pred") == "is_a" and edge["sub"] in index_of and edge["obj"] in index_of:
             parents[index_of[edge["sub"]]].append(index_of[edge["obj"]])
     vocab.parents = dict(parents)
     return vocab
+
+
+def onvoc_crosswalk(directory: Path = CROSSWALKS) -> dict[str, tuple[str, str]]:
+    """MONDO CURIE -> (ONVOC id, ONVOC label), from the crosswalk ONVOC itself publishes.
+
+    Keyed this way because the lookup runs this way: a value is matched against MONDO, and
+    the question afterwards is which ONVOC term that node belongs under. 90 rows over 69
+    ONVOC ids, reaching 66 of the 205 disorder-branch concepts -- so a hit is evidence, not
+    proof, and the ancestor and name layers in `medical_condition.bridge` cover the rest.
+    """
+    path = directory / "mondo.tsv"
+    if not path.is_file():
+        return {}
+    claims: dict[str, set[tuple[str, str]]] = defaultdict(set)
+    with path.open(encoding="utf-8") as handle:
+        for row in csv.DictReader(handle, delimiter="\t"):
+            curie = (row.get("mapped_term_curie") or "").strip()
+            onvoc_id = (row.get("vocabulary_id") or "").strip()
+            if curie.startswith("MONDO:") and onvoc_id:
+                claims[curie].add((onvoc_id, (row.get("vocabulary_term") or "").strip()))
+    # A node claimed by two ONVOC terms cannot decide between them, so it decides nothing:
+    # `MONDO:0005148` is listed under both Type 1 and Type 2 Diabetes Mellitus.
+    return {curie: next(iter(tie)) for curie, tie in claims.items() if len(tie) == 1}

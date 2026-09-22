@@ -498,6 +498,44 @@ def test_a_region_the_proposal_fully_specifies_is_created(storage_schema):
     assert values.read(entity["definition_method"]) == "anatomical_a_priori"
 
 
+def test_an_acquisition_is_minted_with_the_subclass_its_modality_names(storage_schema):
+    """A proposal carries the modality and nothing else, because `acquisition_type` is
+    deterministic -- the schema says it is "derived by the mapper from the modality value's
+    `instantiates`, never extracted" and the extraction projection drops it.
+
+    Counting it as a required slot refused every acquisition the sweep proposed. Deriving it
+    is what makes the minted entity the right class: without the designator an MEG record
+    resolves to the base `Acquisition`, and `apply` then checks each later write against the
+    base class, where every modality-specific parameter is undeclared.
+    """
+    from pondie.extraction.repair import guard as edit_module
+
+    for modality, expected in (("MEG", "OtherModality"), ("SPECT", "OtherModality"),
+                               ("fMRI", "MRI"), ("PET", "PET")):
+        entity, why = edit_module.create(
+            storage_schema, {"acquisitions": []}, "Acquisition",
+            {"name": f"{modality} scan", "modality": modality},
+        )
+        assert entity is not None, why
+        # Bare, not wrapped: the designator is a plain string, and the record states it.
+        assert entity["acquisition_type"] == expected
+        assert values.read(entity["modality"]) == modality
+
+
+def test_a_region_keeps_a_definition_method_the_vocabulary_does_not_cover(storage_schema):
+    """`definition_method` is required and open, so an unlisted method costs the word rather
+    than the Region. Closed, `create` answered "Region would be missing definition_method"
+    and the name, region_type and description the proposal also carried went with it."""
+    from pondie.extraction.repair import guard as edit_module
+
+    entity, why = edit_module.create(
+        storage_schema, {"regions": []}, "Region",
+        {"name": "left amygdala", "definition_method": "hand drawn by an expert"},
+    )
+    assert entity is not None, why
+    assert values.read(entity["definition_method"]) == "hand drawn by an expert"
+
+
 def test_an_entity_that_could_not_be_valid_is_refused_by_the_slots_it_lacks(storage_schema):
     """Analysis requires eight slots including `effect`, a nested structure no flat template
     carries. The refusal names them, so making analyses creatable is a matter of supplying

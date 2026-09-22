@@ -24,12 +24,21 @@ from pondie.formats import values
         ("Group", "acquired_count", "31", 31),
         ("Group", "acquired_count", "about twenty", None),
         ("Group", "age_mean", "33.4", 33.4),
-        # 28888350: accurate about the analysis, not a value the field holds
         ("Analysis", "prespecification", "exploratory", "exploratory"),
-        ("Analysis", "prespecification", "post-hoc", None),
+        # 28888350: "post-hoc" is accurate about the analysis and is not one of the two
+        # values. It used to be refused, which cost the whole Analysis, since the slot is
+        # required; the vocabulary is open now and `normalization.prespecification` maps it.
+        ("Analysis", "prespecification", "post-hoc", "post-hoc"),
+        # A closed enum is still closed, and this is the case that says so: `Cell.direction`
+        # is filled by `derive`, so an off-vocabulary value there is not a synonym to keep.
+        ("Cell", "direction", "positive", "positive"),
+        ("Cell", "direction", "increase", None),
         ("Region", "definition_method", "atlas", "atlas"),
-        ("Region", "definition_method", "hand drawn by an expert", None),
-        # an open vocabulary takes the source's own wording
+        # an open vocabulary takes the source's own wording. `definition_method` is required,
+        # so a closed range discarded the whole Region over the one unrecognised word --
+        # `create` returned "Region would be missing definition_method" and the name,
+        # description and atlas the proposal also carried went with it.
+        ("Region", "definition_method", "hand drawn by an expert", "hand drawn by an expert"),
         ("Region", "region_type", "gray matter", "gray matter"),
         ("Region", "name", "hippocampus", "hippocampus"),
     ],

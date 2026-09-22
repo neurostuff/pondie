@@ -40,6 +40,7 @@ from pondie.extraction.models import Prompt
 # deterministic text transforms selected by --preprocess.
 from pondie.extraction.prompt import worked
 from pondie.extraction.record import ids
+from pondie.extraction.record.fix import shape
 from pondie.formats import parse_keys
 from pondie.schema import reader
 from pondie.schema.reader import Schema
@@ -784,6 +785,8 @@ def postcondition_failures(
                 "no required_entities were declared, so the entity pass that "
                 "follows has nothing to be held to"
             )
+        if mode == "demands":
+            failures.extend(vacuous_entity_demands(payload))
         failures.extend(unreachable_term_demands(payload))
     else:
         if not any(payload.get(key) for key in schema.entity_lists()):
@@ -809,6 +812,35 @@ def postcondition_failures(
                 + ", ".join(sorted(missing)[:8])
             )
     return failures
+
+
+def vacuous_entity_demands(payload: Mapping[str, Any]) -> list[str]:
+    """Declared entities that identify nothing, reported only when none identify anything.
+
+    On `4UoCgF3UJSXq` the pass returned six fully populated analyses and a
+    `required_entities` list holding one all-null row. The payload was complete, valid
+    JSON closing on `stop`, 3,277 output tokens against 1,667 for the smallest reply that
+    succeeded, so it was not truncation -- the shape was filled with nulls instead of
+    content. `satisfy` read the row, built nothing, and the record came out with
+    `tasks: null` while `events.jsonl` said `"state": "done"`.
+
+    Retried only when *every* row is vacuous, because that is the case where no retry can
+    cost anything: there is nothing to preserve. Where good rows sit beside a vacuous one
+    the rows are dropped by the `vacuous_demands` repair instead, which keeps the good
+    ones exactly as the pass wrote them. A vacuous row cannot be re-asked on its own --
+    with `kind` null it names no entity class to ask about, so there is no narrower
+    question than the one the whole pass already answers.
+    """
+    entries = payload.get("required_entities")
+    if not isinstance(entries, list) or not entries:
+        return []
+    vacuous = [entry for entry in entries if shape.is_vacuous(entry)]
+    if len(vacuous) < len(entries):
+        return []
+    return [
+        f"all {len(entries)} required_entities have no local_id, kind or label: the "
+        "declaration names no entity, so the pass that follows has nothing to build"
+    ]
 
 
 def unreachable_term_demands(payload: Mapping[str, Any]) -> list[str]:

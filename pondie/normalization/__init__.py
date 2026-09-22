@@ -1,14 +1,21 @@
 """Post-hoc normalization of extracted record fields, one module per field.
 
-A field's shape decides its method, and three shapes recur. The measurements behind that
+A field's shape decides its method, and four shapes recur. The measurements behind that
 claim are in docs/normalization-pipelines.md; what follows is where each lives.
+
+`task` was two modules doing this one job: a seeded one reachable only from a script, and
+an unseeded one that clustered the whole corpus against itself and, by being the one that
+exposed `normalize`, was the one `pondie normalize task` actually ran. They disagreed.
+It is one module now, and it seeds against the Cognitive Atlas before it clusters.
 
   closed target   a small fixed set of answers, free-text input   `_lexicon`
                   coordinate_space, multiple_comparison_method, correction_scope,
-                  medication_status, sex_distribution, handedness_distribution
+                  medication_status, sex_distribution, handedness_distribution,
+                  modality, prespecification
   link            an external vocabulary exists                   `pondie.vocabularies`, `_embedding`
                   medical_condition
-  cluster         no usable target; the corpus is its own          `_clustering`, `_embedding`
+  seed + cluster  a target covers part of the field; the corpus     `atlas`, `_embedding`
+                  covers the rest
                   task
   partition       one field holding two kinds of value              rules, in the module
                   population_characteristics
@@ -24,17 +31,20 @@ module is one that exposes `normalize`, which is the contract above. `corpus` is
 -- it maps a whole corpus rather than one field, and it has a CLI -- so it is deliberately
 not in that list.
 
+`modality` and `prespecification` are closed targets whose answers are the *schema's own*
+permissible values rather than a downstream set like MNI or RIGHT -- both slots are open
+ranges, and these two put the wording back on the vocabulary. For `modality` that is
+load-bearing: only a vocabulary value carries an `instantiates`, so an unmapped one leaves
+`Acquisition.acquisition_type` underivable.
+
 `is_healthy` is a fifth thing and deliberately outside the list: it fills a slot rather
 than normalizing one, from a field it does not touch, so it has no `normalize` to expose.
 `population_characteristics` does both -- it classifies a value and it moves the
 non-selective ones into `Group.other_characteristics` -- which is why `apply` sits beside
 `normalize` in those two modules and nowhere else.
 
-Nine field modules and six mechanisms, and that is now the whole directory. The two
-largest files used to be here -- the ONVOC index and the abbreviation store, 1,035 lines
-between them -- imported by no field module and reached only from `extraction`, so a reader
-following the table above met 40% of the package that the table does not describe. They are
-`pondie.vocabularies` now, which is what they were: fetched term lists both packages use.
+Eleven field modules and six mechanisms. Term lists both packages fetch and share live in
+`pondie.vocabularies`, not here.
 """
 
 from __future__ import annotations

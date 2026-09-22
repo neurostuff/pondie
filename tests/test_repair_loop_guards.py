@@ -95,10 +95,12 @@ def test_a_field_with_no_prior_evidence_gains_none_from_an_edit():
     ("groups", "is_healthy", "No", False),
     ("groups", "is_healthy", "mostly", None),          # 28416565: str into a boolean
     ("analyses", "prespecification", "exploratory", "exploratory"),
-    ("analyses", "prespecification", "post-hoc", None),  # 28888350: not in the vocabulary
+    # 28888350: not in the vocabulary, and the vocabulary is open now -- the word is kept
+    # and `normalization.prespecification` maps it onto one of the two values.
+    ("analyses", "prespecification", "post-hoc", "post-hoc"),
     ("regions", "definition_method", "atlas", "atlas"),
-    ("regions", "definition_method", "hand drawn", None),
-    ("regions", "region_type", "gray matter", "gray matter"),   # open vocabulary: allowed
+    ("regions", "definition_method", "hand drawn", "hand drawn"),  # open vocabulary: allowed
+    ("regions", "region_type", "gray matter", "gray matter"),      # open vocabulary: allowed
 ])
 def test_a_value_is_written_only_in_the_type_and_vocabulary_its_slot_declares(
         cls, slot, value, expected):

@@ -20,23 +20,53 @@ from pondie.extraction.models import (
 )
 
 
-def _papers(root: Path, ids: Path, flavour: Flavour) -> list[Paper]:
+#: `--flavour best` takes each paper on the best render it actually has, via `Paper.best`.
+#: Not a `Flavour` member, because it names a choice rather than a render.
+BEST = "best"
+
+
+def _papers(root: Path, ids: Path, flavour: Flavour | str) -> list[Paper]:
     """Study ids from the tab-separated pmids file the corpus uses: `pmid<TAB>id<TAB>source`.
 
     A file of bare ids parses to nothing and the run reports success having done nothing, so
     the shape is checked here rather than discovered three stages later.
+
+    Comments are skipped, as `corpus.sync.read_pmids` skips them over the same files. It did
+    not, and every pmids file in `data/selection/` names its columns in a `# pmid<TAB>...`
+    header -- which has two tabs and a non-empty second field, so it parsed as a paper
+    called `neurostore_id` and the run paid a model to look for it.
     """
     papers, malformed = [], 0
     for line in ids.read_text().splitlines():
+        if line.lstrip().startswith("#"):
+            continue
         parts = [p.strip() for p in line.split("\t")]
         if len(parts) >= 2 and parts[1]:
-            papers.append(Paper(study_id=parts[1], root=root, flavour=flavour))
+            study = parts[1]
+            if flavour == BEST:
+                # A paper with no text at all is not an error here: `driver.run` reports it
+                # as a failed paper alongside the rest, which is where the other
+                # not-ready reasons already surface.
+                try:
+                    papers.append(Paper.best(study, root))
+                except FileNotFoundError:
+                    papers.append(Paper(study_id=study, root=root, flavour=Flavour.pubget))
+            else:
+                papers.append(Paper(study_id=study, root=root, flavour=flavour))
         elif line.strip():
             malformed += 1
-    if malformed and not papers:
+    if not papers:
+        # Fires on an empty file and a comment-only one as well as a malformed one: the
+        # guard is against a run that reports success having extracted nothing, and which
+        # of the three caused it does not change that.
+        detail = (
+            f"{malformed} line(s) parsed to nothing"
+            if malformed
+            else "no lines parsed to a study"
+        )
         raise SystemExit(
-            f"{ids}: {malformed} line(s) parsed to nothing. Expected "
-            f"'pmid<TAB>study_id<TAB>source'; a bare id per line is not that."
+            f"{ids}: {detail}. Expected 'pmid<TAB>study_id<TAB>source'; "
+            f"a bare id per line is not that."
         )
     return papers
 
@@ -67,7 +97,10 @@ def _extract(args: argparse.Namespace) -> int:
         retrieve_evidence=not args.no_evidence,
         redo=args.redo,
     )
-    papers = _papers(args.corpus, args.pmids, Flavour(args.flavour))
+    papers = _papers(
+        args.corpus, args.pmids,
+        BEST if args.flavour == BEST else Flavour(args.flavour),
+    )
     if args.plan:
         for study, steps in plan(papers, settings).items():
             print(f"  {study}  {' '.join(steps)}")
@@ -147,7 +180,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     ex.add_argument("--model", required=True)
     ex.add_argument("--env", type=Path, help="shell-style file of API credentials")
-    ex.add_argument("--flavour", default=Flavour.pubget.value, choices=[f.value for f in Flavour])
+    ex.add_argument(
+        "--flavour",
+        default=BEST,
+        choices=[BEST, *(f.value for f in Flavour)],
+        help="which render to extract from. `best` takes the best each paper HAS; naming "
+             "one takes it or drops the paper -- with the old default of `pubget`, the 51 "
+             "elsevier-only papers of a 100-paper run were reported not-ready and skipped",
+    )
     ex.add_argument("--stages", nargs="*", choices=[s.value for s in StageName])
     ex.add_argument("--effort", default="low", choices=["minimal", "low", "medium", "high"])
     ex.add_argument(

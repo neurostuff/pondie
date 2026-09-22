@@ -198,6 +198,12 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
+            "vacuous_demands",
+            "drop a declared entity whose every identifying field is blank",
+            lambda body, ctx: shape.drop_vacuous_demands(body),
+            stage="demands",
+        ),
+        Repair(
             "source_links",
             "verify or fill each analysis's link to its parsed rows",
             lambda body, ctx: derive.resolve_source_table_analysis(body, ctx.stage1),

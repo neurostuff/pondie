@@ -46,7 +46,9 @@ CORPUS = DATA / "corpus"
 #: Extraction runs, one directory each.
 RUNS = DATA / "runs"
 
-#: Fetched vocabularies: onvoc.json, cognitiveatlas-*.json, abbreviations.json, mondo.json.
+#: Fetched vocabularies: onvoc.ttl, cognitiveatlas-*.json, abbreviations.json, mondo.json.
+#: ONVOC is the pinned turtle release rather than a BioPortal dump -- same 752 concepts,
+#: but one versioned file. `onvoc.json` is still read when the turtle is absent.
 VOCAB = DATA / "vocab"
 
 #: Corpus selection: the candidate pool, the screen and adjudication scores, and the pmids

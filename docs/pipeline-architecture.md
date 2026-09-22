@@ -103,7 +103,7 @@ contracts rather than leaving to be rediscovered.
 | `--corpus <root>` | `<root>/<id>/processed/<flavour>/text.txt` and `<root>/<id>/stage1/analyses.json` | stage 1 is **not** regenerated here; a missing `stage1/` skips the paper |
 | payloads → builder | flat: `payloads/<id>/<stage>.json`, which `merge_payloads` globs | a nested `<stage>/payload.json` is merged as nothing, and the record comes out with metadata and an empty body |
 | record → any consumer | read it with `pondie.schema.reader.value_of` / `slot_value`, which take the shape from the schema; **`record/repairs.py` has already normalized the structure at build time** (`wrappers`, `unwrapped`, `listified_scalars`, `coordinate_space`, 16 in all) | a hand-rolled unwrapper returns the wrapper for `not_reported` and drops every entry but the first from a multivalued slot, both without erroring |
-| `data/vocab/` | `onvoc.json`, `cognitiveatlas-*.json`, `abbreviations.json`, `mondo.json`; fetched, none in git | absent files degrade to no matches rather than an error |
+| `data/vocab/` | `onvoc.ttl` (pinned release; `onvoc.json` is the fallback), `cognitiveatlas-*.json`, `abbreviations.json`, `mondo.json`, `onvoc-mappings/`; fetched by `python -m pondie.vocabularies.fetch`, none in git | an absent ONVOC or Cognitive Atlas file degrades to no matches; an absent `mondo.json` raises, naming the fetch command |
 
 The `not_reported` shape is the one that bites repeatedly: `value` missing is a *positive
 assertion that the paper did not report it*, and is not the same as the field being absent.

@@ -32,15 +32,20 @@ a change in the upstream prompt is visible rather than assumed.
 from __future__ import annotations
 
 import argparse
+import csv
+import io
 import json
 import os
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 from pondie import paths
 from pondie.extraction.corpus.sync import read_pmids  # noqa: E402
 from pondie.extraction.llm import load_env
+from pondie.extraction.sign_split import split_opposite_signs  # noqa: E402
+from pondie.formats.table_parse import READERS, read_manifest  # noqa: E402
 
 DEFAULT_MODEL = "@psyc-aid338-ope-333f18/gpt-5.6-luna"
 
@@ -156,41 +161,117 @@ def build_client(effort: str):
 
 
 
-def coordinate_tables(study_dir: Path) -> list[dict]:
-    """The tables pubget found coordinates in, with the CSV text to parse.
+def table_flavour(study_dir: Path) -> str | None:
+    """The best flavour this study has a table manifest for, or None if it has none.
 
-    `contains_coordinates` is pubget's own determination, the same filter the
-    corpus used; parsing the demographics tables would spend calls to produce
-    analyses with no points.
+    `paths.Flavour` order, minus ace, which ships no manifest. Stage 1 read pubget and only
+    pubget, so a study whose tables come from elsevier -- 51 of the 100 in
+    `data/selection/old-extraction-defects.pmids` -- raised FileNotFoundError on a corpus
+    the sync had fetched correctly.
     """
 
-    manifest = study_dir / "processed" / "pubget" / "tables.jsonl"
-    tables_dir = study_dir / "source" / "pubget" / "tables"
+    for flavour in ("pubget", "elsevier"):
+        if (study_dir / "processed" / flavour / "tables.jsonl").is_file():
+            return flavour
+    return None
+
+
+def _csv_text(rows: list[list[str]]) -> str:
+    """Parsed rows as CSV, so every flavour reaches the parser as the same kind of text."""
+
+    buffer = io.StringIO()
+    csv.writer(buffer).writerows(rows)
+    return buffer.getvalue()
+
+
+def _rows_of(path: Path) -> list[list[str]]:
+    """The grid behind one raw table, by what the file actually is.
+
+    `.xml` is two different formats: elsevier writes CALS (`<tgroup>`), pubget writes the
+    article's own JATS `<table>`. Trying CALS first and falling back on an empty read tells
+    them apart without a second manifest field to trust.
+    """
+
+    if path.suffix.lower() in {".html", ".htm"}:
+        return READERS["ace"](path)[0]
+    rows = READERS["elsevier"](path)[0]
+    return rows or READERS["ace"](path)[0]
+
+
+def _fallback_path(tables_dir: Path, table_id: str, named: str) -> Path | None:
+    """A raw table under another name, when the manifest names one that was never written.
+
+    pubget's manifest says `table_001.csv` for four of the hundred studies here and wrote
+    `t2.xml` instead -- the article's own table markup, no CSV render. The manifest is not
+    wrong about which tables hold coordinates, only about where the bytes are, so the id is
+    the thing to search on.
+    """
+
+    stem = Path(named).stem
+    for candidate in (table_id, stem):
+        for suffix in (".csv", ".xml", ".html"):
+            path = tables_dir / f"{candidate}{suffix}"
+            if path.is_file():
+                return path
+    return None
+
+
+def coordinate_tables(study_dir: Path, flavour: str | None = None) -> list[dict]:
+    """The tables the manifest found coordinates in, with the CSV text to parse.
+
+    `contains_coordinates` is the flavour's own determination, the same filter the
+    corpus used; parsing the demographics tables would spend calls to produce
+    analyses with no points.
+
+    pubget's raw table is already CSV and is passed through byte for byte, so its parse is
+    what it always was. elsevier's is CALS XML, and `formats.table_parse` already reads it
+    -- the grid goes to CSV here rather than to markdown so the prompt sees the shape it
+    was written against.
+    """
+
+    flavour = flavour or table_flavour(study_dir)
+    if flavour is None:
+        return []
+    manifest = read_manifest(study_dir, flavour)
+    tables_dir = study_dir / "source" / flavour / "tables"
     out = []
-    for line in manifest.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
+    for table in manifest.values():
+        if not table["contains_coordinates"]:
             continue
-        table = json.loads(line)
-        if not table.get("contains_coordinates"):
-            continue
-        metadata = table.get("metadata") or {}
-        name = Path(metadata.get("data_path") or "").name
-        csv_path = tables_dir / name
-        if not name or not csv_path.is_file():
+        name = table["data_file"]
+        raw_path = tables_dir / name if name else None
+        if raw_path is None or not raw_path.is_file():
+            raw_path = _fallback_path(tables_dir, table["table_id"], name)
+        if raw_path is None:
             print(
-                f"    WARNING: no CSV for {table['table_id']} ({name or 'no data_path'})",
+                f"    WARNING: no {flavour} table for {table['table_id']} "
+                f"({name or 'no data path'})",
                 file=sys.stderr,
             )
             continue
+        if flavour == "pubget" and raw_path.suffix.lower() == ".csv":
+            # Byte for byte what stage 1 has always sent, so the 49 pubget studies here
+            # parse exactly as they would have before elsevier was supported.
+            text = raw_path.read_text(encoding="utf-8")
+        else:
+            rows = _rows_of(raw_path)
+            if not rows:
+                print(
+                    f"    WARNING: {flavour} table {table['table_id']} "
+                    f"({raw_path.name}) read as empty",
+                    file=sys.stderr,
+                )
+                continue
+            text = _csv_text(rows)
         out.append(
             {
                 "table_id": table["table_id"],
-                "table_number": table.get("table_number"),
-                "table_label": metadata.get("table_label"),
-                "caption": table.get("caption") or "",
-                "footer": table.get("footer") or "",
-                "csv_path": csv_path,
-                "csv_text": csv_path.read_text(encoding="utf-8"),
+                "table_number": table["table_number"],
+                "table_label": table["table_label"],
+                "caption": table["caption"],
+                "footer": table["footer"],
+                "csv_path": raw_path,
+                "csv_text": text,
             }
         )
     return out
@@ -291,6 +372,16 @@ def main() -> int:
     parser.add_argument("--key-file", type=Path, default=REPO / ".env")
     parser.add_argument("--dry-run", action="store_true", help="list tables, make no calls")
     parser.add_argument(
+        "--workers", type=int, default=8,
+        help="tables parsed at once. One table is one HTTP round trip, so this is the "
+             "gateway's concurrency, not the machine's",
+    )
+    parser.add_argument(
+        "--redo", action="store_true",
+        help="re-parse studies that already have stage1/analyses.json; without it a "
+             "restart resumes rather than paying for the tables already done",
+    )
+    parser.add_argument(
         "--resplit",
         action="store_true",
         help="apply the sign split to the stage1/analyses.json already on "
@@ -327,41 +418,67 @@ def main() -> int:
     )
 
     failures = 0
+    work: list[tuple[str, str, Path, dict]] = []
     for pmid, study, _axis in read_pmids(args.pmids):
         study_dir = args.texts / study
+        if not args.redo and (study_dir / "stage1" / "analyses.json").is_file():
+            print(f"{study} (pmid {pmid}): already parsed, skipping")
+            continue
         tables = coordinate_tables(study_dir)
         print(f"{study} (pmid {pmid}): {len(tables)} coordinate tables")
-
-        analyses: list[dict] = []
         for table in tables:
             if args.dry_run:
                 print(f"  {table['table_id']}: {len(table['csv_text']):,} ch (dry run)")
-                continue
-            try:
-                result = parse_single_table(
-                    table["table_id"],
-                    table["caption"],
-                    table["footer"],
-                    table["csv_text"],
-                    client,
-                    args.model,
-                )
-                parsed = result["parsed_json"].get("analyses") or []
-            except Exception as exc:  # one table must not sink the study
-                print(
-                    f"  {table['table_id']}: FAILED {type(exc).__name__}: {exc}"[:200],
-                    file=sys.stderr,
-                )
-                failures += 1
-                continue
-            for analysis in parsed:
-                # Table identity is what disambiguates repeated analysis names, so it
-                # is attached here rather than left to the caller to reconstruct.
-                analysis["table_id"] = table["table_id"]
-                analysis["table_number"] = table["table_number"]
-                analysis["table_label"] = table["table_label"]
-                analysis["table_caption"] = table["caption"]
-                analysis["table_footer"] = table["footer"]
+            else:
+                work.append((pmid, study, study_dir, table))
+
+    if args.dry_run:
+        return 0
+
+    def parse_one(item):
+        """One table -> its analyses. A table is a whole HTTP round trip, so the pool is
+        threads and the width is the gateway's concurrency rather than the CPU's."""
+        _pmid, study, _study_dir, table = item
+        try:
+            result = parse_single_table(
+                table["table_id"], table["caption"], table["footer"],
+                table["csv_text"], client, args.model,
+            )
+            parsed = result["parsed_json"].get("analyses") or []
+        except Exception as exc:  # one table must not sink the study
+            return study, table, None, f"{type(exc).__name__}: {exc}"[:200]
+        for analysis in parsed:
+            # Table identity is what disambiguates repeated analysis names, so it
+            # is attached here rather than left to the caller to reconstruct.
+            analysis["table_id"] = table["table_id"]
+            analysis["table_number"] = table["table_number"]
+            analysis["table_label"] = table["table_label"]
+            analysis["table_caption"] = table["caption"]
+            analysis["table_footer"] = table["footer"]
+        return study, table, parsed, None
+
+    # Flattened to (study, table) rather than pooled over studies: table counts run 1 to 5
+    # here, so a study-wide pool leaves most workers idle behind the widest paper.
+    done: dict[str, list[tuple[dict, list[dict]]]] = {}
+    if work:
+        with ThreadPoolExecutor(max_workers=args.workers) as pool:
+            for study, table, parsed, error in pool.map(parse_one, work):
+                if error is not None:
+                    print(f"  {study} {table['table_id']}: FAILED {error}", file=sys.stderr)
+                    failures += 1
+                    continue
+                done.setdefault(study, []).append((table, parsed))
+
+    for pmid, study, _axis in read_pmids(args.pmids):
+        if study not in done:
+            continue
+        study_dir = args.texts / study
+        analyses: list[dict] = []
+        # Back into manifest order, so the output does not depend on which worker
+        # finished first and two runs of the same corpus stay comparable.
+        order = {t["table_id"]: i for i, t in enumerate(coordinate_tables(study_dir))}
+        print(f"{study} (pmid {pmid}):")
+        for table, parsed in sorted(done[study], key=lambda r: order.get(r[0]["table_id"], 99)):
             split = split_opposite_signs(parsed)
             parsed, notes = list(split.analyses), list(split.notes)
             for note in notes:
@@ -371,9 +488,6 @@ def main() -> int:
                 f"  {table['table_id']}: {len(parsed)} analyses, "
                 f"{sum(len(a.get('points') or []) for a in parsed)} points"
             )
-
-        if args.dry_run:
-            continue
 
         out_dir = study_dir / "stage1"
         out_dir.mkdir(parents=True, exist_ok=True)

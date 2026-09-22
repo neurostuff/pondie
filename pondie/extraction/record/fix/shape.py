@@ -308,3 +308,50 @@ def rehome_stray_tables(body: dict[str, Any], sch: Schema) -> list[str]:
         body.setdefault("tables", []).append(entry)
         moved.append(f"Study.{key}: moved into tables[] as {key!r}")
     return moved
+
+
+#: The fields that give a declared entity its identity. A row holding none of them names
+#: nothing the next pass could build, and nothing an analysis could dangle on.
+IDENTIFYING = ("local_id", "kind", "label")
+
+
+def is_vacuous(entry: Any) -> bool:
+    """A declared entity with every identifying field blank.
+
+    Not the same as a malformed one. `{"local_id": null, "kind": null, "label": null}` is
+    valid JSON, conforms to the shape the prompt asks for, and a list holding it is
+    truthy -- so every non-emptiness check passes and it reaches a record unremarked.
+    """
+    if not isinstance(entry, Mapping):
+        return False
+    return all(not str(entry.get(field) or "").strip() for field in IDENTIFYING)
+
+
+def drop_vacuous_demands(body: dict[str, Any]) -> list[str]:
+    """Drop a declared entity whose local_id, kind and label are all blank.
+
+    The `demands` pass sometimes fills the shape it was asked for with nulls rather than
+    content -- see `render.vacuous_entity_demands` for the case that found it. Such a row
+    is not a broken entity that could be repaired into a good one; it carries no field to
+    repair from, so the only sound handling is to remove it and leave every other row as
+    the pass wrote it.
+
+    Dropping cannot orphan anything. A reference dangles by naming a `local_id`, and a row
+    with no `local_id` is named by nothing, so no analysis can be pointing at it.
+
+    A payload where *every* row is vacuous is a retry, not a repair: `postcondition_failures`
+    catches it inside the pass, before this runs. Reaching here with nothing left means the
+    retries were spent, and emptying the list is still right -- `satisfy` holds itself to
+    this list, and holding it to a row that names no entity is worse than holding it to none.
+    """
+    entries = body.get("required_entities")
+    if not isinstance(entries, list):
+        return []
+    kept = [entry for entry in entries if not is_vacuous(entry)]
+    if len(kept) == len(entries):
+        return []
+    body["required_entities"] = kept
+    return [
+        f"dropped {len(entries) - len(kept)} required_entities row(s) with no local_id, "
+        f"kind or label; {len(kept)} kept"
+    ]

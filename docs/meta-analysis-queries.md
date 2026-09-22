@@ -553,10 +553,11 @@ dropped and counted -- 8 in dementia, 3 in substance use -- which is why dementi
 fall to 9-14 papers. PTSD is 22 single-paper studies and cue reactivity 191, so neither is
 affected.
 
-**The query has no foci column yet**, and it should. `Analysis.source_table_analysis` is the
+**The query had no foci column**, and it should have. `Analysis.source_table_analysis` is the
 exact join -- "the only exact route from an analysis to its coordinates", per its own repair --
-so the record can be taken to a focus count without a string match. Computing it needs the
-stage-1 parse beside the records, which is the one input this harness does not have locally.
+so the record can be taken to its coordinates without a string match. It needs the stage-1
+parse beside the records, and with that input the column is measured below in
+[Both gates at once](#both-gates-at-once-what-the-query-alone-produces).
 
 # What would make these queries simpler, and which normalizations to avoid
 
@@ -643,3 +644,170 @@ The fix was to add a value, not to map harder.
 The pattern across all six: **normalize a field whose target vocabulary exists outside the
 corpus, and leave alone any field that is a join key, a sign, or a judgement the corpus is the
 only evidence for.**
+
+# Both gates at once: what the query alone produces
+
+The two gates above were scored apart. `scripts/query_workflow.py` runs them in series --
+the published inclusion criteria over the record, then the published contrast over the
+analyses of the papers that passed -- joins each selected analysis to its coordinates
+through `Analysis.source_table_analysis`, and scores the pooled foci against the map the
+meta-analysis published. That is the whole workflow, and the foci column is the one the
+measurement notes above recorded as missing.
+
+```
+python scripts/query_workflow.py --records '<dir>/*/*.extraction.json' \
+    --bench <neurometabench>/data --stage1 <corpus>
+```
+
+**Both gates run strict and permissive, so each map is scored four ways.** Strict drops
+what the record cannot answer and permissive keeps it, and running the pair at each gate
+says where a silence costs something: a paper the screener cannot judge is a different
+loss from a contrast the record cannot sign.
+
+Three inputs and one pin. The records are the 1,817 in `record_arms`; the parse is
+`<pmid>/stage1/analyses.json` from the corpus; the benchmark is **pinned at 00398b9**,
+the commit the record-arms run scored against; its current head no longer carries emotion
+regulation at all. Foci are compared in MNI at a 2mm tolerance -- each side moves its own
+Talairach coordinates and the two transforms are not the same one, so the benchmark's
+(-54.7, -59.4, -15.8) and `tal2mni`'s (-55.5, -59.7, -15.2) are one focus.
+
+## The gates in series, per published map
+
+`anlys` is analyses selected and `nofoci` how many of them reached no coordinates. Paper
+and foci precision and recall are against the annotation's own key, over the gold papers
+that have a record.
+
+**vbm_of_ptsd**, `non-PTSD > PTSD`: 17 gold papers with a record, 139 gold foci.
+
+| screen / select | anlys | nofoci | paper P | paper R | foci P | foci R | foci F1 |
+|---|---|---|---|---|---|---|---|
+| strict / strict | 7 | 2 | **100.0%** | 29.4% | 80.0% | 11.5% | 0.201 |
+| strict / permissive | 18 | 3 | **100.0%** | 41.2% | 33.3% | 15.8% | 0.215 |
+| permissive / strict | 12 | 5 | 77.8% | 41.2% | **80.8%** | 15.1% | **0.255** |
+| permissive / permissive | 47 | 12 | 57.9% | **64.7%** | 21.1% | **19.4%** | 0.202 |
+
+**dementia**, `bvFTD vs HC`, four keys: 16, 14, 9 and 11 gold papers with a record.
+
+| key | screen / select | anlys | nofoci | paper P | paper R | foci P | foci R | foci F1 |
+|---|---|---|---|---|---|---|---|---|
+| all | strict / strict | 161 | 84 | 11.0% | 56.2% | 17.3% | 30.5% | 0.221 |
+| all | strict / permissive | 297 | 142 | 10.1% | 56.2% | 10.4% | 30.5% | 0.156 |
+| all | permissive / strict | 236 | 144 | 9.9% | 75.0% | 15.6% | 30.9% | 0.208 |
+| all | permissive / permissive | 699 | 404 | 5.5% | **81.2%** | 6.2% | **30.9%** | 0.103 |
+| decrease | strict / strict | 117 | 59 | 14.1% | 64.3% | **26.9%** | 28.8% | **0.278** |
+| decrease | strict / permissive | 253 | 117 | 11.4% | 64.3% | 12.9% | 28.8% | 0.178 |
+| decrease | permissive / strict | 165 | 96 | 11.6% | 78.6% | 23.0% | 28.8% | 0.256 |
+| decrease | permissive / permissive | 628 | 356 | 5.5% | **85.7%** | 6.7% | 28.8% | 0.109 |
+| structural | strict / strict | 73 | 39 | 9.1% | 44.4% | 5.0% | 11.5% | 0.070 |
+| structural | permissive / permissive | 434 | 255 | 3.1% | 55.6% | 1.5% | 11.5% | 0.027 |
+| functional | strict / strict | 77 | 38 | 20.0% | 72.7% | **42.9%** | 33.3% | **0.375** |
+| functional | strict / permissive | 136 | 67 | 16.3% | 72.7% | 27.4% | 33.3% | 0.301 |
+| functional | permissive / strict | 103 | 58 | 17.6% | 81.8% | 41.8% | 33.8% | 0.374 |
+| functional | permissive / permissive | 241 | 145 | 11.0% | **90.9%** | 23.3% | **33.8%** | 0.276 |
+
+**cue_reactivity**, three keys: 140, 123 and 20 gold papers with a record.
+
+| key | screen / select | anlys | nofoci | paper P | paper R | foci P | foci R | foci F1 |
+|---|---|---|---|---|---|---|---|---|
+| reward | strict / strict | 154 | 30 | **45.2%** | 27.1% | 28.9% | 14.0% | 0.189 |
+| reward | strict / permissive | 501 | 119 | 33.2% | 45.0% | 17.7% | 18.9% | 0.183 |
+| reward | permissive / strict | 191 | 38 | 43.4% | 32.9% | **30.9%** | 19.8% | **0.241** |
+| reward | permissive / permissive | 646 | 179 | 32.3% | **57.9%** | 19.4% | **25.8%** | 0.221 |
+| drug | strict / strict | 112 | 23 | **54.7%** | 28.5% | 30.8% | 12.7% | 0.180 |
+| drug | strict / permissive | 461 | 112 | 31.7% | 46.3% | 16.5% | 18.5% | 0.175 |
+| drug | permissive / strict | 143 | 30 | 51.8% | 35.0% | **33.8%** | 18.7% | **0.240** |
+| drug | permissive / permissive | 600 | 171 | 30.0% | **58.5%** | 17.8% | **24.7%** | 0.207 |
+| natural | strict / strict | 55 | 13 | 13.3% | 20.0% | 20.9% | 20.4% | 0.207 |
+| natural | permissive / strict | 68 | 15 | 13.9% | 25.0% | **21.5%** | 28.2% | **0.244** |
+| natural | permissive / permissive | 531 | 158 | 4.7% | **50.0%** | 6.1% | **33.7%** | 0.103 |
+
+**vbm_of_substance_use**, `all drug classes`: 74 gold papers with a record, 511 gold foci.
+
+| screen / select | anlys | nofoci | paper P | paper R | foci P | foci R | foci F1 |
+|---|---|---|---|---|---|---|---|
+| strict / strict | 11 | 0 | **100.0%** | 9.5% | **59.4%** | 7.4% | **0.132** |
+| strict / permissive | 34 | 0 | 91.7% | 14.9% | 33.3% | 7.8% | 0.127 |
+| permissive / strict | 21 | 6 | 64.3% | 12.2% | 41.3% | 7.4% | 0.126 |
+| permissive / permissive | 61 | 13 | 71.4% | **20.3%** | 17.9% | 7.8% | 0.109 |
+
+**emotion_regulation_2022** stops at screening: 43.7% strict and 73.6% permissive recall
+over 87 gold papers, and the benchmark ships no analysis-level annotation for it, so there
+is no map to score against.
+
+## What the four cells say
+
+**Permissive costs little at the first gate and a great deal at the second.** Strict
+selection has the better foci F1 in seventeen of the eighteen comparisons -- nine maps by
+two screening modes, the exception being PTSD under strict screening -- and the losses are
+not small: 30.8% to 16.5% foci precision on cue drug, 80.0% to 33.3% on PTSD, 59.4% to
+33.3% on substance use. The two silences are not equivalent. A record that cannot answer
+"was this whole-brain" is usually still the right paper; an analysis whose cells cannot be
+signed is usually not the contrast the map pooled, and admitting it pools the wrong
+coordinates.
+
+**The screening gate is a wash and the choice is per map.** Permissive screening buys 3 to
+19 points of paper recall everywhere. It improves foci F1 on the four maps where screening
+is the binding constraint -- PTSD 0.201 to 0.255, and all three cue keys, the largest
+0.207 to 0.244 -- and costs at most 0.022 of it on dementia and substance use, where
+selection was already losing more than screening was. Foci precision survives it except on substance
+use, where 16 screened papers become 26 and it falls from 59.4% to 41.3%.
+
+**Nothing here approaches a usable map.** The best foci recall on any map is 33.8%
+(dementia functional, permissive/permissive) and the best F1 is 0.375 (dementia functional,
+strict/strict). A pooled ALE on a third of the foci with three false foci in four is not
+the published result.
+
+## Where the foci go, and it is not the query
+
+Of the 767 analyses the strict/strict pipelines select across the nine maps, **479 reach
+coordinates and 288 do not**:
+
+| | analyses |
+|---|---|
+| joined to coordinates | 479 |
+| **`source_table_analysis` empty** | **230** |
+| its address names no row group in the parse | 40 |
+| the row group it names carries no coordinates | 18 |
+
+The empty slot is dementia's: 74 of the 161 analyses selected for `all`, 51 of 117 for
+`decrease`. `resolve_source_table_analysis` fills the slot only where exactly one parsed
+entry under the cited tables carries the analysis's name, and on that project it usually
+cannot -- which is the same dangling-`Analysis.tables` finding the `Tables` stage work
+measured, arriving at the map.
+
+The ceiling makes the same point without the query in the way. Taking **every** analysis of
+**every** gold paper and joining it to the parse:
+
+| map | foci recall at the ceiling |
+|---|---|
+| `vbm_of_substance_use` / all drug classes | **81.2%** |
+| `vbm_of_ptsd` / non-PTSD > PTSD | 67.6% |
+| `cue_reactivity` / drug | 66.8% |
+| `cue_reactivity` / reward | 66.3% |
+| `cue_reactivity` / natural | 63.3% |
+| `dementia` / structural | 48.6% |
+| `dementia` / functional | 40.8% |
+| `dementia` / all, decrease | **37.6%** |
+
+No selection rule can beat those numbers, and four of the nine are under half the published
+map. The gap between a cell in the tables above and its ceiling is what the two queries
+cost; the gap between the ceiling and 100% is extraction and parsing, and on dementia it is
+the larger of the two.
+
+## Two things this run had to fix to be measurable
+
+**The benchmark stores MNI where the paper published Talairach**, and the record stores what
+the paper said. Cue reactivity's studyset is 3,270 MNI points and nothing else, and on 35 of the
+123 gold records behind its drug key the record resolves to `TAL` instead; substance use
+disagrees on 15 of 74, dementia on 4 of 16, PTSD on 2 of 17. Moving both sides into MNI with `query.engine._points` -- the same transform `pondie
+query` uses -- is what makes the comparison mean anything: it took cue reactivity's ceiling
+from 47.9% to 66.3%. The residual disagreements are counted per map in the script's output
+rather than smoothed away, because a space the record and the benchmark disagree about
+displaces foci by 5-10mm and no tolerance short of a smoothing kernel recovers them.
+
+**Two of dementia's keys are not direction-restricted.** `structural` and `functional` are
+`all` split by modality, `all` contains five analyses `decrease` does not, and `decrease` is
+a subset of `all`. So the contrast spec for those three admits `bvFTD` on either side and
+only `decrease` requires it lower. The earlier analysis-selection table treated all four as
+lower-only; `scripts/query_contrasts.py` now holds one spec per key and both scripts read
+it, so the two cannot disagree again.

@@ -19,25 +19,8 @@ was never read is an unread cohort, not a sick one.
 
 from __future__ import annotations
 
-import re
-
 from pondie.normalization._records import strings_at, value_of
-from pondie.normalization.medical_condition import NO_CONDITION, triage
-
-#: Values that assert health rather than name a condition. `triage` catches the negations
-#: ("no psychiatric history") through its own NEGATION pattern; these are the positive
-#: assertions of wellness, which read as conditions to it -- "healthy controls" has a head.
-HEALTHY_ASSERTION = re.compile(
-    r"^\W*(?:"
-    r"healthy(?:\s+(?:control|controls|volunteer|volunteers|participant|participants|"
-    r"subject|subjects|adult|adults|individual|individuals|comparison))?"
-    r"|(?:normal|unaffected|non-?clinical|typically\s+developing)"
-    r"(?:\s+(?:control|controls|volunteer|volunteers|participant|participants|"
-    r"subject|subjects))?"
-    r"|control|controls|comparison(?:\s+group)?|none"
-    r")\W*$",
-    re.I,
-)
+from pondie.vocabularies.phrases import NOT_READ, triage
 
 #: `medical_condition` states that mean nobody established whether a condition was present.
 #: An absent key is the same thing said by omission.
@@ -45,15 +28,19 @@ UNREAD = {"not_reported", "not_applicable", "unknown", "None", "none"}
 
 
 def is_condition(value: object) -> bool:
-    """Whether one `medical_condition` entry names a condition the cohort has."""
-    text = str(value or "").strip()
-    if not text or HEALTHY_ASSERTION.match(text):
-        return False
-    return triage(text).kind not in {"empty", NO_CONDITION}
+    """Whether one `medical_condition` entry names a condition the cohort has.
+
+    One line, because the judgement is `phrases.triage`'s.
+    """
+    return bool(triage(value).heads)
 
 
 def derive(group: dict) -> bool | None:
-    """True if free of conditions, False if any is named, None if nobody looked."""
+    """True if free of conditions, False if any is named, None if nobody looked.
+
+    The third state is reachable from the VALUE as well as from `extraction_status`: an
+    extractor writing "unknown" into the slot has said the same thing the status says.
+    """
     if not isinstance(group, dict):
         return None
     ev = group.get("medical_condition")
@@ -61,8 +48,11 @@ def derive(group: dict) -> bool | None:
         return None
     if str(ev.get("extraction_status")) in UNREAD:
         return None
-    if any(is_condition(v) for v in strings_at(group, "medical_condition")):
+    triaged = [triage(v) for v in strings_at(group, "medical_condition")]
+    if any(t.heads for t in triaged):
         return False
+    if triaged and all(t.kind == NOT_READ for t in triaged):
+        return None
     return True
 
 

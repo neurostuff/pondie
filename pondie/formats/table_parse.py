@@ -305,7 +305,11 @@ def read_manifest(study_dir: Path, flavour: str = "pubget") -> dict[str, dict[st
     study with no source of that flavour is a degraded task, not a crash.
 
     pubget, elsevier and ace write the same manifest fields, so only the path differs. What
-    differs is the raw table each points at, which is `READERS`' problem.
+    differs is the raw table each points at, which is `READERS`' problem -- and the key the
+    path is under, which is this function's. pubget writes `metadata.data_path`; elsevier
+    writes `metadata.raw_xml_path` and repeats it as `raw_content_path`. Reading only the
+    first left `data_file` empty for every elsevier study, so `read_table` was handed "" and
+    returned None -- a paper with a full table manifest read as a paper with no tables.
     """
 
     path = Path(study_dir) / "processed" / flavour / "tables.jsonl"
@@ -324,7 +328,12 @@ def read_manifest(study_dir: Path, flavour: str = "pubget") -> dict[str, dict[st
             "caption": record.get("caption") or "",
             "footer": record.get("footer") or "",
             "contains_coordinates": bool(record.get("contains_coordinates")),
-            "data_file": Path(metadata.get("data_path") or "").name,
+            "data_file": Path(
+                metadata.get("data_path")
+                or metadata.get("raw_xml_path")
+                or record.get("raw_content_path")
+                or ""
+            ).name,
         }
     return out
 

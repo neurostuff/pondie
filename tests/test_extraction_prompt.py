@@ -21,6 +21,8 @@ from __future__ import annotations
 import pytest
 
 from pondie.extraction.prompt import render, worked
+from pondie.extraction.record import fix
+from pondie.extraction.record.fix import shape
 from pondie import schema
 
 #: Rendered separately or filled by the builder, so neither pass describes them.
@@ -318,3 +320,70 @@ def test_the_postcondition_reaches_the_demands_pass():
     than handing an unsatisfiable list to `satisfy`."""
     failures = render.postcondition_failures(_demand("mod_a", ["mod_a", "mod_b"]), "demands")
     assert any("trm_timing" in f for f in failures)
+
+
+# --------------------------------------------------- a declaration that names no entity
+
+
+def _vacuous_demand(*rows: dict) -> dict:
+    """A demands payload whose analyses are sound and whose entity list is the argument.
+
+    Shaped after `4UoCgF3UJSXq`, where six populated analyses travelled beside an entity
+    list holding one all-null row.
+    """
+    return {"analyses": [{"local_id": "a_1", "name": "an analysis"}], "required_entities": list(rows)}
+
+
+VACUOUS = {"local_id": None, "kind": None, "label": None}
+REAL = {"local_id": "grp_1", "kind": "Group", "label": "patients"}
+
+
+def test_an_all_null_declared_entity_is_vacuous():
+    assert shape.is_vacuous(VACUOUS)
+
+
+def test_blank_strings_are_as_vacuous_as_nulls():
+    """The model writes `""` as readily as `null`, and neither names an entity."""
+    assert shape.is_vacuous({"local_id": "", "kind": "   ", "label": None})
+
+
+def test_an_entity_naming_any_one_field_is_not_vacuous():
+    """`kind` alone is enough for `satisfy` to build something, so it is not a fault."""
+    assert not shape.is_vacuous({"local_id": None, "kind": "Task", "label": None})
+    assert not shape.is_vacuous(REAL)
+
+
+def test_a_wholly_vacuous_declaration_fails_the_post_condition():
+    """The observed failure: valid JSON, finish `stop`, and `satisfy` builds no task from it.
+
+    Caught inside the pass so the retry names the fault, rather than reaching a record
+    where `tasks` is null and `events.jsonl` says the stage is done.
+    """
+    failures = render.postcondition_failures(_vacuous_demand(VACUOUS), "demands")
+    assert any("no local_id, kind or label" in f for f in failures)
+
+
+def test_one_vacuous_row_beside_a_real_one_is_not_a_retry():
+    """Re-asking would resample the rows that came out fine. The repair drops the bad row
+    and leaves the good ones as the pass wrote them."""
+    assert render.postcondition_failures(_vacuous_demand(VACUOUS, REAL), "demands") == []
+
+
+def test_the_repair_drops_the_vacuous_row_and_keeps_the_rest():
+    body = _vacuous_demand(VACUOUS, REAL)
+    lines = shape.drop_vacuous_demands(body)
+    assert lines and "dropped 1" in lines[0]
+    assert body["required_entities"] == [REAL]
+
+
+def test_the_repair_is_silent_on_a_sound_declaration():
+    body = _vacuous_demand(REAL)
+    assert shape.drop_vacuous_demands(body) == []
+    assert body["required_entities"] == [REAL]
+
+
+def test_the_vacuous_repair_runs_after_the_demands_pass():
+    """Wired into the sequence at `demands`, not the merge: `satisfy` reads this list as
+    its contract, so the row has to be gone before that pass, not after it."""
+    names = [(r.name, r.stage) for r in fix.build_sequence()]
+    assert ("vacuous_demands", "demands") in names
