@@ -102,15 +102,15 @@ contracts rather than leaving to be rediscovered.
 | `--pmids` file | TAB-separated, three columns: `pmid \t study_id \t source` | a bare id per line logs `skipping unparseable line`, then **`all stages clean` with zero records written** |
 | `--corpus <root>` | `<root>/<id>/processed/<flavour>/text.txt` and `<root>/<id>/stage1/analyses.json` | stage 1 is **not** regenerated here; a missing `stage1/` skips the paper |
 | payloads → builder | flat: `payloads/<id>/<stage>.json`, which `merge_payloads` globs | a nested `<stage>/payload.json` is merged as nothing, and the record comes out with metadata and an empty body |
-| record → any consumer | read it with `pondie.schema.reader.value_of` / `slot_value`, which take the shape from the schema; **`record/repairs.py` has already normalized the structure at build time** (`wrappers`, `unwrapped`, `listified_scalars`, `coordinate_space`, 16 in all) | a hand-rolled unwrapper returns the wrapper for `not_reported` and drops every entry but the first from a multivalued slot, both without erroring |
+| record → any consumer | read it with `pondie.formats.values.value_of`, whose `multivalued` comes from `Schema.is_multivalued` rather than from a guess; **`record/fix/` has already normalized the structure at build time** (`wrappers`, `unwrapped`, `listified_scalars`, `coordinate_space`, 16 in all) | a hand-rolled unwrapper returns the wrapper for `not_reported` and drops every entry but the first from a multivalued slot, both without erroring |
 | `data/vocab/` | `onvoc.ttl` (pinned release; `onvoc.json` is the fallback), `cognitiveatlas-*.json`, `abbreviations.json`, `mondo.json`, `onvoc-mappings/`; fetched by `python -m pondie.vocabularies.fetch`, none in git | an absent ONVOC or Cognitive Atlas file degrades to no matches; an absent `mondo.json` raises, naming the fetch command |
 
 The `not_reported` shape is the one that bites repeatedly: `value` missing is a *positive
 assertion that the paper did not report it*, and is not the same as the field being absent.
 
-**Do not hand-roll the unwrap.** `pondie.schema.reader.value_of(node, multivalued)` reads the wrapper
-and the slot's declared shape; `slot_value(classes, class_name, entity, slot)` takes
-`multivalued` from the schema so a caller never guesses it. The three outcomes it keeps apart
+**Do not hand-roll the unwrap.** `pondie.formats.values.value_of(node, multivalued)` reads the
+wrapper and the slot's declared shape, and `Schema.is_multivalued(class_name, slot)` is where
+`multivalued` comes from, so a caller never guesses it. The three outcomes it keeps apart
 are the three a hand-written unwrapper conflates:
 
 | record holds | `value_of` returns | the claim |

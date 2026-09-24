@@ -1,10 +1,23 @@
 # Serving the proposer
 
-`repair` proposes with NuExtract 3. It can run the model in-process (`recall.NuExtract`) or
-talk to a vLLM server (`recall_server.NuExtractServer`). `Settings.proposer_url` points at
-the server and is tried first; an address nothing answers falls back to the in-process model
-and says so on stderr, so a run never fails for want of a server -- but it also never
-silently produces a different record without telling you.
+> **This documents an arm that is no longer in the package.** `repair` proposes with the
+> extraction model now (`repair/propose_with_extractor.py`), and the local NuExtract 3
+> proposer, the `NuExtractServer` client, `Settings.proposer_url`, `Settings.proposer_restart`
+> and the MiniCheck entailment step between propose and guard all went with it. Nothing below
+> can be switched on by a setting.
+>
+> It is kept, largely in the present tense it was written in, because everything it measures is about
+> **running a quantised model on an 8 GB card** rather than about this pipeline: which vLLM
+> flags are load-bearing, why the compile cache must never be reused, how to kill a server
+> without killing your own shell, and why a projected schema has to admit `null`. Any local
+> model this repository adopts hits all five again.
+> [local-model-substitution.md](local-model-substitution.md) is where that question stands.
+
+`repair` proposed with NuExtract 3. It could run the model in-process (`recall.NuExtract`) or
+talk to a vLLM server (`recall_server.NuExtractServer`). `Settings.proposer_url` pointed at
+the server and was tried first; an address nothing answers fell back to the in-process model
+and said so on stderr, so a run never failed for want of a server -- but it also never
+silently produced a different record without telling you.
 
 ## Why serve it
 

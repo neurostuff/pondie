@@ -412,10 +412,12 @@ Each step is cheap, each has a falsifier, and each changes what the next one is.
 
 1. **Turn caching on.** Zero accuracy risk. Measure the input-token drop per paper. *Falsified
    if* `cached_tokens` stays 0, in which case it is a gateway limitation and should be written
-   down as one.
-2. **Run the whole pipeline on a 30B-class open-weights model.** No code. One run over the
-   benchmark papers plus a corpus-scale agreement run. This is the largest single unknown in
-   this document. *Falsified if* polarity falls below ~90% on the 101 cells or the post-condition
+   down as one — and §9a is then a second route to the same saving, because a block-level cache
+   makes the reordering `render.py` ruled out pay after all.
+2. **Run the whole pipeline on a 30B-class open-weights model** (§9a for which, and on what
+   card). No code. One run over the benchmark papers plus a corpus-scale agreement run. This is
+   the largest single unknown in this document, and the two numbers that decide it are polarity
+   on the 101 cells and the post-condition failure rate. *Falsified if* polarity falls below ~90% on the 101 cells or the post-condition
    failure rate rises materially — at which point the answer is "not the whole pipeline", and
    §6's ordering is how to spend the rest.
 3. **Build the corpus-scale non-regression harness** (§8). It is a script over instruments that
@@ -434,6 +436,82 @@ Each step is cheap, each has a falsifier, and each changes what the next one is.
    each across ~8 analysis shapes, which
    [extraction-workflow-experiments.md](extraction-workflow-experiments.md) already names as the
    binding constraint on everything else.
+
+---
+
+## 9a. Which open-weights model, and on what card
+
+Step 2 above says "a 30B-class open-weights model" and that is the size band, not a product.
+What decides the choice here is not a leaderboard; it is five properties this pipeline
+specifically exercises.
+
+| property | why this pipeline cares |
+|---|---|
+| **grammar-constrained decoding under vLLM** | the strongest reason to serve locally at all, and it is not a cost reason. 57% of runs need at least one shape repair from `build`, and the variants it cannot repair crashed the scorer (`Cell.term` as a dict) and lost the shopping list. A real JSON-schema grammar over the projected schema removes that class structurally, which is [extraction-workflow-experiments.md](extraction-workflow-experiments.md) §6 recommendation 5 |
+| **block-level prefix caching** | see below. It is worth more than the model choice |
+| **an 11.5:1 input-to-output ratio** | this is a prefill-bound workload, so a sparse model with few active parameters gives large-model behaviour at small-model throughput. It is the right architecture for this shape of call |
+| **a cheap non-thinking mode** | measured here: low effort suffices, and high effort *lowers* field accuracy by 1.3 sd while tripling wall clock. A model whose reasoning can be turned down, or off, matches what the pipeline actually wants |
+| **a permissive licence and, ideally, open data** | the records are a research artefact; a model whose training data cannot be described weakens the provenance claim the rest of this repository is careful about |
+
+### The prefix-caching correction, which is the largest single number here
+
+`prompt/render.py` says the ordering "is not a cache optimisation, and an attempt to make it
+one failed": a byte-identical prompt caches 100% on the gateway and a prompt sharing a 3.6k
+prefix with a different suffix caches **zero**, so "no reordering can help".
+
+**That is true of the gateway and false of vLLM.** The gateway's cache is whole-prompt exact
+match; vLLM's automatic prefix caching is block-level over the KV cache and reuses any shared
+leading blocks. The 29,152 tokens of conventions, worked models and paper that every pass
+sends — 29k of the 36–42k a call carries — become a real shared prefix the moment the serving
+stack changes, and [extraction-workflow-experiments.md](extraction-workflow-experiments.md) §2
+already wrote down the reordering that exposes it: conventions → worked models → paper → then
+the stage-specific ask.
+
+One thing that write-up does not mention and that has to be got right: the *system* message is
+first in the token stream, and `build_prompt` puts the mode-specific note in it
+(`SYSTEM_HEAD.format(lists=...) + MODE_NOTE[mode]`). Two passes therefore diverge at the very
+first block and share nothing, however the user turn is ordered. The invariant material has to
+lead the whole stream, not just the user half.
+
+Done properly, every call after the first for a given paper reuses ~75% of its input. That
+changes the economics of a local arm more than any choice of weights, and it is also the
+control that makes a like-for-like cost comparison against the gateway honest.
+
+### Candidates, as of this writing
+
+Named by property rather than ranked, because the point is to run one, not to argue about
+which. Sizes and context lengths below are approximate and should be checked against the
+current model card — the line moves fast enough that anything here is a starting point.
+
+| | why it is on the list | the catch |
+|---|---|---|
+| **Qwen3-30B-A3B-Instruct** (~30B total, ~3B active, Apache 2.0) | the best fit for the five properties: sparse so prefill is cheap, thinking separable from instruct, strong structured-output behaviour, and 4-bit community quants exist — which is what makes it runnable on the cards this project has | a MoE at 4-bit is the least predictable thing to serve; expect the vLLM flags to need the same care `serving-the-proposer.md` documents |
+| **gpt-oss-120b** (~117B total, ~5.1B active, Apache 2.0) | the closest open analogue of what the pipeline uses today, and the only one whose *reasoning effort* maps one-to-one onto `Settings.effort`. ~5B active means it serves cheaply for its quality | needs a single 80 GB card. Its native MXFP4 format wants Hopper or newer, so it is a rental, not a beast job |
+| **Qwen3-32B** (dense, Apache 2.0) | the control. If a dense 32B and a sparse 30B disagree, the disagreement is informative; if they agree, the MoE is free | dense 32B at 4-bit leaves little room for a 40k-token prompt across four 8 GB cards |
+| **gpt-oss-20b** (~21B total, ~3.6B active) | the cheapest thing that might clear the bar, and the right first call if renting a card is friction | same MXFP4/Ampere problem, so it is a community 4-bit quant or nothing on these cards |
+| **an OLMo 3 instruct model at the largest size available** | the only line where the training data is published, which is the provenance argument the rest of this repository would make. [field-extraction-audit.md](field-extraction-audit.md) already notes `Olmo2Config` works on the beast transformers build | the 7B named there is below the band this needs; whether a 30B-class sibling exists should be checked |
+
+Deliberately not on the list: a domain-tuned biomedical LLM. The failures measured here are
+structural rather than lexical — a model that has not understood what a `Cell` is does not fix
+it by knowing more neuroanatomy — and the one place domain knowledge would pay,
+`Group.medical_condition`, is already served by a MONDO/UMLS linker.
+
+### The hardware, which is the binding constraint
+
+`serving-the-proposer.md` establishes it on the way past: a 4B model in bf16 **OOMs on one
+8 GB card** and needs all four of the 3070s; only the W4A16 checkpoint fits one, and only with
+`--language-model-only`. Ampere has no native FP8 or MXFP4, so every candidate above is a 4-bit
+W4A16/AWQ/GPTQ build on this machine or it does not run at all.
+
+Four 8 GB cards is 32 GB total. A 30B model at 4 bits is ~17 GB of weights before any KV cache,
+and a call here carries 36–42k tokens. That fits, barely, at low concurrency, and it will spend
+the screening run fighting for KV rather than measuring anything.
+
+**So rent one 80 GB card for step 2.** A screening run over the benchmark papers plus a
+corpus-scale agreement pass is hours, not weeks, and it removes the quantisation and the memory
+pressure from a measurement whose whole purpose is to find out whether the *model* is good
+enough. Beast is the right home for whatever is adopted afterwards, and for every fine-tune in
+§6 — S1a in particular is a 256-token-per-example job that one 3070 handles comfortably.
 
 ---
 
@@ -456,6 +534,15 @@ Each step is cheap, each has a falsifier, and each changes what the next one is.
 
 - **No arm here has been run.** Every number is drawn from measurements already in this
   repository; the synthesis, the ordering and the cost attribution are arguments, not results.
+- **The candidates in §9a are a starting point with a shelf life.** Their parameter counts,
+  context lengths and quantisation formats should be read off the current model cards rather
+  than from this table, and a release since it was written may well displace all of them. The
+  five properties the table is built from are the durable part; the names are not.
+- **The prefix-caching correction in §9a is reasoning, not a measurement.** That vLLM's
+  automatic prefix caching is block-level rather than whole-prompt is a property of the serving
+  stack; that it would recover ~75% of input on this pipeline's prompts follows from the 29,152
+  shared tokens `render.py` already counts. Neither has been run here, and the system-message
+  ordering is the part most likely to make it silently not happen.
 - **The 280k span count is an extrapolation** from 16 records in `benchmarks/candidate/` (2,478
   resolved spans, 155 per paper, 78% of extracted fields) to the 1,817 committed records. It
   assumes those records carry evidence at a comparable rate, which has not been checked
@@ -463,9 +550,11 @@ Each step is cheap, each has a falsifier, and each changes what the next one is.
 - **The cost split is the documented one** (~310k in / ~27k out, evidence 45% of input) and is
   not re-derived from `usage.jsonl` here. A per-stage token table from a real run would sharpen
   every priority in §9 and is half an hour of work against a corpus this document did not have.
-- **`docs/serving-the-proposer.md` describes code that is no longer in the package.** The
-  in-process NuExtract proposer, the vLLM `NuExtractServer`, `Settings.proposer_url`, the
+- **The local arm is gone from the package, and two documents said otherwise.** The in-process
+  NuExtract proposer, the vLLM `NuExtractServer`, `Settings.proposer_url`, `repair.POISON`, the
   MiniCheck grounding step and the cross-encoder ranking all went; `evidence/retrieval.py` keeps
-  only `sectionize`, and `README.md`'s account of `repair` having a local half is stale. That
-  serving document remains the best record of how to run a quantised model on these cards and
-  should be kept, but it should say that it documents a removed arm.
+  only `sectionize`. `serving-the-proposer.md` now says in its first lines that it documents a
+  removed arm and is kept for what it measures about running a quantised model on an 8 GB card,
+  and `README.md`'s `repair` paragraph now describes the three steps that exist. Neither was
+  deleted: every measurement in the serving document applies again the moment any local model
+  is adopted.

@@ -67,7 +67,7 @@ Nine stages, and the order is the design:
 | `fill` | yes | asks for the slots still open, round after round, until none are — a shape for finishing an entity rather than deciding it exists |
 | `evidence` | yes | a supporting quote for every value — **45% of input tokens** |
 | `build` | no | merge, 22 repairs, resolve quotes to offsets, check 19 rules, write the record |
-| `repair` | optional | a second model proposes what the first missed, a third judges whether the paper supports it, and what neither settles goes back to the extraction model once |
+| `repair` | optional | the extraction model proposes what the passes missed, deterministic guards decide what may be written, and the contradictions the record cannot settle go back to the model once |
 
 `demands` precedes `satisfy` because a cell cannot be righter than the term it points at:
 asked to guess an inventory first, the entity pass modelled a crossover's condition as a
@@ -75,11 +75,20 @@ continuous covariate.
 
 `repair` runs on the record rather than on a payload, and is the only stage that can make one
 worse — so it validates its own output against its own input and reports what it introduced.
-Both of its halves are optional and independent: the local models want a GPU, the final
-adjudication wants only the gateway, and a host with neither still gets a validated record.
-Its proposer runs in-process or against a vLLM server, whichever `Settings.proposer_url`
-finds -- [docs/serving-the-proposer.md](docs/serving-the-proposer.md) covers starting one,
-stopping one without corrupting the compile cache, and why the projected schema is nullable.
+Three steps, and only two of them call a model: the extraction model proposes the entities and
+links the passes missed, `repair/guard.py` refuses the writes that would damage the record and
+says why, and the contradictions nothing else settles go to the model once, with the paper. The
+two model steps are independent and each is a setting — `repair` and `adjudicate` — and a host
+that wants neither still gets a validated record, because `build` has already run the
+deterministic `record/fix` pass and checked what it produced. With `repair` on and no caller at
+all, the stage says so and does the deterministic half.
+
+There used to be a second arm here, and it is gone: a local NuExtract 3 proposer, in process or
+against a vLLM server, with a MiniCheck entailment step between propose and guard.
+[docs/serving-the-proposer.md](docs/serving-the-proposer.md) is kept as the record of how to run
+a quantised model on a small card, not as instructions for this pipeline, and
+[docs/local-model-substitution.md](docs/local-model-substitution.md) is where bringing one back
+is worked through.
 
 A stage is a function of `(paper, settings, caller)`, not a subprocess, so it can be called
 from a test with a fake `Caller` and its cost is returned rather than scraped from logging.
@@ -108,12 +117,12 @@ pondie/extraction/
   corpus/     getting the paper on disk. An INPUT: a run reads it, never writes it
   prompt/     what the model is asked, and what the paper looks like when it is asked
   evidence/   which characters of the paper warrant each value, and whether they do
-  record/     turning the payloads into a record: assemble, repair, check, edit
-  tools/      things done to records afterwards; none of them runs inside a pipeline
+  record/     turning the payloads into a record: assemble, fix, check. A fix that could go
+              two ways reports instead of deciding, which is the whole difference from repair/
+  repair/     improving a built record afterwards, and reporting what the attempt broke:
+              propose, guard, adjudicate. Everything in here decides
   models.py   the pydantic contracts that cross a boundary
-  recall.py   asking a second model for the entities and links the first missed
-  repair.py   improving a built record, and reporting what the attempt broke
-  stages.py driver.py llm.py parse.py
+  stages.py driver.py llm.py parse.py sign_split.py pubmed.py
 ```
 
 Every boundary is a named type, and writing them down found two bugs that were invisible
