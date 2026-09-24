@@ -369,7 +369,10 @@ configuration, not code.
 ## 6. What has not been tried, and why not
 
 - **Fine-tuning SciBERT or Longformer** -- the right base models, no zero-shot mode, blocked
-  on labels: 4 entity-salience dispositions answered of 281 available.
+  on labels: 4 entity-salience dispositions answered of 281 available. That blocker is about
+  learning *salience*, which no record carries; it does not block distilling a stage from the
+  pipeline's own output, which is a different proposition and is worked through in
+  [local-model-substitution.md](local-model-substitution.md).
 - **BioCoref domain adaptation** -- coref gained nothing (37% appended, 27% substituted),
   so adapting it would optimise a component that is not the lever.
 - **Larger GLiNER / scispaCy NER** -- the bottleneck is scoping, not recognition, and the
