@@ -337,6 +337,100 @@ lose.
 
 ---
 
+## 6a. The two small-model classes, and what each is actually for
+
+"Is a 4B model, or a BERT, too small for this work" is the wrong axis, and the audit table
+says why. The axis that predicts every result in this repository is:
+
+> **Choosing among candidates the pipeline already has is a small model's job. Deciding what
+> the candidates are is not.**
+
+An encoder cannot generate, so it can never say which analyses exist. It can say which of nine
+occurrences of `n = 24` is this group's, which sentence warrants this value, and whether a
+proposed span supports its claim — and every one of those is a place this pipeline currently
+spends a frontier call or gives up.
+
+### Encoders are already here, and both of the ones shipped are untrained
+
+`normalization/_embedding.py` runs SapBERT (a PubMedBERT fine-tune, ~110M) for entity strings
+and MiniLM for prose, and [normalization-rationale.md](normalization-rationale.md) measures
+them inverting completely by input length: R@1 66.3% and 50.6% on short entity strings, 24.5%
+and 58.5% on task descriptions. So the dependency class is already accepted and already earns
+its keep on this material.
+
+What has never been tried is a **trained** one. Both of those are off-the-shelf embedders used
+zero-shot; so was the cross-encoder that scored 42.2% top-1 on evidence. Every encoder number
+in this repository is a zero-shot number, and this corpus holds ~280,000 labelled examples
+(§5).
+
+### Five encoder jobs, with the labels that already exist
+
+| | task | labels on disk | window | baseline it must beat |
+|---|---|---|---|---|
+| **E1** | evidence re-ranking — score (field query, sentence unit) | ~280,000 resolved spans | ~256 tok | untrained cross-encoder, 42.2% top-1 / 69.9% recall@12 |
+| **E2** | **occurrence disambiguation** — the value is on the page *k* times; which one is this entity's | the teacher's resolved span picks one of the *k* | ~256 tok around each candidate | the `uniq` column, which is this task scored for a string matcher |
+| **E3** | warrant abstention — does this span support this value, yes or no | positives = spans that resolved; negatives = `warrant.downgraded`, plus high-ranked sentences the teacher passed over | ~256 tok | the hand-tuned margin cut: 40% coverage at 80% confirmed-correct |
+| **E4** | cell signing — label a cell that already exists | ~20,000 teacher cells | analysis name + definition + cell + the statistic's sign | the deriver, which is 55/55 on gold and **abstains on 46 of 101** |
+| **E5** | salience — did this mentioned region become a `Region` | the records | ~256 tok | GLiNER at 94% recall and 562 spans for 36 entities |
+
+**E2 is the one worth being excited about, and it is new.** The `uniq` column has been read
+throughout this repository as a ceiling — "the value is on the page twenty times and nothing
+distinguishes the right occurrence". It is a ceiling *for a string matcher*. It is a
+description of a ranking problem for anything that reads the words around each candidate, and
+the label is free, because the teacher's span already says which occurrence was right.
+
+Counted off the audit table:
+
+| band | fields | instances (16-paper corpus) |
+|---|---:|---:|
+| `uniq` ≥ 80 — a string match is already right | 20 | 223 |
+| **`surface` ≥ 90 and `uniq` < 20 — on the page, wrong occurrence** | **40** | **758** |
+| `surface` < 10 — model-only, no span to rank | 36 | 827 |
+
+Median candidate counts across those 40 fields run 2 to 51: `analyses.groups.n` is 168
+instances at 98% surface, 2% uniq, 9 candidates; `groups.enrolled_count` is 9 candidates;
+`magnetic_field_strength_tesla` is 18; `smoothing_fwhm_mm` is 18. Pick-one-of-nine with the
+entity label in the query is exactly what a cross-encoder does, and 758 instances over 16
+papers extrapolates to of order 10⁴–10⁵ across the corpus.
+
+And the training set is drawn from the **highest-precision slice of the teacher's evidence**,
+which is the part that makes this better-founded than E1: where the pick contained the value
+verbatim, confirmed-correct was 80.9% against 27.8% where it did not
+([evidence-union-design.md](evidence-union-design.md)). E2's labels are by construction all in
+the first group.
+
+E5 carries a warning the others do not. Distant supervision for salience was tried here and
+**inverted** — unused mentions came out more frequent and more often in Methods, because the
+negatives are dominated by extractor recall misses and class confusion. The teacher's silence
+is not a reliable negative. E5 needs the reviewer dispositions the rest of this document says
+are unavailable, and should be attempted last or not at all.
+
+### What fine-tuning NuExtract3 would and would not fix
+
+NuExtract3 is itself a template-filling fine-tune, so further tuning it on this schema is the
+natural move rather than an exotic one. Read against its measured failures:
+
+| its zero-shot failure | would a fine-tune fix it |
+|---|---|
+| schema codes the paper never writes — `diagnostic_system` answered `DTI`, `SVM`, `C-PiB PET` | **yes, and this is the strongest case.** It is a vocabulary-grounding failure, which is exactly what labels teach. The jump from 0/6 (NuExtract-2.0) to 3/3 DSM-IV (NuExtract3 + explicit field names + `enum` constraints) already came from constraining the vocabulary; a fine-tune is the strongest form of the same move |
+| `regions.atlas`, 30 predictions against 0 recorded values | **yes** — it is over-generation, and abstention is learnable from a corpus where the slot is usually empty |
+| paraphrase fields at 0% (`name`, `definition`, `description`) | **partly.** The teacher's house style is consistent, which is what makes it learnable at all, but 0% is a long way to come and these are the fields P8 argues should be deferred rather than bought |
+| `Cell.direction` 37%, `term: "FESZ", level: "NC"` | **probably not**, and D1 changes the target shape anyway. Attempt it after D1, not before |
+| under-segmentation — 38 cells where the record has 71, 8/15 exact table splits | unknown, and it is the failure mode least addressed by more of the same labels |
+
+The practical constraint is sequence length, not parameters. A LoRA over 4B at the 10–12k
+tokens a paper takes does not fit an 8 GB card; the truncation that makes it fit already exists
+as `repair.stage._premise`, which cuts to Methods and Results through `sectionize` for exactly
+this reason. Train on the premise, not the paper.
+
+### Where neither class reaches
+
+`demands`. It has to hold the paper, the table parse and the contrast set at once and decide an
+inventory — an encoder cannot generate one and the 4B under-segments both tables and cells.
+That is §4's conclusion arrived at from the other direction, and it is the same one call.
+
+---
+
 ## 7. What no student and no small model can do here
 
 Recording these so they are not rediscovered.
@@ -422,17 +516,24 @@ Each step is cheap, each has a falsifier, and each changes what the next one is.
    §6's ordering is how to spend the rest.
 3. **Build the corpus-scale non-regression harness** (§8). It is a script over instruments that
    already exist, and nothing after this point is interpretable without it.
-4. **Train S1a, the evidence re-ranker**, on the 280k resolved spans. Score against held-out
+4. **Train E2, the occurrence ranker** (§6a), on the 40 fields where `surface` ≥ 90 and
+   `uniq` < 20. It is the cheapest trained model in this document — one 3070, ~256-token
+   examples, labels already on disk — and it is the only proposal that attacks entity scoping
+   with a model small enough to run anywhere. *Falsified if* accuracy at k candidates does not
+   clear the `uniq` column by a wide margin on held-out papers, which would say the
+   surrounding words genuinely do not distinguish the occurrences.
+5. **Train S1a/E1, the evidence re-ranker**, on the 280k resolved spans. Score against held-out
    teacher spans and against the 173 hand-judged slots. *Falsified if* it cannot beat the
    untrained cross-encoder's 42.2% top-1 by a wide margin; that would say the query, not the
    training, is the limit.
-5. **Re-shape `fill` to nested per-entity templates, with the frontier model**, and measure. This
+6. **Re-shape `fill` to nested per-entity templates, with the frontier model**, and measure. This
    separates the decomposition from the substitution, and §3 predicts it is worth something on
    its own. *Falsified if* field agreement drops or the open-slot count stops falling.
-6. **Then S2**, routed: derivers → student on the measured ≥80% set → frontier on the rest.
-7. **Run D1, the flat contrast schema, with the frontier model.** Only if it lands does S4
+7. **Then S2**, routed: derivers → E2 and the student on the measured ≥80% set → frontier on
+   the rest.
+8. **Run D1, the flat contrast schema, with the frontier model.** Only if it lands does S4
    become a sensible question.
-8. **Never substitute `demands`** without a stratified gold set that does not exist — ~5 papers
+9. **Never substitute `demands`** without a stratified gold set that does not exist — ~5 papers
    each across ~8 analysis shapes, which
    [extraction-workflow-experiments.md](extraction-workflow-experiments.md) already names as the
    binding constraint on everything else.
@@ -543,6 +644,11 @@ enough. Beast is the right home for whatever is adopted afterwards, and for ever
   stack; that it would recover ~75% of input on this pipeline's prompts follows from the 29,152
   shared tokens `render.py` already counts. Neither has been run here, and the system-message
   ordering is the part most likely to make it silently not happen.
+- **§6a's band is counted off the audit table, which is 16 papers.** 40 fields and 758
+  instances at `surface` ≥ 90 / `uniq` < 20 are that corpus's numbers; the extrapolation to
+  10⁴–10⁵ assumes the field mix holds across 1,817 records, which nothing here checks. The
+  claim that those instances are *rankable* is a hypothesis — `uniq` establishes only that a
+  string matcher cannot do it.
 - **The 280k span count is an extrapolation** from 16 records in `benchmarks/candidate/` (2,478
   resolved spans, 155 per paper, 78% of extracted fields) to the 1,817 committed records. It
   assumes those records carry evidence at a comparable rate, which has not been checked
