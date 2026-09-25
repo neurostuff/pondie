@@ -368,9 +368,9 @@ in this repository is a zero-shot number, and this corpus holds ~280,000 labelle
 | | task | labels on disk | window | baseline it must beat |
 |---|---|---|---|---|
 | **E1** | evidence re-ranking — score (field query, sentence unit) | ~280,000 resolved spans | ~256 tok | untrained cross-encoder, 42.2% top-1 / 69.9% recall@12 |
-| **E2** | **occurrence disambiguation** — the value is on the page *k* times; which one is this entity's | the teacher's resolved span picks one of the *k* | ~256 tok around each candidate | the `uniq` column, which is this task scored for a string matcher |
+| **E2** | **occurrence disambiguation** — the value is on the page *k* times; which one is this entity's | the teacher's resolved span picks one of the *k* | **not a window — see §6b, where this is corrected into an assignment** | the `uniq` column, which is this task scored for a string matcher |
 | **E3** | warrant abstention — does this span support this value, yes or no | positives = spans that resolved; negatives = `warrant.downgraded`, plus high-ranked sentences the teacher passed over | ~256 tok | the hand-tuned margin cut: 40% coverage at 80% confirmed-correct |
-| **E4** | cell signing — label a cell that already exists | ~20,000 teacher cells | analysis name + definition + cell + the statistic's sign | the deriver, which is 55/55 on gold and **abstains on 46 of 101** |
+| **E4** | cell signing — label a cell that already exists | ~20,000 teacher cells | **the bound row group, not a retrieved passage — see §6b** | the deriver, which is 55/55 on gold and **abstains on 46 of 101** |
 | **E5** | salience — did this mentioned region become a `Region` | the records | ~256 tok | GLiNER at 94% recall and 562 spans for 36 entities |
 
 **E2 is the one worth being excited about, and it is new.** The `uniq` column has been read
@@ -428,6 +428,133 @@ this reason. Train on the premise, not the paper.
 `demands`. It has to hold the paper, the table parse and the contrast set at once and decide an
 inventory — an encoder cannot generate one and the 4B under-segments both tables and cells.
 That is §4's conclusion arrived at from the other direction, and it is the same one call.
+
+---
+
+## 6b. Finding the context: join to it, do not retrieve it
+
+The E2 and E4 rows above were first written as "score the candidate against a window of text
+around it", and that is wrong for a reason worth stating, because it is the same mistake §3
+says loses.
+
+**A window around the candidate usually does not contain the discriminator.** A Methods
+sentence reads "twenty-four participants were scanned"; it is about a sample size and says
+nothing about *whose*. The thing that makes it this group's is somewhere else — the group was
+named two paragraphs earlier, or the number is a cell in a demographics row, or the other
+number in the same sentence belongs to the other cohort. A pointwise cross-encoder over ±256
+tokens is asked to find information that is not in front of it, which is input slicing wearing
+a different hat.
+
+And for a cell's direction it is worse: what settles it is the table's own rows. The rubric's
+error investigation is explicit — reviewers sign correctly when the rows are in front of them,
+and the one genuine attribution error came from the grid highlighting **another contrast's
+rows** while the reviewer read a plausible sentence instead.
+
+### Three kinds of fact, and only one of them is a retrieval problem
+
+| | the value is | how you get its context | examples |
+|---|---|---|---|
+| **printed** | a string in the document | match it, then *assign* it (below) | `age_mean`, `magnetic_field_strength_tesla`, `software` |
+| **bound** | determined by a structure the record already points at | **join. Do not search** | `Cell.direction` from its row group, `Statistic.family` from the parse's value kind, a level's identity from the entity it links to |
+| **inferred** | never worded by the paper | there is nothing to find. Derive it and mark it `generated` | `spatial_scope: whole_brain` from no mask, `undirected` from a correlation, `held` from being on neither side, `is_healthy` |
+
+Most of the difficulty in asking "how do I find the supporting text" comes from treating the
+second and third kinds as the first. **And the `surface` column already says which is which** —
+that is what it was measuring all along.
+
+### The teacher already tells you which fields are not retrieval problems
+
+Free diagnostic, run over the 16 records in `benchmarks/candidate/`: group `evidence.status`
+by field path and read off the fields the extraction model itself could not cite.
+
+| uncitable | field |
+|---:|---|
+| **92.3%** (84/91) | `analyses.prespecification` |
+| 73.3% | `design.blinding` |
+| 69.2% | `tasks.response_mode` |
+| 68.8% | `design.allocation`, `design.assignment_structure` |
+| 64.3% | `tasks.design_type` |
+| **54.9%** (50/91) | `analyses.source_table_analysis` |
+| 42.9% (39/91) | `analyses.spatial_scope` |
+| 41.4% | `statistic.degrees_of_freedom_denominator` |
+| 40.9% | `design.timepoints.relation_to_intervention` |
+| 40.7% | `groups.species` |
+
+Pooled over the 101 field paths with ≥8 instances: **678 of 3,048 filled values, 22.2%, carry
+no citation from the model that wrote them.** Every field at the top of that list is an
+inferred fact, and a locator aimed at it — trained, retrieved or frontier — is hunting a
+sentence that was never written. `groups.species` is the purest case: 41% uncitable, and it is
+already derived in code at 100%.
+
+**One of those rows is a defect, not a category.** `analyses.source_table_analysis` is a parse
+key the pipeline minted; it is an address, not a claim about the paper, and `mirror_analysis`
+already writes its own copies as `generated` / `not_applicable` for exactly that reason. The
+extraction pass's copies go through `apply_evidence` like any other value, fail to match, and
+land on `not_found` — ~50 per 16 papers, so of order 5,000 spurious `not_found`s corpus-wide,
+inflating the 32,500 `warrant.py` counts. This is the rule
+`.agent/repair/investigation.md` says was learned the hard way four times: **a verbatim test is
+only valid against a value the paper was supposed to have printed.** Fixing it is a one-line
+change in how that slot is wrapped.
+
+### E2, corrected: an assignment, not a ranking
+
+The discriminator for "which `24` is this group's" is overwhelmingly *co-location with where
+that group is being described*, and **the record already knows where that is**: the group's own
+`name`, `medical_condition` and other filled slots carry resolved `start_char`/`end_char`. So
+the feature is arithmetic on offsets the record holds, not a semantic judgement about a
+sentence.
+
+Two consequences:
+
+1. **Anchor the window on the entity, not on the value.** Score a candidate by its position
+   relative to the entity's known spans, whether it shares a sentence or a table row with the
+   entity's name or one of its abbreviations, and whether it sits in the section this field's
+   warrants usually land in — a prior that is *measurable per field path* from the corpus
+   rather than hand-written.
+2. **Score the whole matrix, not one cell of it.** "24 patients and 19 controls" is two
+   candidates and two groups, and the real constraint is that they are one-to-one. A pointwise
+   model cannot express that; an assignment over an entity × candidate matrix can, and it is
+   the same optimal bipartite assignment `benchmark/scoring.py` already implements for entity
+   matching.
+
+That reframing is §3's rule applied to its own proposal: the scope comes out of the *shape of
+the answer* — one number per group, each used once — rather than out of a retrieved passage.
+It is also why the nested acquisition template reached 86%: it forced one row per acquisition.
+The encoder version of that template is an assignment problem.
+
+The text model in it can then be small, because most of the signal is structural: offset
+distance, shared row, unit agreement, section prior. The words break ties.
+
+### E4, corrected: the table is bound, so most of it is not retrieval at all
+
+`Analysis.source_table_analysis` carries the parse key of the listing entry the analysis was
+emitted for, and `Analysis.tables` carries the Table's `local_id`. So the row group, its
+coordinates, its statistic values *with their signs*, and the table's caption and footer are a
+dictionary lookup — the pipeline built that address space precisely because "`tables` cannot do
+it, a table usually reports several contrasts and several analyses usually cite the same
+table".
+
+Against the deriver's abstentions, that suggests three deterministic widenings before any model
+is trained:
+
+| the abstention | what would close it | is it retrieval |
+|---|---|---|
+| the level matches neither side of the contrast name | expand both sides through **the paper's own abbreviation table**. `direction.same_level` compares word sets and never consults `vocabularies.abbreviations`, so `FESZ` cannot reach `first-episode schizophrenia` even though the paper defines it on first use and the miner already found it | no |
+| ditto, where the level is a bare string | match through the entity the `FactorLevel` **links to** — `groups`, `arms`, `timepoints`, `conditions` — rather than only through the level's own text | no |
+| the name carries no operator | `fill_directions` already concatenates `name` and `definition`, and the rubric says the definition is what states the ordering. What is missing is the **bound row group's own signs**, which the parse holds and this path never reads | no |
+| a slope whose statistics carry no sign | genuinely prose, and this is the residue | yes, but narrowly |
+
+That last one is the only search, and it is a well-posed one rather than an open one: the
+sentence names the term or the region and carries a cue word from a small closed set —
+increase, decrease, positive/negative correlation, greater, reduced — and it is in Results. A
+cue-word-plus-entity-mention query over one section is a different problem from "find the
+sentence supporting this abstract fact", and it is the shape E1 is good at.
+
+And where no sentence exists, the correct answer is not to find one. `mirror_analysis` is the
+worked precedent in this package: it flips a sign, marks the value `generated`, and **drops the
+span**, with a comment saying why — keeping the described half's quote would ship a verified
+span supporting the opposite claim, which is a false citation. A cell whose direction was
+inferred rather than read should say so the same way.
 
 ---
 
@@ -516,24 +643,31 @@ Each step is cheap, each has a falsifier, and each changes what the next one is.
    §6's ordering is how to spend the rest.
 3. **Build the corpus-scale non-regression harness** (§8). It is a script over instruments that
    already exist, and nothing after this point is interpretable without it.
-4. **Train E2, the occurrence ranker** (§6a), on the 40 fields where `surface` ≥ 90 and
-   `uniq` < 20. It is the cheapest trained model in this document — one 3070, ~256-token
-   examples, labels already on disk — and it is the only proposal that attacks entity scoping
-   with a model small enough to run anywhere. *Falsified if* accuracy at k candidates does not
-   clear the `uniq` column by a wide margin on held-out papers, which would say the
-   surrounding words genuinely do not distinguish the occurrences.
-5. **Train S1a/E1, the evidence re-ranker**, on the 280k resolved spans. Score against held-out
+4. **Run the uncitable diagnostic over the corpus** (§6b) — `evidence.status` grouped by field
+   path over all 1,817 records, which is a script and no model. It partitions the schema into
+   printed, bound and inferred, and every later step is aimed with it. It also sizes the
+   `source_table_analysis` defect. *Falsified if* nothing.
+5. **Close the deterministic widenings on direction** (§6b): abbreviations into
+   `direction.same_level`, level matching through the linked entity, and the bound row group's
+   signs. Score against the 101 cells. *Falsified if* the deriver's abstention count does not
+   fall, which would say the abstentions are the slope case and not the alias case.
+6. **Then E2, as an assignment** over the 40 fields where `surface` ≥ 90 and `uniq` < 20,
+   anchored on the entity's resolved spans rather than on a window round the candidate. Still
+   the cheapest trained model here — one 3070, labels already on disk. *Falsified if* accuracy
+   at *k* candidates does not clear the `uniq` column by a wide margin on held-out papers,
+   which would say the structural features do not carry it either.
+7. **Train S1a/E1, the evidence re-ranker**, on the 280k resolved spans. Score against held-out
    teacher spans and against the 173 hand-judged slots. *Falsified if* it cannot beat the
    untrained cross-encoder's 42.2% top-1 by a wide margin; that would say the query, not the
    training, is the limit.
-6. **Re-shape `fill` to nested per-entity templates, with the frontier model**, and measure. This
+8. **Re-shape `fill` to nested per-entity templates, with the frontier model**, and measure. This
    separates the decomposition from the substitution, and §3 predicts it is worth something on
    its own. *Falsified if* field agreement drops or the open-slot count stops falling.
-7. **Then S2**, routed: derivers → E2 and the student on the measured ≥80% set → frontier on
+9. **Then S2**, routed: derivers → E2 and the student on the measured ≥80% set → frontier on
    the rest.
-8. **Run D1, the flat contrast schema, with the frontier model.** Only if it lands does S4
+10. **Run D1, the flat contrast schema, with the frontier model.** Only if it lands does S4
    become a sensible question.
-9. **Never substitute `demands`** without a stratified gold set that does not exist — ~5 papers
+11. **Never substitute `demands`** without a stratified gold set that does not exist — ~5 papers
    each across ~8 analysis shapes, which
    [extraction-workflow-experiments.md](extraction-workflow-experiments.md) already names as the
    binding constraint on everything else.
@@ -644,6 +778,16 @@ enough. Beast is the right home for whatever is adopted afterwards, and for ever
   stack; that it would recover ~75% of input on this pipeline's prompts follows from the 29,152
   shared tokens `render.py` already counts. Neither has been run here, and the system-message
   ordering is the part most likely to make it silently not happen.
+- **§6b's uncitable table is 16 papers and one run's records**, and `not_found` conflates two
+  things `warrant.py` is careful to separate elsewhere: a value nobody quoted, and a value
+  whose quote no locator could place. Read as "the model did not warrant this", which is what
+  the partition needs, and not as "no sentence exists" — corpus-wide, per field path, is what
+  would establish the second, and that is step 4 of §9.
+- **The three deterministic widenings in §6b are diagnoses, not measurements.** That
+  `same_level` never consults the abbreviation table is a fact about the code; that this is
+  what the 24 level-mismatch abstentions are made of is a hypothesis, and the abstention
+  breakdown it rests on comes from [deterministic-fields.md](deterministic-fields.md) over
+  101 gold cells.
 - **§6a's band is counted off the audit table, which is 16 papers.** 40 fields and 758
   instances at `surface` ≥ 90 / `uniq` < 20 are that corpus's numbers; the extrapolation to
   10⁴–10⁵ assumes the field mix holds across 1,817 records, which nothing here checks. The
