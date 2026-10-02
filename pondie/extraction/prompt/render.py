@@ -879,12 +879,51 @@ OMIT_REASONS = (
 _QUALIFIED = ("duplicate_of", "other")
 
 
-def unsupported_omissions(payload: Mapping[str, Any], listing: Collection[str]) -> list[str]:
+def listing_foci(stage1: Mapping[str, Any]) -> dict[str, frozenset]:
+    """Listing key -> the coordinates the parse read under it.
+
+    Beside `demandable_keys` so the two number alike, and for one consumer:
+    `duplicate_of` is the only omit reason the parse can settle, and settling it means
+    comparing coordinates rather than trusting that the key exists.
+    """
+
+    every = stage1.get("analyses") or []
+    out: dict[str, frozenset] = {}
+    for key, entry in zip(parse_keys.parse_keys(every), every):
+        out[key] = frozenset(
+            tuple(point["coordinates"])
+            for point in (entry.get("points") or [])
+            if len(point.get("coordinates") or []) == 3
+        )
+    return out
+
+
+def unsupported_omissions(
+    payload: Mapping[str, Any],
+    listing: Collection[str],
+    foci: Mapping[str, frozenset] | None = None,
+) -> list[str]:
     """Declines whose reason is not a checkable claim about the entry.
 
     The channel exists so an omission and an oversight stop looking identical. A reason
     outside `OMIT_REASONS` puts them back: it satisfies the listing check while saying
     nothing a reader could verify.
+
+    `duplicate_of` is checked against the parse, and checking that the target EXISTS was
+    not enough. 24760016 declined `prose#1` -- "The left amygdala reached significance
+    after applying a SVC (k = 29; -16, -2, -14; Z = 4.33)" -- as a duplicate of table
+    `4220#1`, a real listing key whose ten coordinates do not include that peak. The claim
+    passed, the entry was dropped, and no emitted analysis carried the focus: a result the
+    paper reports left the record. Six of the other seven duplicate claims on that run
+    were true, same coordinates and same sentence, so the reason is worth keeping -- it
+    just has to be answerable, and with `foci` it is.
+
+    One direction only. A target that does not carry the peak REFUTES the claim; a target
+    that does carry it confirms nothing, because the same coordinate legitimately appears
+    under several analyses -- a small-volume correction inside a region two contrasts both
+    probe lands in near-identical voxels by construction. So a passing `duplicate_of` is
+    an unrefuted claim, not a verified one, and the reason text stays in `omitted` for a
+    reader who wants to go and check.
     """
 
     bad: list[str] = []
@@ -904,11 +943,19 @@ def unsupported_omissions(payload: Mapping[str, Any], listing: Collection[str]) 
         if head in _QUALIFIED and not rest.strip():
             bad.append(f"{key!r} is declined with {head!r} and nothing after the colon")
             continue
-        if head == "duplicate_of" and listing and rest.strip() not in listing:
-            bad.append(
-                f"{key!r} is declined as a duplicate of {rest.strip()!r}, "
-                f"which is not a listing key"
-            )
+        if head == "duplicate_of":
+            target = rest.strip()
+            if listing and target not in listing:
+                bad.append(
+                    f"{key!r} is declined as a duplicate of {target!r}, "
+                    f"which is not a listing key"
+                )
+            elif foci and (mine := foci.get(key)) and not mine <= foci.get(target, frozenset()):
+                missing = sorted(mine - foci.get(target, frozenset()))[:2]
+                bad.append(
+                    f"{key!r} is declined as a duplicate of {target!r}, which does not "
+                    f"carry its coordinates ({', '.join(str(c) for c in missing)})"
+                )
     if not bad:
         return []
     return [
@@ -1062,6 +1109,7 @@ def postcondition_failures(
     mode: str,
     declared: Sequence[Mapping[str, Any]] = (),
     listing: Collection[str] = (),
+    foci: Mapping[str, frozenset] | None = None,
 ) -> list[str]:
     """What is wrong with this payload that no schema check would catch.
 
@@ -1100,7 +1148,7 @@ def postcondition_failures(
         if mode == "demands":
             failures.extend(vacuous_entity_demands(payload))
             failures.extend(unconsumed_listing(payload, listing))
-            failures.extend(unsupported_omissions(payload, listing))
+            failures.extend(unsupported_omissions(payload, listing, foci))
             failures.extend(unreachable_entity_demands(payload))
         failures.extend(unreachable_term_demands(payload))
     else:

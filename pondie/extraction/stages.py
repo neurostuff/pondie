@@ -340,6 +340,12 @@ class _ModelPass(_Base):
 
         return ()
 
+    def listing_foci(self, paper: Paper, settings: Settings) -> Mapping[str, frozenset]:
+        """The coordinates under each listing key, for the one omit reason the parse can
+        settle. Empty for a pass with no listing."""
+
+        return {}
+
     def declared(self, paper: Paper, settings: Settings) -> Sequence[Mapping[str, Any]]:
         """The entities this pass was asked to produce, for the post-condition to check."""
         return ()
@@ -355,6 +361,7 @@ class _ModelPass(_Base):
         )
         declared = self.declared(paper, settings)
         listing = self.listing(paper, settings)
+        foci = self.listing_foci(paper, settings)
 
         # Retry names the fault rather than resampling blindly. The failure is stochastic --
         # the same prompt succeeds on the next draw most of the time -- but a model told what
@@ -407,7 +414,9 @@ class _ModelPass(_Base):
             # an empty top-level sibling, and the post-condition would reject a good answer.
             payload, notes = render.normalize(reply.payload, self.mode)
             parsed = True
-            failures = render.postcondition_failures(payload, self.mode, declared, listing)
+            failures = render.postcondition_failures(
+                payload, self.mode, declared, listing, foci
+            )
             if not failures:
                 break
 
@@ -483,6 +492,11 @@ class Demands(_ModelPass):
         """
 
         return render.demandable_keys(TableParse.read(paper.parse).document or {})
+
+    def listing_foci(self, paper: Paper, settings: Settings) -> Mapping[str, frozenset]:
+        """From the same document `listing` and `context` read."""
+
+        return render.listing_foci(TableParse.read(paper.parse).document or {})
 
     def context(self, paper: Paper, settings: Settings) -> str:
         """Reading the Table->Analyses parse."""

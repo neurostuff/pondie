@@ -644,3 +644,78 @@ def test_a_duplicate_must_name_a_key_that_exists() -> None:
         {"omitted": [{"key": "t1#1", "reason": "duplicate_of"}]}, listing), "needs a target"
     assert render.unsupported_omissions(
         {"omitted": [{"key": "t1#1", "reason": "other"}]}, listing), "`other` needs a why"
+
+
+def test_a_duplicate_must_carry_the_declined_entry_s_coordinates() -> None:
+    """24760016, the one false claim in a manual read of nine. `prose#1` -- "The left
+    amygdala reached significance after applying a SVC (k = 29; -16, -2, -14; Z = 4.33)"
+    -- was declined as a duplicate of `4220#1`, a real listing key whose coordinates do
+    not include that peak. The peak appeared only under `prose#1` and `prose#3`, both
+    declined, so the finding left the record while every aggregate called the paper clean.
+
+    Both sides of this comparison are read off the stage-1 parse. The pass supplies the
+    key and the reason string; it is never asked to restate a coordinate, and the schema
+    has nowhere to put one if it did."""
+
+    doc = {
+        "analyses": [
+            {"table_id": "4220", "name": "Fear > neutral",
+             "points": [{"coordinates": [-22, -4, -18]}, {"coordinates": [40, 18, 2]}]},
+            {"table_id": "prose",
+             "points": [{"coordinates": [-16, -2, -14]}]},
+        ]
+    }
+    foci = render.listing_foci(doc)
+    listing = render.demandable_keys(doc)
+
+    assert foci["prose#1"] == frozenset({(-16, -2, -14)})
+
+    declined = {"analyses": [], "omitted": [
+        {"key": "prose#1", "reason": "duplicate_of: 4220#1"}]}
+    failures = render.unsupported_omissions(declined, listing, foci)
+    assert failures, "the target does not carry the peak"
+    assert "-16, -2, -14" in failures[0].replace("(", "").replace(")", "")
+
+    # and the claim stands where the target does carry them
+    wider = foci | {"prose#1": foci["4220#1"] | foci["prose#1"]}
+    kept = {"analyses": [], "omitted": [
+        {"key": "4220#1", "reason": "duplicate_of: prose#1"}]}
+    assert render.unsupported_omissions(kept, listing, wider) == []
+
+
+def test_a_shared_coordinate_is_not_proof_of_duplication() -> None:
+    """The check refutes; it does not confirm. The same peak can legitimately be reported
+    under several analyses -- a small-volume correction inside a region two contrasts both
+    probe lands in near-identical voxels by construction -- so containment holding says
+    only that the claim is not contradicted by the parse. Nothing here licenses reading a
+    passing `duplicate_of` as a verified one, and the reason text stays in `omitted` so a
+    reader can still go and look."""
+
+    doc = {
+        "analyses": [
+            {"table_id": "t1", "name": "Reward > neutral",
+             "points": [{"coordinates": [12, 10, -8]}]},
+            {"table_id": "t2", "name": "Loss > neutral",
+             "points": [{"coordinates": [12, 10, -8]}]},
+        ]
+    }
+    foci = render.listing_foci(doc)
+    assert foci["t1#1"] == foci["t2#1"]
+
+    # two distinct contrasts sharing a peak: the decline passes the guard, which is the
+    # point -- the guard is not the reader.
+    declined = {"analyses": [], "omitted": [{"key": "t1#1", "reason": "duplicate_of: t2#1"}]}
+    assert render.unsupported_omissions(declined, render.demandable_keys(doc), foci) == []
+
+
+def test_an_uncheckable_duplicate_is_still_allowed_through() -> None:
+    """A declined entry the parse found no coordinates under cannot be settled this way,
+    and refusing it would reject the `no_tested_effect` shape for the wrong reason."""
+
+    doc = {"analyses": [
+        {"table_id": "t1", "name": "A > B", "points": [{"coordinates": [1, 2, 3]}]},
+        {"table_id": "prose", "points": [{"coordinates": [1, 2, 3]}]},
+    ]}
+    foci = render.listing_foci(doc) | {"prose#1": frozenset()}
+    declined = {"analyses": [], "omitted": [{"key": "prose#1", "reason": "duplicate_of: t1#1"}]}
+    assert render.unsupported_omissions(declined, {"t1#1", "prose#1"}, foci) == []
