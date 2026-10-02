@@ -1193,6 +1193,45 @@ every arm is under 0.07 there, so that column is not a query problem. And the qu
 under the five-analysis floor for the arms and above it here only because the gold papers
 supply more of them.
 
+## Which fix is worth what, on this project
+
+Every criterion, removed one at a time, over the same 244 records:
+
+| criterion | gold papers it blocks | strict recall without it |
+|---|---|---|
+| **no pharmacological arm** | **46 of 76** | **61.8%** |
+| substance-use cohort | 11 | 26.3% |
+| gray matter measure | 11 | 25.0% |
+| between-group contrast | 10 | 22.4% |
+| structural modality | 9 | 26.3% |
+| standard space | 8 | 23.7% |
+| whole brain | 6 | 23.7% |
+| English language | 0 | 22.4% |
+
+One criterion is the project. Nothing else blocks more than 11 gold papers or moves recall
+by more than four points, and **a record whose design field is right takes strict recall
+from 22.4% to 61.8%** -- at 66.2% precision, down from 89.5%, which is the trade a
+criterion makes when it stops excluding half the gold.
+
+That 61.8% is a bound, not a measurement: it assumes the design field is right on every
+record, and the evidence for the assumption is the five papers re-extracted above, where
+the patched slot description produced `not_applicable` + `observational_cohorts` on five of
+five. Turning the bound into a number means re-extracting the project, which has not been
+done.
+
+What each fix is worth here, with what was measured for each:
+
+| fix | kind | what it did on substance use |
+|---|---|---|
+| read `is_healthy` in the cohort test | query | selection found 33 -> 53 of 74 gold; coordinate F1 0.476 -> 0.664 |
+| negated-naming on top of it | query | 53 -> 54 gold; F1 0.664 -> 0.665 |
+| `no pharmacological arm` from `Arm.arm_kind`, not `allocation` | query | strict 18.4% -> 22.4% recall, 87.5% -> 89.5% precision; permissive 23.7% -> **68.4%** |
+| the same criterion also reading `observational_cohorts` | query | +1 record on this corpus; 1 of 5 -> 4 of 5 answerable on re-extracted records |
+| `group_condition` reading the cohort's name | query | cohort test answers on 65 of 76 gold, was 64 |
+| **the `allocation` slot description** | **schema** | **5 of 5 re-extractions correct against 1 of 5 committed; the fix the table above prices at +39 points of recall** |
+| `Arm`/`Timepoint` declarable in `demands` | prompt | nothing on these papers, and correctly so: they administered nothing |
+| `Study.language` | schema + API | nothing: no substance-use paper is non-English |
+
 # Re-extracting five of the papers that have no arm
 
 The substance-use failure is one criterion -- "presence of pharmacological manipulations",
@@ -1298,3 +1337,299 @@ The five re-extracted records still do not pass strict screening, and what block
 the rest of this document: `Analysis.coordinate_space` empty on two, `spatial_scope` on
 one, no analyses at all on one, and `Study.language` missing because this harness did not
 run the PubMed backfill over them.
+
+## Is a pharmacological arm the right question?
+
+No -- the question is whether the study **administered a drug**, and an arm is one of the
+ways a record can say so. The predicate is now named for the question and reads:
+
+* an arm of kind `pharmacological` or `placebo` -> a drug was administered, exclude;
+* arms declared and none of them a drug -> a tDCS or a CBT arm is an administration and
+  not a pharmacological one, include;
+* `allocation: not_applicable` or `assignment_structure: observational_cohorts` -> nothing
+  was administered, include;
+* anything else that implies administration without naming it -- `randomized`,
+  `non_randomized`, `single_arm`, or a timepoint related to an intervention -> **cannot
+  say**.
+
+Three measurements decided that shape.
+
+**`Arm.agent` is not a drug test.** 202 arms name an agent and 89 of them are not drug
+arms: tDCS, cognitive behavioural therapy, Roux-en-Y gastric bypass, and two that name
+"cannabis" as the exposure defining a cohort. A reading that treats any named agent as a
+drug contradicts two gold papers, and both are record defects rather than drug studies --
+19531112 records "methadone maintenance treatment" as a pharmacological arm, which is the
+cohort's standing treatment and `medication_status`'s job, and 23190458 records "cannabis
+use" against "no cannabis use" as arms, which is an exposure and belongs in
+`observational_cohorts`.
+
+**Reading any administration as a manipulation is the original failure.** It contradicts
+**48 of the 76 gold papers**, because `allocation: non_randomized` is the stale wrong value
+on 45 of them.
+
+**`single_arm` was being read backwards.** Its gloss is "an open-label pre-post drug study
+is single-arm" -- something *was* administered -- and the predicate returned "nothing was
+administered" for it, on 274 records corpus-wide. Only one of them is in substance use, so
+no scored number moved, and it was wrong everywhere else it would have fired.
+
+What this leaves is a schema gap rather than a query one. Three different things land in
+`Arm` today and the criterion needs to tell them apart: a drug the study administered, a
+drug the cohort was already taking, and an exposure that defines the cohort. The schema
+already has homes for the second and third -- `Group.medication_status` and
+`assignment_structure: observational_cohorts` -- so the fix is not a new field but the
+`Arm` description saying that an arm is something the study gave, and neither of the other
+two.
+
+## Auditing the query before spending on extraction
+
+Before re-extracting anything, every criterion that blocks a substance-use gold paper was
+read against the record it blocked. Four of the six blocks were the query's fault and are
+fixed; each fix ran over all 1,817 records, not a sample, because none of them asks a model
+anything.
+
+| what was wrong | the paper that showed it | worth |
+|---|---|---|
+| `standard space` matched `mni\|talairach\|tal\b\|icbm` and not the spelled-out name | 18801475 says "Montreal Neurological Institute" and read as a third space | now reads through `normalization.coordinate_space`, which owns the lexicon |
+| the substance vocabulary had `cannabis` and not `marijuana`, `methamphetamine` and not `amphetamine` | 15607838 "marijuana group", 20817105 "amphetamine-type stimulant use", 21310189 "Heavy marijuana use" | the per-drug contrast specs already carried them, so the two halves of one query disagreed about what a substance is |
+| a value wrapped twice read as a silence | 22076160 holds `{"value": "contrast"}` with no `extraction_status` and lost its between-group test | `read` now unwraps twice; 30 cells in the corpus are shaped that way |
+| a bare `structural_morphometry` family read as "not grey matter" | records that name a family and no quantity | silence is not denial: it now reads as cannot say |
+
+And one criterion was dropped rather than fixed. "Only empirical English language MRI
+studies assessing GM volume differences" states MRI, and the grey-matter measure entails
+it -- nothing but MRI measures grey-matter volume -- while the modality test's own errors
+were records listing an fMRI acquisition for a paper that also ran VBM. Dropping it is
+worth 3.9 points of recall for 2.5 of precision.
+
+One candidate was measured and rejected: letting the grey-matter test admit
+`cortical_thickness` would buy 3.9 points of recall and cost 9 of precision, and the
+criterion says *volume*.
+
+Over the five projects, the four fixes and the dropped criterion move:
+
+| | strict recall/precision before | after |
+|---|---|---|
+| `vbm_of_ptsd` | 52.9% / 90.0% | unchanged |
+| `dementia` | 53.4% / 31.3% | 53.4% / 29.8% |
+| `cue_reactivity` | 81.4% / 30.1% | **84.3%** / 29.6% |
+| `vbm_of_substance_use` | 22.4% / 89.5% | **28.9%** / 88.0% |
+| `emotion_regulation_2022` | 43.7% / 28.6% | 43.7% / 28.1% |
+
+Permissive recall moves further: cue reactivity 95.0% to **98.6%**, substance use 68.4% to
+**76.3%**, emotion regulation 73.6% to 74.7%.
+
+# Re-extracting 150 substance-use papers
+
+The bound said a record whose design field is right would take strict recall from 22.4% to
+61.8%. This tests it: **76 gold papers and 74 non-gold**, re-extracted end to end with the
+patched schema and prompt, 90 workers, 25 minutes. Both sides are then PubMed-backfilled
+and scored by the same query, over the same 150 papers.
+
+| | strict recall / precision | permissive recall / precision |
+|---|---|---|
+| committed records | 28.9% / 91.7% | 76.3% / 76.3% |
+| **re-extracted** | **69.7%** / 86.9% | **78.9%** / 77.9% |
+
+**+40.8 points of strict recall for 4.8 of precision**, and above the 61.8% bound, because
+re-extraction fixed more than the design field. What each criterion blocks, over the 76
+gold papers:
+
+| criterion | committed | re-extracted |
+|---|---|---|
+| **no drug administered** | **46** | **3** |
+| gray matter measure | 11 | 12 |
+| between-group contrast | 10 | 9 |
+| whole brain | 6 | 7 |
+| standard space | 6 | 7 |
+| substance-use cohort | 6 | 4 |
+
+The design fields are why:
+
+| | committed | re-extracted |
+|---|---|---|
+| `not_applicable` / `observational_cohorts` | 0 | **134** |
+| `non_randomized` / `parallel` | 88 | 0 |
+| `not_applicable` / `parallel` | 37 | 0 |
+| something administered (`randomized`, `single_arm`) | 3 | 4 |
+| the design says nothing | 6 | 6 |
+
+134 of 150 records now carry the encoding the schema added for this design, against none
+before. The four that say something was administered are the plausible drug studies, and
+the criterion excludes them.
+
+**Three criteria got slightly worse**, and they are the ones this work did not touch:
+`whole brain` and `standard space` each block one more gold paper, and `gray matter
+measure` one more. Re-extraction is not uniformly better -- it is a fresh draw on the same
+model, and `Analysis.spatial_scope` and `coordinate_space` remain the gaps the rest of this
+document describes.
+
+What this does not measure is the map. The fresh records cover 150 of the project's 244
+papers, so rebuilding the query arm from them would mix two corpora; the honest version of
+that experiment is to re-extract the remaining 94 first.
+
+# The whole project re-extracted, and what it did to the map
+
+All 244 substance-use papers, re-extracted with the patched schema and prompt at 90
+workers -- the 150 above and the remaining 94, 20 minutes for the second batch, one paper
+needing a retry after the gateway refused a JSON-mode request. Both corpora are
+PubMed-backfilled and read by the same query.
+
+| | strict recall / precision | permissive |
+|---|---|---|
+| committed | 28.9% / 88.0% | 76.3% / 61.1% |
+| **re-extracted** | **69.7%** / 71.6% | 78.9% / 62.5% |
+
+**214 of 244 records now say `not_applicable` / `observational_cohorts`**, where none did
+before. Seven say something was administered -- three `randomized`, two `non_randomized`,
+two `single_arm` -- and those are the drug studies the criterion is for. Nine still say
+nothing about the design.
+
+The criterion that was the project is no longer it: **"no drug administered" blocks 3 of
+the 76 gold papers, down from 46.** What blocks gold now is what this document has said
+all along -- `gray matter measure` 12, `between-group contrast` 9, `whole brain` 7,
+`standard space` 7.
+
+## The map
+
+The query arm rebuilt from the re-extracted corpus: 50 studies and 94 analyses under
+strict, against 18 and 39 before, and close to the 52 and 97 the oracle gets from the gold
+list.
+
+| key | analyses | **query, strict (re-extracted)** | query, strict (committed) | query over gold papers | full text | record + evidence |
+|---|---|---|---|---|---|---|
+| alcohol | 34 | **0.346** | 0.024 | 0.505 | 0.493 | 0.390 |
+| all drug classes | 87 | 0.066 | 0.006 | 0.176 | **0.277** | 0.226 |
+| cannabis | 6 | **0.209** | -- | 0.285 | 0.011 | 0.004 |
+| nicotine | 27 | 0.042 | 0.003 | 0.000 | **0.069** | 0.041 |
+| opioids | 15 | **0.037** | -- | 0.012 | 0.004 | 0.006 |
+| stimulants | 25 | 0.022 | 0.024 | 0.082 | **0.090** | 0.077 |
+| **mean** | | **0.120** | 0.014 | 0.177 | 0.158 | 0.124 |
+
+**The map moves with the records: 0.014 to 0.120, and six columns mapped instead of
+four.** That is level with the record arms (0.124) and short of full text (0.158) and of
+the oracle (0.177) -- the remaining gap is the screening gate still losing 30% of the gold,
+not the contrast selection.
+
+**And permissive stops being the better choice.** It was 0.091 against strict's 0.014 on
+the committed corpus, because strict was starved; on the re-extracted one it is 0.075
+against 0.120. A permissive gate is worth having when the records cannot answer and is
+noise when they can, which is the clearest statement in this document of what the whole
+strict/permissive split was measuring.
+
+# The two arms that sit apart in figure 2c, and why
+
+Panel c of the record-arms funnel figure plots full-text screening as precision against
+recall, one line per project. The strict query is an outlier twice, in opposite
+directions.
+
+| | recall | precision | selected | of which gold |
+|---|---|---|---|---|
+| `vbm_of_ptsd`, query strict | 0.409 | **0.900** | 10 | 9 |
+| `vbm_of_ptsd`, full text | 0.727 | 0.593 | 27 | 16 |
+| `dementia`, query strict | 0.425 | **0.316** | 98 | 31 |
+| `dementia`, full text | 0.849 | 0.395 | 157 | 62 |
+
+**PTSD is an outlier in the good direction**: it selects ten papers and nine are gold. The
+cost is recall, and the cause is one criterion -- `adults` cannot be answered on 21 of the
+50 records, 7 of them gold.
+
+**Dementia is an outlier in the bad direction**, below every model arm on both axes, and
+part of that was the query's fault. Two criteria the review states were not implemented:
+
+* criterion (1) excludes bvFTD patients "with no concurrent psychiatric diagnosis (e.g.,
+  major depressive disorder and bipolar mood disorder), other forms of dementia or
+  neurological symptoms, and no history of alcohol and substance abuse". That comorbidity
+  marks **31 non-gold records against 2 gold**. The reading has to be narrow -- the
+  exclusion is about the patients, not the study, and 25 of the review's own gold papers
+  compare bvFTD against another diagnosed cohort. Precision 31.6% -> 32.3%, recall
+  unchanged.
+* the exclusion list's "2) No Control". Precision 32.3% -> **35.4%**, for 2 gold papers.
+
+Dementia strict moves to 0.397 / 0.354: right, not up. What is left is not the query.
+
+## Both outliers are the same missing thing, and it is not the schema, the prompt or the query
+
+The two criteria that block them -- `adults` on PTSD, `between-group contrast` and
+`standard space` on dementia -- are answered by material that lives in tables. So 17 of
+those blocked gold papers were re-extracted with today's pipeline to see whether it fills
+them. **Dementia: 4 of 9 contrast blocks now answer. PTSD: 1 of 7.**
+
+PTSD's records were not being coy. `12853571` says `age_mean: not_reported` on every
+cohort while filling `age_unit: years`, and its rendered text contains no age at all,
+because **`processed/local/tables.jsonl` for that paper is zero bytes**. The demographics
+are in a table the corpus never parsed, so the model answered correctly about a document
+that does not contain the answer.
+
+How often that is true, per project, against the query's own strict recall:
+
+| project | records with no parsed tables | query strict recall |
+|---|---|---|
+| `vbm_of_substance_use` | 25.0% | 67.1% |
+| `cue_reactivity` | 28.2% | 59.7% |
+| `emotion_regulation_2022` | 52.8% | 43.7% |
+| `vbm_of_ptsd` | 58.0% | 40.9% |
+| `dementia` | 68.5% | 39.7% |
+
+**Pearson r = -0.97 over the five projects.** The two outliers in figure 2c are the two
+projects whose corpus most often has no tables, and the ordering of all five follows the
+table rate rather than anything about the criteria. No schema slot, prompt sentence or
+predicate fixes that: the text handed to the extractor does not contain what the criterion
+asks about. The fix is the corpus build -- parse the tables into the render -- and it sits
+upstream of everything this document has measured.
+
+# The tables were downloaded and then dropped
+
+`12853571`'s record says `age_mean: not_reported` on every cohort, and the reason is not
+the model: its rendered text contains no age. Its provenance says `route: ace`,
+`n_tables: 0` -- and its saved journal page is 520 KB and holds two `<table>` elements,
+the first being the demographics table headed "PTSD (n = 9) / non-PTSD (n = 16)". The
+article downloaded. The build dropped the tables, because the ACE route takes them from
+ACE's export and the export has no rows for that paper.
+
+How far that reaches, over the 829 corpus records with no tables:
+
+| route | records | a saved page exists | the page has a `<table>` |
+|---|---|---|---|
+| **ace** | **350** | **350** | **220** |
+| pubget_text | 272 | 0 | -- |
+| ace_text | 163 | 0 | -- |
+| elsevier | 24 | 0 | -- |
+| pmc | 20 | 0 | -- |
+
+220 papers have their tables in a file the builder never reads. The other 459 came through
+text-only exports with no page at all, which is a different problem and a real one.
+
+## The fix, and the proof that it is the right one
+
+`build_corpus.page_table_blocks` parses the page's own tables when ACE's export yields
+none, keeping only tables of at least two rows and two columns -- a journal page is full
+of navigation and affiliation tables -- and taking each label from the "Table 1." the page
+prints above it.
+
+`scripts/recover_page_tables.py` applies that to a corpus that already exists, and
+**appends** rather than re-renders. Re-rendering is what `build_ace` would do and it moves
+every character offset in every record already extracted against that text; appending the
+`## Tables` section to the end leaves the body untouched and puts the tables where the
+build would have put them.
+
+Seven PTSD gold papers whose `adults` criterion could not be answered, run three ways --
+as committed, re-extracted from the corpus as it is, and re-extracted after the repair:
+
+| paper | tables recovered | committed | re-extracted | **after the repair** |
+|---|---|---|---|---|
+| 12853571 | 1 | cannot say | cannot say | **yes** |
+| 16038682 | 2 | cannot say | yes | yes |
+| 17923164 | 3 | cannot say | cannot say | **yes** |
+| 17825801 | none | cannot say | cannot say | cannot say |
+| 19794316 | none | cannot say | cannot say | cannot say |
+| 19942229 | none | cannot say | cannot say | cannot say |
+| 22453299 | none | cannot say | cannot say | cannot say |
+
+**Every paper whose tables were recovered now answers the criterion, and every paper whose
+page has no table still cannot.** That is the whole causal chain, end to end: the build
+drops a table, the age becomes invisible, the criterion cannot be answered, and the
+project's strict recall is capped at 41% with 90% precision. Restore the table and the
+criterion answers.
+
+The repair has not been run over the shared corpus -- it was tested on a copy of the seven
+papers. Running it would touch 220 papers across the five projects, and the papers it
+cannot help are the ones whose page genuinely has no table.

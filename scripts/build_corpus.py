@@ -24,6 +24,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -237,6 +238,61 @@ def build_ace_text(pmid: str, text_rows: dict[str, dict],
     return text, manifest
 
 
+#: A saved journal page is full of tables that are not the paper's: navigation, author
+#: affiliations, a single-cell figure wrapper. A real one has at least two rows and two
+#: columns, and the ones this recovers are the demographics and results tables.
+MIN_TABLE_ROWS, MIN_TABLE_COLUMNS = 2, 2
+
+_TABLE_LABEL = re.compile(r"\b(table\s+[0-9IVX]+)", re.I)
+
+
+def page_table_blocks(raw: str) -> tuple[list[str], list[dict]]:
+    """The tables in the saved page itself, for a paper ACE parsed none for.
+
+    ACE's export is the first source and this is the fallback, because the export is
+    parsed and labelled and this is scraped. It exists because the export is empty for
+    350 of the corpus's ACE-route papers while their saved pages are not: 220 of those
+    pages carry a `<table>`, and on `12853571` the first one is the demographics table
+    whose absence made `Group.age_minimum` unanswerable and cost the PTSD query 7 of its
+    17 gold papers.
+    """
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(raw, "lxml")
+    blocks: list[str] = []
+    manifest: list[dict] = []
+    for index, table in enumerate(soup.find_all("table"), start=1):
+        rows = [[cell.get_text(" ", strip=True) for cell in tr.find_all(["td", "th"])]
+                for tr in table.find_all("tr")]
+        rows = [r for r in rows if any(r)]
+        widest = max((len(r) for r in rows), default=0)
+        if len(rows) < MIN_TABLE_ROWS or widest < MIN_TABLE_COLUMNS:
+            continue
+        body = html_table_to_markdown(str(table))
+        if not body:
+            continue
+        caption_tag = table.find("caption")
+        caption = caption_tag.get_text(" ", strip=True) if caption_tag else None
+        # The label is rarely inside the element. Journal pages print "Table 1." just
+        # above it, which is also what the paper's prose cites.
+        near = table.find_previous(string=_TABLE_LABEL)
+        label = _TABLE_LABEL.search(str(near)).group(1).title() if near else None
+        if caption is None and near is not None:
+            around = getattr(near, "parent", None)
+            text = around.get_text(" ", strip=True) if around is not None else str(near)
+            caption = text[:400].strip() or None
+        blocks.append(table_block(label or f"Table {index}", caption, body, None))
+        manifest.append({
+            "table_id": f"page{index}",
+            "table_number": label,
+            "caption": caption,
+            "footer": None,
+            "contains_coordinates": None,
+            "metadata": {"table_label": label, "data_path": "", "source": "saved page"},
+        })
+    return blocks, manifest
+
+
 def build_ace(pmid: str, html_path: Path, ace_tables: dict[str, list[dict]],
               tables_root: Path) -> tuple[str, list[dict]]:
     """A journal page, so the article has to be found before it can be converted.
@@ -267,6 +323,8 @@ def build_ace(pmid: str, html_path: Path, ace_tables: dict[str, list[dict]],
     text = "\n\n".join(lines)
 
     blocks, manifest = ace_table_blocks(pmid, ace_tables, tables_root)
+    if not blocks:
+        blocks, manifest = page_table_blocks(raw)
     if blocks:
         text = text.rstrip() + "\n\n## Tables\n\n" + "\n\n".join(blocks) + "\n"
     return text, manifest
