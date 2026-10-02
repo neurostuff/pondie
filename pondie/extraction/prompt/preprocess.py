@@ -23,8 +23,9 @@ by a repo whose dependency list is three packages.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from pondie.formats import parse_keys
 
@@ -600,6 +601,27 @@ def prose_parse_entries(text: str, known: Iterable[tuple[float, float, float]] =
             }
         )
     return entries
+
+
+def prose_signature(entry: Mapping[str, Any]) -> tuple:
+    """What makes two prose parse entries the same entry.
+
+    The sentence and the coordinates it states, which is everything a reader -- or a model
+    looking at the listing -- has to tell two entries apart by. `also_in_table` is excluded
+    deliberately: it is a fact about the rest of the parse, not about this sentence, and two
+    entries differing only in it are indistinguishable in the listing and in the paper.
+    """
+    return (
+        _wrap_ws(entry.get("description") or ""),
+        tuple(
+            tuple(point.get("coordinates") or ())
+            for point in (entry.get("points") or [])
+        ),
+    )
+
+
+def _wrap_ws(text: str) -> str:
+    return " ".join((text or "").split())
 
 
 def _mark(points: list[dict], found) -> list[dict]:

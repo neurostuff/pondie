@@ -39,7 +39,7 @@ from pondie.extraction.parse import TableParse
 from pondie.extraction.sign_split import adopt_withholding, split_opposite_signs
 from pondie.extraction.record.ids import table_local_id
 from pondie.extraction.prompt import preprocess, render, worked
-from pondie.formats import table_parse, text_index, values
+from pondie.formats import parse_keys, table_parse, text_index, values
 from pondie.schema import reader
 
 #: Written into every record's `extraction_metadata`, so a record says which pipeline made
@@ -238,6 +238,16 @@ class ProseFoci(_Base):
     """Append coordinates the paper states in prose and not in tables.
 
     Note: this could still miss legitimate analyses that report the same coordinates.
+
+    The append is BY SIGNATURE, because this is the one stage that writes a corpus input
+    and `--redo` asks it to run again. It was an unconditional extend, so every re-run
+    added another copy of every prose sentence to the file and no run ever took one away:
+    24760016 reached 12 entries for 2 distinct sentences, 25451388 15 for 3, 20147457 5
+    for 1. The damage is not just size. The listing then shows six identical rows that a
+    pass must account for one by one, which is what the `duplicate_of:prose#N` chains in
+    those records are, and one of those chains hid a real false claim -- the entry's own
+    coordinates were the only way to tell the copies apart and the listing truncated them
+    away. Idempotent here; `pondie normalize prose-foci` takes the copies back out.
     """
 
     name: StageName = StageName.prose_foci
@@ -261,7 +271,19 @@ class ProseFoci(_Base):
             paper.text.read_text(encoding="utf-8", errors="replace"),
             parse.coordinates,
         )
-        parse.document["analyses"] = [*before, *entries]
+        held = {
+            preprocess.prose_signature(entry)
+            for entry in before
+            if entry.get("table_id") == parse_keys.PROSE_TABLE_ID
+        }
+        fresh = []
+        for entry in entries:
+            signature = preprocess.prose_signature(entry)
+            if signature in held:
+                continue
+            held.add(signature)
+            fresh.append(entry)
+        parse.document["analyses"] = [*before, *fresh]
         parse.document["prose_foci_applied"] = True
         parse.save()
         return StageOutcome(
@@ -269,8 +291,13 @@ class ProseFoci(_Base):
             study_id=paper.study_id,
             produced=(paper.parse,),
             notes=(
-                f"{len(entries)} prose coordinate sentence(s) appended "
-                f"to {len(before)} parsed",
+                f"{len(fresh)} prose coordinate sentence(s) appended "
+                f"to {len(before)} parsed"
+                + (
+                    f"; {len(entries) - len(fresh)} already held"
+                    if len(fresh) != len(entries)
+                    else ""
+                ),
             ),
         )
 

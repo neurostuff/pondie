@@ -225,9 +225,14 @@ class GatewayCaller:
             )
         if isinstance(last, MalformedReply):
             raise last
+        # `from last` chains the cause, and the CLI prints `str(error)`, so the chain was
+        # invisible: a gateway 400 -- a model name the account cannot reach, a parameter it
+        # rejects -- surfaced as `1 attempt(s) failed` and took two further runs at debug to
+        # read off the wire. The reason belongs in the message that gets printed.
         raise RuntimeError(
             f"{stage} for {paper}: {call.attempts} attempt(s) failed"
             + (f" after {unreachable} that never reached the provider" if unreachable else "")
+            + (f": {type(last).__name__}: {str(last)[:400]}" if last else "")
         ) from last
 
 

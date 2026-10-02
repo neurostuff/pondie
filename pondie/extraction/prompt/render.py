@@ -36,9 +36,10 @@ from typing import Any
 from pondie import paths, schema
 from pondie.extraction.models import Prompt
 
-# `preprocess` for the
-# deterministic text transforms selected by --preprocess.
-from pondie.extraction.prompt import worked
+# `preprocess` for `prose_signature`: what makes two prose parse entries the same entry
+# is the parser's own business, and the listing must collapse by the same rule the append
+# refuses to duplicate by, or the two disagree about what a row is.
+from pondie.extraction.prompt import preprocess, worked
 from pondie.extraction.record import ids
 from pondie.formats.values import read as read_value
 from pondie.extraction.record.fix import shape
@@ -128,6 +129,37 @@ def mode_classes(sch: Schema, mode: str) -> tuple[set[str], list[str]]:
 
 def _wrap(text: str) -> str:
     return re.sub(r"\s+", " ", (text or "")).strip()
+
+
+def _foci(points: Sequence[Mapping[str, Any]]) -> str:
+    """The coordinates a listing row covers, as the row's own identity.
+
+    A row used to show `10 foci`: a count. That is enough to emit an analysis for and not
+    enough to decide anything ABOUT the row, and `duplicate_of:<key>` asks for exactly
+    that. 24760016 declined `prose#1` -- "The left amygdala reached significance after
+    applying a SVC (k = 29; -16, -2, -14; Z = 4.33)" -- as a duplicate of `4220#1`, which
+    holds ten coordinates and not that one. The claim was wrong and it was also
+    unanswerable: nothing on the page said what `4220#1` contained.
+
+    A prose row did show its numbers, but only by accident -- they sat inside the sentence,
+    and the sentence was cut at 150 characters. 21 of 34 prose entries over the papers
+    measured lost their coordinate to the cut, 25451388 losing all three of its distinct
+    sentences': `'...applying a SVC ( k = 25; 28'`. So the one row type whose coordinates
+    were visible lost them whenever they fell late in a long sentence.
+
+    Printing them is what makes a decline about this row checkable by the reader who has to
+    make it. Measured at roughly 9 tokens a focus against an input price of $0.05/M.
+    """
+
+    shown = []
+    for point in points:
+        coordinates = point.get("coordinates") or ()
+        if len(coordinates) != 3:
+            continue
+        shown.append(
+            "(" + ", ".join(f"{float(v):g}" for v in coordinates) + ")"
+        )
+    return " ".join(shown) if shown else "none parsed"
 
 
 def enum_of(sch: Schema, range_name: str):
@@ -332,12 +364,47 @@ def demandable_keys(stage1: Mapping[str, Any]) -> set[str]:
     for itself.
     """
 
+    return {key for key, entry in listing_entries(stage1) if entry.get("points")}
+
+
+def listing_entries(stage1: Mapping[str, Any]) -> list[tuple[str, dict]]:
+    """(key, entry) for every row the listing prints, in order.
+
+    One function because `demandable_keys` and `stage1_block` must agree on what was
+    SHOWN -- a post-condition demanding a row the pass never saw is unfair, and a row shown
+    without being demandable is a silent decline. They agreed by both open-coding the same
+    filter, which held until a third rule arrived.
+
+    The third rule is the collapse. `ProseFoci` writes into the corpus parse and `--redo`
+    ran it again, so a paper accumulated one copy of every prose sentence per re-run:
+    24760016 held 12 entries for 2 distinct sentences, 25451388 15 for 3, 20147457 5 for 1.
+    A pass then had to account for six identical rows one at a time, which is what the
+    `duplicate_of:prose#N` chains in those records are -- bookkeeping over a listing that
+    repeated itself, and cover for one claim that was actually false. The stage is
+    idempotent now, but the corpus is shared and an older checkout can still append, so the
+    reader collapses rather than trusting the writer.
+
+    First copy wins, which keeps the surviving keys the low ones: the duplicates are always
+    appended after the block they duplicate, so a paper with k distinct sentences keeps
+    `prose#1..#k` and nothing a record already points at is renumbered.
+    """
+
     every = stage1.get("analyses") or []
-    return {
-        key
-        for key, entry in zip(parse_keys.parse_keys(every), every)
-        if not entry.get("withhold") and (entry.get("points") or [])
-    }
+    rows: list[tuple[str, dict]] = []
+    held: set[tuple] = set()
+    for key, entry in zip(parse_keys.parse_keys(every), every):
+        if entry.get("withhold"):
+            continue
+        # Only an entry with coordinates has a signature worth comparing: a parsed table
+        # that yielded no points has an empty one, and several distinct such tables in a
+        # paper would collapse into one row.
+        if entry.get("points"):
+            signature = (entry.get("table_id"), entry.get("name"), preprocess.prose_signature(entry))
+            if signature in held:
+                continue
+            held.add(signature)
+        rows.append((key, entry))
+    return rows
 
 
 def stage1_block(
@@ -363,9 +430,7 @@ def stage1_block(
     # Keys are computed over the FULL parse and the withheld entries dropped afterwards,
     # so hiding one does not renumber its siblings. `parse_keys.parse_keys` explains why
     # a shifted key is worse than a missing one.
-    every = stage1.get("analyses") or []
-    keyed = list(zip(parse_keys.parse_keys(every), every))
-    shown = [(key, a) for key, a in keyed if not a.get("withhold")]
+    shown = listing_entries(stage1)
     if not shown:
         return ""
     analyses = [a for _key, a in shown]
@@ -488,7 +553,9 @@ def stage1_block(
                 f"   [parse key: {key_by_index[number]}]"
             )
             if analysis.get("description"):
-                lines.append(f"       ({_wrap(analysis['description'])[:150]})")
+                lines.append(f"       ({_wrap(analysis['description'])[:220]})")
+            if points:
+                lines.append(f"       foci: {_foci(points)}")
     return "\n".join(lines) + "\n"
 
 

@@ -1359,3 +1359,30 @@ def test_a_model_answer_in_a_deterministic_slot_is_overwritten(tmp_path):
     assert record["groups"][0]["is_healthy"]["value"] is False
     assert record["groups"][0]["is_healthy"]["value_source"] == "generated"
     assert tallies["is_healthy"]["overruled"] == 1
+
+
+def test_rerunning_the_prose_pass_does_not_append_the_sentences_again(tmp_path):
+    """`ProseFoci` is the one stage that writes a CORPUS INPUT, and `--redo` asks it to run
+    again. The append was unconditional, so each re-run added another copy of every prose
+    sentence and no run ever took one away: 24760016 reached 12 entries for 2 distinct
+    sentences, 25451388 15 for 3, 20147457 5 for 1.
+
+    The size was the lesser harm. The listing then showed six identical rows a pass had to
+    account for one at a time, which is what the `duplicate_of:prose#N` chains in those
+    records are -- and one of those chains was cover for a claim that was false."""
+
+    paper = _paper(tmp_path)
+    paper.text.write_text(
+        "### RESULTS\nThe left amygdala reached significance after applying a "
+        "SVC ( k = 29; -16, -2, -14 [x, y, z]; Z = 4.33).\n"
+    )
+    settings = _settings(tmp_path, stages=(StageName.prose_foci,), redo=True)
+
+    counts = []
+    for _ in range(3):
+        assert run([paper], settings, Recorder()).failures == ()
+        held = json.loads(paper.parse.read_text())["analyses"]
+        counts.append(sum(1 for a in held if a.get("table_id") == "prose"))
+
+    assert counts[0] >= 1, "the sentence states a coordinate and must be found"
+    assert counts == [counts[0]] * 3, f"re-runs appended: {counts}"

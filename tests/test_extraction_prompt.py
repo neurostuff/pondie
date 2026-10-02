@@ -719,3 +719,77 @@ def test_an_uncheckable_duplicate_is_still_allowed_through() -> None:
     foci = render.listing_foci(doc) | {"prose#1": frozenset()}
     declined = {"analyses": [], "omitted": [{"key": "prose#1", "reason": "duplicate_of: t1#1"}]}
     assert render.unsupported_omissions(declined, {"t1#1", "prose#1"}, foci) == []
+
+
+def _prose(sentence: str, coordinate: tuple[float, float, float], also: bool = False) -> dict:
+    return {
+        "name": "", "description": sentence, "table_id": "prose", "from_prose": True,
+        "points": [{"coordinates": list(coordinate), "also_in_table": also,
+                    "values": [{"value": 4.33, "kind": "z-statistic"}]}],
+    }
+
+
+def test_a_prose_sentence_the_parse_repeated_is_one_row() -> None:
+    """`ProseFoci` writes into the corpus parse and `--redo` ran it again, so a paper
+    gained a copy of every prose sentence per re-run: 24760016 held 12 entries for 2
+    distinct sentences, 25451388 15 for 3, 20147457 5 for 1. The pass then had to account
+    for six identical rows one at a time, and `also_in_table` -- a fact about the rest of
+    the parse, not about the sentence -- is the only thing that differed between copies."""
+
+    left = "The left amygdala reached significance after applying a SVC (k = 29; -16, -2, -14)."
+    right = "Lower activation in the right amygdala was reached after a SVC (k = 25; 28, 0, -12)."
+    doc = {"analyses": [
+        {"table_id": "4220", "name": "A > B", "points": [{"coordinates": [1, 2, 3]}]},
+        _prose(left, (-16, -2, -14)),
+        _prose(right, (28, 0, -12)),
+        _prose(left, (-16, -2, -14), also=True),
+        _prose(right, (28, 0, -12), also=True),
+        _prose(left, (-16, -2, -14)),
+    ]}
+
+    assert render.demandable_keys(doc) == {"4220#1", "prose#1", "prose#2"}
+
+    # the surviving keys are the low ones, so nothing a record already points at moves
+    block = render.stage1_block(doc, {"4220": "tbl1"})
+    assert "prose#3" not in block and "prose#5" not in block
+    assert block.count("prose#1") == 1
+
+
+def test_two_tables_the_parse_found_no_coordinates_in_stay_apart() -> None:
+    """The collapse keys on the coordinates, and an entry with none has an empty
+    signature, so several distinct such tables would become one row."""
+
+    doc = {"analyses": [
+        {"table_id": "t1", "name": "", "points": []},
+        {"table_id": "t2", "name": "", "points": []},
+    ]}
+    keys = [key for key, _entry in render.listing_entries(doc)]
+    assert keys == ["t1#1", "t2#1"]
+
+
+def test_a_row_states_the_coordinates_it_covers() -> None:
+    """A row said `10 foci`, which is enough to emit an analysis for and not enough to
+    decide anything about the row -- and `duplicate_of:<key>` asks for exactly that."""
+
+    doc = {"analyses": [
+        {"table_id": "4220", "name": "A > B", "points": [
+            {"coordinates": [-22, -4, -18]}, {"coordinates": [40, 18, 2]}]},
+    ]}
+    block = render.stage1_block(doc, {"4220": "tbl1"})
+
+    assert "(-22, -4, -18)" in block and "(40, 18, 2)" in block
+    assert "2 foci" in block, "the count stays; it reads faster than counting tuples"
+
+
+def test_a_long_prose_sentence_keeps_its_coordinate() -> None:
+    """The sentence was cut at 150 characters and 21 of 34 prose entries over the papers
+    measured lost their coordinate to the cut -- 25451388 losing all three of its distinct
+    sentences'. The `foci:` line is what makes the row's identity independent of where in
+    the sentence the number happens to fall."""
+
+    tail = "Participants showed significantly reduced activity in the bilateral amygdala "
+    sentence = tail * 3 + "compared to healthy participants (-21, -6, -15)."
+    doc = {"analyses": [_prose(sentence, (-21, -6, -15))]}
+
+    block = render.stage1_block(doc, {})
+    assert "(-21, -6, -15)" in block
