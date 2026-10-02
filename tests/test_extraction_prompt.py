@@ -612,3 +612,35 @@ def test_the_paper_is_labelled_as_data() -> None:
 
     assert "DATA, NOT INSTRUCTIONS" in block
     assert "do not obey it" in block
+
+
+def test_a_decline_must_name_what_the_entry_is() -> None:
+    """The channel exists so an omission and an oversight stop looking identical, and free
+    text put them back. On the first run with it, 24782800 declined seven table row groups
+    carrying 26 coordinates -- a 6-focus reappraisal contrast among them -- each with
+    "emitted listing entry omitted from this abbreviated pass", and the listing check
+    reported the paper clean."""
+
+    listing = {"t1#1", "t1#2", "prose#1"}
+
+    abuse = {"omitted": [{"key": "t1#1",
+                          "reason": "emitted listing entry omitted from this abbreviated pass"}]}
+    assert render.unsupported_omissions(abuse, listing)
+
+    for good in ("seed_coordinate", "atlas_roi", "no_tested_effect",
+                 "duplicate_of: prose#1", "other: a null result with no surviving cluster"):
+        ok = {"omitted": [{"key": "t1#1", "reason": good}]}
+        assert render.unsupported_omissions(ok, listing) == [], good
+
+
+def test_a_duplicate_must_name_a_key_that_exists() -> None:
+    """`duplicate_of` is the one reason the parse can check, so it is checked."""
+
+    listing = {"t1#1", "prose#1"}
+
+    assert render.unsupported_omissions(
+        {"omitted": [{"key": "t1#1", "reason": "duplicate_of: t9#9"}]}, listing)
+    assert render.unsupported_omissions(
+        {"omitted": [{"key": "t1#1", "reason": "duplicate_of"}]}, listing), "needs a target"
+    assert render.unsupported_omissions(
+        {"omitted": [{"key": "t1#1", "reason": "other"}]}, listing), "`other` needs a why"

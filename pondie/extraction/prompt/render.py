@@ -248,10 +248,11 @@ Reported in PROSE and in no table — proposals, not parse output
   peak quoted from another study to compare against.
 
   ACCOUNT FOR EVERY ONE, on the same terms as a table row group. Emit an analysis for a
-  result the paper reports, and for anything else add it to `omitted` with the reason --
-  "seed coordinate", "atlas ROI", "peak cited from another paper". Declining is expected
-  here and is not a failure; declining SILENTLY is, because a sentence left unmentioned is
-  indistinguishable from one overlooked.
+  result the paper reports, and for anything else add it to `omitted` with a reason from
+  the closed list above -- `seed_coordinate` and `duplicate_of:<key>` are the two these
+  sentences most often need. Declining is expected here and is not a failure; declining
+  SILENTLY is, because a sentence left unmentioned is indistinguishable from one
+  overlooked.
 
   These entries have NO table. OMIT `tables` for an analysis you emit from one -- there
   is nothing to point at, and a made-up id dangles. `source_table_analysis` is still
@@ -402,9 +403,27 @@ def stage1_block(
         "",
         "OMITTING IS RECORDED, NOT SILENT. When you omit a listing entry under one of the",
         "rules above, add it to a top-level `omitted` list as",
-        '`{\"key\": \"<parse key>\", \"reason\": \"<why>\"}`. An omission and an oversight look',
-        "identical in the output otherwise, so a listing entry that is neither emitted nor",
-        "recorded here is treated as an oversight and the pass is asked again for it.",
+        '`{\"key\": \"<parse key>\", \"reason\": \"<one of the below>\"}`. An omission and an',
+        "oversight look identical in the output otherwise, so a listing entry that is",
+        "neither emitted nor recorded here is treated as an oversight and asked for again.",
+        "",
+        "THE REASON IS A CLOSED LIST, and each value is a claim about the ENTRY that a",
+        "reader can check against the paper:",
+        "",
+        "  seed_coordinate          a connectivity seed, a sphere centre",
+        "  atlas_roi                an ROI taken from an atlas",
+        "  roi_definition           the table defines regions rather than testing an effect",
+        "  component_map            an ICA or PCA component presented descriptively",
+        "  localizer                localizer coordinates, per subject or per session",
+        "  cited_from_other_paper   a peak quoted from another study to compare against",
+        "  no_tested_effect         demographics, a stimulus list, descriptive means, no test",
+        "  duplicate_of:<parse key> the same result already emitted under that key",
+        "  other:<why>              none of the above fits; say what it is",
+        "",
+        "A reason that describes what YOU did rather than what the entry IS -- for brevity,",
+        "abbreviated, omitted from this pass -- is refused and the entry asked for again.",
+        "On the first run with this channel one paper declined seven table row groups",
+        "carrying 26 coordinates that way, including a 6-focus reappraisal contrast.",
         "",
         "`source_table_analysis` is REQUIRED on every entry you emit here: copy the",
         "bracketed `[parse key: ...]` of the listing entry you emitted it for, verbatim. It",
@@ -832,6 +851,73 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
     return Prompt(system=system, user=user)
 
 
+#: Why a listing entry may be declined. CLOSED, because the free-text version was abused
+#: on the first run that had it: 24782800 declined seven table row groups carrying 26
+#: coordinates -- `Emotion regulation > Passive viewing (young)` at 6 foci, `Reappraisal >
+#: Selective Attention (Older)` at 6 -- every one with the reason "emitted listing entry
+#: omitted from this abbreviated pass". That is a statement about the pass, not about the
+#: entry, and `unconsumed_listing` reported the paper clean.
+#:
+#: Each value is a claim about the ENTRY that a reader can check against the paper. The
+#: eight legitimate declines on that run were all `seed_coordinate` or a duplicate.
+OMIT_REASONS = (
+    "seed_coordinate",
+    "atlas_roi",
+    "roi_definition",
+    "component_map",
+    "localizer",
+    "cited_from_other_paper",
+    "no_tested_effect",
+    "duplicate_of",
+    "other",
+)
+
+#: `duplicate_of` and `other` carry a payload after a colon: the parse key duplicated, or
+#: the reason there is no value for. The key is checked; the free text is not, and an
+#: `other` is a decline nobody has vetted -- the payload keeps it, so auditing them is a
+#: query over `omitted` rather than a thing this check can settle.
+_QUALIFIED = ("duplicate_of", "other")
+
+
+def unsupported_omissions(payload: Mapping[str, Any], listing: Collection[str]) -> list[str]:
+    """Declines whose reason is not a checkable claim about the entry.
+
+    The channel exists so an omission and an oversight stop looking identical. A reason
+    outside `OMIT_REASONS` puts them back: it satisfies the listing check while saying
+    nothing a reader could verify.
+    """
+
+    bad: list[str] = []
+    for entry in payload.get("omitted") or []:
+        if not isinstance(entry, Mapping):
+            continue
+        key = str(entry.get("key") or "")
+        raw = str(entry.get("reason") or "").strip()
+        head, _, rest = raw.partition(":")
+        head = head.strip()
+        if head not in OMIT_REASONS:
+            bad.append(
+                f"{key!r} is declined with {raw[:60]!r}, which is not one of "
+                f"{', '.join(OMIT_REASONS)}"
+            )
+            continue
+        if head in _QUALIFIED and not rest.strip():
+            bad.append(f"{key!r} is declined with {head!r} and nothing after the colon")
+            continue
+        if head == "duplicate_of" and listing and rest.strip() not in listing:
+            bad.append(
+                f"{key!r} is declined as a duplicate of {rest.strip()!r}, "
+                f"which is not a listing key"
+            )
+    if not bad:
+        return []
+    return [
+        f"{len(bad)} omission(s) give no checkable reason: " + "; ".join(bad[:4])
+        + (f" and {len(bad) - 4} more" if len(bad) > 4 else "")
+        + ". A decline is a claim about the ENTRY -- what it is, not what the pass did."
+    ]
+
+
 def unconsumed_listing(payload: Mapping[str, Any], listing: Collection[str]) -> list[str]:
     """Listing entries the pass neither emitted an analysis for nor recorded as omitted.
 
@@ -1014,6 +1100,7 @@ def postcondition_failures(
         if mode == "demands":
             failures.extend(vacuous_entity_demands(payload))
             failures.extend(unconsumed_listing(payload, listing))
+            failures.extend(unsupported_omissions(payload, listing))
             failures.extend(unreachable_entity_demands(payload))
         failures.extend(unreachable_term_demands(payload))
     else:
