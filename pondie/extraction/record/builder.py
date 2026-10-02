@@ -50,7 +50,12 @@ EXTRACTION_SCHEMA = schema.EXTRACTION
 
 
 # Keys that are extractor scaffolding, not schema content.
-_SCAFFOLDING = {"cross_reference_notes"}
+#
+# `omitted` is the demands pass's record of listing entries it dropped on purpose, which
+# `render.unconsumed_listing` reads to tell an omission from an oversight. It is kept in
+# the payload because that is where the reasoning is auditable, and kept out of the record
+# because the schema has no slot for "an analysis this paper does not have".
+_SCAFFOLDING = {"cross_reference_notes", "omitted"}
 
 # Payload filename holding local_id reconciliation, excluded from the merge.
 _ALIAS_FILE = "aliases.json"

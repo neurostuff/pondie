@@ -31,6 +31,7 @@ from typing import Any, Mapping, MutableMapping
 
 from pondie.extraction.evidence.retrieval import sectionize
 from pondie.extraction.models import ModelCall
+from pondie.extraction.prompt import render
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record.validate import EXTRACTION_SCHEMA, Validator
 from pondie.extraction.repair import guard as edit_module
@@ -179,12 +180,14 @@ def adjudicate(
     reply = caller(
         ModelCall(
             model=model,
-            system=ADJUDICATION_SYSTEM,
+            # Paper in the system half; only the cases vary between calls. See the note
+            # in `propose_with_extractor._generate`.
+            system=f"{ADJUDICATION_SYSTEM}\n\n{render.paper_block(text)}",
             effort="low",
             max_output_tokens=4_000,
             service_tier=service_tier,
             prompt=(
-                f"## Paper\n\n{text}\n\n## Cases\n\n{listing}\n\n"
+                f"## Cases\n\n{listing}\n\n"
                 'Reply as {"resolutions": [{"id": ..., "value": ..., '
                 '"quote": ...}]}, using the case id verbatim and an empty quote '
                 "for anything unresolved."

@@ -75,20 +75,24 @@ class ModelProposer(_Proposes):
         self, template: Mapping[str, Any], instruction: str, premise: str, what: str = ""
     ) -> Mapping[str, Any]:
         """One templated generation, against the served model."""
+        # The paper rides in the SYSTEM half so the sweep's many calls share it. This
+        # method is called once per class per pass, and the premise was the longest part
+        # of every one of those prompts AND the last -- so no two calls shared a prefix
+        # and the stage measured 0% cached. The gateway caches a message, so the half that
+        # does not vary has to be a message of its own.
+        system = f"{SHAPE}\n\n{render.paper_block(premise[: self._max_chars])}"
         prompt = (
             (directive(what) if what in _NOUN or what == "Analysis" else "")
             + INSTRUCTION
             + instruction
             + "\n\n# Template\n\n"
             + json.dumps(template, indent=1)
-            + "\n\n# Paper\n\n"
-            + premise[: self._max_chars]
             + "\n\nEmit the JSON object now."
         )
         reply = self._caller(
             ModelCall(
                 model=self._model,
-                system=SHAPE,
+                system=system,
                 prompt=prompt,
                 max_output_tokens=24_000,
                 effort=self._effort,
