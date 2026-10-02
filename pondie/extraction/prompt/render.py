@@ -158,6 +158,11 @@ def _foci(points: Sequence[Mapping[str, Any]]) -> str:
             continue
         shown.append(
             "(" + ", ".join(f"{float(v):g}" for v in coordinates) + ")"
+            # The one fact bearing on a duplicate judgement that the row cannot show by
+            # printing its own numbers. `PROSE_GROUP_NOTE` has explained this marker all
+            # along while only `preprocess.prose_coordinate_block` ever printed it, so the
+            # note annotated a listing that did not carry it.
+            + (" [in a table]" if point.get("also_in_table") else "")
         )
     return " ".join(shown) if shown else "none parsed"
 
@@ -272,19 +277,23 @@ def render_schema(sch: Schema, names: set[str], study_keep: list[str]) -> str:
 PROSE_TABLE_ID = parse_keys.PROSE_TABLE_ID
 
 PROSE_GROUP_NOTE = """
-Reported in PROSE and in no table — proposals, not parse output
+Reported in PROSE and in no table
 
-  Each entry below is one sentence that states a coordinate, found by a cue sweep rather
-  than read off a table. Confirm each against the paper: some are results this paper
-  reports only in the text, others are a seed or sphere centre, an ROI from an atlas, or a
-  peak quoted from another study to compare against.
+  Each entry below is one sentence that states a coordinate. These are PARSE ENTRIES like
+  the table row groups above, in the same `<table_id>#<ordinal>` address space, and an
+  analysis emitted from one is an ORDINARY ANALYSIS: the same name, groups, conditions,
+  effects and `spatial_scope` as any other, judged by the same standard. A result this
+  paper reports only in its text is not a lesser result.
 
-  ACCOUNT FOR EVERY ONE, on the same terms as a table row group. Emit an analysis for a
-  result the paper reports, and for anything else add it to `omitted` with a reason from
-  the closed list above -- `seed_coordinate` and `duplicate_of:<key>` are the two these
-  sentences most often need. Declining is expected here and is not a failure; declining
-  SILENTLY is, because a sentence left unmentioned is indistinguishable from one
-  overlooked.
+  ACCOUNT FOR EVERY ONE, on exactly the terms a table row group is held to. Emit an
+  analysis for a result the paper reports; put anything else in `omitted` with a reason
+  from the closed list above. Declining SILENTLY is the failure, because a sentence left
+  unmentioned is indistinguishable from one overlooked.
+
+  What differs is the false-positive rate, not the standing. These sentences were found by
+  a cue sweep rather than read off a table, so some state a seed or sphere centre, an ROI
+  from an atlas, or a peak quoted from another study to compare against -- `seed_coordinate`
+  and `cited_from_other_paper` are what those are for. Read the sentence and say which it is.
 
   These entries have NO table. OMIT `tables` for an analysis you emit from one -- there
   is nothing to point at, and a made-up id dangles. `source_table_analysis` is still
@@ -293,7 +302,7 @@ Reported in PROSE and in no table — proposals, not parse output
   A coordinate marked `[in a table]` is reported by a parsed table as well. That does not
   make the sentence a duplicate: a table lists one contrast's peaks, and a sentence naming
   the same voxel for a DIFFERENT comparison is a second analysis. Read which contrast the
-  sentence names before deciding.
+  sentence names before deciding, and name the key you mean in `duplicate_of:<key>`.
 """
 
 ZERO_FOCI_RULE = """

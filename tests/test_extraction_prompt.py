@@ -793,3 +793,37 @@ def test_a_long_prose_sentence_keeps_its_coordinate() -> None:
 
     block = render.stage1_block(doc, {})
     assert "(-21, -6, -15)" in block
+
+
+def test_a_prose_entry_is_held_to_the_table_standard() -> None:
+    """They were headed "proposals, not parse output" and told that "declining is expected
+    here and is not a failure", while being parse entries in the same address space that
+    produce ordinary analyses -- 24760016's `prose#1` carries the same 17 slots, groups and
+    `spatial_scope` as its table siblings. The decline rate ran at 38% against 14% for
+    table entries. What actually differs is the cue sweep's false-positive rate, which the
+    closed vocabulary already names."""
+
+    note = render.PROSE_GROUP_NOTE
+
+    assert "proposals, not parse output" not in note
+    assert "Declining is expected here" not in note
+    assert "ORDINARY ANALYSIS" in note
+    assert "exactly the terms a table row group is held to" in note
+    assert "seed_coordinate" in note and "cited_from_other_paper" in note
+
+
+def test_a_voxel_a_table_also_reports_is_marked() -> None:
+    """`PROSE_GROUP_NOTE` has explained this marker all along, while the only renderer that
+    printed it was `preprocess.prose_coordinate_block` -- a different block. So the note
+    annotated a listing that did not carry the thing it described, and the one fact bearing
+    on a duplicate judgement that a row cannot show by printing its own numbers was
+    missing."""
+
+    doc = {"analyses": [{
+        "table_id": "prose", "name": "", "description": "A peak at (9, -12, -6).",
+        "points": [{"coordinates": [9, -12, -6], "also_in_table": True}],
+    }]}
+    block = render.stage1_block(doc, {})
+
+    assert "(9, -12, -6) [in a table]" in block
+    assert "[in a table]" in render.PROSE_GROUP_NOTE, "the marker must stay explained"
