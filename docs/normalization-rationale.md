@@ -154,6 +154,13 @@ wording does not say, which is `UNKNOWN`.
 The negation rule is decisive and first: "not pre-registered" contains "pre-registered". Same
 case as `medication_status`. Seeded from the vocabulary's synonyms, same reason as `modality`.
 
+Bare `planned` says what "planned comparison" says and `hypothesis-led` says what
+"hypothesis-driven" says; both are in. What is left over 1,817 records is 8 mangled spellings of
+the permissible value itself — `prereglstered`, `prere_registered`, `preregestistered` — and
+those are **not** absorbed here. No paper wrote them; a model mangling an enum value is an
+extraction defect, and a lexicon that quietly accepts it hides the defect and invites the next
+one.
+
 ## `multiple_comparison_method`
 
 293 surface forms over 921 values, for four answers. "Corrected results only" is a standard
@@ -163,10 +170,23 @@ meta-analysis inclusion criterion, and it cannot be applied against `FWE`,
 `UNCORRECTED` is not `UNKNOWN`: a paper stating it did not correct has told us something, and
 a paper silent on the matter has not. Only the first is safely excludable.
 
-**Rule order.** `permutation` is tested before `FWE` because a permutation-derived family-wise
-threshold is usually written as both, and the resampling is the specific claim. Cluster-level
-thresholding is `OTHER`, not a fifth value: it names a unit, saying where the correction was
-applied and not which error rate it controls.
+**Rule order, and why order was not enough.** A permutation-derived family-wise threshold is
+usually written as both names, and the resampling is the specific claim — so `permutation` was
+placed before `FWE`. That did nothing: `classify` consults rule ORDER only when one of the
+matches is `OTHER`, and two ordinary matches are an ambiguity however they are ordered. Over
+1,817 records, "family-wise error correction using permutations" and 27 more like it answered
+UNKNOWN. The rule is now `decisive`, which is what the paragraph always meant.
+
+**One tool named twice.** AFNI's `AlphaSim` and its successor `3dClustSim` *are* Monte Carlo
+simulations, so 40 values — "AlphaSim Monte Carlo simulation" and six other orderings — matched
+the permutation rule and the FWE rule at once and were read as an ambiguity between two answers.
+A decisive rule for the named implementation, placed first, settles which of the two the paper
+meant. Same shape as `gestational_weeks` and `fMRI`: the specific claim beats the generic one.
+
+Together the two took UNKNOWN from **184 values (11%) to 88 (5%)**.
+
+Cluster-level thresholding is `OTHER`, not a fifth value: it names a unit, saying where the
+correction was applied and not which error rate it controls.
 
 ## `correction_scope`
 
@@ -196,6 +216,14 @@ than a failure to classify.
 
 The handedness negations are load-bearing: "non-left-handed" is an inclusion criterion meaning
 right or ambidextrous, and reading it as LEFT inverts the group it describes.
+
+Both rule sets are anchored at both ends, because "men and women" names both and is not an
+answer. A **trailing role noun** is allowed inside the anchors — "male patients" is one category
+with a study role attached, not two — and `R` and `L` are allowed alone but only anchored, which
+is the difference between reading a handedness cell and firing on every sentence with an R in
+it. With those, the two fields leave 9 and 2 unreadable values over 1,817 records, and 6 of the
+9 are a race or ethnicity written into the sex slot by three papers: a record defect, not a
+wording to add.
 
 ## `medication_status`
 
@@ -313,6 +341,26 @@ said the same thing the status says.
 
 `apply` writes into the same `ExtractedValue` shape as the rest of the record, marked
 `derived`, and replaces any previous value — the point is that the two cannot disagree.
+
+**What it overrules, measured.** Over 1,817 records the derivation sets the flag on 3,771
+groups, leaves 452 unset, and disagrees with what the model wrote on **328** of the 3,724 it
+can compare (8.8%), 207 of them True→False. The disagreements are not evenly spread: the
+largest single driver is `nicotine dependence` (49 groups), and smoking, drinking and cannabis
+use account for over half. Those are the case the section opens with and the derivation is
+right on them.
+
+It was 346 before the wellness vocabulary was widened. The failures were all one shape — a
+`medical_condition` that is *itself* a statement of wellness, looked up as a disease:
+`Typically developing adolescents`, `Cognitively unimpaired aging`, `Healthy; good physical
+health`, `normal weight`, `normal cognition`. `vocabularies.phrases` decides this, so the words
+went there rather than here, and a per-head pass went in beside the joined one: a compound
+states one thing per part, so `Healthy; obesity` is a cohort with obesity and `Healthy` is not a
+second condition for MONDO to name.
+
+What is left is mostly not a derivation fault. `heterosexual`, `single`, `5-HTTLPR carrier
+status`, `family history of substance use disorder`, `history of childhood poverty` are traits
+and exposures in a slot for conditions — the boundary `population_characteristics` exists to
+police, seen from the other side.
 
 ## `group_role` — built, measured, removed
 
@@ -489,42 +537,141 @@ An analysis qualifies only when one cell resolves to an intervention arm and ano
 comparator arm. An analysis contrasting two groups, or two timepoints, is not a treatment
 contrast however much it mentions a drug.
 
+## The derived siblings
+
+`Group.age_unit_normalized` and `CategoryDistribution.category_normalized`. Both are
+`deterministic` in storage, added back on the extraction side by
+`extraction-deviations.yaml`, and written by `apply_derived`.
+
+**Why a sibling and not an overwrite.** `CategoryDistribution.category` is the study's own
+wording and the schema says so — "not normalized to any external scheme". That is right for
+provenance, and it left every consumer re-running a lexicon over free text, which is the
+failure the section above records. A sibling keeps both, and because code overwrites the
+derived one on every run the two cannot drift.
+
+**The test a derived field has to pass is that its derivation is question-independent.**
+The unit a paper reports ages in is a fact about the paper; so is whether a category label
+means female. Which side of a contrast a cohort is on is not — which is why `Group.role` is
+not here, and why that section is the one to read before adding another.
+
+`age_unit` was free text that no code read, so `6` under "months" and `6` under "years" were
+the same number and any age filter read every neonatal and infant cohort wrong.
+`gestational_weeks` is kept apart from `weeks` because the two count from different zeros,
+and its rule is `decisive`: "gestational weeks" matches both rules and `classify` reads two
+distinct matches as an ambiguity, so the commonest way to write the unit answered UNKNOWN
+until the specific claim was made to win. The same case `modality` has with "functional MRI".
+
+Two distinctions the tallies rest on. A group with **no age at all** is left unset rather
+than UNKNOWN: UNKNOWN says a normalizer read a wording and could not place it, and there was
+no wording. A distribution with **no normalizer** — gender, race, ethnicity — is left unset
+for the same reason.
+
+The first of those was stated and not done. `has_age` asked `value_of(...) is not None`, and a
+slot the paper did not report reads as the `NOT_REPORTED` **sentinel**, which is not None — so
+**711 of the 3,951 groups the fill touched had no age at all** and were each told their absent
+age was in a unit this could not read. Asking for a value that is neither None nor the sentinel
+takes the fill to 2,195 groups, every one of which states an age, with 8 units unreadable.
+The lesson generalises past this field: a sentinel that is falsy but not None passes every
+`is not None` guard in the package.
+
+## `apply_derived` — the one seam
+
+`normalization.apply_derived(record)` runs every module exposing `apply`, in the order
+`DERIVED` gives, and returns a tally per module.
+
+Before it there was no seam. Three modules exposed `apply` and **nothing called any of
+them**, so slots the storage schema marks `deterministic` were answered by the model and the
+derivation meant to overwrite the answer never ran — the exact failure `is_healthy` was made
+deterministic to prevent.
+
+`derived_fields()` derives the list from the package and `DERIVED` fixes the order; a test
+asserts the two name the same set, because `DERIVED` went on naming `group_role` after that
+module was deleted and nothing compared them.
+
+**And a way to run it.** `pondie normalize derived --records '<glob>'` runs every fill over a
+corpus and totals the tallies. Every other choice of that verb reports one field; `derived` is
+the one that is not a module name, checked against the field list so it cannot shadow one.
+Until it existed the fills were the only part of the package that could not be measured on real
+records without writing a script, and the two defects that measurement found — a unit written
+onto 711 groups that stated no age, and a disease vocabulary asked to name "Typically
+developing adolescents" — were both invisible to the per-field reports, which only ever see
+values that exist.
+
+## What 1,817 real records say
+
+Every closed-target field, run over the record-arms corpus
+(`experiments/record_arms/records/*/*.extraction.json`), which is the same corpus the
+meta-analysis queries are scored against. Nothing here is a fixture: these are the wordings
+1,817 papers were extracted into.
+
+| field | values | UNKNOWN | no rule matched | before |
+| --- | --- | --- | --- | --- |
+| `age_unit` | 3,277 | 0 | **0** | 18 |
+| `coordinate_space` | 4,813 | 25 | 20 | 20 |
+| `correction_scope` | 1,631 | 0 | **0** | 0 |
+| `handedness_distribution` | 319 | 2 | **2** | 4 |
+| `medication_status` | 1,518 | 253 | — | — |
+| `modality` | 2,108 | 0 | **0** | 0 |
+| `multiple_comparison_method` | 1,643 | **88** | **83** | 184 / 129 |
+| `prespecification` | 4,613 | 9 | **9** | 25 |
+| `sex_distribution` | 1,738 | 9 | **9** | 13 |
+
+Three lessons, one per column.
+
+**The residual is a diagnosis, not a backlog.** Of the 152 values still unreadable, 87 are
+`multiple_comparison_method` saying "corrected" without saying how (a vocabulary gap, below),
+20 are `coordinate_space` naming no space at all — "stereotactic", "template image space" —
+which the module argues at length should stay UNKNOWN, and 8 are mangled spellings of a
+permissible value, which is an extraction defect. **What is actually a missing rule is now
+near zero**, and every remaining class has a named owner that is not this package.
+
+**A wording no rule reached was never the main cost.** `multiple_comparison_method` lost more
+values to *ambiguity* — one method written under two names — than to unmatched text, and the
+rule order the doc said resolved it could not, because `classify` only consults order when
+`OTHER` is one of the matches. Reading the residual list alone would never have shown this; it
+took counting where every UNKNOWN came from.
+
+**The fills were wronger than the lexicons.** The rules above misread a few dozen values each.
+The derived fill for `age_unit` was writing a unit onto 711 groups that stated no age, because
+a sentinel that is falsy but not None slipped through an `is not None` guard, and `is_healthy`
+was handing a disease vocabulary phrases like "Typically developing adolescents". Both are in
+their own sections; both were invisible until the seam was run over real records rather than
+over a fixture.
+
 ## Open findings
 
 Things this audit surfaced and deliberately did **not** change, because each is a behaviour
 decision rather than a redundancy.
 
-### The derived-slot fills are never called
+### ~~The derived-slot fills are never called~~ — fixed
 
-Three modules fill a slot rather than normalizing one, and each exposes `apply`:
+`normalization.apply_derived` is the seam and `build` calls it, after the merge and before
+the record is written. See "`apply_derived` — the one seam" above.
 
-| module | slot | caller |
-|---|---|---|
-| `is_healthy` | `Group.is_healthy` | none |
-| `population_characteristics` | `Group.other_characteristics` | none |
+### ~~`is_healthy.UNREAD` invents extraction statuses~~ — fixed
 
-`study_schema/extraction-deviations.yaml` says of both `is_healthy` and `role` that the slot
-is `deterministic` in storage and that
-`pondie.normalization.<module>.apply` "fills it from … after extraction". Nothing in the
-package or the pipeline invokes any of the three. The extraction schema re-adds the slots, so
-a model answers them and the derivation that is supposed to overwrite the answer never runs —
-which is the exact failure `is_healthy` was made deterministic to prevent.
+`UNREAD` was a set of five compared against `extraction_status`, where the authority
+(`formats.values.STATUSES`) names two. It listed `not_applicable`, an *evidence* status, and
+`unknown`/`None`/`none`, which are not statuses at all — and, being a list of what counts as
+unread, it answered "read" for any junk outside its five.
 
-What it wants is one seam — a `normalization.apply_derived(record)` that runs all three and
-returns their tallies — plus a caller after `build`. That is a new pipeline step, not a
-cleanup, so it is a decision to take rather than a change to slip in.
+The corpus this needed checking against says the slot carries `extracted` 3,771 times and
+`not_reported` 289 times and **nothing else** over 1,817 records, so no record changes answer.
+The test is now positive — `READ = STATUSES[0]`, anything else is an unread cohort — which is
+both narrower than the old set and safer than the canonical set, because an unrecognised status
+is exactly the case where nobody should be claiming the cohort was read.
 
-### `is_healthy.UNREAD` invents extraction statuses
+### `multiple_comparison_method` cannot say "corrected, method unstated"
 
-`UNREAD = {"not_reported", "not_applicable", "unknown", "None", "none"}` is compared against
-`extraction_status`. The authority is `formats.values`:
-`ExtractionStatus = Literal["extracted", "not_reported"]` and `STATUSES = ("extracted",
-"not_reported")`. Of the five, only `not_reported` can legitimately occur; `not_applicable` is
-an *evidence* status and the other three are not statuses at all.
+83 values over 1,817 records reach no rule, and **87 of the 118 distinct unreadable forms say
+the results were corrected without saying how**: `corrected` ×10, `corrected for multiple
+comparisons` ×10, `multiple comparisons correction` ×7, `whole-brain correction` ×5. They answer
+UNKNOWN, which is honest — the module cannot tell which family — but it is not what the paper
+said, and "corrected results only" is a standard inclusion criterion that these papers pass and
+a strict query drops.
 
-Narrowing it to the canonical set would remove a second, looser definition of what a status
-is — but any record in the wild carrying a junk status would change answer, so it needs the
-corpus checked first rather than a blind edit.
+`OTHER` is the wrong home: it asserts a method outside the four, and these assert no method.
+The gap is in the permissible values, so it is a schema decision and not a rule to add here.
 
 ### `contrasts` has three unreferenced patterns
 

@@ -41,19 +41,28 @@ from dataclasses import dataclass
 from pondie.normalization import _negation as negation
 from pondie.vocabularies.folding import fold
 
+# `unimpaired`, `intact`, `good` and `normal weight` are here because the corpus put them
+# in `medical_condition` and every one of them was being looked up as a disease: see
+# docs/normalization-rationale.md, "is_healthy".
 _WELL = (
-    r"healthy|health|normal|unaffected|non-?clinical|non-?patient|non-?smok(?:er|ers|ing)|"
+    r"healthy|health|normal[\s-]weight|normal|unaffected|unimpaired|non-?impaired|intact|"
+    r"good|excellent|non-?clinical|non-?patient|non-?smok(?:er|ers|ing)|"
     r"typically\s+developing|typical|comparison|none|nil"
 )
 _ROLE = (
     r"controls?|volunteers?|participants?|subjects?|adults?|individuals?|groups?|child|"
-    r"children|men|women|males?|females?|elderly|older|younger|young|aging|ageing|"
+    r"children|adolescents?|teens?|teenagers?|infants?|toddlers?|neonates?|boys?|girls?|"
+    r"students?|twins?|siblings?|aged|cognition|"
+    r"men|women|males?|females?|elderly|older|younger|young|aging|ageing|"
     r"persons?|people|population|cohort|sample|donors?|reported|noted|documented|"
     r"identified|found|present"
 )
+# Adjectives sit here beside their adverbs: the pattern only uses this list as a modifier
+# slot, and "good physical health" needs `physical` exactly where `physically` is allowed.
 _ADVERB = (
     r"physically|mentally|medically|generally|otherwise|neurologically|psychiatrically|"
-    r"cognitively|clinically|overall"
+    r"cognitively|clinically|overall|physical|mental|medical|general|neurological|"
+    r"psychiatric|cognitive|somatic"
 )
 #: A value made of nothing but wellness words, study-role nouns and punctuation, anchored
 #: at both ends. A word in neither list -- `smokers`, `obese` -- ends the match, so a bare
@@ -195,6 +204,15 @@ def triage(raw: object) -> Triaged:
     # neurologic disorders" survives as "healthy adults", which is still an absence.
     if heads and HEALTHY.match(" ".join(heads)):
         return Triaged((), tuple(sorted(set(quals))), NO_CONDITION, tuple(denied), how)
+
+    # And once per head, which the joined test cannot do: a compound states one thing per
+    # part, so "Healthy; obesity" is a cohort with obesity and `Healthy` is not a second
+    # condition to look up. The joined test stays above it because a head can be a bare
+    # role noun -- "healthy; adults" joins to a wellness phrase and neither part is one.
+    kept_heads = [h for h in heads if not HEALTHY.match(h)]
+    if heads and not kept_heads:
+        return Triaged((), tuple(sorted(set(quals))), NO_CONDITION, tuple(denied), how)
+    heads = kept_heads
 
     if not heads:
         kind = NO_CONDITION if denied else "empty"

@@ -13,7 +13,7 @@ import importlib
 import pytest
 
 from pondie import normalization
-from pondie.cli import _normalizable
+from pondie.cli import DERIVED, _normalizable
 
 FIELDS = normalization.fields()
 
@@ -26,5 +26,11 @@ def test_every_field_module_exposes_the_whole_contract(field: str) -> None:
 
 
 def test_the_cli_offers_exactly_the_fields_that_exist():
-    """Derived from the package rather than written down, so the two cannot drift."""
-    assert _normalizable() == FIELDS
+    """Derived from the package rather than written down, so the two cannot drift.
+
+    Plus `derived`, which runs the slot fills rather than reporting a field. It is the one
+    choice that is not a module name, and it is checked against the field list here so it
+    can never shadow one.
+    """
+    assert _normalizable() == [*FIELDS, DERIVED]
+    assert DERIVED not in FIELDS

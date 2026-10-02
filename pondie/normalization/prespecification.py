@@ -24,8 +24,13 @@ RULES = (
     ),
     Rule.of(
         PREREGISTERED,
+        # `planned` alone (10 values) says what "planned comparison" says; `hypothesis-led`
+        # and `hypotheses` (5) say what "hypothesis-driven" says. The decisive EXPLORATORY
+        # rule above still takes "not planned" and "were not preregistered" first.
         r"pre[\s-]?regist|pre[\s-]?specifi|\bconfirmatory\b|"
-        r"planned (?:comparison|contrast|analys)|a[\s-]priori hypothes|hypothesis[\s-]driven",
+        r"planned (?:comparison|contrast|analys)|^\s*planned\s*$|"
+        r"a[\s-]priori hypothes|hypothes[ei]s[\s-](?:driven|led|based)|"
+        r"^\s*hypothes(?:es|i[sz]ed)\s*$",
     ),
     Rule.of(
         EXPLORATORY,
