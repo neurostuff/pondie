@@ -852,3 +852,26 @@ def test_a_decline_must_be_about_an_entry_that_exists() -> None:
 
     # No listing to check against is not the same as a key that fails the check.
     assert render.unsupported_omissions(invented, ()) == []
+
+
+def test_collapsing_a_duplicate_does_not_renumber_its_siblings() -> None:
+    """A duplicate is not always in an appended block at the end. In 4 of the 10
+    duplicating papers in the corpus the copy sits NEXT TO its original, because the
+    sentence genuinely occurs twice in the paper -- 26509115 has `prose#4` repeating
+    `prose#2` with `prose#3` between them, and 27444935 has `prose#3` repeating `prose#2`
+    ahead of a distinct `prose#4`.
+
+    So a key is computed over the whole parse before anything is dropped. Removing the
+    entry from the FILE instead would shift every later key down and re-address a record's
+    analyses silently; here `prose#4` stays `prose#4`."""
+
+    doc = {"analyses": [
+        _prose("Greater volume in the right medial temporal lobe (26, -8, -20).", (26, -8, -20)),
+        _prose("Lower volume in the left inferior frontal gyrus (-48, 22, 8).", (-48, 22, 8)),
+        _prose("Greater volume in the right medial temporal lobe (26, -8, -20).", (26, -8, -20)),
+        _prose("Carrying more risk alleles was associated with greater atrophy (8, 4, 2).", (8, 4, 2)),
+    ]}
+
+    assert render.demandable_keys(doc) == {"prose#1", "prose#2", "prose#4"}
+    foci = render.listing_foci(doc)
+    assert foci["prose#4"] == frozenset({(8.0, 4.0, 2.0)}), "the key still addresses its own entry"

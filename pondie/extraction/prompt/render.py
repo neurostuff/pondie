@@ -384,18 +384,24 @@ def listing_entries(stage1: Mapping[str, Any]) -> list[tuple[str, dict]]:
     without being demandable is a silent decline. They agreed by both open-coding the same
     filter, which held until a third rule arrived.
 
-    The third rule is the collapse. `ProseFoci` writes into the corpus parse and `--redo`
-    ran it again, so a paper accumulated one copy of every prose sentence per re-run:
-    24760016 held 12 entries for 2 distinct sentences, 25451388 15 for 3, 20147457 5 for 1.
-    A pass then had to account for six identical rows one at a time, which is what the
-    `duplicate_of:prose#N` chains in those records are -- bookkeeping over a listing that
-    repeated itself, and cover for one claim that was actually false. The stage is
-    idempotent now, but the corpus is shared and an older checkout can still append, so the
-    reader collapses rather than trusting the writer.
+    The third rule is the collapse, which two separate things make necessary. `ProseFoci`
+    writes into the corpus parse and `--redo` ran it again, so a paper accumulated one copy
+    of every prose sentence per re-run: 24760016 held 12 entries for 2 distinct sentences,
+    25451388 15 for 3, 20147457 5 for 1. That one is now fixed at the writer. The other is
+    not fixable there: a sentence can genuinely occur twice in a paper -- a figure caption
+    repeating a body sentence -- and the sweep yields it once per occurrence. 4 of the 10
+    duplicating papers in the corpus are this kind, with the copy sitting next to its
+    original rather than in an appended block.
 
-    First copy wins, which keeps the surviving keys the low ones: the duplicates are always
-    appended after the block they duplicate, so a paper with k distinct sentences keeps
-    `prose#1..#k` and nothing a record already points at is renumbered.
+    Either way a pass had to account for identical rows one at a time, which is what the
+    `duplicate_of:prose#N` chains in those records are -- bookkeeping over a listing that
+    repeated itself, and cover for one claim that was false.
+
+    KEYS ARE COMPUTED BEFORE THE DROP, over the whole parse, so collapsing renumbers
+    nothing: a surviving entry keeps the key it had and a record's `source_table_analysis`
+    goes on resolving. This is also why the collapse belongs here rather than in a rewrite
+    of the parse -- dropping a mid-list entry from the FILE shifts every later key down,
+    which would re-address a record's analyses silently instead of breaking them loudly.
     """
 
     every = stage1.get("analyses") or []
