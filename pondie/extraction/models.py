@@ -115,11 +115,19 @@ class Cost(Strict):
     output_tokens: int = 0
     reasoning_tokens: int = 0
     cached_tokens: int = 0
-    #: Written but never read back: every call reports `cache_write_tokens: 36423,
-    #: cached_tokens: 0, cache_status: DISABLED`. Five stages send a near-identical prefix
-    #: and each pays full input price. Recorded here because that is the only way the
-    #: deviation ("one cached prefix", docs/pipeline-architecture.md D2) can be falsified
-    #: from a run's own output rather than from a dashboard.
+    #: Recorded here because that is the only way the deviation ("one cached prefix",
+    #: docs/pipeline-architecture.md D2) can be falsified from a run's own output rather
+    #: than from a dashboard -- and it was, twice.
+    #:
+    #: `cache_write_tokens: 36423, cached_tokens: 0` was read as "every call pays full
+    #: input price". It is what a COLD call looks like: the prefix is being written to the
+    #: cache, and the next call that shares it reads it back. Measured on the gateway, a
+    #: second paper's two passes now report 68% and 75% `cached_tokens`.
+    #:
+    #: `cache_status` is a different mechanism and stays `DISABLED` throughout: it is the
+    #: gateway's own whole-response cache, which only ever hits on a byte-identical request
+    #: and is not what discounts a shared prefix. Reading the two as one number is what
+    #: made the prompt layout look unfixable -- see `prompt/render.build_prompt`.
     cache_write_tokens: int = 0
     seconds: float = 0.0
     calls: int = 0

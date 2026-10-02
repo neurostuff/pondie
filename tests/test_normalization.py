@@ -411,3 +411,175 @@ def test_a_space_spelled_out_reaches_the_same_answer_as_its_acronym():
     assert coordinate_space.normalize("International Consortium for Brain Mapping").value == "MNI"
     assert coordinate_space.normalize("Colin27 Brain").value == "MNI", "the MNI single subject"
     assert coordinate_space.normalize("Talaraich").value == "TAL", "a transposition in the corpus"
+
+
+# ---------------------------------------------- the derived siblings, and the one seam
+
+
+def _group(**over):
+    base = {
+        "age_mean": {"value": 24.0, "extraction_status": "extracted"},
+        "age_unit": {"value": "yrs", "extraction_status": "extracted"},
+        "sex_distribution": [
+            {"category": {"value": "Females", "extraction_status": "extracted"}}
+        ],
+        "handedness_distribution": [
+            {"category": {"value": "right handed", "extraction_status": "extracted"}}
+        ],
+    }
+    return {**base, **over}
+
+
+def test_a_derived_sibling_keeps_the_sources_own_wording():
+    """The point of a sibling rather than an overwrite: `category` is the study's words and
+    the schema says so, and a query needs the folded value. Both, or the field loses one."""
+
+    from pondie.normalization import sex_distribution
+
+    record = {"groups": [_group()]}
+    sex_distribution.apply(record)
+    entry = record["groups"][0]["sex_distribution"][0]
+
+    assert entry["category"]["value"] == "Females", "the paper's wording survives"
+    assert entry["category_normalized"]["value"] == "FEMALE"
+    assert entry["category_normalized"]["value_source"] == "generated"
+
+
+def test_the_age_unit_of_a_group_with_no_age_is_left_unset():
+    """UNKNOWN says a normalizer read a wording and could not place it. A group with no age
+    has no wording to read, and writing UNKNOWN there claims the paper gave a unit."""
+
+    from pondie.normalization import age_unit
+
+    record = {"groups": [{"name": {"value": "controls", "extraction_status": "extracted"}}]}
+    tally = age_unit.apply(record)
+
+    assert "age_unit_normalized" not in record["groups"][0]
+    assert tally["skipped"] == 1 and tally["set"] == 0
+
+
+def test_gestational_weeks_beats_weeks():
+    """`gestational weeks` matches both rules, and `classify` reads two distinct matches as
+    an ambiguity -- so the commonest way to write the unit answered UNKNOWN until the
+    specific claim was made decisive. The same case `modality` has with `functional MRI`."""
+
+    from pondie.normalization import age_unit
+
+    assert age_unit.normalize("gestational weeks").value == "gestational_weeks"
+    assert age_unit.normalize("postmenstrual age").value == "gestational_weeks"
+    assert age_unit.normalize("weeks").value == "weeks"
+
+
+def test_apply_derived_runs_every_module_that_exposes_apply():
+    """The list and the package cannot drift: `derived_fields()` is derived from the
+    modules, `DERIVED` is the order they run in, and the two must name the same set.
+
+    `DERIVED` named `group_role` after that module was removed, which would have raised on
+    the first record. Nothing caught it because nothing compared the two.
+    """
+
+    from pondie import normalization
+
+    assert set(normalization.DERIVED) == set(normalization.derived_fields())
+
+
+def test_apply_derived_fills_every_derived_slot_on_one_record():
+    from pondie import normalization
+
+    record = {"groups": [_group()]}
+    tallies = normalization.apply_derived(record)
+    group = record["groups"][0]
+
+    assert set(tallies) == set(normalization.DERIVED)
+    assert group["age_unit_normalized"]["value"] == "years"
+    assert group["sex_distribution"][0]["category_normalized"]["value"] == "FEMALE"
+    assert group["handedness_distribution"][0]["category_normalized"]["value"] == "RIGHT"
+
+
+def test_every_derived_slot_is_declared_on_the_extraction_schema():
+    """`is_healthy` was written onto 4,133 groups the schema did not declare, and the
+    validator reported every one. A derived slot needs its `add_slot` deviation or it
+    repeats that."""
+
+    from pondie import schema
+    from pondie.schema import reader
+
+    extraction = reader.load(schema.EXTRACTION)
+    assert extraction.attributes("Group").get("age_unit_normalized") is not None
+    assert extraction.attributes("CategoryDistribution").get("category_normalized") is not None
+
+
+def test_a_group_whose_age_was_not_reported_has_no_unit_either():
+    """The sibling test above, for the shape the corpus actually holds: a slot the paper
+    did not report arrives as a wrapper with no `value`, which reads as the NOT_REPORTED
+    sentinel, and a sentinel is not None. 711 of the 3951 groups this filled across the
+    1817-record corpus had no age at all and were being told their absent age was in an
+    unreadable unit."""
+
+    from pondie.normalization import age_unit
+
+    not_reported = {"extraction_status": "not_reported"}
+    record = {"groups": [{"age_mean": not_reported, "age_median": not_reported}]}
+    tally = age_unit.apply(record)
+
+    assert "age_unit_normalized" not in record["groups"][0]
+    assert tally["skipped"] == 1 and tally["set"] == 0
+
+
+@pytest.mark.parametrize(
+    "wording,expected",
+    [
+        # every one of these is a value the 1817-record corpus holds and no rule reached
+        ("y", "years"),
+        ("R", "RIGHT"),
+        ("L", "LEFT"),
+        ("male patients", "MALE"),
+        ("female patients", "FEMALE"),
+        ("planned", "preregistered"),
+        ("hypothesis-led", "preregistered"),
+        ("random Gaussian fields", "FWE"),
+        ("3dClustSim", "FWE"),
+        ("clusterwise correction", "OTHER"),
+    ],
+)
+def test_a_wording_the_corpus_holds_reaches_its_value(wording, expected):
+    from pondie.normalization import age_unit, sex_distribution
+
+    for module in (age_unit, handedness_distribution, sex_distribution,
+                   prespecification, multiple_comparison_method):
+        decision = module.normalize(wording)
+        if decision.value == expected:
+            return
+    raise AssertionError(f"{wording!r} reached no rule for {expected}")
+
+
+def test_a_category_beside_a_second_one_is_still_not_an_answer():
+    """The trailing role noun is an allowance, not a relaxation of the anchors: `men and
+    women` names both and must stay UNKNOWN."""
+
+    from pondie.normalization import sex_distribution
+
+    assert sex_distribution.normalize("men and women").value == "UNKNOWN"
+    assert sex_distribution.normalize("male patients").value == "MALE"
+
+
+def test_one_tool_named_twice_is_not_two_answers():
+    """AFNI's AlphaSim IS a Monte Carlo simulation, so a paper naming both matched the
+    PERMUTATION rule and the FWE rule at once and `classify` read one tool as an ambiguity.
+    40 values in the corpus write it this way."""
+
+    for wording in ("AlphaSim Monte Carlo simulation", "Monte Carlo simulations (AlphaSim)",
+                    "Monte-Carlo simulations using 3dClustSim"):
+        assert multiple_comparison_method.normalize(wording).value == "FWE"
+
+
+def test_a_family_wise_threshold_derived_by_resampling_is_the_resampling():
+    """Rule order could not deliver this: `classify` consults order only when one of the
+    matches is OTHER, so two answers were an ambiguity however they were ordered."""
+
+    for wording in ("family-wise error correction using permutations",
+                    "FWE-corrected after using threshold-free cluster enhancement",
+                    "family-wise error rate corrected permutation test"):
+        assert multiple_comparison_method.normalize(wording).value == "PERMUTATION"
+    # two error rates named is still two answers, and neither is the specific claim
+    assert multiple_comparison_method.normalize("FWE and FDR").value == "UNKNOWN"

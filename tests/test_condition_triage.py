@@ -136,3 +136,37 @@ def test_triage_still_gates_when_no_parser_is_installed(monkeypatch) -> None:
     assert triage("no neurological or psychiatric disorder").kind == NO_CONDITION
     assert triage("Parkinson's disease; no dementia").heads == ("Parkinson's disease",)
     assert triage("schizophrenia").heads == ("schizophrenia",)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        # every one of these sat in `medical_condition` in the 1817-record corpus and was
+        # handed to a disease vocabulary as a diagnosis
+        "Typically developing adolescents",
+        "Cognitively unimpaired aging",
+        "Healthy; good physical health",
+        "Healthy adolescents",
+        "normal weight",
+        "normal cognition",
+    ],
+)
+def test_a_wellness_phrase_the_corpus_holds_is_an_absence(value: str) -> None:
+    assert triage(value).kind == NO_CONDITION
+    assert triage(value).heads == ()
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["cognitive impairment", "impaired cognition", "mental illness",
+     "Normal pressure hydrocephalus", "healthy regular smokers", "obesity"],
+)
+def test_widening_wellness_did_not_swallow_a_condition(value: str) -> None:
+    assert triage(value).heads
+
+
+def test_a_wellness_head_beside_a_condition_is_not_looked_up() -> None:
+    """The joined test cannot do this one: a compound states one thing per part, so
+    `Healthy` is not a second condition to look up beside `obesity`. It was, and a disease
+    vocabulary was asked to name it."""
+    assert triage("Healthy; obesity").heads == ("obesity",)

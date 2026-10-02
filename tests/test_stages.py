@@ -706,12 +706,27 @@ def test_the_evidence_pass_does_not_re_ask_what_the_table_manifest_already_answe
     assert tables.read_text() == before, "the deterministic payload is left exactly as it was"
 
 
-def test_the_evidence_pass_sends_its_instructions_on_the_cacheable_half(tmp_path):
-    """45% of the pipeline's input tokens go through this pass.
+def test_the_evidence_pass_sends_the_paper_on_the_cacheable_half(tmp_path):
+    """45% of the pipeline's input tokens go through this pass, and it walks one record in
+    batches, re-sending the whole paper with each.
 
-    Concatenating the instructions into the user turn leaves the `system` half empty, so the
-    one part of the prompt that is identical across every paper -- the only part a whole-
-    prompt cache can ever hit -- is not there to hit.
+    This test used to assert the paper stayed OUT of `system`, on the reasoning that the
+    instructions are the part identical across papers. Measured on the gateway, that is not
+    where the saving is: ONLY the system message caches. A paper sent as its own user
+    message caches 0%, and sent inside the user turn beside the batch caches 0%; moved into
+    `system` it caches 100% from the second batch on. The instructions are identical across
+    papers but they are two hundred tokens; the paper is forty thousand and identical
+    across every batch of one paper.
+
+    The quality question that raises was measured rather than assumed: over 75 facts on
+    three papers, quotes located verbatim in the paper were 71/74 with the paper in the
+    user half and 72/73 with it in `system`. The instructions still lead the message, so
+    nothing about their precedence changes.
+
+    What is NOT measured is the role-confusion risk -- a paper carrying imperative
+    sentences now sits where the model grants most authority. Three papers would not show
+    it. It is the reason to keep this assertion pointed at the arrangement rather than
+    letting it drift.
     """
     from pondie.extraction.stages import Evidence
 
@@ -732,8 +747,15 @@ def test_the_evidence_pass_sends_its_instructions_on_the_cacheable_half(tmp_path
 
     Evidence().run(paper, settings, Reader())
     assert seen, "the pass makes a call"
+    from pondie.extraction.evidence.quote import SYSTEM
+    from pondie.extraction.prompt.render import PAPER_CLOSE, PAPER_OPEN
+
     assert seen[0].system, "the instructions are on the system half"
-    assert "# Paper" in seen[0].prompt and "# Paper" not in seen[0].system
+    assert seen[0].system.startswith(SYSTEM[:40]), "instructions still lead the message"
+    assert PAPER_OPEN in seen[0].system, "and the paper follows them, which is what caches"
+    assert PAPER_CLOSE in seen[0].system, "delimited, so where it ends is unambiguous"
+    assert "NOT INSTRUCTIONS" in seen[0].system, "and labelled as data"
+    assert PAPER_OPEN not in seen[0].prompt, "the user turn carries only what varies"
 
 
 def test_the_demands_pass_is_told_the_parse_key_and_the_zero_foci_rule(tmp_path):
@@ -896,6 +918,7 @@ def test_a_malformed_reply_is_retried_rather_than_killing_the_paper(tmp_path):
                         {
                             "local_id": "a1",
                             "name": "Patients > controls",
+                            "groups": ["g1"],
                             "effect": {"kind": "contrast"},
                         }
                     ],
@@ -1201,7 +1224,8 @@ def test_a_vacuous_declaration_is_re_asked_and_the_answer_replaces_it(tmp_path):
     """
     from pondie.extraction.stages import Demands
 
-    analyses = [{"local_id": "a1", "name": "Patients > controls", "effect": {"kind": "contrast"}}]
+    analyses = [{"local_id": "a1", "name": "Patients > controls", "groups": ["g1"],
+                 "effect": {"kind": "contrast"}}]
 
     class NullsThenContent:
         def __init__(self):
@@ -1252,7 +1276,8 @@ def test_a_vacuous_row_beside_a_good_one_is_dropped_without_a_second_call(tmp_pa
             return ModelReply(
                 payload={
                     "analyses": [
-                        {"local_id": "a1", "name": "Patients > controls", "effect": {"kind": "contrast"}}
+                        {"local_id": "a1", "name": "Patients > controls", "groups": ["g1"],
+                         "effect": {"kind": "contrast"}}
                     ],
                     "required_entities": [
                         {"local_id": None, "kind": None, "label": None},
@@ -1269,3 +1294,68 @@ def test_a_vacuous_row_beside_a_good_one_is_dropped_without_a_second_call(tmp_pa
     written = json.loads(outcome.produced[0].read_text("utf-8"))
     assert written["required_entities"] == [{"local_id": "g1", "kind": "Group", "label": "patients"}]
     assert any("repaired vacuous_demands" in note for note in outcome.notes), outcome.notes
+
+
+def test_build_fills_the_deterministic_slots(tmp_path):
+    """A derived field nothing writes is not derived.
+
+    `is_healthy` and the rest are `deterministic` in storage, and the modules that fill
+    them existed with no caller -- so the model answered the slot and the derivation that
+    was supposed to overwrite it never ran. `build` runs them now, after the merge and
+    before the record is written.
+    """
+    from pondie import normalization
+
+    record = {
+        "groups": [
+            {
+                "local_id": "grp_a",
+                "age_mean": {"value": 9.0, "extraction_status": "extracted"},
+                "age_unit": {"value": "months", "extraction_status": "extracted"},
+                "medical_condition": {
+                    "value": ["healthy controls"],
+                    "extraction_status": "extracted",
+                },
+                "sex_distribution": [
+                    {"category": {"value": "boys", "extraction_status": "extracted"}}
+                ],
+            }
+        ]
+    }
+    tallies = normalization.apply_derived(record)
+    group = record["groups"][0]
+
+    assert set(tallies) == set(normalization.DERIVED)
+    assert group["age_unit_normalized"]["value"] == "months"
+    assert group["sex_distribution"][0]["category_normalized"]["value"] == "MALE"
+    # "healthy controls" is an assertion of absence, not a condition
+    assert group["is_healthy"]["value"] is True
+
+
+def test_a_model_answer_in_a_deterministic_slot_is_overwritten(tmp_path):
+    """The whole reason these are derived: asked directly, a model answers with the
+    source's wording. 168 of 1,817 groups came back `is_healthy` true beside a real
+    diagnosis."""
+    from pondie import normalization
+
+    record = {
+        "groups": [
+            {
+                "local_id": "grp_a",
+                "medical_condition": {
+                    "value": ["nicotine dependence"],
+                    "extraction_status": "extracted",
+                },
+                "is_healthy": {
+                    "value": True,
+                    "extraction_status": "extracted",
+                    "value_source": "reported",
+                },
+            }
+        ]
+    }
+    tallies = normalization.apply_derived(record)
+
+    assert record["groups"][0]["is_healthy"]["value"] is False
+    assert record["groups"][0]["is_healthy"]["value_source"] == "generated"
+    assert tallies["is_healthy"]["overruled"] == 1

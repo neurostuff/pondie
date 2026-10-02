@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections import Counter
 from pathlib import Path
 
 from pondie import paths
@@ -118,6 +119,12 @@ def _extract(args: argparse.Namespace) -> int:
     return 1 if report.failures else 0
 
 
+#: `pondie normalize derived` runs the fills instead of reporting one field. Not a field
+#: name, and it cannot collide with one: `fields()` returns module names and there is no
+#: `normalization.derived` module.
+DERIVED = "derived"
+
+
 def _normalizable() -> list[str]:
     """The fields `pondie normalize` can report on, asked of the package.
 
@@ -127,12 +134,40 @@ def _normalizable() -> list[str]:
     """
     from pondie import normalization
 
-    return normalization.fields()
+    return [*normalization.fields(), DERIVED]
+
+
+def _derived_report(records: tuple[str, ...]) -> int:
+    """Run every derived-slot fill over the records and total the tallies.
+
+    The reporting half of `apply_derived`. Without it the fills were the one part of the
+    package with no way to be measured on real records short of writing a script, and the
+    two defects that run found -- a unit written onto 711 groups that stated no age, and a
+    disease vocabulary asked to name "Typically developing adolescents" -- were both
+    invisible to the per-field reports, which only ever see values that exist.
+    """
+    from pondie.normalization import DERIVED as MODULES
+    from pondie.normalization import apply_derived
+    from pondie.normalization._records import DEFAULT, iter_records
+
+    totals: dict[str, Counter] = {name: Counter() for name in MODULES}
+    seen = 0
+    for _study, body in iter_records(records or DEFAULT):
+        seen += 1
+        for name, tally in apply_derived(body).items():
+            totals[name].update(tally)
+    print(f"{seen} records")
+    for name in MODULES:
+        counted = "  ".join(f"{k}={v}" for k, v in sorted(totals[name].items()))
+        print(f"  {name:28} {counted}")
+    return 0
 
 
 def _normalize(args: argparse.Namespace) -> int:
     import importlib
 
+    if args.field == DERIVED:
+        return _derived_report(tuple(args.records or ()))
     module = importlib.import_module(f".normalization.{args.field}", package="pondie")
     print(module.report(tuple(args.records)) if args.records else module.report())
     return 0
@@ -219,7 +254,10 @@ def main(argv: list[str] | None = None) -> int:
     ex.add_argument("--plan", action="store_true", help="say what would run, spend nothing")
     ex.set_defaults(fn=_extract)
 
-    no = sub.add_parser("normalize", help="report one field's normalization")
+    no = sub.add_parser(
+        "normalize",
+        help="report one field's normalization, or `derived` to run the slot fills",
+    )
     no.add_argument("field", choices=_normalizable())
     no.add_argument("--records", action="append")
     no.set_defaults(fn=_normalize)

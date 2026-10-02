@@ -22,7 +22,7 @@ import shutil
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
+from typing import Any, Collection, Mapping, Protocol, Sequence, runtime_checkable
 
 from pondie import pipeline, schema
 from pondie.extraction.llm import Caller, MalformedReply
@@ -335,6 +335,11 @@ class _ModelPass(_Base):
     def context(self, paper: Paper, settings: Settings) -> str:
         return ""
 
+    def listing(self, paper: Paper, settings: Settings) -> Collection[str]:
+        """The stage-1 keys this pass must account for. Empty for a pass with no listing."""
+
+        return ()
+
     def declared(self, paper: Paper, settings: Settings) -> Sequence[Mapping[str, Any]]:
         """The entities this pass was asked to produce, for the post-condition to check."""
         return ()
@@ -349,6 +354,7 @@ class _ModelPass(_Base):
             self.context(paper, settings),
         )
         declared = self.declared(paper, settings)
+        listing = self.listing(paper, settings)
 
         # Retry names the fault rather than resampling blindly. The failure is stochastic --
         # the same prompt succeeds on the next draw most of the time -- but a model told what
@@ -401,7 +407,7 @@ class _ModelPass(_Base):
             # an empty top-level sibling, and the post-condition would reject a good answer.
             payload, notes = render.normalize(reply.payload, self.mode)
             parsed = True
-            failures = render.postcondition_failures(payload, self.mode, declared)
+            failures = render.postcondition_failures(payload, self.mode, declared, listing)
             if not failures:
                 break
 
@@ -467,6 +473,16 @@ class Demands(_ModelPass):
     asks_a_model: bool = True
     mode: str = "demands"
     repair_stage: tuple[str, ...] = ("shape", "demands")
+
+    def listing(self, paper: Paper, settings: Settings) -> Collection[str]:
+        """Every listing entry this pass is shown and must account for.
+
+        Derived by `render.demandable_keys` from the same document `context` renders, so
+        the set the post-condition holds the pass to cannot differ from the set the pass
+        was shown.
+        """
+
+        return render.demandable_keys(TableParse.read(paper.parse).document or {})
 
     def context(self, paper: Paper, settings: Settings) -> str:
         """Reading the Table->Analyses parse."""
@@ -562,8 +578,16 @@ class Fill(_Base):
                     reply = caller(
                         ModelCall(
                             model=settings.model,
-                            system=slots.SYSTEM,
-                            prompt=f"# Paper\n\n{text}\n\n{slots.block(batch)}\n"
+                            # The paper goes in the SYSTEM half, with the instructions, and
+                            # only the batch varies. This stage sends the whole text once
+                            # per batch and per round, so those calls share everything but
+                            # the last few hundred tokens -- and shared a prefix of nothing
+                            # while the text sat in `prompt` beside the batch, because the
+                            # gateway caches a MESSAGE and not an arbitrary token prefix.
+                            # Measured at 0% cached across this stage before the move. The
+                            # same argument, and the same evidence, as `build_prompt`.
+                            system=f"{slots.SYSTEM}\n\n{render.paper_block(text)}",
+                            prompt=f"{slots.block(batch)}\n"
                             "Return the JSON object now.",
                             max_output_tokens=settings.max_output_tokens,
                             effort=settings.effort,
@@ -705,9 +729,11 @@ class Evidence(_Base):
                 reply = caller(
                     ModelCall(
                         model=settings.model,
-                        system=SYSTEM,
-                        prompt=f"# Paper\n\n{text}\n\n"
-                        f"# Facts needing a supporting quote\n\n{listing}\n\n"
+                        # Paper in the system half, the chunk of facts in the user half:
+                        # this stage walks a record in batches and re-sent the whole text
+                        # with each one. See the note in `Fill` above.
+                        system=f"{SYSTEM}\n\n{render.paper_block(text)}",
+                        prompt=f"# Facts needing a supporting quote\n\n{listing}\n\n"
                         "Return the JSON object mapping each id to its quote now.",
                         max_output_tokens=settings.max_output_tokens,
                         effort=settings.effort,
@@ -780,11 +806,24 @@ class Build(_Base):
             stage1=paper.parse if paper.parse.is_file() else None,
             table_map=paper.table_map if paper.table_map.is_file() else None,
         )
+        # The deterministic slots, after the merge and before the record is written: each
+        # is code's answer and overwrites whatever the model said, so the two cannot
+        # disagree. Storage marks them `deterministic` and nothing ran them until now.
+        from pondie import normalization
+
+        derived = normalization.apply_derived(record)
+
         out = self.produces(paper, settings)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
 
-        notes = [f"repairs: {', '.join(report.repair_log.fired()) or 'none fired'}"]
+        filled = ", ".join(
+            f"{name}={tally.get('set', tally.get('moved', 0))}"
+            for name, tally in derived.items()
+            if tally.get("set") or tally.get("moved")
+        )
+        notes = [f"derived: {filled or 'nothing to fill'}"]
+        notes.append(f"repairs: {', '.join(report.repair_log.fired()) or 'none fired'}")
         if report.warrant.unresolved:
             notes.append(
                 f"{len(report.warrant.unresolved)} quote(s) did not resolve, leaving "

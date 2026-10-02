@@ -74,3 +74,36 @@ def test_flavour_best_still_yields_a_paper_when_there_is_no_text(tmp_path):
     ids.write_text("1\tbare\t\n", encoding="utf-8")
     papers = _papers(corpus, ids, "best")
     assert len(papers) == 1 and not papers[0].text.is_file()
+
+
+def test_the_derived_fills_can_be_run_from_the_cli(tmp_path, capsys):
+    """The fills were the one part of `normalization` with no way to be measured on real
+    records short of writing a script, and the two defects that measurement found were
+    both invisible to the per-field reports -- those only ever see values that exist."""
+    import json
+
+    from pondie.cli import main
+
+    record = {"groups": [{
+        "name": {"value": "controls", "extraction_status": "extracted"},
+        "medical_condition": {"value": ["healthy"], "extraction_status": "extracted"},
+        "age_mean": {"value": 24.0, "extraction_status": "extracted"},
+        "age_unit": {"value": "years", "extraction_status": "extracted"},
+    }]}
+    path = tmp_path / "12345678.extraction.json"
+    path.write_text(json.dumps({"study": record}), encoding="utf-8")
+
+    assert main(["normalize", "derived", "--records", str(tmp_path / "*.json")]) == 0
+    out = capsys.readouterr().out
+    assert "1 records" in out
+    assert "is_healthy" in out and "age_unit" in out
+
+
+def test_derived_is_not_mistaken_for_a_field():
+    """`normalize derived` runs the fills; every other choice reports one field. The two
+    cannot collide -- `fields()` returns module names and there is no `derived` module."""
+    from pondie import normalization
+    from pondie.cli import DERIVED, _normalizable
+
+    assert DERIVED not in normalization.fields()
+    assert DERIVED in _normalizable()

@@ -8,12 +8,20 @@ Why it is derived and not asked, with the measurements: docs/normalization-ratio
 
 from __future__ import annotations
 
+from pondie.formats.values import STATUSES
 from pondie.normalization._records import strings_at, value_of
 from pondie.vocabularies.phrases import NOT_READ, triage
 
-#: `medical_condition` states that mean nobody established whether a condition was present.
-#: An absent key is the same thing said by omission.
-UNREAD = {"not_reported", "not_applicable", "unknown", "None", "none"}
+#: The one status that means somebody established what the cohort had. Anything else is an
+#: unread cohort, including a status this does not recognise.
+#:
+#: This was `UNREAD`, a set of five naming `not_applicable` (an *evidence* status) and
+#: `unknown`/`None`/`none` (not statuses at all) -- a second, looser definition of what a
+#: status is, and one that answered "read" for any junk outside its five. Asking for the
+#: canonical status instead is both narrower and safer, and it changes no record here: over
+#: the 1817-record corpus the slot carries `extracted` 3771 times, `not_reported` 289 times
+#: and nothing else.
+READ = STATUSES[0]
 
 
 def is_condition(value: object) -> bool:
@@ -28,7 +36,7 @@ def derive(group: dict) -> bool | None:
     ev = group.get("medical_condition")
     if not isinstance(ev, dict):
         return None
-    if str(ev.get("extraction_status")) in UNREAD:
+    if str(ev.get("extraction_status")) != READ:
         return None
     triaged = [triage(v) for v in strings_at(group, "medical_condition")]
     if any(t.heads for t in triaged):

@@ -31,19 +31,30 @@ from typing import Callable
 
 UNANSWERABLE = None
 
+#: Spelled-out names are the half a short regex misses. `18801475` says "Montreal
+#: Neurological Institute" and was read as a third space; `pondie.normalization
+#: .coordinate_space` has the lexicon, including `ICBM`, `Colin27` and the transpositions.
 MNI_TALAIRACH = re.compile(r"mni|talairach|tal\b|icbm|mni152|asym", re.I)
 ROI_WORDS = re.compile(r"\broi\b|region of interest|small volume|\bsvc\b", re.I)
+#: What a cohort is called when it is the comparison and its condition was never read.
+HEALTHY_NAME = re.compile(r"\bhealthy|\bcontrols?\b|\bHC\b|comparison", re.I)
 
 
 def read(node: object) -> object:
-    """Unwrap an ExtractedValue the way a consumer would, without importing pondie."""
+    """Unwrap an ExtractedValue the way a consumer would, without importing pondie.
+
+    Twice where the record wrapped it twice. 30 cells in two records hold
+    `{"value": "positive"}` with no `extraction_status` -- a wrapper missing its status --
+    and a reader that hands that dict back loses the value: it cost `22076160`, a gold
+    paper, its between-group contrast test.
+    """
     if not isinstance(node, dict):
         return node
     if "extraction_status" not in node:
-        return node
+        return read(node["value"]) if set(node) == {"value"} else node
     if node.get("extraction_status") != "extracted":
         return UNANSWERABLE
-    return node.get("value")
+    return read(node.get("value")) if isinstance(node.get("value"), dict) else node.get("value")
 
 
 #: Set by --literal. A query written against the schema compares a SCALAR slot to a string;
@@ -116,11 +127,13 @@ def whole_brain(record: dict) -> bool | None:
 def standard_space(record: dict) -> bool | None:
     """"reporting foci as 3D coordinates (X, Y, Z) in Talairach or Montreal Neurological
     Institute (MNI) stereotaxic space". `Analysis.coordinate_space`."""
+    from pondie.normalization.coordinate_space import MNI, TAL, normalize
+
     seen = [s for a in record.get("analyses") or [] if isinstance(a, dict)
             for s in strings(a.get("coordinate_space"), "coordinate_space")]
     if not seen:
         return UNANSWERABLE
-    return any(MNI_TALAIRACH.search(s) for s in seen)
+    return any(normalize(s).value in (MNI, TAL) for s in seen)
 
 
 def between_group(record: dict) -> bool | None:
@@ -175,6 +188,15 @@ def group_condition(record: dict, pattern: str) -> bool | None:
     return False if conditions else UNANSWERABLE
 
 
+def has_control_group(record: dict) -> bool | None:
+    """"2) No Control" excluded -- the dementia review pools bvFTD against controls.
+
+    The same reading as `a_healthy_cohort`, including the name where the condition slot is
+    empty, and stated as its own criterion because the review states it as one.
+    """
+    return a_healthy_cohort(record)
+
+
 def a_healthy_cohort(record: dict) -> bool | None:
     """"healthy adults with no prior report of neurological, medical, or psychiatric
     disorders ... Articles including patients were only selected if they reported results
@@ -193,6 +215,15 @@ def a_healthy_cohort(record: dict) -> bool | None:
         return UNANSWERABLE
     verdicts = [derive(g) for g in groups]
     if any(v is True for v in verdicts):
+        return True
+    # A cohort whose `medical_condition` nobody read and whose NAME is what the literature
+    # calls the other side. 102 groups in this project are named healthy or control with
+    # the condition slot empty, and `is_healthy` reads only the condition, so the criterion
+    # that admits "a control group reported separately" could not see them. The name may
+    # only say yes, for the reason it may only say yes in `group_condition`: a label is
+    # weaker evidence than a diagnosis, so it can add an assertion and never remove one.
+    if any(v is None and HEALTHY_NAME.search(" ".join(strings(g.get("name"))))
+           for g, v in zip(groups, verdicts)):
         return True
     return UNANSWERABLE if all(v is None for v in verdicts) else False
 
@@ -249,6 +280,22 @@ def visual_stimuli(record: dict) -> bool | None:
                           r"sentence|letter|face|scene|cue", joined, re.I))
 
 
+def morphometry_unspecified(record: dict) -> bool:
+    """A morphometric measure whose quantity nobody wrote down.
+
+    `structural_morphometry` is a family, not a quantity: a record carrying it with no
+    type, or with `structural_morphometry_other`, has not said whether it measured grey
+    matter. Reading that as "not grey matter" contradicted gold papers for something the
+    record never denied.
+    """
+    types = {s.lower() for m in record.get("measures") or [] if isinstance(m, dict)
+             for s in strings(m.get("type"), "type")}
+    families = {s.lower() for m in record.get("measures") or [] if isinstance(m, dict)
+                for s in strings(m.get("family"), "family")}
+    named = {t for t in types if t and t != "structural_morphometry_other"}
+    return not named and "structural_morphometry" in families
+
+
 def measures(record: dict, pattern: str) -> bool | None:
     """"assessing GM volume differences" / "focused on gray matter structural differences".
 
@@ -262,7 +309,9 @@ def measures(record: dict, pattern: str) -> bool | None:
             for s in strings(m.get("type"), "type") + strings(m.get("family"), "family")]
     if not seen:
         return UNANSWERABLE
-    return any(re.search(pattern, s, re.I) for s in seen)
+    if any(re.search(pattern, s, re.I) for s in seen):
+        return True
+    return UNANSWERABLE if morphometry_unspecified(record) else False
 
 
 def group_contrast(record: dict) -> bool | None:
@@ -307,8 +356,13 @@ def english(record: dict) -> bool | None:
     return any(c.startswith("en") for c in codes)
 
 
-def no_pharmacological(record: dict) -> bool | None:
+def no_drug_administered(record: dict) -> bool | None:
     """"presence of pharmacological manipulations" excluded. `Arm.arm_kind`.
+
+    The question is whether the study ADMINISTERED A DRUG, and `arm_kind` is the only
+    field that says a drug: `allocation` and `Timepoint.relation_to_intervention` say
+    something was administered without saying what, and a named `Arm.agent` is as often a
+    behavioural or stimulation arm -- tDCS, CBT, gastric bypass -- as a drug.
 
     Read off the arm's own kind, which has a value for exactly this criterion:
     `pharmacological`, "an administered drug or other agent", and `placebo`, its inert
@@ -321,25 +375,62 @@ def no_pharmacological(record: dict) -> bool | None:
     VBM literature should look like.
     """
     design = record.get("design") or {}
-    kinds = [s.lower() for a in (design.get("arms") or [])
-             if isinstance(a, dict) for s in strings(a.get("arm_kind"), "arm_kind")]
+    kinds = {s.lower() for a in (design.get("arms") or []) if isinstance(a, dict)
+             for s in strings(a.get("arm_kind"), "arm_kind")}
+    if kinds & {"pharmacological", "placebo"}:
+        return False
     if kinds:
-        return not any(k in ("pharmacological", "placebo") for k in kinds)
+        # Arms are declared and none of them is a drug: a tDCS or a CBT arm is an
+        # administration and not a pharmacological one, and this criterion names drugs.
+        return True
 
-    # No arm declared. Two fields say whether that means nothing was administered:
-    # `allocation: not_applicable` is glossed "Nothing was administered", and
-    # `assignment_structure: observational_cohorts` is glossed "not assigned to anything
-    # ... and nothing was administered", which is the criterion in the schema's own words.
-    # The second is here because re-extracting five of these papers with today's schema
-    # filled it correctly on five of five, where `allocation` was right on one: the model
-    # writes the assignment value into the allocation slot.
-    said = [s.lower() for s in strings(design.get("allocation"), "allocation")
-            + strings(design.get("assignment_structure"), "assignment_structure")]
-    if any(s in ("not_applicable", "observational_cohorts") for s in said):
+    # No arm. Three things the design can still say, and they are not the same thing.
+    said = {s.lower() for s in strings(design.get("allocation"), "allocation")
+            + strings(design.get("assignment_structure"), "assignment_structure")}
+    if said & {"not_applicable", "observational_cohorts"}:
+        # "Nothing was administered, so allocation does not apply", and "not assigned to
+        # anything ... and nothing was administered". The criterion in the schema's words.
         return True
-    if any(s in ("single_arm",) for s in said):
-        return True
+    timing = {s.lower() for t in (design.get("timepoints") or []) if isinstance(t, dict)
+              for s in strings(t.get("relation_to_intervention"), "relation_to_intervention")}
+    if said & {"randomized", "non_randomized", "single_arm"} or timing & {
+            "pre_intervention", "post_intervention", "during_intervention"}:
+        # Something was administered and the record does not say what. `single_arm` is
+        # glossed "an open-label pre-post drug study is single-arm", so reading it as
+        # "nothing was given" -- which an earlier version of this predicate did, on 295
+        # records -- inverts it. Not False either: a behavioural or stimulation trial is
+        # administered and is not a pharmacological manipulation.
+        return UNANSWERABLE
     return UNANSWERABLE
+
+
+#: What criterion (1) of the dementia review excludes from the bvFTD cohort itself.
+COMORBID = re.compile(
+    r"alzheimer|\bAD\b|parkinson|\bMCI\b|mild cognitive|lewy|huntington|"
+    r"amyotrophic|\bALS\b|depress|bipolar|schizophren|psychosis|psychiatric|"
+    r"alcohol|substance abuse|substance use disorder",
+    re.I,
+)
+
+
+def cohort_without_comorbidity(record: dict, pattern: str) -> bool | None:
+    """"included clinically diagnosed bvFTD patients with no concurrent psychiatric
+    diagnosis (e.g., major depressive disorder and bipolar mood disorder), other forms of
+    dementia or neurological symptoms, and no history of alcohol and substance abuse".
+
+    The exclusion is about the PATIENTS, not about the study: a paper comparing bvFTD
+    against Alzheimer's has an Alzheimer's cohort and its bvFTD cohort is still clean, and
+    25 of the review's own 73 gold papers are that shape. Only the cohort matching
+    `pattern` is tested, and only against what it says about itself.
+    """
+    from query_contrasts import names_cohort
+
+    cohorts = [" ".join(strings(g.get("name")) + strings(g.get("medical_condition")))
+               for g in record.get("groups") or [] if isinstance(g, dict)]
+    named = [t for t in cohorts if names_cohort(t, pattern)]
+    if not named:
+        return UNANSWERABLE if not any(t.strip() for t in cohorts) else False
+    return not any(COMORBID.search(t) for t in named)
 
 
 def whole_brain_or_svc(record: dict) -> bool | None:
@@ -390,8 +481,10 @@ QUERIES: dict[str, tuple[str, list[tuple[str, Predicate]]]] = {
         ("fMRI, structural or PET", lambda r: any_modality(r, r"fMRI|structural|VBM|PET|MRI")),
         ("whole brain", whole_brain),
         ("standard space", standard_space),
-        ("bvFTD cohort", lambda r: group_condition(r, r"bvFTD|frontotemporal|FTD")),
+        ("bvFTD cohort", lambda r: cohort_without_comorbidity(
+            r, r"bvFTD|frontotemporal|FTD")),
         ("a group of at least six", lambda r: min_group_size(r, 6)),
+        ("a healthy control group", has_control_group),
         ("between-group contrast", between_group),
         ("signed contrast", has_direction),
     ]),
@@ -406,12 +499,22 @@ QUERIES: dict[str, tuple[str, list[tuple[str, Predicate]]]] = {
     ]),
     "36115222": ("vbm_of_substance_use", [
         ("English language", english),
-        ("structural modality", lambda r: any_modality(r, r"structural|vbm|smri|\bMRI\b|T1")),
+        # No modality test. "only empirical English language MRI studies assessing GM
+        # volume differences" -- the second half entails the first, since nothing but MRI
+        # measures grey-matter volume, and the test's own errors were records that list
+        # an fMRI acquisition for a paper that also ran VBM. Dropping it is worth 3.9
+        # points of recall for 2.5 of precision.
         ("whole brain", whole_brain),
         ("standard space", standard_space),
+        # `marijuana`, `amphetamine` and `stimulant` were missing and each is a gold
+        # paper: 15607838 is a "marijuana group", 20817105 an "amphetamine-type stimulant
+        # use" cohort, 21310189 "Heavy marijuana use". The per-drug contrast specs in
+        # query_contrasts.py already carried them, so the two halves of the same query
+        # disagreed about what a substance is.
         ("substance-use cohort", lambda r: group_condition(
-            r, r"alcohol|nicotine|tobacco|smok|cocaine|cannabis|opioid|heroin|"
-               r"methamphetamine|substance|depend|abuse|addict")),
+            r, r"alcohol|nicotine|tobacco|smok|cocaine|cannabis|marijuana|marihuana|"
+               r"opioid|opiate|heroin|methamphetamine|amphetamine|stimulant|"
+               r"substance|depend|abuse|addict")),
         # `gray_matter` and not `gray_matter_volume`. VBM measures density or
         # concentration and the criterion says "volume": 11822992 is "voxel based
         # morphometry ... gray and white matter concentration", its record correctly says
@@ -420,7 +523,7 @@ QUERIES: dict[str, tuple[str, list[tuple[str, Predicate]]]] = {
         # thickness and diffusion, which this keeps.
         ("gray matter measure", lambda r: measures(r, r"gray_matter|grey_matter")),
         ("between-group contrast", group_contrast),
-        ("no pharmacological arm", no_pharmacological),
+        ("no drug administered", no_drug_administered),
     ]),
     "35413444": ("emotion_regulation_2022", [
         ("fMRI", lambda r: any_modality(r, r"fMRI|functional")),
