@@ -1010,6 +1010,18 @@ def unsupported_omissions(
         raw = str(entry.get("reason") or "").strip()
         head, _, rest = raw.partition(":")
         head = head.strip()
+        # The DECLINED key, not just the target. The target was checked from the start and
+        # the key was not, so a decline could be about an entry that does not exist:
+        # 20147457 returned `{"key": "possible#1", "reason": "duplicate_of:prose#1"}` over
+        # a listing whose only key is `prose#1`. It satisfies every other rule here -- the
+        # reason is in the vocabulary, the target exists and carries the coordinates -- and
+        # says nothing, because there is no `possible#1` to be a duplicate of anything.
+        # Harmless on its own and not harmless as a habit: `unconsumed_listing` counts a
+        # listing entry as accounted for when `omitted` names it, so a key that drifts by
+        # one character is an entry silently dropped and an omission silently invented.
+        if listing and key not in listing:
+            bad.append(f"{key!r} is declined and is not a listing key")
+            continue
         if head not in OMIT_REASONS:
             bad.append(
                 f"{key!r} is declined with {raw[:60]!r}, which is not one of "

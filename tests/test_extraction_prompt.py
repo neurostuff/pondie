@@ -827,3 +827,28 @@ def test_a_voxel_a_table_also_reports_is_marked() -> None:
 
     assert "(9, -12, -6) [in a table]" in block
     assert "[in a table]" in render.PROSE_GROUP_NOTE, "the marker must stay explained"
+
+
+def test_a_decline_must_be_about_an_entry_that_exists() -> None:
+    """The `duplicate_of` TARGET was checked from the start and the declined key was not,
+    so a decline could be about nothing: 20147457 returned
+    `{"key": "possible#1", "reason": "duplicate_of:prose#1"}` over a listing whose only key
+    is `prose#1`. It satisfies every other rule -- the reason is in the vocabulary, the
+    target exists and carries the coordinates.
+
+    It matters because `unconsumed_listing` treats a listing entry as accounted for when
+    `omitted` names it. A key off by one character is then an entry silently dropped and an
+    omission silently invented, which is the exact pair of failures the channel exists to
+    keep apart."""
+
+    listing = {"prose#1"}
+    invented = {"omitted": [{"key": "possible#1", "reason": "duplicate_of:prose#1"}]}
+
+    failures = render.unsupported_omissions(invented, listing)
+    assert failures and "not a listing key" in failures[0]
+
+    real = {"omitted": [{"key": "prose#1", "reason": "seed_coordinate"}]}
+    assert render.unsupported_omissions(real, listing) == []
+
+    # No listing to check against is not the same as a key that fails the check.
+    assert render.unsupported_omissions(invented, ()) == []
