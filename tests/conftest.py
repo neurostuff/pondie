@@ -48,7 +48,7 @@ from pathlib import Path
 
 from pondie import paths, schema
 from pondie.extraction.record import validate as validate_record
-from pondie.formats import text_index
+from pondie.formats import table_parse as tables, text_index
 from pondie.schema import reader
 
 
