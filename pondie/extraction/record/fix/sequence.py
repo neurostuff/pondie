@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
-from pondie.extraction.record.fix import derive, link, shape
+from pondie.extraction.record.fix import derive, link, reachable, shape
 from pondie.schema.reader import Schema
 
 
@@ -256,6 +256,22 @@ def build_sequence() -> tuple[Repair, ...]:
             "rebuild the reversed half of every sign-split contrast",
             lambda body, ctx: derive.mirror_withheld(body, ctx.stage1),
             after="directions",
+            stage="merged",
+        ),
+        # LAST at the merge, because it judges the whole assembled record and because
+        # `mirrored` ADDS analyses -- reachability measured before it would call the
+        # entities only a mirrored analysis reaches orphans.
+        #
+        # Also run after the repair sweep, in `repair.stage`, since that pass creates
+        # entities of its own: over 126 papers 111 of 128 orphans came from there and 17
+        # from `satisfy`. Running it in both places is what makes "every entity reaches an
+        # analysis" a property of the record rather than of whichever stages happened to
+        # run -- `--stages` can omit repair, and then this is the only pass that looks.
+        Repair(
+            "unreachable",
+            "drop entities no analysis reaches, by any path in either direction",
+            lambda body, ctx: reachable.drop_unreachable(body),
+            after="mirrored",
             stage="merged",
         ),
     )

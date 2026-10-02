@@ -3,7 +3,13 @@
 The record is analysis-centred: an Analysis is the unit a meta-analysis pools, and every
 other entity is there to describe one. An entity nothing reaches describes nothing.
 
-WHY THIS RUNS HERE AND NOT EARLIER. `render.unreachable_entity_demands` holds the demands
+WHERE IT RUNS. Twice: last at the merge (`fix.sequence`, after `mirrored`, which ADDS
+analyses) and again after the repair sweep (`repair.stage`), which creates entities of its
+own. Both, because `--stages` can omit repair and then the merge is the only pass that
+looks -- and because running it twice is idempotent, while running it once leaves the
+guarantee depending on which stages happened to run.
+
+WHY NOT ONLY AT DEMANDS. `render.unreachable_entity_demands` holds the demands
 pass to the same rule, and it is not enough: audited over 126 freshly extracted papers,
 **66 of 69 orphans appear in no payload at all** -- not `tables`, `demands`, `satisfy` or
 `fill` -- and **0 of the 69 were ever referenced in any payload**. They are minted by the

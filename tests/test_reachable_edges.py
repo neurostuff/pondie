@@ -15,7 +15,7 @@ from __future__ import annotations
 import pytest
 
 import pondie.schema as schema_pkg
-from pondie.extraction.repair.reachable import _ids_in, drop_unreachable, reachable
+from pondie.extraction.record.fix.reachable import _ids_in, drop_unreachable, reachable
 from pondie.schema import reader
 
 

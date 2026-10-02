@@ -37,7 +37,7 @@ from pondie.extraction.record.validate import EXTRACTION_SCHEMA, Validator
 from pondie.extraction.repair import guard as edit_module
 from pondie.extraction.repair.guard import UNRESTRICTED, Edit, Refusal, refusals
 from pondie.extraction.repair.propose import candidates, existing, sweep_order
-from pondie.extraction.repair.reachable import drop_unreachable
+from pondie.extraction.record.fix.reachable import drop_unreachable
 from pondie.formats import values
 from pondie.schema import reader
 from pondie.schema.reader import Schema

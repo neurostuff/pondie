@@ -652,9 +652,25 @@ filled 178 times and `arms` 33 -- in a corpus of randomised trials, where nearly
 contrast is over an arm. A cell whose level is an arm and whose `FactorLevel` has no `arms`
 cannot be resolved to a treatment or a comparator by anything downstream.
 
-Emit any further entity the paper describes that no analysis referenced -- the participant
-group's demographics, an assessment, the scanner -- as usual. The list is a floor, not a
-ceiling.
+The list is a FLOOR, NOT A CEILING. Emit any further entity the paper describes, and emit
+it whole -- its own attributes and the relationship objects that hold it in place. A
+scanner is an `Acquisition.device`; a preprocessing pipeline is a
+`ModelEstimation.preprocessing`; an instrument that classified a cohort is that group's
+`diagnostic_instrument`; a condition belongs to its task. Emitting the entity and leaving
+the slot that holds it empty is half the work.
+
+AND CONNECT IT. Every entity in the record has to reach an analysis along references, in
+either direction and by a path of any length: an analysis cites a model, the model names
+its preprocessing; an analysis cites a term, the term's level names the arm, the arm names
+the group. If you cannot name the path for an entity, it reaches nothing, and an entity
+that reaches nothing is dropped from the record after this pass -- so emitting it costs the
+work and changes the record not at all.
+
+This paragraph used to end "that no analysis referenced ... as usual", and that is exactly
+what arrived: over 126 papers this pass emitted 17 entities that appear nowhere in the
+shopping list and that nothing in the record reaches -- a handedness inventory, a craving
+questionnaire, a cohort, a result location, and three `devices` and three `preprocessings`
+with no name at all. None was asked for and none could be reached.
 """
 
 #: Keyed by stage. `demands` runs first and emits the analyses plus the shopping list;
