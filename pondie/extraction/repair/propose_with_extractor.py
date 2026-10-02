@@ -27,6 +27,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from pondie.extraction.models import Cost, ModelCall
+from pondie.extraction.prompt import render
 from pondie.extraction.repair.propose import _NOUN, INSTRUCTION, _Proposes, directive, template_for
 
 #: What a template-native model gets from its chat template and a chat model does not:
