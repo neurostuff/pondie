@@ -701,3 +701,43 @@ def test_a_table_an_analysis_cites_reports_that_analysis_effect():
     # tbl2 is cited by nothing, so its own answer stands
     assert values.read(body["tables"][1]["purpose"]) == "demographics"
     assert filled
+
+
+def test_a_single_valued_enum_is_offered_as_a_choice_not_a_list():
+    """`nu_type` returns an enum's permissible values, which is right -- the model has to be
+    told what it may say. Rendering that list AS the template made a single-valued enum
+    look exactly like a list-valued slot, and the model answered the shape it saw.
+
+    Over 126 papers the repair pass introduced 1,027 validator findings and nearly all were
+    this: `brain_coverage` 86, `spatial_unit` 61, `Measure.type` 51, `design_type` 49,
+    `modality` 45, all "must be a single value, got a 1-item list"."""
+    from pondie.extraction.repair.propose import template_for
+    from pondie.schema import reader
+    import pondie.schema as schema_pkg
+
+    sch = reader.load(schema_pkg.EXTRACTION)
+    body = list(template_for(sch, "Acquisition").values())[0][0]
+
+    assert body["brain_coverage"] == "one of: whole_brain | partial"
+    assert not isinstance(body["brain_coverage"], list), "the shape must not say 'list'"
+    # a multivalued slot still looks like a list, which is the convention the reference
+    # branch of this function already uses for `verbatim-string`
+    multi = [v for k, v in body.items() if sch.is_multivalued("Acquisition", k)]
+    assert all(isinstance(v, list) for v in multi), multi
+
+
+def test_a_one_item_list_for_a_single_valued_slot_is_unwrapped():
+    """The belt to the template's braces: a model may send a list anyway, and nothing
+    should write a value the validator will refuse.
+
+    Two or more is left alone -- that is the model asserting two values for a slot that
+    holds one, a disagreement about the paper rather than a shape to tidy."""
+    from pondie.formats import values
+    from pondie.schema import reader
+    import pondie.schema as schema_pkg
+
+    sch = reader.load(schema_pkg.EXTRACTION)
+
+    assert values.shape(sch, "Acquisition", "brain_coverage", ["whole_brain"]) == "whole_brain"
+    assert values.shape(sch, "Acquisition", "brain_coverage", "partial") == "partial"
+    assert values.shape(sch, "Acquisition", "brain_coverage", ["whole_brain", "partial"]) is None

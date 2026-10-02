@@ -227,12 +227,30 @@ def cast(sch: "Schema", class_name: str, slot: str, value: Any) -> Any:
 
 
 def shape(sch: "Schema", class_name: str, slot: str, value: Any) -> Any:
-    """Ensure list response if field allows multiple values."""
+    """Fit a proposed value to its slot's arity: a list where the slot takes many, a bare
+    value where it takes one.
+
+    The second direction is as necessary as the first. A single-valued slot handed a
+    one-item list is a value the validator rejects -- "must be a single value, got a 1-item
+    list" -- and over 126 papers the repair pass introduced 1,027 such findings, led by
+    `brain_coverage` 86, `spatial_unit` 61, `Measure.type` 51, `design_type` 49,
+    `modality` 45. The cause was a template that rendered an enum's permissible values as a
+    list, so the shape said "give me a list" while the slot took one; `propose.template_for`
+    now states the choice instead. This is the belt to that braces: a model is free to send
+    a list anyway, and nothing downstream should write a value the validator will refuse.
+
+    A list of two or more is NOT unwrapped. That is the model asserting two values for a
+    slot that holds one, which is a disagreement about the paper rather than a shape to
+    tidy, and `cast` returning None for it is the honest answer.
+    """
     result = cast(sch, class_name, slot, value)
     if result is None:
         return None
-    if sch.is_multivalued(class_name, slot) and not isinstance(result, list):
+    many = sch.is_multivalued(class_name, slot)
+    if many and not isinstance(result, list):
         return [result]
+    if not many and isinstance(result, list):
+        return result[0] if len(result) == 1 else None
     return result
 
 

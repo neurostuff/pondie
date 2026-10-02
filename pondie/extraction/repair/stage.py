@@ -37,6 +37,7 @@ from pondie.extraction.record.validate import EXTRACTION_SCHEMA, Validator
 from pondie.extraction.repair import guard as edit_module
 from pondie.extraction.repair.guard import UNRESTRICTED, Edit, Refusal, refusals
 from pondie.extraction.repair.propose import candidates, existing, sweep_order
+from pondie.extraction.repair.reachable import drop_unreachable
 from pondie.formats import values
 from pondie.schema import reader
 from pondie.schema.reader import Schema
@@ -72,6 +73,9 @@ class Report:
     traces: tuple = ()
     #: Findings this pass introduced, from `Validator.diff`. Should be empty.
     introduced: list[str] = field(default_factory=list)
+    #: Entities removed from the record because no analysis reached them. Reported rather
+    #: than silent: the entity is out of the record, not deleted from the audit trail.
+    dropped: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
         return (
@@ -304,6 +308,12 @@ def run(
         if reply is not None:
             report.cost = reply.cost
             report.traces = ((reply.trace_id, reply.cache_status),) if reply.trace_id else ()
+
+    # LAST, because it judges what everything above produced. The proposer creates an entity
+    # whenever the model proposes one and never asks whether anything will point at it:
+    # audited over 126 papers, 66 of 69 orphans appear in no payload at all and none was
+    # ever referenced. See `reachable` for what that catches and why tables are exempt.
+    report.dropped += drop_unreachable(record)
 
     # The extraction schema, not `sch`. A record is extraction-shaped -- every value in an
     # `ExtractedValue` wrapper -- while `sch` is storage, where `name` is a plain string.
