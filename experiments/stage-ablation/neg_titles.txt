@@ -1,0 +1,33 @@
+11950456 2002 De Bellis MD | Superior temporal gyrus volumes in maltreated children and adolescents with PTSD.
+15734342 2005 Araki T | Association between lower P300 amplitude and smaller anterior cingulate cortex volume in patients with posttraumatic str
+16199014 2006 Tupler LA | Segmented hippocampal volume in children and adolescents with posttraumatic stress disorder.
+16371250 2006 Chen S | Gray matter density reduction in the insula in fire survivors with posttraumatic stress disorder: a voxel-based morphome
+16508348 2006 Emdad R | Morphometric and psychometric comparisons between non-substance-abusing patients with posttraumatic stress disorder and 
+16701903 2006 Jatzko A | Hippocampal volume in chronic posttraumatic stress disorder (PTSD): MRI study using two different evaluation methods.
+17892884 2008 Bossini L | Magnetic resonance imaging volumes of the hippocampus in drug-naïve patients with post-traumatic stress disorder without
+18330460 2008 Bryant RA | Rostral anterior cingulate volume predicts treatment response to cognitive-behavioural therapy for posttraumatic stress 
+19349151 2009 Carrion VG | Converging evidence for abnormalities of the prefrontal cortex and evaluation of midsagittal structures in pediatric pos
+19914045 2009 Rogers MA | Smaller amygdala volume and reduced anterior cingulate gray matter density associated with history of post-traumatic str
+19996042 2009 Woodward SH | Smaller global and regional cortical volume in combat-related posttraumatic stress disorder.
+20673548 2010 Thomaes K | Reduced anterior cingulate and orbitofrontal volumes in child abuse-related complex PTSD.
+21592738 2011 Kroes MC | Association between flashbacks and structural brain abnormalities in posttraumatic stress disorder.
+22948482 2012 Ahmed F | Relationship between neurocognition and regional brain volumes in traumatized adolescents with and without posttraumatic
+23113800 2013 Nardo D | Gray matter volume alterations related to trait dissociation in PTSD and traumatized controls.
+24058706 2013 Aupperle RL | Deployment and post-deployment experiences in OEF/OIF veterans: relationship to gray matter volume.
+25000505 2014 Zhang Q | Structural impairments of hippocampus in coal mine gas explosion-related posttraumatic stress disorder.
+25212487 2015 Keding TJ | Abnormal structure of fear circuitry in pediatric post-traumatic stress disorder.
+26138235 2016 Daniels JK | Structural brain aberrations associated with the dissociative subtype of post-traumatic stress disorder.
+26424424 2015 Cortese BM | Burning odor-elicited anxiety in OEF/OIF combat veterans: Inverse relationship to gray matter volume in olfactory cortex
+26535944 2015 De Bellis MD | Posterior structural brain volumes differ in maltreated youth with and without chronic posttraumatic stress disorder.
+27082610 2016 Zandieh S | Analysis of the Metabolic and Structural Brain Changes in Patients With Torture-Related Post-Traumatic Stress Disorder (
+28416565 2017 Perez DL | Cingulo-insular structural alterations associated with psychogenic symptoms, childhood abuse and PTSD in functional neur
+28888350 2017 Rinne-Albers MA | Anterior cingulate cortex grey matter volume abnormalities in adolescents with PTSD after childhood sexual abuse.
+29761009 2018 Butler O | Hippocampal gray matter increases following multimodal psychological treatment for combat-related post-traumatic stress 
+29939345 2018 Berman Z | Assault-related self-blame and its association with PTSD in sexually assaulted women: an MRI inquiry.
+30127342 2019 Gong Q | A transdiagnostic neuroanatomical signature of psychiatric illness.
+30343133 2019 Heyn SA | Abnormal Prefrontal Development in Pediatric Posttraumatic Stress Disorder: A Longitudinal Structural and Functional Mag
+30937515 2020 Cwik JC | Reduced gray matter volume in the left prefrontal, occipital, and temporal regions as predictors for posttraumatic stres
+31662209 2020 Berman Z | Macro- and microstructural gray matter alterations in sexually assaulted women.
+32938511 2022 Chen HJ | Evaluation of gray matter reduction in patients with typhoon-related posttraumatic stress disorder using causal network 
+32977211 2020 Siehl S | Structural white and gray matter differences in a large sample of patients with Posttraumatic Stress Disorder and a heal
+33169525 2021 Harnett NG | Multimodal structural neuroimaging markers of risk and recovery from posttrauma anhedonia: A prospective investigation.
