@@ -112,6 +112,10 @@ def mode_classes(sch: Schema, mode: str) -> tuple[set[str], list[str]]:
         keep = ["analyses"]
         return analysis_side - DETERMINISTIC_CLASSES, keep
 
+    if mode == "single":
+        entities, keep = mode_classes(sch, "entities")
+        return (analysis_side | entities) - DETERMINISTIC_CLASSES, keep + ["analyses"]
+
     roots: list[str] = []
     keep = []
     for attr, slot in study.items():
@@ -784,7 +788,22 @@ with no name at all. None was asked for and none could be reached.
 #: rendered schema; the region paragraph went with them deliberately, because
 #: docs/extraction-workflow-experiments.md records that it was in the prompt while the
 #: failure it warns about happened anyway, which is what motivated the reordering.
-MODE_NOTE = {"demands": DEMANDS_NOTE, "satisfy": SATISFY_NOTE}
+SINGLE_NOTE = """
+This is the ONLY extraction pass. It emits the WHOLE record in one JSON object: every analysis
+the paper reports, and every entity those analyses reference -- groups, tasks, acquisitions,
+model estimations with their terms, measures, inference settings, regions, assessments, and
+the design with its arms and timepoints. No pass runs after this one to supply what is
+missing, so a local_id you reference that you do not emit here is a dangling reference and
+the record is rejected.
+
+Account for the stage-1 listing below on exactly the terms its own instructions give: an
+analysis for each result the paper reports, with `source_table_analysis` naming the entry,
+or a reasoned entry in a top-level `omitted` list. Tables already exist; do not emit them.
+Emit an Analysis for every tested effect the paper reports, including one that found
+nothing, whether or not the listing has an entry for it.
+"""
+
+MODE_NOTE = {"demands": DEMANDS_NOTE, "satisfy": SATISFY_NOTE, "single": SINGLE_NOTE}
 
 
 def requirements_block(declared: Mapping[str, Any]) -> str:
@@ -871,7 +890,7 @@ def worked_models() -> str:
 #: The demand-driven pair. `demands` renders the analysis side and `satisfy` the entity
 #: side, exactly as `analyses` and `entities` do; what differs is the order they run in and
 #: that the shopping list, not a guess, decides which entities exist.
-MODE_SCHEMA = {"demands": "analyses", "satisfy": "entities"}
+MODE_SCHEMA = {"demands": "analyses", "satisfy": "entities", "single": "single"}
 
 
 def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
@@ -886,10 +905,14 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
     payload_keys = [
         k
         for k, v in schema.entity_lists().items()
-        if "." not in v and v != "tables" and (v == "analyses") == analysis_side
+        if "." not in v
+        and v != "tables"
+        and (mode == "single" or (v == "analyses") == analysis_side)
     ]
     if mode == "demands":
         payload_keys.append("required_entities")
+    if mode == "single":
+        payload_keys.append("omitted")
     # The split IS the cache optimisation, and the earlier attempt failed because it moved
     # content around inside `user` while leaving the mode-specific note in `system`.
     #
@@ -1204,8 +1227,12 @@ def postcondition_failures(
     declared: Sequence[Mapping[str, Any]] = (),
     listing: Collection[str] = (),
     foci: Mapping[str, frozenset] | None = None,
+    existing: Collection[str] = (),
 ) -> list[str]:
     """What is wrong with this payload that no schema check would catch.
+
+    `existing` is the local_ids that live outside the payload -- the Tables the `tables`
+    stage copied -- so a reference to one is not reported as dangling.
 
     A pass that returns `{"groups": [], "measures": [], ...}` is well formed, legally empty,
     and builds and validates into a record about no study at all. That failure was 2 runs in
@@ -1231,6 +1258,13 @@ def postcondition_failures(
                 f"({', '.join(repr(str(e)[:40]) for e in loose[:3])}): an entity emitted as "
                 "a bare string has lost every field but the fragment shown"
             )
+    if mode == "single":
+        if not payload.get("analyses"):
+            failures.append("no analyses were emitted")
+        failures.extend(unconsumed_listing(payload, listing))
+        failures.extend(unsupported_omissions(payload, listing, foci))
+        failures.extend(dangling_references(payload, existing))
+        return failures
     if MODE_SCHEMA.get(mode, mode) == "analyses":
         if not payload.get("analyses"):
             failures.append("no analyses were emitted")
@@ -1269,6 +1303,31 @@ def postcondition_failures(
                 + ", ".join(sorted(missing)[:8])
             )
     return failures
+
+
+def dangling_references(payload: Mapping[str, Any], existing: Collection[str] = ()) -> list[str]:
+    """References to local_ids this payload never declares, for a pass that emits a whole
+    record and so has nobody after it to declare them.
+
+    The single pass's commonest structural fault, measured: of 55 papers, the reply for 12
+    referenced model estimations, measures or acquisitions and then emitted those lists
+    empty -- 19538748 carried 22 such references. `build` reports them; this is the check
+    that lets the pass be asked again instead.
+    """
+    from pondie.extraction.record.fix.link import check_local_ids
+
+    body = {k: v for k, v in payload.items() if k not in ("study", "omitted")}
+    body |= dict(payload.get("study") or {})
+    body["tables"] = [{"local_id": local_id} for local_id in existing]
+    problems = check_local_ids(body, reader.load(EXTRACTION_SCHEMA))
+    if not problems:
+        return []
+    return [
+        f"{len(problems)} cross-reference problem(s): every local_id you reference must be "
+        "an entity you emit in this same object -- "
+        + "; ".join(problems[:12])
+        + (f" and {len(problems) - 12} more" if len(problems) > 12 else "")
+    ]
 
 
 def vacuous_entity_demands(payload: Mapping[str, Any]) -> list[str]:

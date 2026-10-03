@@ -152,10 +152,10 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool) -> 
         return sum(r[key] for r in group), len(group)
 
     if OVERLAP:
-        import overlap
+        from pondie.query.overlap import overlapping
         meta = json.loads(Path(__file__).with_name("pubmed_meta.json").read_text())
         chosen = {pmid for pmid, _, r in rows if r["veto"]}
-        excluded = overlap.excluded(records, chosen, meta)
+        excluded = overlapping(records, chosen, meta, status=queries.ptsd_status)
         for pmid, lab, r in rows:
             if pmid in excluded:
                 r["veto"] = r["strict"] = False

@@ -377,6 +377,10 @@ class _ModelPass(_Base):
         """The entities this pass was asked to produce, for the post-condition to check."""
         return ()
 
+    def existing(self, paper: Paper, settings: Settings) -> Collection[str]:
+        """local_ids that live outside this pass's payload, which a reference may name."""
+        return ()
+
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
@@ -442,7 +446,7 @@ class _ModelPass(_Base):
             payload, notes = render.normalize(reply.payload, self.mode)
             parsed = True
             failures = render.postcondition_failures(
-                payload, self.mode, declared, listing, foci
+                payload, self.mode, declared, listing, foci, self.existing(paper, settings)
             )
             if not failures:
                 break
@@ -573,11 +577,52 @@ class Satisfy(_ModelPass):
 
 
 @dataclass(frozen=True)
+class Single(_ModelPass):
+    """The whole record in one call: analyses and every entity they reference.
+
+    The alternative to `Demands` then `Satisfy`, and measured against it on the VBM-of-PTSD
+    benchmark (experiments/stage-ablation/JOURNAL.md): on 22 gold papers the split left
+    "structural MRI" unanswerable on 8, because `satisfy` builds only what `demands`
+    declared and `demands` never declares an Acquisition, and `demands` emitted nothing at
+    all for 2 papers through three retries. One call over both halves of the schema
+    answered more of the query at half the calls and tokens. What the split did protect
+    against -- a reply referencing entities it then leaves out -- is kept here as a
+    post-condition the retry names, which is what `existing` and
+    `render.dangling_references` are for.
+
+    It shows the same stage-1 listing `Demands` does, because the listing is what links an
+    analysis to its coordinates, and is held to the same listing checks.
+    """
+
+    name: StageName = StageName.single
+    reads: tuple[StageName, ...] = (StageName.tables,)
+    asks_a_model: bool = True
+    mode: str = "single"
+    repair_stage: tuple[str, ...] = ("shape", "demands", "satisfy")
+
+    def listing(self, paper: Paper, settings: Settings) -> Collection[str]:
+        return Demands().listing(paper, settings)
+
+    def listing_foci(self, paper: Paper, settings: Settings) -> Mapping[str, frozenset]:
+        return Demands().listing_foci(paper, settings)
+
+    def context(self, paper: Paper, settings: Settings) -> str:
+        return Demands().context(paper, settings)
+
+    def existing(self, paper: Paper, settings: Settings) -> Collection[str]:
+        tables = Tables().produces(paper, settings)
+        if not tables.is_file():
+            return ()
+        return [t.get("local_id") for t in json.loads(tables.read_text("utf-8")).get("tables") or []
+                if t.get("local_id")]
+
+
+@dataclass(frozen=True)
 class Fill(_Base):
     """Fill the slots that are still open."""
 
     name: StageName = StageName.fill
-    reads: tuple[StageName, ...] = (StageName.demands, StageName.satisfy)
+    reads: tuple[StageName, ...] = (StageName.demands, StageName.satisfy, StageName.single)
     asks_a_model: bool = True
 
     def produces(self, paper: Paper, settings: Settings) -> Path:
@@ -689,7 +734,12 @@ class Evidence(_Base):
     """A supporting quote for every value the earlier passes emitted."""
 
     name: StageName = StageName.evidence
-    reads: tuple[StageName, ...] = (StageName.demands, StageName.satisfy, StageName.fill)
+    reads: tuple[StageName, ...] = (
+        StageName.demands,
+        StageName.satisfy,
+        StageName.single,
+        StageName.fill,
+    )
     asks_a_model: bool = True
 
     batch: int = 200
@@ -824,6 +874,7 @@ class Build(_Base):
     reads: tuple[StageName, ...] = (
         StageName.demands,
         StageName.satisfy,
+        StageName.single,
         StageName.fill,
         StageName.evidence,
     )
@@ -1008,7 +1059,20 @@ DEMAND_DRIVEN: tuple[Stage, ...] = (
     Repair(),
 )
 
+#: The single-pass alternative: the same deterministic stages around one extraction call.
+SINGLE_PASS: tuple[Stage, ...] = (
+    Tables(),
+    ProseFoci(),
+    SignSplit(),
+    Single(),
+    Fill(),
+    Evidence(),
+    Build(),
+    Repair(),
+)
+
 
 def sequence(settings: Settings) -> tuple[Stage, ...]:
-    """The stages this run will attempt, in order."""
-    return tuple(s for s in DEMAND_DRIVEN if s.name in settings.stages)
+    """The stages this run will attempt, in order. `single` selects `SINGLE_PASS`."""
+    stages = SINGLE_PASS if StageName.single in settings.stages else DEMAND_DRIVEN
+    return tuple(s for s in stages if s.name in settings.stages)

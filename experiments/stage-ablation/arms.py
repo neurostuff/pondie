@@ -191,6 +191,9 @@ ARMS: dict[str, tuple[tuple[StageName, ...], object, tuple[StageName, ...]]] = {
                  Mono(with_parse=True, check=True), (StageName.fill, StageName.build)),
     "mpc_ev": ((StageName.tables, StageName.prose_foci, StageName.sign_split),
                Mono(with_parse=True, check=True), (StageName.evidence, StageName.build)),
+    # pondie's own single-pass stage (pondie/extraction/stages.py `Single`).
+    "pondie_single": ((StageName.tables, StageName.prose_foci, StageName.sign_split,
+                       StageName.single), None, (StageName.build,)),
     "ds": ((StageName.tables, StageName.prose_foci, StageName.sign_split, StageName.demands,
             StageName.satisfy), None, (StageName.build,)),
     "ds_fill": ((StageName.tables, StageName.prose_foci, StageName.sign_split,

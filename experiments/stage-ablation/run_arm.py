@@ -20,7 +20,7 @@ from pondie import paths
 from pondie.extraction.llm import GatewayCaller, load_env
 from pondie.extraction.models import Flavour, Paper, Settings
 from pondie.extraction.record.builder import merge_payloads
-from pondie.extraction.stages import DEMAND_DRIVEN
+from pondie.extraction.stages import DEMAND_DRIVEN, SINGLE_PASS
 
 import arms
 
@@ -28,7 +28,7 @@ ENV = Path("/data/james/pondie-vs-fulltext/repos/autonima-results/.env")
 
 
 def stage_objects(names):
-    by_name = {s.name: s for s in DEMAND_DRIVEN}
+    by_name = {s.name: s for s in (*DEMAND_DRIVEN, *SINGLE_PASS)}
     return [by_name[n] for n in names]
 
 

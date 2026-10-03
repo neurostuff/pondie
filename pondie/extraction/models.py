@@ -47,6 +47,10 @@ class StageName(str, Enum):
     sign_split = "split"
     demands = "demands"
     satisfy = "satisfy"
+    #: The whole record in one call, held to the demands pass's listing checks and to
+    #: `render.dangling_references`, instead of `demands` then `satisfy`. A run takes one
+    #: or the other; see `stages.SINGLE_PASS`.
+    single = "single"
     #: Slot-level, and after `satisfy` because it finishes what that pass left open rather
     #: than deciding anything exists. Loops: a slot is settled when it holds a value or a
     #: reason there is none, so "are we done" is a fact about the record and not a guess.
@@ -188,7 +192,7 @@ class Settings(Strict):
     payloads: Path
     records: Path
     model: str
-    stages: tuple[StageName, ...] = tuple(StageName)
+    stages: tuple[StageName, ...] = tuple(s for s in StageName if s is not StageName.single)
     effort: Literal["minimal", "low", "medium", "high"] = "low"
     max_output_tokens: Annotated[int, Field(gt=0)] = 48_000
     attempts: Annotated[int, Field(ge=1)] = 3
@@ -222,11 +226,12 @@ class Settings(Strict):
 
     @model_validator(mode="after")
     def _build_needs_its_inputs(self) -> "Settings":
-        if StageName.build in self.stages and StageName.satisfy not in self.stages:
+        producers = {StageName.satisfy, StageName.single}
+        if StageName.build in self.stages and not producers & set(self.stages):
             existing = self.payloads
             if not existing.exists():
                 raise ValueError(
-                    "build without satisfy needs payloads on disk from an earlier run; "
+                    "build without satisfy or single needs payloads on disk from an earlier run; "
                     f"{existing} does not exist"
                 )
         return self

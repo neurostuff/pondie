@@ -116,16 +116,18 @@ class Index:
                         + strs(g.get("description")))
 
     def is_ptsd_group(self, gid: str) -> bool | None:
-        """True for a PTSD cohort, False for a comparison cohort, None if unnamed."""
         g = self.groups.get(gid)
-        if g is None:
-            return None
-        text = " ".join(strs(g.get("name")) + strs(g.get("medical_condition")))
-        if NEGATED.search(text) or val(g.get("is_healthy")) is True:
-            return False
-        if PTSD.search(text):
-            return True
-        return False if text else None
+        return None if g is None else ptsd_status(g)
+
+
+def ptsd_status(group: dict) -> bool | None:
+    """True for a PTSD cohort, False for a comparison cohort, None if unnamed."""
+    text = " ".join(strs(group.get("name")) + strs(group.get("medical_condition")))
+    if NEGATED.search(text) or val(group.get("is_healthy")) is True:
+        return False
+    if PTSD.search(text):
+        return True
+    return False if text else None
 
 
 # ------------------------------------------------------------------ study level
@@ -340,11 +342,16 @@ def ptsd_effect(a: dict, record: dict, ix: Index) -> bool | None:
 
 
 def reported_foci(a: dict, record: dict, ix: Index) -> bool | None:
-    """"null effects" excluded. Zero foci under every parse entry the analysis cites.
+    """"null effects" excluded.
 
-    Only an analysis linked to the parse can answer; `score.py` puts the count on
-    `_n_foci` from the run's own stage-1 parse.
+    `Analysis.outcome` where the record has it; otherwise zero foci under every parse entry
+    the analysis cites (`score.py` puts the count on `_n_foci` from the run's own parse).
     """
+    outcome = strs(a.get("outcome"))
+    if "no_significant_effect" in outcome:
+        return False
+    if "significant_effect" in outcome:
+        return True
     n = a.get("_n_foci")
     return None if n is None else n > 0
 
