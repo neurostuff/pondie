@@ -156,10 +156,10 @@ def test_completion_asks_only_for_the_missing_entities(tmp_path):
     assert any("1 of 1 references now resolve" in n for n in outcome.notes)
 
 
-def test_completion_is_off_unless_asked_for(tmp_path):
+def test_completion_can_be_turned_off(tmp_path):
     dangling = {"analyses": [_analysis(groups=[{"group": "grp_bvftd"}])], "groups": []}
     seen = []
     settings = Settings(payloads=tmp_path / "p", records=tmp_path / "r", model="m",
-                        stages=(StageName.single,))
+                        stages=(StageName.single,), complete_references=False)
     Single().run(_staged(tmp_path), settings, _scripted([dangling] * 3, seen))
     assert seen == ["single"] * 3

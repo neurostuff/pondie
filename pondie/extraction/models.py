@@ -229,8 +229,10 @@ class Settings(Strict):
     adjudicate: bool = True
     redo: bool = False
     #: After `single` has spent its attempts, ask once more for only the entities its
-    #: references still name and it never emitted. Off until measured.
-    complete_references: bool = False
+    #: references still name and it never emitted. Measured paired on six draws over three
+    #: meta-analyses: most missing references resolve, +3% calls, one selection gained and
+    #: none lost (experiments/stage-ablation/JOURNAL.md, P2).
+    complete_references: bool = True
 
     @model_validator(mode="after")
     def _build_needs_its_inputs(self) -> "Settings":

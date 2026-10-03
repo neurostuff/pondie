@@ -640,3 +640,57 @@ import.)
 
 H6 (effort `medium`) is running as a full draw: flex calls take 5–28 minutes each at medium,
 against about 4 at low, with 1–6k reasoning tokens per paper.
+
+## P2. Why panel papers fail, and H7 (complete the missing references)
+
+Of 55 gold misses on the dementia panel across 7 full draws, 40 are "bvFTD vs control =
+False", 6 are empty records, 6 are "whole brain = False", 2 are modality, 1 is no single
+analysis meeting all criteria. "bvFTD vs control = False" is two different failures:
+
+1. **The group contrast is never emitted**: 22952324, 25009480 and 31461580 hold only
+   covariance analyses in a failing draw. The supplement-only contrast, which H3 targets.
+2. **The contrast is emitted and its cohorts are not.** 31887311 has a correct "bvFTD versus
+   Controls grey matter intensity" contrast whose levels point at `grp_bvftd`, `grp_ad` and
+   `grp_controls`, and the reply wrote `groups: []`, **in all three attempts**, with all 23
+   dangling references named in each retry. Re-asking for the whole record re-writes
+   everything and drops the entity lists again.
+
+How often (2) survives the retries, per run: 2, 8, 8, 3, 7, 5 and 8 of 55 single-pass records
+end with unresolved references; 0–6 end empty. It is the larger of the two.
+
+**H7**: after the attempts, one call in `satisfy` mode for only the missing local_ids (kind
+from the id prefix, the extracted analyses shown for context) resolves them where re-asking
+for the whole record does not. In pondie as `Single.complete`, behind
+`Settings.complete_references` (off by default); merged by local_id, never replacing an entity,
+a model estimation gaining only the terms it lacked; kept only if no worse by `_severity`.
+Tests in `tests/test_single_pass.py`.
+
+Tested **paired**: `complete_existing.py` copies a run and applies only the completion to the
+replies that need it, so the comparison is the same draw with and without it.
+
+| draw | veto R | P | papers completed | references resolved | extra calls |
+|---|---|---|---|---|---|
+| `dem_p_B` | 17/25 | 1.00 | | | |
+| `dem_p_B+complete` | **18/25** | 1.00 | 3 | 11 of 12 | 3 |
+
+31887311 recovered. Five more paired draws (dementia v4, no_worked, inventory; PTSD v4;
+substance use) are running.
+
+**H7 across six paired draws** (completion only where references still dangled):
+
+| draw | veto recall without → with | precision | extra calls |
+|---|---|---|---|
+| dementia B | 17 → **18**/25 | 1.00 → 1.00 | 3 |
+| dementia v4 | 21 → 21/25 (strict 16 → 17) | 0.95 | 4 |
+| dementia no_worked | 20 → 20/25 | 1.00 | 3 |
+| dementia inventory | 18 → 18/25 | 1.00 | 4 |
+| PTSD v4 (adjudicated) | 17 → 17/19 | 0.94 | 4 |
+| substance use (adjudicated) | 22 → 22/23 | 0.92 | 4 |
+
+The completion repairs records reliably: most asks resolve every missing id (21/21, 17/17,
+10/10, …); two resolved nothing and were discarded; two papers' missing ids had no mintable
+prefix, so nothing was asked. It changed one selection in six draws and lost none, because
+most dangling references are not the cohorts a criterion reads. At about 3% more calls,
+**adopted**: `Settings.complete_references` now defaults to True. The harness keeps
+`--variant no_complete` for comparisons. Not synced to beast until the panel queue finishes,
+so the later baseline replicates stay on the code they started with.
