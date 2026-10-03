@@ -581,3 +581,62 @@ papers), an analysis never extracted in any draw (PTSD 32490056), and the `spati
 misreading of a grey-matter mask (substance use 18165464). What still limits precision:
 overlap with papers outside the pool (Gong 2019), and a few papers no stated criterion
 excludes.
+
+# Part 2: prompt experiments
+
+Same method as the stages: one change per arm, against a fresh baseline draw, on a development
+meta-analysis (**dementia**: most headroom, and its main failure looks like a prompt problem),
+then winners checked on **PTSD** and **substance use**. Variants are in-process patches of
+pondie's renderer (`prompts.py`, `run_arm.py --variant`); the stage, its post-conditions, the
+build and the query are unchanged. `compare.py` gives one row per run, including **probes**:
+dementia papers that failed in at least one earlier draw (22952324, 25009480, 25797589,
+26682697, 28304289, 30718430, 31461580, 31873787, 23576128, 23805313). A variant aimed at a
+failure should move its probes whatever the rest of the draw does.
+
+Single-pass system prompt, ~50k tokens: schema 30.2k, conventions 9.8k, worked models 8.5k,
+rules 1.0k, the single note 0.4k.
+
+| id | change | hypothesis |
+|---|---|---|
+| B | current prompt, fresh draw | baseline; with v4, a noise estimate |
+| H1 `no_worked` | drop the worked models | −8.5k tokens per call, no loss |
+| H2 `no_conventions` | drop the conventions | −9.8k tokens; may hurt cells and direction |
+| H3 `inventory` | a `results_inventory` list first: every reported comparison, wherever it is (text, table, figure, supplement), each mapped to an analysis or a reason | recovers the comparisons the pass skips (dementia supplement-only contrasts, PTSD 32490056) |
+| H4 `cohort_condition` | every cohort states its condition, including absence | fewer unknown cohort statuses (Nardo "NS"; the overlap rule) |
+| H5 `scope` | a grey-matter or brain mask is whole-brain; ROI is a priori named regions | fewer ROI misreads (18165464) |
+| H6 effort `medium` | not a prompt change; the cheapest knob | everything |
+
+Existing dementia rows for reference (`compare.py`, benchmark labels):
+
+| run | veto R | P | strict R | empty | key T | probes | calls | in Mtok |
+|---|---|---|---|---|---|---|---|---|
+| v1 | 17/25 | 1.00 | 14/25 | 6 | 18 | 3/10 | 108 | 6.15 |
+| v4 (best-attempt) | 21/25 | 0.95 | 16/25 | 1 | 21 | 6/10 | 106 | 6.12 |
+| v4 + fill | 21/25 | 0.95 | 21/25 | 1 | 21 | 6/10 | +90 | +1.59 |
+
+Round 1 (dementia, `single` + build): B, H3, then H1, H6.
+
+## P1. Round 1 on full dementia: one draw per variant is not enough
+
+| run | veto R | P | strict R | empty | key T | probes | calls | in Mtok |
+|---|---|---|---|---|---|---|---|---|
+| v4 (current prompt) | 21/25 | 0.95 | 16/25 | 1 | 21 | 6/10 | 106 | 6.12 |
+| **B** (same code, fresh draw) | **17/25** | 1.00 | 16/25 | 2 | 17 | 3/10 | 100 | 5.74 |
+| H3 `inventory` | 18/25 | 1.00 | 14/25 | 4 | 18 | 4/10 | 111 | 6.44 |
+| H1 `no_worked` | 20/25 | 1.00 | 12/25 | 1 | 20 | 6/10 | 105 | **5.21** |
+
+**B and v4 are identical code and differ by four gold papers.** Across the six full dementia
+draws, seven gold papers are selected in some draws and not others (22952324, 23576128,
+23805313, 25009480, 26682697, 28724588, 31887311), and two are never selected (30718430,
+31461580). A single draw over 55 papers cannot detect a prompt effect smaller than that.
+(Strict recall moves with "a group of six" answerability, which `fill` settles anyway.)
+
+**Changed design:** a *flip panel* of the 16 dementia papers that varied or always failed (15
+gold, 1 negative, `panel_dementia.pmids`), with 4 replicate draws per variant, scored by
+`panel.py` as a selection rate over paper-draws (60 gold paper-draws per variant). About 30
+calls a draw instead of about 100. `lanes.py` runs the draws two at a time. (It was first
+named `queue.py`, which shadowed the stdlib `queue` that urllib3 imports, and every job died at
+import.)
+
+H6 (effort `medium`) is running as a full draw: flex calls take 5–28 minutes each at medium,
+against about 4 at low, with 1–6k reasoning tokens per paper.

@@ -124,7 +124,8 @@ def cost(run_dir: Path) -> dict:
     return dict(total)
 
 
-def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool) -> dict:
+def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool,
+          quiet: bool = False) -> dict:
     run_dir = paths.run(run)
     records = load(run_dir, raw)
     facts = pubmed_facts(sorted(records))
@@ -187,9 +188,16 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool) -> 
         fp, nn = rate("neg", key)
         out[key] = {"recall": f"{tp}/{ng}", "fp": f"{fp}/{nn}",
                     "precision": f"{tp / (tp + fp):.2f}" if tp + fp else "n/a"}
+    out["tally"] = {name: {f"{lab}:{v}": n for (lab, v), n in c.items()} for name, c in tally.items()}
+    out["rows"] = {pmid: {"label": lab, "veto": r["veto"], "strict": r["strict"],
+                          "analyses": len(r["analyses"]),
+                          "best": {**r["study"], **r["analysis_best"]}}
+                   for pmid, lab, r in rows}
     out["foci_recall"] = f"{foci_hit}/{foci_total}"
     out["foci_precision"] = f"{foci_sel_gold}/{foci_sel}"
     out["cost"] = cost(run_dir)
+    if quiet:
+        return out
     print(f"\n=== {out['run']}  ({len(rows)} records, labels={LABELS})")
     for key in ("strict", "veto", "permissive"):
         print(f"  {key:10s} recall {out[key]['recall']:6s} false-pos {out[key]['fp']:6s} "

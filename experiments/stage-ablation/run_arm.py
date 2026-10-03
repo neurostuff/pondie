@@ -97,8 +97,11 @@ def main() -> int:
     ap.add_argument("--effort", default="low")
     ap.add_argument("--model", default=arms.MODEL)
     ap.add_argument("--seed-from", help="copy this run's corpus and mono.json payloads first")
+    ap.add_argument("--variant", nargs="*", default=[], help="prompt variants (prompts.py)")
     args = ap.parse_args()
     load_env(ENV)
+    import prompts
+    prompts.apply(args.variant)
     os.environ.setdefault("PONDIE_RUN_ID", args.run)
 
     pmids = [p for p in Path(args.pmids).read_text().split() if p]
@@ -124,6 +127,7 @@ def main() -> int:
     )
     (run_dir / "settings.json").write_text(json.dumps(
         {"arm": args.arm, "model": args.model, "effort": args.effort, "pmids": pmids,
+         "variant": args.variant,
          "started": time.strftime("%Y-%m-%d %H:%M:%S")}, indent=1))
     caller = GatewayCaller()
     log = open(run_dir / "outcomes.jsonl", "a")
