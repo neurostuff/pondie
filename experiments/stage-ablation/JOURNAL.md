@@ -532,3 +532,52 @@ autonima-included non-gold, 15 random), seed 0. Input ceiling: 148 of 195 gold f
 because `allocation: non_randomized` could not tell "assigned a drug non-randomly" from
 "split by diagnosis". `StudyDesign.assignment_structure = observational_cohorts` and the
 current extraction answer it.
+
+**All 55 records.** Held out (before the fix below): strict 22/25, 0.92. After the one query
+fix, fit to this data:
+
+| labels | strict recall | false pos | precision |
+|---|---|---|---|
+| benchmark | 22/25 (88%) | 1/30 | 0.96 |
+| adjudicated | **22/23 (96%)** | 1/31 | **0.96** |
+
+Diagnosis:
+- *Query fix*: 26000879 is adolescents with substance use **and conduct disorder**, and the
+  criteria exclude participants with other mental disorders. The pattern lacked "conduct".
+- *Benchmark, against its own criterion*: 20875635 (Kühn 2010) measures cortical thickness,
+  and the criterion is "assessing GM volume differences". Adjudicated out.
+- *Ambiguous, unscored*: 29065207's VBM is cerebellum-only (SUIT); a whole-brain DARTEL
+  version is said to be in the supplement, and the pooled foci are cerebellar.
+- *Record error*: 18165464 restricted its analysis with "an explicit mask created from
+  Automatic Anatomic Labeling that limited the analysis to gray matter regions", a
+  whole-brain grey-matter mask, and the record says `roi`. This is the scope defect in
+  `docs/meta-analysis-queries.md` ("the record reads the names as a restriction").
+- *Remaining false positive*: 29058369 (Bach 2019, alcohol dependence vs controls plus a
+  genotype effect). No stated criterion excludes it that I can find.
+
+## Change made: `single` is pondie's default (183dbdf)
+
+`Settings.stages` now excludes `demands` and `satisfy`, so the default sequence is
+`SINGLE_PASS`: tables, prose, split, single, fill, evidence, build, repair. The split still runs
+when both are named in `--stages`. The CLI defers to that default instead of passing every
+stage. README's stage table and `tests/test_models.py::test_the_pipeline_is_one_ordering`
+updated.
+
+## Summary across the three meta-analyses (`single` + `fill`, deterministic query)
+
+| meta-analysis | how the query was made | labels | recall | precision |
+|---|---|---|---|---|
+| VBM of PTSD | developed on it | adjudicated | 18/19 (95%) | 0.95 |
+| | | benchmark | 18/22 (82%) | 0.90 |
+| Dementia (bvFTD) | written blind, then 2 fixes | benchmark | 21/25 (84%) | 0.95 |
+| VBM of substance use | written blind, then 1 fix | adjudicated | 22/23 (96%) | 0.96 |
+| | | benchmark | 22/25 (88%) | 0.96 |
+
+Held-out numbers before any fix: dementia veto 16/25 at 0.94; substance use strict 22/25 at
+0.92.
+
+What still limits recall: contrasts reported only in unfetched supplements (dementia, 4
+papers), an analysis never extracted in any draw (PTSD 32490056), and the `spatial_scope: roi`
+misreading of a grey-matter mask (substance use 18165464). What still limits precision:
+overlap with papers outside the pool (Gong 2019), and a few papers no stated criterion
+excludes.
