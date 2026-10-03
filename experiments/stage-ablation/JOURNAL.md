@@ -459,3 +459,54 @@ by exactly one stage.
   (adjudicated). The remaining miss is 32490056 (its PTSD-vs-non-PTSD analysis is never
   extracted), and the remaining false positive is Gong 2019 (overlap with papers outside the
   pool).
+
+### E13. `repair`, `fill` on dementia, and two query corrections
+
+**`repair` on top of `single` + `fill` (PTSD, seeded):** +110 calls, 1.26M input, 717 slots
+written, 0 reported as introduced. Query unchanged: 18/19, 0.95 adjudicated, same foci.
+At first it read *worse* (an extra false positive). `repair` gave Nardo 2013's "all subjects"
+row a medical condition, and that 32-person row then fit inside no 2010 cohort, so the overlap
+rule let the paper back in. Fixed in the rule, not in `repair`: a row named as a whole
+sample ("all", "whole", "total", …) whose size is the sum of the other cohorts is the union of
+the cohorts, not one of them. The name is required because the coal-mine paper's 20 new
+controls also equal 10 + 10.
+
+**`fill` on dementia (seeded from `dem_pondie_single-v4`):** veto 21/25, precision 0.95, and
+**strict rises from 16/25 to 21/25**. `fill` completes the slots the strict query needs (group
+sizes for "a group of six" were unanswerable before).
+
+**Overlap is a per-meta-analysis criterion, not a scorer default.** Applied to dementia it
+excluded gold 25009480 (Kumfor 2014) against Kumfor 2013. The dementia criteria never state an
+overlap exclusion: the meta merged each lab's papers into one study instead (both are inside
+the Kumfor block). `Spec.excludes_overlap` is True for PTSD only.
+
+**The four remaining dementia misses all lack the contrast in the text we have.** 25797589,
+30718430 and 31461580 describe a bvFTD-vs-controls atrophy contrast whose coordinates are in an
+unfetched supplement. 26682697 reports only covariance analyses in its text, so its inclusion
+rests on the lab's merged data. This is a corpus limitation (ns-pond does not fetch
+supplements), not a query or schema one.
+
+## Where it stands
+
+**Best pondie workflow measured:** `tables → prose → split → single → fill → build`, then a
+deterministic query (`queries.py` predicates, PubMed fields, `pondie.query.overlap` where the
+criteria exclude overlap).
+
+| meta-analysis | labels | recall | precision |
+|---|---|---|---|
+| VBM of PTSD (developed on) | adjudicated | **18/19 (95%)** | **0.95** |
+| VBM of PTSD | benchmark | 18/22 (82%) | 0.90 |
+| Dementia (query written blind, then fixed) | benchmark | 21/25 (84%) | 0.95 |
+
+Stage verdicts (stepwise, same `single` draw where marked):
+- `single` (one call, checks, best attempt) over `demands → satisfy`: more queryable at half
+  the calls.
+- `fill`: **keep**. +1 PTSD paper, +1 correct overlap exclusion; dementia strict 16 → 21.
+  +72% calls, +22% input tokens.
+- `evidence`: changes nothing a query reads. It is for review and provenance.
+- `repair`: no change to the query, +110 calls. Not worth it for selection.
+- `build` repairs: small, deterministic, keep.
+
+Remaining errors: PTSD 32490056 (its PTSD-vs-non-PTSD analysis is never extracted, in every
+draw) and Gong 2019 (overlap with papers outside the pool). Dementia: 4 papers whose contrast is
+not in the fetched text.
