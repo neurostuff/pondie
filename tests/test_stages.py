@@ -1386,3 +1386,23 @@ def test_rerunning_the_prose_pass_does_not_append_the_sentences_again(tmp_path):
 
     assert counts[0] >= 1, "the sentence states a coordinate and must be found"
     assert counts == [counts[0]] * 3, f"re-runs appended: {counts}"
+
+
+def test_tables_stays_fresh_after_prose_and_split_rewrite_the_parse(tmp_path):
+    """A resume must not re-run `tables`, or every model pass after it is paid for again.
+
+    `prose` appends to the parse and `split` rewrites it, both after `tables`; the table
+    list they leave is the one `tables` read.
+    """
+    from pondie.extraction.stages import Tables
+
+    parsed = ({"table_id": "t1", "table_number": "1", "name": "A > B",
+               "points": [{"coordinates": [1, 2, 3]}]},)
+    paper = _paper(tmp_path, parsed=parsed)
+    settings = _settings(tmp_path)
+    before = Tables().depends_on(paper, settings)
+    document = json.loads(paper.parse.read_text())
+    document["analyses"].append({"table_id": "prose", "name": "", "points": [], "from_prose": True})
+    document["prose_foci_applied"] = True
+    paper.parse.write_text(json.dumps(document))
+    assert Tables().depends_on(paper, settings) == before

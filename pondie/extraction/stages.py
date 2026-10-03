@@ -175,7 +175,28 @@ class Tables(_Base):
     """
 
     name: StageName = StageName.tables
-    reads_the_parse: bool = True
+
+    def depends_on(self, paper: Paper, settings: Settings) -> dict[str, Any]:
+        """The manifest, and the parse's TABLE LIST -- not the whole parse.
+
+        `prose` and `split` run after this stage and rewrite the parse file in place, so
+        hashing the file made this stage stale on every resume. Its digest then changed,
+        and every model pass downstream (`single`, or `demands` and `satisfy`) re-ran and
+        was paid for again. What this stage reads from the parse is `source_tables()`,
+        which neither rewrite touches: prose entries are excluded from it and a sign split
+        keeps its table.
+        """
+        parts = super().depends_on(paper, settings)
+        manifest = paper.study_dir / "processed" / paper.flavour.value / "tables.jsonl"
+        parts["manifest"] = (
+            text_index.text_hash(manifest.read_text(encoding="utf-8")) if manifest.is_file() else ""
+        )
+        parts["parse_tables"] = (
+            pipeline.digest_of({"tables": TableParse.read(paper.parse).source_tables()})
+            if paper.parse.is_file()
+            else ""
+        )
+        return parts
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
