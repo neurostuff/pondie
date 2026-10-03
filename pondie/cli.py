@@ -92,7 +92,7 @@ def _extract(args: argparse.Namespace) -> int:
         payloads=run_dir / "payloads",
         records=run_dir / "records",
         model=args.model,
-        stages=tuple(StageName(s) for s in args.stages) if args.stages else tuple(StageName),
+        **({"stages": tuple(StageName(s) for s in args.stages)} if args.stages else {}),
         effort=args.effort,
         service_tier=args.service_tier,
         retrieve_evidence=not args.no_evidence,

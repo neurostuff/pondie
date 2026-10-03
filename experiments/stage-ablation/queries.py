@@ -613,7 +613,7 @@ USERS = re.compile(r"alcohol|drink|smok|nicotine|tobacco|cigarette|cocaine|crack
 NON_USERS = re.compile(r"non.?(user|smoker|drinker|dependent|abus)|never.?(smok|us|drink)|"
                        r"\bcontrols?\b|healthy|\bhcs?\b|light drinker|abstainer|"
                        r"comparison|drug.?naive|no history of (substance|drug|alcohol)", re.I)
-OTHER_DISORDER = re.compile(r"schizophren|psychos|bipolar|depress|anxiety|ptsd|adhd|"
+OTHER_DISORDER = re.compile(r"schizophren|psychos|bipolar|depress|anxiety|ptsd|adhd|conduct|"
                             r"autis|dementia|alzheimer|parkinson|epilep|stroke|lesion|"
                             r"korsakoff|wernicke|encephalopath|cirrhos|\bhiv\b|traumatic brain|"
                             r"\btbi\b|multiple sclerosis", re.I)

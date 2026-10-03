@@ -192,7 +192,12 @@ class Settings(Strict):
     payloads: Path
     records: Path
     model: str
-    stages: tuple[StageName, ...] = tuple(s for s in StageName if s is not StageName.single)
+    #: The single pass by default. `demands` + `satisfy` remain selectable by naming them,
+    #: and were measured against it on three neurometabench meta-analyses
+    #: (experiments/stage-ablation/JOURNAL.md): less queryable records at 2.6x the calls.
+    stages: tuple[StageName, ...] = tuple(
+        s for s in StageName if s not in (StageName.demands, StageName.satisfy)
+    )
     effort: Literal["minimal", "low", "medium", "high"] = "low"
     max_output_tokens: Annotated[int, Field(gt=0)] = 48_000
     attempts: Annotated[int, Field(ge=1)] = 3

@@ -55,19 +55,27 @@ pondie extract --pmids papers.pmids --run v3 --model <model> --env .env
 pondie extract --pmids papers.pmids --run v3 --model <model> --plan   # spend nothing
 ```
 
-Nine stages, and the order is the design:
+Eight stages by default, and the order is the design:
 
 | stage | model | what it does |
 |---|---|---|
 | `tables` | no | mints the Table ids analyses reference, from the printed table number rather than the staging flavour's key, and copies `caption` and `footer` as the literal strings they are. Reads the manifest where there is one and the stage-1 parse where there is not — a paper with no manifest used to get no Table at all, and every `Analysis.tables` reference in it dangled |
 | `prose` | no | appends coordinates the paper states in prose and no table reports. The schema stores no coordinates, so a focus that is not a parse entry has nowhere to live |
 | `split` | no | a parse reporting both signs is two contrasts; the half the paper never describes is withheld and rebuilt by arithmetic |
-| `demands` | yes | analyses first: each declares the entities it needs, before any exist |
-| `satisfy` | yes | builds exactly those entities and nothing else |
+| `single` | yes | the whole record in one call, shown the stage-1 listing, held to the listing checks and to a dangling-reference check, retried with the faults named, keeping the best attempt |
 | `fill` | yes | asks for the slots still open, round after round, until none are — a shape for finishing an entity rather than deciding it exists |
-| `evidence` | yes | a supporting quote for every value — **45% of input tokens** |
+| `evidence` | yes | a supporting quote for every value — **45% of input tokens**. Changes no value a query reads |
 | `build` | no | merge, 22 repairs, resolve quotes to offsets, check 19 rules, write the record |
 | `repair` | optional | a second model proposes what the first missed, a third judges whether the paper supports it, and what neither settles goes back to the extraction model once |
+
+`demands` then `satisfy` is the older split of `single`, still run by naming both in
+`--stages`. Measured against `single` on three neurometabench meta-analyses
+([experiments/stage-ablation/JOURNAL.md](experiments/stage-ablation/JOURNAL.md)), it left
+records less able to answer a meta-analysis's criteria at 2.6× the calls: `satisfy` builds
+only what `demands` declared, and `demands` never declared an acquisition. What it protected
+against, a reply that references entities it then leaves out, is a post-condition of
+`single` instead. On the same `single` draw, `fill` added a paper and a correct exclusion,
+`evidence` and `repair` changed nothing a query reads.
 
 `demands` precedes `satisfy` because a cell cannot be righter than the term it points at:
 asked to guess an inventory first, the entity pass modelled a crossover's condition as a

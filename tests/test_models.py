@@ -44,17 +44,16 @@ def test_a_paper_knows_where_its_inputs_are_without_a_stage_being_told(tmp_path)
 
 
 def test_the_pipeline_is_one_ordering(tmp_path):
-    """There is one workflow, so the order is a property of `DEMAND_DRIVEN` and not of a
-    setting. It is pinned because the order is the design: `demands` before `satisfy` so the
-    analyses declare their terms first, `fill` after `satisfy` because it finishes what that
-    pass left open, and `evidence` after `fill` so a value the loop adds gets a quote."""
+    """The default order is a property of `SINGLE_PASS` and not of a setting. It is pinned
+    because the order is the design: the deterministic parse stages before the extraction
+    that is shown their listing, `fill` after `single` because it finishes what that pass
+    left open, and `evidence` after `fill` so a value the loop adds gets a quote."""
     settings = Settings(payloads=tmp_path, records=tmp_path, model="m")
     assert [stage.name.value for stage in sequence(settings)] == [
         "tables",
         "prose",
         "split",
-        "demands",
-        "satisfy",
+        "single",
         "fill",
         "evidence",
         "build",

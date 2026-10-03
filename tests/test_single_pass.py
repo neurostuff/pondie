@@ -65,9 +65,16 @@ def test_a_run_that_names_single_takes_the_single_pass_sequence(tmp_path):
     assert StageName.demands not in [s.name for s in SINGLE_PASS]
 
 
-def test_the_default_run_is_still_demand_driven(tmp_path):
+def test_the_default_run_is_the_single_pass(tmp_path):
     names = [s.name for s in sequence(Settings(payloads=tmp_path, records=tmp_path, model="m"))]
-    assert StageName.demands in names and StageName.single not in names
+    assert StageName.single in names and StageName.demands not in names
+
+
+def test_naming_demands_and_satisfy_still_runs_the_split(tmp_path):
+    settings = Settings(payloads=tmp_path, records=tmp_path, model="m",
+                        stages=(StageName.demands, StageName.satisfy, StageName.build))
+    names = [s.name for s in sequence(settings)]
+    assert names == [StageName.demands, StageName.satisfy, StageName.build]
 
 
 def test_the_single_pass_runs_both_halves_payload_repairs():

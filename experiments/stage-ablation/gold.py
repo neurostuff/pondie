@@ -56,6 +56,13 @@ ADJUDICATED = {
         "16838824": (False, "same Hunan-fire sample as 16371250, reported later"),
         "19538748": (False, "same Hunan-fire sample as 16371250, reported later"),
     },
+    "36115222": {
+        # "assessing GM volume differences": this measures cortical thickness only.
+        "20875635": (False, "cortical thickness, not grey-matter volume"),
+        # Its VBM is cerebellum-only (SUIT); a whole-brain DARTEL analysis is said to be in
+        # the supplement, but the pooled foci are the cerebellar ones.
+        "29065207": (None, "cerebellum-restricted VBM, whole-brain version in the supplement"),
+    },
 }
 
 

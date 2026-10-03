@@ -510,3 +510,25 @@ Stage verdicts (stepwise, same `single` draw where marked):
 Remaining errors: PTSD 32490056 (its PTSD-vs-non-PTSD analysis is never extracted, in every
 draw) and Gong 2019 (overlap with papers outside the pool). Dementia: 4 papers whose contrast is
 not in the fetched text.
+
+## E14. Held-out #2: VBM of substance use (Hill-Bowen 2022, `36115222`)
+
+The frozen workflow (`single` + `fill`) and a query committed from the criteria before any
+record existed (bf24302). Pool: 25 gold from the 65 autonima screened, plus 30 negatives (15
+autonima-included non-gold, 15 random), seed 0. Input ceiling: 148 of 195 gold foci in the parse.
+
+**Held-out result, 52 of 55 records** (3 still running when first scored), benchmark labels,
+`--gold-coords`:
+
+| mode | recall | false pos | precision |
+|---|---|---|---|
+| strict | **22/25 (88%)** | 2/27 | **0.92** |
+| veto | 22/25 | 3/27 | 0.88 |
+
+167 calls, 6.37M input (4.14M cached), 1.07M output.
+
+"no pharmacological manipulation" answers on all 25 gold (25/0/0). pondie's
+`docs/meta-analysis-queries.md` found the old records could not answer it on 49 of 76 gold,
+because `allocation: non_randomized` could not tell "assigned a drug non-randomly" from
+"split by diagnosis". `StudyDesign.assignment_structure = observational_cohorts` and the
+current extraction answer it.
