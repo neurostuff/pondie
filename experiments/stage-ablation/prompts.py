@@ -78,6 +78,25 @@ def inventory() -> None:
     render.normalize = normalize
 
 
+STRICT_NOTE = f"""
+The `{INVENTORY}` is REQUIRED and is never empty for a paper that reports a result.
+
+A result the text states whose numbers are elsewhere -- "(Supplementary Table 2)", "(Figure
+S3)", "see Supplementary Material" -- is NOT a reason to emit no Analysis. It ALWAYS gets one:
+its name, definition, groups, effect cells and direction, `outcome` and `spatial_scope` are
+read from the sentence that states it, and the slots whose values are in the unseen material
+(coordinates, statistics, cluster extents) take `extraction_status: not_reported` with
+`unreported_reason: outside_text`. That is what `outside_text` is for. A patients-versus-
+controls grey-matter comparison stated this way is the result a meta-analysis pools.
+"""
+
+
+def inventory_strict() -> None:
+    """H3b: the model finds supplement-only results and declines them; tell it not to."""
+    inventory()
+    render.MODE_NOTE["single"] = render.MODE_NOTE["single"] + STRICT_NOTE
+
+
 COHORT_NOTE = """
 State every cohort's `medical_condition`, the comparison cohorts included: a control cohort
 that has none says so in the paper's words ("no PTSD", "healthy controls", "trauma-exposed
@@ -108,6 +127,7 @@ VARIANTS: dict[str, Callable[[], None]] = {
     "no_worked": no_worked,
     "no_conventions": no_conventions,
     "inventory": inventory,
+    "inventory_strict": inventory_strict,
     "cohort_condition": cohort_condition,
     "scope": scope,
 }

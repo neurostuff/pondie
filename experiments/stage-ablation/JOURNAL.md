@@ -694,3 +694,77 @@ most dangling references are not the cohorts a criterion reads. At about 3% more
 **adopted**: `Settings.complete_references` now defaults to True. The harness keeps
 `--variant no_complete` for comparisons. Not synced to beast until the panel queue finishes,
 so the later baseline replicates stay on the code they started with.
+
+## P3. Interim panel, and what the inventory revealed
+
+After 2 of 4 replicates (30 gold paper-draws each): B 0.63, `inventory` 0.53, `no_worked` 0.50
+(SE about ±0.09, nothing separable yet). The three supplement-only papers (30718430, 31461580,
+31873787) are 0/2 under every variant.
+
+**The inventory shows the obstacle is a policy, not a miss.** Where it was produced, the model
+*listed* the supplement contrast and declined it:
+
+- 30718430: `supplement | analysis: null | "Gray matter intensity reductions in patients
+  relative to controls …" | why: The cited supplementary figure and table are not available
+  here`
+- 31461580: `supplement | analysis: null | "Pairwise differences in cortical grey matter
+  density between AD, bvFTD, and controls" | why: Table S1 and Figure S1 results are
+  referenced, but their rows … are not`
+
+So the model believes it may not emit a result whose numbers it cannot see. The schema already
+says what to do: such slots take `not_reported` with `unreported_reason: outside_text`. Also, in
+replicate 2 the inventory was not produced at all for these papers (0 entries).
+
+**H3b `inventory_strict`**: inventory plus "required, never empty", and a result stated in the
+text with its numbers in a supplement or figure ALWAYS gets an Analysis, its unseen slots
+`outside_text`. Four panel replicates queued.
+
+## P4. Panel results: no prompt change beats the baseline
+
+Four replicate draws per variant on the 16-paper dementia panel (`panel.py`, veto selection,
+benchmark labels):
+
+| variant | gold paper-draws selected | rate | negative selected | calls/paper | Mtok/paper |
+|---|---|---|---|---|---|
+| **B** (current prompt) | 37/60 | **0.62** | 2/4 | 2.00 | 0.119 |
+| H3 `inventory` | 33/60 | 0.55 | 3/4 | 2.28 | 0.136 |
+| H1 `no_worked` | 28/56 | 0.50 | 1/3 | 2.17 | 0.110 |
+| H3b `inventory_strict` (2 draws so far) | 16/30 | 0.53 | 0/2 | 2.28 | 0.136 |
+
+Standard error about ±0.06 per row. **No variant beats B.** `no_worked` saves 8% of input tokens
+and is, if anything, worse, so the worked models earn their 8.5k tokens. The inventory adds
+14% tokens and 14% calls for nothing measurable. Under `inventory_strict`, 25009480 gained its
+"bvFTD patients versus controls" analysis, but the record had no groups or measures (the
+missing-reference failure; completion was off in panel draws), so it still did not select.
+
+## P5. H8: two draws per paper, selected if either record qualifies
+
+Per-paper selection on the unstable papers behaves like a coin with p ≈ 0.6, so two
+independent draws should raise it to about 0.85. Computed from existing runs, no new calls:
+
+| | single draws | union of two draws, every pair |
+|---|---|---|
+| dementia (`+complete` runs) | 21, 18, 20, 18 of 25 (mean 77%), P 0.95–1.00 | 22, 22, 23, 22, 20, 23 of 25 (mean **88%**), P 0.96–1.00 |
+| PTSD adjudicated | 18, 17, 18, 17 of 19 | 18/19 in all six pairs, P 0.90–0.95 |
+
+The largest gain of anything tried on the prompt side, at 2× extraction cost. Precision barely
+moves because false positives are stable: the same papers in every draw. Selection stays a
+deterministic query; it reads two records per paper and selects if either qualifies.
+
+## P6. H6: reasoning effort `medium` (the first change that looks better than baseline)
+
+One full dementia draw at `effort=medium`, otherwise identical to B:
+
+| run | veto R | P | strict R | empty | analyses/rec | calls | in Mtok | out Mtok |
+|---|---|---|---|---|---|---|---|---|
+| B (low) | 17/25 | 1.00 | 16/25 | 2 | 5.0 | 100 | 5.74 | 0.77 |
+| v4 (low) | 21/25 | 0.95 | 16/25 | 1 | 5.2 | 106 | 6.12 | 0.83 |
+| **medium** | **22/25** | 0.96 | 16/25 | **0** | **6.4** | 99 | 5.73 | **1.27** |
+
+On the 15 panel gold papers inside these draws: medium 12/15, v4 11/15, B 7/15 (the B panel
+rate over four replicates is 0.62). Input tokens and calls are unchanged; output +65% (reasoning
+1–6k tokens per paper). Flex wall time is far longer: 5–28 min per call against about 4, so a
+55-paper draw took about 2.5 hours at 12 workers. Three panel replicates at medium are queued
+to check that this is not one lucky draw.
+
+`inventory_strict` final (4 draws): 34/60 (0.57), no better than B.
