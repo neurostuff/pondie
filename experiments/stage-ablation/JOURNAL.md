@@ -391,3 +391,71 @@ this run's Nardo 2010 record had sex counts, and the earlier one did not.
 the coal record gave no sex counts, so its 10 "fit" inside 12. Every true re-report in the PTSD
 pool shares 3–5 authors. `min_shared_authors` is now 3 (fit to this data). Rescoring every run:
 all true exclusions kept, the false one gone (single+fill 13 → 14/19).
+
+### E10. v4: both fixes, on both meta-analyses
+
+`pondie_single-v4` / `dem_pondie_single-v4`: the `single` stage with best-attempt selection and
+analyses-first, fresh draws.
+
+- **Empty records: PTSD 0/54, dementia 1/55** (from 6–7 per run). The best-attempt fix is
+  what worked; analyses-first alone (v3) did not.
+- Dementia veto **21/25 (84%), precision 0.95** (from 17/25).
+- PTSD adjudicated 15/19 at first. Two query fixes (fit to this data) brought it to **17/19
+  (89%), precision 0.89**:
+  - 17825801 encodes its twin design as pair diagnosis, so the "PTSD" level holds the PTSD
+    twins *and* their unexposed co-twins. A level holding any case cohort is now the case
+    side.
+  - 22453299's VBM contrast points at the paper's only declared acquisition, the fMRI one.
+    The T1 was never emitted. A grey-matter or structural-morphometry measure now answers
+    "structural MRI".
+  - 21418787 this draw encoded "combined clinical groups (PTSD + depression) < controls"
+    with a level label matching no declared level. Left as extraction variation.
+- PTSD's two false positives are the known pair: Gong 2019 (overlap outside the pool) and
+  Nardo 2013, whose 2010 record this draw names the trauma-exposed cohort just "NS", with no
+  condition and no description, so its status is unknown and nothing can be matched to it.
+  Not loosened further: that is how the coal/fire false match happened.
+
+Previous runs rescored under the final query: PTSD adjudicated `mono_parse_check` v1 18/19 0.95,
+rep2 17/19 0.94, `single` v1 18/19 0.90, v4 17/19 0.89; dementia v1–v3 17/25 at 0.94–1.00,
+v4 21/25 0.95.
+
+### E11. A pondie caching bug: every resume re-paid every model call
+
+Seeding a run from another (to add one stage) re-ran `tables`, which made `single` stale, and
+it re-asked the model. The harness was writing stamps correctly (`run_arm.stamp`); the stale
+input was pondie's own.
+
+`Tables` declared a dependency on the stage-1 parse file's hash. `prose` and `split` run after
+it and rewrite that file. So on any resume `tables` is stale, its digest changes, and every
+model pass downstream, `single` or `demands` + `satisfy`, becomes stale with it. In pondie's
+own driver this means **resuming a run re-pays every model call.**
+
+Fixed in 545896c: `Tables.depends_on` hashes the manifest and the parse's **table list**
+(`source_tables()`, which excludes prose entries and survives a sign split), which is all it
+reads. Regression test `test_tables_stays_fresh_after_prose_and_split_rewrite_the_parse`,
+verified to fail on the old code. `restamp.py` re-stamped v4's unchanged outputs under the new
+code, and the seeded `fill` and `evidence` runs now skip `single` (0 calls).
+
+### E12. `fill` and `evidence`, stepwise, on the same `single` draw (PTSD)
+
+Seeded from `pondie_single-v4`, so `single` was reused (0 calls) and each run differs from v4
+by exactly one stage.
+
+| added stage | adjudicated recall | precision | benchmark recall | precision | calls | input tok |
+|---|---|---|---|---|---|---|
+| — | 17/19 | 0.89 | 17/22 | 0.85 | 115 | 6.42M |
+| `fill` | **18/19** | **0.95** | 18/22 | 0.90 | +83 | +1.39M |
+| `evidence` | 17/19 | 0.89 | 17/22 | 0.85 | +55 | +0.67M |
+
+- **`fill` earns its place for querying.** It settled every open slot it was asked about
+  (e.g. "121 of 121"), and two of those slots decided the query. Sex counts on the Nardo
+  cohorts let the overlap rule exclude Nardo 2013, and cohort links on 21418787's group term
+  recovered its PTSD contrast. +72% calls but +22% input tokens (the paper sits in the
+  cached system half).
+- **`evidence` changes nothing the query reads.** It attaches quotes ("87 warranted, 107
+  unsupported, 13 not_reported") and leaves values alone. It is for review and provenance,
+  not selection, and should be judged on that.
+- `single` + `fill` meets the target on PTSD: **18/19 (95%) recall, 0.95 precision**
+  (adjudicated). The remaining miss is 32490056 (its PTSD-vs-non-PTSD analysis is never
+  extracted), and the remaining false positive is Gong 2019 (overlap with papers outside the
+  pool).

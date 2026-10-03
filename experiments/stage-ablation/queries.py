@@ -262,6 +262,12 @@ PTSD_STUDY: list[tuple[str, Callable]] = [
 # --------------------------------------------------------------- analysis level
 
 def structural(a: dict, record: dict, ix: Index) -> bool | None:
+    # The measure is the surer sign: 22453299's VBM contrast points at the paper's only
+    # declared acquisition, the fMRI one, because the T1 the VBM used was never emitted.
+    m = next((ix.measures[t] for t in refs(a.get("measure")) if t in ix.measures), None)
+    if m is not None and ("structural_morphometry" in strs(m.get("family"))
+                          or any(GREY.search(k) for k in strs(m.get("type")) + strs(m.get("source_label")))):
+        return True
     acqs = [ix.acqs.get(x) for x in refs(a.get("acquisitions"))]
     acqs = [x for x in acqs if x] or list(ix.acqs.values())
     mods = [s for x in acqs for s in strs(x.get("modality"))]
@@ -313,10 +319,12 @@ def _cell_cohort(cell: dict, ix: Index) -> tuple[bool | None, dict | None, dict 
     label = " ".join(strs(cell.get("level")))
     level = _level_of(term, label)
     groups = refs(level.get("groups")) if level else []
-    verdicts = {ix.is_ptsd_group(g) for g in groups} - {None}
-    if True in verdicts and False not in verdicts:
+    verdicts = {ix.is_case(g) for g in groups} - {None}
+    # A level holding any case cohort is the case side. 17825801 encodes a twin design as
+    # pair diagnosis: the "PTSD" level holds the PTSD twins and their unexposed co-twins.
+    if True in verdicts:
         return True, term, level
-    if False in verdicts and True not in verdicts:
+    if False in verdicts:
         return False, term, level
     if label and not groups:
         if ix.spec.comparison.search(label):
