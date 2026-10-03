@@ -317,3 +317,77 @@ an included paper's membership answers "reported coordinates".
 not. Gold losses: "bvFTD vs control" False on 6, the modality predicate False on 3, one
 record with no analyses. Diagnosis follows; every change from here is fit to this data and
 reported as such.
+
+**Diagnosis of the held-out misses** (everything below is fit to the dementia data):
+
+- *Query bug*: VBM's quantity is often typed `structural_morphometry_other` with the label
+  "grey matter intensity", and the dementia modality predicate read only the type, which
+  dropped 26401935's real bvFTD-vs-controls atrophy analysis. It now reads the label, as the
+  PTSD predicate already did. Veto recall 16 → 17/25.
+- *Query bug*: the window is "- 5/2020" and I coarsened it to the year. The only false
+  positive, 32353756, was published July 2020. Precision 0.94 → 1.00. The window is now
+  month-precise (PubMed pubdate via `pubmed.authorship`).
+- *Benchmark structure*: 7 of the 9 gold misses sit in merged gold "studies" (the 28-paper
+  Kumfor/Irish/Hornberger block, 634 foci; the Cousins/McMillan/Massimo block). The meta
+  pooled each lab's data as one study.
+- *Extraction misses, not benchmark problems*: the Sydney papers' main tables are
+  **covariance** analyses (grey matter covarying with a score across patients + controls),
+  and their bvFTD-vs-controls atrophy contrast is reported in the text with its coordinates
+  only in the supplement (25797589 "t-tests (Supplementary Material)", 30718430 "SI
+  Appendix, Fig. S3 and Table S4", 31873787 "Supplementary Table 2", 31461580 "Table S1",
+  22952324 "supplement table E-1"). The single pass does not emit those as analyses. One
+  paper (28304289, FDG-PET) declined to emit any analysis because "the detailed imaging
+  results" were in supplementary tables, and held that through three retries naming the
+  fault. Only 25009480 mentions no group contrast at all.
+
+`dem_pondie_single-v2` adds to the single-pass note that a comparison whose coordinates are
+only in a figure or supplement is still a tested effect. Veto recall stayed at 17/25,
+precision 0.94: it recovered 22952324 and 28304289 but lost 23576128 and 23805313 to empty
+records. Draw-to-draw variation is as large as the effect.
+
+### E8. Why single-pass records come back empty
+
+Records with no analyses, per run: `mono` 5/56, `mono_check` 0/55, `mono_parse` 5/55,
+`mono_parse_check` 0/55 and 1/55, `ds` 2/23, **pondie `single` 6/55, dementia v1 6/55,
+v2 4/55**. Two causes, both now fixed in pondie:
+
+1. **The retry loop kept the last attempt, not the best.** pondie's `_ModelPass.run`
+   overwrote `payload` on every attempt. The single pass holds replies to more post-
+   conditions than the harness did (`unsupported_omissions` too), so a reply with sound
+   analyses and one unvetted omission reason was re-asked, and an empty retry replaced it.
+   That is why the harness, which kept the fewest-failures reply, had 0–1 empties against
+   pondie's 6. Now the attempt with the lowest `(empty?, number of faults)` is kept. This
+   applies to `demands` too. Regression test in `tests/test_single_pass.py`, verified to fail
+   on the old code.
+2. **The reply ended after the entity lists.** On 23576128 (29 listing entries) the model
+   wrote `study` and every entity list, then closed the object with no `analyses` key,
+   three times, finishing normally at ~8k output tokens each. That is the failure pondie's
+   docs give for splitting into demands → satisfy ("a single call puts the analyses behind
+   thirty-odd entity classes and drops them"). H4: asking for `analyses` as the **first
+   key** gets the demands-first ordering inside one call. `dem_pondie_single-v3` tests H4
+   alone (synced before fix 1); v4 will have both.
+
+`dem_pondie_single-v3` (analyses-first only): veto 17/25, precision 1.00, **7/55 records still
+empty**. **H4 not supported**: asking for analyses first did not stop replies ending without
+them. Fix 1 (keep the best attempt) is the other candidate; v4 tests both together.
+
+### E9. `fill` on top of `single`
+
+`pondie_single_fill-v1`: a fresh `single` draw (the harness wrote no pipeline stamps, so
+seeding could not reuse `pondie_single-v1`'s payloads; fixed in `run_arm.stamp`) plus `fill`.
+
+| | adjudicated recall | precision | pooled foci | calls |
+|---|---|---|---|---|
+| `single` v1 | 18/19 | 0.90 | 117/143 | 117 |
+| `single` (new draw) + `fill` | 14/19 | 1.00 | 116/143 | 188 (113 single + 75 fill) |
+
+**Inconclusive on recall, clear on cost.** The single draw underneath had 7/55 empty records
+(before the best-attempt fix), which is most of the recall drop. `fill` added 64% to the calls.
+What `fill` is for, completing slots like `sex_distribution`, did matter to the overlap rule:
+this run's Nardo 2010 record had sex counts, and the earlier one did not.
+
+**Overlap rule: 2 shared authors was too few.** In this run the rule excluded gold 21498053
+(coal-mine flood) against 16371250 (Hunan fire). They share two authors (Li L, Zhang J), and
+the coal record gave no sex counts, so its 10 "fit" inside 12. Every true re-report in the PTSD
+pool shares 3–5 authors. `min_shared_authors` is now 3 (fit to this data). Rescoring every run:
+all true exclusions kept, the false one gone (single+fill 13 → 14/19).

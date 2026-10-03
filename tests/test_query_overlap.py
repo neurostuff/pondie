@@ -66,8 +66,8 @@ def test_a_cohort_with_no_size_cannot_be_shown_to_fit():
 def test_only_the_later_paper_is_excluded_and_only_with_shared_authors():
     records = {"1": NARDO_2010, "2": NARDO_2013, "3": FIRE_2006, "4": FIRE_2009}
     authorship = {
-        "1": {"authors": ["Nardo D", "Pagani M"], "pubdate": "2010 May"},
-        "2": {"authors": ["Nardo D", "Pagani M"], "pubdate": "2013 Sep"},
+        "1": {"authors": ["Nardo D", "Pagani M", "Högberg G"], "pubdate": "2010 May"},
+        "2": {"authors": ["Nardo D", "Pagani M", "Högberg G"], "pubdate": "2013 Sep"},
         "3": {"authors": ["Chen S"], "pubdate": "2006 Jan 30"},
         "4": {"authors": ["Chen S"], "pubdate": "2009 Jun"},
     }
@@ -76,6 +76,14 @@ def test_only_the_later_paper_is_excluded_and_only_with_shared_authors():
 
 def test_an_earlier_paper_that_is_not_selected_excludes_nothing():
     records = {"1": NARDO_2010, "2": NARDO_2013}
-    authorship = {p: {"authors": ["Nardo D", "Pagani M"], "pubdate": d}
+    authorship = {p: {"authors": ["Nardo D", "Pagani M", "Högberg G"], "pubdate": d}
                   for p, d in (("1", "2010 May"), ("2", "2013 Sep"))}
     assert overlapping(records, {"2"}, authorship, status) == {}
+
+
+def test_two_shared_authors_is_not_enough():
+    """The coal-mine and fire papers share two authors and are different disasters."""
+    records = {"1": FIRE_2006, "2": _record(_group("ptsd", 10), _group("tec", 10))}
+    authorship = {"1": {"authors": ["Li L", "Zhang J", "Chen S"], "pubdate": "2006 Jan"},
+                  "2": {"authors": ["Li L", "Zhang J", "Tan Q"], "pubdate": "2011 May"}}
+    assert overlapping(records, set(records), authorship, status) == {}

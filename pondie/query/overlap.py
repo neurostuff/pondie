@@ -9,8 +9,10 @@ cohorts were reported before, in a hippocampal-tracing paper no VBM meta-analysi
 
 So this compares records, deterministically. A later paper re-reports an earlier one when
 
-  1. they share at least `min_shared_authors` PubMed authors, so the same group could have
-     scanned the same people,
+  1. they share at least `min_shared_authors` PubMed authors (3), so the same group could
+     have scanned the same people. Two was too few: a coal-mine-flood paper and a Hunan-fire
+     paper share two authors, and when the coal record gave no sex counts its 10 survivors
+     "fit" inside the fire paper's 12. Every true re-report in the PTSD pool shares 3-5.
   2. the earlier paper is itself selected -- it is the "previous study" the pool keeps, and
   3. EVERY cohort of the later paper fits inside a cohort of the earlier one with the same
      status: its size is no larger, it reports no sex the earlier cohort does not, and each
@@ -124,7 +126,7 @@ def overlapping(
     selected: set[str],
     authorship: Mapping[str, Mapping],
     status: Status = healthy_status,
-    min_shared_authors: int = 2,
+    min_shared_authors: int = 3,
 ) -> dict[str, str]:
     """pmid -> the earlier selected pmid whose participants it re-reports.
 
