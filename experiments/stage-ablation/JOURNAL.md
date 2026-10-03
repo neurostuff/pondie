@@ -768,3 +768,55 @@ rate over four replicates is 0.62). Input tokens and calls are unchanged; output
 to check that this is not one lucky draw.
 
 `inventory_strict` final (4 draws): 34/60 (0.57), no better than B.
+
+**Medium on the panel, three replicates:**
+
+| | panel gold selected | rate | empty | calls/paper | input Mtok/paper |
+|---|---|---|---|---|---|
+| B (low), 4 draws | 37/60 | 0.62 | 2 | 2.00 | 0.119 |
+| **medium**, 3 draws | **36/45** | **0.80** | **0** | **1.73** | **0.104** |
+
+With the full draw's 12/15, medium is 48/60 (0.80) against 0.62, about 2 SE. It also needs
+fewer retries, so fewer calls and less input per paper. Output (reasoning) rises, and flex
+latency rises a lot. Papers that went from coin-flip to reliable: 25009480 (2/4 → 3/3),
+26682697 (2/4 → 3/3), 31873787 (2/4 → 3/3), 22952324 (1/4 → 2/3), 25797589 (1/4 → 2/3). Still
+0: 30718430 and 31461580, the supplement-only contrasts.
+
+Confirmation on the other two meta-analyses: full medium draws on PTSD and substance use with the
+current defaults (`single`, completion on, `fill`), plus a second low-effort substance-use draw.
+
+### P6 continued: medium on PTSD and substance use, and the query bugs it exposed
+
+First scores did not transfer (PTSD 17/19 0.94; substance use 20/23 **0.83**). The losses were
+**query bugs that richer records exposed**. Medium extracts more per record (6.8–7.1 analyses
+against 4.5–5.1, and longer condition lists), and three predicates failed on that:
+
+1. **Negation.** Medium lists control cohorts' exclusions as conditions: "No current or past
+   psychiatric disorders", "no major depression", "no history of … psychotic disorders". The
+   "no other disorder" predicate matched the disorder words. Two substance-use gold papers were
+   lost that way. Now `queries.asserted()` drops entries that state an absence ("no", "without",
+   "never had", "free of", …) before the disorder and comorbidity predicates read them.
+2. **A second disorder named beside the substance use.** 26000879's "severe substance and conduct
+   problems" was skipped because the entry also matched a substance; a named other disorder now
+   excludes regardless.
+3. **"Sixteen" contains "teen".** PTSD 12853571 failed `adult` on "Sixteen Tokyo subway
+   sarin-attack victims". `\bteen`.
+
+After the fixes (no earlier low-effort score moved):
+
+| | low effort (`single` + `fill`) | medium |
+|---|---|---|
+| dementia | 21/25, 0.95 (18–21 over draws) | **22/25, 0.96** |
+| PTSD adjudicated | 18/19, 0.95 | 18/19, 0.95 |
+| substance use adjudicated | 22/23 0.92; 21/23 0.91 | 22/23, 0.88 |
+
+**Verdict on medium:** it helps where the miss is a *skipped* analysis (dementia panel 0.62 →
+0.80), is neutral on PTSD, and costs one false positive on substance use, where more analyses per
+record give a wrong one more chances to qualify. Output tokens rise about 60%, and flex latency is
+several times longer. A reasonable choice when recall matters and latency does not; not adopted as
+the default here.
+
+**Lesson for the query layer:** a query has to be robust to a *better* record, not just a
+sparser one. The negation bug was invisible until extraction got richer. pondie already has
+negation tooling (`normalization._negation`, `is_healthy`'s triage); the per-meta predicates
+should go through it rather than through ad hoc regexes.

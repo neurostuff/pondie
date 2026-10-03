@@ -43,6 +43,18 @@ NOT_ORIGINAL = {"review", "systematic review", "meta-analysis", "editorial", "le
                 "comment", "case reports"}
 
 
+#: An entry that states an absence: "No current or past psychiatric disorders", "without
+#: PTSD", "never had PTSD". Richer extractions list a control cohort's exclusions this way,
+#: and a predicate reading condition words without it reads them as diagnoses.
+NEGATION = re.compile(r"^\s*(no|none|not|non|never|without|absence|absent|free of|negative for)\b|"
+                      r"\b(no|without|never had|no history of|free of)\s", re.I)
+
+
+def asserted(entries: list[str]) -> list[str]:
+    """The entries that assert a condition rather than its absence."""
+    return [e for e in entries if not NEGATION.search(e)]
+
+
 def val(node: Any) -> Any:
     """The value of an ExtractedValue, None for anything not extracted."""
     if isinstance(node, dict) and "extraction_status" in node:
@@ -165,7 +177,7 @@ def english(record: dict, ix: Index) -> bool | None:
 
 
 MINORS = re.compile(r"child(?!hood)(?!.{0,3}(abuse|maltreat|trauma|sexual|neglect))|"
-                    r"adolescen|youth|pediatric|paediatric|juvenile|teen|minors?\b|"
+                    r"adolescen|youth|pediatric|paediatric|juvenile|\bteen|\bminors?\b|"
                     r"school.?age|boys|girls", re.I)
 ADULTS = re.compile(r"adult|veteran|soldier|military|police|firefighter|parent|mother|father|"
                     r"widow|university student|college student|\bmen\b|\bwomen\b|"
@@ -518,7 +530,7 @@ def bvftd_without_comorbidity(record: dict, ix: Index) -> bool | None:
     entries = [x for g in cases for x in strs(g.get("medical_condition"))]
     if not entries:
         return None
-    return not any(COMORBID.search(e) for e in entries)
+    return not any(COMORBID.search(e) for e in asserted(entries))
 
 
 def at_least_six(record: dict, ix: Index) -> bool | None:
@@ -628,7 +640,9 @@ def users_without_other_disorder(record: dict, ix: Index) -> bool | None:
     entries = [x for g in ix.groups.values() for x in strs(g.get("medical_condition"))]
     if not entries:
         return None
-    return not any(OTHER_DISORDER.search(e) and not USERS.search(e) for e in entries)
+    # A disorder named beside the substance use is still another disorder: 26000879's
+    # "severe substance and conduct problems".
+    return not any(OTHER_DISORDER.search(e) for e in asserted(entries))
 
 
 def no_pharmacological_manipulation(record: dict, ix: Index) -> bool | None:
