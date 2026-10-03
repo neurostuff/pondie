@@ -606,6 +606,10 @@ class Spec:
     analysis: list
     required: tuple
     pooled: list
+    #: Whether the criteria exclude overlapping samples. PTSD states it; dementia does not,
+    #: and merges each lab's papers into one study instead (Kumfor 2013 and 2014 are both
+    #: gold, inside one merged block).
+    excludes_overlap: bool = False
 
     def status(self, group: dict) -> bool | None:
         return cohort_status(group, self.case, self.comparison)
@@ -613,7 +617,7 @@ class Spec:
 
 SPECS: dict[str, Spec] = {
     "36100907": Spec(PTSD, NOT_PTSD, SEVERITY, (2002, 2020), PTSD_STUDY, PTSD_ANALYSIS,
-                     PTSD_REQUIRED, PTSD_POOLED),
+                     PTSD_REQUIRED, PTSD_POOLED, excludes_overlap=True),
     "35664889": Spec(BVFTD, HEALTHY_CONTROL, None, (1900, (2020, 5)), DEMENTIA_STUDY,
                      DEMENTIA_ANALYSIS, DEMENTIA_REQUIRED, DEMENTIA_POOLED),
 }

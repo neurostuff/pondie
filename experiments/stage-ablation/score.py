@@ -169,7 +169,7 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool) -> 
         group = [r for _, lab, r in rows if lab == label]
         return sum(r[key] for r in group), len(group)
 
-    if OVERLAP:
+    if OVERLAP and queries.SPECS[meta].excludes_overlap:
         from pondie.query.overlap import overlapping
         meta_pubmed = authorship(sorted(records))
         chosen = {pmid for pmid, _, r in rows if r["veto"]}

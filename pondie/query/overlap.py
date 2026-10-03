@@ -83,6 +83,7 @@ class Cohort:
     status: object
     size: float | None
     sex: Mapping[str, float]
+    name: str = ""
 
     def fits_inside(self, earlier: "Cohort") -> bool:
         if self.status is None or self.status != earlier.status:
@@ -111,8 +112,27 @@ def cohorts(record: Mapping, status: Status = healthy_status) -> list[Cohort]:
             size = _number(group.get("enrolled_count"))
         if size is None and sex:
             size = sum(sex.values())
-        out.append(Cohort(status(group), size, sex))
-    return out
+        out.append(Cohort(status(group), size, sex, str(value_of(group.get("name")) or "")))
+    return _without_aggregates(out)
+
+
+def _without_aggregates(cohorts: list[Cohort]) -> list[Cohort]:
+    """Drop a "whole sample" row: named as one, and as large as the others together.
+
+    Records carry one ("all subjects", 43; "whole sample", 32), and it is not a cohort but
+    the union of the rest. Kept, it cannot fit inside any single earlier cohort, so a
+    re-report stopped being one as soon as `repair` gave the row a medical condition. The
+    name is required as well as the sum: a later paper's 20 new controls beside 10 + 10
+    re-reported survivors add up the same way and are a real cohort.
+    """
+    sized = [c for c in cohorts if c.size is not None]
+    total = sum(c.size for c in sized)
+    return [c for c in cohorts
+            if not (len(sized) >= 3 and c.size is not None and c.size * 2 == total
+                    and _AGGREGATE.search(c.name))]
+
+
+_AGGREGATE = re.compile(r"\b(all|whole|total|combined|entire|full)\b", re.I)
 
 
 def re_reports(later: Mapping, earlier: Mapping, status: Status = healthy_status) -> bool:

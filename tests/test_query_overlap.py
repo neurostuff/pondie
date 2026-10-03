@@ -11,8 +11,8 @@ def _v(value):
     return {"extraction_status": "extracted", "value": value, "value_source": "reported"}
 
 
-def _group(status, size=None, **sex):
-    group = {"local_id": f"grp_{status}_{size}", "_status": status}
+def _group(status, size=None, name="", **sex):
+    group = {"local_id": f"grp_{status}_{size}", "_status": status, "name": _v(name or status)}
     if size is not None:
         group["acquired_count"] = _v(size)
     group["sex_distribution"] = [{"category": _v(k), "count": _v(v)} for k, v in sex.items()]
@@ -87,3 +87,10 @@ def test_two_shared_authors_is_not_enough():
     authorship = {"1": {"authors": ["Li L", "Zhang J", "Chen S"], "pubdate": "2006 Jan"},
                   "2": {"authors": ["Li L", "Zhang J", "Tan Q"], "pubdate": "2011 May"}}
     assert overlapping(records, set(records), authorship, status) == {}
+
+
+def test_a_whole_sample_row_is_not_a_cohort():
+    """Nardo 2013's record carries "whole sample" (32) beside S (15) and NS (17)."""
+    with_total = _record(_group("ptsd", 15, male=12, female=3), _group("tec", 17, male=11, female=6),
+                         _group("ptsd", 32, name="whole sample"))
+    assert re_reports(with_total, NARDO_2010, status)
