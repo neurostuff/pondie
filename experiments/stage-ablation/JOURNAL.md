@@ -265,3 +265,55 @@ these records can exclude it without also excluding gold 17825801, which says th
 about a non-VBM paper. Answering it would need the cited reference resolved to a paper and
 that paper's method, i.e. `sample_source_reference` as an identifier rather than a citation
 string.
+
+## Porting into pondie (branch `stage-ablation`; study_schema branch `analysis-outcome`)
+
+**Constraint, from the user:** LLM calls only fill records; selection is a deterministic query.
+Everything in `queries.py`, `pondie.query.overlap` and the PubMed fields obeys it.
+
+1. **`StageName.single` / `stages.Single`.** The whole record in one call with the stage-1
+   listing, held to the demands pass's listing checks (`unconsumed_listing`,
+   `unsupported_omissions`) and a new `render.dangling_references` (built on
+   `fix.check_local_ids`, with the `tables` stage's ids as `existing`). It runs the `shape`,
+   `demands` and `satisfy` payload repairs. `stages.SINGLE_PASS` is selected when a run's
+   `--stages` names `single`. **The default pipeline is unchanged** until the held-out
+   meta-analysis agrees. Tests: `tests/test_single_pass.py`.
+2. **`Analysis.outcome`** (`significant_effect | no_significant_effect`) in the storage
+   schema, regenerated into extraction. It answers "null effects excluded" without the parse
+   link. The query reads it first and falls back to the parse-link foci count.
+3. **`pondie.query.overlap`**: the deterministic overlap rule, with the cohort status passed in
+   by the query (default: derived `is_healthy`). **`pubmed.authorship()`** supplies authors and
+   pubdate; the record has no slot for them, and `pubmed.fill` writes every key it fetches
+   onto the record, so they are kept off it. Tests: `tests/test_query_overlap.py`.
+4. `queries.py` is now a registry of per-meta-analysis `Spec`s. Cohort status got stricter
+   in one place: a comparison cohort must read as a control (or be derived healthy), so
+   "PTSD vs OCD" is no longer a PTSD contrast. It also reads the description when name and
+   condition decide nothing (rep2's "non-symptomatic (NS)" … "did not develop PTSD").
+   PTSD scores after the refactor: v1 unchanged; rep2 adjudicated 17/19, 0.94.
+
+Note on pondie's `single` vs the harness's `mono_parse_check`: the stage also enforces
+`unsupported_omissions`, so more replies are re-asked (many papers take 2–3 calls) and some
+still fail after 3. It is a stricter, costlier variant, measured below.
+
+## E7. Held-out: Dementia (bvFTD, Kamalian 2022, `35664889`)
+
+The query (`queries.DEMENTIA_*`) was committed (4851a9e) from the published criteria before
+any dementia record was extracted. Pool: 25 gold sampled from the 66 gold papers autonima
+screened, plus 30 negatives (15 that autonima's full-text screener *included* but the
+benchmark did not, 15 random), seed 0. Its gold studyset merges papers into lab blocks
+(e.g. ~28 Kumfor/Irish/Hornberger papers as one study), so scoring is study-level only, and
+an included paper's membership answers "reported coordinates".
+
+**Held-out result** (`dem_pondie_single-v1`, pondie's `single` stage, query as committed in
+4851a9e, benchmark labels, `--gold-coords --overlap`):
+
+| mode | recall | false pos | precision |
+|---|---|---|---|
+| strict | 13/25 | 1/30 | 0.93 |
+| veto | **16/25** | 1/30 | **0.94** |
+| permissive | 17/25 | 2/30 | 0.89 |
+
+108 calls, 6.15M input (4.84M cached), 813k output. Precision transfers from PTSD; recall does
+not. Gold losses: "bvFTD vs control" False on 6, the modality predicate False on 3, one
+record with no analyses. Diagnosis follows; every change from here is fit to this data and
+reported as such.

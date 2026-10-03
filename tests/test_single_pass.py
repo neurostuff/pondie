@@ -72,3 +72,34 @@ def test_the_default_run_is_still_demand_driven(tmp_path):
 
 def test_the_single_pass_runs_both_halves_payload_repairs():
     assert set(Single().repair_stage) == {"shape", "demands", "satisfy"}
+
+
+def test_a_retry_that_comes_back_empty_does_not_replace_a_good_answer(tmp_path):
+    """The pass keeps its best attempt, not its last.
+
+    The first reply has an analysis and one fault (a reference it does not declare), so it
+    is re-asked; both retries return nothing. Writing the last reply turned 6 of 55
+    single-pass records empty on the PTSD benchmark.
+    """
+    import json
+
+    from pondie.extraction.models import Cost, Flavour, ModelReply, Paper
+
+    root = tmp_path / "corpus"
+    (root / "S1" / "processed" / "local").mkdir(parents=True)
+    (root / "S1" / "stage1").mkdir(parents=True)
+    (root / "S1" / "processed" / "local" / "text.tables.txt").write_text("a paper")
+    (root / "S1" / "stage1" / "analyses.json").write_text(json.dumps({"analyses": []}))
+    paper = Paper(study_id="S1", root=root, flavour=Flavour.local)
+    good = {"analyses": [_analysis(measure="mea_missing")]}
+    replies = iter([good, {"groups": []}, {"groups": []}])
+
+    def caller(call, *, paper, stage):
+        return ModelReply(payload=json.loads(json.dumps(next(replies))), cost=Cost(calls=1))
+
+    settings = Settings(payloads=tmp_path / "p", records=tmp_path / "r", model="m",
+                        stages=(StageName.single,))
+    outcome = Single().run(paper, settings, caller)
+    written = json.loads(outcome.produced[0].read_text())
+    assert [a["local_id"] for a in written["analyses"]] == ["ana_1"]
+    assert any("mea_missing" in n for n in outcome.notes)

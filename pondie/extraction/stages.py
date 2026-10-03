@@ -401,6 +401,8 @@ class _ModelPass(_Base):
         cost, traces, notes = Cost(), [], []
         payload: dict = {}
         failures: list[str] = []
+        best: dict | None = None
+        best_failures: list[str] = []
         parse_failures: list[str] = []
         truncation_notes: list[str] = []
         parsed = False
@@ -443,13 +445,22 @@ class _ModelPass(_Base):
                 )
             # Hoisting first: an entity list nested under `study` is otherwise shadowed by
             # an empty top-level sibling, and the post-condition would reject a good answer.
-            payload, notes = render.normalize(reply.payload, self.mode)
+            candidate, candidate_notes = render.normalize(reply.payload, self.mode)
             parsed = True
             failures = render.postcondition_failures(
-                payload, self.mode, declared, listing, foci, self.existing(paper, settings)
+                candidate, self.mode, declared, listing, foci, self.existing(paper, settings)
             )
+            # Keep the best attempt, not the last. A reply with sound analyses and one
+            # unvetted omission reason is re-asked, and the retry can come back with no
+            # analyses at all; writing the last one threw the good answer away. Measured
+            # on the single pass: 6 of 55 records empty, against 0-1 for the same prompt
+            # kept by fewest failures.
+            if best is None or _severity(failures) < _severity(best_failures):
+                payload, notes, best, best_failures = (
+                    candidate, candidate_notes, candidate, failures)
             if not failures:
                 break
+        failures = best_failures if best is not None else failures
 
         # Never parsed is not the same as parsed-but-imperfect.
         if not parsed:
@@ -498,6 +509,16 @@ class _ModelPass(_Base):
             stage=self.repair_stage,
         )
         return [f"repaired {name}: {len(lines)}" for name, lines in log.entries if lines]
+
+
+#: Post-condition failures that mean the reply is not a record at all, ranked below any
+#: number of the faults a record can carry.
+_EMPTY = ("no analyses were emitted", "every entity list is empty")
+
+
+def _severity(failures: Sequence[str]) -> tuple[int, int]:
+    """How bad an attempt is: an empty reply first, then how many faults it has."""
+    return (sum(any(f.startswith(e) for e in _EMPTY) for f in failures), len(failures))
 
 
 @dataclass(frozen=True)

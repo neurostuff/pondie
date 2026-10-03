@@ -16,7 +16,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-from pondie import paths
+from pondie import paths, pipeline
 from pondie.extraction.llm import GatewayCaller, load_env
 from pondie.extraction.models import Flavour, Paper, Settings
 from pondie.extraction.record.builder import merge_payloads
@@ -30,6 +30,28 @@ ENV = Path("/data/james/pondie-vs-fulltext/repos/autonima-results/.env")
 def stage_objects(names):
     by_name = {s.name: s for s in (*DEMAND_DRIVEN, *SINGLE_PASS)}
     return [by_name[n] for n in names]
+
+
+def stamp(stage, paper, settings, seconds):
+    """Stamp a pondie stage's output the way `pipeline._run_step` does.
+
+    The harness calls `stage.run` directly to keep the `StageOutcome` (cost, notes), which
+    skips the scheduler -- and the scheduler is what writes the freshness stamp. Without it
+    a seeded run sees every pondie stage as stale and re-runs it.
+    """
+    if isinstance(stage, arms.Mono):
+        return
+    step = stage.as_step(settings)
+    output = step.produces(paper)
+    if output is None or not output.exists():
+        return
+    pipeline.Stamp(
+        step=step.name,
+        digest=pipeline.digest_of(step.depends_on(paper), step.name),
+        parts=dict(step.depends_on(paper)),
+        produced_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        seconds=seconds,
+    ).write(output)
 
 
 def run_paper(pmid, arm, settings, corpus, caller):
@@ -53,6 +75,7 @@ def run_paper(pmid, arm, settings, corpus, caller):
             "cost": outcome.cost.model_dump(), "wall": round(time.time() - started, 1)})
         if not outcome.ok:
             break
+        stamp(stage, paper, settings, time.time() - started)
     if custom is not None:
         payloads = settings.payloads / pmid
         if payloads.is_dir():

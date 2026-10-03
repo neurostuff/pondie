@@ -789,6 +789,11 @@ with no name at all. None was asked for and none could be reached.
 #: docs/extraction-workflow-experiments.md records that it was in the prompt while the
 #: failure it warns about happened anyway, which is what motivated the reordering.
 SINGLE_NOTE = """
+Write `analyses` FIRST: it is the first key of the object, before `study` and before every
+entity list, and each analysis names the local_ids of the entities it needs. Then emit those
+entities. The analyses are what this record is for, and a reply that spends itself on
+entities first ends without them -- measured, on papers with dozens of listing entries.
+
 This is the ONLY extraction pass. It emits the WHOLE record in one JSON object: every analysis
 the paper reports, and every entity those analyses reference -- groups, tasks, acquisitions,
 model estimations with their terms, measures, inference settings, regions, assessments, and
@@ -800,7 +805,12 @@ Account for the stage-1 listing below on exactly the terms its own instructions 
 analysis for each result the paper reports, with `source_table_analysis` naming the entry,
 or a reasoned entry in a top-level `omitted` list. Tables already exist; do not emit them.
 Emit an Analysis for every tested effect the paper reports, including one that found
-nothing, whether or not the listing has an entry for it.
+nothing, whether or not the listing has an entry for it. That includes a comparison whose
+result the text describes but whose coordinates are only in a figure or a supplementary
+table -- "reduced grey matter in patients compared to controls (Figure 1, Table S1)" is a
+tested effect with a direction and an `outcome`, and it has no listing entry because its
+table never reached this text. A paper's group comparison is often reported this way while
+its main tables hold covariate analyses; do not let the tables decide what was tested.
 """
 
 MODE_NOTE = {"demands": DEMANDS_NOTE, "satisfy": SATISFY_NOTE, "single": SINGLE_NOTE}

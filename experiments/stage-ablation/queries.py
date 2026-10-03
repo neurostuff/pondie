@@ -203,10 +203,16 @@ def adult(record: dict, ix: Index) -> bool | None:
 
 
 def search_window(record: dict, ix: Index) -> bool | None:
-    """The search's date range, against PubMed's pubdate. PTSD: "from 2002 to 2020"."""
-    year = num(record.get("_pubyear"))
+    """The search's date range, against PubMed's pubdate, to the month where the criterion
+    gives one. PTSD: "from 2002 to 2020"; dementia: "- 5/2020" (32353756, July 2020, is
+    outside it, and reading the bound as a year let it in)."""
+    when = record.get("_pubdate")  # (year, month), month 0 when PubMed gives none
+    if not when:
+        return None
     low, high = ix.spec.window
-    return None if year is None else low <= year <= high
+    low = low if isinstance(low, tuple) else (low, 0)
+    high = high if isinstance(high, tuple) else (high, 12)
+    return low <= tuple(when) <= high
 
 
 def reports_coordinates(record: dict, ix: Index) -> bool:
@@ -541,7 +547,10 @@ def vbm_fmri_or_fdg(a: dict, record: dict, ix: Index) -> bool | None:
     acq_text = " ".join(x for acq in acqs for x in strs(acq.get("acquisition_type")))
     if not kinds and not mods:
         return None
-    if kinds & GREY_TYPES:
+    # VBM's quantity is often typed `structural_morphometry_other` with the label
+    # "grey matter intensity" (26401935's bvFTD-vs-controls atrophy analysis), so the
+    # label decides as well as the type -- as `grey_voxelwise` already does for PTSD.
+    if kinds & GREY_TYPES or (GREY.search(label) and not kinds & (BOLD_TYPES | PET_TYPES)):
         model = next((ix.models[t] for t in refs(a.get("model_estimation")) if t in ix.models), None)
         unit = strs(model.get("spatial_unit")) if model else []
         return not unit or "voxel" in unit
@@ -584,7 +593,7 @@ class Spec:
     case: re.Pattern
     comparison: re.Pattern
     severity: re.Pattern | None
-    window: tuple[int, int]
+    window: tuple
     study: list
     analysis: list
     required: tuple
@@ -597,6 +606,6 @@ class Spec:
 SPECS: dict[str, Spec] = {
     "36100907": Spec(PTSD, NOT_PTSD, SEVERITY, (2002, 2020), PTSD_STUDY, PTSD_ANALYSIS,
                      PTSD_REQUIRED, PTSD_POOLED),
-    "35664889": Spec(BVFTD, HEALTHY_CONTROL, None, (1900, 2020), DEMENTIA_STUDY,
+    "35664889": Spec(BVFTD, HEALTHY_CONTROL, None, (1900, (2020, 5)), DEMENTIA_STUDY,
                      DEMENTIA_ANALYSIS, DEMENTIA_REQUIRED, DEMENTIA_POOLED),
 }

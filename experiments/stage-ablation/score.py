@@ -129,6 +129,7 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool) -> 
     records = load(run_dir, raw)
     facts = pubmed_facts(sorted(records))
     years = pubyears(sorted(records))
+    authors = authorship(sorted(records))
     positives = gold.labels(meta, LABELS)
     golds = gold.gold_studyset(meta)
     rows, tally = [], {}
@@ -137,6 +138,9 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool) -> 
         record["local_id"] = pmid
         pubmed.fill(record, facts)
         record["_pubyear"] = years.get(pmid)
+        from pondie.query.overlap import date_key
+        when = authors.get(pmid, {}).get("pubdate")
+        record["_pubdate"] = date_key(when, pmid)[:2] if when else None
         annotate_foci(record, run_dir, pmid)
         record["_input_coordinates"] = input_coordinates(pmid)
         # The pooled foci; for a benchmark whose studyset merges papers into blocks

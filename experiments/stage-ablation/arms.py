@@ -194,6 +194,10 @@ ARMS: dict[str, tuple[tuple[StageName, ...], object, tuple[StageName, ...]]] = {
     # pondie's own single-pass stage (pondie/extraction/stages.py `Single`).
     "pondie_single": ((StageName.tables, StageName.prose_foci, StageName.sign_split,
                        StageName.single), None, (StageName.build,)),
+    "pondie_single_fill": ((StageName.tables, StageName.prose_foci, StageName.sign_split,
+                            StageName.single, StageName.fill), None, (StageName.build,)),
+    "pondie_single_ev": ((StageName.tables, StageName.prose_foci, StageName.sign_split,
+                          StageName.single, StageName.evidence), None, (StageName.build,)),
     "ds": ((StageName.tables, StageName.prose_foci, StageName.sign_split, StageName.demands,
             StageName.satisfy), None, (StageName.build,)),
     "ds_fill": ((StageName.tables, StageName.prose_foci, StageName.sign_split,
