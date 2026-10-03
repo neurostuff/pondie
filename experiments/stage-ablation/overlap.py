@@ -10,8 +10,9 @@ A later paper is excluded as overlapping an earlier one when
   1. they share >= 2 PubMed authors (the same group could have scanned the same people),
   2. the earlier paper is itself selected (it is a "previous study" the pool keeps), and
   3. EVERY cohort of the later paper fits inside a cohort of the earlier paper with the same
-     PTSD status: its size is <= that cohort's, and each sex count it reports is <= the
-     earlier cohort's count for that sex. A cohort with no size cannot be shown to fit.
+     PTSD status: its size is <= that cohort's, it reports no sex the earlier cohort does
+     not, and each sex count is <= the earlier cohort's. A cohort with no size cannot be
+     shown to fit.
 
 Condition 3 is what keeps a paper that adds a new cohort: gold 23155380 re-reports
 21498053's 10 vs 10 coal-mine survivors but adds 20 unexposed controls, and 20 does not fit
@@ -69,7 +70,12 @@ def fits(later: dict, earlier: dict) -> bool:
         return False
     if later["size"] is None or earlier["size"] is None or later["size"] > earlier["size"]:
         return False
-    return all(earlier["sex"].get(k, float("inf")) >= v for k, v in later["sex"].items())
+    # The later paper may report less than the earlier one (16838824 gives no sex counts for
+    # the Hunan-fire cohorts 16371250 reported as 8F/4M) but not more: 21498053's 10 men
+    # "fit" inside 16838824's 12 of unreported sex, a coal-mine flood inside a fire.
+    if not set(later["sex"]) <= set(earlier["sex"]):
+        return False
+    return all(earlier["sex"][k] >= v for k, v in later["sex"].items())
 
 
 def subset(later: dict, earlier: dict) -> bool:

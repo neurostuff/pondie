@@ -133,6 +133,8 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool) -> 
         r = queries.evaluate(record)
         pool = negatives | gold.included(meta) | positives
         label = "gold" if pmid in positives else ("neg" if pmid in pool else "other")
+        if pmid in gold.unscored(meta, LABELS):
+            label = "unscored"
         rows.append((pmid, label, r))
         for name, v in {**r["study"], **r["analysis_best"]}.items():
             tally.setdefault(name, Counter())[(label, v)] += 1

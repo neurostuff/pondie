@@ -13,7 +13,7 @@ from pathlib import Path
 BENCH = Path("/data/james/pondie-vs-fulltext/repos/neurometabench/data")
 
 #: meta pmid -> nimads project directory
-PROJECTS = {"36100907": "vbm_of_ptsd"}
+PROJECTS = {"36100907": "vbm_of_ptsd", "35664889": "dementia"}
 
 #: Corrections to the benchmark, each argued in JOURNAL.md. wrong pmid -> right pmid.
 REMAP = {
@@ -41,11 +41,13 @@ def included(meta_pmid: str) -> frozenset[str]:
 
 
 #: Where the published included set contradicts the meta-analysis's own stated criteria,
-#: read from the papers. JOURNAL.md argues each. pmid -> (in?, why).
+#: read from the papers. JOURNAL.md argues each. pmid -> (in?, why); in=None is unscored.
 ADJUDICATED = {
     "36100907": {
         "21118656": (False, "a priori ROI: VBM restricted to the parcellation's ROIs"),
-        "19794316": (False, "a priori ROI: hippocampus and ACC from AAL masks"),
+        # Ambiguous, so unscored: its pooled foci are AAL-mask ROI peaks (hippocampus, ACC),
+        # but the paper also reports whole-brain "nonhypothesized" reductions in prose.
+        "19794316": (None, "ROI foci pooled from a paper that also reports a whole-brain result"),
         # Hunan fire, Nov 2003, the same 12 PTSD (8F/4M) vs 12 non-PTSD in all three,
         # each reporting non-PTSD vs PTSD. "overlapping samples to previous studies"
         # keeps the first report.
@@ -63,6 +65,12 @@ def labels(meta_pmid: str, mode: str = "benchmark") -> frozenset[str]:
         for pmid, (keep, _why) in ADJUDICATED.get(meta_pmid, {}).items():
             (inc.add if keep else inc.discard)(pmid)
     return frozenset(inc)
+
+
+def unscored(meta_pmid: str, mode: str) -> frozenset[str]:
+    if mode != "adjudicated":
+        return frozenset()
+    return frozenset(p for p, (keep, _) in ADJUDICATED.get(meta_pmid, {}).items() if keep is None)
 
 
 @lru_cache

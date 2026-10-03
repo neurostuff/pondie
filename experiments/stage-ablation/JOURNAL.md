@@ -225,3 +225,43 @@ The 90/90 target is met by `mono_parse_check` on adjudicated labels, but with tw
 the query was written while looking at these 55 papers, and this is one draw. A fresh replicate
 (`mono_parse_check-rep2`) is running to measure noise, and the next meta-analysis is the
 held-out test of the method.
+
+### E6. Replicate, and the overlap rule's first bug
+
+`mono_parse_check-rep2` is a fresh, unseeded run of the best arm (66 calls on 55 papers).
+
+| run | labels | recall | false pos | precision | gold foci |
+|---|---|---|---|---|---|
+| v1 | adjudicated | 18/19 | 1/35 | 0.95 | 127/143 |
+| rep2 | adjudicated | 16/19 | 1/35 | 0.94 | 116/143 |
+| v1 | benchmark | 17/22 | 2/33 | 0.89 | 130/159 |
+| rep2 | benchmark | 16/22 | 2/33 | 0.89 | 119/159 |
+| `mono_check` v1 | adjudicated | 19/19 | 2/35 | 0.90 | n/a |
+
+**Noise is about ±2 papers out of 19.** What moves between draws is borderline-field
+instability, not structure:
+- 21418787's PTSD contrast present in v1, absent in rep2.
+- 22453299: no analyses after 3 attempts in rep2.
+- 19794316: rep2 found a whole-brain analysis v1 did not (see below).
+- 32490056 misses its PTSD vs non-PTSD analysis in **both** draws: the record has one PTSD
+  cohort and a social-support regression, though the title says "PTSD diagnosis". A
+  consistent extraction miss.
+
+**19794316 re-adjudicated to unscored.** Its pooled gold foci are hippocampus and ACC peaks
+from AAL masks (ROI), but the paper also reports, in prose and without coordinates, whole-brain
+"nonhypothesized" reductions. A paper with an ROI result and a whole-brain result is not
+clearly against the criteria, so it is out of both recall and precision under
+`adjudicated` (`gold.unscored`).
+
+**The overlap rule had a hole.** rep2 excluded gold 21498053 (coal-mine flood) as a re-report of
+16838824 (Hunan fire). 16838824's record gives no sex counts, so "10 men" fit inside "12 of
+unknown sex". Now a later cohort may report *fewer* sexes than the earlier one (16838824 omits
+what 16371250 reported) but not *more*.
+
+**The persistent false positive is 30127342 (Gong 2019).** It states "subsets of the data used
+here have been used in previous studies [13–16]", and the record says `previously_reported`
+on every cohort, but the earlier papers are outside the pool. So no deterministic rule over
+these records can exclude it without also excluding gold 17825801, which says the same thing
+about a non-VBM paper. Answering it would need the cited reference resolved to a paper and
+that paper's method, i.e. `sample_source_reference` as an identifier rather than a citation
+string.
