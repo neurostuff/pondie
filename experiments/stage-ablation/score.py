@@ -41,6 +41,16 @@ def pubmed_facts(pmids: list[str]) -> dict:
     return cache
 
 
+def authorship(pmids: list[str]) -> dict:
+    path = PUBMED_CACHE.with_name("authorship.json")
+    cache = json.loads(path.read_text()) if path.is_file() else {}
+    missing = [p for p in pmids if p not in cache]
+    if missing:
+        cache |= pubmed.authorship(missing)
+        path.write_text(json.dumps(cache, indent=1))
+    return cache
+
+
 def pubyears(pmids: list[str]) -> dict[str, int]:
     import urllib.request
     path = PUBMED_CACHE.with_name("pubyear.json")
@@ -129,8 +139,12 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool) -> 
         record["_pubyear"] = years.get(pmid)
         annotate_foci(record, run_dir, pmid)
         record["_input_coordinates"] = input_coordinates(pmid)
-        record["_gold_coordinates"] = len([p for a in golds.get(pmid, []) for p in a["points"]]) if GOLD_COORDS else 0
-        r = queries.evaluate(record)
+        # The pooled foci; for a benchmark whose studyset merges papers into blocks
+        # (dementia), being in the included set is what says its coordinates were pooled.
+        record["_gold_coordinates"] = (
+            len([p for a in golds.get(pmid, []) for p in a["points"]])
+            or int(pmid in gold.included(meta))) if GOLD_COORDS else 0
+        r = queries.evaluate(record, meta)
         pool = negatives | gold.included(meta) | positives
         label = "gold" if pmid in positives else ("neg" if pmid in pool else "other")
         if pmid in gold.unscored(meta, LABELS):
@@ -153,9 +167,9 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool) -> 
 
     if OVERLAP:
         from pondie.query.overlap import overlapping
-        meta = json.loads(Path(__file__).with_name("pubmed_meta.json").read_text())
+        meta_pubmed = authorship(sorted(records))
         chosen = {pmid for pmid, _, r in rows if r["veto"]}
-        excluded = overlapping(records, chosen, meta, status=queries.ptsd_status)
+        excluded = overlapping(records, chosen, meta_pubmed, status=queries.SPECS[meta].status)
         for pmid, lab, r in rows:
             if pmid in excluded:
                 r["veto"] = r["strict"] = False

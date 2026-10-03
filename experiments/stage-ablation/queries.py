@@ -24,12 +24,14 @@ one, or a between-subject regression on PTSD severity in a sample that is not PT
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import Any, Callable
 
 PTSD = re.compile(r"ptsd|post.?traumatic stress|posttraumatic stress", re.I)
 #: A cohort whose name or condition says it is the comparison: non-PTSD, trauma-exposed
 #: without PTSD, healthy controls.
 NEGATED = re.compile(r"non.?ptsd|without (a )?(current |lifetime )?ptsd|\bno ptsd|ptsd.?neg|"
+                     r"(did not|never|not) develop(ed)? (a )?ptsd|"
                      r"\bcontrols?\b|healthy|\bhc\b|\btec\b|non.?traumati|resilient|"
                      r"comparison|unaffected", re.I)
 #: The same, for a factor level label with no group reference behind it.
@@ -92,8 +94,9 @@ def as_list(x: Any) -> list:
 class Index:
     """local_id -> entity, for every class a predicate needs to follow a reference to."""
 
-    def __init__(self, record: dict):
+    def __init__(self, record: dict, spec: "Spec | None" = None):
         self.record = record
+        self.spec = spec or SPECS["36100907"]
         self.groups = {g.get("local_id"): g for g in record.get("groups") or []
                        if isinstance(g, dict)}
         self.measures = {m.get("local_id"): m for m in record.get("measures") or []
@@ -115,19 +118,36 @@ class Index:
         return " ".join(strs(g.get("name")) + strs(g.get("medical_condition"))
                         + strs(g.get("description")))
 
-    def is_ptsd_group(self, gid: str) -> bool | None:
+    def is_case(self, gid: str) -> bool | None:
         g = self.groups.get(gid)
-        return None if g is None else ptsd_status(g)
+        return None if g is None else self.spec.status(g)
+
+    # the PTSD name, kept for callers written against it
+    is_ptsd_group = is_case
+
+
+def cohort_status(group: dict, case: re.Pattern, comparison: re.Pattern) -> bool | None:
+    """True for a case cohort, False for a comparison cohort, None for anything else.
+
+    A comparison must READ as one -- controls, healthy, without the condition -- or be
+    derived healthy. A cohort with some other diagnosis is neither: "PTSD vs OCD" is not
+    the contrast a PTSD meta-analysis pools, and "bvFTD vs Alzheimer's" is not bvFTD < HC.
+    """
+    if val(group.get("is_healthy")) is True:
+        return False
+    # The label first; the description only where the label decides nothing -- rep2's
+    # "non-symptomatic (NS)" has no condition and says "did not develop PTSD" only there.
+    for slots in (("name", "medical_condition"), ("description",)):
+        text = " ".join(x for slot in slots for x in strs(group.get(slot)))
+        if comparison.search(text):
+            return False
+        if case.search(text):
+            return True
+    return None
 
 
 def ptsd_status(group: dict) -> bool | None:
-    """True for a PTSD cohort, False for a comparison cohort, None if unnamed."""
-    text = " ".join(strs(group.get("name")) + strs(group.get("medical_condition")))
-    if NEGATED.search(text) or val(group.get("is_healthy")) is True:
-        return False
-    if PTSD.search(text):
-        return True
-    return False if text else None
+    return cohort_status(group, PTSD, NOT_PTSD)
 
 
 # ------------------------------------------------------------------ study level
@@ -183,9 +203,10 @@ def adult(record: dict, ix: Index) -> bool | None:
 
 
 def search_window(record: dict, ix: Index) -> bool | None:
-    """"MRI studies ... from 2002 to 2020" -- the search's date range. PubMed's pubdate."""
+    """The search's date range, against PubMed's pubdate. PTSD: "from 2002 to 2020"."""
     year = num(record.get("_pubyear"))
-    return None if year is None else 2002 <= year <= 2020
+    low, high = ix.spec.window
+    return None if year is None else low <= year <= high
 
 
 def reports_coordinates(record: dict, ix: Index) -> bool:
@@ -209,18 +230,20 @@ def no_declared_overlap(record: dict, ix: Index) -> bool | None:
     return "previously_reported" not in sources
 
 
-def ptsd_cohort(record: dict, ix: Index) -> bool | None:
-    verdicts = [ix.is_ptsd_group(g) for g in ix.groups]
+def case_cohort(record: dict, ix: Index) -> bool | None:
+    verdicts = [ix.is_case(g) for g in ix.groups]
     if any(v is True for v in verdicts):
         return True
-    # a single mixed cohort described as containing PTSD cases ("13 met criteria for PTSD")
-    if any(re.search(r"\bptsd\b", " ".join(strs(g.get("description"))), re.I)
-           for g in ix.groups.values()):
+    # a single mixed cohort described as containing cases ("13 met criteria for PTSD")
+    if any(ix.spec.case.search(" ".join(strs(g.get("description")))) for g in ix.groups.values()):
         return True
     return False if verdicts else None
 
 
-STUDY: list[tuple[str, Callable]] = [
+ptsd_cohort = case_cohort
+
+
+PTSD_STUDY: list[tuple[str, Callable]] = [
     ("original research", original),
     ("2002-2020", search_window),
     ("English", english),
@@ -290,9 +313,9 @@ def _cell_cohort(cell: dict, ix: Index) -> tuple[bool | None, dict | None, dict 
     if False in verdicts and True not in verdicts:
         return False, term, level
     if label and not groups:
-        if NOT_PTSD.search(label):
+        if ix.spec.comparison.search(label):
             return False, term, level
-        if PTSD.search(label):
+        if ix.spec.case.search(label):
             return True, term, level
     return None, term, level
 
@@ -325,16 +348,18 @@ def ptsd_effect(a: dict, record: dict, ix: Index) -> bool | None:
         cohorts.add(verdict)
     if True in cohorts and False in cohorts:
         return True
-    for term in slopes:
+    for term in slopes if ix.spec.severity is not None else ():
         name = " ".join(strs(term.get("name")))
         asm = next((ix.assessments[t] for t in refs(term.get("assessment"))
                     if t in ix.assessments), {})
         name += " " + " ".join(strs(asm.get("name")))
-        if not (SEVERITY.search(name) or PTSD.search(name)):
+        if not (ix.spec.severity.search(name) or ix.spec.case.search(name)):
             continue
+        # A slope fitted inside the case cohort alone is a within-group effect; one across a
+        # sample holding anyone else (23021615's veterans with and without PTSD) is not.
         sample = [x.get("group") for x in a.get("groups") or [] if isinstance(x, dict)]
         sample = [g for g in sample if isinstance(g, str)] or list(ix.groups)
-        if any(ix.is_ptsd_group(g) is False for g in sample):
+        if any(ix.is_case(g) is not True for g in sample):
             return True
     if not signed and "contrast" in kind:
         return None
@@ -374,23 +399,25 @@ def ptsd_decrease(a: dict, record: dict, ix: Index) -> bool | None:
             for lv in term.get("levels") or []:
                 if isinstance(lv, dict) and level and level in strs(lv.get("level")):
                     groups += refs(lv.get("groups"))
-        verdicts = {ix.is_ptsd_group(g) for g in groups}
-        if True in verdicts or (not groups and PTSD.search(level) and not NOT_PTSD.search(level)):
+        verdicts = {ix.is_case(g) for g in groups}
+        case, comparison = ix.spec.case, ix.spec.comparison
+        if True in verdicts or (not groups and case.search(level) and not comparison.search(level)):
             seen = True
             if direction == "negative":
                 return True
-        elif False in verdicts or (not groups and NOT_PTSD.search(level)):
+        elif False in verdicts or (not groups and comparison.search(level)):
             seen = True
             if direction == "positive":
                 return True
-        elif term is not None and " ".join(strs(term.get("type"))) == "continuous":
+        elif (ix.spec.severity is not None and term is not None
+              and " ".join(strs(term.get("type"))) == "continuous"):
             seen = True
             if direction == "negative":
                 return True
     return False if seen else None
 
 
-ANALYSIS: list[tuple[str, Callable]] = [
+PTSD_ANALYSIS: list[tuple[str, Callable]] = [
     ("structural MRI", structural),
     ("grey matter, voxel-wise", grey_voxelwise),
     ("whole brain", whole_brain),
@@ -399,16 +426,18 @@ ANALYSIS: list[tuple[str, Callable]] = [
 ]
 
 #: Not a criterion for the study, a criterion for WHICH of its analyses is pooled.
-POOLED = [("PTSD decrease", ptsd_decrease)]
+PTSD_POOLED = [("PTSD decrease", ptsd_decrease)]
 
 
 #: What a selected analysis must positively be. Everything else vetoes only on False.
-REQUIRED = ("structural MRI", "grey matter, voxel-wise", "PTSD effect")
+PTSD_REQUIRED = ("structural MRI", "grey matter, voxel-wise", "PTSD effect")
 
 
-def evaluate(record: dict) -> dict:
+def evaluate(record: dict, meta: str = "36100907") -> dict:
     """Per-criterion answers, the qualifying analyses, and the strict/permissive verdicts."""
-    ix = Index(record)
+    spec = SPECS[meta]
+    ix = Index(record, spec)
+    STUDY, ANALYSIS, POOLED, REQUIRED = spec.study, spec.analysis, spec.pooled, spec.required
     study = {name: f(record, ix) for name, f in STUDY}
     analyses = []
     for a in record.get("analyses") or []:
@@ -439,3 +468,135 @@ def evaluate(record: dict) -> dict:
         "veto_hits": [x["local_id"] for x in veto_hits],
         "pooled_hits": [x["local_id"] for x in veto_hits if x["pooled"]],
     }
+
+
+# ------------------------------------------------------- dementia (Kamalian 2022, 35664889)
+#
+# Written from the criteria text alone, before any dementia record was read, so the first
+# score is a held-out number. Quoted from neurometabench's meta_datasets.csv:
+#
+#   (1) clinically diagnosed bvFTD patients with no concurrent psychiatric diagnosis (e.g.,
+#   major depressive disorder and bipolar mood disorder), other forms of dementia or
+#   neurological symptoms, and no history of alcohol and substance abuse; (2) at least six
+#   participants in either the patient or healthy group; (3) VBM, fMRI (resting-state or
+#   task based), and FDG-PET as the imaging modality; (4) reported the coordinates of
+#   between-group contrasts in a defined stochastic space (MNI or Talairach); and (5)
+#   performed a whole-brain analysis.  Exclusion: 1) ROI 2) No Control.  dates: - 5/2020.
+#   Analysis: bvFTD < HC.
+
+BVFTD = re.compile(r"bvftd|behaviou?ral[- ]variant|frontotemporal dementia|\bftd\b|"
+                   r"frontal[- ]variant|pick'?s", re.I)
+HEALTHY_CONTROL = re.compile(r"healthy|\bcontrols?\b|\bhcs?\b|\bncs?\b|normal|"
+                             r"cognitively (normal|unimpaired|intact)|non.?demented", re.I)
+COMORBID = re.compile(r"depress|bipolar|schizophren|psychos|alzheimer|\bad\b|lewy|"
+                      r"vascular dementia|\bals\b|amyotrophic|motor neuron|\bmnd\b|parkinson|"
+                      r"progressive supranuclear|corticobasal|huntington|alcohol|substance|"
+                      r"semantic dementia|primary progressive aphasia|\bppa\b|svppa|nfvppa", re.I)
+
+
+def bvftd_without_comorbidity(record: dict, ix: Index) -> bool | None:
+    """(1): the bvFTD cohort carries no other diagnosis. Read off the case cohorts' own
+    `medical_condition` entries, each one separately: "bvFTD" is clean, "bvFTD with
+    motor neuron disease" is not."""
+    cases = [g for gid, g in ix.groups.items() if ix.is_case(gid)]
+    if not cases:
+        return None
+    entries = [x for g in cases for x in strs(g.get("medical_condition"))]
+    if not entries:
+        return None
+    return not any(COMORBID.search(e) for e in entries)
+
+
+def at_least_six(record: dict, ix: Index) -> bool | None:
+    """(2): "at least six participants in either the patient or healthy group"."""
+    sizes = []
+    for gid, g in ix.groups.items():
+        if ix.is_case(gid) is None:
+            continue
+        n = num(g.get("acquired_count"))
+        if n is None:
+            n = num(g.get("enrolled_count"))
+        if n is not None:
+            sizes.append(n)
+    return max(sizes) >= 6 if sizes else None
+
+
+GREY_TYPES = {"gray_matter_volume", "gray_matter_density"}
+BOLD_TYPES = {"bold_response", "bold_derived_metric", "connectivity_strength",
+              "component_loading"}
+PET_TYPES = {"metabolic_rate", "tracer_uptake", "receptor_binding"}
+FDG = re.compile(r"fdg|fluoro.?deoxy|glucose", re.I)
+OTHER_TRACER = re.compile(r"amyloid|pib|florbetapir|florbetaben|flutemetamol|tau|av.?1451|"
+                          r"dopamin|raclopride|flumazenil|hmpao|ecd|spect", re.I)
+
+
+def vbm_fmri_or_fdg(a: dict, record: dict, ix: Index) -> bool | None:
+    """(3): VBM, fMRI (resting-state or task) or FDG-PET."""
+    m = next((ix.measures[t] for t in refs(a.get("measure")) if t in ix.measures), None)
+    kinds = set(strs(m.get("type"))) if m else set()
+    label = " ".join(strs(m.get("source_label")) + strs(m.get("specific_metric"))) if m else ""
+    acqs = [ix.acqs.get(x) for x in refs(a.get("acquisitions"))]
+    acqs = [x for x in acqs if x] or list(ix.acqs.values())
+    mods = {x for acq in acqs for x in strs(acq.get("modality"))}
+    acq_text = " ".join(x for acq in acqs for x in strs(acq.get("acquisition_type")))
+    if not kinds and not mods:
+        return None
+    if kinds & GREY_TYPES:
+        model = next((ix.models[t] for t in refs(a.get("model_estimation")) if t in ix.models), None)
+        unit = strs(model.get("spatial_unit")) if model else []
+        return not unit or "voxel" in unit
+    if kinds & BOLD_TYPES:
+        return not mods or bool(mods & {"fMRI", "MRI"})
+    if kinds & PET_TYPES or "PET" in mods or "SPECT" in mods:
+        text = f"{label} {acq_text}"
+        if FDG.search(text):
+            return True
+        if OTHER_TRACER.search(text) or "SPECT" in mods:
+            return False
+        return None
+    return False if kinds else None
+
+
+DEMENTIA_STUDY: list[tuple[str, Callable]] = [
+    ("original research", original),
+    ("by May 2020", search_window),
+    ("bvFTD cohort", case_cohort),
+    ("no comorbidity", bvftd_without_comorbidity),
+    ("a group of six", at_least_six),
+    ("reports coordinates", reports_coordinates),
+]
+DEMENTIA_ANALYSIS: list[tuple[str, Callable]] = [
+    ("VBM, fMRI or FDG-PET", vbm_fmri_or_fdg),
+    ("whole brain", whole_brain),
+    ("bvFTD vs control", ptsd_effect),
+    ("reported foci", reported_foci),
+]
+DEMENTIA_POOLED = [("bvFTD < HC", ptsd_decrease)]
+DEMENTIA_REQUIRED = ("VBM, fMRI or FDG-PET", "bvFTD vs control")
+
+
+# ------------------------------------------------------------------ the registry
+
+@dataclass(frozen=True)
+class Spec:
+    """One meta-analysis's criteria. `case`/`comparison` decide a cohort's side."""
+
+    case: re.Pattern
+    comparison: re.Pattern
+    severity: re.Pattern | None
+    window: tuple[int, int]
+    study: list
+    analysis: list
+    required: tuple
+    pooled: list
+
+    def status(self, group: dict) -> bool | None:
+        return cohort_status(group, self.case, self.comparison)
+
+
+SPECS: dict[str, Spec] = {
+    "36100907": Spec(PTSD, NOT_PTSD, SEVERITY, (2002, 2020), PTSD_STUDY, PTSD_ANALYSIS,
+                     PTSD_REQUIRED, PTSD_POOLED),
+    "35664889": Spec(BVFTD, HEALTHY_CONTROL, None, (1900, 2020), DEMENTIA_STUDY,
+                     DEMENTIA_ANALYSIS, DEMENTIA_REQUIRED, DEMENTIA_POOLED),
+}
