@@ -592,6 +592,79 @@ DEMENTIA_POOLED = [("bvFTD < HC", ptsd_decrease)]
 DEMENTIA_REQUIRED = ("VBM, fMRI or FDG-PET", "bvFTD vs control")
 
 
+# --------------------------------------------- VBM of substance use (Hill-Bowen 2022, 36115222)
+#
+# Written from the criteria text alone, before any substance-use record was extracted:
+#
+#   "First, only empirical English language MRI studies assessing GM volume differences
+#   between substance users and controls were included. Second, only studies reporting
+#   whole-brain analysis outcomes of lower or higher GM volume were recorded, as region of
+#   interest (ROI) analyses violate the ALE null-hypothesis ... Third, studies reporting foci
+#   as 3D coordinates (X, Y, Z) in Talairach or Montreal Neurological Institute (MNI)
+#   stereotaxic space were included."  Exclusion: "presence of pharmacological
+#   manipulations, brain lesion studies, and studies including participants with reports of
+#   mental and/or neurological disorders".  Analyses: all substances, alcohol, nicotine,
+#   alcohol-nicotine -- lower or higher GM, so no direction is pooled preferentially.
+
+USERS = re.compile(r"alcohol|drink|smok|nicotine|tobacco|cigarette|cocaine|crack|cannabis|"
+                   r"marijuana|\bthc\b|opi(oid|ate)|heroin|methadone|amphetamine|"
+                   r"methamphetamine|\bmeth\b|stimulant|ketamine|mdma|ecstasy|inhalant|"
+                   r"substance|\bdrug|\busers?\b|dependen|addict|\baud\b|\bsud\b|abus", re.I)
+NON_USERS = re.compile(r"non.?(user|smoker|drinker|dependent|abus)|never.?(smok|us|drink)|"
+                       r"\bcontrols?\b|healthy|\bhcs?\b|light drinker|abstainer|"
+                       r"comparison|drug.?naive|no history of (substance|drug|alcohol)", re.I)
+OTHER_DISORDER = re.compile(r"schizophren|psychos|bipolar|depress|anxiety|ptsd|adhd|"
+                            r"autis|dementia|alzheimer|parkinson|epilep|stroke|lesion|"
+                            r"korsakoff|wernicke|encephalopath|cirrhos|\bhiv\b|traumatic brain|"
+                            r"\btbi\b|multiple sclerosis", re.I)
+ADMINISTERED = re.compile(r"placebo|\bdose\b|\bmg\b|administ|infusion|patch|varenicline|"
+                          r"bupropion|naltrexone|acamprosate|challenge|intoxicat", re.I)
+
+
+def users_without_other_disorder(record: dict, ix: Index) -> bool | None:
+    """"participants with reports of mental and/or neurological disorders" excluded. Read
+    off every cohort's own `medical_condition` entries: the substance use disorder itself
+    is the case, anything else named is another disorder."""
+    entries = [x for g in ix.groups.values() for x in strs(g.get("medical_condition"))]
+    if not entries:
+        return None
+    return not any(OTHER_DISORDER.search(e) and not USERS.search(e) for e in entries)
+
+
+def no_pharmacological_manipulation(record: dict, ix: Index) -> bool | None:
+    """"presence of pharmacological manipulations" excluded. `StudyDesign`: an
+    observational comparison of cohorts administers nothing; an arm or condition that
+    administers a drug, placebo or dose is a manipulation."""
+    design = (record.get("study") or record).get("design") or {}
+    structure = strs(design.get("assignment_structure"))
+    arms = [a for a in design.get("arms") or [] if isinstance(a, dict)]
+    arm_text = " ".join(x for a in arms for slot in ("name", "description", "arm_kind")
+                        for x in strs(a.get(slot)))
+    if ADMINISTERED.search(arm_text):
+        return False
+    if "observational_cohorts" in structure:
+        return True
+    return None if not structure else not arms
+
+
+SUD_STUDY: list[tuple[str, Callable]] = [
+    ("original research", original),
+    ("English", english),
+    ("users cohort", case_cohort),
+    ("no other disorder", users_without_other_disorder),
+    ("no pharmacological manipulation", no_pharmacological_manipulation),
+    ("reports coordinates", reports_coordinates),
+]
+SUD_ANALYSIS: list[tuple[str, Callable]] = [
+    ("structural MRI", structural),
+    ("grey matter, voxel-wise", grey_voxelwise),
+    ("whole brain", whole_brain),
+    ("users vs controls", ptsd_effect),
+    ("reported foci", reported_foci),
+]
+SUD_REQUIRED = ("structural MRI", "grey matter, voxel-wise", "users vs controls")
+
+
 # ------------------------------------------------------------------ the registry
 
 @dataclass(frozen=True)
@@ -618,6 +691,8 @@ class Spec:
 SPECS: dict[str, Spec] = {
     "36100907": Spec(PTSD, NOT_PTSD, SEVERITY, (2002, 2020), PTSD_STUDY, PTSD_ANALYSIS,
                      PTSD_REQUIRED, PTSD_POOLED, excludes_overlap=True),
+    "36115222": Spec(USERS, NON_USERS, None, (1900, 2100), SUD_STUDY, SUD_ANALYSIS,
+                     SUD_REQUIRED, []),
     "35664889": Spec(BVFTD, HEALTHY_CONTROL, None, (1900, (2020, 5)), DEMENTIA_STUDY,
                      DEMENTIA_ANALYSIS, DEMENTIA_REQUIRED, DEMENTIA_POOLED),
 }
