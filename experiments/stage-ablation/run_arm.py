@@ -101,7 +101,8 @@ def main() -> int:
     args = ap.parse_args()
     load_env(ENV)
     import prompts
-    prompts.apply(args.variant)
+    complete = "complete" in args.variant
+    prompts.apply([v for v in args.variant if v != "complete"])
     os.environ.setdefault("PONDIE_RUN_ID", args.run)
 
     pmids = [p for p in Path(args.pmids).read_text().split() if p]
@@ -124,6 +125,7 @@ def main() -> int:
         stages=tuple(before) + tuple(after) or ("build",), effort=args.effort,
         service_tier="flex", max_output_tokens=64_000,
         repair="repair" in [s.value for s in after], adjudicate="repair" in [s.value for s in after],
+        complete_references=complete,
     )
     (run_dir / "settings.json").write_text(json.dumps(
         {"arm": args.arm, "model": args.model, "effort": args.effort, "pmids": pmids,

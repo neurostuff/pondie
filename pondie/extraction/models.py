@@ -228,6 +228,9 @@ class Settings(Strict):
     #: record that does not -- 8 cases across 42 records measured.
     adjudicate: bool = True
     redo: bool = False
+    #: After `single` has spent its attempts, ask once more for only the entities its
+    #: references still name and it never emitted. Off until measured.
+    complete_references: bool = False
 
     @model_validator(mode="after")
     def _build_needs_its_inputs(self) -> "Settings":

@@ -18,6 +18,7 @@ from __future__ import annotations
 import copy
 import functools
 import json
+import re
 import shutil
 from dataclasses import dataclass
 from datetime import date
@@ -402,6 +403,10 @@ class _ModelPass(_Base):
         """local_ids that live outside this pass's payload, which a reference may name."""
         return ()
 
+    def complete(self, paper, settings, caller, payload, failures, prompt):
+        """A last step after the attempts. `(payload, failures, cost, notes)`; no-op here."""
+        return payload, failures, Cost(), []
+
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
@@ -483,6 +488,13 @@ class _ModelPass(_Base):
                 break
         failures = best_failures if best is not None else failures
 
+        if parsed and failures:
+            payload, failures, more_cost, more_notes = self.complete(
+                paper, settings, caller, payload, failures, prompt
+            )
+            cost = cost + more_cost
+            notes = list(notes) + more_notes
+
         # Never parsed is not the same as parsed-but-imperfect.
         if not parsed:
             raise MalformedReply(
@@ -530,6 +542,67 @@ class _ModelPass(_Base):
             stage=self.repair_stage,
         )
         return [f"repaired {name}: {len(lines)}" for name, lines in log.entries if lines]
+
+
+def _missing_ids(payload: Mapping[str, Any], existing: Collection[str]) -> list[str]:
+    """The local_ids the payload references and does not declare, in first-seen order."""
+    from pondie.extraction.record.fix.link import check_local_ids
+
+    body = {k: v for k, v in payload.items() if k not in ("study", "omitted")}
+    body |= dict(payload.get("study") or {})
+    body["tables"] = [{"local_id": i} for i in existing]
+    found: dict[str, None] = {}
+    for problem in check_local_ids(body, reader.load(render.EXTRACTION_SCHEMA)):
+        hit = _UNKNOWN.search(problem)
+        if hit:
+            found.setdefault(hit.group(1))
+    return list(found)
+
+
+_UNKNOWN = re.compile(r"unknown local_id '([^']+)'")
+
+
+def _kind_of(local_id: str) -> str | None:
+    """The class a local_id's prefix names, or None for a prefix nobody mints."""
+    from pondie.extraction.record.ids import DERIVED, PREFIX
+
+    for cls, prefix in sorted(PREFIX.items(), key=lambda kv: -len(kv[1])):
+        if cls not in DERIVED and local_id.startswith(prefix):
+            return cls
+    return None
+
+
+def _merge_entities(payload: dict, found: Mapping[str, Any]) -> dict:
+    """Add the completion's entities to the payload by local_id, never replacing one.
+
+    A model estimation already present gains the terms it lacked; anything else already
+    present is left as the single pass wrote it.
+    """
+    for key, entities in found.items():
+        if key == "study":
+            design = (entities or {}).get("design") if isinstance(entities, Mapping) else None
+            if isinstance(design, Mapping):
+                target = payload.setdefault("study", {}).setdefault("design", {})
+                for sub in ("arms", "timepoints"):
+                    _extend(target.setdefault(sub, []), design.get(sub) or [])
+            continue
+        if not isinstance(entities, list) or key not in schema.entity_lists():
+            continue
+        _extend(payload.setdefault(key, []), entities)
+    return payload
+
+
+def _extend(held: list, new: list) -> None:
+    by_id = {e.get("local_id"): e for e in held if isinstance(e, Mapping)}
+    for entity in new:
+        if not isinstance(entity, Mapping) or not entity.get("local_id"):
+            continue
+        present = by_id.get(entity["local_id"])
+        if present is None:
+            held.append(entity)
+            by_id[entity["local_id"]] = entity
+        elif isinstance(present.get("terms"), list) and isinstance(entity.get("terms"), list):
+            _extend(present["terms"], entity["terms"])
 
 
 #: Post-condition failures that mean the reply is not a record at all, ranked below any
@@ -650,6 +723,71 @@ class Single(_ModelPass):
 
     def context(self, paper: Paper, settings: Settings) -> str:
         return Demands().context(paper, settings)
+
+    def complete(self, paper, settings, caller, payload, failures, prompt):
+        """Ask for only the entities the reply references and never emitted.
+
+        Re-asking for the whole record does not fix this: 31887311 referenced `grp_bvftd`,
+        `grp_ad` and `grp_controls` from a correct bvFTD-versus-controls contrast and wrote
+        `groups: []` in all three attempts, with all 23 dangling references named in each
+        retry. 5-15% of single-pass records ended that way. This is the `satisfy` pass
+        restricted to the ids that are missing, with the analyses shown so each entity can
+        be read off what references it.
+        """
+        if not settings.complete_references:
+            return payload, failures, Cost(), []
+        missing = _missing_ids(payload, self.existing(paper, settings))
+        declared = [
+            {"local_id": i, "kind": _kind_of(i), "label": i} for i in missing if _kind_of(i)
+        ]
+        if not declared:
+            return payload, failures, Cost(), []
+        shown = json.dumps(payload.get("analyses") or [], ensure_ascii=False)[:60_000]
+        context = (
+            render.requirements_block({"required_entities": declared})
+            + "\n\n## The analyses that reference them (already extracted; do not re-emit)\n\n"
+            + shown
+        )
+        ask = render.build_prompt(
+            paper.text.read_text(encoding="utf-8", errors="replace"),
+            "satisfy",
+            settings.retrieve_evidence,
+            context,
+        )
+        try:
+            reply = caller(
+                ModelCall(
+                    model=settings.model,
+                    system=ask.system,
+                    prompt=ask.user,
+                    max_output_tokens=settings.max_output_tokens,
+                    effort=settings.effort,
+                    service_tier=settings.service_tier,
+                    attempts=settings.attempts,
+                ),
+                paper=paper.study_id,
+                stage=f"{self.name.value}-complete",
+            )
+        except Exception as error:  # noqa: BLE001 -- completion must not lose the record
+            return payload, failures, Cost(), [f"completion failed: {type(error).__name__}"]
+        found, _ = render.normalize(reply.payload, "satisfy")
+        merged = _merge_entities(copy.deepcopy(payload), found)
+        after = render.postcondition_failures(
+            merged,
+            self.mode,
+            (),
+            self.listing(paper, settings),
+            self.listing_foci(paper, settings),
+            self.existing(paper, settings),
+        )
+        still = _missing_ids(merged, self.existing(paper, settings))
+        note = (
+            f"completion: asked for {len(declared)} missing entit(ies), "
+            f"{len(missing) - len(still)} of {len(missing)} references now resolve"
+        )
+        if _severity(after) <= _severity(failures) and len(still) < len(missing):
+            return merged, after, reply.cost, [note]
+        return payload, failures, reply.cost, [note + "; kept the uncompleted reply"]
 
     def existing(self, paper: Paper, settings: Settings) -> Collection[str]:
         tables = Tables().produces(paper, settings)

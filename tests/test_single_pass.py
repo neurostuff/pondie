@@ -110,3 +110,56 @@ def test_a_retry_that_comes_back_empty_does_not_replace_a_good_answer(tmp_path):
     written = json.loads(outcome.produced[0].read_text())
     assert [a["local_id"] for a in written["analyses"]] == ["ana_1"]
     assert any("mea_missing" in n for n in outcome.notes)
+
+
+def _staged(tmp_path):
+    import json
+
+    from pondie.extraction.models import Flavour, Paper
+
+    root = tmp_path / "corpus"
+    (root / "S1" / "processed" / "local").mkdir(parents=True)
+    (root / "S1" / "stage1").mkdir(parents=True)
+    (root / "S1" / "processed" / "local" / "text.tables.txt").write_text("a paper")
+    (root / "S1" / "stage1" / "analyses.json").write_text(json.dumps({"analyses": []}))
+    return Paper(study_id="S1", root=root, flavour=Flavour.local)
+
+
+def _scripted(replies, seen):
+    import json
+
+    from pondie.extraction.models import Cost, ModelReply
+
+    replies = iter(replies)
+
+    def caller(call, *, paper, stage):
+        seen.append(stage)
+        return ModelReply(payload=json.loads(json.dumps(next(replies))), cost=Cost(calls=1))
+
+    return caller
+
+
+def test_completion_asks_only_for_the_missing_entities(tmp_path):
+    """31887311: a correct contrast whose cohorts were never emitted, in every attempt."""
+    import json
+
+    dangling = {"analyses": [_analysis(groups=[{"group": "grp_bvftd"}])], "groups": []}
+    completion = {"groups": [{"local_id": "grp_bvftd", "name": _wrapped("bvFTD")}]}
+    seen = []
+    settings = Settings(payloads=tmp_path / "p", records=tmp_path / "r", model="m",
+                        stages=(StageName.single,), complete_references=True)
+    outcome = Single().run(_staged(tmp_path), settings,
+                           _scripted([dangling, dangling, dangling, completion], seen))
+    written = json.loads(outcome.produced[0].read_text())
+    assert [g["local_id"] for g in written["groups"]] == ["grp_bvftd"]
+    assert seen == ["single", "single", "single", "single-complete"]
+    assert any("1 of 1 references now resolve" in n for n in outcome.notes)
+
+
+def test_completion_is_off_unless_asked_for(tmp_path):
+    dangling = {"analyses": [_analysis(groups=[{"group": "grp_bvftd"}])], "groups": []}
+    seen = []
+    settings = Settings(payloads=tmp_path / "p", records=tmp_path / "r", model="m",
+                        stages=(StageName.single,))
+    Single().run(_staged(tmp_path), settings, _scripted([dangling] * 3, seen))
+    assert seen == ["single"] * 3
