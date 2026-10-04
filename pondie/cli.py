@@ -112,7 +112,8 @@ def _extract(args: argparse.Namespace) -> int:
             f"{s.name.value}={settings.effort_for(s.name)}"
             for s in sequence(settings)
             if getattr(s, "asks_a_model", False)
-        ),
+        )
+        or "none (no model stage)",
         args.workers,
     )
     report = run(

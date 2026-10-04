@@ -336,7 +336,7 @@ def build(
     # ones and wrong for `mirrored`, which appends.
     log = fix.apply_all(
         body,
-        fix.Context(schema=sch, stage1=stage1, table_map=table_map),
+        fix.Context(schema=sch, stage1=stage1, table_map=table_map, text=normalized),
         stage=fix.AT_MERGE,
     )
     report.repair_log = log

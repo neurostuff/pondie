@@ -594,3 +594,40 @@ def derive_analysis_ids(body: dict[str, Any]) -> list[str]:
         if isinstance(analysis, Mapping) and analysis.get("mirror_of") in renamed:
             analysis["mirror_of"] = renamed[analysis["mirror_of"]]
     return notes
+
+
+def derive_correction_regions(body: dict[str, Any]) -> list[str]:
+    """Name an ROI correction's regions from the analyses that used it.
+
+    `correction_scope: roi` with no `correction_regions` says the correction was
+    restricted and not to what. When every analysis using that scheme names the same
+    regions, those are what it was restricted to; analyses that disagree, or name none,
+    leave it for the adjudicator.
+    """
+    fixed: list[str] = []
+    for index, scheme in enumerate(body.get("inference_settings") or []):
+        if not isinstance(scheme, dict) or scheme.get("correction_regions"):
+            continue
+        if str(values.read(scheme.get("correction_scope")) or "").strip().lower() != "roi":
+            continue
+        users = [
+            analysis
+            for analysis in body.get("analyses") or []
+            if isinstance(analysis, Mapping)
+            and scheme.get("local_id")
+            in (
+                analysis.get("inference_settings")
+                if isinstance(analysis.get("inference_settings"), list)
+                else [analysis.get("inference_settings")]
+            )
+        ]
+        named = {tuple(analysis.get("regions") or []) for analysis in users}
+        if len(named) != 1 or () in named:
+            continue
+        scheme["correction_regions"] = list(named.pop())
+        fixed.append(
+            f"inference_settings[{index}].correction_regions: the regions its "
+            f"{len(users)} analysis(es) ran over"
+        )
+    return fixed
+

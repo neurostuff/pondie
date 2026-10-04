@@ -95,9 +95,9 @@ def test_an_analysis_slot_filed_inside_effect_moves_up():
     notes = shape.lift_misnested(body, reader.load(schema.EXTRACTION))
     analysis = body["analyses"][0]
     assert analysis["tables"] == ["tbl2"]
-    assert analysis["model_estimation"] == "mod_b", "the analysis's own value wins"
-    assert set(analysis["effect"]) == {"cells"}
-    assert len(notes) == 2
+    assert analysis["model_estimation"] == "mod_b", "the analysis's own value stays"
+    assert analysis["effect"]["model_estimation"] == "mod_a", "a conflicting one is kept"
+    assert len(notes) == 1
 
 
 def test_a_cell_written_as_a_wrapper_reads_as_a_cell():
@@ -153,6 +153,52 @@ def test_any_entity_written_as_a_value_loses_its_wrapper_keys():
         {"local_id": "trm_group", "name": _v("group"), "levels": [level]}]}]}
     shape.unwrap_entities(body, reader.load(schema.EXTRACTION))
     assert level == {"level": _v("PTSD")}
+
+
+def test_an_objects_slots_written_inside_its_field_wrapper_move_out():
+    """21078704 put an analysis's `definition` inside its `name`; 21498053 an effect's
+    `statistic` inside its `kind`."""
+    name = {**_v("cluster"), "definition": _v("a regression")}
+    effect = {"kind": {**_v("contrast"), "statistic": _v("t")}, "cells": []}
+    body = {"analyses": [{"local_id": "ana_1", "name": name, "effect": effect}]}
+    shape.lift_misnested(body, reader.load(schema.EXTRACTION))
+    assert name == _v("cluster") and body["analyses"][0]["definition"] == _v("a regression")
+    assert effect["kind"] == _v("contrast") and effect["statistic"] == _v("t")
+
+
+def test_a_stray_that_contradicts_what_is_there_stays_put():
+    """Nothing the model wrote is discarded to make a record validate."""
+    name = {**_v("cluster"), "definition": _v("one reading")}
+    body = {"analyses": [{"local_id": "ana_1", "name": name, "definition": _v("another")}]}
+    shape.lift_misnested(body, reader.load(schema.EXTRACTION))
+    assert name["definition"] == _v("one reading")
+    assert body["analyses"][0]["definition"] == _v("another")
+
+
+
+def test_a_stray_with_the_same_value_is_a_duplicate_and_keeps_its_evidence():
+    """21078704's `outcome` sat in both places with one value and different evidence."""
+    cited = {**_v("significant_effect"),
+             "evidence": {"status": "present", "sets": [{"spans": [{"text": "p < .05"}]}]}}
+    name = {**_v("cluster"), "outcome": cited}
+    body = {"analyses": [{"local_id": "ana_1", "name": name,
+                          "outcome": _v("significant_effect")}]}
+    shape.lift_misnested(body, reader.load(schema.EXTRACTION))
+    assert "outcome" not in name
+    assert body["analyses"][0]["outcome"]["evidence"]["status"] == "present"
+
+def test_a_slot_name_in_a_list_of_objects_is_dropped():
+    """25050433: `design.timepoints` held `"arms"` beside two Timepoints."""
+    tp = {"local_id": "tp_1", "name": _v("baseline")}
+    body = {"design": {"timepoints": [tp, "arms"]}}
+    shape.drop_stray_slot_names(body, reader.load(schema.EXTRACTION))
+    assert body["design"]["timepoints"] == [tp]
+
+
+def test_a_wrapper_meaning_generated_or_carrying_a_moot_reason_is_repaired():
+    field = {**_v(2.0, "inferred"), "unreported_reason": "not_stated"}
+    shape.repair_wrappers({"x": field})
+    assert field == _v(2.0, "generated")
 
 def test_not_reported_written_as_a_value_becomes_the_status():
     """`Cell.direction: 'not_reported'` is not a permissible direction."""

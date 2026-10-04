@@ -65,7 +65,16 @@ _EMPTY_WORDS = frozenset(
 )
 
 
-def align_cell_levels(body: dict[str, Any]) -> list[str]:
+def _expansion(defined: Mapping[str, str], short: str) -> str:
+    """What the paper defines `short` as, allowing its plural: 26347628 defined `HCs`
+    and declared the level `HC`."""
+    for form in (short, f"{short}s", short.removesuffix("s")):
+        if form in defined:
+            return defined[form]
+    return ""
+
+
+def align_cell_levels(body: dict[str, Any], text: str = "") -> list[str]:
     """Rewrite a `Cell.level` to the declared `FactorLevel.level` it folds to.
 
     The join is on the string (extraction-readme.md §3 invariant 3), so `Healthy controls`
@@ -76,8 +85,12 @@ def align_cell_levels(body: dict[str, Any]) -> list[str]:
 
     Deliberately narrow. `AD` against a declared `AD group` does *not* fold, and is left for
     `Validator.check_cell_terms` to report -- shortening a level is a claim about the paper,
-    not a transcription slip.
+    not a transcription slip. The one exception is an abbreviation `text` itself defines:
+    26347628 wrote `healthy controls (HCs)`, so a cell's `healthy controls` is the
+    declared `HC`. Only this paper's definitions are used, never a store's.
     """
+
+    defined = abbreviations.mine(text) if text else {}
 
     fixed: list[str] = []
     models = {
@@ -109,6 +122,14 @@ def align_cell_levels(body: dict[str, Any]) -> list[str]:
                 continue
             folded = span_tools.fold_label(level)
             matches = [name for name in declared if span_tools.fold_label(name) == folded]
+            if not matches and defined:
+                matches = [
+                    name
+                    for name in declared
+                    if span_tools.fold_label(_expansion(defined, name)) == folded
+                    or span_tools.fold_label(_expansion(defined, level))
+                    == span_tools.fold_label(name)
+                ]
             if len(matches) == 1:
                 cell["level"]["value"] = matches[0]
                 fixed.append(
@@ -387,6 +408,41 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
                 cell.pop("level", None)
                 fixed.append(f"{path}: {level!r} moved to direction")
 
+    return fixed
+
+
+def infer_missing_models(body: dict[str, Any]) -> list[str]:
+    """Point an analysis with no `model_estimation` at the one model declaring its terms.
+
+    The analysis's cells name terms, and a term lives in one model, so where exactly one
+    model declares every term the cells name, that is the model the analysis estimated
+    (17892884's `ana_t2_hippocampus_group`, whose cells name `mod_repeated_hippocampus`'s
+    group term). Two candidates, or none, leave it reported.
+    """
+    declared_by: dict[str, set[str]] = {}
+    for model in body.get("model_estimations") or []:
+        if isinstance(model, Mapping) and isinstance(model.get("local_id"), str):
+            for term in model.get("terms") or []:
+                if isinstance(term, Mapping) and isinstance(term.get("local_id"), str):
+                    declared_by.setdefault(term["local_id"], set()).add(model["local_id"])
+    fixed: list[str] = []
+    for index, analysis in enumerate(body.get("analyses") or []):
+        if not isinstance(analysis, dict) or analysis.get("model_estimation"):
+            continue
+        named = {
+            cell.get("term")
+            for cell in (analysis.get("effect") or {}).get("cells") or []
+            if isinstance(cell, Mapping)
+        }
+        if not named or not all(isinstance(t, str) for t in named):
+            continue
+        models = set.intersection(*(declared_by.get(t, set()) for t in named))
+        if len(models) == 1:
+            analysis["model_estimation"] = models.pop()
+            fixed.append(
+                f"analyses[{index}].model_estimation: {analysis['model_estimation']!r}, "
+                "the one model declaring every term its cells name"
+            )
     return fixed
 
 

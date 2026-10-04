@@ -34,6 +34,8 @@ class Context:
     schema: Schema
     stage1: Path | None = None
     table_map: Path | None = None
+    #: The paper, for a repair that needs its own definitions (its abbreviations).
+    text: str = ""
 
 
 #: A repair reports what it changed, one line per change, and mutates the record in
@@ -121,13 +123,6 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="shape",
         ),
         Repair(
-            "code_filled",
-            "drop a model's value for a slot code fills",
-            lambda body, ctx: shape.drop_code_filled(body, ctx.schema),
-            after="wrappers",
-            stage="shape",
-        ),
-        Repair(
             "misnested",
             "move a parent's slot out of a child; lift an object out of its own slot",
             lambda body, ctx: shape.lift_misnested(body, ctx.schema),
@@ -138,6 +133,20 @@ def build_sequence() -> tuple[Repair, ...]:
             "wrapped_entities",
             "strip wrapper keys from an entity written as if it were a value",
             lambda body, ctx: shape.unwrap_entities(body, ctx.schema),
+            after="wrappers",
+            stage="shape",
+        ),
+        Repair(
+            "code_filled",
+            "drop a model's value for a slot code fills",
+            lambda body, ctx: shape.drop_code_filled(body, ctx.schema),
+            after="misnested",
+            stage="shape",
+        ),
+        Repair(
+            "slot_name_strings",
+            "drop a bare string naming a slot from a list of objects",
+            lambda body, ctx: shape.drop_stray_slot_names(body, ctx.schema),
             after="wrappers",
             stage="shape",
         ),
@@ -153,6 +162,12 @@ def build_sequence() -> tuple[Repair, ...]:
             "unwrap a wrapper the model put in a bare-scalar slot",
             lambda body, ctx: shape.unwrap_plain_slots(body, ctx.schema),
             after="wrappers",
+            stage="merged",
+        ),
+        Repair(
+            "correction_regions",
+            "name an ROI correction's regions from the analyses that used it",
+            lambda body, ctx: derive.derive_correction_regions(body),
             stage="merged",
         ),
         Repair(
@@ -207,6 +222,13 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="shape",
         ),
         Repair(
+            "missing_models",
+            "point an analysis with no model at the one model declaring its cells' terms",
+            lambda body, ctx: link.infer_missing_models(body),
+            after="listified",
+            stage="merged",
+        ),
+        Repair(
             "empty_models",
             "copy into a model with no terms the terms its analyses borrow from another",
             lambda body, ctx: link.fill_empty_models(body),
@@ -216,7 +238,7 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "cell_levels",
             "rewrite a cell's level to the declared level it folds to",
-            lambda body, ctx: link.align_cell_levels(body),
+            lambda body, ctx: link.align_cell_levels(body, ctx.text),
             after="listified",
             stage="merged",
         ),

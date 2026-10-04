@@ -415,6 +415,43 @@ def test_an_empty_model_borrowing_from_two_models_is_left():
     assert link.fill_empty_models(record) == []
     assert record["model_estimations"][2]["terms"] == []
 
+
+def test_an_analysis_without_a_model_takes_the_one_declaring_its_terms():
+    """17892884: the cells named `mod_repeated_hippocampus`'s group term."""
+    record = _seeds()
+    record["analyses"][0]["model_estimation"] = None
+    record["analyses"][0]["effect"]["cells"] = [{"term": "trm_sex", "direction": _v("negative")}]
+    link.infer_missing_models(record)
+    assert record["analyses"][0]["model_estimation"] == "mod_other"
+
+
+def test_an_roi_correction_takes_the_regions_its_analyses_agree_on():
+    from pondie.extraction.record.fix import derive
+
+    body = {"inference_settings": [{"local_id": "inf_svc", "correction_scope": _v("roi")}],
+            "analyses": [{"local_id": "a", "inference_settings": ["inf_svc"],
+                          "regions": ["reg_amy"]},
+                         {"local_id": "b", "inference_settings": "inf_svc",
+                          "regions": ["reg_amy"]}]}
+    derive.derive_correction_regions(body)
+    assert body["inference_settings"][0]["correction_regions"] == ["reg_amy"]
+    body["analyses"][1]["regions"] = ["reg_hip"]
+    body["inference_settings"][0].pop("correction_regions")
+    assert derive.derive_correction_regions(body) == []
+
+
+def test_a_level_matches_through_an_abbreviation_this_paper_defines():
+    """26347628 declared `HC`, celled `healthy controls`, and defined `HCs`."""
+    record = _effect_record("healthy controls", "contrast")
+    term = record["model_estimations"][0]["terms"][0]
+    term["levels"] = [{"level": _v("PTSD")}, {"level": _v("HC")}]
+    link.align_cell_levels(record, "We scanned 20 healthy controls (HCs) and 20 patients.")
+    assert values.read(record["analyses"][0]["effect"]["cells"][0]["level"]) == "HC"
+    other = _effect_record("healthy controls", "contrast")
+    other["model_estimations"][0]["terms"][0]["levels"] = [{"level": _v("PTSD")},
+                                                           {"level": _v("HC")}]
+    assert link.align_cell_levels(other, "No abbreviations are defined here.") == []
+
 def test_a_value_cannot_be_wrapped_with_not_applicable_evidence():
     """The schema reserves it for not_reported fields; seven writers got it wrong."""
     with pytest.raises(ValueError):

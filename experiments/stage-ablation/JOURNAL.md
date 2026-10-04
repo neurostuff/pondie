@@ -953,3 +953,23 @@ its id), `unwrap_entities` (wrapper keys on an entity). After the build chain ev
 case is gone; 21078704 keeps its 12 analyses instead of 1. Left reported: an analysis's slots
 at study level (which analysis?), MRI slots on a PET acquisition (a type question), and
 `omitted` under `study` in payloads written before it was hoisted at reply time.
+
+## Seven more deterministic repairs, checked for information loss
+
+Of 448 validation errors over 220 rebuilt records, ~10% were decidable from the record.
+`compare_builds.py` builds the same payloads under two code trees and lists, per record,
+validation errors, entity lists that shrank, and every leaf value outside evidence that
+disappeared. Committed code → new: 448 → 408 errors, 113 → 119 valid, no list shrank, 8
+values gone, all intended (`"arms"` debris ×2, `"inferred"` → generated, a moot
+`unreported_reason`, and four duplicate copies whose identical values stay in place).
+
+Dropping strays that contradict the value in place (the user's alternative) changes one
+paper, 21078704: 6 fewer errors for 18 values lost, including an interpretation sentence.
+Three of its "conflicts" were the same value with different evidence, which the first
+version compared as different; compared by value they are duplicates. The three real
+conflicts (`prespecification: exploratory` vs a sentence; `coordinate_space: MNI` vs a
+description; a result sentence in `definition`) are kept both ways, reported.
+
+A study-level copy of an analysis (19996042, medium run) is a second analysis with no id or
+name; no rule recovers it, and the "only child lacking them" rule written for it fired on
+nothing in 220 papers, so it was removed.

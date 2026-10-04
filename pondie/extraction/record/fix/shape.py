@@ -20,6 +20,10 @@ from typing import Any
 import re
 
 
+#: `value_source` words that mean the pipeline, not the paper, produced the value.
+GENERATED_WORDS = {"inferred", "derived", "computed", "calculated", "estimated", "imputed"}
+
+
 def repair_wrappers(node: Any, path: str = "") -> list[str]:
     """Put a collapsed ExtractedValue back together, and report every one.
 
@@ -33,6 +37,10 @@ def repair_wrappers(node: Any, path: str = "") -> list[str]:
     slot has exactly two legal strings, so anything else in it was never a status. A
     value already sitting in `value` is kept and only the status is corrected; otherwise
     the misplaced payload is moved into `value`.
+
+    Two slips in a well-formed wrapper go the same way: a `value_source` the vocabulary
+    lacks but plainly means `generated` ("inferred"), and an `unreported_reason` on a value
+    that was reported.
 
     Deliberately here and not in `render.normalize`: it has to hold for payloads
     already on disk, so a rebuild fixes them without paying for the extraction again.
@@ -48,6 +56,13 @@ def repair_wrappers(node: Any, path: str = "") -> list[str]:
             node["extraction_status"] = "extracted"
             node.setdefault("value_source", "reported")
             repaired.append(f"{path or '<root>'}: status held {status!r}")
+        if node.get("extraction_status") == "extracted":
+            source = node.get("value_source")
+            if isinstance(source, str) and source.strip().lower() in GENERATED_WORDS:
+                node["value_source"] = "generated"
+                repaired.append(f"{path or '<root>'}: value_source {source!r} -> 'generated'")
+            if node.pop("unreported_reason", None) is not None:
+                repaired.append(f"{path or '<root>'}: extracted, so no unreported_reason")
         for key, value in node.items():
             repaired += repair_wrappers(value, f"{path}.{key}" if path else str(key))
     elif isinstance(node, list):
@@ -399,17 +414,52 @@ def _empty(value: Any) -> bool:
     return value in (None, "", [], {})
 
 
-def lift_misnested(body: dict[str, Any], sch: Schema) -> list[str]:
-    """Put back what a model nested one level too deep.
+def _conflicts(target: Mapping[str, Any], key: str, value: Any) -> bool:
+    """Whether `target` already holds a different value at `key`, evidence aside."""
+    held = target.get(key)
+    return not _empty(held) and values.read(held) != values.read(value)
 
-    Two shapes, both decided by which class declares the key:
+
+def _settle(target: dict[str, Any], key: str, value: Any) -> bool:
+    """Put `value` at `target[key]` unless a different value is there; True if it may go.
+
+    The same value already there makes the stray a duplicate, so it may be removed -- its
+    evidence moving over when the one in place has none. A different value is two claims,
+    and the caller leaves the stray where it was, still reported: nothing the model wrote
+    is discarded to make a record validate.
+    """
+    if _conflicts(target, key, value):
+        return False
+    held = target.get(key)
+    if _empty(held):
+        target[key] = value
+    elif (
+        values.is_field(held)
+        and values.is_field(value)
+        and (held.get("evidence") or {}).get("status") != "present"
+        and (value.get("evidence") or {}).get("status") == "present"
+    ):
+        held["evidence"] = value["evidence"]
+    return True
+
+
+def lift_misnested(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Put back what a model wrote one level from where the schema puts it.
+
+    Three shapes, all decided by which class declares the key:
 
     - a parent's slot found in a child moves up to the parent (`tables` and
       `model_estimation` written under an analysis's `effect`); one the parent already
       holds is dropped, since the parent's own is the one the schema reads;
     - an object written inside one of its own slots is lifted into it: 30545239 wrote a
       factor level as `{"level": {"level": <field>, "groups": [...]}}`, leaving the term
-      with no readable levels. Keys the outer object already holds win.
+      with no readable levels. Keys the outer object already holds win;
+    - an object's slots written inside one of its field wrappers move up to it: 21078704
+      put an analysis's `definition` and `prespecification` inside its `name`, 21498053 an
+      effect's `statistic` inside its `kind`.
+
+    A stray that disagrees with the value already in place is left where it is, still
+    reported (`_settle`).
     """
     fixed: list[str] = []
     for node, class_name, parent, parent_class, path in list(_objects(body, "Study", sch)):
@@ -418,27 +468,64 @@ def lift_misnested(body: dict[str, Any], sch: Schema) -> list[str]:
             above = sch.attributes(parent_class) or {}
             moving = [k for k in node if k not in declared and k in above]
             for key in [k for k in moving if k not in WRAPPER_KEYS]:
-                moved = node.pop(key)
-                if _empty(parent.get(key)):
-                    parent[key] = moved
+                if _settle(parent, key, node[key]):
+                    node.pop(key)
                     fixed.append(f"{path}.{key}: moved up to the {parent_class}")
-                else:
-                    fixed.append(f"{path}.{key}: dropped; the {parent_class} already holds one")
         for key, attribute in declared.items():
             inner = node.get(key)
+            if values.is_field(inner):
+                fixed += _lift_from_wrapper(node, key, inner, attribute, declared, sch, path)
+                continue
             if (
                 sch.classify(key, attribute) == "nested"
                 or not isinstance(inner, dict)
                 or values.is_field(inner)
                 or key not in inner
                 or not set(inner) <= set(declared)
+                or any(_conflicts(node, k, v) for k, v in inner.items() if k != key)
             ):
                 continue
             node[key] = inner.pop(key)
             for other, value in inner.items():
-                if _empty(node.get(other)):
-                    node[other] = value
+                _settle(node, other, value)
             fixed.append(f"{path}.{key}: a {class_name} written inside it, lifted out")
+    return fixed
+
+
+def _lift_from_wrapper(
+    node: dict[str, Any], key: str, wrapper: dict[str, Any], attribute: Any,
+    declared: Mapping[str, Any], sch: Schema, path: str,
+) -> list[str]:
+    """Move the owner's slots out of one of its field wrappers."""
+    own = set(WRAPPER_KEYS) | {"value"}
+    for wrapper_class in sch.ranges(attribute):
+        own |= set(sch.attributes(wrapper_class) or {})
+    fixed: list[str] = []
+    for stray in [k for k in wrapper if k not in own and k in declared and k != key]:
+        if _settle(node, stray, wrapper[stray]):
+            wrapper.pop(stray)
+            fixed.append(f"{path}.{key}.{stray}: moved out of the wrapper")
+    return fixed
+
+
+def drop_stray_slot_names(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Drop a bare string that names a slot from a list of objects.
+
+    `design.timepoints` held `"arms"` beside its two Timepoints (25050433, 23072363): the
+    next key's name, emitted as an item. A string in a list of objects is never an object,
+    and one spelling a slot of the list's owner is debris rather than a misplaced id.
+    """
+    fixed: list[str] = []
+    for node, class_name, _parent, _class, path in list(_objects(body, "Study", sch)):
+        declared = sch.attributes(class_name) or {}
+        for slot, attribute in declared.items():
+            items = node.get(slot)
+            if sch.classify(slot, attribute) != "nested" or not isinstance(items, list):
+                continue
+            stray = [i for i in items if isinstance(i, str) and i in declared]
+            if stray:
+                node[slot] = [i for i in items if not (isinstance(i, str) and i in declared)]
+                fixed.append(f"{path}.{slot}: dropped {stray}, slot names rather than objects")
     return fixed
 
 
