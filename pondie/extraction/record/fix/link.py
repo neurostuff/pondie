@@ -406,8 +406,11 @@ def fill_empty_models(body: dict[str, Any]) -> list[str]:
     celled one per analysis, so the intrusion model takes the intrusion score and the
     covariates, not the scores tested beside it.
 
-    Only when every borrowed term comes from one model. Borrowing from two leaves nothing
-    to copy that the record states.
+    The donor is a model declaring every borrowed term. 21338692's correlation model borrowed
+    `age of first use`, declared by two models, and `years of use`, declared by one of them:
+    that one is the donor. Several donors are fine when they would give the same design --
+    16701903 declared one `group` factor in two models -- and none, or donors that disagree,
+    leave the model for the report.
     """
 
     models = {
@@ -415,12 +418,11 @@ def fill_empty_models(body: dict[str, Any]) -> list[str]:
         for m in body.get("model_estimations") or []
         if isinstance(m, dict) and isinstance(m.get("local_id"), str)
     }
-    owner = {
-        term["local_id"]: model_id
-        for model_id, model in models.items()
-        for term in model.get("terms") or []
-        if isinstance(term, Mapping) and isinstance(term.get("local_id"), str)
-    }
+    declared_by: dict[str, set[str]] = {}
+    for model_id, model in models.items():
+        for term in model.get("terms") or []:
+            if isinstance(term, Mapping) and isinstance(term.get("local_id"), str):
+                declared_by.setdefault(term["local_id"], set()).add(model_id)
     celled_by: dict[str, set[str]] = {}
     for analysis in body.get("analyses") or []:
         if isinstance(analysis, Mapping):
@@ -446,24 +448,24 @@ def fill_empty_models(body: dict[str, Any]) -> list[str]:
         }
         if not named or set(terms_in_scope(model_id, models)) & named:
             continue
-        donors = {owner.get(term_id) for term_id in named}
-        if len(donors) != 1 or None in donors:
-            continue
-        donor = donors.pop()
-        by_id = {t["local_id"]: t for t in models[donor]["terms"] if isinstance(t, Mapping)}
-        wanted = {t for t in by_id if t in named or not celled_by.get(t)}
-        for term_id in list(wanted):
-            wanted |= set(by_id[term_id].get("interaction_with") or []) & set(by_id)
-        scoped = {
-            term_id: f"{model_id}.{term_id.removeprefix(f'{donor}.')}"
-            for term_id in by_id
-            if term_id in wanted
+        designs = {
+            donor: _borrowed_terms(models[donor], named, celled_by)
+            for donor in set.intersection(*(declared_by.get(t, set()) for t in named))
         }
-        model["terms"] = json.loads(json.dumps([by_id[t] for t in by_id if t in scoped]))
+        if len({tuple(map(_design, terms)) for terms in designs.values()}) != 1:
+            continue  # no donor, or donors that would give different designs
+        donor = min(designs)
+        scoped = {
+            term["local_id"]: f"{model_id}.{term['local_id'].removeprefix(f'{donor}.')}"
+            for term in designs[donor]
+        }
+        model["terms"] = json.loads(json.dumps(designs[donor]))
         for term in model["terms"]:
             term["local_id"] = scoped[term["local_id"]]
             if isinstance(term.get("interaction_with"), list):
-                term["interaction_with"] = [scoped.get(t, t) for t in term["interaction_with"]]
+                term["interaction_with"] = [
+                    scoped.get(t, t) if isinstance(t, str) else t for t in term["interaction_with"]
+                ]
         for analysis in analyses:
             effect = analysis.get("effect") or {}
             for cell in effect.get("cells") or []:
@@ -477,6 +479,33 @@ def fill_empty_models(body: dict[str, Any]) -> list[str]:
             f"{donor!r}, which its {len(analyses)} analysis(es)' cells named"
         )
     return fixed
+
+
+def _borrowed_terms(
+    donor: Mapping[str, Any], named: set[Any], celled_by: Mapping[str, set[str]]
+) -> list[Mapping[str, Any]]:
+    """The donor's terms an empty model takes: those its analyses cell, the ones no analysis
+    cells, and the components of either."""
+    by_id = {t["local_id"]: t for t in donor.get("terms") or [] if isinstance(t, Mapping)}
+    wanted = {t for t in by_id if t in named or not celled_by.get(t)}
+    for term_id in list(wanted):
+        components = by_id[term_id].get("interaction_with") or []
+        wanted |= {c for c in components if isinstance(c, str) and c in by_id}
+    return [term for term_id, term in by_id.items() if term_id in wanted]
+
+
+def _design(term: Mapping[str, Any]) -> str:
+    """What a term says about the model, without its evidence."""
+    levels = [
+        values.read(level.get("level")) if isinstance(level, Mapping) else level
+        for level in term.get("levels") or []
+    ]
+    return json.dumps(
+        [term.get("local_id"), values.read(term.get("name")), values.read(term.get("type")),
+         levels, term.get("interaction_with") or []],
+        sort_keys=True,
+        default=str,
+    )
 
 
 def cross_products_of_factors(body: dict[str, Any]) -> list[str]:

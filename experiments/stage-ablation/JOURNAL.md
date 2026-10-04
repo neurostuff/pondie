@@ -934,3 +934,8 @@ avoidance scores under one model, and copying all of it would have claimed each 
 regression was adjusted for the others. Every empty model in four runs was a borrower (3, 9,
 1, 1 per 55); all but the substance-use one (two donors) are filled. Out-of-chain + kind
 errors: PTSD 9 → 6, PTSD medium 26 → 10, dementia 29 → 23. Rebuilt PTSD: 31/55 valid.
+The substance-use "two donors" case was one: 21338692's correlation model borrowed `age of
+first use` (declared by two models) and `years of use` (declared by one of them, which also
+declares the other). The donor is now any model declaring every borrowed term, and several
+are fine when they would give the same design (16701903's one `group` factor, declared twice).
+All 14 empty models in the four runs are filled; substance use 19 → 17.

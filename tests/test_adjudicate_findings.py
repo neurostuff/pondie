@@ -4,6 +4,8 @@ From the 55-paper PTSD run: 77 ROI analyses naming no region, 8 ROI corrections 
 16 cell levels no declared level spells, and 6 effect kinds their cells contradict.
 """
 
+import json
+
 import pytest
 
 from pondie.extraction.models import Cost, ModelReply
@@ -377,8 +379,37 @@ def test_an_empty_model_does_not_take_a_term_another_analysis_tests():
     copied = [t["local_id"] for t in record["model_estimations"][2]["terms"]]
     assert copied == ["mod_pcc.trm_group", "mod_pcc.trm_age", "mod_pcc.trm_gxa"]
 
+def test_the_donor_is_the_one_model_declaring_every_borrowed_term():
+    """21338692: `age of first use` was declared by two models and `years of use` by one of
+    them, so one model holds everything the empty model's analysis cells."""
+    record = _seeds(borrowed=("trm_gxa", "trm_age"))
+    record["model_estimations"][1]["terms"].append(
+        {"local_id": "trm_age", "name": _v("age"), "type": _v("continuous")})
+    assert link.fill_empty_models(record)
+    assert "mod_pcc.trm_gxa" in [t["local_id"] for t in record["model_estimations"][2]["terms"]]
+
+
+
+def test_donors_declaring_the_same_design_are_one_donor():
+    """16701903 declared an identical `group` factor in two models."""
+    record = _seeds(borrowed=("trm_sex",))
+    record["model_estimations"][0]["terms"].append(
+        json.loads(json.dumps(record["model_estimations"][1]["terms"][0])))
+    record["model_estimations"][0]["terms"] = [record["model_estimations"][0]["terms"][-1]]
+    assert link.fill_empty_models(record)
+    assert [t["local_id"] for t in record["model_estimations"][2]["terms"]] == ["mod_pcc.trm_sex"]
+
+
+def test_donors_declaring_different_designs_are_none():
+    record = _seeds(borrowed=("trm_sex",))
+    other = json.loads(json.dumps(record["model_estimations"][1]["terms"][0]))
+    other["levels"] = [{"level": _v("female")}, {"level": _v("male")}]
+    other["interaction_with"] = [{"malformed": "a reference written as an object"}]
+    record["model_estimations"][0]["terms"] = [other]
+    assert link.fill_empty_models(record) == []
+
 def test_an_empty_model_borrowing_from_two_models_is_left():
-    """21338692 borrowed from two models: no one design the record states to copy."""
+    """No model declares both borrowed terms: no one design the record states to copy."""
     record = _seeds(borrowed=("trm_gxa", "trm_sex"))
     assert link.fill_empty_models(record) == []
     assert record["model_estimations"][2]["terms"] == []
