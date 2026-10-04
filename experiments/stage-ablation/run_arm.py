@@ -18,7 +18,7 @@ from pathlib import Path
 
 from pondie import paths, pipeline
 from pondie.extraction.llm import GatewayCaller, load_env
-from pondie.extraction.models import Flavour, Paper, Settings
+from pondie.extraction.models import Flavour, Paper, Settings, StageName
 from pondie.extraction.record.builder import merge_payloads
 from pondie.extraction.stages import DEMAND_DRIVEN, SINGLE_PASS
 
@@ -30,6 +30,15 @@ ENV = Path("/data/james/pondie-vs-fulltext/repos/autonima-results/.env")
 def stage_objects(names):
     by_name = {s.name: s for s in (*DEMAND_DRIVEN, *SINGLE_PASS)}
     return [by_name[n] for n in names]
+
+
+def stage_effort(spec):
+    """Settings kwargs for --stage-effort. Uniform by default, so earlier arms compare."""
+    if spec is None:
+        return {"stage_effort": {}}
+    if spec == ["default"]:
+        return {}
+    return {"stage_effort": {StageName(k): v for k, _, v in (x.partition("=") for x in spec)}}
 
 
 def stamp(stage, paper, settings, seconds):
@@ -98,6 +107,9 @@ def main() -> int:
     ap.add_argument("--model", default=arms.MODEL)
     ap.add_argument("--seed-from", help="copy this run's corpus and mono.json payloads first")
     ap.add_argument("--variant", nargs="*", default=[], help="prompt variants (prompts.py)")
+    ap.add_argument("--stage-effort", nargs="*", default=None,
+                    help="'default' for pondie's per-stage map, or STAGE=LEVEL pairs; "
+                    "omitted, --effort applies to every stage (how earlier arms ran)")
     args = ap.parse_args()
     load_env(ENV)
     import prompts
@@ -126,10 +138,11 @@ def main() -> int:
         service_tier="flex", max_output_tokens=64_000,
         repair="repair" in [s.value for s in after], adjudicate="repair" in [s.value for s in after],
         complete_references=complete or not ("no_complete" in args.variant),
+        **stage_effort(args.stage_effort),
     )
     (run_dir / "settings.json").write_text(json.dumps(
         {"arm": args.arm, "model": args.model, "effort": args.effort, "pmids": pmids,
-         "variant": args.variant,
+         "variant": args.variant, "stage_effort": args.stage_effort,
          "started": time.strftime("%Y-%m-%d %H:%M:%S")}, indent=1))
     caller = GatewayCaller()
     log = open(run_dir / "outcomes.jsonl", "a")

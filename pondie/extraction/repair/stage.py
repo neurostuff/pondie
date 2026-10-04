@@ -165,6 +165,7 @@ def adjudicate(
     model: str,
     report: Report,
     service_tier: str = "",
+    effort: str = "low",
 ) -> Any:
     """Put the unresolved contradictions to the extraction model, once, with the paper.
 
@@ -187,7 +188,7 @@ def adjudicate(
             # Paper in the system half; only the cases vary between calls. See the note
             # in `propose_with_extractor._generate`.
             system=f"{ADJUDICATION_SYSTEM}\n\n{render.paper_block(text)}",
-            effort="low",
+            effort=effort,
             max_output_tokens=4_000,
             service_tier=service_tier,
             prompt=(
@@ -270,6 +271,7 @@ def run(
     model: str = "",
     service_tier: str = "",
     iterations: int = 2,
+    effort: str = "low",
 ) -> Report:
     """Repair `record` in place. Returns what happened, including anything it broke."""
     from copy import deepcopy
@@ -304,6 +306,7 @@ def run(
             model=model,
             report=report,
             service_tier=service_tier,
+            effort=effort,
         )
         if reply is not None:
             report.cost = reply.cost

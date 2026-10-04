@@ -94,6 +94,11 @@ def _extract(args: argparse.Namespace) -> int:
         model=args.model,
         **({"stages": tuple(StageName(s) for s in args.stages)} if args.stages else {}),
         effort=args.effort,
+        **(
+            {"stage_effort": dict(_stage_effort(x) for x in args.stage_effort)}
+            if args.stage_effort
+            else {}
+        ),
         service_tier=args.service_tier,
         retrieve_evidence=not args.no_evidence,
         redo=args.redo,
@@ -195,6 +200,13 @@ def _benchmark(args: argparse.Namespace) -> int:
     return 0
 
 
+def _stage_effort(spec: str) -> tuple[StageName, str]:
+    stage, _, level = spec.partition("=")
+    if level not in ("minimal", "low", "medium", "high"):
+        raise SystemExit(f"--stage-effort {spec!r}: expected STAGE=minimal|low|medium|high")
+    return StageName(stage), level
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="pondie", description=__doc__)
     sub = parser.add_subparsers(dest="verb", required=True)
@@ -224,7 +236,11 @@ def main(argv: list[str] | None = None) -> int:
              "elsevier-only papers of a 100-paper run were reported not-ready and skipped",
     )
     ex.add_argument("--stages", nargs="*", choices=[s.value for s in StageName])
-    ex.add_argument("--effort", default="low", choices=["minimal", "low", "medium", "high"])
+    ex.add_argument("--effort", default="low", choices=["minimal", "low", "medium", "high"],
+                    help="reasoning effort for any stage --stage-effort does not name")
+    ex.add_argument("--stage-effort", nargs="*", metavar="STAGE=LEVEL",
+                    help="per-stage effort, replacing the default map "
+                    "(single=medium fill=low evidence=low repair=medium)")
     ex.add_argument(
         "--service-tier",
         default="",

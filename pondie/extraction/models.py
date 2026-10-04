@@ -198,7 +198,22 @@ class Settings(Strict):
     stages: tuple[StageName, ...] = tuple(
         s for s in StageName if s not in (StageName.demands, StageName.satisfy)
     )
+    #: The reasoning effort of any stage `stage_effort` does not name.
     effort: Literal["minimal", "low", "medium", "high"] = "low"
+    #: Reasoning effort per stage, over `effort`. Judgement gets more than transcription:
+    #: `single` decides what was tested and `repair` decides between readings, while `fill`
+    #: and `evidence` complete slots and find quotes. Measured for `single` on the dementia
+    #: panel, 0.62 of unstable gold selected at low and 0.80 at medium, with fewer retries
+    #: (experiments/stage-ablation/JOURNAL.md, P6). The other levels are a judgement, not yet
+    #: a measurement.
+    stage_effort: dict[StageName, Literal["minimal", "low", "medium", "high"]] = Field(
+        default_factory=lambda: {
+            StageName.single: "medium",
+            StageName.fill: "low",
+            StageName.evidence: "low",
+            StageName.repair: "medium",
+        }
+    )
     max_output_tokens: Annotated[int, Field(gt=0)] = 48_000
     attempts: Annotated[int, Field(ge=1)] = 3
     retrieve_evidence: bool = True
@@ -233,6 +248,10 @@ class Settings(Strict):
     #: meta-analyses: most missing references resolve, +3% calls, one selection gained and
     #: none lost (experiments/stage-ablation/JOURNAL.md, P2).
     complete_references: bool = True
+
+    def effort_for(self, stage: "StageName | str") -> str:
+        """The reasoning effort a stage's calls are made at."""
+        return self.stage_effort.get(StageName(stage), self.effort)
 
     @model_validator(mode="after")
     def _build_needs_its_inputs(self) -> "Settings":

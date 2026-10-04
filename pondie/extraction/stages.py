@@ -104,7 +104,7 @@ class _Base:
         if self.asks_a_model:
             parts |= {
                 "model": settings.model,
-                "effort": settings.effort,
+                "effort": settings.effort_for(self.name),
                 "service_tier": settings.service_tier,
                 "prompt": prompt_digest(),
             }
@@ -448,7 +448,7 @@ class _ModelPass(_Base):
                         system=prompt.system,
                         prompt=user,
                         max_output_tokens=settings.max_output_tokens,
-                        effort=settings.effort,
+                        effort=settings.effort_for(self.name),
                         service_tier=settings.service_tier,
                         attempts=1,
                     ),
@@ -761,7 +761,7 @@ class Single(_ModelPass):
                     system=ask.system,
                     prompt=ask.user,
                     max_output_tokens=settings.max_output_tokens,
-                    effort=settings.effort,
+                    effort=settings.effort_for(self.name),
                     service_tier=settings.service_tier,
                     attempts=settings.attempts,
                 ),
@@ -856,7 +856,7 @@ class Fill(_Base):
                             prompt=f"{slots.block(batch)}\n"
                             "Return the JSON object now.",
                             max_output_tokens=settings.max_output_tokens,
-                            effort=settings.effort,
+                            effort=settings.effort_for(self.name),
                             service_tier=settings.service_tier,
                             attempts=settings.attempts,
                         ),
@@ -1007,7 +1007,7 @@ class Evidence(_Base):
                         prompt=f"# Facts needing a supporting quote\n\n{listing}\n\n"
                         "Return the JSON object mapping each id to its quote now.",
                         max_output_tokens=settings.max_output_tokens,
-                        effort=settings.effort,
+                        effort=settings.effort_for(self.name),
                         service_tier=settings.service_tier,
                         attempts=settings.attempts,
                     ),
@@ -1183,7 +1183,7 @@ class Repair(_Base):
                     settings.model,
                     study_id=paper.study_id,
                     service_tier=settings.service_tier,
-                    effort=settings.effort,
+                    effort=settings.effort_for(self.name),
                 )
                 notes.append(f"proposer: {settings.model}")
 
@@ -1197,6 +1197,7 @@ class Repair(_Base):
             model=settings.model if settings.adjudicate else "",
             service_tier=settings.service_tier,
             iterations=settings.repair_iterations,
+            effort=settings.effort_for(self.name),
         )
         record_path.write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n")
         out = self.produces(paper, settings)
