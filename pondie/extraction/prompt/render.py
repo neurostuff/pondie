@@ -673,10 +673,48 @@ _WRAPPER_PLAIN = """Every source-derived value is an ExtractedValue wrapper:
    pass. Spend your output on getting the values right and complete, not on quotation.
 """
 
-VALUE_RULE_EVIDENCE = _WRAPPER_WITH_EVIDENCE + _UNREPORTED_TAIL.format(
-    absent=_ABSENT_WITH_EVIDENCE
-)
-VALUE_RULE_NO_EVIDENCE = _WRAPPER_PLAIN + _UNREPORTED_TAIL.format(absent=_ABSENT_PLAIN)
+_WRAPPER_INDEXED = """Every source-derived value is an ExtractedValue wrapper:
+   {"extraction_status": "extracted", "value": <value>, "value_source": "reported",
+    "evidence": [12, 40]}
+   The paper below is split into numbered sentences, each preceded by its number in
+   brackets: [S12]. `evidence` lists the numbers of the sentences that state the value.
+   Do not quote; the number is the citation, and it is resolved to the sentence for you.
+"""
+
+_WRAPPER_INVERTED = """Every source-derived value is an ExtractedValue wrapper:
+   {"extraction_status": "extracted", "value": <value>, "value_source": "reported"}
+   with no `evidence` key. The support goes in ONE top-level `support` list instead: each
+   entry is one sentence copied character-for-character from the paper and the `fields` it
+   supports, as paths `<local_id>.<slot>` -- `grp_ptsd.age_mean`,
+   `ana_1.effect.cells[0].direction`, `study.design.allocation`. Write each sentence once,
+   however many fields it supports.
+"""
+
+#: The empty slot's form when strict decoding requires the reason key to be answered.
+_SILENT_TAIL = """   A slot with no value takes
+   {"extraction_status": "not_reported", "unreported_reason": "silent_default"} when the
+   paper simply does not mention it. Use another reason ONLY where it is not plain silence:
+   ambiguous (the paper addresses it and settles on no one value), outside_text (in a
+   figure, an image-only table or an unfetched supplement), cited_elsewhere (given by
+   reference to another paper), undetermined (the paper bears on it and you could not work
+   it out). A value the paper does not give is silent_default, not undetermined."""
+
+
+def value_rule(evidence: str, silence: bool) -> str:
+    """Rule 3 of the system prompt, for one evidence format (`reply_schema.EVIDENCE_FORMATS`)."""
+    head = {
+        "none": _WRAPPER_PLAIN,
+        "quotes": _WRAPPER_WITH_EVIDENCE,
+        "indexed": _WRAPPER_INDEXED,
+        "inverted": _WRAPPER_INVERTED,
+    }[evidence]
+    if silence:
+        return head + _SILENT_TAIL
+    return head + _UNREPORTED_TAIL.format(
+        absent=_ABSENT_WITH_EVIDENCE if evidence == "quotes" else _ABSENT_PLAIN
+    )
+
+
 
 DEMANDS_NOTE = """
 This pass emits `analyses`, and the SHOPPING LIST of entities those analyses need.
@@ -905,16 +943,16 @@ def worked_models() -> str:
 MODE_SCHEMA = {"demands": "analyses", "satisfy": "entities", "single": "single"}
 
 
-def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
-    sch = reader.load(EXTRACTION_SCHEMA)
-    names, study_keep = mode_classes(sch, MODE_SCHEMA.get(mode, mode))
+def payload_keys(mode: str) -> list[str]:
+    """The keys a reply in `mode` holds at its top level.
 
-    # Only the lists that sit directly on Study are offered as top-level payload keys.
-    # `design.arms` and `design.timepoints` are reachable that way too, but naming them
-    # here would contradict rule 2, and merge_payloads resolves a top-level `arms` by
-    # assigning over `design.arms` -- so a payload carrying both silently loses one.
+    Only the lists that sit directly on Study. `design.arms` and `design.timepoints` are
+    reachable that way too, but naming them would contradict rule 2, and merge_payloads
+    resolves a top-level `arms` by assigning over `design.arms` -- so a payload carrying
+    both silently loses one.
+    """
     analysis_side = MODE_SCHEMA.get(mode, mode) == "analyses"
-    payload_keys = [
+    keys = [
         k
         for k, v in schema.entity_lists().items()
         if "." not in v
@@ -923,9 +961,31 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
         and (mode == "single" or (v == "analyses") == analysis_side)
     ]
     if mode == "demands":
-        payload_keys.append("required_entities")
+        keys.append("required_entities")
     if mode == "single":
-        payload_keys.append("omitted")
+        keys.append("omitted")
+    return keys
+
+
+def build_prompt(
+    text: str,
+    mode: str,
+    evidence: bool,
+    context: str,
+    evidence_format: str = "quotes",
+    silence: bool = False,
+) -> Prompt:
+    """`evidence_format` applies when `evidence` is on; `indexed` numbers the paper's
+    sentences, which `evidence.cited.expand` reads back with the same splitter."""
+    sch = reader.load(EXTRACTION_SCHEMA)
+    names, study_keep = mode_classes(sch, MODE_SCHEMA.get(mode, mode))
+    form = evidence_format if evidence else "none"
+
+    lists = payload_keys(mode) + (["support"] if form == "inverted" else [])
+    if form == "indexed":
+        from pondie.extraction.evidence.cited import numbered
+
+        text = numbered(text)
     # The split IS the cache optimisation, and the earlier attempt failed because it moved
     # content around inside `user` while leaving the mode-specific note in `system`.
     #
@@ -942,11 +1002,11 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
     # context and the paper.
     system = (
         SYSTEM_HEAD.format(
-            lists=", ".join(sorted(payload_keys)),
+            lists=", ".join(sorted(lists)),
             # From `record/ids.py`, so the convention the model is told and the convention
             # the repair pass mints by cannot drift apart.
             id_prefixes=ids.prefix_table(),
-            value_rule=VALUE_RULE_EVIDENCE if evidence else VALUE_RULE_NO_EVIDENCE,
+            value_rule=value_rule(form, silence),
         )
         + "\n\n# Conventions (extraction-readme.md)\n\n"
         + conventions()

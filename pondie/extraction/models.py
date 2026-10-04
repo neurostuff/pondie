@@ -161,6 +161,9 @@ class ModelCall(Strict):
     #: same rate as parallel ones. Retrying cannot fix a 5-in-6 fault, which is why a run
     #: over 89 papers lost 25 of them with all three attempts spent.
     json_object: bool = True
+    #: A JSON Schema the reply must match, decoded under it (Structured Outputs, strict).
+    #: Takes precedence over `json_object`. See `prompt.reply_schema`.
+    json_schema: dict | None = None
     #: The provider's service tier, passed through the gateway; empty leaves the provider's
     #: default. Verified to reach the provider: a `flex` reply echoes `service_tier: "flex"`
     #: and an invented tier is refused.
@@ -205,6 +208,16 @@ class Settings(Strict):
     max_output_tokens: Annotated[int, Field(gt=0)] = 48_000
     attempts: Annotated[int, Field(ge=1)] = 3
     retrieve_evidence: bool = True
+    #: Decode `single`, `fill` and `evidence` replies under a schema generated from the
+    #: extraction schema (`prompt.reply_schema`) instead of JSON mode.
+    structured_outputs: bool = False
+    #: How a `single` reply carries its evidence: a quote per field, or each sentence once
+    #: -- cited by number (`indexed`) or listed with the fields it supports (`inverted`).
+    #: See `evidence.cited`.
+    evidence_format: Literal["quotes", "indexed", "inverted"] = "quotes"
+    #: Offer `silent_default` for a slot the paper does not mention. Strict decoding has to
+    #: answer the reason key, and with nothing else to say it answers `undetermined`.
+    explicit_silence: bool = False
     zero_foci_rule: bool = True
     #: Passed to every call this run makes. `flex` is cheaper and slower; a run's per-paper
     #: progress line is what tells a slow call from a hung one.

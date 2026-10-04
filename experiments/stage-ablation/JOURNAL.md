@@ -973,3 +973,51 @@ description; a result sentence in `definition`) are kept both ways, reported.
 A study-level copy of an analysis (19996042, medium run) is a second analysis with no id or
 name; no rule recovers it, and the "only child lacking them" rule written for it fired on
 nothing in 220 papers, so it was removed.
+
+## S. Structured Outputs (strict JSON schema) instead of JSON mode
+
+Every call so far used Chat Completions JSON mode (`response_format: json_object`): valid
+JSON, no shape guarantee. The adjudicator's prompt never said "JSON", so the gateway refused
+JSON mode on every adjudicator call and it silently ran unconstrained. The gateway accepts
+strict `json_schema` for gpt-6-luna.
+
+`prompt/reply_schema.py` generates one schema per reply shape from the extraction schema:
+`single` (82–87 defs, ~700 properties, ~500 enum values, ~85k chars -- inside strict limits),
+`fill` and `evidence` per call. Closed vocabularies become enums, open ones strings, a
+type-designated class the choice of its subclasses with the designator fixed, a wrapper the
+choice {extracted, typed value} | {not_reported, reason}. Strict mode requires every key, so
+an optional slot is answered `null` and stripped on return. Raw `single` replies are now kept
+(`payloads/<id>/raw/single.json`, before normalizing or repair); before this, the faults the
+repairs fix were invisible after the fact.
+
+Bugs found on the way: `Acquisition` was concrete, so the schema offered only
+`acquisition_type: "Acquisition"` and no MRI slots (fixed in the generator, and the class
+made abstract in study_schema -- its description already said so). And strict decoding
+answers the forced reason key with `undetermined` for every absent slot (52 on one paper),
+which `fill` then re-asks.
+
+### One paper (19538748), configurations
+
+| arm | evidence | analyses | extracted / not reported | evidence resolved | single out tokens |
+|---|---|---|---|---|---|
+| original (JSON mode) | quotes | 1 | 73 / 7 | 77%* | – |
+| S0 structured | quotes | 1 | 104 / 52 `undetermined` | 93%* | – |
+| S1 + silence | quotes | 1 | 94 / 48 `silent_default` | 91% | 9.9k |
+| S2 + silence | indexed | 1 | 106 / 5 | 93% | 6.5k |
+| S3 + silence | inverted | 1 | 127 / 66 | 73% | 10.5k (3x slower) |
+
+\* after `fill` and `evidence`; S1–S3 are `single` + `build` only.
+
+- An earlier draw of the original (`ptsd_default`) found 3 analyses here (VBM + two fMRI);
+  this draw found 1 in every arm. The "structured loses recall" reading of S0 was variance.
+- `silent_default` replaced every `undetermined`.
+- Indexed (the paper shown as `[S12]` sentences; fields cite numbers): all 106 extracted
+  fields cite, 155 citations over 36 distinct sentences, and 12 of 12 hand-checked citations
+  state the value. A third fewer output tokens; quotes exact by construction.
+- Inverted (top-level verbatim sentences, each naming the fields it supports): all 31
+  sentences verbatim, 6 of 108 paths unresolved, but the model leaves many fields out of
+  `support`, so less evidence resolves; and it took 3x as long.
+- Raw JSON-mode replies hold the faults strict decoding cannot: 37 bare `"negative"`
+  directions and 33 bare levels in five replies.
+
+Next: indexed on the 20 papers against the original and S0, then the meta-analysis.

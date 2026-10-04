@@ -244,6 +244,37 @@ def sentences(text: str) -> list[str]:
     return [s for paragraph in paragraphs(text) for s in sentences_of(paragraph)]
 
 
+def sentence_spans(text: str) -> list[tuple[int, int]]:
+    """Every sentence of `text` as (start, end) offsets into it, in document order.
+
+    Offsets rather than strings, so a sentence cited by number resolves to exactly the
+    span it names. The same boundaries as `sentences`; a heading or a table row is one
+    unit of its own, since a row's cells are not sentences.
+    """
+    spans: list[tuple[int, int]] = []
+    offset = 0
+    for line in text.split("\n"):
+        start, stripped = 0, line.strip()
+        if stripped and not stripped.startswith(("#", "|")):
+            # The decimal guard keeps the length, so offsets in `guarded` are offsets in `line`.
+            guarded = re.sub(r"(\d)\.(\d)", lambda m: f"{m[1]}\x00{m[2]}", line)
+            for boundary in _BOUNDARY.finditer(guarded):
+                if ends_mid_sentence(guarded[start : boundary.start() + 1]):
+                    continue
+                spans.append((offset + start, offset + boundary.start() + 1))
+                start = boundary.end()
+        spans.append((offset + start, offset + len(line)))
+        offset += len(line) + 1
+    trimmed = []
+    for begin, end in spans:
+        piece = text[begin:end]
+        begin += len(piece) - len(piece.lstrip())
+        end -= len(piece) - len(piece.rstrip())
+        if end - begin > 2:
+            trimmed.append((begin, end))
+    return trimmed
+
+
 # --------------------------------------------------------------- abbreviation glossary
 
 

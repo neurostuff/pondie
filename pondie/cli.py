@@ -89,6 +89,9 @@ def _extract(args: argparse.Namespace) -> int:
         ),
         service_tier=args.service_tier,
         retrieve_evidence=not args.no_evidence,
+        structured_outputs=args.structured_outputs,
+        evidence_format=args.evidence_format,
+        explicit_silence=args.explicit_silence,
         redo=args.redo,
     )
     papers = _papers(
@@ -239,6 +242,24 @@ def main(argv: list[str] | None = None) -> int:
         help="which render to extract from; `best` takes the richest each paper has",
     )
     ex.add_argument("--stages", nargs="*", choices=[s.value for s in StageName])
+    ex.add_argument(
+        "--structured-outputs",
+        action="store_true",
+        help="decode single, fill and evidence replies under a schema from the extraction "
+        "schema (strict Structured Outputs) instead of JSON mode",
+    )
+    ex.add_argument(
+        "--evidence-format",
+        default="quotes",
+        choices=["quotes", "indexed", "inverted"],
+        help="single's evidence: a quote per field, sentence numbers per field, or each "
+        "sentence once with the fields it supports",
+    )
+    ex.add_argument(
+        "--explicit-silence",
+        action="store_true",
+        help="offer silent_default for a slot the paper does not mention",
+    )
     ex.add_argument(
         "--effort",
         default="low",

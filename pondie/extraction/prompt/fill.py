@@ -187,6 +187,7 @@ def unsettled(payload: Mapping[str, Any], sch: Schema) -> list[dict[str, Any]]:
                     "id": f"{path}.{name}",
                     "owner": f"{cls} {label}",
                     "range": inner[0],
+                    "ranges": inner,
                     "multivalued": sch.is_multivalued(cls, name),
                     "description": (slot.description or "").strip(),
                     "vocabulary": sorted((enum.permissible_values or {}).keys()) if enum else [],

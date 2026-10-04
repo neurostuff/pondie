@@ -364,7 +364,7 @@ def adjudicate(
             service_tier=service_tier,
             prompt=(
                 f"## Cases\n\n{listing}\n\n"
-                'Reply as {"resolutions": [{"id": ..., "value": ..., '
+                'Reply with JSON, {"resolutions": [{"id": ..., "value": ..., '
                 '"quote": ...}]}, using the case id verbatim and an empty quote '
                 "for anything unresolved. For a case that asks for regions, answered "
                 '"roi", add "regions": [{"name": ..., "definition_method": ...}], where '

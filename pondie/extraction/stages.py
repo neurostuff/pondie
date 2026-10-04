@@ -39,7 +39,8 @@ from pondie.extraction.models import (
 from pondie.extraction.parse import TableParse
 from pondie.extraction.sign_split import adopt_withholding, split_opposite_signs
 from pondie.extraction.record.ids import table_local_id
-from pondie.extraction.prompt import preprocess, render, worked
+from pondie.extraction.evidence import cited
+from pondie.extraction.prompt import preprocess, render, reply_schema, worked
 from pondie.formats import parse_keys, table_parse, text_index, values
 from pondie.schema import reader
 
@@ -108,6 +109,13 @@ class _Base:
                 "service_tier": settings.service_tier,
                 "prompt": prompt_digest(),
             }
+            # Only where they differ from the default, so existing caches stay valid.
+            if settings.structured_outputs:
+                parts["structured_outputs"] = True
+            if settings.evidence_format != "quotes":
+                parts["evidence_format"] = settings.evidence_format
+            if settings.explicit_silence:
+                parts["explicit_silence"] = True
         for upstream in self.reads:
             output = settings.payloads / paper.study_id / f"{upstream.value}.json"
             stamp = pipeline.Stamp.read(output, upstream.value)
@@ -406,11 +414,14 @@ class _ModelPass(_Base):
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
+        text = _paper_text(paper, settings)
         prompt = render.build_prompt(
-            paper.text.read_text(encoding="utf-8", errors="replace"),
+            text,
             self.mode,
             settings.retrieve_evidence,
             self.context(paper, settings),
+            settings.evidence_format,
+            settings.explicit_silence,
         )
         declared = self.declared(paper, settings)
         listing = self.listing(paper, settings)
@@ -424,6 +435,7 @@ class _ModelPass(_Base):
         payload: dict = {}
         failures: list[str] = []
         best: dict | None = None
+        raw: dict = {}
         best_failures: list[str] = []
         parse_failures: list[str] = []
         truncation_notes: list[str] = []
@@ -447,6 +459,13 @@ class _ModelPass(_Base):
                         effort=settings.effort_for(self.name),
                         service_tier=settings.service_tier,
                         attempts=1,
+                        json_schema=(
+                            reply_schema.for_single(
+                                _evidence_form(settings), settings.explicit_silence
+                            )
+                            if settings.structured_outputs and self.mode == "single"
+                            else None
+                        ),
                     ),
                     paper=paper.study_id,
                     stage=self.name.value,
@@ -467,18 +486,22 @@ class _ModelPass(_Base):
                 )
             # Hoisting first: an entity list nested under `study` is otherwise shadowed by
             # an empty top-level sibling, and the post-condition would reject a good answer.
+            said = copy.deepcopy(reply.payload)
+            cited_notes = cited.expand(reply.payload, _evidence_form(settings), text)
             candidate, candidate_notes = render.normalize(reply.payload, self.mode)
+            candidate_notes = cited_notes + candidate_notes
             parsed = True
             failures = render.postcondition_failures(
                 candidate, self.mode, declared, listing, foci, self.existing(paper, settings)
             )
             # Keep the best attempt: a retry can come back worse, even empty.
             if best is None or _severity(failures) < _severity(best_failures):
-                payload, notes, best, best_failures = (
+                payload, notes, best, best_failures, raw = (
                     candidate,
                     candidate_notes,
                     candidate,
                     failures,
+                    said,
                 )
             if not failures:
                 break
@@ -499,6 +522,12 @@ class _ModelPass(_Base):
                 body="",
                 cost=cost,
             )
+
+        # The reply as the model wrote it, before normalizing or repair: what a change to the
+        # prompt or the decoding is judged by. Under `raw/`, which no payload merge reads.
+        kept = settings.payloads / paper.study_id / "raw" / f"{self.name.value}.json"
+        kept.parent.mkdir(parents=True, exist_ok=True)
+        kept.write_text(json.dumps(raw, indent=1, ensure_ascii=False) + "\n")
 
         outcome_notes = list(notes) + truncation_notes
         if parse_failures:
@@ -538,6 +567,19 @@ class _ModelPass(_Base):
             stage=self.repair_stage,
         )
         return [f"repaired {name}: {len(lines)}" for name, lines in log.entries if lines]
+
+
+def _evidence_form(settings: Settings) -> str:
+    """The reply's evidence format: `settings.evidence_format`, or none when not asked."""
+    return settings.evidence_format if settings.retrieve_evidence else "none"
+
+
+def _paper_text(paper: Paper, settings: Settings) -> str:
+    """The text a model pass is shown. Normalized when sentences are cited by number, so
+    the numbers name sentences of the text `build` resolves evidence against."""
+    if _evidence_form(settings) == "indexed":
+        return text_index.load(paper.text)[0]
+    return paper.text.read_text(encoding="utf-8", errors="replace")
 
 
 _UNKNOWN = re.compile(r"unknown local_id '([^']+)'")
@@ -749,11 +791,14 @@ class Single(_ModelPass):
             + "\n\n## The analyses that reference them (already extracted; do not re-emit)\n\n"
             + shown
         )
+        text = _paper_text(paper, settings)
         ask = render.build_prompt(
-            paper.text.read_text(encoding="utf-8", errors="replace"),
+            text,
             "satisfy",
             settings.retrieve_evidence,
             context,
+            settings.evidence_format,
+            settings.explicit_silence,
         )
         try:
             reply = caller(
@@ -771,6 +816,7 @@ class Single(_ModelPass):
             )
         except Exception as error:  # noqa: BLE001 -- completion must not lose the record
             return payload, failures, Cost(), [f"completion failed: {type(error).__name__}"]
+        cited.expand(reply.payload, _evidence_form(settings), text)
         found, _ = render.normalize(reply.payload, "satisfy")
         merged = _merge_entities(copy.deepcopy(payload), found)
         after = render.postcondition_failures(
@@ -862,6 +908,11 @@ class Fill(_Base):
                             effort=settings.effort_for(self.name),
                             service_tier=settings.service_tier,
                             attempts=settings.attempts,
+                            json_schema=(
+                                reply_schema.fill(sch, batch)
+                                if settings.structured_outputs
+                                else None
+                            ),
                         ),
                         paper=paper.study_id,
                         stage=f"{self.name.value}{round_number}",
@@ -1013,6 +1064,11 @@ class Evidence(_Base):
                         effort=settings.effort_for(self.name),
                         service_tier=settings.service_tier,
                         attempts=settings.attempts,
+                        json_schema=(
+                            reply_schema.evidence([path for path, _field in chunk])
+                            if settings.structured_outputs
+                            else None
+                        ),
                     ),
                     paper=paper.study_id,
                     stage=self.name.value,

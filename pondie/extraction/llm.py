@@ -152,7 +152,7 @@ class GatewayCaller:
                     + [{"role": "user", "content": call.prompt}],
                     max_completion_tokens=call.max_output_tokens,
                     reasoning_effort=call.effort,
-                    **({"response_format": {"type": "json_object"}} if constrain else {}),
+                    **({"response_format": _format(call)} if constrain else {}),
                     **({"service_tier": call.service_tier} if call.service_tier else {}),
                     extra_headers=metadata,
                 )
@@ -214,6 +214,8 @@ class GatewayCaller:
                 # it costs an attempt -- unlike a call that never landed.
                 attempt += 1
                 continue
+            if constrain and call.json_schema is not None:
+                payload = _without_nulls(payload)
             return ModelReply(
                 payload=payload,
                 stop_reason=finish,
@@ -234,6 +236,23 @@ class GatewayCaller:
             + (f" after {unreachable} that never reached the provider" if unreachable else "")
             + (f": {type(last).__name__}: {str(last)[:400]}" if last else "")
         ) from last
+
+
+def _without_nulls(node):
+    """Remove null-valued keys, everywhere: strict mode's spelling of an absent slot."""
+    if isinstance(node, dict):
+        return {k: _without_nulls(v) for k, v in node.items() if v is not None}
+    if isinstance(node, list):
+        return [_without_nulls(v) for v in node]
+    return node
+
+
+def _format(call: ModelCall) -> dict:
+    """The `response_format` a call asks for: its schema, strictly, or plain JSON mode."""
+    if call.json_schema is None:
+        return {"type": "json_object"}
+    return {"type": "json_schema",
+            "json_schema": {"name": "reply", "strict": True, "schema": call.json_schema}}
 
 
 def _as_json(body: str) -> dict:
