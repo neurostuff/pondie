@@ -270,7 +270,7 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
 
     A continuous term declares no levels, so `check_cell_terms` errors on any cell naming
     one: 1,204 errors over 527 papers, the largest error class in the corpus, and 1,185 of
-    the 1,205 are on a term typed continuous. Three shapes carry no information and are
+    the 1,205 are on a term typed continuous. Four shapes carry no information and are
     removed here.
 
       restates the term  547 (46%). `BMI` on term `BMI`, `age` on `age`, `pack-years` on
@@ -283,7 +283,10 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
       restates the       `PTSD group` on a CAPS correlation run within the PTSD group only.
       only group         `Analysis.groups` already says whose scores these are.
 
-    A fourth shape is left alone: 424 cells name a genuinely categorical level on a term
+      on an unsigned     `PTSD` on a `group x BAI` F-test. The test has no side for a level
+      product column     to name.
+
+    One shape is left alone: 424 cells name a genuinely categorical level on a term
     whose `type` is wrong. Fixing that means flipping the type *and* synthesising the levels
     the term should have declared, which is a claim about the model rather than a tidy-up, so
     `check_cell_terms` keeps reporting it.
@@ -344,6 +347,13 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
             if _restates_the_only_group(level, analysis, groups):
                 cell.pop("level", None)
                 fixed.append(f"{path}: {level!r} restated the analysis's only group -- dropped")
+                continue
+            if term.get("interaction_with") and values.read(cell.get("direction")) not in (
+                "positive",
+                "negative",
+            ):
+                cell.pop("level", None)
+                fixed.append(f"{path}: {level!r} on an unsigned product column -- dropped")
                 continue
             polarity = _LEVEL_POLARITY.get(str(level).strip().lower())
             if polarity is None:

@@ -183,6 +183,28 @@ def test_a_level_restating_the_analysis_only_group_is_dropped(level, group, drop
     assert ("level" not in body["analyses"][0]["effect"]["cells"][0]) is dropped
 
 
+
+@pytest.mark.parametrize("direction, dropped", [(None, True), ("undirected", True),
+                                                ("negative", False)])
+def test_a_level_on_an_unsigned_product_column_is_dropped(direction, dropped):
+    """21418787: `level: 'PTSD'` on a group x BAI F-test. A signed one is left: there the
+    level says which group's slope the sign describes."""
+    cell = {"term": "trm_x", "level": _v("PTSD")}
+    if direction:
+        cell["direction"] = _v(direction)
+    body = {
+        "model_estimations": [{"local_id": "mod_a", "terms": [
+            {"local_id": "trm_group", "name": _v("group"), "type": _v("categorical"),
+             "levels": [{"level": _v("PTSD")}, {"level": _v("MDD")}]},
+            {"local_id": "trm_bai", "name": _v("BAI"), "type": _v("continuous")},
+            {"local_id": "trm_x", "name": _v("group x BAI"), "type": _v("continuous"),
+             "interaction_with": ["trm_group", "trm_bai"]}]}],
+        "analyses": [{"local_id": "ana_1", "model_estimation": "mod_a",
+                      "effect": {"cells": [cell]}}],
+    }
+    link.drop_redundant_cell_levels(body)
+    assert ("level" not in cell) is dropped
+
 def test_a_value_cannot_be_wrapped_with_not_applicable_evidence():
     """The schema reserves it for not_reported fields; seven writers got it wrong."""
     with pytest.raises(ValueError):
