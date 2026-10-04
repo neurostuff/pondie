@@ -53,7 +53,7 @@ def main() -> int:
             payload, "single", (), single.listing(paper, settings),
             single.listing_foci(paper, settings), single.existing(paper, settings))
         merged, after, cost, notes = single.complete(
-            paper, settings, caller, payload, failures, None)
+            paper, settings, caller, payload, failures)
         target.write_text(json.dumps(merged, indent=1, ensure_ascii=False) + "\n")
         Build().run(paper, settings, None)
         return {"pmid": pmid, "missing": len(missing), "notes": notes,

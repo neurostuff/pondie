@@ -5,9 +5,7 @@ from __future__ import annotations
 import sys
 import warnings
 from collections.abc import Mapping
-from pathlib import Path
 
-import yaml
 
 from pondie.schema import ROOT, STORAGE
 from pondie.schema.authoring import load_yaml, load_imported_classes

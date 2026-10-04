@@ -35,12 +35,9 @@ def test_a_tier_the_provider_does_not_know_is_refused_here():
         ModelCall(model="m", prompt="p", service_tier="nonsense_tier")
 
 
-def test_the_run_wide_setting_is_off_by_default(tmp_path):
-    """Flex trades latency for price, and a stage that silently took longer would be
-    indistinguishable from a stage that hung."""
-    settings = Settings(payloads=tmp_path, records=tmp_path, model="m")
-    assert settings.service_tier == ""
-    assert (
-        Settings(payloads=tmp_path, records=tmp_path, model="m", service_tier="flex").service_tier
-        == "flex"
-    )
+def test_a_run_uses_flex_unless_told_otherwise(tmp_path):
+    """Extraction is offline work; the per-paper progress line shows a slow call is not a
+    hung one."""
+    assert Settings(payloads=tmp_path, records=tmp_path, model="m").service_tier == "flex"
+    unset = Settings(payloads=tmp_path, records=tmp_path, model="m", service_tier="")
+    assert unset.service_tier == ""

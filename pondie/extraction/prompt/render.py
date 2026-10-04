@@ -1316,13 +1316,10 @@ def postcondition_failures(
 
 
 def dangling_references(payload: Mapping[str, Any], existing: Collection[str] = ()) -> list[str]:
-    """References to local_ids this payload never declares, for a pass that emits a whole
-    record and so has nobody after it to declare them.
+    """References to local_ids this payload never declares.
 
-    The single pass's commonest structural fault, measured: of 55 papers, the reply for 12
-    referenced model estimations, measures or acquisitions and then emitted those lists
-    empty -- 19538748 carried 22 such references. `build` reports them; this is the check
-    that lets the pass be asked again instead.
+    For a pass that emits a whole record, so nothing after it can declare them. `existing`
+    names ids that live outside the payload (the tables stage's).
     """
     from pondie.extraction.record.fix.link import check_local_ids
 

@@ -12,7 +12,6 @@ each one sits where it does.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from pondie.extraction.record import direction
 from pondie import schema
 from pondie.extraction.record import walk
 from pondie.formats import values

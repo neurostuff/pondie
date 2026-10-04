@@ -27,7 +27,7 @@ from typing import Any, Callable, Mapping, MutableMapping
 from pondie.extraction.record import ids, spans as span_tools
 from pondie.extraction.record.fix import derive
 from pondie.extraction.record.effect import terms_in_scope
-from pondie.extraction.record.ids import from_local_id, label_of
+from pondie.extraction.record.ids import label_of
 from pondie.extraction.record.validate import EXTRACTION_SCHEMA
 from pondie.extraction.repair import propose
 from pondie.extraction.repair.propose import flat

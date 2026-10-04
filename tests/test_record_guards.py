@@ -996,7 +996,7 @@ def test_a_minted_id_becomes_a_label_a_paper_could_contain():
     `Device` has no usable fallback either, so `label_of` returned the raw id for 336 of
     1,032 entities over eighty papers. Nothing matches `dev_siemens_trio` in a paper, so
     `resolve`, `same_entity` and the locator's entity bonus were all working blind."""
-    from pondie.extraction.repair.guard import from_local_id
+    from pondie.extraction.record.ids import from_local_id
 
     assert from_local_id("dev_siemens_trio") == "siemens trio"
     assert from_local_id("mea_cerebral_blood_flow") == "cerebral blood flow"
@@ -1006,7 +1006,7 @@ def test_a_minted_id_becomes_a_label_a_paper_could_contain():
 
 def test_a_derived_label_too_short_to_be_a_name_is_refused():
     """`mea_fa` would offer "fa", which appears inside "factor" and "surface"."""
-    from pondie.extraction.repair.guard import from_local_id
+    from pondie.extraction.record.ids import from_local_id
 
     assert from_local_id("mea_fa") == ""
     assert from_local_id("dev_ge") == ""

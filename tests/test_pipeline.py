@@ -260,3 +260,19 @@ def test_a_stamp_is_invisible_to_a_glob_of_the_output_directory(tmp_path):
     run([1], [w.step()])
     assert Stamp.read(w.produces(1)) is not None, "the stamp must still be findable"
     assert sorted(p.name for p in tmp_path.glob("*.json")) == ["1.json"]
+
+
+# --- progress ----------------------------------------------------------------
+
+
+def test_each_finished_item_is_logged_with_what_the_caller_says_of_it(tmp_path, caplog):
+    """The line a redirected run has instead of a progress bar."""
+    import logging
+
+    work = Work(tmp_path)
+    with caplog.at_level(logging.INFO, logger="pondie"):
+        run([1, 2], [work.step()], describe=lambda n, outcomes: f"{len(outcomes)} step(s)")
+    lines = [r.getMessage() for r in caplog.records if r.getMessage().startswith("[")]
+    assert len(lines) == 2
+    assert all("1 step(s)" in line and "left" in line for line in lines)
+    assert {line.split()[0] for line in lines} == {"[1/2]", "[2/2]"}

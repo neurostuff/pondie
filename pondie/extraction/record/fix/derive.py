@@ -18,7 +18,6 @@ from functools import lru_cache
 from pathlib import Path
 from pondie import schema
 from pondie.extraction.record import direction
-from pondie.extraction.record import ids
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import walk
 from pondie.formats import parse_keys, values

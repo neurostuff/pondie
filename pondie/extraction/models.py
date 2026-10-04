@@ -47,9 +47,8 @@ class StageName(str, Enum):
     sign_split = "split"
     demands = "demands"
     satisfy = "satisfy"
-    #: The whole record in one call, held to the demands pass's listing checks and to
-    #: `render.dangling_references`, instead of `demands` then `satisfy`. A run takes one
-    #: or the other; see `stages.SINGLE_PASS`.
+    #: The whole record in one call, instead of `demands` then `satisfy`; see
+    #: `stages.SINGLE_PASS`.
     single = "single"
     #: Slot-level, and after `satisfy` because it finishes what that pass left open rather
     #: than deciding anything exists. Loops: a slot is settled when it holds a value or a
@@ -160,17 +159,9 @@ class ModelCall(Strict):
     #: same rate as parallel ones. Retrying cannot fix a 5-in-6 fault, which is why a run
     #: over 89 papers lost 25 of them with all three attempts spent.
     json_object: bool = True
-    #: The provider's service tier, passed through the gateway. Empty leaves it unset, which
-    #: is the provider's own default.
-    #:
-    #: `flex` trades latency for price on an offline run. Verified against the gateway rather
-    #: than assumed: a reply to a `flex` request echoes `service_tier: "flex"`, a `default`
-    #: one echoes `default`, and an invented tier is refused -- so the field reaches the
-    #: provider instead of being swallowed by the proxy, which is the failure a parameter
-    #: that is merely *accepted* hides.
-    #:
-    #: Off by default because it is slower and can be refused for capacity, and a stage that
-    #: silently took longer would be indistinguishable from a stage that hung.
+    #: The provider's service tier, passed through the gateway; empty leaves the provider's
+    #: default. Verified to reach the provider: a `flex` reply echoes `service_tier: "flex"`
+    #: and an invented tier is refused.
     service_tier: Literal["", "flex", "default", "priority"] = ""
 
 
@@ -192,20 +183,15 @@ class Settings(Strict):
     payloads: Path
     records: Path
     model: str
-    #: The single pass by default. `demands` + `satisfy` remain selectable by naming them,
-    #: and were measured against it on three neurometabench meta-analyses
-    #: (experiments/stage-ablation/JOURNAL.md): less queryable records at 2.6x the calls.
+    #: The single pass by default; naming `demands` and `satisfy` runs the split instead.
     stages: tuple[StageName, ...] = tuple(
         s for s in StageName if s not in (StageName.demands, StageName.satisfy)
     )
     #: The reasoning effort of any stage `stage_effort` does not name.
     effort: Literal["minimal", "low", "medium", "high"] = "low"
-    #: Reasoning effort per stage, over `effort`. Judgement gets more than transcription:
-    #: `single` decides what was tested and `repair` decides between readings, while `fill`
-    #: and `evidence` complete slots and find quotes. Measured for `single` on the dementia
-    #: panel, 0.62 of unstable gold selected at low and 0.80 at medium, with fewer retries
-    #: (experiments/stage-ablation/JOURNAL.md, P6). The other levels are a judgement, not yet
-    #: a measurement.
+    #: Reasoning effort per stage, over `effort`: more for judgement (`single`, `repair`),
+    #: less for completion and quoting (`fill`, `evidence`). Only `single`'s level is
+    #: measured (experiments/stage-ablation/JOURNAL.md, P6).
     stage_effort: dict[StageName, Literal["minimal", "low", "medium", "high"]] = Field(
         default_factory=lambda: {
             StageName.single: "medium",
@@ -218,8 +204,9 @@ class Settings(Strict):
     attempts: Annotated[int, Field(ge=1)] = 3
     retrieve_evidence: bool = True
     zero_foci_rule: bool = True
-    #: Passed to every call this run makes. See `ModelCall.service_tier`; off by default.
-    service_tier: Literal["", "flex", "default", "priority"] = ""
+    #: Passed to every call this run makes. `flex` is cheaper and slower; a run's per-paper
+    #: progress line is what tells a slow call from a hung one.
+    service_tier: Literal["", "flex", "default", "priority"] = "flex"
     #: Ask the model for the entities and links the extraction missed. On by default, and
     #: degrades rather than fails: with no caller the stage says so once and runs the
     #: deterministic half, which needs none.
@@ -243,10 +230,8 @@ class Settings(Strict):
     #: record that does not -- 8 cases across 42 records measured.
     adjudicate: bool = True
     redo: bool = False
-    #: After `single` has spent its attempts, ask once more for only the entities its
-    #: references still name and it never emitted. Measured paired on six draws over three
-    #: meta-analyses: most missing references resolve, +3% calls, one selection gained and
-    #: none lost (experiments/stage-ablation/JOURNAL.md, P2).
+    #: After `single`'s attempts, ask once for only the entities its references name and it
+    #: never emitted (experiments/stage-ablation/JOURNAL.md, P2).
     complete_references: bool = True
 
     def effort_for(self, stage: "StageName | str") -> str:

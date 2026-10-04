@@ -1406,3 +1406,21 @@ def test_tables_stays_fresh_after_prose_and_split_rewrite_the_parse(tmp_path):
     document["prose_foci_applied"] = True
     paper.parse.write_text(json.dumps(document))
     assert Tables().depends_on(paper, settings) == before
+
+
+def test_a_raising_stage_reports_the_cause_not_just_the_retry_count(tmp_path, monkeypatch):
+    """`llm.py` raises "... attempt(s) failed" from the gateway's error; the cause is the
+    diagnosis, and the report used to keep only the outer message."""
+
+    class _Chained(_Fake):
+        def run(self, paper, settings, caller):
+            try:
+                raise ConnectionError("Connection reset by peer")
+            except ConnectionError as inner:
+                raise RuntimeError("single for S1: 3 attempt(s) failed") from inner
+
+    monkeypatch.setattr("pondie.extraction.driver.sequence",
+                        lambda s: (_Chained(StageName.single),))
+    report = run([_paper(tmp_path)], _settings(tmp_path), Recorder())
+    reason = report.failures[0].failed.reason
+    assert "3 attempt(s) failed" in reason and "Connection reset by peer" in reason

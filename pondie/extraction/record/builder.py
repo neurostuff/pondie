@@ -21,24 +21,16 @@ Usage:
 from __future__ import annotations
 
 import json
-import re
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from linkml_runtime.linkml_model.meta import SlotDefinition
 
 from pondie import schema
 from pondie.extraction.evidence import warrant as evidence
 from pondie.extraction.record import fix
-from pondie.extraction.record import spans as span_tools
 
-# Imported as the function rather than the module: `effect` is a local name
-# throughout this file, and the module would be shadowed on first assignment.
-from pondie.extraction.record.effect import terms_in_scope
-from pondie.formats import parse_keys, text_index, values
-from pondie.vocabularies import abbreviations
+from pondie.formats import text_index, values
 from pondie.schema import reader
 from pondie.schema.reader import Schema
 

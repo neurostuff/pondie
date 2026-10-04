@@ -18,13 +18,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from pondie.extraction.record import direction
 from pondie.extraction.record import ids
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import walk
 from pondie.extraction.record.effect import terms_in_scope
 from pondie.formats import values
-from pondie.schema import reader
 from pondie.schema.reader import Schema
 from pondie.vocabularies import abbreviations
 from typing import Any

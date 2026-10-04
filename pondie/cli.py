@@ -20,22 +20,16 @@ from pondie.extraction.models import (
     StageName,
 )
 
-
 #: `--flavour best` takes each paper on the best render it actually has, via `Paper.best`.
 #: Not a `Flavour` member, because it names a choice rather than a render.
 BEST = "best"
 
 
 def _papers(root: Path, ids: Path, flavour: Flavour | str) -> list[Paper]:
-    """Study ids from the tab-separated pmids file the corpus uses: `pmid<TAB>id<TAB>source`.
+    """Papers from a tab-separated pmids file: `pmid<TAB>study_id<TAB>source`.
 
-    A file of bare ids parses to nothing and the run reports success having done nothing, so
-    the shape is checked here rather than discovered three stages later.
-
-    Comments are skipped, as `corpus.sync.read_pmids` skips them over the same files. It did
-    not, and every pmids file in `data/selection/` names its columns in a `# pmid<TAB>...`
-    header -- which has two tabs and a non-empty second field, so it parsed as a paper
-    called `neurostore_id` and the run paid a model to look for it.
+    `#` lines are skipped. An empty result raises, so a malformed file cannot run and
+    report success having extracted nothing.
     """
     papers, malformed = [], 0
     for line in ids.read_text().splitlines():
@@ -45,9 +39,7 @@ def _papers(root: Path, ids: Path, flavour: Flavour | str) -> list[Paper]:
         if len(parts) >= 2 and parts[1]:
             study = parts[1]
             if flavour == BEST:
-                # A paper with no text at all is not an error here: `driver.run` reports it
-                # as a failed paper alongside the rest, which is where the other
-                # not-ready reasons already surface.
+                # A paper with no text still enters the run; `driver.run` reports it.
                 try:
                     papers.append(Paper.best(study, root))
                 except FileNotFoundError:
@@ -57,13 +49,8 @@ def _papers(root: Path, ids: Path, flavour: Flavour | str) -> list[Paper]:
         elif line.strip():
             malformed += 1
     if not papers:
-        # Fires on an empty file and a comment-only one as well as a malformed one: the
-        # guard is against a run that reports success having extracted nothing, and which
-        # of the three caused it does not change that.
         detail = (
-            f"{malformed} line(s) parsed to nothing"
-            if malformed
-            else "no lines parsed to a study"
+            f"{malformed} line(s) parsed to nothing" if malformed else "no lines parsed to a study"
         )
         raise SystemExit(
             f"{ids}: {detail}. Expected 'pmid<TAB>study_id<TAB>source'; "
@@ -75,10 +62,9 @@ def _papers(root: Path, ids: Path, flavour: Flavour | str) -> list[Paper]:
 def _extract(args: argparse.Namespace) -> int:
     import logging
 
-    from pondie.extraction import GatewayCaller, load_env, plan, run
+    from pondie.extraction import GatewayCaller, load_env, plan, run, sequence
 
-    # Configured here and not at import: a library that installs a handler steals the
-    # formatting from anything embedding it. The CLI is the application, so it decides.
+    # Configured here, not at import: the application decides how a library logs.
     logging.basicConfig(
         level=getattr(logging, args.log.upper()),
         format="%(asctime)s %(levelname)-7s %(message)s",
@@ -104,13 +90,29 @@ def _extract(args: argparse.Namespace) -> int:
         redo=args.redo,
     )
     papers = _papers(
-        args.corpus, args.pmids,
+        args.corpus,
+        args.pmids,
         BEST if args.flavour == BEST else Flavour(args.flavour),
     )
     if args.plan:
         for study, steps in plan(papers, settings).items():
             print(f"  {study}  {' '.join(steps)}")
         return 0
+    log = logging.getLogger("pondie")
+    log.info(
+        "run %s: %d paper(s), stages %s, model %s, tier %s, effort %s, %d worker(s)",
+        args.run,
+        len(papers),
+        " > ".join(s.name.value for s in sequence(settings)),
+        settings.model,
+        settings.service_tier or "provider default",
+        ", ".join(
+            f"{s.name.value}={settings.effort_for(s.name)}"
+            for s in sequence(settings)
+            if getattr(s, "asks_a_model", False)
+        ),
+        args.workers,
+    )
     report = run(
         papers,
         settings,
@@ -231,41 +233,46 @@ def main(argv: list[str] | None = None) -> int:
         "--flavour",
         default=BEST,
         choices=[BEST, *(f.value for f in Flavour)],
-        help="which render to extract from. `best` takes the best each paper HAS; naming "
-             "one takes it or drops the paper -- with the old default of `pubget`, the 51 "
-             "elsevier-only papers of a 100-paper run were reported not-ready and skipped",
+        help="which render to extract from; `best` takes the richest each paper has",
     )
     ex.add_argument("--stages", nargs="*", choices=[s.value for s in StageName])
-    ex.add_argument("--effort", default="low", choices=["minimal", "low", "medium", "high"],
-                    help="reasoning effort for any stage --stage-effort does not name")
-    ex.add_argument("--stage-effort", nargs="*", metavar="STAGE=LEVEL",
-                    help="per-stage effort, replacing the default map "
-                    "(single=medium fill=low evidence=low repair=medium)")
+    ex.add_argument(
+        "--effort",
+        default="low",
+        choices=["minimal", "low", "medium", "high"],
+        help="reasoning effort for any stage --stage-effort does not name",
+    )
+    ex.add_argument(
+        "--stage-effort",
+        nargs="*",
+        metavar="STAGE=LEVEL",
+        help="per-stage effort, replacing the default map "
+        "(single=medium fill=low evidence=low repair=medium)",
+    )
     ex.add_argument(
         "--service-tier",
-        default="",
+        default="flex",
         choices=["", "flex", "default", "priority"],
-        help="the provider's service tier. `flex` trades latency for price on an "
-        "offline run; unset leaves the provider's own default",
+        help="the provider's service tier; `flex` is cheaper and slower, '' leaves the "
+        "provider's default",
     )
     ex.add_argument(
         "--no-evidence",
         action="store_true",
-        help="skip the quote pass; 45%% of input tokens, and the record is "
-        "then structurally complete and unreviewable",
+        help="skip the quote pass; values are kept, without supporting quotes",
     )
     ex.add_argument("--redo", action="store_true")
     ex.add_argument("--workers", type=int, default=1)
     ex.add_argument(
         "--no-progress",
         action="store_true",
-        help="suppress the progress bar. It is already off when stderr is not a terminal",
+        help="no progress bar; it is off anyway when stderr is not a terminal",
     )
     ex.add_argument(
         "--log",
-        default="warning",
+        default="info",
         choices=["debug", "info", "warning", "error"],
-        help="`info` names each step as it finishes; `debug` adds the cache hits",
+        help="`info` logs one line per paper; `debug` adds every step and cache hit",
     )
     ex.add_argument("--plan", action="store_true", help="say what would run, spend nothing")
     ex.set_defaults(fn=_extract)

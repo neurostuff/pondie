@@ -42,8 +42,18 @@ BATCH = 200
 #: Types that mean the article is not a report of original data. Not used here -- a query
 #: applies it -- but named so the exclusion has one definition rather than one per caller.
 NOT_ORIGINAL_RESEARCH = frozenset(
-    {"Review", "Systematic Review", "Meta-Analysis", "Editorial", "Letter", "Comment",
-     "Case Reports", "Published Erratum", "Retraction of Publication", "Retracted Publication"}
+    {
+        "Review",
+        "Systematic Review",
+        "Meta-Analysis",
+        "Editorial",
+        "Letter",
+        "Comment",
+        "Case Reports",
+        "Published Erratum",
+        "Retraction of Publication",
+        "Retracted Publication",
+    }
 )
 
 
@@ -155,7 +165,7 @@ def fill(record: dict, found: Mapping[str, Mapping[str, list[str]] | list[str]])
     answer = found.get(local_id)
     if not answer:
         return []
-    if isinstance(answer, list):                      # `publication_types`' shape
+    if isinstance(answer, list):  # `publication_types`' shape
         answer = {"study_type": answer}
 
     changed = []

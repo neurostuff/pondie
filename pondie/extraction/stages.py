@@ -139,7 +139,7 @@ class _Base:
 @functools.lru_cache(maxsize=1)
 def prompt_digest() -> str:
     """A digest of everything that decides what the model is asked.
-    
+
     Allows us to track prompt changes that would invalidate the cache.
     """
     sources = [
@@ -178,19 +178,17 @@ class Tables(_Base):
     name: StageName = StageName.tables
 
     def depends_on(self, paper: Paper, settings: Settings) -> dict[str, Any]:
-        """The manifest, and the parse's TABLE LIST -- not the whole parse.
+        """The manifest and the parse's table list, which is all this stage reads.
 
-        `prose` and `split` run after this stage and rewrite the parse file in place, so
-        hashing the file made this stage stale on every resume. Its digest then changed,
-        and every model pass downstream (`single`, or `demands` and `satisfy`) re-ran and
-        was paid for again. What this stage reads from the parse is `source_tables()`,
-        which neither rewrite touches: prose entries are excluded from it and a sign split
-        keeps its table.
+        Not the parse file: `prose` and `split` rewrite it after this stage runs, which would
+        make it, and every model stage after it, stale on each resume.
         """
         parts = super().depends_on(paper, settings)
         manifest = paper.study_dir / "processed" / paper.flavour.value / "tables.jsonl"
         parts["manifest"] = (
-            text_index.text_hash(manifest.read_text(encoding="utf-8")) if manifest.is_file() else ""
+            text_index.text_hash(manifest.read_text(encoding="utf-8"))
+            if manifest.is_file()
+            else ""
         )
         parts["parse_tables"] = (
             pipeline.digest_of({"tables": TableParse.read(paper.parse).source_tables()})
@@ -203,9 +201,7 @@ class Tables(_Base):
         if self.done(paper, settings):
             return self._skip(paper)
 
-        sources = list(
-            table_parse.read_manifest(paper.study_dir, paper.flavour.value).values()
-        )
+        sources = list(table_parse.read_manifest(paper.study_dir, paper.flavour.value).values())
         origin = f"{paper.flavour.value}/tables.jsonl"
         if not sources:
             # On emptiness as well as absence. A manifest with no rows makes the same claim
@@ -403,7 +399,7 @@ class _ModelPass(_Base):
         """local_ids that live outside this pass's payload, which a reference may name."""
         return ()
 
-    def complete(self, paper, settings, caller, payload, failures, prompt):
+    def complete(self, paper, settings, caller, payload, failures):
         """A last step after the attempts. `(payload, failures, cost, notes)`; no-op here."""
         return payload, failures, Cost(), []
 
@@ -423,7 +419,7 @@ class _ModelPass(_Base):
         # Retry names the fault rather than resampling blindly. The failure is stochastic --
         # the same prompt succeeds on the next draw most of the time -- but a model told what
         # was wrong with its last answer does better than one asked the same question twice.
-        
+
         cost, traces, notes = Cost(), [], []
         payload: dict = {}
         failures: list[str] = []
@@ -476,21 +472,21 @@ class _ModelPass(_Base):
             failures = render.postcondition_failures(
                 candidate, self.mode, declared, listing, foci, self.existing(paper, settings)
             )
-            # Keep the best attempt, not the last. A reply with sound analyses and one
-            # unvetted omission reason is re-asked, and the retry can come back with no
-            # analyses at all; writing the last one threw the good answer away. Measured
-            # on the single pass: 6 of 55 records empty, against 0-1 for the same prompt
-            # kept by fewest failures.
+            # Keep the best attempt: a retry can come back worse, even empty.
             if best is None or _severity(failures) < _severity(best_failures):
                 payload, notes, best, best_failures = (
-                    candidate, candidate_notes, candidate, failures)
+                    candidate,
+                    candidate_notes,
+                    candidate,
+                    failures,
+                )
             if not failures:
                 break
         failures = best_failures if best is not None else failures
 
         if parsed and failures:
             payload, failures, more_cost, more_notes = self.complete(
-                paper, settings, caller, payload, failures, prompt
+                paper, settings, caller, payload, failures
             )
             cost = cost + more_cost
             notes = list(notes) + more_notes
@@ -544,6 +540,9 @@ class _ModelPass(_Base):
         return [f"repaired {name}: {len(lines)}" for name, lines in log.entries if lines]
 
 
+_UNKNOWN = re.compile(r"unknown local_id '([^']+)'")
+
+
 def _missing_ids(payload: Mapping[str, Any], existing: Collection[str]) -> list[str]:
     """The local_ids the payload references and does not declare, in first-seen order."""
     from pondie.extraction.record.fix.link import check_local_ids
@@ -557,9 +556,6 @@ def _missing_ids(payload: Mapping[str, Any], existing: Collection[str]) -> list[
         if hit:
             found.setdefault(hit.group(1))
     return list(found)
-
-
-_UNKNOWN = re.compile(r"unknown local_id '([^']+)'")
 
 
 def _kind_of(local_id: str) -> str | None:
@@ -605,8 +601,7 @@ def _extend(held: list, new: list) -> None:
             _extend(present["terms"], entity["terms"])
 
 
-#: Post-condition failures that mean the reply is not a record at all, ranked below any
-#: number of the faults a record can carry.
+#: Failures meaning the reply is not a record at all; worse than any number of others.
 _EMPTY = ("no analyses were emitted", "every entity list is empty")
 
 
@@ -695,18 +690,13 @@ class Satisfy(_ModelPass):
 class Single(_ModelPass):
     """The whole record in one call: analyses and every entity they reference.
 
-    The alternative to `Demands` then `Satisfy`, and measured against it on the VBM-of-PTSD
-    benchmark (experiments/stage-ablation/JOURNAL.md): on 22 gold papers the split left
-    "structural MRI" unanswerable on 8, because `satisfy` builds only what `demands`
-    declared and `demands` never declares an Acquisition, and `demands` emitted nothing at
-    all for 2 papers through three retries. One call over both halves of the schema
-    answered more of the query at half the calls and tokens. What the split did protect
-    against -- a reply referencing entities it then leaves out -- is kept here as a
-    post-condition the retry names, which is what `existing` and
-    `render.dangling_references` are for.
+    Shown the same stage-1 listing as `Demands` and held to the same listing checks, plus
+    `render.dangling_references`: a reply may not reference an entity it does not emit.
 
-    It shows the same stage-1 listing `Demands` does, because the listing is what links an
-    analysis to its coordinates, and is held to the same listing checks.
+    Notes
+    -----
+    Replaces `Demands` then `Satisfy` as the default. Measured against the split on three
+    neurometabench meta-analyses in experiments/stage-ablation/JOURNAL.md.
     """
 
     name: StageName = StageName.single
@@ -724,15 +714,13 @@ class Single(_ModelPass):
     def context(self, paper: Paper, settings: Settings) -> str:
         return Demands().context(paper, settings)
 
-    def complete(self, paper, settings, caller, payload, failures, prompt):
-        """Ask for only the entities the reply references and never emitted.
+    def complete(self, paper, settings, caller, payload, failures):
+        """Ask once for only the entities the reply references and never emitted.
 
-        Re-asking for the whole record does not fix this: 31887311 referenced `grp_bvftd`,
-        `grp_ad` and `grp_controls` from a correct bvFTD-versus-controls contrast and wrote
-        `groups: []` in all three attempts, with all 23 dangling references named in each
-        retry. 5-15% of single-pass records ended that way. This is the `satisfy` pass
-        restricted to the ids that are missing, with the analyses shown so each entity can
-        be read off what references it.
+        The `satisfy` prompt, restricted to the missing ids, with the analyses shown so each
+        entity can be read off what references it. Used where re-asking for the whole
+        record keeps dropping the same entity lists. The merged payload is kept only if
+        it resolves references and is no worse by `_severity`.
         """
         if not settings.complete_references:
             return payload, failures, Cost(), []
@@ -793,8 +781,11 @@ class Single(_ModelPass):
         tables = Tables().produces(paper, settings)
         if not tables.is_file():
             return ()
-        return [t.get("local_id") for t in json.loads(tables.read_text("utf-8")).get("tables") or []
-                if t.get("local_id")]
+        return [
+            t.get("local_id")
+            for t in json.loads(tables.read_text("utf-8")).get("tables") or []
+            if t.get("local_id")
+        ]
 
 
 @dataclass(frozen=True)
@@ -853,8 +844,7 @@ class Fill(_Base):
                             # Measured at 0% cached across this stage before the move. The
                             # same argument, and the same evidence, as `build_prompt`.
                             system=f"{slots.SYSTEM}\n\n{render.paper_block(text)}",
-                            prompt=f"{slots.block(batch)}\n"
-                            "Return the JSON object now.",
+                            prompt=f"{slots.block(batch)}\n" "Return the JSON object now.",
                             max_output_tokens=settings.max_output_tokens,
                             effort=settings.effort_for(self.name),
                             service_tier=settings.service_tier,
@@ -1047,8 +1037,7 @@ class Evidence(_Base):
 
 @dataclass(frozen=True)
 class Build(_Base):
-    """Merge the payloads, repair, resolve quotes to offsets, validate.
-    """
+    """Merge the payloads, repair, resolve quotes to offsets, validate."""
 
     name: StageName = StageName.build
     reads: tuple[StageName, ...] = (
@@ -1102,8 +1091,7 @@ class Build(_Base):
                 f"{report.warrant.unlocated} field(s) unevidenced despite a quote"
             )
         if report.warrant.case_insensitive:
-            notes.append(
-                f"{report.warrant.case_insensitive} span(s) placed only by ignoring case")
+            notes.append(f"{report.warrant.case_insensitive} span(s) placed only by ignoring case")
         if report.dangling:
             notes.append(f"{len(report.dangling)} cross-reference(s) need a human")
         notes += self._validate(record, paper, settings)
@@ -1240,7 +1228,7 @@ DEMAND_DRIVEN: tuple[Stage, ...] = (
     Repair(),
 )
 
-#: The single-pass alternative: the same deterministic stages around one extraction call.
+#: The default: the same deterministic stages around one extraction call.
 SINGLE_PASS: tuple[Stage, ...] = (
     Tables(),
     ProseFoci(),

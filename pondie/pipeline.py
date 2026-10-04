@@ -1,36 +1,23 @@
-"""Run work over many items: cached on what it depends on, in parallel, with a record.
+"""Run steps over many items: cached on what each depends on, in parallel, with a record.
 
-Two workflows in this package do the same thing in different words. `extraction` runs nine
-stages over each paper; `normalization` runs one pass over each record. Both want the same
-five things, and between them had one and a half:
+Extraction runs its stages over each paper and normalization runs one pass over each
+record. Both need the same things: provenance, caching, invalidation when an input
+changes, progress, and parallelism for network-bound work.
 
-    provenance    what produced this output, from what
-    caching       do not pay for an answer already on disk
-    invalidation  unless what it was computed from has changed
-    progress      a run that takes forty minutes should say so before minute forty
-    parallelism   the work is network-bound, so run several at once
+Caching and provenance are one mechanism. A `Stamp` beside each output records the digest
+of everything it was computed from; an output is reused only while that digest still
+matches, and the same file says what produced it.
 
-The half was `extraction`'s cache, and the half it was missing is the one that matters. A
-stage was done when its output file existed. Change the prompt, the model, the effort or the
-schema and every stale payload was reused in silence -- the fault that a cache exists to make
-impossible, and the reason this module is a rewrite rather than a wrapper.
-
-The two features are one mechanism. A `Stamp` beside each output records what produced it and
-the digest of everything it was computed from; caching is asking whether that digest still
-matches, and provenance is reading the same file. There is no second bookkeeping to fall out
-of step with the first.
-
-    steps = [Step("demands", produces=..., depends_on=..., run=...)]
+    steps = [Step("single", produces=..., depends_on=..., run=...)]
     report = execute(papers, steps, workers=8)
 
-`Step` is a plain dataclass of four callables rather than a base class to inherit. Extraction's
-stages are already classes with their own hierarchy, and normalization's passes are functions;
-asking either to change shape to be scheduled is how a scheduler ends up owning a domain it
-should only be running.
+`Step` is four callables rather than a base class, so extraction's stage classes and
+normalization's functions can both be scheduled without changing shape.
 """
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
@@ -46,22 +33,16 @@ log = logging.getLogger("pondie")
 
 Item = TypeVar("Item")
 
-#: Bumped when a change to this module alters what a stamp means. Part of every digest, so a
-#: change to the stamping rules invalidates every cache rather than silently reinterpreting
-#: stamps written under the old ones.
+#: Part of every digest, so changing what a stamp means invalidates every cache.
 STAMP_VERSION = "1"
 
 
 def digest_of(parts: Mapping[str, Any], step: str = "") -> str:
     """A stable digest of everything an output was computed from.
 
-    `sort_keys` and `default=str` so that a dict whose insertion order differs, or which holds
-    a Path, still digests the same. The alternative -- hashing a repr -- makes the cache turn
-    over on a refactor that changed nothing a caller can see.
-
-    The step's name is part of it, so two steps that happen to write one path cannot read each
-    other's stamp. No stage does that today; it costs nothing to make it undecidable rather
-    than a thing to remember.
+    Keys are sorted and values stringified, so insertion order and `Path` objects do not
+    change it. The step's name is included, so two steps writing one path cannot share a
+    stamp.
     """
     import hashlib
 
@@ -78,10 +59,8 @@ def digest_of(parts: Mapping[str, Any], step: str = "") -> str:
 class Stamp:
     """What produced an output, and from what.
 
-    Written beside the output rather than inside it, because not every output is JSON and an
-    output's schema is not this module's to extend. A missing stamp means "not computed by a
-    version of this code that stamps", which is treated as stale: it is the safe reading, and
-    it is what makes adopting this module a one-time recompute rather than a silent mixture.
+    Written beside the output, not inside it, since an output need not be JSON. A missing or
+    unreadable stamp reads as stale.
     """
 
     step: str
@@ -106,14 +85,10 @@ class Stamp:
 
     @staticmethod
     def path_for(output: Path) -> Path:
-        """A `.stamps/` subdirectory, not a sibling file.
+        """`.stamps/<name>.json` beside the output.
 
-        `builder.merge_payloads` globs `<payload_dir>/*.json` and merges everything it
-        finds, which the `Tables` and `Repair` docstrings both record as a trap already
-        sprung once -- a report written there arrived in the next build as unexpected
-        payload keys. A stamp named `demands.json.stamp.json` walks into it. The glob is not
-        recursive, so a subdirectory is invisible to it, and the stamp stays next to what it
-        describes rather than in a directory of its own somewhere else.
+        A subdirectory, because `builder.merge_payloads` merges every `*.json` in a payload
+        directory and would read a sibling stamp as a payload.
         """
         return output.parent / ".stamps" / (output.name + ".json")
 
@@ -132,8 +107,6 @@ class Stamp:
                 seconds=body.get("seconds", 0.0),
             )
         except (OSError, ValueError, KeyError):
-            # An unreadable stamp is a stale stamp. Raising here would fail a run over
-            # bookkeeping, and trusting it would be worse.
             return None
 
     def write(self, output: Path) -> Path:
@@ -145,23 +118,18 @@ class Stamp:
 
 @dataclass(frozen=True)
 class Step(Generic[Item]):
-    """One unit of work, and everything the scheduler needs to decide whether to do it.
+    """One unit of work, and what the scheduler needs to decide whether to do it.
 
-    `depends_on` is the whole of cache correctness. It must name every input whose change
-    should produce a different output -- the paper text's hash, the prompt's version, the
-    model, the settings that reach the call -- and nothing that changes without changing the
-    answer, or the cache never hits. Naming too little is the dangerous direction: that is a
-    stale answer served as a fresh one.
+    `depends_on` decides cache correctness: it must name every input whose change should
+    change the output, or a stale answer is served as a fresh one.
     """
 
     name: str
-    #: Where the answer goes. `None` for a step whose effect is not a file, which is then
-    #: never cached -- honest, because this module cannot know when such a step is stale.
+    #: Where the answer goes. `None` for a step whose effect is not a file; never cached.
     produces: Callable[[Item], Path | None]
     depends_on: Callable[[Item], Mapping[str, Any]]
     run: Callable[[Item], Any]
-    #: Ceiling on how many items may be inside this step at once, under the run's own
-    #: `workers`. For a step that holds a scarce resource where the others only wait.
+    #: How many items may be inside this step at once, under the run's `workers`.
     max_parallel: int | None = None
 
 
@@ -171,7 +139,7 @@ class Outcome:
 
     item: str
     step: str
-    state: str  # "done" | "cached" | "failed" | "skipped"
+    state: str  # "done" | "cached" | "failed"
     seconds: float = 0.0
     detail: str = ""
 
@@ -203,13 +171,7 @@ class Report:
 
 
 class Events:
-    """One JSON object per outcome, appended as it happens.
-
-    Appended rather than written at the end, which is what `extraction` did: a run killed at
-    minute thirty left no record of the thirty minutes. Locked because the pool writes from
-    several threads, and a torn line is worse than a missing one -- it makes the whole file
-    unparseable rather than the last row absent.
-    """
+    """One JSON line per outcome, appended as it happens, so a killed run keeps its record."""
 
     def __init__(self, path: Path | None) -> None:
         self.path = path
@@ -236,32 +198,65 @@ class Events:
                 handle.write(line + "\n")
 
 
-def _bar(total: int, enabled: bool):
-    """A tqdm bar, or a stand-in with the same three methods.
+class _Progress:
+    """Per-item progress: a tqdm bar on a terminal, and one log line per finished item.
 
-    Disabled off a TTY as well as on request: a progress bar in a log file is one line of
-    control characters per update, and this pipeline's long runs are usually redirected.
+    The log line is what a redirected run (`nohup … > run.log`) has instead of a bar: count,
+    elapsed time and an ETA from the mean time per finished item. On a terminal the lines
+    are routed above the bar so neither breaks the other.
     """
-    if not enabled or not os.isatty(2):
 
-        class _Quiet:
-            def update(self, n: int = 1) -> None: ...
-            def set_postfix_str(self, s: str) -> None: ...
-            def close(self) -> None: ...
+    def __init__(self, total: int, enabled: bool) -> None:
+        self.total, self.done, self.started = total, 0, time.monotonic()
+        self._lock = threading.Lock()
+        self.bar = None
+        if enabled and os.isatty(2):
+            from tqdm import tqdm
 
-        return _Quiet()
-    from tqdm import tqdm
+            self.bar = tqdm(total=total, unit="paper", dynamic_ncols=True, leave=True)
 
-    return tqdm(total=total, unit="item", dynamic_ncols=True, leave=True)
+    def redirect(self):
+        """Route logging through the bar while it is open."""
+        if self.bar is None:
+            return contextlib.nullcontext()
+        from tqdm.contrib.logging import logging_redirect_tqdm
+
+        return logging_redirect_tqdm()
+
+    def finished(self, label: str, detail: str) -> None:
+        with self._lock:
+            self.done += 1
+            elapsed = time.monotonic() - self.started
+            remaining = elapsed / self.done * (self.total - self.done)
+            if self.bar is not None:
+                self.bar.update(1)
+                self.bar.set_postfix_str(label[:24])
+            log.info(
+                "[%d/%d] %s%s · %s elapsed, ~%s left",
+                self.done,
+                self.total,
+                label,
+                f"  {detail}" if detail else "",
+                _clock(elapsed),
+                _clock(remaining),
+            )
+
+    def close(self) -> None:
+        if self.bar is not None:
+            self.bar.close()
+
+
+def _clock(seconds: float) -> str:
+    minutes, secs = divmod(int(seconds), 60)
+    hours, minutes = divmod(minutes, 60)
+    return f"{hours}h{minutes:02d}m" if hours else f"{minutes}m{secs:02d}s"
 
 
 def fresh(step: Step[Item], item: Item, *, redo: bool = False) -> Stamp | None:
     """The stamp on a usable cached output, or None when the step has to run.
 
-    Four ways to be stale, and they are not the same thing: asked to redo, no output, no
-    stamp, or a stamp whose digest no longer matches what the step now depends on. The last
-    is the one that did not exist before -- the others were already decidable from the
-    filesystem.
+    Stale when asked to redo, when the output or its stamp is missing, or when the stamp's
+    digest no longer matches what the step depends on.
     """
     if redo:
         return None
@@ -294,8 +289,7 @@ def _run_step(step: Step[Item], item: Item, name: str, redo: bool) -> Outcome:
         )
 
     elapsed = time.monotonic() - started
-    # Stamped only after the work returned. A stamp written first would mark a crashed step
-    # as complete, and the next run would trust it.
+    # Stamped only after the work returned, so a crash never leaves a trusted stamp.
     output = step.produces(item)
     if output is not None and output.exists():
         Stamp(
@@ -305,7 +299,7 @@ def _run_step(step: Step[Item], item: Item, name: str, redo: bool) -> Outcome:
             produced_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             seconds=elapsed,
         ).write(output)
-    log.info("%s/%s done in %.1fs", name, step.name, elapsed)
+    log.debug("%s/%s done in %.1fs", name, step.name, elapsed)
     return Outcome(
         item=name,
         step=step.name,
@@ -325,51 +319,50 @@ def execute(
     progress: bool = True,
     events: Path | None = None,
     stop_item_on_failure: bool = True,
+    describe: Callable[[Item, list[Outcome]], str] | None = None,
 ) -> Report:
     """Run every step over every item: parallel across items, in order within one.
 
-    That is the shape both workflows have. Extraction's stages feed each other, so a paper's
-    steps are a sequence and only the papers are concurrent; normalization's single pass over
-    a record is the same shape with one step. Nothing here runs two steps of one item at
-    once, because a step whose input is the step before it cannot be told apart from one
-    that is merely listed after it.
+    Parameters
+    ----------
+    progress
+        Show a per-item bar when stderr is a terminal. A line per finished item is logged
+        at INFO either way.
+    describe
+        Returns the text that line carries for an item, given its outcomes -- the caller's
+        domain summary (cost, what failed). Without it the line states only the item.
     """
 
     items = list(items)
     journal = Events(events)
     report = Report()
     guards = {s.name: threading.Semaphore(s.max_parallel) for s in steps if s.max_parallel}
-    bar = _bar(len(items), progress)
-    lock = threading.Lock()
+    tracker = _Progress(len(items), progress)
 
     def one(item: Item) -> list[Outcome]:
         label = name_of(item)
         out: list[Outcome] = []
         for step in steps:
             guard = guards.get(step.name)
-            if guard is not None:
-                with guard:
-                    outcome = _run_step(step, item, label, redo)
-            else:
+            with guard if guard is not None else contextlib.nullcontext():
                 outcome = _run_step(step, item, label, redo)
             out.append(outcome)
             journal.record(outcome)
             if not outcome.ok and stop_item_on_failure:
                 break
-        with lock:
-            bar.update(1)
-            bar.set_postfix_str(label[:24])
+        tracker.finished(label, describe(item, out) if describe else "")
         return out
 
     try:
-        if workers <= 1:
-            for item in items:
-                report.outcomes += one(item)
-        else:
-            with ThreadPoolExecutor(max_workers=workers) as pool:
-                for produced in pool.map(one, items):
-                    report.outcomes += produced
+        with tracker.redirect():
+            if workers <= 1:
+                for item in items:
+                    report.outcomes += one(item)
+            else:
+                with ThreadPoolExecutor(max_workers=workers) as pool:
+                    for produced in pool.map(one, items):
+                        report.outcomes += produced
     finally:
-        bar.close()
+        tracker.close()
     log.info("%s", report.summary())
     return report

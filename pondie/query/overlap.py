@@ -1,33 +1,23 @@
-"""Overlapping samples: the one inclusion criterion that is about two papers at once.
+"""Overlapping samples: the inclusion criterion that compares two papers.
 
-"overlapping samples to previous studies" excludes a paper that re-reports people an
-earlier included paper already reported. A record cannot answer it alone. The paper may
-never cite the earlier report -- Nardo 2013 re-reports Nardo 2010's train drivers without a
-word -- and when it does, `Group.sample_source_reference` is a citation string, not a paper.
-And `previously_reported` cannot veto by itself: a twin study truthfully says all four of its
-cohorts were reported before, in a hippocampal-tracing paper no VBM meta-analysis would pool.
+"overlapping samples to previous studies" excludes a paper that re-reports participants an
+earlier selected paper already reported. One record cannot answer it: a re-report may not
+cite the earlier paper, and `Group.sample_source = previously_reported` may point at a paper
+outside the pool. So records are compared. A later paper re-reports an earlier one when
 
-So this compares records, deterministically. A later paper re-reports an earlier one when
+  1. they share at least `min_shared_authors` (3) PubMed authors;
+  2. the earlier paper is itself selected; and
+  3. every cohort of the later paper fits inside a same-status cohort of the earlier one:
+     no larger, reporting no sex the earlier cohort does not, and no larger per sex.
+     A cohort with no size cannot fit; a "whole sample" row is not a cohort.
 
-  1. they share at least `min_shared_authors` PubMed authors (3), so the same group could
-     have scanned the same people. Two was too few: a coal-mine-flood paper and a Hunan-fire
-     paper share two authors, and when the coal record gave no sex counts its 10 survivors
-     "fit" inside the fire paper's 12. Every true re-report in the PTSD pool shares 3-5.
-  2. the earlier paper is itself selected -- it is the "previous study" the pool keeps, and
-  3. EVERY cohort of the later paper fits inside a cohort of the earlier one with the same
-     status: its size is no larger, it reports no sex the earlier cohort does not, and each
-     sex count is no larger. A cohort with no size cannot be shown to fit.
-
-Condition 3 is what keeps a paper that adds a cohort. Two coal-mine-flood papers share six
-authors and the same 10 vs 10 survivors, and the later one adds 20 unexposed controls; 20
-does not fit inside 10, so it stays. Shared authorship alone would have dropped it.
-
-The sex condition is one-sided on purpose. A later paper may report less than the earlier
-one -- a re-report of 8F/4M cohorts that gives no sex split still fits -- but not more: 10 men
-from a coal-mine flood must not "fit" inside 12 fire survivors of unreported sex.
-
-Measured on the VBM-of-PTSD pool (experiments/stage-ablation/JOURNAL.md, E5): it makes the
-same two exclusions a model judging the same pairs made, and none of the pairs it keeps.
+Notes
+-----
+Condition 3 keeps a paper that adds a cohort: a re-report of 10 vs 10 survivors that adds 20
+new controls stays. The sex check is one-sided because a re-report often omits the sex split,
+while a cohort that states one cannot fit inside a cohort of unknown sex. Three shared authors,
+not two: two let papers about different disasters match. Examples and their papers are in
+experiments/stage-ablation/JOURNAL.md (E5, E13).
 """
 
 from __future__ import annotations
@@ -117,19 +107,23 @@ def cohorts(record: Mapping, status: Status = healthy_status) -> list[Cohort]:
 
 
 def _without_aggregates(cohorts: list[Cohort]) -> list[Cohort]:
-    """Drop a "whole sample" row: named as one, and as large as the others together.
+    """Drop a "whole sample" row: named as one, and as large as the other cohorts together.
 
-    Records carry one ("all subjects", 43; "whole sample", 32), and it is not a cohort but
-    the union of the rest. Kept, it cannot fit inside any single earlier cohort, so a
-    re-report stopped being one as soon as `repair` gave the row a medical condition. The
-    name is required as well as the sum: a later paper's 20 new controls beside 10 + 10
-    re-reported survivors add up the same way and are a real cohort.
+    The name is required as well as the sum, because a real cohort can equal the others'
+    total too (20 new controls beside 10 + 10).
     """
     sized = [c for c in cohorts if c.size is not None]
     total = sum(c.size for c in sized)
-    return [c for c in cohorts
-            if not (len(sized) >= 3 and c.size is not None and c.size * 2 == total
-                    and _AGGREGATE.search(c.name))]
+    return [
+        c
+        for c in cohorts
+        if not (
+            len(sized) >= 3
+            and c.size is not None
+            and c.size * 2 == total
+            and _AGGREGATE.search(c.name)
+        )
+    ]
 
 
 _AGGREGATE = re.compile(r"\b(all|whole|total|combined|entire|full)\b", re.I)

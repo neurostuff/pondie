@@ -64,30 +64,24 @@ Eight stages by default, and the order is the design:
 | `split` | no | a parse reporting both signs is two contrasts; the half the paper never describes is withheld and rebuilt by arithmetic |
 | `single` | yes | the whole record in one call, shown the stage-1 listing, held to the listing checks and to a dangling-reference check, retried with the faults named, keeping the best attempt |
 | `fill` | yes | asks for the slots still open, round after round, until none are — a shape for finishing an entity rather than deciding it exists |
-| `evidence` | yes | a supporting quote for every value — **45% of input tokens**. Changes no value a query reads |
-| `build` | no | merge, 22 repairs, resolve quotes to offsets, check 19 rules, write the record |
-| `repair` | optional | a second model proposes what the first missed, a third judges whether the paper supports it, and what neither settles goes back to the extraction model once |
+| `evidence` | yes | a supporting quote for every value. About 8% of input tokens on the single pass; changes no value a query reads |
+| `build` | no | merge, apply the 24 deterministic fixes in `record/fix/`, resolve quotes to offsets, validate, write the record |
+| `repair` | yes | the extraction model proposes what the record lacks, guards decide what is written, and scope/region contradictions are settled once |
 
-`demands` then `satisfy` is the older split of `single`, still run by naming both in
-`--stages`. Measured against `single` on three neurometabench meta-analyses
-([experiments/stage-ablation/JOURNAL.md](experiments/stage-ablation/JOURNAL.md)), it left
-records less able to answer a meta-analysis's criteria at 2.6× the calls: `satisfy` builds
-only what `demands` declared, and `demands` never declared an acquisition. What it protected
-against, a reply that references entities it then leaves out, is a post-condition of
-`single` instead. On the same `single` draw, `fill` added a paper and a correct exclusion,
-`evidence` and `repair` changed nothing a query reads.
+`demands` then `satisfy` is the earlier, two-call form of `single`, still run by naming both
+in `--stages`. How the two compare, and what each other stage adds to a meta-analysis query,
+is measured in [experiments/stage-ablation/JOURNAL.md](experiments/stage-ablation/JOURNAL.md).
 
 `demands` precedes `satisfy` because a cell cannot be righter than the term it points at:
 asked to guess an inventory first, the entity pass modelled a crossover's condition as a
 continuous covariate.
 
-`repair` runs on the record rather than on a payload, and is the only stage that can make one
-worse — so it validates its own output against its own input and reports what it introduced.
-Both of its halves are optional and independent: the local models want a GPU, the final
-adjudication wants only the gateway, and a host with neither still gets a validated record.
-Its proposer runs in-process or against a vLLM server, whichever `Settings.proposer_url`
-finds -- [docs/serving-the-proposer.md](docs/serving-the-proposer.md) covers starting one,
-stopping one without corrupting the compile cache, and why the projected schema is nullable.
+`repair` runs on the built record, and is the only stage that can make one worse, so it
+validates its output against its input and reports what it introduced. The extraction model
+proposes slot values class by class; deterministic guards in `repair/guard.py` refuse any
+edit that repeats, shortens or drops a supported value, or that no sentence in the paper
+places. One further call settles analyses whose scope contradicts their regions.
+`Settings.repair` and `Settings.adjudicate` turn the two halves off independently.
 
 A stage is a function of `(paper, settings, caller)`, not a subprocess, so it can be called
 from a test with a fake `Caller` and its cost is returned rather than scraped from logging.
@@ -116,12 +110,10 @@ pondie/extraction/
   corpus/     getting the paper on disk. An INPUT: a run reads it, never writes it
   prompt/     what the model is asked, and what the paper looks like when it is asked
   evidence/   which characters of the paper warrant each value, and whether they do
-  record/     turning the payloads into a record: assemble, repair, check, edit
-  tools/      things done to records afterwards; none of them runs inside a pipeline
+  record/     turning the payloads into a record: assemble, deterministic fixes, checks
+  repair/     model-proposed improvements to a built record, guarded
   models.py   the pydantic contracts that cross a boundary
-  recall.py   asking a second model for the entities and links the first missed
-  repair.py   improving a built record, and reporting what the attempt broke
-  stages.py driver.py llm.py parse.py
+  stages.py driver.py llm.py parse.py pubmed.py sign_split.py
 ```
 
 Every boundary is a named type, and writing them down found two bugs that were invisible
