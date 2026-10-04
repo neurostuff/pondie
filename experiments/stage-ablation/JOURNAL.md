@@ -820,3 +820,24 @@ the default here.
 sparser one. The negation bug was invisible until extraction got richer. pondie already has
 negation tooling (`normalization._negation`, `is_healthy`'s triage); the per-meta predicates
 should go through it rather than through ad hoc regexes.
+
+## P7. Reasoning effort `high`
+
+Three draws of the dementia panel at `effort=high`, completion off to match the B and medium
+panels (43 of 45 gold paper-draws scored; two calls still running when recorded).
+
+| effort | gold paper-draws selected | rate | panel negative selected | empty | calls/paper | output tok/paper | reasoning tok/paper | wall s/paper |
+|---|---|---|---|---|---|---|---|---|
+| low (B) | 37/60 | 0.62 | 2/4 | 2 | 2.00 | 17k | 0.8k | 182 |
+| medium | 36/45 | 0.80 | 2/3 | 0 | 1.73 | 28k | 6.6k | 737 |
+| high | 37/43 | 0.86 | **3/3** | 0 | 1.72 | **48k** | **12.9k** | 691 |
+
+- **High edges medium (0.86 against 0.80), within one standard error.** Most of the gain came
+  at low → medium. It is the first setting to select 30718430 in any draw (1/3); 31461580 is
+  still never selected.
+- **It costs about 1.7× medium's output and 2.8× low's.** Input and calls barely change, and wall
+  time is no worse than medium (both dominated by flex queueing).
+- **The panel's one negative (28474365) was selected in every high draw**, against half the
+  time at low and medium. That is the precision risk medium showed on substance use, more
+  analyses giving a wrong one more chances, and the panel has only one negative, so it cannot
+  measure it. Full PTSD and substance-use draws at high would.
