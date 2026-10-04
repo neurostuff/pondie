@@ -168,13 +168,17 @@ def for_single(evidence: str, silence: bool = False) -> dict[str, Any]:
     return single(reader.load(schema.EXTRACTION), evidence, silence)
 
 
-def fill(sch: Schema, rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    """The `fill` reply: every asked id, answered with a value of its type or a reason."""
+def fill(sch: Schema, rows: Sequence[Mapping[str, Any]], cite: bool = False) -> dict[str, Any]:
+    """The `fill` reply: every asked id, answered with a value of its type or a reason.
+    `cite` adds the numbers of the sentences that state a value (`evidence.cited`)."""
     reasons = {"type": "string", "enum": sorted(VOCABULARY | {PLAIN})}
     answers = {}
     for row in rows:
         typed = _value_type(sch, row.get("ranges") or [row["range"]], bool(row["multivalued"]))
-        answers[row["id"]] = {"anyOf": [_object({"value": typed}),
+        value = {"value": typed}
+        if cite:
+            value["evidence"] = {"type": "array", "items": {"type": "integer"}}
+        answers[row["id"]] = {"anyOf": [_object(value),
                                         _object({"unreported_reason": reasons})]}
     return _object(answers)
 

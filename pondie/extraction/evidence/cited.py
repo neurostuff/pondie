@@ -86,6 +86,18 @@ def _expand_indexed(payload: dict[str, Any], text: str) -> list[str]:
     return [f"{unknown} cited sentence number(s) name no sentence"] if unknown else []
 
 
+def quote_answers(answers: dict[str, Any], text: str) -> None:
+    """Replace each `fill` answer's cited sentence numbers with the sentences, in place."""
+    spans = sentence_spans(text)
+    for answer in answers.values():
+        if isinstance(answer, dict) and isinstance(answer.get("evidence"), list):
+            answer["evidence"] = [
+                text[spans[n - 1][0] : spans[n - 1][1]]
+                for n in answer["evidence"]
+                if isinstance(n, int) and 1 <= n <= len(spans)
+            ]
+
+
 _STEP = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
 
 

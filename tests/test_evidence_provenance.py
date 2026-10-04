@@ -99,3 +99,18 @@ def test_a_field_no_locator_placed_carries_no_set_to_label():
     evidence = acq["magnetic_strength"]["evidence"]
     assert evidence["status"] == "not_found"
     assert "sets" not in evidence
+
+
+def test_a_fields_own_resolvable_quote_is_kept_and_not_asked_again():
+    """`single` cites as it extracts; re-asking threw those quotes away and paid twice."""
+    text = "Scanning used a 3 T magnet. Twelve patients took part."
+    good = {"extraction_status": "extracted", "value": 3,
+            "evidence": {"status": "present", "sets": [{"quotes": ["Scanning used a 3 T magnet."]}]}}
+    bad = {"extraction_status": "extracted", "value": 12,
+           "evidence": {"status": "present", "sets": [{"quotes": ["12 patients took part"]}]}}
+    doc = {"acquisitions": [{"strength": good}], "groups": [{"n": bad}]}
+    kept = qz.own_evidence(doc, text)
+    assert kept == {"acquisitions[0].strength"}
+    qz.apply_evidence(doc, {}, kept=kept)
+    assert good["evidence"]["sets"][0]["quotes"] == ["Scanning used a 3 T magnet."]
+    assert bad["evidence"] == {"status": "not_found"}, "a quote not in the paper is re-asked"

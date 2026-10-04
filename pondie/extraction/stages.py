@@ -875,7 +875,10 @@ class Fill(_Base):
             return self._skip(paper, "no payloads to fill")
 
         sch = reader.load(render.EXTRACTION_SCHEMA)
-        text = paper.text.read_text(encoding="utf-8", errors="replace")
+        text = _paper_text(paper, settings)
+        indexed = _evidence_form(settings) == "indexed"
+        instructions = slots.SYSTEM + (slots.CITE_RULE if indexed else "")
+        shown = cited.numbered(text) if indexed else text
         cost, traces, notes = Cost(), [], []
         opened = closed = 0
 
@@ -902,14 +905,14 @@ class Fill(_Base):
                             # gateway caches a MESSAGE and not an arbitrary token prefix.
                             # Measured at 0% cached across this stage before the move. The
                             # same argument, and the same evidence, as `build_prompt`.
-                            system=f"{slots.SYSTEM}\n\n{render.paper_block(text)}",
+                            system=f"{instructions}\n\n{render.paper_block(shown)}",
                             prompt=f"{slots.block(batch)}\n" "Return the JSON object now.",
                             max_output_tokens=settings.max_output_tokens,
                             effort=settings.effort_for(self.name),
                             service_tier=settings.service_tier,
                             attempts=settings.attempts,
                             json_schema=(
-                                reply_schema.fill(sch, batch)
+                                reply_schema.fill(sch, batch, cite=indexed)
                                 if settings.structured_outputs
                                 else None
                             ),
@@ -924,6 +927,8 @@ class Fill(_Base):
                     break
                 cost = cost + reply.cost
                 traces.append((reply.trace_id, reply.cache_status))
+                if indexed:
+                    cited.quote_answers(reply.payload, text)
                 filled, reasoned, dropped = slots.apply_fill(payload, reply.payload, ids)
                 notes.append(
                     f"{target.name} round {round_number}: {len(batch)} asked, "
@@ -1012,6 +1017,7 @@ class Evidence(_Base):
             describe,
             iter_fields,
             literal_quotes,
+            own_evidence,
         )
 
         targets = self._payloads(paper, settings)
@@ -1029,6 +1035,8 @@ class Evidence(_Base):
                 shutil.copy(target, backup / target.name)
 
         text = paper.text.read_text(encoding="utf-8", errors="replace")
+        # What `build` resolves quotes against, so a kept citation is one it will place.
+        normalized = text_index.load(paper.text)[0]
         cost = Cost()
         traces: list[tuple[str, str]] = []
         truncated: list[str] = []
@@ -1042,10 +1050,13 @@ class Evidence(_Base):
             # then that's likely the evidence for that value.
             quotes: dict[str, str] = literal_quotes(payload, text)
             literal = set(quotes)
+            kept = own_evidence(payload, normalized)
             wanted = [
                 (path, field)
                 for path, field in iter_fields(payload)
-                if field.get("extraction_status") == "extracted" and path not in quotes
+                if field.get("extraction_status") == "extracted"
+                and path not in quotes
+                and path not in kept
             ]
             settled += len(quotes)
             for begin in range(0, len(wanted), self.batch):
@@ -1083,7 +1094,9 @@ class Evidence(_Base):
                 cost = cost + reply.cost
                 traces.append((reply.trace_id, reply.cache_status))
 
-            totals = totals + apply_evidence(payload, quotes, literal=frozenset(literal))
+            totals = totals + apply_evidence(
+                payload, quotes, literal=frozenset(literal), kept=frozenset(kept)
+            )
             target.write_text(
                 json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
             )

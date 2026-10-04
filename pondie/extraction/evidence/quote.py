@@ -23,6 +23,7 @@ import re
 from typing import Any
 
 from pondie.extraction.models import EvidenceCounts
+from pondie.extraction.record.spans import SpanResolutionError, resolve
 
 #: Paths per call. Large enough that a paper is a handful of calls, small enough
 
@@ -154,10 +155,32 @@ def iter_fields(node: Any, path: str = ""):
             yield from iter_fields(value, f"{path}[{index}]")
 
 
+def own_evidence(payload: dict[str, Any], text: str) -> set[str]:
+    """Paths whose field already carries evidence, every quote of which is in `text`.
+
+    The extraction pass is asked to cite as it extracts; a citation that resolves is the
+    one this stage would otherwise ask for again, at the cost of another read of the paper.
+    """
+    kept = set()
+    for path, field in iter_fields(payload):
+        evidence = field.get("evidence") if isinstance(field.get("evidence"), dict) else {}
+        quoted = [q for s in evidence.get("sets") or [] for q in s.get("quotes") or []]
+        if field.get("extraction_status") != "extracted" or not quoted:
+            continue
+        try:
+            for quote in quoted:
+                resolve(text, quote)
+        except SpanResolutionError:
+            continue
+        kept.add(path)
+    return kept
+
+
 def apply_evidence(
     payload: dict[str, Any],
     quotes: dict[str, str],
     literal: frozenset[str] | set[str] = frozenset(),
+    kept: frozenset[str] | set[str] = frozenset(),
 ) -> EvidenceCounts:
     """Put an evidence block on every field of a payload, in place.
 
@@ -165,6 +188,8 @@ def apply_evidence(
     `ExtractedValue`, and `build_record` leaves a field without one untouched -- so a
     missing block fails validation at the end of the run rather than here, where the
     reason is still visible.
+
+    A field in `kept` (`own_evidence`) keeps the evidence it came with.
 
     Three outcomes, and they are different claims. A field the paper did not report gets
     `not_applicable` -- there is no sentence to quote. A field with a quote, or a span the
@@ -175,6 +200,9 @@ def apply_evidence(
 
     counts = dict.fromkeys(EvidenceCounts.model_fields, 0)
     for path, field in iter_fields(payload):
+        if path in kept:
+            counts["filled"] += 1
+            continue
         if field.get("extraction_status") != "extracted":
             field.pop("value", None)
             field["evidence"] = {"status": "not_applicable"}

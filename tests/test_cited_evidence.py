@@ -54,3 +54,15 @@ def test_silent_default_becomes_plain_not_reported():
     cited.expand({"groups": [{"local_id": "g", "a": field, "b": kept}]}, "quotes", TEXT)
     assert field == {"extraction_status": "not_reported"}
     assert kept["unreported_reason"] == "outside_text"
+
+
+def test_a_fill_answer_cites_numbers_and_the_slot_gets_the_sentences():
+    from pondie.extraction.prompt import fill
+
+    payload = {"groups": [{"local_id": "grp_ptsd", "age_mean": None}]}
+    answers = {"groups[grp_ptsd].age_mean": {"value": 34.6, "evidence": [3, 77]}}
+    cited.quote_answers(answers, TEXT)
+    fill.apply_fill(payload, answers, ["groups[grp_ptsd].age_mean"])
+    age = payload["groups"][0]["age_mean"]
+    assert age["value"] == 34.6
+    assert age["evidence"]["sets"][0]["quotes"] == ["Their mean age was 34.6 years."]

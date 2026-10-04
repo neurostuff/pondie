@@ -78,6 +78,11 @@ Rules:
    term describes the situation records the field as blank when the paper settled it.
 7. Do not answer under an id that was not given to you. Ids you invent are discarded."""
 
+#: Added to SYSTEM when the paper is shown as numbered sentences (`evidence.cited`).
+CITE_RULE = """
+Each answer with a value also carries `evidence`: the numbers of the sentences that state
+it, as shown in brackets before each sentence of the paper ([S12]). Do not quote."""
+
 
 def _label(entity: Mapping[str, Any]) -> str:
     """What to call this entity, so the model knows which one it is answering about.
@@ -284,6 +289,9 @@ def apply_fill(
                 "value": answer["value"],
                 "value_source": "reported",
             }
+            quotes = [q for q in answer.get("evidence") or [] if isinstance(q, str)]
+            if quotes:  # cited by sentence number, read back by `evidence.cited`
+                target[name]["evidence"] = {"status": "present", "sets": [{"quotes": quotes}]}
             filled += 1
         elif answer.get("unreported_reason"):
             reason = str(answer["unreported_reason"])
