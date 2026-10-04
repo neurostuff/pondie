@@ -741,8 +741,9 @@ def check_cell_terms(record: Mapping[str, Any], findings: Findings) -> None:
             if not declared and term.get("interaction_with"):
                 findings.error(
                     f"{path}.level",
-                    f"is {level!r} but term {term_id!r} is a product column, whose cell "
-                    "names only a level of a categorical component, and only when signed",
+                    f"is {level!r} but term {term_id!r} is a product column, whose cell names "
+                    "a level only when signed and a component is continuous; two factors "
+                    "cross in their own cells",
                 )
             elif not declared:
                 findings.error(

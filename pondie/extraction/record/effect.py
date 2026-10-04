@@ -64,7 +64,9 @@ def levels_a_cell_may_name(
     term: Mapping[str, Any], terms: Mapping[str, Mapping[str, Any]], direction: Any
 ) -> tuple[str, ...]:
     """The levels a cell on `term` may name: a factor's own, or, for a signed cell on a
-    product column, those of its categorical components (whose slope the sign describes)."""
+    product column with a continuous component, those of its categorical components (whose
+    slope the sign describes). Two factors cross in their own cells, so a product of
+    factors offers none."""
 
     def declared(entry: Mapping[str, Any]) -> tuple[str, ...]:
         named = (values.read(level.get("level")) for level in entry.get("levels") or [])
@@ -74,12 +76,11 @@ def levels_a_cell_may_name(
         return own
     if not term.get("interaction_with") or values.read(direction) not in _SIGNED:
         return ()
-    return tuple(
-        name
-        for component in term["interaction_with"]
-        if isinstance(terms.get(component), Mapping)
-        for name in declared(terms[component])
-    )
+    components = [terms.get(c) for c in term["interaction_with"]]
+    named = [declared(c) if isinstance(c, Mapping) else () for c in components]
+    if all(named):
+        return ()
+    return tuple(name for levels in named for name in levels)
 
 
 UNDETERMINED_VARIATION = "undetermined:variation_level"

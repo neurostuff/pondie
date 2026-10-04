@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from pondie.extraction.record import ids
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import walk
-from pondie.extraction.record.effect import terms_in_scope
+from pondie.extraction.record.effect import levels_a_cell_may_name, terms_in_scope
 from pondie.formats import values
 from pondie.schema.reader import Schema
 from pondie.vocabularies import abbreviations
@@ -298,8 +298,6 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
     those instead.
     """
 
-    from pondie.extraction.record.effect import levels_a_cell_may_name, terms_in_scope
-
     models = {
         model["local_id"]: model
         for model in (body.get("model_estimations") or [])
@@ -390,6 +388,103 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
                 fixed.append(f"{path}: {level!r} moved to direction")
 
     return fixed
+
+
+def cross_products_of_factors(body: dict[str, Any]) -> list[str]:
+    """Rewrite a signed cell on a product of two factors as the factors' crossed cells.
+
+    Two factors cross in their own cells (`representing-models.md` §5.10), so a product
+    column of two factors decides nothing and its cell may name no level. 30343133 wrote its
+    group x time interactions that way anyway: `{term: group-by-time, level: PTSD,
+    direction: positive}`, "PTSD's change over time was positive relative to TD's". That is
+    `PTSD +, TD -, follow-up +, baseline -`.
+
+    Only where the reading is certain: both factors have two levels, the cell names a level
+    of one, the other's levels carry distinct `order` (later is positive), and no other cell
+    of the analysis names either factor.
+    """
+
+    models = {
+        model["local_id"]: model
+        for model in (body.get("model_estimations") or [])
+        if isinstance(model, Mapping) and isinstance(model.get("local_id"), str)
+    }
+    fixed: list[str] = []
+    for index, analysis in enumerate(body.get("analyses") or []):
+        effect = analysis.get("effect") if isinstance(analysis, dict) else None
+        if not isinstance(effect, dict) or not isinstance(effect.get("cells"), list):
+            continue
+        terms = terms_in_scope(analysis.get("model_estimation"), models)
+        for position, cell in enumerate(effect["cells"]):
+            crossed = _crossed_cells(cell, terms, effect["cells"])
+            if crossed is None:
+                continue
+            effect["cells"][position : position + 1] = crossed
+            fixed.append(
+                f"analyses[{index}].effect.cells[{position}]: product of factors "
+                f"{cell['term']!r} rewritten as crossed cells"
+            )
+            break  # the list changed under `position`; one product per analysis
+    return fixed
+
+
+def _crossed_cells(
+    cell: Any, terms: Mapping[str, Mapping[str, Any]], cells: list[Any]
+) -> list[dict[str, Any]] | None:
+    """The four cells `cross_products_of_factors` writes for `cell`, or None to leave it."""
+    if not isinstance(cell, Mapping):
+        return None
+    term = terms.get(cell.get("term"))
+    sign = values.read(cell.get("direction"))
+    named = values.read(cell.get("level"))
+    components = [terms.get(c) for c in (term or {}).get("interaction_with") or []]
+    if sign not in _OPPOSITE or not isinstance(named, str) or len(components) != 2:
+        return None
+    levels = [_levels_of(c) if isinstance(c, Mapping) else [] for c in components]
+    if any(len(pair) != 2 for pair in levels):
+        return None
+    sides = [i for i in (0, 1) if named in [name for name, _ in levels[i]]]
+    if len(sides) != 1:
+        return None
+    side, other = sides[0], 1 - sides[0]
+    orders = [order for _, order in levels[other]]
+    if not all(isinstance(o, int) for o in orders) or orders[0] == orders[1]:
+        return None
+    factors = {components[side]["local_id"], components[other]["local_id"]}
+    if any(isinstance(c, Mapping) and c.get("term") in factors for c in cells):
+        return None
+
+    def made(term_id: str, level: str, direction: str) -> dict[str, Any]:
+        return {
+            "term": term_id,
+            "level": values.wrap(level, source="generated", evidence="not_found"),
+            "direction": values.wrap(direction, source="generated", evidence="not_found"),
+        }
+
+    unnamed = next(name for name, _ in levels[side] if name != named)
+    earlier, later = sorted(levels[other], key=lambda pair: pair[1])
+    kept = {"term": components[side]["local_id"], "level": cell["level"],
+            "direction": cell["direction"]}
+    if cell.get("label") is not None:
+        kept["label"] = cell["label"]
+    return [
+        kept,
+        made(components[side]["local_id"], unnamed, _OPPOSITE[sign]),
+        made(components[other]["local_id"], later[0], "positive"),
+        made(components[other]["local_id"], earlier[0], "negative"),
+    ]
+
+
+_OPPOSITE = {"positive": "negative", "negative": "positive"}
+
+
+def _levels_of(term: Mapping[str, Any]) -> list[tuple[str, Any]]:
+    """A factor's declared levels, each with its `order` (None where unordered)."""
+    return [
+        (values.read(entry.get("level")), values.read(entry.get("order")))
+        for entry in term.get("levels") or []
+        if isinstance(entry, Mapping) and isinstance(values.read(entry.get("level")), str)
+    ]
 
 
 def scope_duplicate_terms(body: dict[str, Any]) -> list[str]:

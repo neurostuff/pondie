@@ -913,3 +913,8 @@ from. The schema now lets a signed product cell name a level of its categorical 
 (study_schema 'Let a signed product cell name whose slope its sign describes'), and §5.4's worked
 model shows `level: PTSD group`, the referent paper's own reading. Adjudicated PTSD records:
 36 → 32 errors, 40 → 42 valid, before a rebuild clears the two unsigned cells.
+Narrowed the same day: only a product with a continuous component may carry the level. Two
+factors cross in their own cells, so `build` now rewrites a signed product of two two-level
+factors as crossed cells when the other factor's levels carry `order` (later positive). Both
+30343133 group x time analyses came out as `PTSD ±, TD ∓, follow-up +, baseline -`, kind
+`interaction`. Rebuilt PTSD records: no level errors left, 28 → 30 valid before adjudication.

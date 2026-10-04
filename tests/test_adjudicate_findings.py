@@ -244,6 +244,71 @@ def test_a_product_cells_unmatched_level_is_put_as_a_choice_of_component_levels(
               if c.slot == "level"]
     assert case.options == ("PTSD", "control")
 
+
+def _group_by_time(direction="positive", ordered=True, extra_cells=()):
+    def level(name, order):
+        entry = {"level": _v(name)}
+        if ordered:
+            entry["order"] = _v(order)
+        return entry
+
+    return {
+        "model_estimations": [{"local_id": "mod_a", "terms": [
+            {"local_id": "trm_group", "name": _v("group"), "type": _v("categorical"),
+             "levels": [{"level": _v("TD")}, {"level": _v("PTSD")}]},
+            {"local_id": "trm_time", "name": _v("time"), "type": _v("categorical"),
+             "levels": [level("follow-up", 2), level("baseline", 1)]},
+            {"local_id": "trm_gxt", "name": _v("group by time"), "type": _v("continuous"),
+             "interaction_with": ["trm_group", "trm_time"]}]}],
+        "analyses": [{"local_id": "ana_1", "name": _v("Group x Time"),
+                      "model_estimation": "mod_a", "effect": {"kind": _v("interaction"), "cells": [
+                          {"term": "trm_gxt", "level": _v("PTSD"), "direction": _v(direction)},
+                          *extra_cells]}}],
+    }
+
+
+def _signs(record):
+    return {(c["term"], values.read(c["level"])): values.read(c["direction"])
+            for c in record["analyses"][0]["effect"]["cells"]}
+
+
+def test_a_product_of_two_factors_may_not_name_a_level():
+    """Two factors cross in their own cells, so the level there is reported, not accepted."""
+    validator = Validator(_sch(), None)
+    validator.check_record(_group_by_time())
+    assert any("two factors cross in their own cells" in e for e in validator.errors)
+
+
+@pytest.mark.parametrize("direction, ptsd, td", [("positive", "positive", "negative"),
+                                                 ("negative", "negative", "positive")])
+def test_a_signed_product_of_two_factors_is_rewritten_as_crossed_cells(direction, ptsd, td):
+    """30343133: "GMV decreased over time in TD youths, whereas youths with PTSD showed
+    slightly increasing GMV" was `{term: group-by-time, level: PTSD, direction: positive}`."""
+    from pondie.extraction.record.effect import derive_effect_kind, terms_in_scope
+
+    record = _group_by_time(direction)
+    assert link.cross_products_of_factors(record)
+    assert _signs(record) == {("trm_group", "PTSD"): ptsd, ("trm_group", "TD"): td,
+                              ("trm_time", "follow-up"): "positive",
+                              ("trm_time", "baseline"): "negative"}
+    cells = record["analyses"][0]["effect"]["cells"]
+    terms = terms_in_scope("mod_a", {"mod_a": record["model_estimations"][0]})
+    assert derive_effect_kind(cells, terms)[0] == "interaction"
+    validator = Validator(_sch(), None)
+    validator.check_record(record)
+    assert not [e for e in validator.errors if "level" in e or "effect.kind" in e]
+
+
+@pytest.mark.parametrize("record", [
+    _group_by_time(ordered=False),
+    _group_by_time(extra_cells=[{"term": "trm_time", "level": _v("baseline"),
+                                 "direction": _v("held")}]),
+], ids=["unordered", "factor-already-celled"])
+def test_a_product_of_factors_is_left_where_the_reading_is_not_certain(record):
+    before = _signs(record)
+    assert link.cross_products_of_factors(record) == []
+    assert _signs(record) == before
+
 def test_a_value_cannot_be_wrapped_with_not_applicable_evidence():
     """The schema reserves it for not_reported fields; seven writers got it wrong."""
     with pytest.raises(ValueError):

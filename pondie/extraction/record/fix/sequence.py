@@ -261,6 +261,13 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
+            "crossed_products",
+            "rewrite a signed cell on a product of two factors as their crossed cells",
+            lambda body, ctx: link.cross_products_of_factors(body),
+            after="directions",
+            stage="merged",
+        ),
+        Repair(
             "redundant_levels",
             "drop a cell level a continuous term cannot have and that says nothing new",
             lambda body, ctx: link.drop_redundant_cell_levels(body),
