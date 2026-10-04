@@ -1510,6 +1510,16 @@ def normalize(payload: dict[str, Any], mode: str) -> tuple[dict[str, Any], list[
                 payload[key] = hoisted
                 notes.append(f"hoisted {key!r} out of study to the top level")
 
+    # A pass's own outputs, filed under `study` by the model. Left there they reach the
+    # record as undeclared Study attributes, and the post-conditions, which read them at
+    # the top level, see a pass that declined nothing and declared nothing.
+    for key in ("omitted", "required_entities"):
+        nested = study.pop(key, None)
+        if isinstance(nested, list) and nested:
+            held = payload.get(key)
+            payload[key] = (held if isinstance(held, list) else []) + nested
+            notes.append(f"hoisted {key!r} out of study to the top level")
+
     for key in list(payload):
         # `required_entities` is a top-level output of the demands pass, not a stray Study
         # attribute; sweeping it under `study` would hide it and the next line drops it.

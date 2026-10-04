@@ -163,3 +163,44 @@ def test_completion_can_be_turned_off(tmp_path):
                         stages=(StageName.single,), complete_references=False)
     Single().run(_staged(tmp_path), settings, _scripted([dangling] * 3, seen))
     assert seen == ["single"] * 3
+
+
+def test_omitted_filed_under_study_is_hoisted_to_the_top_level():
+    """23021615: the reply nested `omitted` in `study`. It then reached the record as an
+    undeclared Study attribute, and the listing check, which reads the top level, saw the
+    pass decline nothing."""
+    reply = {"study": {"omitted": [{"key": "t1#1", "reason": "seed_coordinate"}]},
+             "analyses": [_analysis()]}
+    payload, notes = render.normalize(reply, "single")
+    assert payload["omitted"] == [{"key": "t1#1", "reason": "seed_coordinate"}]
+    assert "omitted" not in payload.get("study", {})
+    assert any("hoisted 'omitted'" in n for n in notes)
+    assert not render.unconsumed_listing(payload, {"t1#1"})
+
+
+def test_hoisting_omitted_keeps_what_was_already_at_the_top_level():
+    reply = {"omitted": [{"key": "t1#1", "reason": "localizer"}],
+             "study": {"omitted": [{"key": "t1#2", "reason": "seed_coordinate"}]},
+             "analyses": [_analysis()]}
+    payload, _ = render.normalize(reply, "single")
+    assert [o["key"] for o in payload["omitted"]] == ["t1#1", "t1#2"]
+
+
+def test_a_shopping_list_filed_under_study_still_reaches_satisfy():
+    reply = {"study": {"required_entities": [{"local_id": "grp_a", "kind": "Group"}]},
+             "analyses": [{**_analysis(), "effect": {"cells": [{}]}}]}
+    payload, _ = render.normalize(reply, "demands")
+    assert payload["required_entities"] == [{"local_id": "grp_a", "kind": "Group"}]
+
+
+def test_omitted_never_reaches_the_record(tmp_path):
+    import json
+
+    from pondie.extraction.record.builder import merge_payloads
+
+    reply = {"study": {"omitted": [{"key": "t1#1", "reason": "seed_coordinate"}]},
+             "analyses": [_analysis()]}
+    payload, _ = render.normalize(reply, "single")
+    (tmp_path / "single.json").write_text(json.dumps(payload))
+    body, _ = merge_payloads(tmp_path)
+    assert "omitted" not in body
