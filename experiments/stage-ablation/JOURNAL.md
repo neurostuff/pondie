@@ -1021,3 +1021,38 @@ which `fill` then re-asks.
   directions and 33 bare levels in five replies.
 
 Next: indexed on the 20 papers against the original and S0, then the meta-analysis.
+
+### Under strict decoding, the schema's key order is part of the prompt
+
+S0 on 20 PTSD papers, read after 8 had finished: 3 came back with every entity list empty
+(17892884: 0 analyses vs the original's 13; 26535944: 0 vs 8; 22453299: 0 vs 1) and others
+lost most of theirs (21498053: 8 → 1). The records were "valid" -- empty records are -- so the
+progress line looked healthy. Cause: strict decoding writes keys in schema order, and the
+schema put `analyses` after every entity list, while `SINGLE_NOTE` says "write `analyses`
+FIRST", because a reply that spends itself on entities first ends without them. Made to start
+on `groups`, the model wrote `[]` and moved on. With `analyses` first, the same two papers:
+
+| paper | original | S0 (groups first) | S1 quotes+silence | S2 indexed+silence |
+|---|---|---|---|---|
+| 26535944 | 8 analyses | 0 | 10 | 11 |
+| 17892884 | 13 | 0 | 9 | – |
+
+S1/S2 cover every result the original found on 26535944 and split the three-group comparisons
+more finely. On 17892884 S1 missed four secondary analyses (adjusted hippocampus; the
+group × gender ANCOVA). S2 cited sentences for all 366 values, none out of range.
+
+The S0 and first indexed arms were stopped once this was found (lesson saved: read the first
+outputs of any run over ~10 minutes).
+
+### Baseline: the original pipeline on the 20 papers
+
+Recall 9/10 and precision 0.90 (1 false positive of 9) against the adjudicated labels;
+10/20 records valid (52 errors); 104 calls (single 35 -- about 15 retries --, fill 34,
+evidence 35), 689k output tokens (single 468k).
+
+### The evidence stage discarded `single`'s quotes
+
+`Evidence` asked the model for a quote for every extracted field and overwrote what the field
+carried, so every quote `single` wrote (a large share of its output) was thrown away and paid
+for again. It now keeps a field's own evidence when every quote resolves to the text `build`
+reads, and asks only for the rest. In the indexed format `fill` also cites sentence numbers.
