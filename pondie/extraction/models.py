@@ -228,8 +228,8 @@ class Settings(Strict):
     fill_batch: Annotated[int, Field(ge=1)] = 250
 
     #: Put the contradictions nothing else could settle to the extraction model, once per
-    #: record, with the paper. Costs one call for a record that has one, and nothing for a
-    #: record that does not -- 8 cases across 42 records measured.
+    #: record, with the paper (`repair.contradictions`). One call for a record that has
+    #: any, none for a record that does not.
     adjudicate: bool = True
     redo: bool = False
     #: After `single`'s attempts, ask once for only the entities its references name and it

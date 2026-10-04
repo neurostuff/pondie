@@ -163,7 +163,7 @@ def _manifest_value(text: str | None) -> dict:
     """A literal copied from a table source wrapped in the evidence class
     from the extraction schema.
     """
-    return values.wrap(text or None, source="reported", evidence="not_applicable")
+    return values.wrap(text or None, source="reported", evidence="not_found")
 
 
 @dataclass(frozen=True)

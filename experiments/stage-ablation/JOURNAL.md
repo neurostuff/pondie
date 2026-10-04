@@ -877,3 +877,28 @@ These fixes run at `build`, so the same payloads could be rebuilt with no model 
 corrections that never name their regions (85), and cell levels that don't match the term's
 declared levels (16). Those are for the prompt or repair. Commits 092c852 (pondie) and
 7fbf270 (study_schema).
+
+## The adjudicator settles the validator's content findings
+
+The 107 errors left after the formatting fixes were content, and repair's adjudicator only
+knew one kind (a whole-brain scope beside named regions). It now also takes an ROI scope
+naming no region (85), a cell level none of its term's declared levels spells (2), and an
+effect kind its cells contradict (6), still in one call per record, at `repair`'s medium
+effort. A level repeating the analysis's only group (`'PTSD group'` on a CAPS correlation
+within PTSD) is dropped by code instead.
+
+`adjudicate_only.py` over the 55 rebuilt PTSD records, no proposer sweep: 25 calls,
+**107 → 36 errors, 27 → 40 records valid**. 57 ROI cases named their regions, 11 were
+rescoped to whole brain, 11 left unresolved, 4 refused by the warrant guard, 2 quotes
+rejected.
+
+The first attempt validated better (42) and was worse: the prompt's "or the paper's own
+words" came back verbatim as `definition_method`, and with no way to say "not named" the
+model invented "Parcellation region 1 (prefrontal cortex)". With `not_reported` allowed and
+"answer unresolved if the paper does not name them one by one", the regions are anatomical
+names and the methods are the paper's ("manually traced", "FSL FIRST"). 13 quotes were also
+rejected for tidying `(Figure  1 )` into `(Figure 1)`; the resolver now allows any spacing
+beside brackets and punctuation.
+
+Remaining: 14 ROI analyses (unresolved or refused), 6 levels on crossed `group × score`
+terms typed continuous (a model-structure question), 6 kinds, and singletons.

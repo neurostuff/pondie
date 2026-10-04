@@ -93,7 +93,9 @@ def fold_label(value: str) -> str:
 
 
 def _tolerant_pattern(quote: str, *, ignore_case: bool = False) -> re.Pattern[str]:
-    """Build a regex matching the quote with any whitespace run between tokens.
+    """Build a regex matching the quote with any whitespace run between words, and any or
+    none beside brackets and punctuation, which renders spaced inconsistently: a model
+    quotes `(Figure  1 ).` as `(Figure 1).`
 
     `ignore_case` is the third pass `resolve` tries, and it is a separate pass rather than a
     flag on the second so that no quote which already matches can match somewhere *else*:
@@ -108,10 +110,18 @@ def _tolerant_pattern(quote: str, *, ignore_case: bool = False) -> re.Pattern[st
     `EvidenceSpan.text` is still the document substring rather than the model's quote.
     """
 
-    tokens = [re.escape(token) for token in fold(quote).split()]
+    tokens = _TOKEN.findall(fold(quote))
     if not tokens:
         raise SpanResolutionError("quote is empty")
-    return re.compile(r"\s+".join(tokens), re.IGNORECASE if ignore_case else 0)
+    pattern = re.escape(tokens[0])
+    for before, token in zip(tokens, tokens[1:]):
+        words = _PUNCTUATION.fullmatch(before) is None and _PUNCTUATION.fullmatch(token) is None
+        pattern += (r"\s+" if words else r"\s*") + re.escape(token)
+    return re.compile(pattern, re.IGNORECASE if ignore_case else 0)
+
+
+_PUNCTUATION = re.compile(r"[()\[\],;:.]")
+_TOKEN = re.compile(r"[()\[\],;:.]|[^\s()\[\],;:.]+")
 
 
 #: An elision a model writes when it joins two non-adjacent fragments of a sentence:

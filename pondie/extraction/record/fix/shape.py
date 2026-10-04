@@ -435,7 +435,7 @@ def rehome_misplaced(body: dict[str, Any], sch: Schema) -> list[str]:
 
 
 #: Strings a model writes as a value when it means the slot's status.
-_STATUS_WORDS = {"not_reported", "not reported"}
+STATUS_WORDS = {"not_reported", "not reported"}
 
 
 def status_as_value(body: dict[str, Any], sch: Schema) -> list[str]:
@@ -451,7 +451,7 @@ def status_as_value(body: dict[str, Any], sch: Schema) -> list[str]:
             value = field.get("value")
         else:
             value = field
-        if isinstance(value, str) and value.strip().lower() in _STATUS_WORDS:
+        if isinstance(value, str) and value.strip().lower() in STATUS_WORDS:
             slot.owner[slot.key] = values.wrap(None, source="reported", evidence="not_found")
             fixed.append(f"{slot.path}: 'not_reported' written as a value")
     return fixed

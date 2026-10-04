@@ -11,8 +11,8 @@ narrowing at each one:
   2. **guard** -- `repair.guard` refuses the writes that would damage the record, and says
      why. Every write goes past it, step 3 included.
   3. **adjudicate** -- what is left is a contradiction the record cannot settle from its own
-     contents. That goes to the model, once, with the paper, and its answer is written
-     through the same guards as everything else.
+     contents (`contradictions` lists the kinds). That goes to the model, once, with the
+     paper, and its answer is written through the same guards as everything else.
 
 There used to be a **ground** step between 1 and 2: a local entailment model scored each
 proposal against the passage offered for it. It went with the local models, and the guards
@@ -32,7 +32,14 @@ from typing import Any, Mapping, MutableMapping
 from pondie.extraction.evidence.retrieval import sectionize
 from pondie.extraction.models import ModelCall
 from pondie.extraction.prompt import render
+from pondie.extraction.record import rules
 from pondie.extraction.record import spans as span_tools
+from pondie.extraction.record.effect import (
+    NO_LABEL,
+    UNDETERMINED_VARIATION,
+    derive_effect_kind,
+    terms_in_scope,
+)
 from pondie.extraction.record.validate import EXTRACTION_SCHEMA, Validator
 from pondie.extraction.repair import guard as edit_module
 from pondie.extraction.repair.guard import UNRESTRICTED, Edit, Refusal, refusals
@@ -53,6 +60,11 @@ You resolve contradictions in a structured record extracted from a neuroimaging 
 Each case names fields of the record that cannot all be true, and lists the values each may
 take. Answer with the value the paper supports and one verbatim sentence from the paper that
 shows it. Copy the sentence exactly; do not paraphrase, join, or trim it.
+
+A case that asks for regions is a region-of-interest procedure with none named. If it was
+restricted to regions, answer "roi" and name each region as the paper names it -- no
+numbering, no description of where it lies. If the paper does not name them one by one,
+answer "unresolved". If the procedure was not restricted, answer the scope it had.
 
 Answer "unresolved" whenever the paper does not settle the case -- when it is silent,
 ambiguous, or describes something the options do not cover. The record already reports the
@@ -97,22 +109,35 @@ class Case:
     slot: str
     #: Cleared when the answer makes the slot beside it inapplicable.
     clears: str = ""
+    #: Where `slot` sits below the entity: `("effect", "cells", 0)` for a cell's level.
+    within: tuple[str | int, ...] = ()
+    #: The reference slot an answer of `roi` fills with the regions it names.
+    names: str = ""
+
+
+#: The scope/regions pairs: what volume was searched, and the regions it was restricted to.
+_SCOPE_PAIRS = (
+    ("analyses", "Analysis", "spatial_scope", "regions"),
+    ("inference_settings", "InferenceSettings", "correction_scope", "correction_regions"),
+)
 
 
 def contradictions(record: Mapping[str, Any], sch: Schema) -> list[Case]:
-    """The scope/regions pairs that disagree.
+    """The validator's findings that can be put as "choose one of these and quote it".
 
-    Only this family, and deliberately: a case is adjudicable when it can be put as "choose
-    one of these and quote the sentence". Of the findings a repaired record carries, the
-    largest group is dangling references caused by a deletion -- for which the answer is not
-    to delete, not to ask. Measured over 42 records: 209 findings, of which 8 are these.
+    - a whole-brain or searchlight scope beside named regions, and an ROI scope beside none;
+    - a cell level that none of its term's declared levels spells;
+    - an `effect.kind` its own cells contradict.
+
+    Not dangling references, the largest group a repaired record carries: those come from a
+    deletion, and the answer is not to delete rather than to ask.
     """
+    return _scopes(record, sch) + _levels(record) + _kinds(record)
+
+
+def _scopes(record: Mapping[str, Any], sch: Schema) -> list[Case]:
     out: list[Case] = []
-    pairs = (
-        ("analyses", "Analysis", "spatial_scope", "regions"),
-        ("inference_settings", "InferenceSettings", "correction_scope", "correction_regions"),
-    )
-    for container, class_name, scope_slot, region_slot in pairs:
+    for container, class_name, scope_slot, region_slot in _SCOPE_PAIRS:
         attribute = sch.attributes(class_name).get(scope_slot)
         options = tuple(
             getattr(sch.enums.get(r), "permissible_values", {}) or {}
@@ -124,25 +149,167 @@ def contradictions(record: Mapping[str, Any], sch: Schema) -> list[Case]:
                 continue
             scope = str(values.read(entity.get(scope_slot)) or "").strip().lower()
             regions = entity.get(region_slot) or []
-            if scope not in UNRESTRICTED or not regions:
+            where = f"{container}/{entity.get('local_id')}"
+            if scope in UNRESTRICTED and regions:
+                named = ", ".join(_label(record, r) for r in regions)
+                out.append(
+                    Case(
+                        id=f"{where}/{scope_slot}",
+                        question=(
+                            f"{scope_slot} is '{scope}' while {region_slot} names {named}. "
+                            f"A whole-brain or searchlight procedure is restricted to no "
+                            f"region, so at most one of these is right."
+                        ),
+                        options=allowed,
+                        container=container,
+                        local_id=str(entity.get("local_id")),
+                        slot=scope_slot,
+                        clears=region_slot,
+                    )
+                )
+            elif scope == "roi" and not regions:
+                out.append(
+                    Case(
+                        id=f"{where}/{region_slot}",
+                        question=(
+                            f"{class_name} {edit_module.label_of(entity)!r} has {scope_slot} "
+                            f"'roi' and names no {region_slot}. Which regions was it "
+                            f"restricted to?"
+                        ),
+                        options=allowed,
+                        container=container,
+                        local_id=str(entity.get("local_id")),
+                        slot=scope_slot,
+                        names=region_slot,
+                    )
+                )
+    return out
+
+
+def _levels(record: Mapping[str, Any]) -> list[Case]:
+    models = rules.model_index(record)
+    out: list[Case] = []
+    for analysis in record.get("analyses") or []:
+        if not isinstance(analysis, Mapping):
+            continue
+        terms = terms_in_scope(analysis.get("model_estimation"), models)
+        cells = (analysis.get("effect") or {}).get("cells") or []
+        for position, cell in enumerate(cells):
+            if not isinstance(cell, Mapping):
                 continue
-            named = ", ".join(_label(record, r) for r in regions)
+            term = terms.get(cell.get("term"))
+            level = values.read(cell.get("level"))
+            if term is None or not isinstance(level, str):
+                continue
+            declared = tuple(
+                name
+                for name in (values.read(e.get("level")) for e in term.get("levels") or [])
+                if isinstance(name, str)
+            )
+            if not declared or level in declared:
+                continue  # no levels at all is the term's type, not a spelling to choose
             out.append(
                 Case(
-                    id=f"{container}/{entity.get('local_id')}/{scope_slot}",
+                    id=f"analyses/{analysis.get('local_id')}/effect.cells[{position}].level",
                     question=(
-                        f"{scope_slot} is '{scope}' while {region_slot} names {named}. "
-                        f"A whole-brain or searchlight procedure is restricted to no "
-                        f"region, so at most one of these is right."
+                        f"A cell of analysis {edit_module.label_of(analysis)!r} names level "
+                        f"{level!r} of term {edit_module.label_of(term)!r}, which declares "
+                        f"only the levels listed. Which one does the cell mean?"
                     ),
-                    options=allowed,
-                    container=container,
-                    local_id=str(entity.get("local_id")),
-                    slot=scope_slot,
-                    clears=region_slot,
+                    options=declared,
+                    container="analyses",
+                    local_id=str(analysis.get("local_id")),
+                    slot="level",
+                    within=("effect", "cells", position),
                 )
             )
     return out
+
+
+def _kinds(record: Mapping[str, Any]) -> list[Case]:
+    models = rules.model_index(record)
+    out: list[Case] = []
+    for analysis in record.get("analyses") or []:
+        if not isinstance(analysis, Mapping):
+            continue
+        effect = analysis.get("effect")
+        if not isinstance(effect, Mapping):
+            continue
+        terms = terms_in_scope(analysis.get("model_estimation"), models)
+        derived, why = derive_effect_kind(effect.get("cells"), terms)
+        stated = values.read(effect.get("kind"))
+        if derived in (NO_LABEL, UNDETERMINED_VARIATION) or stated in (None, derived):
+            continue
+        out.append(
+            Case(
+                id=f"analyses/{analysis.get('local_id')}/effect.kind",
+                question=(
+                    f"Analysis {edit_module.label_of(analysis)!r} says its effect is "
+                    f"{stated!r}, but its cells describe {derived!r} ({why}). Which is the "
+                    f"test the paper reports?"
+                ),
+                options=(derived, str(stated)),
+                container="analyses",
+                local_id=str(analysis.get("local_id")),
+                slot="kind",
+                within=("effect",),
+            )
+        )
+    return out
+
+
+def _descend(entity: Any, path: tuple[str | int, ...]) -> MutableMapping[str, Any] | None:
+    node = entity
+    for step in path:
+        try:
+            node = node[step]
+        except (KeyError, IndexError, TypeError):
+            return None
+    return node if isinstance(node, MutableMapping) else None
+
+
+def _name_regions(
+    record: MutableMapping[str, Any],
+    sch: Schema,
+    entity: MutableMapping[str, Any],
+    case: Case,
+    row: Mapping[str, Any],
+    text: str,
+    quote: str,
+    abbreviations: Any,
+    report: Report,
+) -> None:
+    """Point `case.names` at the regions an answer named, declaring the ones not yet held."""
+    named: list[str] = []
+    for proposal in row.get("regions") or []:
+        if isinstance(proposal, str):
+            proposal = {"name": proposal}
+        if not isinstance(proposal, Mapping):
+            continue
+        held = edit_module.resolve(record, sch, "Region", proposal.get("name"), abbreviations)
+        if held:
+            named += [r for r in held if r not in named]
+            continue
+        region, why = edit_module.create(
+            sch, record, "Region", proposal, text, abbreviations, quote=quote
+        )
+        if region is None:
+            report.refused.append(Refusal("regions", why, proposal.get("name")))
+            continue
+        record.setdefault("regions", []).append(region)
+        report.written.append(f"regions/{region['local_id']} created")
+        named.append(region["local_id"])
+    if not named:
+        report.adjudicated.append(f"{case.id}: unresolved, no region could be named")
+        return
+    class_name = sch.classes_by_container()[case.container]
+    log = edit_module.apply(sch, record, class_name, entity, {case.names: named}, text)
+    report.written += [f"{case.container}/{case.local_id}.{s}" for s, _v in log.written]
+    report.refused += log.refused
+    if log.written:
+        report.adjudicated.append(f"{case.id}: roi, {', '.join(named)}")
+    else:
+        report.adjudicated.append(f"{case.id}: refused, {log.refused[0].why}")
 
 
 def _label(record: Mapping[str, Any], local_id: str) -> str:
@@ -166,6 +333,7 @@ def adjudicate(
     report: Report,
     service_tier: str = "",
     effort: str = "low",
+    abbreviations: Any = None,
 ) -> Any:
     """Put the unresolved contradictions to the extraction model, once, with the paper.
 
@@ -179,9 +347,10 @@ def adjudicate(
         return None
     listing = "\n\n".join(
         f"case {i + 1} (id {c.id}):\n  {c.question}\n"
-        f"  permissible values: {', '.join(c.options)}, or unresolved"
+        f"  permissible values: {', '.join(repr(o) for o in c.options)}, or unresolved"
         for i, c in enumerate(cases)
     )
+    methods = getattr(sch.enums.get("RegionDefinition"), "permissible_values", {}) or {}
     reply = caller(
         ModelCall(
             model=model,
@@ -189,13 +358,18 @@ def adjudicate(
             # in `propose_with_extractor._generate`.
             system=f"{ADJUDICATION_SYSTEM}\n\n{render.paper_block(text)}",
             effort=effort,
-            max_output_tokens=4_000,
+            # Room for reasoning: at medium effort it is spent from the same budget.
+            max_output_tokens=16_000,
             service_tier=service_tier,
             prompt=(
                 f"## Cases\n\n{listing}\n\n"
                 'Reply as {"resolutions": [{"id": ..., "value": ..., '
                 '"quote": ...}]}, using the case id verbatim and an empty quote '
-                "for anything unresolved."
+                "for anything unresolved. For a case that asks for regions, answered "
+                '"roi", add "regions": [{"name": ..., "definition_method": ...}], where '
+                "definition_method is how the region was delimited: one of "
+                f"{', '.join(methods)}; else a few words of the paper's saying how "
+                '(e.g. "manually traced"); else "not_reported".'
             ),
         ),
         paper=study_id,
@@ -218,7 +392,9 @@ def adjudicate(
             span = span_tools.resolve(text, quote).as_record()
             span_tools.verify(text, span)
         except Exception:
-            report.adjudicated.append(f"{case.id}: rejected, the quote is not in the paper")
+            report.adjudicated.append(
+                f"{case.id}: rejected, the quote is not in the paper ({quote[:80]!r})"
+            )
             continue
         entity = next(
             (
@@ -228,22 +404,25 @@ def adjudicate(
             ),
             None,
         )
-        if entity is None:
+        owner = _descend(entity, case.within)
+        if owner is None:
+            continue
+        if case.names and value not in UNRESTRICTED:
+            _name_regions(record, sch, entity, case, row, text, quote, abbreviations, report)
+            continue
+        if values.read(owner.get(case.slot)) == value:
+            report.adjudicated.append(f"{case.id}: kept {value}")
             continue
         # Through the guards, like every other write. Coercing a cited scope to a bare enum
-        # is exactly the shape `refuses_losing_the_warrant` exists for, and step 4 was the
-        # one path that bypassed it.
-        #
-        # The quote goes with it. It was resolved against this paper's text just above, so
-        # withholding it left `refuses_an_unwarranted_replacement` judging a cited edit as
-        # though it had arrived bare -- refusing the one write on this path that had already
-        # proved itself.
-        edit = Edit(record, entity, case.slot, value, text, quote)
+        # is exactly the shape `refuses_losing_the_warrant` exists for. The quote goes with
+        # it: it was resolved against this paper just above, and without it
+        # `refuses_an_unwarranted_replacement` would judge a cited edit as a bare one.
+        edit = Edit(record, owner, case.slot, value, text, quote)
         if refused := refusals(edit):
             report.refused.extend(refused)
             report.adjudicated.append(f"{case.id}: refused, {refused[0].why}")
             continue
-        entity[case.slot] = {
+        owner[case.slot] = {
             "extraction_status": "extracted",
             "value": value,
             "value_source": "reported",
@@ -253,7 +432,7 @@ def adjudicate(
             },
         }
         if case.clears and value in UNRESTRICTED:
-            entity[case.clears] = []
+            owner[case.clears] = []
         report.adjudicated.append(f"{case.id}: {value}")
     # Returned, not logged. `llm.py`: "Cost is returned rather than logged, because a stage
     # that has to scrape its own spend out of its own logging cannot be summed."
@@ -307,6 +486,7 @@ def run(
             report=report,
             service_tier=service_tier,
             effort=effort,
+            abbreviations=abbreviations,
         )
         if reply is not None:
             report.cost = reply.cost

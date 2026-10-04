@@ -240,13 +240,38 @@ def _restates(one: Any, other: Any) -> bool:
     return bool(left and right) and (left in right or right in left)
 
 
+#: Words that name no particular group, and the spellings of "not" a group name uses.
+_GROUP_FILLER = frozenset({"group", "groups", "subjects", "participants", "sample", "the"})
+_NEGATIONS = {"non": "non", "no": "non", "without": "non", "not": "non"}
+
+
+def _restates_the_only_group(
+    level: str, analysis: Mapping[str, Any], groups: Mapping[str, str]
+) -> bool:
+    """Whether `level` names the one group the analysis ran in: `PTSD group` beside
+    `recent onset PTSD`. A negation on one side only (`PTSD` beside `non-PTSD`) is not."""
+    named = [
+        entry.get("group") if isinstance(entry, Mapping) else entry
+        for entry in analysis.get("groups") or []
+    ]
+    if len(named) != 1 or named[0] not in groups:
+        return False
+
+    def words(text: str) -> set[str]:
+        found = re.findall(r"[a-z0-9]+", text.lower())
+        return {_NEGATIONS.get(w, w) for w in found} - _GROUP_FILLER
+
+    said, group = words(level), words(groups[named[0]])
+    return bool(said) and said <= group and ("non" in said) == ("non" in group)
+
+
 def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
     """Drop a `Cell.level` that a continuous term cannot have and that says nothing new.
 
     A continuous term declares no levels, so `check_cell_terms` errors on any cell naming
     one: 1,204 errors over 527 papers, the largest error class in the corpus, and 1,185 of
-    the 1,205 are on a term typed continuous. Two of the three shapes carry no information
-    and are removed here.
+    the 1,205 are on a term typed continuous. Three shapes carry no information and are
+    removed here.
 
       restates the term  547 (46%). `BMI` on term `BMI`, `age` on `age`, `pack-years` on
                          `pack-years`. A regressor's cell has no level, and naming it after
@@ -255,7 +280,10 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
       duplicates the     185 (16%). `positive` where `direction` already says positive.
       direction          `Cell.direction` is where the sign lives and it is already right.
 
-    The third shape is left alone: 424 cells name a genuinely categorical level on a term
+      restates the       `PTSD group` on a CAPS correlation run within the PTSD group only.
+      only group         `Analysis.groups` already says whose scores these are.
+
+    A fourth shape is left alone: 424 cells name a genuinely categorical level on a term
     whose `type` is wrong. Fixing that means flipping the type *and* synthesising the levels
     the term should have declared, which is a claim about the model rather than a tidy-up, so
     `check_cell_terms` keeps reporting it.
@@ -273,6 +301,11 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
         model["local_id"]: model
         for model in (body.get("model_estimations") or [])
         if isinstance(model, Mapping) and isinstance(model.get("local_id"), str)
+    }
+    groups = {
+        group["local_id"]: str(values.read(group.get("name")) or "")
+        for group in (body.get("groups") or [])
+        if isinstance(group, Mapping) and isinstance(group.get("local_id"), str)
     }
     fixed: list[str] = []
     for index, analysis in enumerate(body.get("analyses") or []):
@@ -308,6 +341,10 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
                 cell.pop("level", None)
                 fixed.append(f"{path}: {level!r} restated term {term_id!r} -- dropped")
                 continue
+            if _restates_the_only_group(level, analysis, groups):
+                cell.pop("level", None)
+                fixed.append(f"{path}: {level!r} restated the analysis's only group -- dropped")
+                continue
             polarity = _LEVEL_POLARITY.get(str(level).strip().lower())
             if polarity is None:
                 continue
@@ -335,7 +372,7 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
                 # Only where `direction` is genuinely absent. `undirected` is an answer, not
                 # a gap, and overwriting it would replace a stated fact with an inference.
                 cell["direction"] = values.wrap(
-                    polarity, source="generated", evidence="not_applicable"
+                    polarity, source="generated", evidence="not_found"
                 )
                 cell.pop("level", None)
                 fixed.append(f"{path}: {level!r} moved to direction")

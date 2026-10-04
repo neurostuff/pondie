@@ -25,7 +25,7 @@ from dataclasses import field as dataclass_field
 from typing import Any, Callable, Mapping, MutableMapping
 
 from pondie.extraction.record import ids, spans as span_tools
-from pondie.extraction.record.fix import derive
+from pondie.extraction.record.fix import derive, shape
 from pondie.extraction.record.effect import terms_in_scope
 from pondie.extraction.record.ids import label_of
 from pondie.extraction.record.validate import EXTRACTION_SCHEMA
@@ -446,8 +446,10 @@ def create(
     proposal: Mapping[str, Any],
     text: str = "",
     abbreviations: Any = None,
+    quote: str = "",
 ) -> tuple[dict | None, str]:
-    """A new entity from `proposal`, or `(None, why not)`.
+    """A new entity from `proposal`, or `(None, why not)`. `quote`, a sentence already
+    placed in `text`, warrants each value it states.
 
     Two conditions, both read from the schema rather than chosen here.
 
@@ -504,9 +506,13 @@ def create(
         # fill, and `apply` writes the rest through `_nested` once the entity exists.
         if name in ("local_id", "id") or name not in proposal or kind in ("reference", "nested"):
             continue
+        if str(proposal[name]).strip().lower() in shape.STATUS_WORDS:
+            # A required slot the source is silent on still carries the slot, as a status.
+            entity[name] = values.wrap(None, source="reported", evidence="not_applicable")
+            continue
         value = values.shape(sch, class_name, name, proposal[name])
         if value is not None:
-            entity[name] = _wrap(value, text)
+            entity[name] = _wrap(value, text, quote=quote if _warrants(quote, value) else "")
 
     entity.update(_nested_defaults(sch, record, class_name, proposal, text))
     entity.update(_derived(sch, class_name, entity))

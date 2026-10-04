@@ -96,13 +96,22 @@ def wrap(
     evidence: EvidenceStatus,
     reason: UnreportedReason | None = None,
 ) -> dict[str, Any]:
-    """A wrapper around `value`, or a `not_reported` one when there is no value."""
+    """A wrapper around `value`, or a `not_reported` one when there is no value.
+
+    Raises
+    ------
+    ValueError
+        For a value with `not_applicable` evidence, which the schema reserves for
+        `not_reported` fields. A value code produced is `generated` + `not_found`.
+    """
     if value is None or value == "":
         return ExtractedValue(
             extraction_status="not_reported",
             unreported_reason=reason,
             evidence=Evidence(status="not_applicable"),
         ).as_field()
+    if evidence == "not_applicable":
+        raise ValueError(f"a value ({value!r}) cannot have not_applicable evidence")
     return ExtractedValue(
         extraction_status="extracted",
         value=value,

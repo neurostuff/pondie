@@ -177,7 +177,7 @@ def derive_table_effects(body: dict[str, Any]) -> list[str]:
         # An analysis cites it, so any other kind contradicts the record rather than
         # describing it -- which is the contradiction `check_table_content` reports.
         table["purpose"] = values.wrap(
-            "reported_effect", source="generated", evidence="not_applicable"
+            "reported_effect", source="generated", evidence="not_found"
         )
         filled.append(f"tables[{index}].purpose" + (f": was {held!r}" if held else ""))
     return filled
@@ -238,7 +238,7 @@ def derive_denominators(body: dict[str, Any]) -> list[str]:
                         "extraction_status": "extracted",
                         "value": int(base),
                         "value_source": "generated",
-                        "evidence": {"status": "not_applicable"},
+                        "evidence": {"status": "not_found"},
                     }
                 filled.append(f"{owner}[{index}].{slot}.denominator = {int(base)}")
     return filled
@@ -524,7 +524,7 @@ def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> 
         ]
         if len(same) == 1 and wanted:
             analysis["source_table_analysis"] = values.wrap(
-                same[0], source="generated", evidence="not_applicable"
+                same[0], source="generated", evidence="not_found"
             )
             notes.append(
                 f"{path}: filled {same[0]!r} from the parsed analysis of the " f"same name"

@@ -213,7 +213,7 @@ def mirror_analysis(described: dict, withheld: dict, parse_key: str = "") -> dic
     reversed_name = (withheld or {}).get("name")
     if reversed_name:
         mirrored["name"] = values.wrap(
-            str(reversed_name), source="generated", evidence="not_applicable"
+            str(reversed_name), source="generated", evidence="not_found"
         )
 
     # The reversed half's coordinates are reached the way every other analysis reaches
@@ -226,11 +226,10 @@ def mirror_analysis(described: dict, withheld: dict, parse_key: str = "") -> dic
     mirrored.pop("coordinates", None)
     if parse_key:
         # A wrapper and not a bare string: the slot is `model_extracted`, so it projects
-        # into the extraction schema as an ExtractedString. `generated` because the key is
-        # the parse's, and `not_applicable` because no sentence of the paper warrants a
-        # reversal it never describes.
+        # into the extraction schema as an ExtractedString, `generated` because the key is
+        # the parse's and no sentence of the paper warrants a reversal it never describes.
         mirrored["source_table_analysis"] = values.wrap(
-            parse_key, source="generated", evidence="not_applicable"
+            parse_key, source="generated", evidence="not_found"
         )
     else:
         mirrored.pop("source_table_analysis", None)
@@ -251,7 +250,7 @@ def mirror_analysis(described: dict, withheld: dict, parse_key: str = "") -> dic
                 # here shipped a *verified* span -- `_walk` resolves it to real offsets
                 # afterwards -- supporting the opposite claim to the one the cell now makes,
                 # on the values a reviewer actually reads. That is a false citation.
-                node["evidence"] = {"status": "not_applicable"}
+                node["evidence"] = {"status": "not_found"}
         elif isinstance(node, str):
             cell["direction"] = reverse(node)
     return mirrored
