@@ -144,7 +144,11 @@ def single(sch: Schema, evidence: str, silence: bool = False) -> dict[str, Any]:
     builder = _Builder(sch, evidence, silence)
     _names, keep = render.mode_classes(sch, "single")
     by_container = sch.classes_by_container()
+    # `analyses` first. Strict decoding writes keys in schema order, and `SINGLE_NOTE` asks
+    # for the analyses before every entity list: a reply made to start on `groups` came
+    # back with every list empty on 3 of 8 papers, and with far fewer analyses on others.
     lists = [k for k in render.payload_keys("single") if k in by_container]
+    lists.sort(key=lambda key: key != "analyses")
     root = {key: {"type": "array", "items": builder.nested(by_container[key])} for key in lists}
     root["study"] = builder._build("Study", [k for k in keep if k not in lists])
     root["omitted"] = {"type": "array", "items": _object(

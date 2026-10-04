@@ -33,7 +33,8 @@ def test_every_object_is_closed_and_requires_every_property():
 def test_the_top_level_is_the_lists_the_prompt_states():
     single = reply_schema.single(_sch(), "quotes")
     lists = [k for k in render.payload_keys("single") if k in _sch().classes_by_container()]
-    assert list(single["properties"]) == lists + ["study", "omitted"]
+    assert sorted(single["properties"]) == sorted(lists + ["study", "omitted"])
+    assert list(single["properties"])[0] == "analyses", "SINGLE_NOTE asks for analyses first"
     assert "language" not in single["properties"], "a slot code fills is not asked for"
 
 
