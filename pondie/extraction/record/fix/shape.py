@@ -354,3 +354,104 @@ def drop_vacuous_demands(body: dict[str, Any]) -> list[str]:
         f"dropped {len(entries) - len(kept)} required_entities row(s) with no local_id, "
         f"kind or label; {len(kept)} kept"
     ]
+
+
+#: What a slot name can be. A key outside it is debris from a malformed reply (`":{"`).
+SLOT_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def drop_impossible_keys(body: dict[str, Any]) -> list[str]:
+    """Remove keys no slot could have, at any depth outside a field's value."""
+    dropped: list[str] = []
+
+    def visit(node: Any, path: str) -> None:
+        if isinstance(node, list):
+            for i, item in enumerate(node):
+                visit(item, f"{path}[{i}]")
+        elif isinstance(node, dict) and not values.is_field(node):
+            for key in list(node):
+                if not SLOT_NAME.match(str(key)):
+                    del node[key]
+                    dropped.append(f"{path}: dropped {key!r}, not a possible slot name")
+                else:
+                    visit(node[key], f"{path}.{key}")
+
+    visit(body, "Study")
+    return dropped
+
+
+def drop_code_filled(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Remove a model's value for a slot code fills (`schema.code_fills`).
+
+    Code writes these after the merge (`is_healthy`, the normalized demographics,
+    `mirror_of`, PubMed's `language` and `study_type`); a model's answer is either
+    overwritten or, where nothing overwrites it, left in the wrong shape.
+    """
+    dropped: list[str] = []
+    for slot in walk.slots(body, sch):
+        if schema.code_fills(slot.owner_class, slot.key):
+            del slot.owner[slot.key]
+            dropped.append(f"{slot.path}: dropped a model's value for a slot code fills")
+    return dropped
+
+
+#: The keys that make a mapping an ExtractedValue rather than an entity.
+WRAPPER_KEYS = ("extraction_status", "value_source", "unreported_reason", "evidence")
+
+
+def rehome_misplaced(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Put back what a model nested one level too deep inside an analysis.
+
+    An `Analysis` attribute filed under `effect` (`tables`, `model_estimation`, …) moves up
+    to the analysis; one the analysis already holds is dropped, since the analysis's own
+    is the one the schema reads. A `Cell` carrying wrapper markers -- a whole cell written
+    as if it were a value -- loses them, so it reads as the entity it is.
+    """
+    analysis_slots = set(sch.attributes("Analysis") or {})
+    effect_slots = set(sch.attributes("Effect") or {})
+    cell_slots = set(sch.attributes("Cell") or {})
+    fixed: list[str] = []
+    for index, analysis in enumerate(body.get("analyses") or []):
+        effect = analysis.get("effect") if isinstance(analysis, dict) else None
+        if not isinstance(effect, dict):
+            continue
+        path = f"analyses[{index}].effect"
+        for key in [k for k in effect if k not in effect_slots and k in analysis_slots]:
+            moved = effect.pop(key)
+            if analysis.get(key) in (None, "", [], {}):
+                analysis[key] = moved
+                fixed.append(f"{path}.{key}: moved up to the analysis")
+            else:
+                fixed.append(f"{path}.{key}: dropped; the analysis already holds one")
+        for position, cell in enumerate(effect.get("cells") or []):
+            if not isinstance(cell, dict) or not cell_slots & set(cell):
+                continue
+            stray = [k for k in WRAPPER_KEYS if k in cell and k not in cell_slots]
+            for key in stray:
+                del cell[key]
+            if stray:
+                fixed.append(f"{path}.cells[{position}]: removed wrapper keys {stray}")
+    return fixed
+
+
+#: Strings a model writes as a value when it means the slot's status.
+_STATUS_WORDS = {"not_reported", "not reported"}
+
+
+def status_as_value(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Turn a value of `"not_reported"` into a `not_reported` field: the model put the
+    status in the value, wrapped (`{"extraction_status": "extracted", "value":
+    "not_reported"}`) or bare (`"direction": "not_reported"`)."""
+    fixed: list[str] = []
+    for slot in walk.fields(body, sch):
+        field = slot.value
+        if values.is_field(field):
+            if field.get("extraction_status") != "extracted":
+                continue
+            value = field.get("value")
+        else:
+            value = field
+        if isinstance(value, str) and value.strip().lower() in _STATUS_WORDS:
+            slot.owner[slot.key] = values.wrap(None, source="reported", evidence="not_found")
+            fixed.append(f"{slot.path}: 'not_reported' written as a value")
+    return fixed

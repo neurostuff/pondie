@@ -8,6 +8,7 @@ Why it is derived and not asked, with the measurements: docs/normalization-ratio
 
 from __future__ import annotations
 
+from pondie.formats import values
 from pondie.formats.values import STATUSES
 from pondie.normalization._records import strings_at, value_of
 from pondie.vocabularies.phrases import NOT_READ, triage
@@ -61,16 +62,7 @@ def apply(record: dict) -> dict[str, int]:
             group.pop("is_healthy", None)
             tally["unset"] += 1
             continue
-        group["is_healthy"] = {
-            "value": after,
-            "extraction_status": "extracted",
-            # `generated`, not `derived`: `ValueSource` offers `reported` and `generated`
-            # and nothing else, and the enum's own gloss for `generated` is "Created by the
-            # extraction system", which is exactly this. `derived` would have been a
-            # validation error on every group this touched.
-            "value_source": "generated",
-            "evidence": {"status": "not_applicable"},
-        }
+        group["is_healthy"] = values.wrap(after, source="generated", evidence="not_found")
         tally["set"] += 1
         if before is not None:
             tally["agreed" if before == after else "overruled"] += 1

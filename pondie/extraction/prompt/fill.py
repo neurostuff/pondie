@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from typing import Any, Iterator, Mapping, MutableMapping, Sequence
 
+from pondie import schema
 from pondie.formats import values
 from pondie.schema.reader import Schema
 
@@ -158,7 +159,7 @@ def unsettled(payload: Mapping[str, Any], sch: Schema) -> list[dict[str, Any]]:
     for path, cls, entity in _entities(payload, sch):
         label = _label(entity)
         for name, slot, kind in sch.iter_slots(cls):
-            if kind in ("identifier", "reference", "nested"):
+            if kind in ("identifier", "reference", "nested") or schema.code_fills(cls, name):
                 continue
             held = entity.get(name)
             if values.is_field(held):

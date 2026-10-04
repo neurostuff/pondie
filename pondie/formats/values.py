@@ -32,9 +32,10 @@ if TYPE_CHECKING:
 #: field both are.
 ValueSource = Literal["reported", "generated"]
 
-#: `not_applicable` means there is no sentence to quote -- the value came from a table
-#: manifest or from arithmetic. `not_found` means there should be one and neither locator
-#: placed it, which is a defect a reviewer should see rather than a silence.
+#: `not_applicable` belongs to a `not_reported` field only: there is no value to support.
+#: `not_found` is an extracted or generated value with no supporting span -- for a value
+#: read off the paper a defect a reviewer should see, for one code computed (`generated`)
+#: the expected state. Per `EvidenceStatus` in extraction-evidence.yaml.
 EvidenceStatus = Literal["present", "not_found", "not_applicable"]
 
 #: `not_reported` is a positive assertion that the paper is silent. It is NOT the same as

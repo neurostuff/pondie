@@ -109,6 +109,11 @@ def run(
             f"{cost.input_tokens / 1e3:.0f}k in ({cost.cached_tokens / 1e3:.0f}k cached), "
             f"{cost.output_tokens / 1e3:.0f}k out"
         )
+        with lock:
+            built = [o for o in collected[paper.study_id] if o.stage is StageName.build]
+        if built and built[-1].ok and not built[-1].skipped:
+            errors = len(built[-1].validation_errors)
+            text += f" · {errors} validation error(s)" if errors else " · valid"
         failed = next((o for o in outcomes if not o.ok), None)
         if failed is not None:
             text += f" · FAILED at {failed.step}: {failed.detail[:160]}"

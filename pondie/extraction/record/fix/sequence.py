@@ -101,9 +101,36 @@ def build_sequence() -> tuple[Repair, ...]:
 
     return (
         Repair(
+            "impossible_keys",
+            "drop a key no slot could have, debris from a malformed reply",
+            lambda body, ctx: shape.drop_impossible_keys(body),
+            stage="shape",
+        ),
+        Repair(
             "wrappers",
             "put a malformed ExtractedValue back into wrapper shape",
             lambda body, ctx: shape.repair_wrappers(body),
+            stage="shape",
+        ),
+        Repair(
+            "code_filled",
+            "drop a model's value for a slot code fills",
+            lambda body, ctx: shape.drop_code_filled(body, ctx.schema),
+            after="wrappers",
+            stage="shape",
+        ),
+        Repair(
+            "misplaced",
+            "move an analysis's slot out of its effect; unwrap a wrapped cell",
+            lambda body, ctx: shape.rehome_misplaced(body, ctx.schema),
+            after="wrappers",
+            stage="shape",
+        ),
+        Repair(
+            "status_as_value",
+            "turn a value that is the word not_reported into a not_reported field",
+            lambda body, ctx: shape.status_as_value(body, ctx.schema),
+            after="wrappers",
             stage="shape",
         ),
         Repair(

@@ -131,7 +131,7 @@ def test_core_strips_generic_person_nouns_from_both_ends() -> None:
     assert pc.core("typically developing controls") == "typically developing"
 
 
-def test_apply_partitions_a_group_and_marks_the_moved_side_derived() -> None:
+def test_apply_partitions_a_group_and_marks_the_moved_side_generated() -> None:
     record = {
         "groups": [
             {
@@ -155,8 +155,10 @@ def test_apply_partitions_a_group_and_marks_the_moved_side_derived() -> None:
     # The kept side keeps the model's evidence, because it is evidence for those values.
     assert group["population_characteristics"]["value_source"] == "reported"
     assert group["population_characteristics"]["evidence"] == [{"sentence_ids": ["s1"]}]
-    # The moved side is the rule's answer, not the model's, and says so.
-    assert group["other_characteristics"]["value_source"] == "derived"
+    # The moved side is the rule's answer, not the model's, and says so in the schema's
+    # words: `generated`, with no supporting span.
+    assert group["other_characteristics"]["value_source"] == "generated"
+    assert group["other_characteristics"]["evidence"] == {"status": "not_found"}
     assert tally == {"groups": 1, "kept": 1, "moved": 2, "dropped": 1, "deduped": 1}
 
 

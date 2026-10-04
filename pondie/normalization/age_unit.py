@@ -12,6 +12,7 @@ Why, with the measurements: docs/normalization-rationale.md, "age_unit".
 
 from __future__ import annotations
 
+from pondie.formats import values
 from pondie.normalization import UNKNOWN
 from pondie.normalization._lexicon import ClosedField, Rule
 from pondie.normalization._records import NOT_REPORTED, value_of
@@ -63,12 +64,9 @@ def apply(record: dict) -> dict[str, int]:
             tally["skipped"] += 1
             continue
         decision = normalize(value_of(group.get("age_unit")))
-        group["age_unit_normalized"] = {
-            "value": decision.value,
-            "extraction_status": "extracted",
-            "value_source": "generated",
-            "evidence": {"status": "not_applicable"},
-        }
+        group["age_unit_normalized"] = values.wrap(
+            decision.value, source="generated", evidence="not_found"
+        )
         tally["set"] += 1
         if decision.reason in ("unmatched", "empty"):
             tally["unmatched"] += 1

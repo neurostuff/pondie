@@ -211,7 +211,9 @@ def render_schema(sch: Schema, names: set[str], study_keep: list[str]) -> str:
         definition = sch.definition(name)
         if definition is None:
             continue
-        attributes = sch.attributes(name)
+        attributes = {
+            k: v for k, v in sch.attributes(name).items() if not schema.code_fills(name, k)
+        }
         if name == "Study":
             attributes = {k: v for k, v in attributes.items() if k in study_keep}
         if not attributes:
@@ -917,6 +919,7 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
         for k, v in schema.entity_lists().items()
         if "." not in v
         and v != "tables"
+        and not schema.code_fills("Study", v)
         and (mode == "single" or (v == "analyses") == analysis_side)
     ]
     if mode == "demands":
@@ -1521,9 +1524,12 @@ def normalize(payload: dict[str, Any], mode: str) -> tuple[dict[str, Any], list[
             notes.append(f"hoisted {key!r} out of study to the top level")
 
     for key in list(payload):
-        # `required_entities` is a top-level output of the demands pass, not a stray Study
-        # attribute; sweeping it under `study` would hide it and the next line drops it.
+        # A pass's own outputs stay at the top level; anything else is a Study attribute.
         if key in schema.entity_lists() or key in ("study", "required_entities", "omitted"):
+            continue
+        if not shape.SLOT_NAME.match(str(key)):
+            payload.pop(key)
+            notes.append(f"dropped top-level {key!r}: not a possible slot name")
             continue
         study[key] = payload.pop(key)
         notes.append(f"moved top-level {key!r} under study")

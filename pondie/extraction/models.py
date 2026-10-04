@@ -17,6 +17,8 @@ setting that silently does not apply.
 
 from __future__ import annotations
 
+import re
+from collections import Counter
 from enum import Enum
 from pathlib import Path
 from typing import Annotated, ClassVar, Literal
@@ -233,6 +235,8 @@ class Settings(Strict):
     #: After `single`'s attempts, ask once for only the entities its references name and it
     #: never emitted (experiments/stage-ablation/JOURNAL.md, P2).
     complete_references: bool = True
+    #: Fill `Study.language` and `Study.study_type` from PubMed at `build`. Needs network.
+    pubmed: bool = True
 
     def effort_for(self, stage: "StageName | str") -> str:
         """The reasoning effort a stage's calls are made at."""
@@ -266,6 +270,8 @@ class StageOutcome(Strict):
     #: One entry per model call: the gateway's trace id and what it said about the cache.
     #: Empty for a deterministic stage, which is the honest answer rather than a zero.
     traces: tuple[tuple[str, str], ...] = ()
+    #: The record's schema-validation errors, from `build`. Empty is a valid record.
+    validation_errors: tuple[str, ...] = ()
 
     @property
     def ok(self) -> bool:
@@ -307,6 +313,23 @@ class RunReport(Strict):
     #: A note whose presence means a paper was extracted without its tables. Matched on the
     #: text because that is what a stage has to say with; the alternative is a typed outcome
     #: field that every other stage would carry and none would set.
+    def validation_summary(self, top: int = 5) -> str:
+        """How many built records validate, and the commonest error patterns."""
+        built = [
+            outcome
+            for paper in self.papers
+            for outcome in paper.outcomes
+            if outcome.stage is StageName.build and outcome.ok and not outcome.skipped
+        ]
+        if not built:
+            return ""
+        valid = sum(not o.validation_errors for o in built)
+        counts = Counter(error_pattern(e) for o in built for e in o.validation_errors)
+        text = f"\n  records valid: {valid}/{len(built)}"
+        for pattern, count in counts.most_common(top):
+            text += f"\n    {count:5d}  {pattern}"
+        return text
+
     MISSING_TABLES: ClassVar[str] = "no tables.jsonl"
 
     def starved(self) -> tuple[str, ...]:
@@ -330,6 +353,7 @@ class RunReport(Strict):
             f"{cost.input_tokens:,} in / {cost.output_tokens:,} out tokens "
             f"over {cost.calls} call(s)"
         )
+        line += self.validation_summary()
         if missing := self.starved():
             shown = ", ".join(missing[:4]) + (" ..." if len(missing) > 4 else "")
             line += (
@@ -337,6 +361,14 @@ class RunReport(Strict):
                 f"records ({shown}); any coordinates they have come from prose."
             )
         return line
+
+
+def error_pattern(message: str) -> str:
+    """A validation message with its record-specific parts blanked, so one fault across
+    many records counts as one pattern: quoted values, list indices and numbers."""
+    message = re.sub(r"'[^']*'", "'…'", message)
+    message = re.sub(r"\[\d+\]", "[i]", message)
+    return re.sub(r"\b\d+(\.\d+)?\b", "N", message)[:140]
 
 
 class Prompt(Strict):

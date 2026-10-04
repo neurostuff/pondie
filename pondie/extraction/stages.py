@@ -601,6 +601,19 @@ def _extend(held: list, new: list) -> None:
             _extend(present["terms"], entity["terms"])
 
 
+def _fill_from_pubmed(record: dict, study_id: str) -> str:
+    """`Study.language` and `Study.study_type` from PubMed. A note, or "" for a non-pmid.
+
+    Never fatal: an unreachable PubMed leaves both unset, which reads as unknown.
+    """
+    if not study_id.isdigit():
+        return ""
+    from pondie.extraction import pubmed
+
+    changed = pubmed.fill(record, pubmed.summaries([study_id]))
+    return f"pubmed: {'; '.join(changed)}" if changed else "pubmed: nothing returned"
+
+
 #: Failures meaning the reply is not a record at all; worse than any number of others.
 _EMPTY = ("no analyses were emitted", "every entity list is empty")
 
@@ -1073,6 +1086,7 @@ class Build(_Base):
         from pondie import normalization
 
         derived = normalization.apply_derived(record)
+        published = _fill_from_pubmed(record, paper.study_id) if settings.pubmed else ""
 
         out = self.produces(paper, settings)
         out.parent.mkdir(parents=True, exist_ok=True)
@@ -1084,6 +1098,8 @@ class Build(_Base):
             if tally.get("set") or tally.get("moved")
         )
         notes = [f"derived: {filled or 'nothing to fill'}"]
+        if published:
+            notes.append(published)
         notes.append(f"repairs: {', '.join(report.repair_log.fired()) or 'none fired'}")
         if report.warrant.unresolved:
             notes.append(
@@ -1094,13 +1110,19 @@ class Build(_Base):
             notes.append(f"{report.warrant.case_insensitive} span(s) placed only by ignoring case")
         if report.dangling:
             notes.append(f"{len(report.dangling)} cross-reference(s) need a human")
-        notes += self._validate(record, paper, settings)
+        checked, errors = self._validate(record, paper, settings)
         return StageOutcome(
-            stage=self.name, study_id=paper.study_id, produced=(out,), notes=tuple(notes)
+            stage=self.name,
+            study_id=paper.study_id,
+            produced=(out,),
+            notes=tuple(notes + checked),
+            validation_errors=tuple(errors),
         )
 
-    def _validate(self, record: dict, paper: Paper, settings: Settings) -> list[str]:
-        """Check the record against the schema."""
+    def _validate(
+        self, record: dict, paper: Paper, settings: Settings
+    ) -> tuple[list[str], list[str]]:
+        """Check the record against the schema: (notes, errors)."""
         from pondie.extraction.record import validate
         from pondie.schema import reader
 
@@ -1111,7 +1133,7 @@ class Build(_Base):
             )
             validator.check_record(record)
         except Exception as error:  # noqa: BLE001
-            return [f"validation could not run ({type(error).__name__}: {error})"]
+            return [f"validation could not run ({type(error).__name__}: {error})"], []
         notes = []
         if validator.errors:
             notes.append(
@@ -1119,7 +1141,7 @@ class Build(_Base):
             )
         if validator.warnings:
             notes.append(f"{len(validator.warnings)} validation warning(s)")
-        return notes
+        return notes, list(validator.errors)
 
 
 @dataclass(frozen=True)

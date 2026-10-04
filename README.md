@@ -65,7 +65,7 @@ Eight stages by default, and the order is the design:
 | `single` | yes | the whole record in one call, shown the stage-1 listing, held to the listing checks and to a dangling-reference check, retried with the faults named, keeping the best attempt |
 | `fill` | yes | asks for the slots still open, round after round, until none are — a shape for finishing an entity rather than deciding it exists |
 | `evidence` | yes | a supporting quote for every value. About 8% of input tokens on the single pass; changes no value a query reads |
-| `build` | no | merge, apply the 24 deterministic fixes in `record/fix/`, resolve quotes to offsets, validate, write the record |
+| `build` | no | merge, apply the deterministic fixes in `record/fix/`, fill `language` and `study_type` from PubMed, resolve quotes to offsets, validate, write the record |
 | `repair` | yes | the extraction model proposes what the record lacks, guards decide what is written, and scope/region contradictions are settled once |
 
 `demands` then `satisfy` is the earlier, two-call form of `single`, still run by naming both
