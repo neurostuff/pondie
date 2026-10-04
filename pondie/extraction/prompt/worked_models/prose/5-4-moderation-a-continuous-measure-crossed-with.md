@@ -8,6 +8,9 @@ continuous term has no levels, so it cannot be crossed; without the product colu
 a plain regression on maltreatment severity. The product column also holds the only thing that can
 carry the moderation's *direction* — "maltreatment was negatively associated with rACC activation in
 the PTSD group but not in controls" is a fact about the crossing, not about either term's own slope.
+The cell names `PTSD group`, a level of the cohort factor it crosses, because the sign is that
+group's slope relative to the other's; without it the same `negative` could be read from the TC
+side, and which side the coefficient is taken from is a coding choice.
 
 **Do not add a product column for a crossing of two categorical factors.** There the crossed levels
 already say it (5.5), the column decides nothing, and records that add one are flagged for review.

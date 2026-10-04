@@ -35,6 +35,7 @@ from pondie.extraction.record.effect import (
     NO_LABEL,
     UNDETERMINED_VARIATION,
     derive_effect_kind,
+    levels_a_cell_may_name,
     terms_in_scope,
 )
 from pondie.formats import values
@@ -669,7 +670,8 @@ def check_derived_columns(record: Mapping[str, Any], findings: Findings) -> None
 
 def check_cell_terms(record: Mapping[str, Any], findings: Findings) -> None:
     """§3 invariants 2, 3 and 4: a cell names a term of its own stage chain, and a
-    level it names is one that term declares.
+    level it names is one that term declares -- or, on a signed cell of a product column,
+    one its categorical components declare.
 
     The three travel together because they are one join failed at different depths. A
     `Cell.term` that resolves nowhere, or to a term of a model this analysis does not
@@ -735,16 +737,23 @@ def check_cell_terms(record: Mapping[str, Any], findings: Findings) -> None:
             level = values.read(cell.get("level"))
             if not isinstance(level, str):
                 continue
-            declared = [
-                values.read(entry.get("level"))
-                for entry in (term.get("levels") or [])
-                if isinstance(entry, Mapping)
-            ]
-            declared = [name for name in declared if isinstance(name, str)]
-            if not declared:
+            declared = levels_a_cell_may_name(term, terms, cell.get("direction"))
+            if not declared and term.get("interaction_with"):
+                findings.error(
+                    f"{path}.level",
+                    f"is {level!r} but term {term_id!r} is a product column, whose cell "
+                    "names only a level of a categorical component, and only when signed",
+                )
+            elif not declared:
                 findings.error(
                     f"{path}.level",
                     f"is {level!r} but term {term_id!r} declares " "no levels to match it against",
+                )
+            elif level not in declared and not term.get("levels"):
+                findings.error(
+                    f"{path}.level",
+                    f"{level!r} matches none of the levels of product column {term_id!r}'s "
+                    f"components ({', '.join(repr(name) for name in declared)})",
                 )
             elif level not in declared:
                 findings.error(

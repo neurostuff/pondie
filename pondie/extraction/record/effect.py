@@ -60,6 +60,28 @@ def terms_in_scope(
     return terms
 
 
+def levels_a_cell_may_name(
+    term: Mapping[str, Any], terms: Mapping[str, Mapping[str, Any]], direction: Any
+) -> tuple[str, ...]:
+    """The levels a cell on `term` may name: a factor's own, or, for a signed cell on a
+    product column, those of its categorical components (whose slope the sign describes)."""
+
+    def declared(entry: Mapping[str, Any]) -> tuple[str, ...]:
+        named = (values.read(level.get("level")) for level in entry.get("levels") or [])
+        return tuple(name for name in named if isinstance(name, str))
+
+    if own := declared(term):
+        return own
+    if not term.get("interaction_with") or values.read(direction) not in _SIGNED:
+        return ()
+    return tuple(
+        name
+        for component in term["interaction_with"]
+        if isinstance(terms.get(component), Mapping)
+        for name in declared(terms[component])
+    )
+
+
 UNDETERMINED_VARIATION = "undetermined:variation_level"
 NO_LABEL = "none"
 

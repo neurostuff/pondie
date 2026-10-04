@@ -298,7 +298,7 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
     those instead.
     """
 
-    from pondie.extraction.record.effect import terms_in_scope
+    from pondie.extraction.record.effect import levels_a_cell_may_name, terms_in_scope
 
     models = {
         model["local_id"]: model
@@ -340,6 +340,8 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
             if declared:
                 continue
             path = f"analyses[{index}].effect.cells[{position}].level"
+            if level in levels_a_cell_may_name(term, terms, cell.get("direction")):
+                continue  # a signed product cell's component level: whose slope it is
             if _restates(level, values.read(term.get("name"))):
                 cell.pop("level", None)
                 fixed.append(f"{path}: {level!r} restated term {term_id!r} -- dropped")

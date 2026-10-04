@@ -902,3 +902,14 @@ beside brackets and punctuation.
 
 Remaining: 14 ROI analyses (unresolved or refused), 6 levels on crossed `group × score`
 terms typed continuous (a model-structure question), 6 kinds, and singletons.
+
+## Whose slope a moderation's sign describes (schema change)
+
+The 6 "declares no levels" errors were `level: 'PTSD'` on product columns. Two were unsigned
+F-tests, where a level says nothing; `build` now drops it. Four were signed moderations ("age
+negatively predicted GMV in PTSD youth"), where the level is the only thing saying which group's
+slope the sign is: a product coefficient's sign depends on which level the difference is taken
+from. The schema now lets a signed product cell name a level of its categorical component
+(study_schema 'Let a signed product cell name whose slope its sign describes'), and §5.4's worked
+model shows `level: PTSD group`, the referent paper's own reading. Adjudicated PTSD records:
+36 → 32 errors, 40 → 42 valid, before a rebuild clears the two unsigned cells.

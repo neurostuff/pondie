@@ -205,6 +205,45 @@ def test_a_level_on_an_unsigned_product_column_is_dropped(direction, dropped):
     link.drop_redundant_cell_levels(body)
     assert ("level" not in cell) is dropped
 
+
+def _moderation(level, direction):
+    cell = {"term": "trm_x", "level": _v(level)}
+    if direction:
+        cell["direction"] = _v(direction)
+    return {
+        "model_estimations": [{"local_id": "mod_a", "terms": [
+            {"local_id": "trm_group", "name": _v("group"), "type": _v("categorical"),
+             "levels": [{"level": _v("PTSD")}, {"level": _v("control")}]},
+            {"local_id": "trm_age", "name": _v("age"), "type": _v("continuous")},
+            {"local_id": "trm_x", "name": _v("group x age"), "type": _v("continuous"),
+             "interaction_with": ["trm_group", "trm_age"]}]}],
+        "analyses": [{"local_id": "ana_1", "name": _v("group x age"),
+                      "model_estimation": "mod_a", "effect": {"cells": [cell]}}],
+    }
+
+
+@pytest.mark.parametrize("level, direction, fault", [
+    ("PTSD", "negative", None),
+    ("control", "positive", None),
+    ("patients", "negative", "components ('PTSD', 'control')"),
+    ("PTSD", "undirected", "only when signed"),
+])
+def test_a_signed_product_cell_may_name_a_level_of_its_categorical_component(
+    level, direction, fault
+):
+    """25212487: "age negatively predicted GMV in PTSD youth" is `negative` with `level: PTSD`:
+    without the level the sign has no reference."""
+    validator = Validator(_sch(), None)
+    validator.check_record(_moderation(level, direction))
+    found = [e for e in validator.errors if e.endswith(".level") or ".level:" in e]
+    assert (found == []) if fault is None else (len(found) == 1 and fault in found[0])
+
+
+def test_a_product_cells_unmatched_level_is_put_as_a_choice_of_component_levels():
+    [case] = [c for c in stage.contradictions(_moderation("patients", "negative"), _sch())
+              if c.slot == "level"]
+    assert case.options == ("PTSD", "control")
+
 def test_a_value_cannot_be_wrapped_with_not_applicable_evidence():
     """The schema reserves it for not_reported fields; seven writers got it wrong."""
     with pytest.raises(ValueError):

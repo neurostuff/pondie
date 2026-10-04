@@ -38,6 +38,7 @@ from pondie.extraction.record.effect import (
     NO_LABEL,
     UNDETERMINED_VARIATION,
     derive_effect_kind,
+    levels_a_cell_may_name,
     terms_in_scope,
 )
 from pondie.extraction.record.validate import EXTRACTION_SCHEMA, Validator
@@ -201,11 +202,7 @@ def _levels(record: Mapping[str, Any]) -> list[Case]:
             level = values.read(cell.get("level"))
             if term is None or not isinstance(level, str):
                 continue
-            declared = tuple(
-                name
-                for name in (values.read(e.get("level")) for e in term.get("levels") or [])
-                if isinstance(name, str)
-            )
+            declared = levels_a_cell_may_name(term, terms, cell.get("direction"))
             if not declared or level in declared:
                 continue  # no levels at all is the term's type, not a spelling to choose
             out.append(
@@ -213,7 +210,7 @@ def _levels(record: Mapping[str, Any]) -> list[Case]:
                     id=f"analyses/{analysis.get('local_id')}/effect.cells[{position}].level",
                     question=(
                         f"A cell of analysis {edit_module.label_of(analysis)!r} names level "
-                        f"{level!r} of term {edit_module.label_of(term)!r}, which declares "
+                        f"{level!r} of term {edit_module.label_of(term)!r}, which may name "
                         f"only the levels listed. Which one does the cell mean?"
                     ),
                     options=declared,
