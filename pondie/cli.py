@@ -64,12 +64,14 @@ def _extract(args: argparse.Namespace) -> int:
 
     from pondie.extraction import GatewayCaller, load_env, plan, run, sequence
 
-    # Configured here, not at import: the application decides how a library logs.
+    # Configured here, not at import: the application decides how a library logs. `--log`
+    # sets pondie's level; other libraries (LinkML, the HTTP client) log warnings only.
     logging.basicConfig(
-        level=getattr(logging, args.log.upper()),
+        level=logging.WARNING,
         format="%(asctime)s %(levelname)-7s %(message)s",
         datefmt="%H:%M:%S",
     )
+    logging.getLogger("pondie").setLevel(getattr(logging, args.log.upper()))
 
     if args.env:
         load_env(args.env)
