@@ -190,7 +190,7 @@ def test_a_table_written_as_a_study_attribute_is_rehomed(extraction_schema):
         "analyses": [{"local_id": "a1", "tables": ["tab4"]}],
         "tab4": {"table_number": {"extraction_status": "extracted", "value": 4}},
     }
-    moved = fix.rehome_stray_tables(body, extraction_schema)
+    moved = fix.rehome_keyed_entities(body, extraction_schema)
     assert "tab4" not in body
     assert [t["local_id"] for t in body["tables"]] == ["tab4"]
     assert moved
@@ -198,7 +198,7 @@ def test_a_table_written_as_a_study_attribute_is_rehomed(extraction_schema):
 
 def test_an_unreferenced_stray_key_is_left_reported(extraction_schema):
     body = {"analyses": [], "somethingElse": {"x": 1}}
-    assert fix.rehome_stray_tables(body, extraction_schema) == []
+    assert fix.rehome_keyed_entities(body, extraction_schema) == []
     assert "somethingElse" in body
 
 

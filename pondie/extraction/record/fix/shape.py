@@ -11,7 +11,7 @@ each one sits where it does.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from pondie import schema
 from pondie.extraction.record import walk
 from pondie.formats import values
@@ -277,38 +277,6 @@ def coerce_numeric_values(body: dict[str, Any], sch: Schema) -> list[str]:
     return fixed
 
 
-def rehome_stray_tables(body: dict[str, Any], sch: Schema) -> list[str]:
-    """Move a Table the model wrote as a Study attribute into `tables`.
-
-    Seen as `Study: attribute 'tab4' is not declared on Study` while every analysis
-    referenced `tab4`. The cost is not cosmetic: the stray key is dropped on load, so
-    every analysis pointing at it loses the table its coordinates are joined through,
-    and the paper contributes nothing to a coordinate query.
-
-    Only keys that some analysis actually references are moved, and only when they carry
-    no `local_id` of their own -- anything else is a slot the schema does not know
-    about, which is a different fault and stays reported.
-    """
-
-    declared = set(sch.attributes("Study") or {})
-    referenced: set[str] = set()
-    for analysis in body.get("analyses") or []:
-        if isinstance(analysis, Mapping):
-            cited = values.read(analysis.get("tables")) or []
-            referenced |= {
-                t for t in (cited if isinstance(cited, list) else [cited]) if isinstance(t, str)
-            }
-
-    moved: list[str] = []
-    for key in [k for k in body if k not in declared and k in referenced]:
-        stray = body.pop(key)
-        entry = dict(stray) if isinstance(stray, Mapping) else {}
-        entry.setdefault("local_id", key)
-        body.setdefault("tables", []).append(entry)
-        moved.append(f"Study.{key}: moved into tables[] as {key!r}")
-    return moved
-
-
 #: The fields that give a declared entity its identity. A row holding none of them names
 #: nothing the next pass could build, and nothing an analysis could dangle on.
 IDENTIFYING = ("local_id", "kind", "label")
@@ -399,38 +367,148 @@ def drop_code_filled(body: dict[str, Any], sch: Schema) -> list[str]:
 WRAPPER_KEYS = ("extraction_status", "value_source", "unreported_reason", "evidence")
 
 
-def rehome_misplaced(body: dict[str, Any], sch: Schema) -> list[str]:
-    """Put back what a model nested one level too deep inside an analysis.
+def _objects(
+    node: Any, class_name: str, sch: Schema, parent: dict[str, Any] | None = None,
+    parent_class: str = "", path: str = "Study",
+) -> Iterator[tuple[dict[str, Any], str, dict[str, Any] | None, str, str]]:
+    """(object, class, parent, parent class, path) for every object the schema nests.
 
-    An `Analysis` attribute filed under `effect` (`tables`, `model_estimation`, …) moves up
-    to the analysis; one the analysis already holds is dropped, since the analysis's own
-    is the one the schema reads. A `Cell` carrying wrapper markers -- a whole cell written
-    as if it were a value -- loses them, so it reads as the entity it is.
+    Not `walk.entities`: that skips a node carrying wrapper keys, which is a whole entity
+    written as a value -- one of the faults these repairs exist for.
     """
-    analysis_slots = set(sch.attributes("Analysis") or {})
-    effect_slots = set(sch.attributes("Effect") or {})
-    cell_slots = set(sch.attributes("Cell") or {})
-    fixed: list[str] = []
-    for index, analysis in enumerate(body.get("analyses") or []):
-        effect = analysis.get("effect") if isinstance(analysis, dict) else None
-        if not isinstance(effect, dict):
+    if not isinstance(node, dict):
+        return
+    class_name = sch.designated_type(node, class_name)
+    attributes = sch.attributes(class_name) or {}
+    if not attributes:
+        return
+    yield node, class_name, parent, parent_class, path
+    for key, attribute in list(attributes.items()):
+        if key not in node or sch.classify(key, attribute) != "nested":
             continue
-        path = f"analyses[{index}].effect"
-        for key in [k for k in effect if k not in effect_slots and k in analysis_slots]:
-            moved = effect.pop(key)
-            if analysis.get(key) in (None, "", [], {}):
-                analysis[key] = moved
-                fixed.append(f"{path}.{key}: moved up to the analysis")
-            else:
-                fixed.append(f"{path}.{key}: dropped; the analysis already holds one")
-        for position, cell in enumerate(effect.get("cells") or []):
-            if not isinstance(cell, dict) or not cell_slots & set(cell):
+        if not isinstance(attribute.range, str):
+            continue
+        child = node[key]
+        listed = isinstance(child, list)
+        for index, item in enumerate(child if listed else [child]):
+            suffix = f"[{index}]" if listed else ""
+            yield from _objects(item, attribute.range, sch, node, class_name, f"{path}.{key}{suffix}")
+
+
+def _empty(value: Any) -> bool:
+    return value in (None, "", [], {})
+
+
+def lift_misnested(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Put back what a model nested one level too deep.
+
+    Two shapes, both decided by which class declares the key:
+
+    - a parent's slot found in a child moves up to the parent (`tables` and
+      `model_estimation` written under an analysis's `effect`); one the parent already
+      holds is dropped, since the parent's own is the one the schema reads;
+    - an object written inside one of its own slots is lifted into it: 30545239 wrote a
+      factor level as `{"level": {"level": <field>, "groups": [...]}}`, leaving the term
+      with no readable levels. Keys the outer object already holds win.
+    """
+    fixed: list[str] = []
+    for node, class_name, parent, parent_class, path in list(_objects(body, "Study", sch)):
+        declared = sch.attributes(class_name) or {}
+        if parent is not None:
+            above = sch.attributes(parent_class) or {}
+            moving = [k for k in node if k not in declared and k in above]
+            for key in [k for k in moving if k not in WRAPPER_KEYS]:
+                moved = node.pop(key)
+                if _empty(parent.get(key)):
+                    parent[key] = moved
+                    fixed.append(f"{path}.{key}: moved up to the {parent_class}")
+                else:
+                    fixed.append(f"{path}.{key}: dropped; the {parent_class} already holds one")
+        for key, attribute in declared.items():
+            inner = node.get(key)
+            if (
+                sch.classify(key, attribute) == "nested"
+                or not isinstance(inner, dict)
+                or values.is_field(inner)
+                or key not in inner
+                or not set(inner) <= set(declared)
+            ):
                 continue
-            stray = [k for k in WRAPPER_KEYS if k in cell and k not in cell_slots]
+            node[key] = inner.pop(key)
+            for other, value in inner.items():
+                if _empty(node.get(other)):
+                    node[other] = value
+            fixed.append(f"{path}.{key}: a {class_name} written inside it, lifted out")
+    return fixed
+
+
+def rehome_keyed_entities(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Move an entity written as a key named after its own id into its list.
+
+    Two shapes, told apart by what settles the entity's class:
+
+    - a key some reference slot cites: `Study.tab4` while every analysis cited `tab4` as
+      a table. The stray key is dropped on load, so each analysis lost the table its
+      coordinates join through. The citing slot's range is the class;
+    - an object of the host's own class whose `local_id` is the key: 21078704 wrote eleven
+      analyses inside `a_2022_1`, keyed by their ids, and the built record held one.
+
+    Anything else undeclared is a slot the schema does not know, and stays reported. So
+    does an entity whose id its list already holds.
+    """
+    containers = sch.containers()
+    cited: dict[str, str] = {}
+    for slot in walk.slots(body, sch, kinds=("reference",)):
+        named = values.read(slot.value)
+        for target in named if isinstance(named, list) else [named]:
+            if isinstance(target, str) and isinstance(slot.attribute.range, str):
+                cited.setdefault(target, slot.attribute.range)
+
+    moved: list[str] = []
+    for node, class_name, _parent, _class, path in list(_objects(body, "Study", sch)):
+        declared = sch.attributes(class_name) or {}
+        for key in [k for k in node if k not in declared]:
+            entry = node[key]
+            own_id = entry.get("local_id") if isinstance(entry, Mapping) else None
+            if key in cited and own_id in (None, key):
+                target = cited[key]
+            elif (
+                isinstance(entry, Mapping)
+                and own_id == key
+                and set(entry) <= set(declared)
+            ):
+                target = class_name
+            else:
+                continue
+            container = containers.get(target)
+            held = body.get(container) if container else None
+            if container is None or any(
+                isinstance(e, Mapping) and e.get("local_id") == key for e in held or []
+            ):
+                continue
+            node.pop(key)
+            body.setdefault(container, []).append(
+                {**(dict(entry) if isinstance(entry, Mapping) else {}), "local_id": key}
+            )
+            moved.append(f"{path}.{key}: moved into {container}[] as {key!r}")
+    return moved
+
+
+def unwrap_entities(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Strip wrapper keys from an entity written as if it were a value.
+
+    `{"term": ..., "level": ..., "extraction_status": "extracted", "evidence": ...}` is a
+    `Cell` with a wrapper's markers on it, which makes it read as a field rather than the
+    entity it is. Only keys the class does not declare are removed.
+    """
+    fixed: list[str] = []
+    for node, class_name, _parent, _class, path in _objects(body, "Study", sch):
+        declared = sch.attributes(class_name) or {}
+        stray = [k for k in WRAPPER_KEYS if k in node and k not in declared]
+        if stray and set(node) - set(WRAPPER_KEYS):
             for key in stray:
-                del cell[key]
-            if stray:
-                fixed.append(f"{path}.cells[{position}]: removed wrapper keys {stray}")
+                del node[key]
+            fixed.append(f"{path}: removed wrapper keys {stray}")
     return fixed
 
 

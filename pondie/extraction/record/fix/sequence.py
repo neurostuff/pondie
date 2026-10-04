@@ -107,6 +107,14 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="shape",
         ),
         Repair(
+            "keyed_entities",
+            "move an entity written as a key named after its id into its list",
+            lambda body, ctx: shape.rehome_keyed_entities(body, ctx.schema),
+            # Before `wrappers`, so a moved entity's fields are repaired with the rest.
+            after="impossible_keys",
+            stage="shape",
+        ),
+        Repair(
             "wrappers",
             "put a malformed ExtractedValue back into wrapper shape",
             lambda body, ctx: shape.repair_wrappers(body),
@@ -120,9 +128,16 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="shape",
         ),
         Repair(
-            "misplaced",
-            "move an analysis's slot out of its effect; unwrap a wrapped cell",
-            lambda body, ctx: shape.rehome_misplaced(body, ctx.schema),
+            "misnested",
+            "move a parent's slot out of a child; lift an object out of its own slot",
+            lambda body, ctx: shape.lift_misnested(body, ctx.schema),
+            after="wrappers",
+            stage="shape",
+        ),
+        Repair(
+            "wrapped_entities",
+            "strip wrapper keys from an entity written as if it were a value",
+            lambda body, ctx: shape.unwrap_entities(body, ctx.schema),
             after="wrappers",
             stage="shape",
         ),
@@ -157,12 +172,6 @@ def build_sequence() -> tuple[Repair, ...]:
             "turn a numeric string into the number its slot declares",
             lambda body, ctx: shape.coerce_numeric_values(body, ctx.schema),
             after="unwrapped",
-            stage="merged",
-        ),
-        Repair(
-            "stray_tables",
-            "move a Table written as a Study attribute into tables[]",
-            lambda body, ctx: shape.rehome_stray_tables(body, ctx.schema),
             stage="merged",
         ),
         Repair(

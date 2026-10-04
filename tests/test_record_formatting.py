@@ -92,7 +92,7 @@ def test_an_analysis_slot_filed_inside_effect_moves_up():
     body = {"analyses": [{"local_id": "ana_1", "effect": {"cells": [], "tables": ["tbl2"],
                                                           "model_estimation": "mod_a"},
                           "model_estimation": "mod_b"}]}
-    notes = shape.rehome_misplaced(body, reader.load(schema.EXTRACTION))
+    notes = shape.lift_misnested(body, reader.load(schema.EXTRACTION))
     analysis = body["analyses"][0]
     assert analysis["tables"] == ["tbl2"]
     assert analysis["model_estimation"] == "mod_b", "the analysis's own value wins"
@@ -104,9 +104,55 @@ def test_a_cell_written_as_a_wrapper_reads_as_a_cell():
     cell = {"term": "trm_group", "level": _v("PTSD"), "direction": _v("negative"),
             "extraction_status": "extracted", "evidence": {"status": "not_found"}}
     body = {"analyses": [{"local_id": "ana_1", "effect": {"cells": [cell]}}]}
-    shape.rehome_misplaced(body, reader.load(schema.EXTRACTION))
+    shape.unwrap_entities(body, reader.load(schema.EXTRACTION))
     assert set(cell) == {"term", "level", "direction"}
 
+
+
+def test_a_factor_level_written_inside_its_own_level_is_lifted():
+    """30545239 and 16684342: `{"level": {"level": <field>, "groups": [...]}}` left the term
+    with no readable level. Keys already on the outer level (`order`) stay."""
+    level = {"level": {"level": _v("PTSD"), "groups": ["grp_ptsd"]}, "order": _v(1)}
+    body = {"model_estimations": [{"local_id": "mod_a", "terms": [
+        {"local_id": "trm_group", "name": _v("group"), "type": _v("categorical"),
+         "levels": [level]}]}]}
+    shape.lift_misnested(body, reader.load(schema.EXTRACTION))
+    assert level == {"level": _v("PTSD"), "groups": ["grp_ptsd"], "order": _v(1)}
+
+
+def test_a_parents_slot_in_any_child_moves_up():
+    """Not only an analysis's slots under `effect`: an Effect's `kind` filed in a cell."""
+    effect = {"cells": [{"term": "trm_group", "kind": _v("contrast")}]}
+    body = {"analyses": [{"local_id": "ana_1", "effect": effect}]}
+    shape.lift_misnested(body, reader.load(schema.EXTRACTION))
+    assert effect == {"cells": [{"term": "trm_group"}], "kind": _v("contrast")}
+
+
+def test_entities_written_inside_a_sibling_keyed_by_their_ids_join_their_list():
+    """21078704 wrote eleven analyses inside `a_2022_1`; the built record held one."""
+    inner = {"local_id": "ana_medial_years", "name": _v("medial frontal x years")}
+    body = {"analyses": [{"local_id": "a_2022_1", "name": _v("cluster"),
+                          "ana_medial_years": inner}]}
+    moved = shape.rehome_keyed_entities(body, reader.load(schema.EXTRACTION))
+    assert [a["local_id"] for a in body["analyses"]] == ["a_2022_1", "ana_medial_years"]
+    assert "ana_medial_years" not in body["analyses"][0] and len(moved) == 1
+
+
+def test_a_keyed_entity_whose_id_is_already_held_stays_reported():
+    body = {"analyses": [
+        {"local_id": "a_1", "a_2": {"local_id": "a_2", "name": _v("copy")}},
+        {"local_id": "a_2", "name": _v("original")}]}
+    assert shape.rehome_keyed_entities(body, reader.load(schema.EXTRACTION)) == []
+    assert "a_2" in body["analyses"][0]
+
+
+def test_any_entity_written_as_a_value_loses_its_wrapper_keys():
+    level = {"level": _v("PTSD"), "extraction_status": "extracted",
+             "evidence": {"status": "not_found"}}
+    body = {"model_estimations": [{"local_id": "mod_a", "terms": [
+        {"local_id": "trm_group", "name": _v("group"), "levels": [level]}]}]}
+    shape.unwrap_entities(body, reader.load(schema.EXTRACTION))
+    assert level == {"level": _v("PTSD")}
 
 def test_not_reported_written_as_a_value_becomes_the_status():
     """`Cell.direction: 'not_reported'` is not a permissible direction."""
@@ -129,7 +175,7 @@ def test_a_top_level_key_no_slot_could_have_is_dropped():
     reply = {"analyses": [], "}rayele": "x", "tab4": {"caption": _v("Peaks")}}
     payload, notes = render.normalize(reply, "single")
     assert "}rayele" not in payload and "}rayele" not in payload.get("study", {})
-    assert "tab4" in payload["study"], "a valid name stays, for rehome_stray_tables"
+    assert "tab4" in payload["study"], "a valid name stays, for rehome_keyed_entities"
     assert any("not a possible slot name" in n for n in notes)
 
 

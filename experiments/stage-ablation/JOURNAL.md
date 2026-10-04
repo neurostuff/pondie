@@ -939,3 +939,17 @@ first use` (declared by two models) and `years of use` (declared by one of them,
 declares the other). The donor is now any model declaring every borrowed term, and several
 are fine when they would give the same design (16701903's one `group` factor, declared twice).
 All 14 empty models in the four runs are filled; substance use 19 → 17.
+
+## Misnested structure, repaired from the schema
+
+Correction to the last entry: the dementia crash was not "a reference written as an object" —
+there are none in ~12,460 reference values over four runs. It was a FactorLevel written inside
+its own `level` slot. A schema-driven census of the raw payloads (220 papers) found 61 pieces
+of structure one level from where the schema puts them, in 20 papers. Three shape repairs now
+decide placement from which class declares a key, replacing `rehome_misplaced` (analysis/effect
+only) and `rehome_stray_tables` (tables only): `lift_misnested` (a parent's slot in a child; an
+object inside its own slot), `rehome_keyed_entities` (an entity written as a key named after
+its id), `unwrap_entities` (wrapper keys on an entity). After the build chain every such
+case is gone; 21078704 keeps its 12 analyses instead of 1. Left reported: an analysis's slots
+at study level (which analysis?), MRI slots on a PET acquisition (a type question), and
+`omitted` under `study` in payloads written before it was hoisted at reply time.

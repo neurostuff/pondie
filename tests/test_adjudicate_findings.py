@@ -403,8 +403,9 @@ def test_donors_declaring_the_same_design_are_one_donor():
 def test_donors_declaring_different_designs_are_none():
     record = _seeds(borrowed=("trm_sex",))
     other = json.loads(json.dumps(record["model_estimations"][1]["terms"][0]))
-    other["levels"] = [{"level": _v("female")}, {"level": _v("male")}]
-    other["interaction_with"] = [{"malformed": "a reference written as an object"}]
+    # The levels written inside their own `level` slot, as 26682697 did: comparing
+    # designs must not need anything hashable.
+    other["levels"] = [{"level": {"level": _v("female")}}, {"level": {"level": _v("male")}}]
     record["model_estimations"][0]["terms"] = [other]
     assert link.fill_empty_models(record) == []
 
