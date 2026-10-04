@@ -841,3 +841,20 @@ panels (43 of 45 gold paper-draws scored; two calls still running when recorded)
   time at low and medium. That is the precision risk medium showed on substance use, more
   analyses giving a wrong one more chances, and the panel has only one negative, so it cannot
   measure it. Full PTSD and substance-use draws at high would.
+
+## The workflow as pondie runs it (CLI)
+
+`pondie extract` now runs `tables → prose → split → single → fill → evidence → build →
+repair` on flex, at the per-stage efforts (`single` and `repair` medium, `fill` and `evidence`
+low), with one INFO line per paper: stages run and cached, calls, tokens, elapsed, ETA. On a
+terminal a tqdm bar per paper is drawn below those lines; redirected, the lines are the
+progress. Smoke run, 3 PTSD papers, 3 workers: 18 calls, 413k input / 93k output tokens,
+11m41s; every stage ran, no failures.
+
+Two cache bugs found by resuming it:
+- `tables` depended on the whole parse file, which `prose` and `split` rewrite afterwards, so
+  a resume re-ran every model stage (fixed earlier, 545896c). Resume now: 0 calls.
+- `prose` and `split` both write the parse and shared one stamp file, so each made the other
+  stale on every resume (cheap, but it made "N run" lines lie). Stamps are now named per
+  step, and an unqualified stamp still counts for the step that wrote it, so existing runs
+  keep their caches. Resume: 8/8 cached per paper.

@@ -110,7 +110,7 @@ class _Base:
             }
         for upstream in self.reads:
             output = settings.payloads / paper.study_id / f"{upstream.value}.json"
-            stamp = pipeline.Stamp.read(output)
+            stamp = pipeline.Stamp.read(output, upstream.value)
             parts[f"after:{upstream.value}"] = stamp.digest if stamp else ""
         return parts
 

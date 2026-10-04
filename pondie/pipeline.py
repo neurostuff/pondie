@@ -84,33 +84,47 @@ class Stamp:
         )
 
     @staticmethod
-    def path_for(output: Path) -> Path:
-        """`.stamps/<name>.json` beside the output.
+    def path_for(output: Path, step: str = "") -> Path:
+        """`.stamps/<name>.<step>.json` beside the output (`<name>.json` with no step).
 
         A subdirectory, because `builder.merge_payloads` merges every `*.json` in a payload
-        directory and would read a sibling stamp as a payload.
+        directory and would read a sibling stamp as a payload. Named per step, because two
+        steps can write one output (`prose` and `split` both rewrite the stage-1 parse).
         """
-        return output.parent / ".stamps" / (output.name + ".json")
+        return (
+            output.parent
+            / ".stamps"
+            / (f"{output.name}.{step}.json" if step else output.name + ".json")
+        )
 
     @classmethod
-    def read(cls, output: Path) -> "Stamp | None":
-        path = cls.path_for(output)
-        if not path.is_file():
-            return None
-        try:
-            body = json.loads(path.read_text(encoding="utf-8"))
-            return cls(
-                step=body["step"],
-                digest=body["digest"],
-                parts=body.get("parts") or {},
-                produced_at=body.get("produced_at", ""),
-                seconds=body.get("seconds", 0.0),
-            )
-        except (OSError, ValueError, KeyError):
-            return None
+    def read(cls, output: Path, step: str = "") -> "Stamp | None":
+        """The stamp `step` left on `output`, or None.
+
+        Falls back to an unqualified stamp written before stamps were named per step, if it
+        was that step's.
+        """
+        for path in (
+            (cls.path_for(output, step), cls.path_for(output)) if step else (cls.path_for(output),)
+        ):
+            if not path.is_file():
+                continue
+            try:
+                body = json.loads(path.read_text(encoding="utf-8"))
+                stamp = cls(
+                    step=body["step"],
+                    digest=body["digest"],
+                    parts=body.get("parts") or {},
+                    produced_at=body.get("produced_at", ""),
+                    seconds=body.get("seconds", 0.0),
+                )
+            except (OSError, ValueError, KeyError):
+                return None
+            return stamp if not step or stamp.step == step else None
+        return None
 
     def write(self, output: Path) -> Path:
-        path = self.path_for(output)
+        path = self.path_for(output, self.step)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(self.as_json() + "\n", encoding="utf-8")
         return path
@@ -263,7 +277,7 @@ def fresh(step: Step[Item], item: Item, *, redo: bool = False) -> Stamp | None:
     output = step.produces(item)
     if output is None or not output.exists():
         return None
-    stamp = Stamp.read(output)
+    stamp = Stamp.read(output, step.name)
     if stamp is None:
         return None
     return stamp if stamp.digest == digest_of(step.depends_on(item), step.name) else None

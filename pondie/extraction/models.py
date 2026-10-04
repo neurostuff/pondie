@@ -319,14 +319,10 @@ class RunReport(Strict):
         )
 
     def summary(self) -> str:
-        """The headline, and the one degradation a run can suffer while reporting success.
+        """The headline, plus papers that succeeded without any table.
 
-        A paper with no table manifest still extracts: the stage writes an empty list, says
-        so in a note, and every later stage runs. What it produces is a record whose analyses
-        reference tables it does not contain, and the stage that copies them exists because a
-        rewrite once dropped it and left 155 of 156 records that way. That went unnoticed
-        because nothing above the stage said anything. Counted here for the same reason the
-        failures are: a summary that reports only what raised is not a summary of the run.
+        A paper with no table manifest still extracts, with no Table records; that is
+        reported here because nothing fails.
         """
         cost = self.cost
         line = (
@@ -337,9 +333,8 @@ class RunReport(Strict):
         if missing := self.starved():
             shown = ", ".join(missing[:4]) + (" ..." if len(missing) > 4 else "")
             line += (
-                f"\n  WARNING: {len(missing)} paper(s) had no table manifest and hold no "
-                f"Table records ({shown}). Their analyses reference tables the record does "
-                f"not contain; polarity coverage falls with them."
+                f"\n  WARNING: {len(missing)} paper(s) had no table manifest and hold no Table "
+                f"records ({shown}); any coordinates they have come from prose."
             )
         return line
 
