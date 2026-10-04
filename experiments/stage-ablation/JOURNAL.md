@@ -918,3 +918,19 @@ factors cross in their own cells, so `build` now rewrites a signed product of tw
 factors as crossed cells when the other factor's levels carry `order` (later positive). Both
 30343133 group x time analyses came out as `PTSD ±, TD ∓, follow-up +, baseline -`, kind
 `interaction`. Rebuilt PTSD records: no level errors left, 28 → 30 valid before adjudication.
+
+## Models declared once and borrowed
+
+30343133's three "kind" errors were not kind errors. The extractor wrote one seed's model in
+full and left three sibling seed models with no terms, their analyses' cells naming the first
+model's terms. The derivation read those unresolvable cells as plain signed cells
+(`simple_effect`), the validator called that a contradiction with the stated `interaction`,
+and the adjudicator was asked a question with no right answer ("kept interaction", 3/3).
+Now: a cell outside its model chain derives no kind (the out-of-chain reference is reported
+on its own), and `build` copies into an empty model the terms its analyses borrow from one
+other model, scoped `<model>.<term>`. Only the terms its analyses cell, the uncelled
+covariates, and their product components: 17923164 put the IES total, intrusion and
+avoidance scores under one model, and copying all of it would have claimed each subscale
+regression was adjusted for the others. Every empty model in four runs was a borrower (3, 9,
+1, 1 per 55); all but the substance-use one (two donors) are filled. Out-of-chain + kind
+errors: PTSD 9 → 6, PTSD medium 26 → 10, dementia 29 → 23. Rebuilt PTSD: 31/55 valid.

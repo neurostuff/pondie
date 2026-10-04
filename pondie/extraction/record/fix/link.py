@@ -390,6 +390,95 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
     return fixed
 
 
+def fill_empty_models(body: dict[str, Any]) -> list[str]:
+    """Give a model with no terms the terms its analyses' cells borrow from one other model.
+
+    An extractor declaring one design several times writes it out once: 30343133 tests
+    group x time at four seeds, declares the terms under the vmPFC seed's model, leaves the
+    other three models empty, and points their analyses' cells at the vmPFC terms. Each
+    cell then names a term its own model does not reach. The cells already say which terms
+    these analyses tested, so the terms are copied into the empty model, scoped to it as
+    `<model>.<term>` (`scope_duplicate_terms`' form), and the cells repointed.
+
+    What is copied is the terms these analyses cell, the donor's terms no analysis cells
+    (the shared covariates), and what those are products of. A term another analysis tests is
+    not: 17923164 declared the IES total, intrusion and avoidance scores under one model and
+    celled one per analysis, so the intrusion model takes the intrusion score and the
+    covariates, not the scores tested beside it.
+
+    Only when every borrowed term comes from one model. Borrowing from two leaves nothing
+    to copy that the record states.
+    """
+
+    models = {
+        m["local_id"]: m
+        for m in body.get("model_estimations") or []
+        if isinstance(m, dict) and isinstance(m.get("local_id"), str)
+    }
+    owner = {
+        term["local_id"]: model_id
+        for model_id, model in models.items()
+        for term in model.get("terms") or []
+        if isinstance(term, Mapping) and isinstance(term.get("local_id"), str)
+    }
+    celled_by: dict[str, set[str]] = {}
+    for analysis in body.get("analyses") or []:
+        if isinstance(analysis, Mapping):
+            for cell in (analysis.get("effect") or {}).get("cells") or []:
+                if isinstance(cell, Mapping) and isinstance(cell.get("term"), str):
+                    celled_by.setdefault(cell["term"], set()).add(
+                        str(analysis.get("model_estimation"))
+                    )
+    fixed: list[str] = []
+    for model_id, model in models.items():
+        if model.get("terms"):
+            continue
+        analyses = [
+            a
+            for a in body.get("analyses") or []
+            if isinstance(a, dict) and a.get("model_estimation") == model_id
+        ]
+        named = {
+            cell.get("term")
+            for a in analyses
+            for cell in (a.get("effect") or {}).get("cells") or []
+            if isinstance(cell, Mapping)
+        }
+        if not named or set(terms_in_scope(model_id, models)) & named:
+            continue
+        donors = {owner.get(term_id) for term_id in named}
+        if len(donors) != 1 or None in donors:
+            continue
+        donor = donors.pop()
+        by_id = {t["local_id"]: t for t in models[donor]["terms"] if isinstance(t, Mapping)}
+        wanted = {t for t in by_id if t in named or not celled_by.get(t)}
+        for term_id in list(wanted):
+            wanted |= set(by_id[term_id].get("interaction_with") or []) & set(by_id)
+        scoped = {
+            term_id: f"{model_id}.{term_id.removeprefix(f'{donor}.')}"
+            for term_id in by_id
+            if term_id in wanted
+        }
+        model["terms"] = json.loads(json.dumps([by_id[t] for t in by_id if t in scoped]))
+        for term in model["terms"]:
+            term["local_id"] = scoped[term["local_id"]]
+            if isinstance(term.get("interaction_with"), list):
+                term["interaction_with"] = [scoped.get(t, t) for t in term["interaction_with"]]
+        for analysis in analyses:
+            effect = analysis.get("effect") or {}
+            for cell in effect.get("cells") or []:
+                if isinstance(cell, dict) and cell.get("term") in scoped:
+                    cell["term"] = scoped[cell["term"]]
+            mediation = effect.get("mediation")
+            if isinstance(mediation, dict) and mediation.get("mediator") in scoped:
+                mediation["mediator"] = scoped[mediation["mediator"]]
+        fixed.append(
+            f"model_estimations[{model_id!r}]: had no terms; copied {len(scoped)} from "
+            f"{donor!r}, which its {len(analyses)} analysis(es)' cells named"
+        )
+    return fixed
+
+
 def cross_products_of_factors(body: dict[str, Any]) -> list[str]:
     """Rewrite a signed cell on a product of two factors as the factors' crossed cells.
 

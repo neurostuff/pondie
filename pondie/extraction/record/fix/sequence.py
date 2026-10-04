@@ -198,6 +198,13 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="shape",
         ),
         Repair(
+            "empty_models",
+            "copy into a model with no terms the terms its analyses borrow from another",
+            lambda body, ctx: link.fill_empty_models(body),
+            after="listified",
+            stage="merged",
+        ),
+        Repair(
             "cell_levels",
             "rewrite a cell's level to the declared level it folds to",
             lambda body, ctx: link.align_cell_levels(body),

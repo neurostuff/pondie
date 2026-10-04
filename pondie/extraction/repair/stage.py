@@ -37,6 +37,7 @@ from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record.effect import (
     NO_LABEL,
     UNDETERMINED_VARIATION,
+    UNRESOLVED_TERM,
     derive_effect_kind,
     levels_a_cell_may_name,
     terms_in_scope,
@@ -235,7 +236,10 @@ def _kinds(record: Mapping[str, Any]) -> list[Case]:
         terms = terms_in_scope(analysis.get("model_estimation"), models)
         derived, why = derive_effect_kind(effect.get("cells"), terms)
         stated = values.read(effect.get("kind"))
-        if derived in (NO_LABEL, UNDETERMINED_VARIATION) or stated in (None, derived):
+        if derived in (NO_LABEL, UNDETERMINED_VARIATION, UNRESOLVED_TERM) or stated in (
+            None,
+            derived,
+        ):
             continue
         out.append(
             Case(

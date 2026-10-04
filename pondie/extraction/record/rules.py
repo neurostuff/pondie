@@ -34,6 +34,7 @@ from pondie.extraction.record.fix.derive import modality_subclasses
 from pondie.extraction.record.effect import (
     NO_LABEL,
     UNDETERMINED_VARIATION,
+    UNRESOLVED_TERM,
     derive_effect_kind,
     levels_a_cell_may_name,
     terms_in_scope,
@@ -1392,8 +1393,8 @@ def check_effect_kind(record: Mapping[str, Any], findings: Findings) -> None:
         if derived == NO_LABEL:
             findings.error(f"{path}.cells", why)
             continue
-        if derived == UNDETERMINED_VARIATION:
-            continue  # a missing `variation_level`, which `check_field` reports at its source
+        if derived in (UNDETERMINED_VARIATION, UNRESOLVED_TERM):
+            continue  # reported at the source: `check_field`, `check_cell_terms`
 
         stated = values.read(effect.get("kind"))
         if stated is None:

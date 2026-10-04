@@ -84,6 +84,9 @@ def levels_a_cell_may_name(
 
 
 UNDETERMINED_VARIATION = "undetermined:variation_level"
+#: A cell names a term outside its analysis's model chain, so nothing can be read off it;
+#: `check_cell_terms` reports the reference itself.
+UNRESOLVED_TERM = "undetermined:term"
 NO_LABEL = "none"
 
 _SIGNED = ("positive", "negative")
@@ -109,6 +112,9 @@ def derive_effect_kind(cells: Any, terms: Mapping[str, Mapping[str, Any]]) -> tu
 
     if not parsed:
         return NO_LABEL, "no cells"
+    for term_id, term, _level, _direction in parsed:
+        if term is None:
+            return UNRESOLVED_TERM, f"term {term_id!r} is outside the model chain"
 
     # Step 1 -- a cell on a product column. A non-empty `interaction_with` is what makes a
     # column a product.

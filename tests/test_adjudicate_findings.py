@@ -309,6 +309,80 @@ def test_a_product_of_factors_is_left_where_the_reading_is_not_certain(record):
     assert link.cross_products_of_factors(record) == []
     assert _signs(record) == before
 
+
+def _seeds(borrowed=("trm_gxa",)):
+    """Two seed models; the extractor declared the design under the first only."""
+    return {
+        "model_estimations": [
+            {"local_id": "mod_vmpfc", "terms": [
+                {"local_id": "trm_group", "name": _v("group"), "type": _v("categorical"),
+                 "levels": [{"level": _v("PTSD")}, {"level": _v("TD")}]},
+                {"local_id": "trm_age", "name": _v("age"), "type": _v("continuous"),
+                 "variation_level": _v("between_subject")},
+                {"local_id": "trm_gxa", "name": _v("group x age"), "type": _v("continuous"),
+                 "interaction_with": ["trm_group", "trm_age"]}]},
+            {"local_id": "mod_other", "terms": [
+                {"local_id": "trm_sex", "name": _v("sex"), "type": _v("categorical"),
+                 "levels": [{"level": _v("F")}, {"level": _v("M")}]}]},
+            {"local_id": "mod_pcc", "terms": []},
+        ],
+        "analyses": [{"local_id": "ana_pcc", "name": _v("group x age (PCC)"),
+                      "model_estimation": "mod_pcc", "effect": {
+                          "kind": _v("interaction"),
+                          "cells": [{"term": t, "direction": _v("negative")} for t in borrowed]}}],
+    }
+
+
+def test_a_cell_outside_its_model_chain_derives_no_kind_and_raises_no_kind_case():
+    """30343133: the cell's term was unresolvable, so it derived `simple_effect` against a
+    stated `interaction`, and the adjudicator was asked a question with no right answer."""
+    from pondie.extraction.record.effect import UNRESOLVED_TERM, derive_effect_kind
+
+    record = _seeds()
+    cells = record["analyses"][0]["effect"]["cells"]
+    assert derive_effect_kind(cells, {})[0] == UNRESOLVED_TERM
+    assert not [c for c in stage.contradictions(record, _sch()) if c.slot == "kind"]
+    validator = Validator(_sch(), None)
+    validator.check_record(record)
+    assert not [e for e in validator.errors if "effect.kind" in e]
+    assert any("does not reach" in e for e in validator.errors)
+
+
+def test_an_empty_model_gets_the_terms_its_analyses_borrow_from_one_other():
+    record = _seeds()
+    assert link.fill_empty_models(record)
+    pcc = record["model_estimations"][2]
+    assert [t["local_id"] for t in pcc["terms"]] == [
+        "mod_pcc.trm_group", "mod_pcc.trm_age", "mod_pcc.trm_gxa"]
+    assert pcc["terms"][2]["interaction_with"] == ["mod_pcc.trm_group", "mod_pcc.trm_age"]
+    assert record["analyses"][0]["effect"]["cells"][0]["term"] == "mod_pcc.trm_gxa"
+    assert [t["local_id"] for t in record["model_estimations"][0]["terms"]][0] == "trm_group"
+    validator = Validator(_sch(), None)
+    validator.check_record(record)
+    assert not [e for e in validator.errors if "does not reach" in e or "effect.kind" in e]
+
+
+
+def test_an_empty_model_does_not_take_a_term_another_analysis_tests():
+    """17923164: one model held the IES total, intrusion and avoidance scores; the intrusion
+    model takes intrusion and the covariate, not the total its neighbour tested."""
+    record = _seeds()
+    donor = record["model_estimations"][0]
+    donor["terms"].append({"local_id": "trm_total", "name": _v("IES total"),
+                           "type": _v("continuous")})
+    record["analyses"].append({"local_id": "ana_total", "model_estimation": "mod_vmpfc",
+                               "effect": {"cells": [{"term": "trm_total",
+                                                     "direction": _v("negative")}]}})
+    link.fill_empty_models(record)
+    copied = [t["local_id"] for t in record["model_estimations"][2]["terms"]]
+    assert copied == ["mod_pcc.trm_group", "mod_pcc.trm_age", "mod_pcc.trm_gxa"]
+
+def test_an_empty_model_borrowing_from_two_models_is_left():
+    """21338692 borrowed from two models: no one design the record states to copy."""
+    record = _seeds(borrowed=("trm_gxa", "trm_sex"))
+    assert link.fill_empty_models(record) == []
+    assert record["model_estimations"][2]["terms"] == []
+
 def test_a_value_cannot_be_wrapped_with_not_applicable_evidence():
     """The schema reserves it for not_reported fields; seven writers got it wrong."""
     with pytest.raises(ValueError):
