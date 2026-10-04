@@ -858,3 +858,22 @@ Two cache bugs found by resuming it:
   stale on every resume (cheap, but it made "N run" lines lie). Stamps are now named per
   step, and an unqualified stamp still counts for the step that wrote it, so existing runs
   keep their caches. Resume: 8/8 cached per paper.
+
+## Record formatting on the 55-paper default run
+
+`check_records.py` runs pondie's validator over every record (quote spans checked against
+the paper text). The `ptsd_default` records: **0/55 valid, 573 errors, median 10 per
+record**. Most errors were systematic, and code caused them rather than the model:
+- Code-filled slots (`is_healthy`, the normalized demographics) were written `extracted` +
+  `not_applicable`, a shape the schema forbids: 407 errors.
+- `other_characteristics` was written but never declared on the extraction schema.
+- The prompt asked for slots that code overwrites (`language`, `is_healthy`, …), and the
+  model's wrapper survived where code didn't write one.
+- Model shape slips: `tables` filed under `effect`, cells written as wrappers, `"direction":
+  "not_reported"` (bare or wrapped), debris keys (`"}rayele"`, `":{"`).
+
+These fixes run at `build`, so the same payloads could be rebuilt with no model calls:
+**26/55 valid, 115 errors, median 1**. The remaining errors are content: ROI analyses or
+corrections that never name their regions (85), and cell levels that don't match the term's
+declared levels (16). Those are for the prompt or repair. Commits 092c852 (pondie) and
+7fbf270 (study_schema).
