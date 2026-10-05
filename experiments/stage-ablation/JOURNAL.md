@@ -1575,3 +1575,54 @@ Adjudicator outcomes across the S2r runs show the warrant-guard fix at work. Ref
 
 Rejected quotes are rare, 3 in one run, so moving the adjudicator to indexed citations is
 not worth doing yet.
+
+## Cue reactivity (Hill-Bowen 2021, 34400176): a fourth meta-analysis, held out
+
+The first task-fMRI meta-analysis. Selection rests on visual cues
+(`Task.stimulus_modality`) and a **within-participant** cue > control contrast, read off
+cells, their levels' conditions, and those conditions' `stimulus_content` and
+`condition_kind`. The three VBM pools instead compare groups.
+
+**Pool and corpus.** `make_pool.py` (new; the earlier pools were drawn inline): 25 gold
+sampled from the 140 benchmark papers autonima screened at full text, plus 30 negatives (15
+that autonima's screener included and the benchmark did not, 15 others it screened), seed
+0. The corpus was built with `build_corpus.py` into a new directory, and only the 54 papers
+not already in the base corpus were copied in. 16 of 25 gold papers carry parsed
+coordinates; two negatives are abstract-only texts.
+
+**Query** (`43d66cb`), committed from the criteria text before any record existed. The run
+was `cue55_s2r`: `tables` + `prose` + `split`, then S2r + repair, on code `43d66cb`.
+
+| | veto recall | precision | inputs-only recall |
+|---|---|---|---|
+| **held out** | **9/25** | **0.64** | 7/25 |
+| after three reading fixes (fit to this data) | 15/25 | 0.71 | 13/25 |
+
+**The records were right and the query read them wrong:**
+1. *Control first, in the description.* A cue condition's description compares ("sexual
+   pictures ... masked by neutral pictures"), so looking for a control word there first
+   called every cue a control. The side now comes from the conditions' `condition_kind`
+   (`control_state`), then their stimulus content, label and names; the description is
+   used only when those say nothing. Fixation and rest are neither side: the criterion
+   says "control *stimuli*".
+2. *A held cohort counted as a group crossing.* A contrast taken within one group is not a
+   group comparison. ("romantic" was also dropped from the cue words: romantic-partner
+   photos made 22860092's "partner + pen" control condition a cue.)
+3. *An SVC is not recorded as I assumed.* The query's comment said an SVC "is a
+   correction over an ROI on a whole-brain model, so `whole_brain` already admits it". That
+   was never checked. Records give it `spatial_scope: roi` on a voxel model: 46 of 179 ROI
+   analyses here, against 133 region-mean ones. Now an ROI analysis on a voxel or vertex
+   model passes, and a region-mean (`roi`/`parcel` unit) one fails.
+
+**What still limits it:**
+- *Recall (9 misses, all `cue > control`=None).* Many cue-reactivity papers report group
+  comparisons of the cue > neutral map ("heroin-dependent vs controls: heroin-related >
+  neutral cues"). The model cells only the group term and leaves out the first-level
+  condition cells the schema asks for. I did not loosen the query to accept a bare group
+  comparison as a within-participant contrast. This is an extraction gap.
+- *Precision (6 false positives).* Five are papers autonima's own full-text screener
+  included, each with visual cues, a within-participant cue > control contrast and
+  whole-brain results. The sixth, 29108734, reports only uncorrected results. Against the
+  15 random negatives, precision is 1 false positive in 15; against the 15 the benchmark
+  left out despite autonima including them, it is 5 in 15. The benchmark's 191 papers are
+  a selection from a larger eligible literature.
