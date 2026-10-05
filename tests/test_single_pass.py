@@ -207,3 +207,46 @@ def test_omitted_never_reaches_the_record(tmp_path):
     (tmp_path / "single.json").write_text(json.dumps(payload))
     body, _ = merge_payloads(tmp_path)
     assert "omitted" not in body
+
+
+def _two_models(term_b: str):
+    """Two analyses, each on its own model, both models declaring a group term."""
+    def model(mid, tid):
+        return {"local_id": mid, "terms": [{"local_id": tid, "name": _wrapped("group"),
+                "type": _wrapped("categorical"),
+                "levels": [{"level": _wrapped("PTSD")}, {"level": _wrapped("control")}]}]}
+    def analysis(aid, mid, tid):
+        return {"local_id": aid, "name": _wrapped(aid), "model_estimation": mid,
+                "effect": {"cells": [{"term": tid, "level": _wrapped("PTSD"),
+                                      "direction": _wrapped("negative")}]}}
+    return {"analyses": [analysis("ana_1", "mod_a", "trm_group"),
+                         analysis("ana_2", "mod_b", term_b)],
+            "model_estimations": [model("mod_a", "trm_group"), model("mod_b", "trm_group")]}
+
+
+def _calls_for(tmp_path, reply):
+    import json
+
+    from pondie.extraction.models import Cost, ModelReply
+
+    calls = []
+
+    def caller(call, *, paper, stage):
+        calls.append(stage)
+        return ModelReply(payload=json.loads(json.dumps(reply)), cost=Cost(calls=1))
+
+    settings = Settings(payloads=tmp_path / "p", records=tmp_path / "r", model="m",
+                        stages=(StageName.single,), complete_references=False)
+    Single().run(_staged(tmp_path), settings, caller)
+    return calls
+
+
+def test_a_fault_a_repair_fixes_does_not_cost_a_retry(tmp_path):
+    """16199014: `trm_group` declared once per model read as a duplicated id and paid for a
+    second full attempt, though `scope_duplicate_terms` scopes it at no cost."""
+    assert render.postcondition_failures(_two_models("trm_group"), "single"), "raw: a fault"
+    assert _calls_for(tmp_path, _two_models("trm_group")) == ["single"]
+
+
+def test_a_fault_no_repair_fixes_is_still_retried(tmp_path):
+    assert _calls_for(tmp_path, _two_models("trm_nowhere")) == ["single"] * 3

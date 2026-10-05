@@ -496,7 +496,12 @@ class _ModelPass(_Base):
             candidate_notes = cited_notes + candidate_notes
             parsed = True
             failures = render.postcondition_failures(
-                candidate, self.mode, declared, listing, foci, self.existing(paper, settings)
+                self._judged(paper, settings, candidate),
+                self.mode,
+                declared,
+                listing,
+                foci,
+                self.existing(paper, settings),
             )
             # Keep the best attempt: a retry can come back worse, even empty.
             if best is None or _severity(failures) < _severity(best_failures):
@@ -564,6 +569,37 @@ class _ModelPass(_Base):
             notes=tuple(outcome_notes),
             produced=(self._write(paper, settings, payload),),
         )
+
+    def _judged(self, paper: Paper, settings: Settings, payload: dict) -> dict:
+        """A copy of `payload` after the deterministic repairs it will get anyway -- this
+        pass's own and `build`'s -- for judging it. A fault one of them fixes (a term id
+        declared once per model, a reference with one possible target) is no reason to pay
+        for another attempt. The payload itself is still repaired once, where it always is.
+        """
+        from pondie.extraction.record import fix
+
+        judged = copy.deepcopy(payload)
+        tables = Tables().produces(paper, settings)
+        if tables.is_file():
+            judged.setdefault("tables", json.loads(tables.read_text("utf-8")).get("tables") or [])
+        stage1 = paper.parse if paper.parse.is_file() else None
+        table_map = paper.table_map if paper.table_map.is_file() else None
+        try:
+            for stages, schema_path in (
+                (self.repair_stage, schema.STORAGE),
+                (fix.AT_MERGE, render.EXTRACTION_SCHEMA),
+            ):
+                if stages:
+                    fix.apply_all(
+                        judged,
+                        fix.Context(
+                            schema=reader.load(schema_path), stage1=stage1, table_map=table_map
+                        ),
+                        stage=stages,
+                    )
+        except Exception:  # noqa: BLE001 -- a repair that cannot run here judges nothing
+            return payload
+        return judged
 
     def _repair(self, paper: Paper, payload: dict) -> list[str]:
         """The payload-local repairs, run where their inputs are rather than at the merge."""
@@ -868,7 +904,7 @@ class Single(_ModelPass):
         found, _ = render.normalize(reply.payload, "satisfy")
         merged = _merge_entities(copy.deepcopy(payload), found)
         after = render.postcondition_failures(
-            merged,
+            self._judged(paper, settings, merged),
             self.mode,
             (),
             self.listing(paper, settings),
@@ -959,7 +995,7 @@ class Single(_ModelPass):
         # Strict decoding fixes a reply's shape, not its references: complete what the
         # additions leave undeclared, then drop an addition that still names nothing.
         failures = render.postcondition_failures(
-            merged, self.mode, (), self.listing(paper, settings),
+            self._judged(paper, settings, merged), self.mode, (), self.listing(paper, settings),
             self.listing_foci(paper, settings), self.existing(paper, settings),
         )
         notes = []
