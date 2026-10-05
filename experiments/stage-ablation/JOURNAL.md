@@ -1434,3 +1434,24 @@ check on gold 17923164: `prose#2`'s two peaks are printed, but the sentence says
 difference "did not survive a SVC", so `no_significant_effect` is right and the foci count
 alone would have been wrong. Reading `outcome` before foci is supported here. The remaining
 disagreements are not hand-checked.
+
+### More from the rerun's errors
+
+- **Hyphenated levels.** `fold_label` now treats hyphens and dashes as spaces: 17825801 wrote
+  `combat exposed` against the declared `combat-exposed` on 12 cells. A longer name
+  (`PTSD twin pairs` against `PTSD`) is still not a spelling, and is still reported.
+  Rebuilding 185 records changed only that paper (24 -> 12 errors).
+- **Coordinate-set keys.** `rekey_coordinate_sets` maps a set keyed by its Table's id
+  (`tbltable2#1`) back to the parse key (`823#1`) through `table_map`, and only to a key the
+  parse has. It runs beside `single` ("demands"), so it applies to new draws, not rebuilds:
+  `build` runs only the merge repairs.
+- **Kept `whole_brain` left its regions.** The adjudicator's clearing of `regions` ran only
+  when the scope changed. 33169525's five analyses and 15734342's one were answered
+  "kept whole_brain" and still contradicted. This is the second consequence found running
+  on the write path only, after "kept contrast" over undirected cells. Both now go through
+  one `_consequences` step that runs whichever way the slot went, and the re-check after
+  adjudication is what exposed this one.
+
+The dementia draw's failed attempts so far are references to models and terms declared
+nowhere (`mod_dti_fbi_regression`, `trm_lobule_vi_volume`). That is a real omission, for the
+retry or the completion call.
