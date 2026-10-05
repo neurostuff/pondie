@@ -51,9 +51,16 @@ NEGATION = re.compile(r"^\s*(no|none|not|non|never|without|absence|absent|free o
                       r"\b(no|without|never had|no history of|free of)\s", re.I)
 
 
+#: Where one entry's clauses part: "17 survivors were diagnosed with recent-onset PTSD; 10
+#: survivors without PTSD participated" asserts PTSD in its first clause only.
+CLAUSE = re.compile(r";|\.\s+(?=[A-Z])")
+
+
 def asserted(entries: list[str]) -> list[str]:
-    """The entries that assert a condition rather than its absence."""
-    return [e for e in entries if not NEGATION.search(e)]
+    """The clauses that assert a condition rather than its absence. Read per clause: a whole
+    entry dropped for one negated clause took the disorder its other clauses assert with it."""
+    clauses = (c.strip() for e in entries for c in CLAUSE.split(e))
+    return [c for c in clauses if c and not NEGATION.search(c)]
 
 
 def val(node: Any) -> Any:
