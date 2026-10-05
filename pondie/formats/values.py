@@ -120,6 +120,26 @@ def wrap(
     ).as_field()
 
 
+#: The `UnreportedReason` that leaves a slot open: "I could not tell", a claim about the pass
+#: and a revisable one. Every other reason describes the paper.
+OPEN = "undetermined"
+
+
+def blank(node: Any) -> bool:
+    """Holds nothing at all: None, an empty string, list or mapping."""
+    return node is None or node == "" or node == [] or node == {}
+
+
+def settled(node: Any) -> bool:
+    """Whether a slot holds an answer: a value, or `not_reported` -- plain silence is an
+    answer -- with any reason but `OPEN`. Blank and `undetermined` are open: what `fill`
+    asks about again, and what a repair may still fill."""
+    if is_field(node):
+        return not (node.get("extraction_status") == "not_reported"
+                    and node.get("unreported_reason") == OPEN)
+    return not blank(node)
+
+
 def is_field(node: Any) -> bool:
     """Whether this node is a wrapper, by the key that defines one."""
     return isinstance(node, Mapping) and MARKER in node

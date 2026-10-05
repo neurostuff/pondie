@@ -337,8 +337,12 @@ def fill_directions(body: dict[str, Any]) -> list[str]:
             current = values.read(node)
             if current not in (None, "", "absent"):
                 continue
-            if isinstance(node, Mapping) and node.get("unreported_reason"):
-                continue  # `ambiguous`, `outside_text`: the pass looked and said so
+            # Open (`values.settled`), or plain silence about a sign the name states. A
+            # reason other than `OPEN` -- `ambiguous`, `outside_text` -- is the pass's answer.
+            if values.settled(node) and isinstance(node, Mapping) and node.get(
+                "unreported_reason"
+            ):
+                continue
             level = str(values.read(cell.get("level")) or "")
             derived = direction.direction_of(level, contrast)
             if derived is None:

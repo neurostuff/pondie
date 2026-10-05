@@ -1072,3 +1072,25 @@ def test_a_quantity_is_not_a_comparison():
     assert direction.polarity("PTSD greater than controls")[2] == 1
     assert direction.reverse_comparison("PTSD > HC (p < 0.001)") == "PTSD < HC (p < 0.001)"
     assert direction.same_level("control", "Controls")
+
+
+def test_an_open_slot_is_blank_or_undetermined_and_nothing_else():
+    from pondie.formats import values
+
+    nr = lambda **kw: {"extraction_status": "not_reported",  # noqa: E731
+                       "evidence": {"status": "not_applicable"}, **kw}
+    assert not values.settled(None) and not values.settled("")
+    assert not values.settled(nr(unreported_reason="undetermined"))
+    assert values.settled(nr()), "plain silence is an answer"
+    assert values.settled(nr(unreported_reason="outside_text"))
+    assert values.settled(_wrapped("x"))
+
+
+def test_an_undetermined_direction_is_still_filled_from_the_name():
+    """Audit: fill_directions skipped any reason, so an `undetermined` direction fill would
+    re-ask was not filled from a name that states it."""
+    body = {"analyses": [{"local_id": "a", "name": _wrapped("FTD > controls"), "effect": {
+        "cells": [{"level": _wrapped("FTD"), "direction": {
+            "extraction_status": "not_reported", "unreported_reason": "undetermined",
+            "evidence": {"status": "not_applicable"}}}]}}]}
+    assert fix.derive.fill_directions(body)

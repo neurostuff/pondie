@@ -35,9 +35,10 @@ from pondie.schema.reader import Schema
 #: rather than at the end of the run.
 VOCABULARY = frozenset({"ambiguous", "outside_text", "cited_elsewhere", "undetermined"})
 
-#: The reason that leaves a slot open. Every other value of `UnreportedReason` is a claim
-#: about the paper, and re-asking it would invite the model to overwrite its own finding.
-OPEN = "undetermined"
+#: The reason that leaves a slot open (`values.OPEN`). Every other value of `UnreportedReason`
+#: is a claim about the paper, and re-asking it would invite the model to overwrite its own
+#: finding.
+OPEN = values.OPEN
 
 #: What the model answers for plain silence, and not a member of `UnreportedReason`. The
 #: schema has no token for the ordinary case: `not_reported` already says the attribute was
@@ -168,11 +169,9 @@ def unsettled(payload: Mapping[str, Any], sch: Schema) -> list[dict[str, Any]]:
                 continue
             held = entity.get(name)
             if values.is_field(held):
-                if held.get("extraction_status") != "not_reported":
+                if values.settled(held):
                     continue
-                if held.get("unreported_reason") != OPEN:
-                    continue
-            elif held not in (None, "", [], {}):
+            elif not values.blank(held):
                 # An answer in the wrong shape is still an answer. The extraction passes
                 # emit some slots as bare scalars -- `Cell.direction` comes back as
                 # `"positive"` rather than a wrapper -- and the `wrappers` fix puts them

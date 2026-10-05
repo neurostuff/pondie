@@ -339,17 +339,16 @@ def drop_vacuous_demands(body: dict[str, Any]) -> list[str]:
     ]
 
 
-def _says_nothing(node: Any) -> bool:
-    """Blank, empty, or a field with no value and no reason -- recursively for an object.
-    A `not_reported` field with a reason is an answer, not nothing."""
-    if node is None or node == "" or node == [] or node == {}:
+def _holds_no_value(node: Any) -> bool:
+    """No extracted value and no non-blank leaf anywhere in it."""
+    if values.blank(node):
         return True
     if values.is_field(node):
-        return node.get("extraction_status") != "extracted" and not node.get("unreported_reason")
+        return node.get("extraction_status") != "extracted"
     if isinstance(node, Mapping):
-        return all(_says_nothing(v) for v in node.values())
+        return all(_holds_no_value(v) for v in node.values())
     if isinstance(node, list):
-        return all(_says_nothing(v) for v in node)
+        return all(_holds_no_value(v) for v in node)
     return False
 
 
@@ -360,7 +359,7 @@ def drop_vacuous_objects(body: dict[str, Any], sch: Schema) -> list[str]:
     optional one must fill it. 25533729 wrote `mediation: {"mediator": "", "path":
     not_reported}` on four analyses that had no mediation, and each reads as a reference to
     a term named nothing. Only an optional, single-valued nested object one of whose
-    required references is blank and whose every value says nothing: `Study.design` with
+    required references is blank and which holds no value: `Study.design` with
     open fields is something `fill` still asks about, and is left.
     """
     dropped: list[str] = []
@@ -376,7 +375,7 @@ def drop_vacuous_objects(body: dict[str, Any], sch: Schema) -> list[str]:
         ] if target else []
         if not any(not walk.ids_of(slot.value.get(name)) for name in required_refs):
             continue
-        if _says_nothing(slot.value):
+        if _holds_no_value(slot.value):
             del slot.owner[slot.key]
             dropped.append(f"{slot.path}: an object naming nothing it requires -- dropped")
     return dropped
@@ -453,8 +452,7 @@ def _objects(
             yield from _objects(item, attribute.range, sch, node, class_name, f"{path}.{key}{suffix}")
 
 
-def _empty(value: Any) -> bool:
-    return value in (None, "", [], {})
+_empty = values.blank
 
 
 def _conflicts(target: Mapping[str, Any], key: str, value: Any) -> bool:
