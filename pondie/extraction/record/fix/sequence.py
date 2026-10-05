@@ -167,6 +167,14 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="shape",
         ),
         Repair(
+            "vacuous_objects",
+            "drop an optional object that says nothing, as null would",
+            lambda body, ctx: shape.drop_vacuous_objects(body, ctx.schema),
+            # After `status_as_value`, so a status word is already a field that says nothing.
+            after="status_as_value",
+            stage="shape",
+        ),
+        Repair(
             "unwrapped",
             "unwrap a wrapper the model put in a bare-scalar slot",
             lambda body, ctx: shape.unwrap_plain_slots(body, ctx.schema),

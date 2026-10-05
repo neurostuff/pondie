@@ -948,3 +948,21 @@ def test_a_mask_with_nowhere_to_go_is_left_alone():
 
 def test_a_named_structure_is_not_a_mask():
     assert fix.derive.rescope_tissue_masks(_masked("hippocampus grey matter")) == []
+
+
+def test_an_optional_object_holding_nothing_is_dropped():
+    """25533729: `mediation: {mediator: "", path: not_reported}` on analyses with none."""
+    body = {"analyses": [{"local_id": "a", "effect": {
+        "cells": [{"term": "t", "direction": _wrapped("positive")}],
+        "mediation": {"mediator": "", "path": {"extraction_status": "not_reported",
+                                                 "evidence": {"status": "not_applicable"}}}}}]}
+    assert fix.shape.drop_vacuous_objects(body, _SCH)
+    assert "mediation" not in body["analyses"][0]["effect"]
+    assert body["analyses"][0]["effect"]["cells"], "a required list is never touched"
+
+
+def test_an_object_with_one_value_is_kept():
+    body = {"analyses": [{"local_id": "a", "effect": {
+        "cells": [], "mediation": {"mediator": "trm_x", "path": {
+            "extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}}}}]}
+    assert fix.shape.drop_vacuous_objects(body, _SCH) == []

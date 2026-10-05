@@ -339,6 +339,38 @@ def drop_vacuous_demands(body: dict[str, Any]) -> list[str]:
     ]
 
 
+def _says_nothing(node: Any) -> bool:
+    """Blank, empty, or a field that holds no value -- recursively for an object."""
+    if node is None or node == "" or node == [] or node == {}:
+        return True
+    if values.is_field(node):
+        return node.get("extraction_status") != "extracted"
+    if isinstance(node, Mapping):
+        return all(_says_nothing(v) for v in node.values())
+    if isinstance(node, list):
+        return all(_says_nothing(v) for v in node)
+    return False
+
+
+def drop_vacuous_objects(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Drop an optional single object that says nothing: what `null` would have said.
+
+    Strict decoding makes every slot of an object required, so a model that opens an
+    optional one must fill it. 25533729 wrote `mediation: {"mediator": "", "path":
+    not_reported}` on four analyses that had no mediation, and each reads as a reference to
+    a term named nothing. Only optional, single-valued nested slots whose every value is
+    blank or unreported; anything carrying an id or an extracted value stays.
+    """
+    dropped: list[str] = []
+    for slot in walk.slots(body, sch, kinds=("nested",)):
+        if slot.attribute.multivalued or slot.attribute.required:
+            continue
+        if isinstance(slot.value, Mapping) and slot.value and _says_nothing(slot.value):
+            del slot.owner[slot.key]
+            dropped.append(f"{slot.path}: an object holding nothing -- dropped")
+    return dropped
+
+
 #: What a slot name can be. A key outside it is debris from a malformed reply (`":{"`).
 SLOT_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
