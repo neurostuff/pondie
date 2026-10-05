@@ -1134,3 +1134,45 @@ one `single` attempt, 5 calls, 126k in / 23k out.
   `undirected`, which derives `omnibus`. The adjudicator kept `contrast`, but nothing
   rewrites the cells, so the contradiction stands. A contrast's cell sign is its weight,
   not the result's direction; the model left it undirected because the effect was null.
+
+## Post-mortems
+
+### `derived_ids` left coordinate sets on the old analysis id
+
+**What happened.** The repair renames each analysis to an id from its parse key and
+repointed only `mirror_of`. `CoordinateSet.analysis` (study_schema `eaf4f94`, 2026-10-02)
+is a second reference to an analysis. Every coordinate set then dangled. The first
+55-paper launch retried `single` on 9 of its first 9 papers for it, and the stored records
+dangled too.
+
+**How it came to be.** The premise "`mirror_of` is the only pointer at an analysis" was
+true when written (2026-08-31). It sat in a docstring, a code comment and a test comment,
+and the code hard-coded it. Adding a reference slot to the schema changed no code, so no
+check failed. The same schema change made three more claims stale: "`source_table_analysis`
+is the only exact route to an analysis's coordinates" (two docstrings and the `single`
+prompt).
+
+**Why it was not obvious.**
+- The error named the model's own id (`ana_morphometric_ptsd_control`), so it looked like a
+  model fault. The retry note even sent it to the model as one.
+- Nothing said a repair had renamed that analysis.
+- No earlier reply had carried coordinate sets, so no run and no test had both together.
+
+**What changed so it cannot recur.**
+- `walk.repoint` takes the reference slots from the schema. `derived_ids`,
+  `fill_empty_models` and `scope_duplicate_terms` all rename through it.
+  `scope_duplicate_terms` used to rewrite any matching string in any slot.
+- `apply_all` counts dangling references around every repair. It names any repair that
+  adds one, in `RepairLog.introduced` and a warning. Here that would have said
+  `derived_ids` on the first paper.
+- Rebuilding 75 records (`ptsd_default`, `ptsd20_s2r`) with both changes gave identical
+  errors and values. No repair introduces a dangling reference on them.
+- The stale "only route" docstrings were corrected. The prompt sentence is unchanged
+  while the 55-paper run uses it.
+
+**Left open.** Nothing in pondie reads `coordinate_sets` (the model emits them because the
+strict schema includes the list). In the first 17 sets of the 55-paper run, 14 agree with
+their analysis's `source_table_analysis`. All 3 that differ are from 28549317, keyed by
+the table's `local_id` (`tbltable2#1`) where the analyses carry the parse key (`823#1`).
+One of them links an `anchor` set to an analysis, which the schema allows only for
+results. No rule checks that the two joins agree.
