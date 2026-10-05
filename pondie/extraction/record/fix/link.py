@@ -46,11 +46,12 @@ NAMING_SLOTS = ("name", "level", "label")
 _LEVEL_POLARITY: dict[str, str] = {
     **{w: "positive" for w in (
         "positive", "higher", "greater", "more", "increase", "increased", "up", "activation",
-        "positive correlation", "positively correlated",
+        "positive correlation", "positively correlated", "increasing", "high", "larger",
+        "bigger",
     )},
     **{w: "negative" for w in (
         "negative", "lower", "less", "fewer", "decrease", "decreased", "down", "deactivation",
-        "negative correlation", "negatively correlated",
+        "negative correlation", "negatively correlated", "decreasing", "low", "smaller",
     )},
 }
 

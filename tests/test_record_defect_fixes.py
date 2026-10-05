@@ -1033,3 +1033,10 @@ def test_a_stated_denominator_is_never_overwritten() -> None:
     }
     assert fix.derive_denominators(body) == []
     assert body["groups"][0]["sex_distribution"][0]["denominator"]["value"] == 25
+
+
+def test_an_increasing_level_beside_a_positive_direction_is_dropped():
+    """23383194: 'increasing' on a continuous sum term with direction positive."""
+    record = _continuous("increasing", "positive")
+    fix.drop_redundant_cell_levels(record)
+    assert "level" not in record["analyses"][0]["effect"]["cells"][0]
