@@ -475,10 +475,10 @@ def relabel_conclusions(body: dict[str, Any], sch: Schema) -> list[str]:
 def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> list[str]:
     """Verify, or deterministically fill, each analysis's link to its parsed row group.
 
-    `Analysis.source_table_analysis` is the only exact route from an analysis to its
-    coordinates: the schema stores none, `Table.coordinate_count` says only how many
-    exist, and `tables` cannot disambiguate because a table usually reports several
-    contrasts and several analyses usually cite the same table.
+    `Analysis.source_table_analysis` is an exact route from an analysis to its
+    coordinates (`CoordinateSet.analysis` is the same join from the other side).
+    `tables` cannot stand in for it: a table usually reports several contrasts and
+    several analyses usually cite the same table.
 
     Not left to the model. A key it invents resolves to nothing, and a key it omits
     leaves the join to a later string match -- which is what this slot exists to replace.

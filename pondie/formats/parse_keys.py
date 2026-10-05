@@ -24,10 +24,10 @@ PROSE_TABLE_ID = "prose"
 def parse_keys(analyses: list[dict]) -> list[str]:
     """A stable address per parsed entry, positionally aligned with `analyses`.
 
-    `Analysis.source_table_analysis` holds one of these, and it is the only exact route
-    from an analysis to the coordinate rows it was read off. Both sides of that contract
-    must number identically: `render.stage1_block` prints the key to the model and
-    `fix.resolve_source_table_analysis` resolves what comes back.
+    `Analysis.source_table_analysis` holds one of these, as does a `CoordinateSet.local_id`:
+    the exact route between an analysis and the coordinate rows it was read off. Both sides
+    of that contract must number identically: `render.stage1_block` prints the key to the
+    model and `fix.resolve_source_table_analysis` resolves what comes back.
 
     Numbered over EVERY entry, including the withheld half of a sign-split. The prompt
     hides withheld entries -- the paper has no prose for them -- and numbering only what
