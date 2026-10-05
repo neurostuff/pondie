@@ -674,3 +674,17 @@ def test_answering_cells_reverses_the_names_comparison():
     _adjudicate(record, caller)
     assert values.read(record["analyses"][0]["name"]) == "PTSD > controls"
     assert values.read(record["analyses"][0]["effect"]["cells"][0]["direction"]) == "positive"
+
+
+def test_keeping_whole_brain_clears_the_regions_beside_it():
+    """33169525: five analyses answered `kept whole_brain` and kept their regions, so the
+    contradiction stood after every answer."""
+    record = _roi_record()
+    analysis = record["analyses"][0]
+    analysis["spatial_scope"] = _v("whole_brain")
+    analysis["regions"] = ["reg_amygdala"]
+    [case] = [c for c in stage.contradictions(record, _sch()) if c.slot == "spatial_scope"]
+    caller, _ = _answering({"id": case.id, "value": "whole_brain", "quote": REDUCED})
+    report = _adjudicate(record, caller)
+    assert analysis["regions"] == []
+    assert report.adjudicated == [f"{case.id}: kept whole_brain; regions cleared"]

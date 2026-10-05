@@ -416,6 +416,16 @@ def _reverse_name(analysis: MutableMapping[str, Any], _span: Any = None) -> list
     return [f"name: {text!r} -> {swapped!r}"]
 
 
+def _consequences(case: Case, value: str, owner: MutableMapping[str, Any], span: Any) -> list[str]:
+    """What an answer writes besides its slot -- whether the slot changed or was kept. A
+    kept `whole_brain` that left its regions beside it settled nothing (33169525)."""
+    done = []
+    if case.clears and value in UNRESTRICTED and owner.get(case.clears):
+        owner[case.clears] = []
+        done.append(f"{case.clears} cleared")
+    return done + (case.then[value](owner, span) if value in case.then else [])
+
+
 def _descend(entity: Any, path: tuple[str | int, ...]) -> MutableMapping[str, Any] | None:
     node = entity
     for step in path:
@@ -570,7 +580,7 @@ def adjudicate(
             _name_regions(record, sch, entity, case, row, text, quote, abbreviations, report)
             continue
         if not case.writes or values.read(owner.get(case.slot)) == value:
-            also = case.then[value](owner, span) if value in case.then else []
+            also = _consequences(case, value, owner, span)
             said = f"kept {value}" if case.writes else value
             report.adjudicated.append(f"{case.id}: {said}" + "".join(f"; {a}" for a in also))
             answered.append(case.id)
@@ -594,9 +604,7 @@ def adjudicate(
                 "sets": [{"source": "repair_pass", "spans": [span]}],
             },
         }
-        if case.clears and value in UNRESTRICTED:
-            owner[case.clears] = []
-        also = case.then[value](owner, span) if value in case.then else []
+        also = _consequences(case, value, owner, span)
         report.adjudicated.append(f"{case.id}: {value}" + "".join(f"; {a}" for a in also))
         answered.append(case.id)
     # An answer counts only if the contradiction it answered is gone. "kept contrast" on
