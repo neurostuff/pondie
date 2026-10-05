@@ -56,6 +56,15 @@ RETRYABLE = frozenset({408, 409, 425, 429, 500, 502, 503, 504})
 
 #: How many times a call may fail to land before it counts against `attempts`.
 UNREACHABLE_TRIES = 4
+#: The same for flex's "not sufficient resources", which lasts minutes to hours rather than
+#: seconds: four tries within two minutes lost 7 papers of one night's runs to it. Spaced
+#: 30 s doubling to 10 min, about 45 minutes in all.
+CAPACITY_TRIES = 8
+
+
+def _no_capacity(error: BaseException) -> bool:
+    """Flex's 429 for having no capacity, as opposed to a rate limit."""
+    return "resource_unavailable" in str(error) or "sufficient resources" in str(error)
 
 
 def _transient(error: BaseException) -> bool:
@@ -167,12 +176,18 @@ class GatewayCaller:
                     )
                     constrain = False
                     continue
-                if _transient(error) and unreachable < UNREACHABLE_TRIES:
+                capacity = _no_capacity(error)
+                if _transient(error) and unreachable < (
+                    CAPACITY_TRIES if capacity else UNREACHABLE_TRIES
+                ):
                     unreachable += 1
                     # The SDK has already backed off twice inside this one call, so this
                     # spaces whole calls. Jittered: eight workers that hit the same limit
                     # would otherwise return in lockstep and hit it again.
-                    time.sleep(min(2.0**unreachable, 30.0) * (0.5 + random.random() / 2))
+                    wait = min(15.0 * 2.0**unreachable, 600.0) if capacity else min(
+                        2.0**unreachable, 30.0
+                    )
+                    time.sleep(wait * (0.5 + random.random() / 2))
                     continue
                 attempt += 1
                 continue

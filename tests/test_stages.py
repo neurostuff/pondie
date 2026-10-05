@@ -1424,3 +1424,16 @@ def test_a_raising_stage_reports_the_cause_not_just_the_retry_count(tmp_path, mo
     report = run([_paper(tmp_path)], _settings(tmp_path), Recorder())
     reason = report.failures[0].failed.reason
     assert "3 attempt(s) failed" in reason and "Connection reset by peer" in reason
+
+
+def test_flex_with_no_capacity_is_told_apart_from_a_rate_limit() -> None:
+    """Seven papers in one night died on four tries within two minutes of flex having "no
+    sufficient resources"; it gets the longer budget."""
+    from pondie.extraction import llm
+
+    error = _Boom(429)._error()
+    assert not llm._no_capacity(error)
+    error = RuntimeError("Error code: 429 - {'error': {'message': 'Flex does not have "
+                         "sufficient resources available', 'type': 'resource_unavailable'}}")
+    assert llm._no_capacity(error)
+    assert llm.CAPACITY_TRIES > llm.UNREACHABLE_TRIES
