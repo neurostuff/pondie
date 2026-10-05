@@ -305,6 +305,12 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="demands",
         ),
         Repair(
+            "coordinate_set_keys",
+            "key a coordinate set by its parse key, not its table's local_id",
+            lambda body, ctx: derive.rekey_coordinate_sets(body, ctx.stage1, ctx.table_map),
+            stage="demands",
+        ),
+        Repair(
             "derived_ids",
             "rename each analysis to an id the parse determines",
             lambda body, ctx: derive.derive_analysis_ids(body, ctx.schema),

@@ -592,6 +592,43 @@ def derive_analysis_ids(body: dict[str, Any], sch: Schema) -> list[str]:
     return notes
 
 
+def rekey_coordinate_sets(
+    body: dict[str, Any], stage1: Path | None, table_map: Path | None
+) -> list[str]:
+    """Key a coordinate set by its parse key where it was keyed by its table's `local_id`.
+
+    A `CoordinateSet.local_id` is the parse key, `<table id>#<ordinal>`, the same key
+    `Analysis.source_table_analysis` holds. 13 of 78 sets in the 55-paper PTSD run used the
+    Table entity's id instead (`tbltable2#1` for parse key `823#1`), while their analyses
+    carried the right key. `table_map` says which parse table each Table came from, so the
+    key is rewritten, and only to a key the parse has.
+    """
+    if not (stage1 and stage1.is_file() and table_map and table_map.is_file()):
+        return []
+    parsed = json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
+    keys = set(parse_keys.parse_keys(parsed))
+    parse_table = {local: source for source, local in json.loads(table_map.read_text()).items()}
+    taken = {
+        entry.get("local_id")
+        for entry in body.get("coordinate_sets") or []
+        if isinstance(entry, Mapping)
+    }
+    fixed: list[str] = []
+    for coordinate_set in body.get("coordinate_sets") or []:
+        if not isinstance(coordinate_set, dict):
+            continue
+        key = coordinate_set.get("local_id")
+        if not isinstance(key, str) or key in keys or "#" not in key:
+            continue
+        table, _, ordinal = key.rpartition("#")
+        rekeyed = f"{parse_table.get(table)}#{ordinal}"
+        if table in parse_table and rekeyed in keys and rekeyed not in taken:
+            coordinate_set["local_id"] = rekeyed
+            taken.add(rekeyed)
+            fixed.append(f"coordinate_sets[{key!r}] -> {rekeyed!r}, its table's parse key")
+    return fixed
+
+
 def derive_correction_regions(body: dict[str, Any]) -> list[str]:
     """Name an ROI correction's regions from the analyses that used it.
 

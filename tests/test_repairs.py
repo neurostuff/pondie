@@ -852,3 +852,16 @@ def test_a_one_item_list_for_a_single_valued_slot_is_unwrapped():
     assert values.shape(sch, "Acquisition", "brain_coverage", ["whole_brain"]) == "whole_brain"
     assert values.shape(sch, "Acquisition", "brain_coverage", "partial") == "partial"
     assert values.shape(sch, "Acquisition", "brain_coverage", ["whole_brain", "partial"]) is None
+
+
+def test_a_coordinate_set_keyed_by_its_tables_local_id_takes_the_parse_key(tmp_path):
+    """28549317: `tbltable2#1` where the parse key is `823#1`."""
+    stage1 = tmp_path / "analyses.json"
+    stage1.write_text(json.dumps({"analyses": [{"table_id": "823"}, {"table_id": "824"}]}))
+    table_map = tmp_path / "table-map.json"
+    table_map.write_text(json.dumps({"823": "tbltable2", "824": "tbltable3"}))
+    body = {"coordinate_sets": [{"local_id": "tbltable2#1", "analysis": "a_823_1"},
+                                {"local_id": "tbltable2#2"}, {"local_id": "text#1"}]}
+    notes = fix.derive.rekey_coordinate_sets(body, stage1, table_map)
+    assert [s["local_id"] for s in body["coordinate_sets"]] == ["823#1", "tbltable2#2", "text#1"]
+    assert len(notes) == 1, "a key the parse lacks, and a text set, are left alone"
