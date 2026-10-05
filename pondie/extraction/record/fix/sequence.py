@@ -180,6 +180,12 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
+            "tissue_masks",
+            "leave a tissue-masked analysis whole-brain, the mask as its search volume",
+            lambda body, ctx: derive.rescope_tissue_masks(body),
+            stage="merged",
+        ),
+        Repair(
             "table_effects",
             "mark a table an analysis cites as reporting that analysis's effect",
             lambda body, ctx: derive.derive_table_effects(body),

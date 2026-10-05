@@ -627,6 +627,79 @@ def rekey_coordinate_sets(
     return fixed
 
 
+@lru_cache(maxsize=1)
+def _tissue_mask() -> re.Pattern[str] | None:
+    """The schema's own "bare tissue class" name pattern (storage `Region` rule)."""
+    for rule in reader.load(schema.STORAGE).definition("Region").rules or []:
+        conditions = (rule.preconditions.slot_conditions or {}) if rule.preconditions else {}
+        name = conditions.get("name")
+        if name is not None and name.pattern:
+            return re.compile(name.pattern)
+    return None
+
+
+def rescope_tissue_masks(body: dict[str, Any]) -> list[str]:
+    """Apply the schema's prescription for a tissue mask recorded as a region: "Record the
+    mask as InferenceSettings.search_volume and leave the analysis whole-brain."
+
+    A grey-matter mask is the tissue modelled, not a region inference was restricted to.
+    18165464's smokers-vs-never-smokers VBM, explicitly masked to AAL grey matter, came out
+    `roi` over a region named "gray matter regions", so the whole-brain criterion failed a
+    gold paper. Only where every region the analysis (or correction) names is a mask, and
+    only where an inference setting holds or takes the mask, so nothing is lost.
+    """
+    pattern = _tissue_mask()
+    if pattern is None:
+        return []
+    masks = {
+        region["local_id"]: str(values.read(region.get("name")))
+        for region in body.get("regions") or []
+        if isinstance(region, Mapping)
+        and isinstance(region.get("local_id"), str)
+        and pattern.match(str(values.read(region.get("name")) or ""))
+    }
+    if not masks:
+        return []
+    settings = {
+        entry["local_id"]: entry
+        for entry in body.get("inference_settings") or []
+        if isinstance(entry, dict) and isinstance(entry.get("local_id"), str)
+    }
+    fixed: list[str] = []
+
+    def keep_mask(targets: list[dict], named: list[str]) -> bool:
+        if not targets:
+            return False
+        for target in targets:
+            if not values.read(target.get("search_volume")):
+                target["search_volume"] = values.wrap(
+                    ", ".join(masks[n] for n in named), source="generated", evidence="not_found"
+                )
+        return True
+
+    for entity, scope_slot, region_slot, targets in [
+        *(
+            (a, "spatial_scope", "regions",
+             [settings[s] for s in walk.ids_of(a.get("inference_settings")) if s in settings])
+            for a in body.get("analyses") or []
+            if isinstance(a, dict)
+        ),
+        *((s, "correction_scope", "correction_regions", [s]) for s in settings.values()),
+    ]:
+        named = walk.ids_of(entity.get(region_slot))
+        if not named or not all(n in masks for n in named):
+            continue
+        if values.read(entity.get(scope_slot)) != "roi" or not keep_mask(targets, named):
+            continue
+        entity[scope_slot] = values.wrap("whole_brain", source="generated", evidence="not_found")
+        entity[region_slot] = []
+        fixed.append(
+            f"{entity.get('local_id')}.{scope_slot}: roi over {[masks[n] for n in named]} "
+            f"-> whole_brain, the mask kept as search_volume"
+        )
+    return fixed
+
+
 def derive_correction_regions(body: dict[str, Any]) -> list[str]:
     """Name an ROI correction's regions from the analyses that used it.
 

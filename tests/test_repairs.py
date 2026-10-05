@@ -910,3 +910,41 @@ def test_a_filled_direction_is_a_whole_wrapper():
     filled = body["analyses"][0]["effect"]["cells"][0]["direction"]
     assert filled["value"] == "positive" and "unreported_reason" not in filled
     assert filled["evidence"] == {"status": "not_found"}
+
+
+def _masked(region_name, search_volume=None, settings=True):
+    inf = {"local_id": "inf1", "correction_scope": _wrapped("whole_brain")}
+    if search_volume:
+        inf["search_volume"] = _wrapped(search_volume)
+    return {
+        "regions": [{"local_id": "reg_gm", "name": _wrapped(region_name)}],
+        "inference_settings": [inf] if settings else [],
+        "analyses": [{"local_id": "a", "spatial_scope": _wrapped("roi"), "regions": ["reg_gm"],
+                      "inference_settings": ["inf1"] if settings else []}],
+    }
+
+
+def test_a_grey_matter_mask_leaves_the_analysis_whole_brain():
+    """18165464: VBM explicitly masked to AAL grey matter, recorded as `roi` over a region
+    named "gray matter regions"; the whole-brain criterion then failed a gold paper."""
+    body = _masked("gray matter regions", search_volume="explicit AAL grey-matter mask")
+    assert fix.derive.rescope_tissue_masks(body)
+    analysis = body["analyses"][0]
+    assert analysis["spatial_scope"]["value"] == "whole_brain" and analysis["regions"] == []
+    assert body["inference_settings"][0]["search_volume"]["value"] == "explicit AAL grey-matter mask"
+
+
+def test_the_mask_moves_to_an_empty_search_volume():
+    body = _masked("grey matter mask")
+    fix.derive.rescope_tissue_masks(body)
+    assert body["inference_settings"][0]["search_volume"]["value"] == "grey matter mask"
+
+
+def test_a_mask_with_nowhere_to_go_is_left_alone():
+    body = _masked("grey matter mask", settings=False)
+    assert fix.derive.rescope_tissue_masks(body) == []
+    assert body["analyses"][0]["spatial_scope"]["value"] == "roi"
+
+
+def test_a_named_structure_is_not_a_mask():
+    assert fix.derive.rescope_tissue_masks(_masked("hippocampus grey matter")) == []
