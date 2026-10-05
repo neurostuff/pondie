@@ -843,6 +843,58 @@ CUE_ANALYSIS: list[tuple[str, Callable]] = [
 CUE_REQUIRED = ("fMRI", "cue > control")
 
 
+# ------------------------------------------- decision making (Poudel 2020, 32078973)
+#
+# Written from the criteria text alone, before any decision-making record was extracted:
+#
+#   "First, only empirical English language articles using fMRI as a neuroimaging
+#   technique were included. We excluded PET studies ... Second, only experiments reporting
+#   results from whole-brain analyses were included, as region of interest (ROI) analyses
+#   violate the ALE null-hypothesis ... Third, only experiments reporting activity foci as
+#   3D coordinates (X, Y, Z) in stereotactic (MNI or Talairach) space were included.
+#   Coordinates from studies including healthy controls, substance users, as well as
+#   participants with other neuropsychiatric conditions ... were utilized ... participants
+#   from all age groups (range: 10-69 years) were also included."  Dates: "-3/2019".
+#   Analyses: risky, ambiguous and perceptual decision making.
+#
+# No population criterion. The task is the criterion: an analysis of a decision-making task
+# -- risky, ambiguous or perceptual choice -- read off its task's name, description and
+# conditions.
+
+DECISION = re.compile(r"decision|choice|choos|gambl|lotter|\brisk|ambigu|uncertain|"
+                      r"\bbet(s|ting)?\b|wager|balloon|\bbart\b|iowa|\bigt\b|cups task|"
+                      r"wheel of fortune|delay(ed)? discount|intertemporal|probabilistic|"
+                      r"perceptual (decision|discrimination|judg)|random[- ]dot|motion "
+                      r"discrimination|two[- ]alternative|\b2afc\b|forced[- ]choice", re.I)
+
+
+def decision_task(a: dict, record: dict, ix: Index) -> bool | None:
+    """"risky-, ambiguous- and perceptual-DM": the analysis's task (or, unlinked, the paper's
+    tasks) is one where participants choose."""
+    tasks = [ix.tasks[t] for t in refs(a.get("tasks")) if t in ix.tasks] or list(ix.tasks.values())
+    if not tasks:
+        return None
+    text = " ".join(x for t in tasks for x in strs(t.get("name")) + strs(t.get("description"))
+                    + [y for c in t.get("conditions") or [] if isinstance(c, dict)
+                       for y in strs(c.get("name")) + strs(c.get("description"))])
+    return bool(DECISION.search(text))
+
+
+DM_STUDY: list[tuple[str, Callable]] = [
+    ("original research", original),
+    ("English", english),
+    ("by March 2019", search_window),
+    ("reports coordinates", reports_coordinates),
+]
+DM_ANALYSIS: list[tuple[str, Callable]] = [
+    ("fMRI", functional_mri),
+    ("decision-making task", decision_task),
+    ("whole brain", whole_brain),
+    ("reported foci", reported_foci),
+]
+DM_REQUIRED = ("fMRI", "decision-making task")
+
+
 # ------------------------------------------------------------------ the registry
 
 @dataclass(frozen=True)
@@ -876,4 +928,6 @@ SPECS: dict[str, Spec] = {
     # No cohort criterion: `case`/`comparison` are unused by these predicates.
     "34400176": Spec(CUE, CONTROL, None, (1900, (2020, 8)), CUE_STUDY, CUE_ANALYSIS,
                      CUE_REQUIRED, []),
+    "32078973": Spec(DECISION, CONTROL, None, (1900, (2019, 3)), DM_STUDY, DM_ANALYSIS,
+                     DM_REQUIRED, []),
 }

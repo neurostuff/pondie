@@ -21,7 +21,7 @@ def main() -> int:
     meta, project, out = sys.argv[1:4]
     gold = {r["study_pmid"] for r in csv.DictReader(open(BENCH / "included_studies.csv"))
             if r["meta_pmid"] == meta}
-    screened = json.loads((AUTONIMA / project / "v5-gpt/outputs/fulltext_screening_results.json")
+    screened = json.loads((sorted((AUTONIMA / project).glob("v*/outputs/fulltext_screening_results.json"))[-1])
                           .read_text())["screening_results"]
     decided = {str(r["study_id"]): r["decision"] for r in screened}
     rng = random.Random(0)
