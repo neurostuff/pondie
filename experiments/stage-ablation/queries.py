@@ -706,25 +706,43 @@ SUD_REQUIRED = ("structural MRI", "grey matter, voxel-wise", "users vs controls"
 #   cues>control stimuli or natural reward-related cues>control stimuli were included."
 #   Exclusion: "1) ROI". Dates: "- 8/1/2020". Analyses: pooled, drug, natural.
 #
-# A small-volume correction is a correction over an ROI on a whole-brain model, so
-# `whole_brain` already admits it; an ROI *analysis* is excluded.
+# "whole-brain or small-volume corrected": an ROI analysis passes when it was voxel-wise
+# inside its mask (a small-volume correction), and fails when it averaged a region -- the
+# parcellation ROIs the criteria exclude "given the absence of coordinates".
 
 CUE = re.compile(r"drug|alcohol|beer|wine|liquor|smok|cigarette|tobacco|nicotine|cocaine|"
                  r"crack|heroin|opioid|opiate|cannabis|marijuana|methamphetamine|amphetamine|"
                  r"gambl|food|meal|snack|palatable|sweet|chocolate|sex|erotic|porn|nude|"
-                 r"romantic|reward|money|monetary|appetitive|craving", re.I)
+                 r"reward|money|monetary|appetitive|craving", re.I)
 CONTROL = re.compile(r"neutral|control|non[- ]?(drug|food|alcohol|smok|cue|sex|erotic|reward)|"
                      r"scrambled|household|object|furniture|tool|landscape|nature|water|"
                      r"office|blurred|mosaic", re.I)
 
 
-def _condition_text(level: dict | None, label: str, ix: Index) -> str:
-    """A level's label and everything its conditions say about their stimuli."""
-    parts = [label]
-    for cid in refs(level.get("conditions")) if level else []:
-        c = ix.conditions.get(cid) or {}
-        parts += strs(c.get("name")) + strs(c.get("stimulus_content")) + strs(c.get("description"))
-    return " ".join(parts)
+def _side(level: dict | None, label: str, ix: Index) -> str | None:
+    """"cue", "control" or None for one level, read off its conditions.
+
+    Their kind and stimulus content first -- `control_state`, "neutral pictures",
+    "interacting bodies" -- and the label and names with them. The description only when
+    those say nothing: it compares (24275010's sexual pictures "masked by neutral
+    pictures"), so read first it called every cue a control. A fixation or rest period is
+    not a "control stimulus" and is neither side.
+    """
+    conds = [ix.conditions[c] for c in (refs(level.get("conditions")) if level else [])
+             if c in ix.conditions]
+    kinds = {k for c in conds for k in strs(c.get("condition_kind"))}
+    if kinds & {"fixation", "rest"} and not kinds & {"control_state", "task_state"}:
+        return None
+    primary = " ".join([label] + [x for c in conds
+                                  for x in strs(c.get("name")) + strs(c.get("stimulus_content"))])
+    if "control_state" in kinds or CONTROL.search(primary):
+        return "control"
+    if CUE.search(primary):
+        return "cue"
+    described = " ".join(x for c in conds for x in strs(c.get("description")))
+    if CUE.search(described) and not CONTROL.search(described):
+        return "cue"
+    return None
 
 
 def _within(term: dict | None, level: dict | None) -> bool | None:
@@ -740,6 +758,23 @@ def _within(term: dict | None, level: dict | None) -> bool | None:
     if level and refs(level.get("groups")):
         return False
     return None
+
+
+def whole_brain_or_svc(a: dict, record: dict, ix: Index) -> bool | None:
+    """Whole brain, or voxel-wise within an ROI mask. Recorded, an SVC is `spatial_scope:
+    roi` on a voxel model (46 of 179 ROI analyses here), not the whole-brain scope with an
+    ROI correction the query first assumed: 23188041's MJ cue > non-MJ cue inside an a
+    priori amygdala/striatum/OFC mask failed `whole brain` until this."""
+    scope = strs(a.get("spatial_scope"))
+    if not scope:
+        return None
+    if "whole_brain" in scope:
+        return True
+    model = next((ix.models[t] for t in refs(a.get("model_estimation")) if t in ix.models), None)
+    unit = set(strs(model.get("spatial_unit"))) if model else set()
+    if unit & {"voxel", "vertex"}:
+        return True
+    return False if unit & {"roi", "parcel"} else None
 
 
 def visual_cues(a: dict, record: dict, ix: Index) -> bool | None:
@@ -778,10 +813,10 @@ def cue_gt_control(a: dict, record: dict, ix: Index) -> bool | None:
         level = _level_of(term, label)
         within = _within(term, level)
         if within is False:
-            between = True
+            # A held cohort is the group the contrast was taken within, not a crossing.
+            between = between or "held" not in strs(cell.get("direction"))
             continue
-        text = _condition_text(level, label, ix)
-        kind = "control" if CONTROL.search(text) else "cue" if CUE.search(text) else None
+        kind = _side(level, label, ix)
         sign = " ".join(strs(cell.get("direction")))
         sides.setdefault((id(term), kind), set()).add(sign)
     pairs = {t for (t, k), signs in sides.items() if k == "cue" and "positive" in signs} & \
@@ -800,7 +835,7 @@ CUE_STUDY: list[tuple[str, Callable]] = [
 CUE_ANALYSIS: list[tuple[str, Callable]] = [
     ("fMRI", functional_mri),
     ("visual cues", visual_cues),
-    ("whole brain", whole_brain),
+    ("whole brain or SVC", whole_brain_or_svc),
     ("cue > control", cue_gt_control),
     ("reported foci", reported_foci),
 ]
