@@ -783,7 +783,12 @@ def visual_cues(a: dict, record: dict, ix: Index) -> bool | None:
     mods = {m for t in tasks for m in strs(t.get("stimulus_modality"))}
     if not mods:
         return None
-    return "visual" in mods
+    if "visual" not in mods:
+        return False
+    # "other sensory cues [e.g., gustatory, olfactory, tactile] were not considered": beside
+    # one of those, a visual channel says nothing about what carried the cue (27459715's
+    # beer-flavour sprays, recorded once as gustatory and once as gustatory + visual).
+    return None if mods & {"gustatory", "olfactory", "tactile"} else True
 
 
 def functional_mri(a: dict, record: dict, ix: Index) -> bool | None:
