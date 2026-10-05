@@ -1094,3 +1094,9 @@ def test_an_undetermined_direction_is_still_filled_from_the_name():
             "extraction_status": "not_reported", "unreported_reason": "undetermined",
             "evidence": {"status": "not_applicable"}}}]}}]}
     assert fix.derive.fill_directions(body)
+
+
+def test_a_search_volume_naming_regions_does_not_hold_the_mask():
+    """Audit: `\\bmask` accepted 'amygdala mask' as already recording a tissue mask."""
+    body = _masked("grey matter mask", search_volume="amygdala mask")
+    assert fix.derive.rescope_tissue_masks(body) == []

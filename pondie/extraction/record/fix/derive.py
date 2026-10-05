@@ -21,6 +21,7 @@ from pondie.extraction.record import direction
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import walk
 from pondie.formats import parse_keys, values
+from pondie.normalization import search_volume
 from pondie.normalization.coordinate_space import normalize as normalize_space
 from pondie.schema import reader
 from pondie.schema.reader import Schema
@@ -689,7 +690,11 @@ def rescope_tissue_masks(body: dict[str, Any]) -> list[str]:
         for target in targets:
             held = str(values.read(target.get("search_volume")) or "")
             if held:
-                if not (pattern.search(held) or re.search(r"(?i)\bmask", held)):
+                # `search_volume.normalize` is what reads this slot everywhere else; an
+                # "amygdala mask" is REGIONS there, not the tissue modelled.
+                if search_volume.normalize(held).value not in (
+                    search_volume.COMPARTMENT, search_volume.WHOLE_BRAIN
+                ):
                     return False  # it says something else; the mask would go unrecorded
                 continue
             if any(not masked_only(a) for a in users.get(target.get("local_id"), [])):
