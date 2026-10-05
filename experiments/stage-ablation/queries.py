@@ -868,9 +868,14 @@ CUE_REQUIRED = ("fMRI", "cue > control")
 
 DECISION = re.compile(r"decision|choice|choos|gambl|lotter|\brisk|ambigu|uncertain|"
                       r"\bbet(s|ting)?\b|wager|balloon|\bbart\b|iowa|\bigt\b|cups task|"
-                      r"wheel of fortune|delay(ed)? discount|intertemporal|probabilistic|"
+                      r"wheel of fortune|delay(ed)? discount|intertemporal|"
                       r"perceptual (decision|discrimination|judg)|random[- ]dot|motion "
                       r"discrimination|two[- ]alternative|\b2afc\b|forced[- ]choice", re.I)
+
+
+NOT_DECISION = re.compile(r"ultimatum|dictator game|trust game|prisoner'?s dilemma|"
+                          r"reinforcement learning|category learning|reversal learning", re.I)
+RISK_WORDS = re.compile(r"gambl|lotter|\brisk|ambigu|wager|balloon|iowa|cups task", re.I)
 
 
 def decision_task(a: dict, record: dict, ix: Index) -> bool | None:
@@ -882,6 +887,11 @@ def decision_task(a: dict, record: dict, ix: Index) -> bool | None:
     text = " ".join(x for t in tasks for x in strs(t.get("name")) + strs(t.get("description"))
                     + [y for c in t.get("conditions") or [] if isinstance(c, dict)
                        for y in strs(c.get("name")) + strs(c.get("description"))])
+    # Social exchange is a decision, but not one of the three the meta-analysis pools
+    # (25720857's Ultimatum Game); nor is learning from probabilistic feedback (27710793,
+    # 28575424, 29590478) -- "probabilistic" was dropped from DECISION for it.
+    if NOT_DECISION.search(text) and not RISK_WORDS.search(text):
+        return False
     return bool(DECISION.search(text))
 
 
