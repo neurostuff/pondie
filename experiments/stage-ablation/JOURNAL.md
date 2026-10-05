@@ -1219,3 +1219,56 @@ Nothing else changed.
 **Noted.** The `Validator`'s error count does not include dangling references
 (`check_local_ids` reports them separately, in the build report's `dangling`). So
 17892884's 12 errors did not move when its 6 dangling references were fixed.
+
+### The adjudicator "kept contrast" and left the cells contradicting it
+
+**What happened.** Three null group comparisons in the 55-paper run were stated `contrast` over
+two `undirected` cells, which derive `omnibus`: 23021615, 22952599 and 28549317. Each says
+the groups did not differ. The adjudicator answered `contrast`, the report said "kept
+contrast", and the record still contradicted itself.
+
+**Which half is wrong.** The cells. `undirected` marks a test with no per-level sign (an F or
+χ² over the factor). A t or z comparison that found nothing still had a sign, and when the
+paper does not print it the cell is `not_reported` (extraction-readme.md §2), which derives
+`contrast`.
+
+**How it came to be.** A contradiction between two halves of the record was put to the model
+as a question about one slot, `effect.kind`. Answering the stated kind wrote nothing. No
+option could ever reach the cells.
+
+**Why it was not obvious.** "kept contrast" reads as a resolution, and nothing recomputed the
+contradictions afterwards.
+
+**What changed.**
+- A `Case` now says what else each answer writes. When every cell is `undirected` and
+  withholding their signs would derive the stated kind, the question explains the two
+  readings, and answering the stated kind marks those signs `not_reported`.
+- After adjudication the contradictions are recomputed. An answered case still standing is
+  reported as "still contradicted after the answer", not counted as settled.
+- Re-adjudicating the three records (3 calls): all answered `contrast`, the cells became
+  `not_reported`, and all three validate with nothing introduced.
+
+**A bug I introduced along the way.** The first version wrote the withheld sign as a
+hand-built `{"extraction_status": "not_reported"}`. The schema requires
+`evidence.status: not_applicable` on such a field, so each rewritten cell failed
+validation (2 new errors per record). `values.wrap(None, ...)` is the constructor that
+encodes that invariant. My unit test checked only the derived kind, and
+`adjudicate_only.py` skipped the `Validator.diff` that `stage.run` performs. Now the
+wrapper goes through `values.wrap`, the test validates the record it produces, and
+`adjudicate_only.py` prints what an adjudication introduces.
+
+**Upstream.** The model writes `undirected` for a null result, reading "no direction in the
+result" as "no direction in the test". It does so for slopes too: 23021615's four null
+regressions each carry one `undirected` slope cell. That derives a regression, so no
+contradiction flags it and only the prompt can correct it. The enum's own description
+never reaches the prompt (value descriptions are not rendered); extraction-readme.md §2
+does. §2 now says a null t or z result is `not_reported`, for group cells and for slopes,
+and `undirected` is only for an F or χ².
+
+**Tested** (`runs/nullsent`: `single` + `build`, one draw each, on the three papers). Every
+unsigned cell came back `not_reported`, 13 in all (group comparisons and slopes), and none
+`undirected`. Before: 3 group comparisons and 4 slopes were `undirected`. None of the three
+records derives `omnibus` any more. 23021615 found 14 analyses, against 8 in the 55-paper
+draw. The records' ROI-without-regions errors (11) are not new: the 55-paper `single`
+payload had the same gap (4 on 23021615), and there `fill`/`repair` named the regions. The
+sentence is on study_schema PR #15 (`965f7b9`).
