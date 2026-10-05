@@ -1660,3 +1660,49 @@ Strict decoding requires every slot of an object a model opens. 25533729 wrote
 `drop_vacuous_objects` removes an optional, single-valued nested object whose every value
 is blank or unreported, which is what `null` would have said. Rebuilding 385 records changed
 only that paper.
+
+### Confirmation draws
+
+**Cue reactivity with the group-difference note (`cue55_s2r2`, code `f5f53d5`):**
+
+| run | veto recall | precision | inputs-only recall | valid records | errors |
+|---|---|---|---|---|---|
+| `cue55_s2r` (query as fixed) | 16/25 | 0.73 | 13/25 | 44/55 | 31 |
+| `cue55_s2r2` (+ note) | **19/25** | 0.70 | 16/25 | 36/55 | 45 |
+
+- **The note held on the full pool:** +3 gold papers.
+- **Precision:** the 8 false positives include the 5 autonima-included papers again. The
+  new ones are 27459715 and 27654662.
+- **Errors rose.** The note made the model cell the neutral condition, but it did not always
+  declare the level: 24695721's cue term listed cocaine, sexual and aversive and not
+  neutral, though the record declares `cond_neutral`. `complete_condition_levels` now
+  declares such a level when the cell's name folds to exactly one unclaimed condition of a
+  condition factor. A contrast label ("cocaine vs neutral") names no condition and is
+  still reported. Rebuilding 330 records: 401 -> 394 errors, no value lost.
+- **Remaining recall misses** (`cue > control`=None) are other shapes:
+  - a correlation with sexual desire (22514316);
+  - cue vs fixation (30165099; the gold analysis is "F>baseline");
+  - a craving regressor with the cue contrast implicit (23359677);
+  - a cue-type main effect on a four-cell term (22860092);
+  - an n-back analysis (30991248, a surprising gold paper).
+
+**Substance use on current code (`sud55_s2r2`, code `7c88557`):** veto recall 21/23,
+**precision 0.91** (2 false positives: 29058369, 30082140). This time 26133201 and 30643026
+were not selected. Across the two SUD draws, the disputed negatives move in and out, which
+is draw variance at the borderline.
+
+The tissue-mask repair did not fire on 18165464 here: this draw named the mask region
+"explicit mask created from Automatic Anatomic Labeling limiting the analysis to gray
+matter regions", which the bare-tissue pattern does not match, by design. Matching
+descriptions that mention a mask would risk real structures ("grey matter of the
+hippocampus"), so it is left. 28887180 (`users vs controls`=F) was found in the previous
+draw.
+
+## Standing, all four meta-analyses (veto, `--gold-coords`, current code or the latest draw)
+
+| meta-analysis | held out? | recall | precision | inputs-only recall |
+|---|---|---|---|---|
+| PTSD | developed on it | 19/19 | 0.95 | 18/19 |
+| dementia | held out for S2r | 23/25 | 0.96 | 16/25 (8 gold papers' coordinate tables missing from the corpus) |
+| substance use | developed earlier | 21-22/23 | 0.85-0.91 | same |
+| cue reactivity | held out (9/25, 0.64), then fit | 19/25 | 0.70 | 16/25 |
