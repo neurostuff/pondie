@@ -12,6 +12,10 @@ pipelines the package advertises.
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+from typing import Any
+
 
 #: The `table_id` a prose-derived parse entry carries, making its keys `prose#1`, `prose#2`,
 #: distinct from any real table's. Here and not with the stage that writes it, because
@@ -44,3 +48,23 @@ def parse_keys(analyses: list[dict]) -> list[str]:
         ordinals[table_id] = ordinals.get(table_id, 0) + 1
         keys.append(f"{table_id}#{ordinals[table_id]}")
     return keys
+
+
+def split(key: str) -> tuple[str, str]:
+    """(table_id, ordinal) of a key: the ordinal follows the last `#`."""
+    table_id, _, ordinal = key.rpartition("#")
+    return table_id, ordinal
+
+
+def load(stage1: Path | None) -> list[dict[str, Any]]:
+    """A stage-1 parse's entries, or none when there is no parse file."""
+    if not (stage1 and stage1.is_file()):
+        return []
+    return json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
+
+
+def load_table_map(table_map: Path | None) -> dict[str, str]:
+    """The tables stage's map, manifest `table_id` -> `Table.local_id`; empty without one."""
+    if not (table_map and table_map.is_file()):
+        return {}
+    return json.loads(table_map.read_text(encoding="utf-8"))

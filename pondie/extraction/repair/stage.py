@@ -47,7 +47,7 @@ from pondie.extraction.repair import guard as edit_module
 from pondie.extraction.repair.guard import UNRESTRICTED, Edit, Refusal, refusals
 from pondie.extraction.repair.propose import candidates, existing, sweep_order
 from pondie.extraction.record.fix.reachable import drop_unreachable
-from pondie.formats import values
+from pondie.formats import parse_keys, values
 from pondie.schema import reader
 from pondie.schema.reader import Schema
 from pondie.vocabularies.abbreviations import Abbreviations
@@ -398,7 +398,7 @@ def _located(record: Mapping[str, Any], analysis: Mapping[str, Any]) -> str:
     if not label:
         return ""
     label = label if str(label).lower().startswith("table") else f"Table {label}"
-    return f" It is row group {key.rpartition('#')[2]} of {label}."
+    return f" It is row group {parse_keys.split(key)[1]} of {label}."
 
 
 def _consequences(case: Case, value: str, owner: MutableMapping[str, Any], span: Any) -> list[str]:

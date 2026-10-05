@@ -263,8 +263,8 @@ def derive_coordinate_spaces(
     if not (stage1 and stage1.is_file() and table_map and table_map.is_file()):
         return []
 
-    parsed = json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
-    mapping = json.loads(table_map.read_text(encoding="utf-8"))
+    parsed = parse_keys.load(stage1)
+    mapping = parse_keys.load_table_map(table_map)
 
     # Read through the same lexicon `coordinate_space.resolve` reads with, rather than
     # comparing the parser's raw tokens. Stage 1 writes "MNI" for one sentence and "MNI152"
@@ -367,7 +367,7 @@ def mirror_withheld(body: dict[str, Any], stage1: Path | None) -> list[str]:
 
     if not (stage1 and stage1.is_file()):
         return []
-    parsed = json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
+    parsed = parse_keys.load(stage1)
     # Keyed alongside the parse so each withheld entry carries the address of its own row
     # group -- the mirrored analysis's only route to the rows it is about.
     keyed = list(zip(parse_keys.parse_keys(parsed), parsed))
@@ -492,7 +492,7 @@ def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> 
 
     if not (stage1 and stage1.is_file()):
         return []
-    parsed = json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
+    parsed = parse_keys.load(stage1)
     if not parsed:
         return []
 
@@ -570,7 +570,7 @@ def derive_analysis_ids(body: dict[str, Any], sch: Schema) -> list[str]:
         key = values.read(analysis.get("source_table_analysis"))
         if not isinstance(key, str) or "#" not in key:
             continue
-        table_id, _, ordinal = key.partition("#")
+        table_id, ordinal = parse_keys.split(key)
         stem = f"a_{re.sub(r'[^A-Za-z0-9]+', '_', table_id).strip('_')}_{ordinal}"
         seen[stem] = seen.get(stem, 0) + 1
         derived = stem if seen[stem] == 1 else f"{stem}_{seen[stem]}"
@@ -607,9 +607,9 @@ def rekey_coordinate_sets(
     """
     if not (stage1 and stage1.is_file() and table_map and table_map.is_file()):
         return []
-    parsed = json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
+    parsed = parse_keys.load(stage1)
     keys = set(parse_keys.parse_keys(parsed))
-    parse_table = {local: source for source, local in json.loads(table_map.read_text()).items()}
+    parse_table = {local: source for source, local in parse_keys.load_table_map(table_map).items()}
     taken = {
         entry.get("local_id")
         for entry in body.get("coordinate_sets") or []
@@ -622,7 +622,7 @@ def rekey_coordinate_sets(
         key = coordinate_set.get("local_id")
         if not isinstance(key, str) or key in keys or "#" not in key:
             continue
-        table, _, ordinal = key.rpartition("#")
+        table, ordinal = parse_keys.split(key)
         rekeyed = f"{parse_table.get(table)}#{ordinal}"
         if table in parse_table and rekeyed in keys and rekeyed not in taken:
             coordinate_set["local_id"] = rekeyed
