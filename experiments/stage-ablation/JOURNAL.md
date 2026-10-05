@@ -1272,3 +1272,110 @@ records derives `omnibus` any more. 23021615 found 14 analyses, against 8 in the
 draw. The records' ROI-without-regions errors (11) are not new: the 55-paper `single`
 payload had the same gap (4 on 23021615), and there `fill`/`repair` named the regions. The
 sentence is on study_schema PR #15 (`965f7b9`).
+
+## 55 PTSD papers on S2r + repair (`runs/ptsd55_s2r`, code `ce94af0`)
+
+Scored as the headline numbers were (`--labels adjudicated --overlap --gold-coords`; the
+queued script left out `--overlap --gold-coords`, which turned two overlap exclusions into
+false positives):
+
+| run | veto recall | precision | strict recall | foci recall | foci precision |
+|---|---|---|---|---|---|
+| S2r | 18/19 | 0.95 | 17/19 | 128/143 | 155/173 (0.90) |
+| original (`ptsd_default`) | 18/19 | 0.95 | 17/19 | 128/143 | 159/182 (0.87) |
+
+Same selection. The miss is 32490056 (its PTSD vs non-PTSD analysis was not extracted in
+this draw either); the false positive is 30127342 (overlap with papers outside the pool).
+
+**Final records, validated as `build` validates (`final_errors.py`):** 43/55 valid, 30
+errors. The run log's "records valid 36/55" counts `build`, before `repair`. By class: 8
+cell levels on level-less terms (7 are 21592738's `continuous`), 6 null contrasts
+`undirected` (fixed upstream since), 6 ROI analyses with no regions (all total-volume
+comparisons whose cited `whole_brain` answer the warrant guard refused), 4 terms the model
+does not reach (17825801), and a few one-offs.
+
+### Fixes from those errors
+
+- `drop_redundant_cell_levels`: a level that restates the term's type (`continuous`) is
+  dropped. A level saying more than the term (19914045's `left amygdala volume` on a
+  `medial temporal volumetric measure`) is kept.
+- `refuses_losing_the_warrant`: an adjudicated answer may swap one of the case's own options
+  for another when it brings a verified quote. A free-text value outside the options
+  (12853571's compound scope) is still protected.
+- `complete_partial_models` (new): a model gets the celled terms it lacks from the model
+  declaring them. Only those terms and their components are copied, not the donor's
+  covariates (17825801: `mod_age` lacked `trm_exposure`).
+- `scope_duplicate_terms` moved to the merge, after the models are filled. Inside `single`,
+  analyses on still-empty models named the bare id, the rename was reverted, and the
+  duplicate reached the record.
+
+**A regression I introduced, caught by the rebuild diff.** `complete_partial_models` first ran
+before `cell_terms`. 19794316's whole-brain model declares its own `group` term, and its
+cells named the ROI model's `trm_group`. `cell_terms` repoints such a cell to the
+same-named term in scope; run first, the new repair copied `trm_group` in beside the
+model's own term, in 5 records. How it came to be: I placed the repair by what it depends
+on (`empty_models`) and not by what it must not pre-empt. Why it was visible: rebuilding
+130 stored records and diffing every leaf value showed renamed term ids on records whose
+errors did not change, which made no sense for a fix aimed at one paper. Now `cell_terms`
+runs first, a test holds the 19794316 shape, and only 17825801 and 21592738 change (errors
+170 -> 159 over the 130 records).
+
+**A second slip of mine.** I committed with a failing test: `pytest | tail` hid the exit
+status from `&&`. I now use `set -o pipefail` before chaining.
+
+### `fill` ran unconstrained on a quarter of the papers
+
+"gateway rejected response_format; retrying without JSON mode" appeared 14 times in the
+55-paper run. Strict decoding allows 1,000 enum values per schema. A 250-row `fill` batch
+repeated the five unreported reasons, and each closed vocabulary, in every row. 14 of 55
+first batches exceeded the limit (up to 1,278 values), matching the 14 rejections exactly.
+Each distinct enum is now defined once under `$defs`. Checked live: 16701903's 250-row
+schema is accepted and answered in full.
+
+### Query: negations read per clause
+
+`asserted()` dropped a whole `medical_condition` entry for one negated clause, taking the
+disorder its other clauses assert with it. Across the PTSD, dementia and substance-use
+records there were 46 mid-string negations, e.g. "17 survivors were diagnosed with
+recent-onset PTSD; ... survivors without PTSD", and "A subgroup of the 40
+amphetamine-dependent patients; ... without a diag...". It now reads per clause. Rescored
+dementia and substance use (the two queries that use it): no selection changes.
+
+### Tables lost at ingestion, in every pool
+
+The `old-corpus` route lost table bodies, keeping captions and footnotes only, in every
+pool, not just PTSD. Papers with table headings in the text, no manifest and an empty parse:
+
+| pool | papers | gold among them |
+|---|---|---|
+| PTSD | 6 | 26952803 |
+| dementia | 6 | 28724588 (one heading, likely a text mention) |
+| substance use | 2 | none |
+
+A negative whose coordinate table was lost fails `reports coordinates` for the wrong
+reason. Under `--gold-coords` a gold paper passes that criterion on its gold foci whatever
+its inputs say. That asymmetry flatters precision; see the review below, item 1.
+
+### Review of this journal for untested assumptions (subagent, 19 items)
+
+The most consequential, and what was done with each:
+
+1. `--gold-coords` makes `reports coordinates` depend on the label: a gold paper passes on
+   its gold foci, a negative only on its inputs. Every precision figure rests on it.
+   *To do:* rescore inputs-only for both classes and list what flips.
+2. The shipped defaults (single and repair at medium, evidence and repair in the pipeline)
+   were never scored as a whole. *Now running:* full S2r + repair draws on PTSD
+   (`ptsd55_s2r2`) and dementia (`dem55_s2r`); substance use next.
+3. The headline tables predate many repairs. *Done for PTSD:* rebuilt and rescored.
+4. The stage verdicts come from single draws inside the ±2-paper noise. *Open.*
+10. `asserted()` too broad. *Done (above).*
+14. S2r rested on 20 PTSD papers. *Done for 55 PTSD; dementia running.*
+17. Two joins link an analysis to its coordinates, unchecked. *Open.*
+18. "Valid" ignored dangling references. *Done:* `final_errors.py` reports reference
+    problems and a "clean" count.
+19. Lost tables were checked in PTSD only. *Done (above).*
+
+Others (open): the panel's standard errors treat repeated papers as independent; the query
+fixes were each fitted to one paper; the overlap thresholds were fitted to about 3 pairs;
+the adjudicated labels are one rater's; `Analysis.outcome`'s accuracy is unmeasured; the
+recall effect of `_judged` accepting first attempts is unmeasured.
