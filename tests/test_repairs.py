@@ -1100,3 +1100,93 @@ def test_a_search_volume_naming_regions_does_not_hold_the_mask():
     """Audit: `\\bmask` accepted 'amygdala mask' as already recording a tissue mask."""
     body = _masked("grey matter mask", search_volume="amygdala mask")
     assert fix.derive.rescope_tissue_masks(body) == []
+
+
+# --- a term restated from a stage below (representing-models.md §5.12) --------------------
+
+
+def _two_stages(upper_levels=("REL-0", "REL-1", "REL-2"), siblings=False):
+    """19120413: a subject GLM's condition factor declared again on the group model."""
+    def term(tid, levels, conditions=()):
+        return {"local_id": tid, "name": _wrapped("relational complexity condition"),
+                "type": _wrapped("categorical"),
+                "levels": [{"level": _wrapped(x), "conditions": list(conditions)} for x in levels]}
+    lower = [{"local_id": "mod_subject", "terms": [term("trm_first", ("REL-0", "REL-1", "REL-2"))]}]
+    inputs = ["mod_subject"]
+    if siblings:
+        lower.append({"local_id": "mod_subject_b", "terms": [term("trm_first_b", ("REL-0", "REL-1", "REL-2"))]})
+        inputs.append("mod_subject_b")
+    group = {"local_id": "mod_group", "inputs_from": inputs,
+             "terms": [term("trm_group", upper_levels, ["cond_rel2"])]}
+    return {
+        "tasks": [{"local_id": "tsk_rel", "conditions": [{"local_id": "cond_rel2"}]}],
+        "model_estimations": lower + [group],
+        "analyses": [{"local_id": "a_1", "model_estimation": "mod_group",
+                      "effect": {"cells": [{"term": "trm_group", "level": _wrapped("REL-2")},
+                                           {"term": "trm_group", "level": _wrapped("REL-0")}]}}],
+    }
+
+
+class _Errors:
+    def __init__(self):
+        self.errors = []
+
+    def error(self, path, message):
+        self.errors.append(f"{path}: {message}")
+
+    def warn(self, path, message):
+        pass
+
+
+def test_a_term_restated_from_a_stage_below_is_the_lower_term():
+    from pondie.extraction.record import walk
+
+    body = _two_stages()
+    assert fix.link.merge_restated_terms(body, _SCH)
+    models = {m["local_id"]: m for m in body["model_estimations"]}
+    assert models["mod_group"]["terms"] == []
+    assert [c["term"] for c in body["analyses"][0]["effect"]["cells"]] == ["trm_first", "trm_first"]
+    # What only the copy said is kept: the condition carrying REL-0..2 on the group model.
+    assert all(level["conditions"] == ["cond_rel2"] for level in models["mod_subject"]["terms"][0]["levels"])
+    assert not walk.dangling(body, _SCH)
+
+
+def test_the_stage_chain_rule_no_longer_fires_after_the_merge():
+    from pondie.extraction.record import rules
+
+    body = _two_stages()
+    before = _Errors()
+    rules.check_model_stages(body, before)
+    assert any("stage chain" in e for e in before.errors)
+    fix.link.merge_restated_terms(body, _SCH)
+    after = _Errors()
+    rules.check_model_stages(body, after)
+    assert not any("stage chain" in e for e in after.errors)
+
+
+def test_a_factor_coded_differently_above_is_its_own_term():
+    body = _two_stages(upper_levels=("REL-2", "REL-0"))
+    assert fix.link.merge_restated_terms(body, _SCH) == []
+
+
+def test_a_name_on_two_siblings_below_is_not_merged():
+    """21334351: a conjunction over two pipelines, each with its own `task condition`."""
+    body = _two_stages(siblings=True)
+    assert fix.link.merge_restated_terms(body, _SCH) == []
+
+
+def test_the_merge_reads_the_storage_schema_too():
+    """The repair stage passes storage, where the build passes extraction."""
+    body = _two_stages()
+    assert fix.link.merge_restated_terms(body, reader.load(schema_pkg.STORAGE))
+    assert [c["term"] for c in body["analyses"][0]["effect"]["cells"]] == ["trm_first", "trm_first"]
+
+
+def test_a_product_column_is_not_merged_by_its_name():
+    """12217967: two `VOI x task x time` columns crossing different components."""
+    body = _two_stages()
+    for model in body["model_estimations"]:
+        for term in model["terms"]:
+            term["interaction_with"] = ["trm_other"]
+            term["levels"] = []
+    assert fix.link.merge_restated_terms(body, _SCH) == []

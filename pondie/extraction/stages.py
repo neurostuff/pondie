@@ -1463,6 +1463,7 @@ class Repair(_Base):
                     "refused": [{"slot": r.slot, "why": r.why} for r in report.refused],
                     "adjudicated": report.adjudicated,
                     "introduced": report.introduced,
+                    "merged": report.merged,
                 },
                 indent=1,
             )

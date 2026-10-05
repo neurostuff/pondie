@@ -829,6 +829,93 @@ def _levels_of(term: Mapping[str, Any]) -> list[tuple[str, Any]]:
     ]
 
 
+#: FactorLevel slots naming the entities that carry a level; a dropped copy's are kept.
+_LEVEL_ENTITIES = ("conditions", "groups", "timepoints", "arms", "regions")
+
+
+def _level_labels(term: Mapping[str, Any]) -> frozenset[str]:
+    return frozenset(
+        span_tools.fold_label(str(values.read(level.get("level")) or ""))
+        for level in term.get("levels") or []
+        if isinstance(level, Mapping)
+    )
+
+
+def merge_restated_terms(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Drop a term a model restates from a stage below it, pointing its references there.
+
+    `representing-models.md` §5.12: "The lower column is never copied upward." A group
+    model fitted on first-level contrasts reaches the first-level terms through
+    `inputs_from`, and a cell may name them there; a second `task condition` on the group
+    model is the same factor declared twice, which `rules.check_model_stages` reports.
+    19120413 declared `relational complexity condition` (REL-0/1/2) on its subject GLM and
+    again on the group GLM and an ROI ANOVA fitted on it.
+
+    Only an unambiguous copy: one term below with the same name, the same type and the same
+    levels. A factor coded differently at the two stages -- four first-level regressors
+    analysed as a 2x2 -- is two terms, and two terms below sharing the name (siblings, both
+    feeding a conjunction) leave nothing to choose between. A product column is never
+    merged; its components may be, and its `interaction_with` then names the lower ones. The kept term gains what only
+    the copy said: an open slot filled, a level's carrying entities.
+    """
+    models = _models(body)
+    merged: dict[str, str] = {}
+    out: list[str] = []
+    for model_id, model in models.items():
+        below: dict[str, Mapping[str, Any]] = {}
+        for lower in model.get("inputs_from") or []:
+            below.update(terms_in_scope(lower, models))
+        # A cycle would put the model's own terms below it; `check_model_stages` names that.
+        own = {id(t) for t in model.get("terms") or []}
+        below = {k: t for k, t in below.items() if id(t) not in own}
+        for term in list(model.get("terms") or []):
+            if not isinstance(term, dict) or not isinstance(term.get("local_id"), str):
+                continue
+            # A product column is its components, not its name: 12217967's group-stage
+            # `VOI x task x time` and the one below it crossed different columns.
+            if term.get("interaction_with"):
+                continue
+            name = span_tools.fold_label(str(values.read(term.get("name")) or ""))
+            same = [
+                t for t in below.values()
+                if name and not t.get("interaction_with")
+                and span_tools.fold_label(str(values.read(t.get("name")) or "")) == name
+                and values.read(t.get("type")) == values.read(term.get("type"))
+                and _level_labels(t) == _level_labels(term)
+            ]
+            if len(same) != 1 or not isinstance(same[0].get("local_id"), str):
+                continue
+            kept = same[0]
+            for slot, value in term.items():
+                if slot not in ("local_id", "levels") and values.blank(kept.get(slot)) \
+                        and not values.blank(value):
+                    kept[slot] = value
+            by_label = {
+                span_tools.fold_label(str(values.read(level.get("level")) or "")): level
+                for level in kept.get("levels") or []
+                if isinstance(level, dict)
+            }
+            for level in term.get("levels") or []:
+                if not isinstance(level, Mapping):
+                    continue
+                target = by_label.get(span_tools.fold_label(str(values.read(level.get("level")) or "")))
+                if target is None:
+                    continue
+                for slot in _LEVEL_ENTITIES:
+                    extra = [x for x in level.get(slot) or [] if x not in (target.get(slot) or [])]
+                    if extra:
+                        target[slot] = list(target.get(slot) or []) + extra
+            model["terms"] = [t for t in model["terms"] if t is not term]
+            merged[term["local_id"]] = kept["local_id"]
+            out.append(
+                f"{model_id}: {term['local_id']} restated {kept['local_id']} from a stage "
+                f"below ({values.read(term.get('name'))!r}); references repointed"
+            )
+    if merged:
+        walk.repoint(body, sch, merged, target="ModelTerm")
+    return out
+
+
 def scope_duplicate_terms(body: dict[str, Any], sch: Schema) -> list[str]:
     """Make two models' identically-named terms distinguishable, by their model.
 

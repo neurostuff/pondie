@@ -2077,3 +2077,45 @@ three runs (dementia 52 to 43, cue 67 to 58, problem solving 40 to 36).
   named them under `introduced` and kept the write.
 - **What prevents it:** a reference is an id, never a label; a lookup that cannot name one
   entity names none.
+
+### A term restated from a stage below: merged into the lower term (`link.merge_restated_terms`)
+
+The schema has already settled this. `representing-models.md` §5.12 says "The lower column
+is never copied upward". §5.5's audited 2x2 factorial (pmid 37559139) declares only the
+between-subject factors on the group stage and cites the first-level task term through
+`inputs_from`, and its audit removed "task and group were each declared twice, once per
+stage".
+
+**The fix.** A model's term is dropped when exactly one term below it, through `inputs_from`,
+has the same name, type and levels. Every reference to it is repointed to the lower term,
+and the lower term gains what only the copy said: a blank slot filled, the entities carrying
+each level. It leaves alone:
+- a factor coded differently at the two stages, where the levels differ;
+- two same-named terms below, as when siblings feed a conjunction;
+- product columns. A product column is its components, and 12217967's two "VOI x task x
+  time" columns crossed different ones; merging them by name gave a cell a level its new
+  components lack.
+
+It runs in `build` (after `scoped_terms`) and at the end of `repair`, because `repair`'s
+`inputs_from` writes are what expose most duplicates.
+
+**Checked on the stored runs, no model calls.**
+
+| | without | with |
+|---|---|---|
+| stage-chain errors, final records (9 runs) | 67 | 32 |
+| all errors, final records | 323 | 288 |
+| valid final records | 372 | 386 |
+| stage-chain errors, built records | 21 | 4 |
+| records gaining any error (final or built) | | 0 |
+| papers whose query selection changes (veto, `--gold-coords`) | | 0 |
+
+**What is left.** Of the 32 still in the final records, 26 are siblings: mostly
+links the old `resolve` wrote (dm55_s2r alone has 13), which `ace625d` stops at source. The
+other 6 are three product columns and three copies whose levels differ from the lower term,
+which is left for review by design.
+
+**Open question:** siblings legitimately feeding one model. For example, 21334351's
+conjunction takes two pipelines, each with its own "task condition". Checking names down
+each input separately would accept that, but it would also stop the rule catching a wrong
+sibling link, which is how this whole thread began.
