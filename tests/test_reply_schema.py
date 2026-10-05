@@ -65,3 +65,12 @@ def test_a_call_with_a_schema_asks_for_it_strictly_and_reads_null_as_absent():
     assert llm._format(call)["json_schema"]["strict"] is True
     assert llm._format(ModelCall(model="m", prompt="p")) == {"type": "json_object"}
     assert llm._without_nulls({"a": None, "b": [{"c": None, "d": 1}]}) == {"b": [{"d": 1}]}
+
+
+def test_an_omission_is_written_the_way_the_listing_check_reads_it():
+    """It was `entry`; `unconsumed_listing` reads `key`, so every structured omission read as
+    an entry ignored, and `single` was asked again."""
+    item = reply_schema.single(_sch(), "quotes")["properties"]["omitted"]["items"]
+    assert list(item["properties"]) == ["key", "reason"]
+    payload = {"analyses": [], "omitted": [{"key": "t1#1", "reason": "seed_coordinate"}]}
+    assert render.unconsumed_listing(payload, ["t1#1"]) == []

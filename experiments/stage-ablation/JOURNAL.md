@@ -1056,3 +1056,33 @@ evidence 35), 689k output tokens (single 468k).
 carried, so every quote `single` wrote (a large share of its output) was thrown away and paid
 for again. It now keeps a field's own evidence when every quote resolves to the text `build`
 reads, and asks only for the rest. In the indexed format `fill` also cites sentence numbers.
+
+### 20 papers: structured arms against the original
+
+S1 = strict schema, analyses first, explicit silence, quotes. S2 = the same with indexed
+evidence. Both ran with a bug, since fixed: the schema wrote omissions as `entry` while the
+listing check reads `key`, so every recorded omission read as an entry ignored and `single`
+was re-asked. S2 was stopped at 19/20 (17825801, a gold paper, stuck in those retries).
+
+| arm | recall | precision | foci recall | foci precision | calls / paper | out / paper |
+|---|---|---|---|---|---|---|
+| original | 9/10 | 0.90 | 30/33 | 57/89 (64%) | 5.1 | 33k |
+| S1 quotes | 10/10 | 0.91 | 30/33 | 57/71 (80%) | 3.4* | 38k |
+| S2 indexed | 9/9 | 0.90 | 22/26 | 25/31 (81%) | 2.2* | 28k |
+
+\* inflated by the omission bug. Calls and tokens over the 16 papers all three finished.
+
+- S2 first scored 8/9: gold 22453299 failed "PTSD effect". The query's case pattern read the
+  control group "veterans negative for PTSD" as a PTSD cohort (its condition was empty, so
+  the name decided). A query bug, not an extraction one: `NEGATED` now includes "negative
+  for PTSD". Every arm rescored.
+- On the 16 shared papers: analyses 84 / 92 / 100 and final values 4,177 / 4,352 / 4,576
+  (original / S1 / S2).
+- Hand review of S2: of ~40 citations read, 1 wrong, a few weak or padded with a second
+  sentence; automated "mismatches" were numbers written as words or derived counts. Links:
+  inference settings 100% vs 65%, ROI regions 94% vs 42%, no dangling references; fewer
+  table links, mostly correct omissions (a localizer ROI, duplicate prose peaks). Faults:
+  one duplicated ROI analysis, one lumped four-measure analysis.
+- Explicit silence closes the slots `fill` would re-ask: S1/S2 papers often took one call in
+  total, but on some papers the original's `fill` adds 50–140 values the single pass does
+  not. S2r (indexed, no silence) tests whether that second look is worth its calls.

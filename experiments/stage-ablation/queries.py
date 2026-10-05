@@ -31,6 +31,7 @@ PTSD = re.compile(r"ptsd|post.?traumatic stress|posttraumatic stress", re.I)
 #: A cohort whose name or condition says it is the comparison: non-PTSD, trauma-exposed
 #: without PTSD, healthy controls.
 NEGATED = re.compile(r"non.?ptsd|without (a )?(current |lifetime )?ptsd|\bno ptsd|ptsd.?neg|"
+                     r"negative for (current |lifetime )?ptsd|"
                      r"(did not|never|not) develop(ed)? (a )?ptsd|"
                      r"\bcontrols?\b|healthy|\bhc\b|\btec\b|non.?traumati|resilient|"
                      r"comparison|unaffected", re.I)

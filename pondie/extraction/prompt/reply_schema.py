@@ -151,8 +151,9 @@ def single(sch: Schema, evidence: str, silence: bool = False) -> dict[str, Any]:
     lists.sort(key=lambda key: key != "analyses")
     root = {key: {"type": "array", "items": builder.nested(by_container[key])} for key in lists}
     root["study"] = builder._build("Study", [k for k in keep if k not in lists])
+    # `key`, as the listing instructions spell it and `render.unconsumed_listing` reads it.
     root["omitted"] = {"type": "array", "items": _object(
-        {"entry": {"type": "string"}, "reason": {"type": "string"}})}
+        {"key": {"type": "string"}, "reason": {"type": "string"}})}
     if evidence == "inverted":
         root["support"] = {"type": "array", "items": _object({
             "sentence": {"type": "string",
