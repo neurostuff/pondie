@@ -575,7 +575,13 @@ def cross_products_of_factors(body: dict[str, Any]) -> list[str]:
 
     Only where the reading is certain: both factors have two levels, the cell names a level
     of one, the other's levels carry distinct `order` (later is positive), and no other cell
-    of the analysis names either factor.
+    of the analysis names either factor. Without an order nothing says which level of the
+    other factor is the positive side (26535944's sex x group), and the cell stays reported.
+
+    A second shape is the factor's own cells filed on the product: 28287194 wrote
+    `Patients -, Healthy controls +` on group-by-time beside `T2: held` -- "patients below
+    controls at T2". Signed cells naming both levels of one factor, opposite in sign, are that
+    factor's crossing; they move to its term.
     """
 
     models = {
@@ -589,6 +595,7 @@ def cross_products_of_factors(body: dict[str, Any]) -> list[str]:
         if not isinstance(effect, dict) or not isinstance(effect.get("cells"), list):
             continue
         terms = terms_in_scope(analysis.get("model_estimation"), models)
+        fixed += [f"analyses[{index}].{note}" for note in _repoint_to_factor(effect["cells"], terms)]
         for position, cell in enumerate(effect["cells"]):
             crossed = _crossed_cells(cell, terms, effect["cells"])
             if crossed is None:
@@ -600,6 +607,32 @@ def cross_products_of_factors(body: dict[str, Any]) -> list[str]:
             )
             break  # the list changed under `position`; one product per analysis
     return fixed
+
+
+def _repoint_to_factor(cells: list[Any], terms: Mapping[str, Mapping[str, Any]]) -> list[str]:
+    """Move to the factor the cells on a product of factors that name both its levels."""
+    notes: list[str] = []
+    on_product: dict[str, list[dict[str, Any]]] = {}
+    for cell in cells:
+        term = terms.get(cell.get("term")) if isinstance(cell, dict) else None
+        if term and term.get("interaction_with") and values.read(cell.get("direction")) in _OPPOSITE:
+            on_product.setdefault(cell["term"], []).append(cell)
+    for product_id, signed in on_product.items():
+        components = [terms.get(c) for c in terms[product_id]["interaction_with"]]
+        if not components or not all(isinstance(c, Mapping) and _levels_of(c) for c in components):
+            continue  # a product with a continuous term is a moderation, not a crossing
+        named = {values.read(c.get("level")) for c in signed}
+        owners = [c for c in components if named <= {name for name, _ in _levels_of(c)}]
+        signs = {values.read(c.get("direction")) for c in signed}
+        if len(owners) != 1 or len(named) < 2 or signs != set(_OPPOSITE):
+            continue
+        factor = owners[0]["local_id"]
+        if any(isinstance(c, Mapping) and c.get("term") == factor for c in cells):
+            continue
+        for cell in signed:
+            cell["term"] = factor
+        notes.append(f"cells on product {product_id!r} name both levels of {factor!r}: moved to it")
+    return notes
 
 
 def _crossed_cells(

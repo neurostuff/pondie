@@ -301,6 +301,32 @@ def test_a_signed_product_of_two_factors_is_rewritten_as_crossed_cells(direction
     assert not [e for e in validator.errors if "level" in e or "effect.kind" in e]
 
 
+
+def test_a_factors_cells_filed_on_a_product_move_to_the_factor():
+    """28287194: `Patients -, Healthy controls +` on group-by-time beside `T2: held` is
+    patients below controls at T2 -- a crossing of group, held within one occasion."""
+    from pondie.extraction.record.effect import derive_effect_kind, terms_in_scope
+
+    record = _group_by_time()
+    cells = record["analyses"][0]["effect"]["cells"]
+    cells[:] = [{"term": "trm_gxt", "level": _v("PTSD"), "direction": _v("negative")},
+                {"term": "trm_gxt", "level": _v("TD"), "direction": _v("positive")},
+                {"term": "trm_time", "level": _v("follow-up"), "direction": _v("held")}]
+    record["analyses"][0]["effect"]["kind"] = _v("contrast")
+    assert link.cross_products_of_factors(record)
+    assert [c["term"] for c in cells] == ["trm_group", "trm_group", "trm_time"]
+    terms = terms_in_scope("mod_a", {"mod_a": record["model_estimations"][0]})
+    assert derive_effect_kind(cells, terms)[0] == "contrast"
+
+
+def test_a_moderations_cells_are_not_moved_to_its_factor():
+    """A product with a continuous term is a moderation; its cells stay on it."""
+    record = _moderation("PTSD", "negative")
+    cells = record["analyses"][0]["effect"]["cells"]
+    cells.append({"term": "trm_x", "level": _v("control"), "direction": _v("positive")})
+    link.cross_products_of_factors(record)
+    assert {c["term"] for c in cells} == {"trm_x"}
+
 @pytest.mark.parametrize("record", [
     _group_by_time(ordered=False),
     _group_by_time(extra_cells=[{"term": "trm_time", "level": _v("baseline"),
