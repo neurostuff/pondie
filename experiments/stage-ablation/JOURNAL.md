@@ -1091,3 +1091,46 @@ Removed after measurement (recoverable from git before the "Prune the S2r workfl
 commit): the `inverted` evidence format (lower evidence coverage, 3x slower) and
 `explicit_silence` (29% of its `silent_default` claims contradicted by a value the original
 pipeline found, and it closes the slots `fill` re-asks). S1 and S2 above used silence.
+
+### S2r: indexed evidence, no silence, `fill` re-asks (20 papers)
+
+| arm | recall | precision | foci precision | analyses | values | validation errors | calls |
+|---|---|---|---|---|---|---|---|
+| original | 9/10 | 0.90 | 64% | 121 | 5,666 | 52 | 104 |
+| S2r | 10/10 | 0.91 | 76% | 137 | 6,765 | 30 | 65 |
+
+No S2r reply needed a shape repair. `evidence` kept 97.8% of its quotes as `single` cited them
+and added the other 2.2%.
+
+### Judging a reply after the repairs it will get anyway
+
+Retries of `single` came from cross-reference failures, some of which the deterministic
+repairs fix at no cost (a term declared once per model, a reference with one possible
+target). The postcondition now judges a copy after this pass's repairs and the merge
+repairs (`_ModelPass._judged`); the payload itself is still repaired once, where it always
+was. Replayed on the 20 S2r replies, 2 of the 4 that were retried pass on the first attempt.
+
+The first 55-paper launch on this code retried 9 of its first 9 papers on
+`coordinate_sets[i].analysis -> unknown local_id`. The cause was `derived_ids`, which
+renames an analysis to an id from its parse key (`ana_ptsd_control_gm_density` ->
+`a_prose_1`). It followed only `mirror_of`, on the premise that nothing else references
+an analysis by id, but `CoordinateSet.analysis` does. The 20-paper replies carried no
+coordinate sets, so the replay missed it. The judged copy exposed it, but the stored
+record dangled too. It now renames through every reference slot whose range is
+Analysis. The run was stopped (kept as `ptsd55_s2r_aborted_derivedids`) and relaunched.
+
+### Regression check: 23021615 on the current workflow
+
+S2r + `fill` + `evidence` + `repair`, against the original and the 20-paper S2r record:
+one `single` attempt, 5 calls, 126k in / 23k out.
+
+- The four S2r analyses are unchanged in kind, outcome, scope and cells.
+- Two new analyses, both true: the hippocampal ROI regression ("no significant
+  correlations with any of the above variables and hippocampal volume") and the
+  hippocampal group comparison ("no significant difference in hippocampal volumes between
+  the PTSD and non-PTSD groups"). Values 226 -> 244; evidence spans 405 -> 446.
+- `prespecification` is now `planned` on all six, where S2r left most empty.
+- One validation error: the null group comparison is `kind: contrast` with both cells
+  `undirected`, which derives `omnibus`. The adjudicator kept `contrast`, but nothing
+  rewrites the cells, so the contradiction stands. A contrast's cell sign is its weight,
+  not the result's direction; the model left it undirected because the effect was null.
