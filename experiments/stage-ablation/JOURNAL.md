@@ -1832,3 +1832,21 @@ left out. Those hard negatives make up most of the false positives. Of the rando
 negatives, the query selects 1 of 15 (cue reactivity) and 2 of 15 (decision making). The benchmark
 included sets are curated selections from much larger eligible literatures; 90% precision
 against them is not reachable without fitting the query to the labels.
+
+## Problem solving (Bartley 2018, 29944961): a sixth meta-analysis, held out
+
+**Criteria:**
+- Inclusion: "1) met definition of problem solving 2) BOLD/rCBF increases 3) group-level
+  effects in healthy adult individuals".
+- Exclusion: "1) disease, age gender related group comparison".
+- Dates: 1/1997 to 3/2015.
+
+**Query (`83f2d22`):**
+- fMRI or PET.
+- A problem-solving task (`PROBLEM`: reasoning, puzzles, arithmetic, analogies, Raven's,
+  Tower of London ...).
+- A within-participant increase, with no signed cell on a between-subject term.
+- Healthy (no cohort asserts a disorder), adult, inside the window.
+
+**Pool:** seed 0. Two negatives without text were replaced from their strata
+(`replace_missing.py`, now a script). Run: `ps55_s2r` (code `2ebd8a0`).
