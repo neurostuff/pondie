@@ -99,6 +99,35 @@ def test_a_region_whose_definition_the_paper_omits_carries_the_slot_as_not_repor
     validator.check_record(record)
     assert not [e for e in validator.errors if "regions[1]" in e]
 
+def _cited(value, quote):
+    span = stage.span_tools.resolve(TEXT, quote).as_record()
+    return {"extraction_status": "extracted", "value": value, "value_source": "reported",
+            "evidence": {"status": "present", "sets": [{"spans": [span]}]}}
+
+
+def test_a_cited_scope_is_rescoped_by_a_cited_answer_among_the_options():
+    """27082610: total-volume comparisons cited as `roi` with no region; every cited
+    `whole_brain` answer was refused as losing the warrant."""
+    record = _roi_record()
+    record["analyses"][0]["spatial_scope"] = _cited("roi", "Left hippocampal volume")
+    caller, _ = _answering({
+        "id": "analyses/ana_hc/regions", "value": "whole_brain",
+        "quote": "Left hippocampal volume was smaller in PTSD than in healthy controls.",
+    })
+    report = _adjudicate(record, caller)
+    assert values.read(record["analyses"][0]["spatial_scope"]) == "whole_brain", report.adjudicated
+
+
+def test_a_cited_value_outside_the_options_is_still_not_coerced():
+    """12853571: a cited compound scope is not collapsed to one enum value."""
+    from pondie.extraction.repair.guard import Edit, refuses_losing_the_warrant
+
+    entity = {"correction_scope": _cited("whole volume and small volumes", "Hippocampal")}
+    edit = Edit({}, entity, "correction_scope", "whole_brain", TEXT, "Hippocampal",
+                choices=("whole_brain", "roi"))
+    assert refuses_losing_the_warrant(edit) is not None
+
+
 def test_an_roi_analysis_that_searched_the_whole_brain_is_rescoped():
     record = _roi_record()
     caller, _ = _answering({

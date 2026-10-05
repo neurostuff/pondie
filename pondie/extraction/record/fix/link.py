@@ -297,7 +297,8 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
 
       restates the term  547 (46%). `BMI` on term `BMI`, `age` on `age`, `pack-years` on
                          `pack-years`. A regressor's cell has no level, and naming it after
-                         the term says nothing a reader did not already have.
+                         the term says nothing a reader did not already have. So is its
+                         type: `continuous` on a continuous term (21592738, seven cells).
 
       duplicates the     185 (16%). `positive` where `direction` already says positive.
       direction          `Cell.direction` is where the sign lives and it is already right.
@@ -365,6 +366,10 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
             if _restates(level, values.read(term.get("name"))):
                 cell.pop("level", None)
                 fixed.append(f"{path}: {level!r} restated term {term_id!r} -- dropped")
+                continue
+            if _fold_name(level) == _fold_name(values.read(term.get("type"))):
+                cell.pop("level", None)
+                fixed.append(f"{path}: {level!r} restated the term's type -- dropped")
                 continue
             if _restates_the_only_group(level, analysis, groups):
                 cell.pop("level", None)

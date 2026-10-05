@@ -460,11 +460,12 @@ def adjudicate(
             report.adjudicated.append(f"{case.id}: kept {value}" + "".join(f"; {a}" for a in also))
             answered.append(case.id)
             continue
-        # Through the guards, like every other write. Coercing a cited scope to a bare enum
-        # is exactly the shape `refuses_losing_the_warrant` exists for. The quote goes with
-        # it: it was resolved against this paper just above, and without it
+        # Through the guards, like every other write. Coercing a cited free-text scope to a
+        # bare enum is exactly the shape `refuses_losing_the_warrant` exists for; swapping
+        # one of the case's options for another is the choice it asked for (`choices`). The
+        # quote goes with it: it was resolved against this paper just above, and without it
         # `refuses_an_unwarranted_replacement` would judge a cited edit as a bare one.
-        edit = Edit(record, owner, case.slot, value, text, quote)
+        edit = Edit(record, owner, case.slot, value, text, quote, choices=case.options)
         if refused := refusals(edit):
             report.refused.extend(refused)
             report.adjudicated.append(f"{case.id}: refused, {refused[0].why}")

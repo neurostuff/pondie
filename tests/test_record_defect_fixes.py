@@ -326,6 +326,20 @@ def test_a_level_restating_its_own_term_is_dropped():
     assert changed and "restated" in changed[0]
 
 
+def test_a_level_restating_its_terms_type_is_dropped():
+    """21592738: `level: 'continuous'` on seven continuous symptom-score terms."""
+    record = _continuous("continuous", "positive")
+    changed = fix.drop_redundant_cell_levels(record)
+    assert "level" not in record["analyses"][0]["effect"]["cells"][0]
+    assert changed and "type" in changed[0]
+
+
+def test_a_level_saying_more_than_its_term_is_kept():
+    # 19914045: `left amygdala volume` on a term named for medial temporal volume.
+    record = _continuous("left amygdala volume", "positive")
+    assert fix.drop_redundant_cell_levels(record) == []
+
+
 def test_a_level_duplicating_its_direction_is_dropped():
     """185 of 1,185. The sign is already in the slot that holds signs."""
     record = _continuous("positive", "positive")

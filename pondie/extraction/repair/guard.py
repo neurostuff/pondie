@@ -52,6 +52,8 @@ class Edit:
     #: so they default and every existing construction of an `Edit` still stands.
     text: str = ""
     quote: str = ""
+    #: The values a contradiction case offered, when the write answers one.
+    choices: tuple[str, ...] = ()
 
     @property
     def current(self) -> Any:
@@ -175,8 +177,16 @@ def refuses_losing_the_warrant(edit: Edit) -> Refusal | None:
 
     The old spans are kept when they still contain the new value, which is what lets a
     genuine extension through: on 23021615 the restored full sentence was already the span.
+
+    Nor is it a loss when an adjudicated case swaps one of its own options for another. The
+    record contradicts itself there, so one cited half is wrong, and the answer brings a
+    sentence of its own. 27082610's total-brain-volume comparisons said `roi` with no region;
+    every cited `whole_brain` answer was refused here. A free-text value outside the options
+    -- 12853571's compound scope -- is still protected.
     """
     if _inherited(edit.current, edit.value) is not None:
+        return None
+    if edit.quote and edit.current_value in edit.choices and edit.value in edit.choices:
         return None
     node = edit.current
     if not isinstance(node, Mapping):
