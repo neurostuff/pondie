@@ -1888,3 +1888,35 @@ resources" or read timeouts. The client gave up after 4 tries within about two m
 while a capacity shortage lasts much longer. That error now gets 8 tries spaced 30 s
 doubling to 10 min, about 45 minutes in all (`b08baf1`). The failed papers are to be
 resumed into their runs.
+
+## Audit for duplication and missed reuse (architect subagent), and the eight consolidations
+
+The user asked whether I had checked tonight's code for repeated fixes of one kind, or
+fixes re-implementing a function the package already had. I had not done so
+systematically: the earlier review was for correctness only. A read-only audit of
+`97dad25..HEAD` found eight; all are done. Each was verified with tests, a rebuild of
+605 stored records against the previous commit, and, for query changes,
+`compare_queries.py` across all 7 pools.
+
+| # | duplicated | now | effect on stored records |
+|---|---|---|---|
+| 0 | the adjudicator's name-vs-cells parser re-implemented `direction.polarity`/`direction_of` (and the p-threshold guard was written into both) | built on `direction`; plurals and parentheses handled there | exposed a shared bug: "more than 1 year of heavy alcohol use" read as a comparison, and `fill_directions` had signed 2 cells of 20487539 from it |
+| 1 | `healthy_only` and `asserted()` re-implemented `is_healthy` and `phrases.triage`, badly (424 of 2,007 records called all-healthy that `is_healthy` does not) | through `triage` and `is_healthy` | exposed a case-cohort bug (26673947's nfvPPA cohort read as bvFTD from its description) and made problem solving's adult/healthy criteria per analysis sample |
+| 2 | three dangling-reference detectors | `walk.dangling_references` | none (they agreed) |
+| 3 | `fill_empty_models`/`complete_partial_models` donor logic, `declared_by` built 4 times | `_models`, `_declared_by`, `_agreed`, `_copy_terms` | none; settled a divergence that would have scoped a copy of a copy twice |
+| 4 | three answers to "is this slot open" | `values.OPEN/blank/settled` | none; `fill_directions` now fills an `undetermined` direction, as `fill` would re-ask |
+| 5 | `queries.py` lookups repeated 4-5 times; three task-text builders; two modality predicates | `Index` methods, `task_text`, `_measured` | none |
+| 6 | four stage-1 reads, two table-map reads, `partition`/`rpartition` on keys | `parse_keys.load/load_table_map/split` | none |
+| 7 | the tissue-mask repair's own "mask" check | `search_volume.normalize` | none |
+| 8 | cited wrappers by hand, sign flips by hand, a third opposite-sign table | `guard.cited`, `direction.reverse`/`OPPOSITE` | none |
+
+Lesson (added to memory): before writing a helper, search the package for the concept,
+not the name. Three of the eight re-implemented something the package already did
+better: negation scoping, healthy cohorts, comparison parsing.
+
+## Problem solving and social, final (all 55 records each, after resuming flex failures)
+
+| | held out (query `081d288`) | current query | inputs-only (current) |
+|---|---|---|---|
+| problem solving | 20/25, 0.69 | 21/25, 0.68 | 20/25 |
+| social | 18/25, 0.86 | 18/25, 0.86 | 16/25 |
