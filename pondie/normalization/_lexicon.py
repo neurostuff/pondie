@@ -14,6 +14,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Callable
 
+from pondie.formats import values
 from pondie.normalization import OTHER, UNKNOWN
 
 
@@ -65,12 +66,12 @@ def residual(decisions: list[Decision]) -> Counter:
     return Counter(d.text for d in decisions if d.reason == "unmatched" and d.text)
 
 
-def summarize(decisions: list[Decision], values: tuple[str, ...]) -> str:
+def summarize(decisions: list[Decision], answers: tuple[str, ...]) -> str:
     counts = Counter(d.value for d in decisions)
     total = max(1, sum(counts.values()))
-    lines = [f"  {v:34s} {counts[v]:6d}  ({counts[v] / total:4.0%})" for v in values if counts[v]]
+    lines = [f"  {v:34s} {counts[v]:6d}  ({counts[v] / total:4.0%})" for v in answers if counts[v]]
     folded = Counter((d.value, d.text) for d in decisions if d.reason == "lexical" and d.text)
-    for v in values:
+    for v in answers:
         forms = [(t, n) for (val, t), n in folded.items() if val == v]
         if forms:
             top = sorted(forms, key=lambda kv: -kv[1])[:5]
@@ -101,13 +102,13 @@ def scan(
 def field_report(
     path: str,
     decide: "Callable[[object], Decision]",
-    values: tuple[str, ...],
+    answers: tuple[str, ...],
     patterns: tuple[str, ...] | None = None,
 ) -> str:
     """The residual report for one field. See docs/normalization-rationale.md."""
 
     decisions = scan(path, decide, patterns)
-    return f"{path}: {len(decisions)} values\n" + summarize(decisions, values)
+    return f"{path}: {len(decisions)} values\n" + summarize(decisions, answers)
 
 
 @dataclass(frozen=True)
@@ -146,12 +147,9 @@ def apply_to_distribution(record: dict, slot: str, decide) -> dict[str, int]:
             from pondie.normalization._records import value_of
 
             decision = decide(value_of(entry.get("category")))
-            entry["category_normalized"] = {
-                "value": decision.value,
-                "extraction_status": "extracted",
-                "value_source": "generated",
-                "evidence": {"status": "not_applicable"},
-            }
+            entry["category_normalized"] = values.wrap(
+                decision.value, source="generated", evidence="not_found"
+            )
             tally["set"] += 1
             if decision.reason in ("unmatched", "empty"):
                 tally["unmatched"] += 1

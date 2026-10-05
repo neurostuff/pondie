@@ -146,7 +146,7 @@ def test_the_mirror_is_named_for_the_half_it_holds_not_the_half_it_came_from():
     assert mirrored["name"]["value"] == "FESZ > NC (reversed)"
     assert mirrored["name"]["value"] != described["name"]["value"]
     assert mirrored["name"]["value_source"] == "generated"
-    assert mirrored["name"]["evidence"]["status"] == "not_applicable"
+    assert mirrored["name"]["evidence"]["status"] == "not_found"
 
 
 def test_a_mirror_with_no_parse_label_keeps_the_name_it_was_copied_from():

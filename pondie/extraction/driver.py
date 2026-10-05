@@ -1,12 +1,8 @@
-"""Run papers through the stages and say exactly what happened.
+"""Run papers through the stages and report what happened.
 
-Returns a `RunReport` rather than printing one. A caller that wants text calls `.summary()`;
-a test asserts on `.failures`. Cost is summed from what each stage returned, not scraped back
-out of logging.
-
-A paper stops at its first failing stage. The stages are ordered by dependency, so continuing
-past a failure would run a stage against inputs that do not exist and report a second, less
-informative error.
+Returns a `RunReport` rather than printing one; cost is summed from what each stage
+returned. A paper stops at its first failing stage, since every later stage reads what an
+earlier one wrote.
 """
 
 from __future__ import annotations
@@ -20,6 +16,7 @@ from typing import Iterable
 from pondie import pipeline
 from pondie.extraction.llm import Caller
 from pondie.extraction.models import (
+    Cost,
     Paper,
     PaperOutcome,
     RunReport,
@@ -30,14 +27,11 @@ from pondie.extraction.models import (
 from pondie.extraction.stages import sequence
 
 
-def _why(error: BaseException) -> str:
-    depth = 3
-    """The exception and what caused it, down the chain.
+def _why(error: BaseException, depth: int = 3) -> str:
+    """The exception and up to `depth` causes down its chain.
 
-    `llm.py` raises `RuntimeError("satisfy for X: 1 attempt(s) failed") from last`, and
-    recording only `str(error)` threw `last` away -- so four papers failed in one batch and
-    the log could not say whether the gateway had refused them, timed out, or returned
-    something unparseable. The chain is the whole diagnosis.
+    `llm.py` raises `RuntimeError("… attempt(s) failed") from <the gateway's error>`, and
+    the cause is what says whether the call was refused, timed out or came back malformed.
     """
     parts, seen = [f"{type(error).__name__}: {error}"], {id(error)}
     cause = error.__cause__ or error.__context__
@@ -46,34 +40,6 @@ def _why(error: BaseException) -> str:
         parts.append(f"{type(cause).__name__}: {str(cause)[:300]}")
         cause = cause.__cause__ or cause.__context__
     return " <- ".join(parts)
-
-
-def run_paper(paper: Paper, settings: Settings, caller: Caller) -> PaperOutcome:
-    outcomes: list[StageOutcome] = []
-    if not paper.ready():
-        return PaperOutcome(
-            study_id=paper.study_id,
-            outcomes=(
-                StageOutcome(
-                    stage=settings.stages[0],
-                    study_id=paper.study_id,
-                    reason=f"missing text or stage-1 parse under {paper.root}",
-                ),
-            ),
-        )
-    for stage in sequence(settings):
-        try:
-            outcome = stage.run(paper, settings, caller)
-        except Exception as error:  # noqa: BLE001 -- one paper's failure is not the run's
-            outcome = StageOutcome(
-                stage=stage.name,
-                study_id=paper.study_id,
-                reason=_why(error),
-            )
-        outcomes.append(outcome)
-        if not outcome.ok:
-            break
-    return PaperOutcome(study_id=paper.study_id, outcomes=tuple(outcomes))
 
 
 def plan(papers: Iterable[Paper], settings: Settings) -> dict[str, list[str]]:
@@ -89,7 +55,7 @@ def plan(papers: Iterable[Paper], settings: Settings) -> dict[str, list[str]]:
 
 
 class _StageFailed(RuntimeError):
-    """A stage that returned `ok=False` without raising, so the scheduler stops the paper."""
+    """A stage that returned `ok=False`, so the scheduler stops the paper."""
 
 
 def run(
@@ -101,26 +67,23 @@ def run(
 ) -> RunReport:
     """Schedule the stages over the papers, and report what each one did.
 
-    The scheduling, the caching, the progress bar and the event journal are
-    `pondie.pipeline`'s; what stays here is the domain -- which stages there are, what a
-    `StageOutcome` costs, and that a paper stops at its first failure.
-
-    A stage still decides for itself whether it has work to do, and says so with
-    `skipped=True`. That is a different question from the scheduler's: the scheduler asks
-    whether the answer on disk was computed from today's inputs, and a stage asks whether
-    there is anything to compute. Both answers reach the report.
+    Scheduling, caching, progress and the event journal are `pondie.pipeline`'s. A stage
+    still reports `skipped=True` when it has nothing to do; the scheduler separately skips
+    a stage whose output is fresh. Both reach the report.
     """
 
     papers = list(papers)
     collected: dict[str, list[StageOutcome]] = defaultdict(list)
-    #: (study, stage) the stage itself reported on. Anything the scheduler saw and this did
-    #: not is a stage that never returned -- cached, so never called, or raised.
+    #: (study, stage) pairs a stage reported on itself; the rest were cached or raised.
     spoke: set[tuple[str, str]] = set()
     lock = threading.Lock()
 
     def as_step(stage) -> pipeline.Step[Paper]:
         def do(paper: Paper):
-            outcome = stage.run(paper, settings, caller)
+            try:
+                outcome = stage.run(paper, settings, caller)
+            except Exception as error:
+                raise _StageFailed(_why(error)) from error
             with lock:
                 collected[paper.study_id].append(outcome)
                 spoke.add((paper.study_id, stage.name.value))
@@ -134,6 +97,27 @@ def run(
             depends_on=lambda paper: stage.depends_on(paper, settings),
             run=do,
         )
+
+    def describe(paper: Paper, outcomes: list[pipeline.Outcome]) -> str:
+        """One paper's line: stages run and cached, what it cost, and what failed."""
+        with lock:
+            cost = sum((o.cost for o in collected[paper.study_id]), Cost())
+        ran = sum(o.state == "done" for o in outcomes)
+        cached = sum(o.state == "cached" for o in outcomes)
+        text = (
+            f"{ran} run, {cached} cached · {cost.calls} calls, "
+            f"{cost.input_tokens / 1e3:.0f}k in ({cost.cached_tokens / 1e3:.0f}k cached), "
+            f"{cost.output_tokens / 1e3:.0f}k out"
+        )
+        with lock:
+            built = [o for o in collected[paper.study_id] if o.stage is StageName.build]
+        if built and built[-1].ok and not built[-1].skipped:
+            errors = len(built[-1].validation_errors)
+            text += f" · {errors} validation error(s)" if errors else " · valid"
+        failed = next((o for o in outcomes if not o.ok), None)
+        if failed is not None:
+            text += f" · FAILED at {failed.step}: {failed.detail[:160]}"
+        return text
 
     steps = [as_step(stage) for stage in sequence(settings)]
     ready = [p for p in papers if p.ready()]
@@ -156,11 +140,9 @@ def run(
         redo=settings.redo,
         progress=progress,
         events=settings.records.parent / "events.jsonl",
+        describe=describe,
     )
-    # Two ways a stage produces no `StageOutcome` of its own: the scheduler found the answer
-    # fresh and never called it, or it raised before returning one. Both have to reach the
-    # report -- without the first a run that skipped everything reports having done nothing,
-    # and without the second a crash is a paper that silently stops early.
+    # A stage that was cached or raised returned no `StageOutcome`; add one for each.
     for outcome in run_report.outcomes:
         if (outcome.item, outcome.step) in spoke:
             continue
@@ -193,18 +175,7 @@ def run(
 
 
 def _record_usage(report: RunReport, settings: Settings) -> None:
-    """Append one row per stage to the run's `usage.jsonl`.
-
-    The file the cost figures come from -- "~310k input and ~27k output tokens per paper,
-    an 11.5:1 ratio", "every call reports cache_status: DISABLED" -- and nothing was
-    writing it. The module that used to had been orphaned: its two callers were themselves
-    dead, and it tagged rows with a different run id and a different pipeline name from the
-    caller that actually makes the requests, so even had it run the rows would not have
-    joined up.
-
-    Never fatal. Accounting must not sink an extraction that has already been paid for, so
-    a failure here is reported and swallowed.
-    """
+    """Append one row per stage to the run's `usage.jsonl`. Never fatal."""
     rows = [
         {
             "paper": outcome.study_id,

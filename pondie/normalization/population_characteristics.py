@@ -15,6 +15,7 @@ import unicodedata
 from collections import Counter
 from dataclasses import dataclass
 
+from pondie.formats import values
 from pondie.normalization._records import DEFAULT, iter_records, strings_at
 
 #: The three outcomes. KEPT is the default and the safe one: no rule calling a value
@@ -317,12 +318,9 @@ def apply(record: dict) -> dict[str, int]:
         tally["deduped"] += len(entries) - len(keep) - len(other) - tally_empty(verdicts)
         wrapper["value"] = keep
         if other:
-            group["other_characteristics"] = {
-                "value": other,
-                "extraction_status": "extracted",
-                "value_source": "derived",
-                "evidence": None,
-            }
+            group["other_characteristics"] = values.wrap(
+                other, source="generated", evidence="not_found"
+            )
     return tally
 
 

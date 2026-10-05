@@ -17,6 +17,8 @@ setting that silently does not apply.
 
 from __future__ import annotations
 
+import re
+from collections import Counter
 from enum import Enum
 from pathlib import Path
 from typing import Annotated, ClassVar, Literal
@@ -47,6 +49,9 @@ class StageName(str, Enum):
     sign_split = "split"
     demands = "demands"
     satisfy = "satisfy"
+    #: The whole record in one call, instead of `demands` then `satisfy`; see
+    #: `stages.SINGLE_PASS`.
+    single = "single"
     #: Slot-level, and after `satisfy` because it finishes what that pass left open rather
     #: than deciding anything exists. Loops: a slot is settled when it holds a value or a
     #: reason there is none, so "are we done" is a fact about the record and not a guess.
@@ -156,17 +161,12 @@ class ModelCall(Strict):
     #: same rate as parallel ones. Retrying cannot fix a 5-in-6 fault, which is why a run
     #: over 89 papers lost 25 of them with all three attempts spent.
     json_object: bool = True
-    #: The provider's service tier, passed through the gateway. Empty leaves it unset, which
-    #: is the provider's own default.
-    #:
-    #: `flex` trades latency for price on an offline run. Verified against the gateway rather
-    #: than assumed: a reply to a `flex` request echoes `service_tier: "flex"`, a `default`
-    #: one echoes `default`, and an invented tier is refused -- so the field reaches the
-    #: provider instead of being swallowed by the proxy, which is the failure a parameter
-    #: that is merely *accepted* hides.
-    #:
-    #: Off by default because it is slower and can be refused for capacity, and a stage that
-    #: silently took longer would be indistinguishable from a stage that hung.
+    #: A JSON Schema the reply must match, decoded under it (Structured Outputs, strict).
+    #: Takes precedence over `json_object`. See `prompt.reply_schema`.
+    json_schema: dict | None = None
+    #: The provider's service tier, passed through the gateway; empty leaves the provider's
+    #: default. Verified to reach the provider: a `flex` reply echoes `service_tier: "flex"`
+    #: and an invented tier is refused.
     service_tier: Literal["", "flex", "default", "priority"] = ""
 
 
@@ -188,14 +188,39 @@ class Settings(Strict):
     payloads: Path
     records: Path
     model: str
-    stages: tuple[StageName, ...] = tuple(StageName)
+    #: The single pass by default; naming `demands` and `satisfy` runs the split instead.
+    stages: tuple[StageName, ...] = tuple(
+        s for s in StageName if s not in (StageName.demands, StageName.satisfy)
+    )
+    #: The reasoning effort of any stage `stage_effort` does not name.
     effort: Literal["minimal", "low", "medium", "high"] = "low"
+    #: Reasoning effort per stage, over `effort`: more for judgement (`single`, `repair`),
+    #: less for completion and quoting (`fill`, `evidence`). Only `single`'s level is
+    #: measured (experiments/stage-ablation/JOURNAL.md, P6).
+    stage_effort: dict[StageName, Literal["minimal", "low", "medium", "high"]] = Field(
+        default_factory=lambda: {
+            StageName.single: "medium",
+            StageName.fill: "low",
+            StageName.evidence: "low",
+            StageName.repair: "medium",
+        }
+    )
     max_output_tokens: Annotated[int, Field(gt=0)] = 48_000
     attempts: Annotated[int, Field(ge=1)] = 3
     retrieve_evidence: bool = True
+    #: Decode `single`, `fill` and `evidence` replies under a schema generated from the
+    #: extraction schema (`prompt.reply_schema`) instead of JSON mode.
+    structured_outputs: bool = False
+    #: How `single` and `fill` cite: a quote per value, or the numbers of the sentences that
+    #: state it, the paper shown numbered (`evidence.cited`).
+    evidence_format: Literal["quotes", "indexed"] = "quotes"
+    #: After `single`, ask once for the analyses reported in Results sentences that no
+    #: analysis cites (`Single.recheck`). Needs `indexed`, whose citations say which.
+    recheck_results: bool = False
     zero_foci_rule: bool = True
-    #: Passed to every call this run makes. See `ModelCall.service_tier`; off by default.
-    service_tier: Literal["", "flex", "default", "priority"] = ""
+    #: Passed to every call this run makes. `flex` is cheaper and slower; a run's per-paper
+    #: progress line is what tells a slow call from a hung one.
+    service_tier: Literal["", "flex", "default", "priority"] = "flex"
     #: Ask the model for the entities and links the extraction missed. On by default, and
     #: degrades rather than fails: with no caller the stage says so once and runs the
     #: deterministic half, which needs none.
@@ -215,18 +240,34 @@ class Settings(Strict):
     fill_batch: Annotated[int, Field(ge=1)] = 250
 
     #: Put the contradictions nothing else could settle to the extraction model, once per
-    #: record, with the paper. Costs one call for a record that has one, and nothing for a
-    #: record that does not -- 8 cases across 42 records measured.
+    #: record, with the paper (`repair.contradictions`). One call for a record that has
+    #: any, none for a record that does not.
     adjudicate: bool = True
     redo: bool = False
+    #: After `single`'s attempts, ask once for only the entities its references name and it
+    #: never emitted (experiments/stage-ablation/JOURNAL.md, P2).
+    complete_references: bool = True
+    #: Fill `Study.language` and `Study.study_type` from PubMed at `build`. Needs network.
+    pubmed: bool = True
+
+    def effort_for(self, stage: "StageName | str") -> str:
+        """The reasoning effort a stage's calls are made at."""
+        return self.stage_effort.get(StageName(stage), self.effort)
+
+    @model_validator(mode="after")
+    def _recheck_needs_citations(self) -> "Settings":
+        if self.recheck_results and self.evidence_format != "indexed":
+            raise ValueError("recheck_results needs evidence_format='indexed'")
+        return self
 
     @model_validator(mode="after")
     def _build_needs_its_inputs(self) -> "Settings":
-        if StageName.build in self.stages and StageName.satisfy not in self.stages:
+        producers = {StageName.satisfy, StageName.single}
+        if StageName.build in self.stages and not producers & set(self.stages):
             existing = self.payloads
             if not existing.exists():
                 raise ValueError(
-                    "build without satisfy needs payloads on disk from an earlier run; "
+                    "build without satisfy or single needs payloads on disk from an earlier run; "
                     f"{existing} does not exist"
                 )
         return self
@@ -247,6 +288,8 @@ class StageOutcome(Strict):
     #: One entry per model call: the gateway's trace id and what it said about the cache.
     #: Empty for a deterministic stage, which is the honest answer rather than a zero.
     traces: tuple[tuple[str, str], ...] = ()
+    #: The record's schema-validation errors, from `build`. Empty is a valid record.
+    validation_errors: tuple[str, ...] = ()
 
     @property
     def ok(self) -> bool:
@@ -288,6 +331,23 @@ class RunReport(Strict):
     #: A note whose presence means a paper was extracted without its tables. Matched on the
     #: text because that is what a stage has to say with; the alternative is a typed outcome
     #: field that every other stage would carry and none would set.
+    def validation_summary(self, top: int = 5) -> str:
+        """How many built records validate, and the commonest error patterns."""
+        built = [
+            outcome
+            for paper in self.papers
+            for outcome in paper.outcomes
+            if outcome.stage is StageName.build and outcome.ok and not outcome.skipped
+        ]
+        if not built:
+            return ""
+        valid = sum(not o.validation_errors for o in built)
+        counts = Counter(error_pattern(e) for o in built for e in o.validation_errors)
+        text = f"\n  records valid: {valid}/{len(built)}"
+        for pattern, count in counts.most_common(top):
+            text += f"\n    {count:5d}  {pattern}"
+        return text
+
     MISSING_TABLES: ClassVar[str] = "no tables.jsonl"
 
     def starved(self) -> tuple[str, ...]:
@@ -300,14 +360,10 @@ class RunReport(Strict):
         )
 
     def summary(self) -> str:
-        """The headline, and the one degradation a run can suffer while reporting success.
+        """The headline, plus papers that succeeded without any table.
 
-        A paper with no table manifest still extracts: the stage writes an empty list, says
-        so in a note, and every later stage runs. What it produces is a record whose analyses
-        reference tables it does not contain, and the stage that copies them exists because a
-        rewrite once dropped it and left 155 of 156 records that way. That went unnoticed
-        because nothing above the stage said anything. Counted here for the same reason the
-        failures are: a summary that reports only what raised is not a summary of the run.
+        A paper with no table manifest still extracts, with no Table records; that is
+        reported here because nothing fails.
         """
         cost = self.cost
         line = (
@@ -315,14 +371,22 @@ class RunReport(Strict):
             f"{cost.input_tokens:,} in / {cost.output_tokens:,} out tokens "
             f"over {cost.calls} call(s)"
         )
+        line += self.validation_summary()
         if missing := self.starved():
             shown = ", ".join(missing[:4]) + (" ..." if len(missing) > 4 else "")
             line += (
-                f"\n  WARNING: {len(missing)} paper(s) had no table manifest and hold no "
-                f"Table records ({shown}). Their analyses reference tables the record does "
-                f"not contain; polarity coverage falls with them."
+                f"\n  WARNING: {len(missing)} paper(s) had no table manifest and hold no Table "
+                f"records ({shown}); any coordinates they have come from prose."
             )
         return line
+
+
+def error_pattern(message: str) -> str:
+    """A validation message with its record-specific parts blanked, so one fault across
+    many records counts as one pattern: quoted values, list indices and numbers."""
+    message = re.sub(r"'[^']*'", "'…'", message)
+    message = re.sub(r"\[\d+\]", "[i]", message)
+    return re.sub(r"\b\d+(\.\d+)?\b", "N", message)[:140]
 
 
 class Prompt(Strict):

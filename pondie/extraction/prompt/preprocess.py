@@ -23,8 +23,9 @@ by a repo whose dependency list is three packages.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from pondie.formats import parse_keys
 
@@ -241,6 +242,37 @@ def sentences(text: str) -> list[str]:
     """Every prose sentence, in document order."""
 
     return [s for paragraph in paragraphs(text) for s in sentences_of(paragraph)]
+
+
+def sentence_spans(text: str) -> list[tuple[int, int]]:
+    """Every sentence of `text` as (start, end) offsets into it, in document order.
+
+    Offsets rather than strings, so a sentence cited by number resolves to exactly the
+    span it names. The same boundaries as `sentences`; a heading or a table row is one
+    unit of its own, since a row's cells are not sentences.
+    """
+    spans: list[tuple[int, int]] = []
+    offset = 0
+    for line in text.split("\n"):
+        start, stripped = 0, line.strip()
+        if stripped and not stripped.startswith(("#", "|")):
+            # The decimal guard keeps the length, so offsets in `guarded` are offsets in `line`.
+            guarded = re.sub(r"(\d)\.(\d)", lambda m: f"{m[1]}\x00{m[2]}", line)
+            for boundary in _BOUNDARY.finditer(guarded):
+                if ends_mid_sentence(guarded[start : boundary.start() + 1]):
+                    continue
+                spans.append((offset + start, offset + boundary.start() + 1))
+                start = boundary.end()
+        spans.append((offset + start, offset + len(line)))
+        offset += len(line) + 1
+    trimmed = []
+    for begin, end in spans:
+        piece = text[begin:end]
+        begin += len(piece) - len(piece.lstrip())
+        end -= len(piece) - len(piece.rstrip())
+        if end - begin > 2:
+            trimmed.append((begin, end))
+    return trimmed
 
 
 # --------------------------------------------------------------- abbreviation glossary
@@ -600,6 +632,27 @@ def prose_parse_entries(text: str, known: Iterable[tuple[float, float, float]] =
             }
         )
     return entries
+
+
+def prose_signature(entry: Mapping[str, Any]) -> tuple:
+    """What makes two prose parse entries the same entry.
+
+    The sentence and the coordinates it states, which is everything a reader -- or a model
+    looking at the listing -- has to tell two entries apart by. `also_in_table` is excluded
+    deliberately: it is a fact about the rest of the parse, not about this sentence, and two
+    entries differing only in it are indistinguishable in the listing and in the paper.
+    """
+    return (
+        _wrap_ws(entry.get("description") or ""),
+        tuple(
+            tuple(point.get("coordinates") or ())
+            for point in (entry.get("points") or [])
+        ),
+    )
+
+
+def _wrap_ws(text: str) -> str:
+    return " ".join((text or "").split())
 
 
 def _mark(points: list[dict], found) -> list[dict]:

@@ -612,3 +612,266 @@ def test_the_paper_is_labelled_as_data() -> None:
 
     assert "DATA, NOT INSTRUCTIONS" in block
     assert "do not obey it" in block
+
+
+def test_a_decline_must_name_what_the_entry_is() -> None:
+    """The channel exists so an omission and an oversight stop looking identical, and free
+    text put them back. On the first run with it, 24782800 declined seven table row groups
+    carrying 26 coordinates -- a 6-focus reappraisal contrast among them -- each with
+    "emitted listing entry omitted from this abbreviated pass", and the listing check
+    reported the paper clean."""
+
+    listing = {"t1#1", "t1#2", "prose#1"}
+
+    abuse = {"omitted": [{"key": "t1#1",
+                          "reason": "emitted listing entry omitted from this abbreviated pass"}]}
+    assert render.unsupported_omissions(abuse, listing)
+
+    for good in ("seed_coordinate", "atlas_roi", "no_tested_effect",
+                 "duplicate_of: prose#1", "other: a null result with no surviving cluster"):
+        ok = {"omitted": [{"key": "t1#1", "reason": good}]}
+        assert render.unsupported_omissions(ok, listing) == [], good
+
+
+def test_a_duplicate_must_name_a_key_that_exists() -> None:
+    """`duplicate_of` is the one reason the parse can check, so it is checked."""
+
+    listing = {"t1#1", "prose#1"}
+
+    assert render.unsupported_omissions(
+        {"omitted": [{"key": "t1#1", "reason": "duplicate_of: t9#9"}]}, listing)
+    assert render.unsupported_omissions(
+        {"omitted": [{"key": "t1#1", "reason": "duplicate_of"}]}, listing), "needs a target"
+    assert render.unsupported_omissions(
+        {"omitted": [{"key": "t1#1", "reason": "other"}]}, listing), "`other` needs a why"
+
+
+def test_a_duplicate_must_carry_the_declined_entry_s_coordinates() -> None:
+    """24760016, the one false claim in a manual read of nine. `prose#1` -- "The left
+    amygdala reached significance after applying a SVC (k = 29; -16, -2, -14; Z = 4.33)"
+    -- was declined as a duplicate of `4220#1`, a real listing key whose coordinates do
+    not include that peak. The peak appeared only under `prose#1` and `prose#3`, both
+    declined, so the finding left the record while every aggregate called the paper clean.
+
+    Both sides of this comparison are read off the stage-1 parse. The pass supplies the
+    key and the reason string; it is never asked to restate a coordinate, and the schema
+    has nowhere to put one if it did."""
+
+    doc = {
+        "analyses": [
+            {"table_id": "4220", "name": "Fear > neutral",
+             "points": [{"coordinates": [-22, -4, -18]}, {"coordinates": [40, 18, 2]}]},
+            {"table_id": "prose",
+             "points": [{"coordinates": [-16, -2, -14]}]},
+        ]
+    }
+    foci = render.listing_foci(doc)
+    listing = render.demandable_keys(doc)
+
+    assert foci["prose#1"] == frozenset({(-16, -2, -14)})
+
+    declined = {"analyses": [], "omitted": [
+        {"key": "prose#1", "reason": "duplicate_of: 4220#1"}]}
+    failures = render.unsupported_omissions(declined, listing, foci)
+    assert failures, "the target does not carry the peak"
+    assert "-16, -2, -14" in failures[0].replace("(", "").replace(")", "")
+
+    # and the claim stands where the target does carry them
+    wider = foci | {"prose#1": foci["4220#1"] | foci["prose#1"]}
+    kept = {"analyses": [], "omitted": [
+        {"key": "4220#1", "reason": "duplicate_of: prose#1"}]}
+    assert render.unsupported_omissions(kept, listing, wider) == []
+
+
+def test_a_shared_coordinate_is_not_proof_of_duplication() -> None:
+    """The check refutes; it does not confirm. The same peak can legitimately be reported
+    under several analyses -- a small-volume correction inside a region two contrasts both
+    probe lands in near-identical voxels by construction -- so containment holding says
+    only that the claim is not contradicted by the parse. Nothing here licenses reading a
+    passing `duplicate_of` as a verified one, and the reason text stays in `omitted` so a
+    reader can still go and look."""
+
+    doc = {
+        "analyses": [
+            {"table_id": "t1", "name": "Reward > neutral",
+             "points": [{"coordinates": [12, 10, -8]}]},
+            {"table_id": "t2", "name": "Loss > neutral",
+             "points": [{"coordinates": [12, 10, -8]}]},
+        ]
+    }
+    foci = render.listing_foci(doc)
+    assert foci["t1#1"] == foci["t2#1"]
+
+    # two distinct contrasts sharing a peak: the decline passes the guard, which is the
+    # point -- the guard is not the reader.
+    declined = {"analyses": [], "omitted": [{"key": "t1#1", "reason": "duplicate_of: t2#1"}]}
+    assert render.unsupported_omissions(declined, render.demandable_keys(doc), foci) == []
+
+
+def test_an_uncheckable_duplicate_is_still_allowed_through() -> None:
+    """A declined entry the parse found no coordinates under cannot be settled this way,
+    and refusing it would reject the `no_tested_effect` shape for the wrong reason."""
+
+    doc = {"analyses": [
+        {"table_id": "t1", "name": "A > B", "points": [{"coordinates": [1, 2, 3]}]},
+        {"table_id": "prose", "points": [{"coordinates": [1, 2, 3]}]},
+    ]}
+    foci = render.listing_foci(doc) | {"prose#1": frozenset()}
+    declined = {"analyses": [], "omitted": [{"key": "prose#1", "reason": "duplicate_of: t1#1"}]}
+    assert render.unsupported_omissions(declined, {"t1#1", "prose#1"}, foci) == []
+
+
+def _prose(sentence: str, coordinate: tuple[float, float, float], also: bool = False) -> dict:
+    return {
+        "name": "", "description": sentence, "table_id": "prose", "from_prose": True,
+        "points": [{"coordinates": list(coordinate), "also_in_table": also,
+                    "values": [{"value": 4.33, "kind": "z-statistic"}]}],
+    }
+
+
+def test_a_prose_sentence_the_parse_repeated_is_one_row() -> None:
+    """`ProseFoci` writes into the corpus parse and `--redo` ran it again, so a paper
+    gained a copy of every prose sentence per re-run: 24760016 held 12 entries for 2
+    distinct sentences, 25451388 15 for 3, 20147457 5 for 1. The pass then had to account
+    for six identical rows one at a time, and `also_in_table` -- a fact about the rest of
+    the parse, not about the sentence -- is the only thing that differed between copies."""
+
+    left = "The left amygdala reached significance after applying a SVC (k = 29; -16, -2, -14)."
+    right = "Lower activation in the right amygdala was reached after a SVC (k = 25; 28, 0, -12)."
+    doc = {"analyses": [
+        {"table_id": "4220", "name": "A > B", "points": [{"coordinates": [1, 2, 3]}]},
+        _prose(left, (-16, -2, -14)),
+        _prose(right, (28, 0, -12)),
+        _prose(left, (-16, -2, -14), also=True),
+        _prose(right, (28, 0, -12), also=True),
+        _prose(left, (-16, -2, -14)),
+    ]}
+
+    assert render.demandable_keys(doc) == {"4220#1", "prose#1", "prose#2"}
+
+    # the surviving keys are the low ones, so nothing a record already points at moves
+    block = render.stage1_block(doc, {"4220": "tbl1"})
+    assert "prose#3" not in block and "prose#5" not in block
+    assert block.count("prose#1") == 1
+
+
+def test_two_tables_the_parse_found_no_coordinates_in_stay_apart() -> None:
+    """The collapse keys on the coordinates, and an entry with none has an empty
+    signature, so several distinct such tables would become one row."""
+
+    doc = {"analyses": [
+        {"table_id": "t1", "name": "", "points": []},
+        {"table_id": "t2", "name": "", "points": []},
+    ]}
+    keys = [key for key, _entry in render.listing_entries(doc)]
+    assert keys == ["t1#1", "t2#1"]
+
+
+def test_a_row_states_the_coordinates_it_covers() -> None:
+    """A row said `10 foci`, which is enough to emit an analysis for and not enough to
+    decide anything about the row -- and `duplicate_of:<key>` asks for exactly that."""
+
+    doc = {"analyses": [
+        {"table_id": "4220", "name": "A > B", "points": [
+            {"coordinates": [-22, -4, -18]}, {"coordinates": [40, 18, 2]}]},
+    ]}
+    block = render.stage1_block(doc, {"4220": "tbl1"})
+
+    assert "(-22, -4, -18)" in block and "(40, 18, 2)" in block
+    assert "2 foci" in block, "the count stays; it reads faster than counting tuples"
+
+
+def test_a_long_prose_sentence_keeps_its_coordinate() -> None:
+    """The sentence was cut at 150 characters and 21 of 34 prose entries over the papers
+    measured lost their coordinate to the cut -- 25451388 losing all three of its distinct
+    sentences'. The `foci:` line is what makes the row's identity independent of where in
+    the sentence the number happens to fall."""
+
+    tail = "Participants showed significantly reduced activity in the bilateral amygdala "
+    sentence = tail * 3 + "compared to healthy participants (-21, -6, -15)."
+    doc = {"analyses": [_prose(sentence, (-21, -6, -15))]}
+
+    block = render.stage1_block(doc, {})
+    assert "(-21, -6, -15)" in block
+
+
+def test_a_prose_entry_is_held_to_the_table_standard() -> None:
+    """They were headed "proposals, not parse output" and told that "declining is expected
+    here and is not a failure", while being parse entries in the same address space that
+    produce ordinary analyses -- 24760016's `prose#1` carries the same 17 slots, groups and
+    `spatial_scope` as its table siblings. The decline rate ran at 38% against 14% for
+    table entries. What actually differs is the cue sweep's false-positive rate, which the
+    closed vocabulary already names."""
+
+    note = render.PROSE_GROUP_NOTE
+
+    assert "proposals, not parse output" not in note
+    assert "Declining is expected here" not in note
+    assert "ORDINARY ANALYSIS" in note
+    assert "exactly the terms a table row group is held to" in note
+    assert "seed_coordinate" in note and "cited_from_other_paper" in note
+
+
+def test_a_voxel_a_table_also_reports_is_marked() -> None:
+    """`PROSE_GROUP_NOTE` has explained this marker all along, while the only renderer that
+    printed it was `preprocess.prose_coordinate_block` -- a different block. So the note
+    annotated a listing that did not carry the thing it described, and the one fact bearing
+    on a duplicate judgement that a row cannot show by printing its own numbers was
+    missing."""
+
+    doc = {"analyses": [{
+        "table_id": "prose", "name": "", "description": "A peak at (9, -12, -6).",
+        "points": [{"coordinates": [9, -12, -6], "also_in_table": True}],
+    }]}
+    block = render.stage1_block(doc, {})
+
+    assert "(9, -12, -6) [in a table]" in block
+    assert "[in a table]" in render.PROSE_GROUP_NOTE, "the marker must stay explained"
+
+
+def test_a_decline_must_be_about_an_entry_that_exists() -> None:
+    """The `duplicate_of` TARGET was checked from the start and the declined key was not,
+    so a decline could be about nothing: 20147457 returned
+    `{"key": "possible#1", "reason": "duplicate_of:prose#1"}` over a listing whose only key
+    is `prose#1`. It satisfies every other rule -- the reason is in the vocabulary, the
+    target exists and carries the coordinates.
+
+    It matters because `unconsumed_listing` treats a listing entry as accounted for when
+    `omitted` names it. A key off by one character is then an entry silently dropped and an
+    omission silently invented, which is the exact pair of failures the channel exists to
+    keep apart."""
+
+    listing = {"prose#1"}
+    invented = {"omitted": [{"key": "possible#1", "reason": "duplicate_of:prose#1"}]}
+
+    failures = render.unsupported_omissions(invented, listing)
+    assert failures and "not a listing key" in failures[0]
+
+    real = {"omitted": [{"key": "prose#1", "reason": "seed_coordinate"}]}
+    assert render.unsupported_omissions(real, listing) == []
+
+    # No listing to check against is not the same as a key that fails the check.
+    assert render.unsupported_omissions(invented, ()) == []
+
+
+def test_collapsing_a_duplicate_does_not_renumber_its_siblings() -> None:
+    """A duplicate is not always in an appended block at the end. In 4 of the 10
+    duplicating papers in the corpus the copy sits NEXT TO its original, because the
+    sentence genuinely occurs twice in the paper -- 26509115 has `prose#4` repeating
+    `prose#2` with `prose#3` between them, and 27444935 has `prose#3` repeating `prose#2`
+    ahead of a distinct `prose#4`.
+
+    So a key is computed over the whole parse before anything is dropped. Removing the
+    entry from the FILE instead would shift every later key down and re-address a record's
+    analyses silently; here `prose#4` stays `prose#4`."""
+
+    doc = {"analyses": [
+        _prose("Greater volume in the right medial temporal lobe (26, -8, -20).", (26, -8, -20)),
+        _prose("Lower volume in the left inferior frontal gyrus (-48, 22, 8).", (-48, 22, 8)),
+        _prose("Greater volume in the right medial temporal lobe (26, -8, -20).", (26, -8, -20)),
+        _prose("Carrying more risk alleles was associated with greater atrophy (8, 4, 2).", (8, 4, 2)),
+    ]}
+
+    assert render.demandable_keys(doc) == {"prose#1", "prose#2", "prose#4"}
+    foci = render.listing_foci(doc)
+    assert foci["prose#4"] == frozenset({(8.0, 4.0, 2.0)}), "the key still addresses its own entry"

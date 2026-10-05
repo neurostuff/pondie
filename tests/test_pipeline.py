@@ -82,7 +82,7 @@ def test_an_output_with_no_stamp_is_stale(tmp_path):
 def test_an_unreadable_stamp_is_stale_rather_than_an_error(tmp_path):
     w = Work(tmp_path)
     run([1], [w.step()])
-    Stamp.path_for(w.produces(1)).write_text("{ this is not json")
+    Stamp.path_for(w.produces(1), "work").write_text("{ this is not json")
     assert fresh(w.step(), 1) is None
 
 
@@ -93,7 +93,7 @@ def test_a_failed_step_leaves_no_stamp_behind(tmp_path):
     w.produces(1).write_text("{}")
     report = run([1], [w.step()])
     assert report.tally() == {"failed": 1}
-    assert not Stamp.path_for(w.produces(1)).exists()
+    assert not Stamp.path_for(w.produces(1), "work").exists()
 
 
 def test_a_step_that_produces_no_file_is_never_cached(tmp_path):
@@ -122,7 +122,7 @@ def test_the_stamp_says_what_produced_the_output_and_from_what(tmp_path):
     """Caching and provenance are one file, so the two cannot disagree about what ran."""
     w = Work(tmp_path, version="7")
     run([1], [w.step(name="demands")])
-    body = json.loads(Stamp.path_for(w.produces(1)).read_text())
+    body = json.loads(Stamp.path_for(w.produces(1), "demands").read_text())
     assert body["step"] == "demands"
     assert body["parts"] == {"n": 1, "version": "7"}
     assert body["digest"] == digest_of({"n": 1, "version": "7"}, "demands")
@@ -258,5 +258,39 @@ def test_a_stamp_is_invisible_to_a_glob_of_the_output_directory(tmp_path):
     `Repair` docstrings each record having been caught by once."""
     w = Work(tmp_path)
     run([1], [w.step()])
-    assert Stamp.read(w.produces(1)) is not None, "the stamp must still be findable"
+    assert Stamp.read(w.produces(1), "work") is not None, "the stamp must still be findable"
     assert sorted(p.name for p in tmp_path.glob("*.json")) == ["1.json"]
+
+
+# --- progress ----------------------------------------------------------------
+
+
+def test_each_finished_item_is_logged_with_what_the_caller_says_of_it(tmp_path, caplog):
+    """The line a redirected run has instead of a progress bar."""
+    import logging
+
+    work = Work(tmp_path)
+    with caplog.at_level(logging.INFO, logger="pondie"):
+        run([1, 2], [work.step()], describe=lambda n, outcomes: f"{len(outcomes)} step(s)")
+    lines = [r.getMessage() for r in caplog.records if r.getMessage().startswith("[")]
+    assert len(lines) == 2
+    assert all("1 step(s)" in line and "left" in line for line in lines)
+    assert {line.split()[0] for line in lines} == {"[1/2]", "[2/2]"}
+
+
+def test_two_steps_writing_one_output_each_keep_their_stamp(tmp_path):
+    """`prose` and `split` both rewrite the stage-1 parse; sharing one stamp, each made
+    the other stale on every resume."""
+    w = Work(tmp_path)
+    steps = [w.step(name="first"), w.step(name="second")]
+    run([1], steps)
+    assert run([1], steps).tally() == {"cached": 2}
+
+
+def test_a_stamp_written_before_stamps_were_named_per_step_still_counts(tmp_path):
+    """Existing runs keep their caches."""
+    w = Work(tmp_path)
+    run([1], [w.step()])
+    Stamp.path_for(w.produces(1), "work").rename(Stamp.path_for(w.produces(1)))
+    assert fresh(w.step(), 1) is not None
+    assert fresh(w.step(name="other"), 1) is None, "an unqualified stamp is only its own step's"

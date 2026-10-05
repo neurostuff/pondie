@@ -253,6 +253,14 @@
         "cells": [
           {
             "term": "term-ctq-x-ptsd",
+            "level": {
+              "extraction_status": "extracted",
+              "value": "PTSD group",
+              "value_source": "generated",
+              "evidence": {
+                "status": "not_found"
+              }
+            },
             "direction": {
               "extraction_status": "extracted",
               "value": "negative",

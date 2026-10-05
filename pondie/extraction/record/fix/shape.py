@@ -11,14 +11,17 @@ each one sits where it does.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from pondie.extraction.record import direction
+from collections.abc import Iterator, Mapping
 from pondie import schema
 from pondie.extraction.record import walk
 from pondie.formats import values
 from pondie.schema.reader import Schema
 from typing import Any
 import re
+
+
+#: `value_source` words that mean the pipeline, not the paper, produced the value.
+GENERATED_WORDS = {"inferred", "derived", "computed", "calculated", "estimated", "imputed"}
 
 
 def repair_wrappers(node: Any, path: str = "") -> list[str]:
@@ -35,6 +38,10 @@ def repair_wrappers(node: Any, path: str = "") -> list[str]:
     value already sitting in `value` is kept and only the status is corrected; otherwise
     the misplaced payload is moved into `value`.
 
+    Two slips in a well-formed wrapper go the same way: a `value_source` the vocabulary
+    lacks but plainly means `generated` ("inferred"), and an `unreported_reason` on a value
+    that was reported.
+
     Deliberately here and not in `render.normalize`: it has to hold for payloads
     already on disk, so a rebuild fixes them without paying for the extraction again.
     """
@@ -49,6 +56,13 @@ def repair_wrappers(node: Any, path: str = "") -> list[str]:
             node["extraction_status"] = "extracted"
             node.setdefault("value_source", "reported")
             repaired.append(f"{path or '<root>'}: status held {status!r}")
+        if node.get("extraction_status") == "extracted":
+            source = node.get("value_source")
+            if isinstance(source, str) and source.strip().lower() in GENERATED_WORDS:
+                node["value_source"] = "generated"
+                repaired.append(f"{path or '<root>'}: value_source {source!r} -> 'generated'")
+            if node.pop("unreported_reason", None) is not None:
+                repaired.append(f"{path or '<root>'}: extracted, so no unreported_reason")
         for key, value in node.items():
             repaired += repair_wrappers(value, f"{path}.{key}" if path else str(key))
     elif isinstance(node, list):
@@ -278,38 +292,6 @@ def coerce_numeric_values(body: dict[str, Any], sch: Schema) -> list[str]:
     return fixed
 
 
-def rehome_stray_tables(body: dict[str, Any], sch: Schema) -> list[str]:
-    """Move a Table the model wrote as a Study attribute into `tables`.
-
-    Seen as `Study: attribute 'tab4' is not declared on Study` while every analysis
-    referenced `tab4`. The cost is not cosmetic: the stray key is dropped on load, so
-    every analysis pointing at it loses the table its coordinates are joined through,
-    and the paper contributes nothing to a coordinate query.
-
-    Only keys that some analysis actually references are moved, and only when they carry
-    no `local_id` of their own -- anything else is a slot the schema does not know
-    about, which is a different fault and stays reported.
-    """
-
-    declared = set(sch.attributes("Study") or {})
-    referenced: set[str] = set()
-    for analysis in body.get("analyses") or []:
-        if isinstance(analysis, Mapping):
-            cited = values.read(analysis.get("tables")) or []
-            referenced |= {
-                t for t in (cited if isinstance(cited, list) else [cited]) if isinstance(t, str)
-            }
-
-    moved: list[str] = []
-    for key in [k for k in body if k not in declared and k in referenced]:
-        stray = body.pop(key)
-        entry = dict(stray) if isinstance(stray, Mapping) else {}
-        entry.setdefault("local_id", key)
-        body.setdefault("tables", []).append(entry)
-        moved.append(f"Study.{key}: moved into tables[] as {key!r}")
-    return moved
-
-
 #: The fields that give a declared entity its identity. A row holding none of them names
 #: nothing the next pass could build, and nothing an analysis could dangle on.
 IDENTIFYING = ("local_id", "kind", "label")
@@ -355,3 +337,327 @@ def drop_vacuous_demands(body: dict[str, Any]) -> list[str]:
         f"dropped {len(entries) - len(kept)} required_entities row(s) with no local_id, "
         f"kind or label; {len(kept)} kept"
     ]
+
+
+def _holds_no_value(node: Any) -> bool:
+    """No extracted value and no non-blank leaf anywhere in it."""
+    if values.blank(node):
+        return True
+    if values.is_field(node):
+        return node.get("extraction_status") != "extracted"
+    if isinstance(node, Mapping):
+        return all(_holds_no_value(v) for v in node.values())
+    if isinstance(node, list):
+        return all(_holds_no_value(v) for v in node)
+    return False
+
+
+def drop_vacuous_objects(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Drop an optional object that cannot stand and says nothing: what `null` would say.
+
+    Strict decoding makes every slot of an object required, so a model that opens an
+    optional one must fill it. 25533729 wrote `mediation: {"mediator": "", "path":
+    not_reported}` on four analyses that had no mediation, and each reads as a reference to
+    a term named nothing. Only an optional, single-valued nested object one of whose
+    required references is blank and which holds no value: `Study.design` with
+    open fields is something `fill` still asks about, and is left.
+    """
+    dropped: list[str] = []
+    for slot in walk.slots(body, sch, kinds=("nested",)):
+        if slot.attribute.multivalued or slot.attribute.required:
+            continue
+        if not isinstance(slot.value, Mapping) or not slot.value:
+            continue
+        target = sch.ranges(slot.attribute)[0] if sch.ranges(slot.attribute) else None
+        required_refs = [
+            name for name, spec in (sch.attributes(target) or {}).items()
+            if spec.required and sch.classify(name, spec) == "reference"
+        ] if target else []
+        if not any(not walk.ids_of(slot.value.get(name)) for name in required_refs):
+            continue
+        if _holds_no_value(slot.value):
+            del slot.owner[slot.key]
+            dropped.append(f"{slot.path}: an object naming nothing it requires -- dropped")
+    return dropped
+
+
+#: What a slot name can be. A key outside it is debris from a malformed reply (`":{"`).
+SLOT_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def drop_impossible_keys(body: dict[str, Any]) -> list[str]:
+    """Remove keys no slot could have, at any depth outside a field's value."""
+    dropped: list[str] = []
+
+    def visit(node: Any, path: str) -> None:
+        if isinstance(node, list):
+            for i, item in enumerate(node):
+                visit(item, f"{path}[{i}]")
+        elif isinstance(node, dict) and not values.is_field(node):
+            for key in list(node):
+                if not SLOT_NAME.match(str(key)):
+                    del node[key]
+                    dropped.append(f"{path}: dropped {key!r}, not a possible slot name")
+                else:
+                    visit(node[key], f"{path}.{key}")
+
+    visit(body, "Study")
+    return dropped
+
+
+def drop_code_filled(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Remove a model's value for a slot code fills (`schema.code_fills`).
+
+    Code writes these after the merge (`is_healthy`, the normalized demographics,
+    `mirror_of`, PubMed's `language` and `study_type`); a model's answer is either
+    overwritten or, where nothing overwrites it, left in the wrong shape.
+    """
+    dropped: list[str] = []
+    for slot in walk.slots(body, sch):
+        if schema.code_fills(slot.owner_class, slot.key):
+            del slot.owner[slot.key]
+            dropped.append(f"{slot.path}: dropped a model's value for a slot code fills")
+    return dropped
+
+
+#: The keys that make a mapping an ExtractedValue rather than an entity.
+WRAPPER_KEYS = ("extraction_status", "value_source", "unreported_reason", "evidence")
+
+
+def _objects(
+    node: Any, class_name: str, sch: Schema, parent: dict[str, Any] | None = None,
+    parent_class: str = "", path: str = "Study",
+) -> Iterator[tuple[dict[str, Any], str, dict[str, Any] | None, str, str]]:
+    """(object, class, parent, parent class, path) for every object the schema nests.
+
+    Not `walk.entities`: that skips a node carrying wrapper keys, which is a whole entity
+    written as a value -- one of the faults these repairs exist for.
+    """
+    if not isinstance(node, dict):
+        return
+    class_name = sch.designated_type(node, class_name)
+    attributes = sch.attributes(class_name) or {}
+    if not attributes:
+        return
+    yield node, class_name, parent, parent_class, path
+    for key, attribute in list(attributes.items()):
+        if key not in node or sch.classify(key, attribute) != "nested":
+            continue
+        if not isinstance(attribute.range, str):
+            continue
+        child = node[key]
+        listed = isinstance(child, list)
+        for index, item in enumerate(child if listed else [child]):
+            suffix = f"[{index}]" if listed else ""
+            yield from _objects(item, attribute.range, sch, node, class_name, f"{path}.{key}{suffix}")
+
+
+_empty = values.blank
+
+
+def _conflicts(target: Mapping[str, Any], key: str, value: Any) -> bool:
+    """Whether `target` already holds a different value at `key`, evidence aside."""
+    held = target.get(key)
+    return not _empty(held) and values.read(held) != values.read(value)
+
+
+def _settle(target: dict[str, Any], key: str, value: Any) -> bool:
+    """Put `value` at `target[key]` unless a different value is there; True if it may go.
+
+    The same value already there makes the stray a duplicate, so it may be removed -- its
+    evidence moving over when the one in place has none. A different value is two claims,
+    and the caller leaves the stray where it was, still reported: nothing the model wrote
+    is discarded to make a record validate.
+    """
+    if _conflicts(target, key, value):
+        return False
+    held = target.get(key)
+    if _empty(held):
+        target[key] = value
+    elif (
+        values.is_field(held)
+        and values.is_field(value)
+        and (held.get("evidence") or {}).get("status") != "present"
+        and (value.get("evidence") or {}).get("status") == "present"
+    ):
+        held["evidence"] = value["evidence"]
+    return True
+
+
+def lift_misnested(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Put back what a model wrote one level from where the schema puts it.
+
+    Three shapes, all decided by which class declares the key:
+
+    - a parent's slot found in a child moves up to the parent (`tables` and
+      `model_estimation` written under an analysis's `effect`); one the parent already
+      holds is dropped, since the parent's own is the one the schema reads;
+    - an object written inside one of its own slots is lifted into it: 30545239 wrote a
+      factor level as `{"level": {"level": <field>, "groups": [...]}}`, leaving the term
+      with no readable levels. Keys the outer object already holds win;
+    - an object's slots written inside one of its field wrappers move up to it: 21078704
+      put an analysis's `definition` and `prespecification` inside its `name`, 21498053 an
+      effect's `statistic` inside its `kind`.
+
+    A stray that disagrees with the value already in place is left where it is, still
+    reported (`_settle`).
+    """
+    fixed: list[str] = []
+    for node, class_name, parent, parent_class, path in list(_objects(body, "Study", sch)):
+        declared = sch.attributes(class_name) or {}
+        if parent is not None:
+            above = sch.attributes(parent_class) or {}
+            moving = [k for k in node if k not in declared and k in above]
+            for key in [k for k in moving if k not in WRAPPER_KEYS]:
+                if _settle(parent, key, node[key]):
+                    node.pop(key)
+                    fixed.append(f"{path}.{key}: moved up to the {parent_class}")
+        for key, attribute in declared.items():
+            inner = node.get(key)
+            if values.is_field(inner):
+                fixed += _lift_from_wrapper(node, key, inner, attribute, declared, sch, path)
+                continue
+            if (
+                sch.classify(key, attribute) == "nested"
+                or not isinstance(inner, dict)
+                or values.is_field(inner)
+                or key not in inner
+                or not set(inner) <= set(declared)
+                or any(_conflicts(node, k, v) for k, v in inner.items() if k != key)
+            ):
+                continue
+            node[key] = inner.pop(key)
+            for other, value in inner.items():
+                _settle(node, other, value)
+            fixed.append(f"{path}.{key}: a {class_name} written inside it, lifted out")
+    return fixed
+
+
+def _lift_from_wrapper(
+    node: dict[str, Any], key: str, wrapper: dict[str, Any], attribute: Any,
+    declared: Mapping[str, Any], sch: Schema, path: str,
+) -> list[str]:
+    """Move the owner's slots out of one of its field wrappers."""
+    own = set(WRAPPER_KEYS) | {"value"}
+    for wrapper_class in sch.ranges(attribute):
+        own |= set(sch.attributes(wrapper_class) or {})
+    fixed: list[str] = []
+    for stray in [k for k in wrapper if k not in own and k in declared and k != key]:
+        if _settle(node, stray, wrapper[stray]):
+            wrapper.pop(stray)
+            fixed.append(f"{path}.{key}.{stray}: moved out of the wrapper")
+    return fixed
+
+
+def drop_stray_slot_names(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Drop a bare string that names a slot from a list of objects.
+
+    `design.timepoints` held `"arms"` beside its two Timepoints (25050433, 23072363): the
+    next key's name, emitted as an item. A string in a list of objects is never an object,
+    and one spelling a slot of the list's owner is debris rather than a misplaced id.
+    """
+    fixed: list[str] = []
+    for node, class_name, _parent, _class, path in list(_objects(body, "Study", sch)):
+        declared = sch.attributes(class_name) or {}
+        for slot, attribute in declared.items():
+            items = node.get(slot)
+            if sch.classify(slot, attribute) != "nested" or not isinstance(items, list):
+                continue
+            stray = [i for i in items if isinstance(i, str) and i in declared]
+            if stray:
+                node[slot] = [i for i in items if not (isinstance(i, str) and i in declared)]
+                fixed.append(f"{path}.{slot}: dropped {stray}, slot names rather than objects")
+    return fixed
+
+
+def rehome_keyed_entities(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Move an entity written as a key named after its own id into its list.
+
+    Two shapes, told apart by what settles the entity's class:
+
+    - a key some reference slot cites: `Study.tab4` while every analysis cited `tab4` as
+      a table. The stray key is dropped on load, so each analysis lost the table its
+      coordinates join through. The citing slot's range is the class;
+    - an object of the host's own class whose `local_id` is the key: 21078704 wrote eleven
+      analyses inside `a_2022_1`, keyed by their ids, and the built record held one.
+
+    Anything else undeclared is a slot the schema does not know, and stays reported. So
+    does an entity whose id its list already holds.
+    """
+    containers = sch.containers()
+    cited: dict[str, str] = {}
+    for slot in walk.slots(body, sch, kinds=("reference",)):
+        named = values.read(slot.value)
+        for target in named if isinstance(named, list) else [named]:
+            if isinstance(target, str) and isinstance(slot.attribute.range, str):
+                cited.setdefault(target, slot.attribute.range)
+
+    moved: list[str] = []
+    for node, class_name, _parent, _class, path in list(_objects(body, "Study", sch)):
+        declared = sch.attributes(class_name) or {}
+        for key in [k for k in node if k not in declared]:
+            entry = node[key]
+            own_id = entry.get("local_id") if isinstance(entry, Mapping) else None
+            if key in cited and own_id in (None, key):
+                target = cited[key]
+            elif (
+                isinstance(entry, Mapping)
+                and own_id == key
+                and set(entry) <= set(declared)
+            ):
+                target = class_name
+            else:
+                continue
+            container = containers.get(target)
+            held = body.get(container) if container else None
+            if container is None or any(
+                isinstance(e, Mapping) and e.get("local_id") == key for e in held or []
+            ):
+                continue
+            node.pop(key)
+            body.setdefault(container, []).append(
+                {**(dict(entry) if isinstance(entry, Mapping) else {}), "local_id": key}
+            )
+            moved.append(f"{path}.{key}: moved into {container}[] as {key!r}")
+    return moved
+
+
+def unwrap_entities(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Strip wrapper keys from an entity written as if it were a value.
+
+    `{"term": ..., "level": ..., "extraction_status": "extracted", "evidence": ...}` is a
+    `Cell` with a wrapper's markers on it, which makes it read as a field rather than the
+    entity it is. Only keys the class does not declare are removed.
+    """
+    fixed: list[str] = []
+    for node, class_name, _parent, _class, path in _objects(body, "Study", sch):
+        declared = sch.attributes(class_name) or {}
+        stray = [k for k in WRAPPER_KEYS if k in node and k not in declared]
+        if stray and set(node) - set(WRAPPER_KEYS):
+            for key in stray:
+                del node[key]
+            fixed.append(f"{path}: removed wrapper keys {stray}")
+    return fixed
+
+
+#: Strings a model writes as a value when it means the slot's status.
+STATUS_WORDS = {"not_reported", "not reported"}
+
+
+def status_as_value(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Turn a value of `"not_reported"` into a `not_reported` field: the model put the
+    status in the value, wrapped (`{"extraction_status": "extracted", "value":
+    "not_reported"}`) or bare (`"direction": "not_reported"`)."""
+    fixed: list[str] = []
+    for slot in walk.fields(body, sch):
+        field = slot.value
+        if values.is_field(field):
+            if field.get("extraction_status") != "extracted":
+                continue
+            value = field.get("value")
+        else:
+            value = field
+        if isinstance(value, str) and value.strip().lower() in STATUS_WORDS:
+            slot.owner[slot.key] = values.wrap(None, source="reported", evidence="not_found")
+            fixed.append(f"{slot.path}: 'not_reported' written as a value")
+    return fixed

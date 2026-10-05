@@ -85,9 +85,28 @@ empty string or a guess is worse than an absent field.
 
 Do not invent a value to fill a field. If the paper does not state it, leave the field out.
 
-An analysis restricted to a region names that region; one run over the whole brain names
-none. The volume searched and the volume corrected are different claims, and gray or white
-matter masking is not a restriction to a region at all.
+EVERY ENTITY YOU ADD MUST CONNECT TO AN ANALYSIS. Not necessarily to one directly -- a
+chain of any length counts. An analysis cites a model; the model's term names a timepoint;
+the timepoint names the arm; the arm names the group that received it. All four are
+connected, and none but the first is named by the analysis itself. The direction does not
+matter either: it is enough that a path exists.
+
+What does not count is an entity nothing points at and that points at nothing. Before you
+add one, name the path: which analysis reaches it, through what. If you cannot name the
+path, do not add the entity -- it is dropped from the record after this pass, so adding it
+costs the work and changes nothing.
+
+This is the most common fault in this pass. Audited over 126 papers: 69 entities arrived
+with no path to any analysis, 66 of them from here, and not one of them had ever been
+referenced by anything. 50 were Regions.
+
+A REGION IS WHERE AN ANALYSIS LOOKED, NEVER WHERE IT FOUND SOMETHING. An analysis
+restricted to a region names that region; one run over the whole brain names none. A peak
+in a results table -- `right inferior occipital gyrus`, `superior medial frontal gyrus
+bilaterally` -- is an output of the analysis and is already carried by its coordinates;
+making a Region of it says the study delimited that area in advance, which is the opposite
+of what happened. The volume searched and the volume corrected are different claims, and
+gray or white matter masking is not a restriction to a region at all.
 """
 
 
@@ -250,12 +269,20 @@ def template_for(sch: Schema, class_name: str) -> dict:
         # says so in its range name (`ExtractedStringList`) and the attribute's own flag is
         # False, so the template offered a scalar for all 23 list slots -- the proposer
         # could not express two medications even where the paper named two.
-        shaped = (
-            [projected]
-            if sch.is_multivalued(class_name, name) and isinstance(projected, str)
-            else projected
-        )
-        fields[name] = shaped
+        many = sch.is_multivalued(class_name, name)
+        if isinstance(projected, list):
+            # An enum arrived as its permissible values, which is right -- `nu_type` says
+            # why -- and rendering that list AS the template made a single-valued enum
+            # indistinguishable from a list-valued slot. The model read the shape and
+            # answered `["whole_brain"]`, and the validator rejected it: over 126 papers
+            # the repair pass introduced 1,027 findings and nearly all were this, led by
+            # `brain_coverage` 86, `spatial_unit` 61, `Measure.type` 51, `design_type` 49.
+            #
+            # So the choice is stated and the SHAPE is left to say what it always says
+            # here: a bare value for one, a one-element list for many. The same convention
+            # the reference branch above uses for `verbatim-string`.
+            projected = "one of: " + " | ".join(str(v) for v in projected)
+        fields[name] = [projected] if many else projected
     return {sch.containers().get(class_name, class_name.lower()): [fields]}
 
 

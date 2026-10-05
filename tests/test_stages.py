@@ -247,7 +247,7 @@ def test_evidence_asks_about_the_fields_that_exist_not_about_the_paper(tmp_path,
     caller = Recorder()
     monkeypatch.setattr(
         "pondie.extraction.evidence.quote.apply_evidence",
-        lambda payload, quotes, reranker=None, units=(), literal=frozenset(): (EvidenceCounts()),
+        lambda payload, quotes, literal=frozenset(), kept=frozenset(): EvidenceCounts(),
     )
     outcome = Evidence().run(paper, settings, caller)
     assert not outcome.skipped and outcome.ok
@@ -1359,3 +1359,81 @@ def test_a_model_answer_in_a_deterministic_slot_is_overwritten(tmp_path):
     assert record["groups"][0]["is_healthy"]["value"] is False
     assert record["groups"][0]["is_healthy"]["value_source"] == "generated"
     assert tallies["is_healthy"]["overruled"] == 1
+
+
+def test_rerunning_the_prose_pass_does_not_append_the_sentences_again(tmp_path):
+    """`ProseFoci` is the one stage that writes a CORPUS INPUT, and `--redo` asks it to run
+    again. The append was unconditional, so each re-run added another copy of every prose
+    sentence and no run ever took one away: 24760016 reached 12 entries for 2 distinct
+    sentences, 25451388 15 for 3, 20147457 5 for 1.
+
+    The size was the lesser harm. The listing then showed six identical rows a pass had to
+    account for one at a time, which is what the `duplicate_of:prose#N` chains in those
+    records are -- and one of those chains was cover for a claim that was false."""
+
+    paper = _paper(tmp_path)
+    paper.text.write_text(
+        "### RESULTS\nThe left amygdala reached significance after applying a "
+        "SVC ( k = 29; -16, -2, -14 [x, y, z]; Z = 4.33).\n"
+    )
+    settings = _settings(tmp_path, stages=(StageName.prose_foci,), redo=True)
+
+    counts = []
+    for _ in range(3):
+        assert run([paper], settings, Recorder()).failures == ()
+        held = json.loads(paper.parse.read_text())["analyses"]
+        counts.append(sum(1 for a in held if a.get("table_id") == "prose"))
+
+    assert counts[0] >= 1, "the sentence states a coordinate and must be found"
+    assert counts == [counts[0]] * 3, f"re-runs appended: {counts}"
+
+
+def test_tables_stays_fresh_after_prose_and_split_rewrite_the_parse(tmp_path):
+    """A resume must not re-run `tables`, or every model pass after it is paid for again.
+
+    `prose` appends to the parse and `split` rewrites it, both after `tables`; the table
+    list they leave is the one `tables` read.
+    """
+    from pondie.extraction.stages import Tables
+
+    parsed = ({"table_id": "t1", "table_number": "1", "name": "A > B",
+               "points": [{"coordinates": [1, 2, 3]}]},)
+    paper = _paper(tmp_path, parsed=parsed)
+    settings = _settings(tmp_path)
+    before = Tables().depends_on(paper, settings)
+    document = json.loads(paper.parse.read_text())
+    document["analyses"].append({"table_id": "prose", "name": "", "points": [], "from_prose": True})
+    document["prose_foci_applied"] = True
+    paper.parse.write_text(json.dumps(document))
+    assert Tables().depends_on(paper, settings) == before
+
+
+def test_a_raising_stage_reports_the_cause_not_just_the_retry_count(tmp_path, monkeypatch):
+    """`llm.py` raises "... attempt(s) failed" from the gateway's error; the cause is the
+    diagnosis, and the report used to keep only the outer message."""
+
+    class _Chained(_Fake):
+        def run(self, paper, settings, caller):
+            try:
+                raise ConnectionError("Connection reset by peer")
+            except ConnectionError as inner:
+                raise RuntimeError("single for S1: 3 attempt(s) failed") from inner
+
+    monkeypatch.setattr("pondie.extraction.driver.sequence",
+                        lambda s: (_Chained(StageName.single),))
+    report = run([_paper(tmp_path)], _settings(tmp_path), Recorder())
+    reason = report.failures[0].failed.reason
+    assert "3 attempt(s) failed" in reason and "Connection reset by peer" in reason
+
+
+def test_flex_with_no_capacity_is_told_apart_from_a_rate_limit() -> None:
+    """Seven papers in one night died on four tries within two minutes of flex having "no
+    sufficient resources"; it gets the longer budget."""
+    from pondie.extraction import llm
+
+    error = _Boom(429)._error()
+    assert not llm._no_capacity(error)
+    error = RuntimeError("Error code: 429 - {'error': {'message': 'Flex does not have "
+                         "sufficient resources available', 'type': 'resource_unavailable'}}")
+    assert llm._no_capacity(error)
+    assert llm.CAPACITY_TRIES > llm.UNREACHABLE_TRIES

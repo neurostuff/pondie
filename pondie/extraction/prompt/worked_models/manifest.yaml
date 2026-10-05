@@ -70,7 +70,7 @@
       show:
       - effect
   annotations:
-    term: the interaction coefficient's sign
+    term: the PTSD group's slope, relative to the TC group's
 - id: '5.5'
   title: A factorial with one within- and one between-subject factor
   slug: a-factorial-with-one-within-and-one-between-

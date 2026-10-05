@@ -11,8 +11,8 @@ narrowing at each one:
   2. **guard** -- `repair.guard` refuses the writes that would damage the record, and says
      why. Every write goes past it, step 3 included.
   3. **adjudicate** -- what is left is a contradiction the record cannot settle from its own
-     contents. That goes to the model, once, with the paper, and its answer is written
-     through the same guards as everything else.
+     contents (`contradictions` lists the kinds). That goes to the model, once, with the
+     paper, and its answer is written through the same guards as everything else.
 
 There used to be a **ground** step between 1 and 2: a local entailment model scored each
 proposal against the passage offered for it. It went with the local models, and the guards
@@ -27,17 +27,27 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any, Mapping, MutableMapping
+from typing import Any, Callable, Mapping, MutableMapping
 
 from pondie.extraction.evidence.retrieval import sectionize
 from pondie.extraction.models import ModelCall
 from pondie.extraction.prompt import render
+from pondie.extraction.record import direction, rules
 from pondie.extraction.record import spans as span_tools
+from pondie.extraction.record.effect import (
+    NO_LABEL,
+    UNDETERMINED_VARIATION,
+    UNRESOLVED_TERM,
+    derive_effect_kind,
+    levels_a_cell_may_name,
+    terms_in_scope,
+)
 from pondie.extraction.record.validate import EXTRACTION_SCHEMA, Validator
 from pondie.extraction.repair import guard as edit_module
 from pondie.extraction.repair.guard import UNRESTRICTED, Edit, Refusal, refusals
 from pondie.extraction.repair.propose import candidates, existing, sweep_order
-from pondie.formats import values
+from pondie.extraction.record.fix.reachable import drop_unreachable
+from pondie.formats import parse_keys, values
 from pondie.schema import reader
 from pondie.schema.reader import Schema
 from pondie.vocabularies.abbreviations import Abbreviations
@@ -52,6 +62,11 @@ You resolve contradictions in a structured record extracted from a neuroimaging 
 Each case names fields of the record that cannot all be true, and lists the values each may
 take. Answer with the value the paper supports and one verbatim sentence from the paper that
 shows it. Copy the sentence exactly; do not paraphrase, join, or trim it.
+
+A case that asks for regions is a region-of-interest procedure with none named. If it was
+restricted to regions, answer "roi" and name each region as the paper names it -- no
+numbering, no description of where it lies. If the paper does not name them one by one,
+answer "unresolved". If the procedure was not restricted, answer the scope it had.
 
 Answer "unresolved" whenever the paper does not settle the case -- when it is silent,
 ambiguous, or describes something the options do not cover. The record already reports the
@@ -72,6 +87,9 @@ class Report:
     traces: tuple = ()
     #: Findings this pass introduced, from `Validator.diff`. Should be empty.
     introduced: list[str] = field(default_factory=list)
+    #: Entities removed from the record because no analysis reached them. Reported rather
+    #: than silent: the entity is out of the record, not deleted from the audit trail.
+    dropped: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
         return (
@@ -93,22 +111,44 @@ class Case:
     slot: str
     #: Cleared when the answer makes the slot beside it inapplicable.
     clears: str = ""
+    #: Where `slot` sits below the entity: `("effect", "cells", 0)` for a cell's level.
+    within: tuple[str | int, ...] = ()
+    #: The reference slot an answer of `roi` fills with the regions it names.
+    names: str = ""
+    #: What else an answer writes, by option, on the same owner as `slot`. An answer
+    #: settling one half of a contradiction must make the other half agree with it.
+    then: Mapping[str, Callable[[MutableMapping[str, Any], Any], list[str]]] = field(
+        default_factory=dict
+    )
+    #: False for a case answered only through `then`: `slot` names what it is about, and
+    #: no option is a value to write there.
+    writes: bool = True
+
+
+#: The scope/regions pairs: what volume was searched, and the regions it was restricted to.
+_SCOPE_PAIRS = (
+    ("analyses", "Analysis", "spatial_scope", "regions"),
+    ("inference_settings", "InferenceSettings", "correction_scope", "correction_regions"),
+)
 
 
 def contradictions(record: Mapping[str, Any], sch: Schema) -> list[Case]:
-    """The scope/regions pairs that disagree.
+    """The validator's findings that can be put as "choose one of these and quote it".
 
-    Only this family, and deliberately: a case is adjudicable when it can be put as "choose
-    one of these and quote the sentence". Of the findings a repaired record carries, the
-    largest group is dangling references caused by a deletion -- for which the answer is not
-    to delete, not to ask. Measured over 42 records: 209 findings, of which 8 are these.
+    - a whole-brain or searchlight scope beside named regions, and an ROI scope beside none;
+    - a cell level that none of its term's declared levels spells;
+    - an `effect.kind` its own cells contradict;
+    - an analysis named "A < B" whose cells sign A above B, or the reverse.
+
+    Not dangling references, the largest group a repaired record carries: those come from a
+    deletion, and the answer is not to delete rather than to ask.
     """
+    return _scopes(record, sch) + _levels(record) + _kinds(record) + _named_directions(record)
+
+
+def _scopes(record: Mapping[str, Any], sch: Schema) -> list[Case]:
     out: list[Case] = []
-    pairs = (
-        ("analyses", "Analysis", "spatial_scope", "regions"),
-        ("inference_settings", "InferenceSettings", "correction_scope", "correction_regions"),
-    )
-    for container, class_name, scope_slot, region_slot in pairs:
+    for container, class_name, scope_slot, region_slot in _SCOPE_PAIRS:
         attribute = sch.attributes(class_name).get(scope_slot)
         options = tuple(
             getattr(sch.enums.get(r), "permissible_values", {}) or {}
@@ -120,25 +160,304 @@ def contradictions(record: Mapping[str, Any], sch: Schema) -> list[Case]:
                 continue
             scope = str(values.read(entity.get(scope_slot)) or "").strip().lower()
             regions = entity.get(region_slot) or []
-            if scope not in UNRESTRICTED or not regions:
+            where = f"{container}/{entity.get('local_id')}"
+            if scope in UNRESTRICTED and regions:
+                named = ", ".join(_label(record, r) for r in regions)
+                out.append(
+                    Case(
+                        id=f"{where}/{scope_slot}",
+                        question=(
+                            f"{scope_slot} is '{scope}' while {region_slot} names {named}. "
+                            f"A whole-brain or searchlight procedure is restricted to no "
+                            f"region, so at most one of these is right."
+                        ),
+                        options=allowed,
+                        container=container,
+                        local_id=str(entity.get("local_id")),
+                        slot=scope_slot,
+                        clears=region_slot,
+                    )
+                )
+            elif scope == "roi" and not regions:
+                out.append(
+                    Case(
+                        id=f"{where}/{region_slot}",
+                        question=(
+                            f"{class_name} {edit_module.label_of(entity)!r} has {scope_slot} "
+                            f"'roi' and names no {region_slot}. Which regions was it "
+                            f"restricted to?"
+                        ),
+                        options=allowed,
+                        container=container,
+                        local_id=str(entity.get("local_id")),
+                        slot=scope_slot,
+                        names=region_slot,
+                    )
+                )
+    return out
+
+
+def _levels(record: Mapping[str, Any]) -> list[Case]:
+    models = rules.model_index(record)
+    out: list[Case] = []
+    for analysis in record.get("analyses") or []:
+        if not isinstance(analysis, Mapping):
+            continue
+        terms = terms_in_scope(analysis.get("model_estimation"), models)
+        cells = (analysis.get("effect") or {}).get("cells") or []
+        for position, cell in enumerate(cells):
+            if not isinstance(cell, Mapping):
                 continue
-            named = ", ".join(_label(record, r) for r in regions)
+            term = terms.get(cell.get("term"))
+            level = values.read(cell.get("level"))
+            if term is None or not isinstance(level, str):
+                continue
+            declared = levels_a_cell_may_name(term, terms, cell.get("direction"))
+            if not declared or level in declared:
+                continue  # no levels at all is the term's type, not a spelling to choose
             out.append(
                 Case(
-                    id=f"{container}/{entity.get('local_id')}/{scope_slot}",
+                    id=f"analyses/{analysis.get('local_id')}/effect.cells[{position}].level",
                     question=(
-                        f"{scope_slot} is '{scope}' while {region_slot} names {named}. "
-                        f"A whole-brain or searchlight procedure is restricted to no "
-                        f"region, so at most one of these is right."
+                        f"A cell of analysis {edit_module.label_of(analysis)!r} names level "
+                        f"{level!r} of term {edit_module.label_of(term)!r}, which may name "
+                        f"only the levels listed. Which one does the cell mean?"
                     ),
-                    options=allowed,
-                    container=container,
-                    local_id=str(entity.get("local_id")),
-                    slot=scope_slot,
-                    clears=region_slot,
+                    options=declared,
+                    container="analyses",
+                    local_id=str(analysis.get("local_id")),
+                    slot="level",
+                    within=("effect", "cells", position),
                 )
             )
     return out
+
+
+def _kinds(record: Mapping[str, Any]) -> list[Case]:
+    models = rules.model_index(record)
+    out: list[Case] = []
+    for analysis in record.get("analyses") or []:
+        if not isinstance(analysis, Mapping):
+            continue
+        effect = analysis.get("effect")
+        if not isinstance(effect, Mapping):
+            continue
+        terms = terms_in_scope(analysis.get("model_estimation"), models)
+        derived, why = derive_effect_kind(effect.get("cells"), terms)
+        stated = values.read(effect.get("kind"))
+        if derived in (NO_LABEL, UNDETERMINED_VARIATION, UNRESOLVED_TERM) or stated in (
+            None,
+            derived,
+        ):
+            continue
+        question = (
+            f"Analysis {edit_module.label_of(analysis)!r} says its effect is "
+            f"{stated!r}, but its cells describe {derived!r} ({why}). Which is the "
+            f"test the paper reports?"
+        )
+        then = {}
+        if _withheld(effect.get("cells"), terms) == stated:
+            question += (
+                " Its cells are all `undirected`, which marks a test with no per-level sign"
+                " (an F or chi-square over the factor). A directional test (t, z) that found"
+                f" nothing, or whose direction the paper does not print, is still {stated!r};"
+                " answering that marks the cells' sign as not reported."
+            )
+            then = {str(stated): _withhold_signs}
+        out.append(
+            Case(
+                id=f"analyses/{analysis.get('local_id')}/effect.kind",
+                question=question,
+                options=(derived, str(stated)),
+                container="analyses",
+                local_id=str(analysis.get("local_id")),
+                slot="kind",
+                within=("effect",),
+                then=then,
+            )
+        )
+    return out
+
+
+_NOT_REPORTED = values.wrap(None, source="reported", evidence="not_applicable")
+
+
+def _undirected(cell: Any) -> bool:
+    return isinstance(cell, Mapping) and values.read(cell.get("direction")) == "undirected"
+
+
+def _withheld(cells: Any, terms: Mapping[str, Any]) -> str | None:
+    """The kind `cells` would derive with every `undirected` sign marked not reported, when
+    every cell is undirected; else None."""
+    if not cells or not all(_undirected(c) for c in cells):
+        return None
+    withheld = [{**c, "direction": _NOT_REPORTED} for c in cells]
+    return derive_effect_kind(withheld, terms)[0]
+
+
+def _withhold_signs(effect: MutableMapping[str, Any], _span: Any = None) -> list[str]:
+    """Mark each `undirected` cell's sign as not reported: a directional test whose
+    direction the paper did not print (extraction-readme.md §2)."""
+    changed = []
+    for index, cell in enumerate(effect.get("cells") or []):
+        if _undirected(cell):
+            cell["direction"] = values.wrap(None, source="reported", evidence="not_applicable")
+            changed.append(f"cells[{index}].direction: undirected -> not_reported")
+    return changed
+
+
+_SIGN = {"positive": 1, "negative": -1}
+
+
+def _named_against_cells(name: Any, cells: Any) -> bool:
+    """Whether the name's stated comparison (`direction.direction_of`, which `fill_directions`
+    signs cells by) is the reverse of every signed cell's sign, on at least two cells."""
+    if not isinstance(name, str) or not isinstance(cells, list):
+        return False
+    verdicts = []
+    for cell in cells:
+        if not isinstance(cell, Mapping):
+            continue
+        sign, level = values.read(cell.get("direction")), values.read(cell.get("level"))
+        if sign not in _SIGN or not isinstance(level, str) or not level:
+            continue
+        named = direction.direction_of(level, name)
+        if named is None:
+            return False
+        verdicts.append(named == sign)
+    return len(verdicts) >= 2 and not any(verdicts)
+
+
+def _named_directions(record: Mapping[str, Any]) -> list[Case]:
+    out: list[Case] = []
+    for analysis in record.get("analyses") or []:
+        if not isinstance(analysis, Mapping) or not isinstance(analysis.get("effect"), Mapping):
+            continue
+        name = values.read(analysis.get("name"))
+        if not _named_against_cells(name, analysis["effect"].get("cells")):
+            continue
+        out.append(
+            Case(
+                id=f"analyses/{analysis.get('local_id')}/effect.cells.direction",
+                question=(
+                    f"Analysis {name!r} is named for one direction of comparison, and its "
+                    f"cells sign the levels the other way.{_located(record, analysis)} "
+                    f"Which does the paper report: "
+                    f"'name' (the cells' signs are reversed) or 'cells' (the name is)? Quote "
+                    f"what states the direction of THIS comparison -- its table row or "
+                    f"heading, or its sentence -- not another contrast's result. A contrast "
+                    f"that found nothing keeps the signs of what was tested."
+                ),
+                options=("name", "cells"),
+                container="analyses",
+                local_id=str(analysis.get("local_id")),
+                slot="effect",
+                then={"name": _reverse_signs, "cells": _reverse_name},
+                writes=False,
+            )
+        )
+    return out
+
+
+def _reverse_signs(analysis: MutableMapping[str, Any], span: Any = None) -> list[str]:
+    """Swap every signed cell's direction, cited by the adjudicated sentence."""
+    changed = []
+    for index, cell in enumerate((analysis.get("effect") or {}).get("cells") or []):
+        sign = values.read(cell.get("direction")) if isinstance(cell, Mapping) else None
+        if sign not in _SIGN:
+            continue
+        flipped = direction.reverse(sign)
+        cell["direction"] = edit_module.cited(flipped, span)
+        changed.append(f"cells[{index}].direction: {sign} -> {flipped}")
+    return changed
+
+
+def _reverse_name(analysis: MutableMapping[str, Any], _span: Any = None) -> list[str]:
+    """Swap the comparison in the analysis's name: the cells are right and it is not."""
+    text = values.read(analysis.get("name"))
+    swapped = direction.reverse_comparison(text) if isinstance(text, str) else None
+    if swapped is None:
+        return []
+    analysis["name"] = values.wrap(swapped, source="generated", evidence="not_found")
+    return [f"name: {text!r} -> {swapped!r}"]
+
+
+def _located(record: Mapping[str, Any], analysis: Mapping[str, Any]) -> str:
+    """" It is row group 3 of Table 3." when the analysis is linked to one; else ""."""
+    key = values.read(analysis.get("source_table_analysis"))
+    tables = {t.get("local_id"): t for t in record.get("tables") or [] if isinstance(t, Mapping)}
+    linked = [tables[t] for t in analysis.get("tables") or [] if t in tables]
+    if not isinstance(key, str) or "#" not in key or len(linked) != 1:
+        return ""
+    label = values.read(linked[0].get("table_number"))
+    if not label:
+        return ""
+    label = label if str(label).lower().startswith("table") else f"Table {label}"
+    return f" It is row group {parse_keys.split(key)[1]} of {label}."
+
+
+def _consequences(case: Case, value: str, owner: MutableMapping[str, Any], span: Any) -> list[str]:
+    """What an answer writes besides its slot -- whether the slot changed or was kept. A
+    kept `whole_brain` that left its regions beside it settled nothing (33169525)."""
+    done = []
+    if case.clears and value in UNRESTRICTED and owner.get(case.clears):
+        owner[case.clears] = []
+        done.append(f"{case.clears} cleared")
+    return done + (case.then[value](owner, span) if value in case.then else [])
+
+
+def _descend(entity: Any, path: tuple[str | int, ...]) -> MutableMapping[str, Any] | None:
+    node = entity
+    for step in path:
+        try:
+            node = node[step]
+        except (KeyError, IndexError, TypeError):
+            return None
+    return node if isinstance(node, MutableMapping) else None
+
+
+def _name_regions(
+    record: MutableMapping[str, Any],
+    sch: Schema,
+    entity: MutableMapping[str, Any],
+    case: Case,
+    row: Mapping[str, Any],
+    text: str,
+    quote: str,
+    abbreviations: Any,
+    report: Report,
+) -> None:
+    """Point `case.names` at the regions an answer named, declaring the ones not yet held."""
+    named: list[str] = []
+    for proposal in row.get("regions") or []:
+        if isinstance(proposal, str):
+            proposal = {"name": proposal}
+        if not isinstance(proposal, Mapping):
+            continue
+        held = edit_module.resolve(record, sch, "Region", proposal.get("name"), abbreviations)
+        if held:
+            named += [r for r in held if r not in named]
+            continue
+        region, why = edit_module.create(
+            sch, record, "Region", proposal, text, abbreviations, quote=quote
+        )
+        if region is None:
+            report.refused.append(Refusal("regions", why, proposal.get("name")))
+            continue
+        record.setdefault("regions", []).append(region)
+        report.written.append(f"regions/{region['local_id']} created")
+        named.append(region["local_id"])
+    if not named:
+        report.adjudicated.append(f"{case.id}: unresolved, no region could be named")
+        return
+    class_name = sch.classes_by_container()[case.container]
+    log = edit_module.apply(sch, record, class_name, entity, {case.names: named}, text)
+    report.written += [f"{case.container}/{case.local_id}.{s}" for s, _v in log.written]
+    report.refused += log.refused
+    if log.written:
+        report.adjudicated.append(f"{case.id}: roi, {', '.join(named)}")
+    else:
+        report.adjudicated.append(f"{case.id}: refused, {log.refused[0].why}")
 
 
 def _label(record: Mapping[str, Any], local_id: str) -> str:
@@ -161,6 +480,8 @@ def adjudicate(
     model: str,
     report: Report,
     service_tier: str = "",
+    effort: str = "low",
+    abbreviations: Any = None,
 ) -> Any:
     """Put the unresolved contradictions to the extraction model, once, with the paper.
 
@@ -174,23 +495,29 @@ def adjudicate(
         return None
     listing = "\n\n".join(
         f"case {i + 1} (id {c.id}):\n  {c.question}\n"
-        f"  permissible values: {', '.join(c.options)}, or unresolved"
+        f"  permissible values: {', '.join(repr(o) for o in c.options)}, or unresolved"
         for i, c in enumerate(cases)
     )
+    methods = getattr(sch.enums.get("RegionDefinition"), "permissible_values", {}) or {}
     reply = caller(
         ModelCall(
             model=model,
             # Paper in the system half; only the cases vary between calls. See the note
             # in `propose_with_extractor._generate`.
             system=f"{ADJUDICATION_SYSTEM}\n\n{render.paper_block(text)}",
-            effort="low",
-            max_output_tokens=4_000,
+            effort=effort,
+            # Room for reasoning: at medium effort it is spent from the same budget.
+            max_output_tokens=16_000,
             service_tier=service_tier,
             prompt=(
                 f"## Cases\n\n{listing}\n\n"
-                'Reply as {"resolutions": [{"id": ..., "value": ..., '
+                'Reply with JSON, {"resolutions": [{"id": ..., "value": ..., '
                 '"quote": ...}]}, using the case id verbatim and an empty quote '
-                "for anything unresolved."
+                "for anything unresolved. For a case that asks for regions, answered "
+                '"roi", add "regions": [{"name": ..., "definition_method": ...}], where '
+                "definition_method is how the region was delimited: one of "
+                f"{', '.join(methods)}; else a few words of the paper's saying how "
+                '(e.g. "manually traced"); else "not_reported".'
             ),
         ),
         paper=study_id,
@@ -202,6 +529,7 @@ def adjudicate(
     answers = reply.payload
 
     by_id = {c.id: c for c in cases}
+    answered: list[str] = []
     for row in answers.get("resolutions") or []:
         case = by_id.get(str(row.get("id", "")).strip())
         value = str(row.get("value", "")).strip()
@@ -213,7 +541,9 @@ def adjudicate(
             span = span_tools.resolve(text, quote).as_record()
             span_tools.verify(text, span)
         except Exception:
-            report.adjudicated.append(f"{case.id}: rejected, the quote is not in the paper")
+            report.adjudicated.append(
+                f"{case.id}: rejected, the quote is not in the paper ({quote[:80]!r})"
+            )
             continue
         entity = next(
             (
@@ -223,33 +553,38 @@ def adjudicate(
             ),
             None,
         )
-        if entity is None:
+        owner = _descend(entity, case.within)
+        if owner is None:
             continue
-        # Through the guards, like every other write. Coercing a cited scope to a bare enum
-        # is exactly the shape `refuses_losing_the_warrant` exists for, and step 4 was the
-        # one path that bypassed it.
-        #
-        # The quote goes with it. It was resolved against this paper's text just above, so
-        # withholding it left `refuses_an_unwarranted_replacement` judging a cited edit as
-        # though it had arrived bare -- refusing the one write on this path that had already
-        # proved itself.
-        edit = Edit(record, entity, case.slot, value, text, quote)
+        if case.names and value not in UNRESTRICTED:
+            _name_regions(record, sch, entity, case, row, text, quote, abbreviations, report)
+            continue
+        if not case.writes or values.read(owner.get(case.slot)) == value:
+            also = _consequences(case, value, owner, span)
+            said = f"kept {value}" if case.writes else value
+            report.adjudicated.append(f"{case.id}: {said}" + "".join(f"; {a}" for a in also))
+            answered.append(case.id)
+            continue
+        # Through the guards, like every other write. Coercing a cited free-text scope to a
+        # bare enum is exactly the shape `refuses_losing_the_warrant` exists for; swapping
+        # one of the case's options for another is the choice it asked for (`choices`). The
+        # quote goes with it: it was resolved against this paper just above, and without it
+        # `refuses_an_unwarranted_replacement` would judge a cited edit as a bare one.
+        edit = Edit(record, owner, case.slot, value, text, quote, choices=case.options)
         if refused := refusals(edit):
             report.refused.extend(refused)
             report.adjudicated.append(f"{case.id}: refused, {refused[0].why}")
             continue
-        entity[case.slot] = {
-            "extraction_status": "extracted",
-            "value": value,
-            "value_source": "reported",
-            "evidence": {
-                "status": "present",
-                "sets": [{"source": "repair_pass", "spans": [span]}],
-            },
-        }
-        if case.clears and value in UNRESTRICTED:
-            entity[case.clears] = []
-        report.adjudicated.append(f"{case.id}: {value}")
+        owner[case.slot] = edit_module.cited(value, span)
+        also = _consequences(case, value, owner, span)
+        report.adjudicated.append(f"{case.id}: {value}" + "".join(f"; {a}" for a in also))
+        answered.append(case.id)
+    # An answer counts only if the contradiction it answered is gone. "kept contrast" on
+    # cells that still derive `omnibus` read as resolved while the record still disagreed.
+    standing = {c.id for c in contradictions(record, sch)}
+    for case_id in answered:
+        if case_id in standing:
+            report.adjudicated.append(f"{case_id}: still contradicted after the answer")
     # Returned, not logged. `llm.py`: "Cost is returned rather than logged, because a stage
     # that has to scrape its own spend out of its own logging cannot be summed."
     return reply
@@ -266,6 +601,7 @@ def run(
     model: str = "",
     service_tier: str = "",
     iterations: int = 2,
+    effort: str = "low",
 ) -> Report:
     """Repair `record` in place. Returns what happened, including anything it broke."""
     from copy import deepcopy
@@ -300,10 +636,18 @@ def run(
             model=model,
             report=report,
             service_tier=service_tier,
+            effort=effort,
+            abbreviations=abbreviations,
         )
         if reply is not None:
             report.cost = reply.cost
             report.traces = ((reply.trace_id, reply.cache_status),) if reply.trace_id else ()
+
+    # LAST, because it judges what everything above produced. The proposer creates an entity
+    # whenever the model proposes one and never asks whether anything will point at it:
+    # audited over 126 papers, 66 of 69 orphans appear in no payload at all and none was
+    # ever referenced. See `reachable` for what that catches and why tables are exempt.
+    report.dropped += drop_unreachable(record)
 
     # The extraction schema, not `sch`. A record is extraction-shaped -- every value in an
     # `ExtractedValue` wrapper -- while `sch` is storage, where `name` is a plain string.

@@ -25,9 +25,9 @@ from dataclasses import field as dataclass_field
 from typing import Any, Callable, Mapping, MutableMapping
 
 from pondie.extraction.record import ids, spans as span_tools
-from pondie.extraction.record.fix import derive
+from pondie.extraction.record.fix import derive, shape
 from pondie.extraction.record.effect import terms_in_scope
-from pondie.extraction.record.ids import from_local_id, label_of
+from pondie.extraction.record.ids import label_of
 from pondie.extraction.record.validate import EXTRACTION_SCHEMA
 from pondie.extraction.repair import propose
 from pondie.extraction.repair.propose import flat
@@ -52,6 +52,8 @@ class Edit:
     #: so they default and every existing construction of an `Edit` still stands.
     text: str = ""
     quote: str = ""
+    #: The values a contradiction case offered, when the write answers one.
+    choices: tuple[str, ...] = ()
 
     @property
     def current(self) -> Any:
@@ -175,8 +177,16 @@ def refuses_losing_the_warrant(edit: Edit) -> Refusal | None:
 
     The old spans are kept when they still contain the new value, which is what lets a
     genuine extension through: on 23021615 the restored full sentence was already the span.
+
+    Nor is it a loss when an adjudicated case swaps one of its own options for another. The
+    record contradicts itself there, so one cited half is wrong, and the answer brings a
+    sentence of its own. 27082610's total-brain-volume comparisons said `roi` with no region;
+    every cited `whole_brain` answer was refused here. A free-text value outside the options
+    -- 12853571's compound scope -- is still protected.
     """
     if _inherited(edit.current, edit.value) is not None:
+        return None
+    if edit.quote and edit.current_value in edit.choices and edit.value in edit.choices:
         return None
     node = edit.current
     if not isinstance(node, Mapping):
@@ -446,8 +456,10 @@ def create(
     proposal: Mapping[str, Any],
     text: str = "",
     abbreviations: Any = None,
+    quote: str = "",
 ) -> tuple[dict | None, str]:
-    """A new entity from `proposal`, or `(None, why not)`.
+    """A new entity from `proposal`, or `(None, why not)`. `quote`, a sentence already
+    placed in `text`, warrants each value it states.
 
     Two conditions, both read from the schema rather than chosen here.
 
@@ -504,9 +516,13 @@ def create(
         # fill, and `apply` writes the rest through `_nested` once the entity exists.
         if name in ("local_id", "id") or name not in proposal or kind in ("reference", "nested"):
             continue
+        if str(proposal[name]).strip().lower() in shape.STATUS_WORDS:
+            # A required slot the source is silent on still carries the slot, as a status.
+            entity[name] = values.wrap(None, source="reported", evidence="not_applicable")
+            continue
         value = values.shape(sch, class_name, name, proposal[name])
         if value is not None:
-            entity[name] = _wrap(value, text)
+            entity[name] = _wrap(value, text, quote=quote if _warrants(quote, value) else "")
 
     entity.update(_nested_defaults(sch, record, class_name, proposal, text))
     entity.update(_derived(sch, class_name, entity))
@@ -889,7 +905,17 @@ def _placed(value: Any, text: str, quote: str = "") -> dict | None:
         span_tools.verify(text, span)
     except Exception:
         return None
+    return _repair_evidence(span)
+
+
+def _repair_evidence(span: dict) -> dict:
     return {"status": "present", "sets": [{"source": "repair_pass", "spans": [span]}]}
+
+
+def cited(value: Any, span: dict) -> dict:
+    """A reported value this pass wrote, with the sentence that warrants it."""
+    return {"extraction_status": "extracted", "value": value, "value_source": "reported",
+            "evidence": _repair_evidence(span)}
 
 
 def _wrap(value: Any, text: str, source: str = "reported", quote: str = "") -> dict:

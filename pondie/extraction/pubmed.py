@@ -30,7 +30,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 
 ESUMMARY = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
 
@@ -42,8 +42,18 @@ BATCH = 200
 #: Types that mean the article is not a report of original data. Not used here -- a query
 #: applies it -- but named so the exclusion has one definition rather than one per caller.
 NOT_ORIGINAL_RESEARCH = frozenset(
-    {"Review", "Systematic Review", "Meta-Analysis", "Editorial", "Letter", "Comment",
-     "Case Reports", "Published Erratum", "Retraction of Publication", "Retracted Publication"}
+    {
+        "Review",
+        "Systematic Review",
+        "Meta-Analysis",
+        "Editorial",
+        "Letter",
+        "Comment",
+        "Case Reports",
+        "Published Erratum",
+        "Retraction of Publication",
+        "Retracted Publication",
+    }
 )
 
 
@@ -65,20 +75,11 @@ def _credentials() -> dict[str, str]:
 FIELDS = {"pubtype": "study_type", "lang": "language"}
 
 
-def summaries(
+def _entries(
     pmids: Iterable[str], *, batch: int = BATCH, pause: float = 0.15, retries: int = 4
-) -> dict[str, dict[str, list[str]]]:
-    """pmid -> {slot: values}, for every slot `FIELDS` names.
-
-    A pmid PubMed does not know is absent from the result rather than present and empty:
-    "we asked and it has none" and "we could not ask" are different claims, and only the
-    first should ever reach the record.
-
-    One request per 200 ids for both fields rather than one per field: `esummary` returns
-    the whole record and the caller pays for the round trip, not for the columns.
-    """
+) -> Iterator[tuple[str, dict]]:
+    """(pmid, esummary entry) for every pmid PubMed knows, 200 to a request."""
     wanted = [str(p).strip() for p in pmids if str(p).strip().isdigit()]
-    found: dict[str, dict[str, list[str]]] = {}
     credentials = _credentials()
     for start in range(0, len(wanted), batch):
         chunk = wanted[start : start + batch]
@@ -102,14 +103,44 @@ def summaries(
                     delay *= 2
         for uid in payload.get("uids") or []:
             entry = payload.get(uid) or {}
-            if entry.get("error"):
-                continue
-            found[str(uid)] = {
-                slot: [str(v) for v in (entry.get(field) or []) if str(v).strip()]
-                for field, slot in FIELDS.items()
-            }
+            if not entry.get("error"):
+                yield str(uid), entry
         time.sleep(pause)
-    return found
+
+
+def summaries(pmids: Iterable[str], **kwargs) -> dict[str, dict[str, list[str]]]:
+    """pmid -> {slot: values}, for every slot `FIELDS` names.
+
+    A pmid PubMed does not know is absent from the result rather than present and empty:
+    "we asked and it has none" and "we could not ask" are different claims, and only the
+    first should ever reach the record.
+
+    One request per 200 ids for both fields rather than one per field: `esummary` returns
+    the whole record and the caller pays for the round trip, not for the columns.
+    """
+    return {
+        uid: {
+            slot: [str(v) for v in (entry.get(field) or []) if str(v).strip()]
+            for field, slot in FIELDS.items()
+        }
+        for uid, entry in _entries(pmids, **kwargs)
+    }
+
+
+def authorship(pmids: Iterable[str], **kwargs) -> dict[str, dict]:
+    """pmid -> {"authors": [...], "pubdate": "2006 Jan 30"}, verbatim from `esummary`.
+
+    Not written onto the record, which has no slot for either: they are what a query
+    about two papers at once needs -- whether the same group could have reported the same
+    participants twice, and which report came first. See `pondie.query.overlap`.
+    """
+    return {
+        uid: {
+            "authors": [a.get("name") for a in entry.get("authors") or [] if a.get("name")],
+            "pubdate": str(entry.get("pubdate") or ""),
+        }
+        for uid, entry in _entries(pmids, **kwargs)
+    }
 
 
 def publication_types(pmids: Iterable[str], **kwargs) -> dict[str, list[str]]:
@@ -134,7 +165,7 @@ def fill(record: dict, found: Mapping[str, Mapping[str, list[str]] | list[str]])
     answer = found.get(local_id)
     if not answer:
         return []
-    if isinstance(answer, list):                      # `publication_types`' shape
+    if isinstance(answer, list):  # `publication_types`' shape
         answer = {"study_type": answer}
 
     changed = []

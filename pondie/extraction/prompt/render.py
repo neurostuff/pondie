@@ -29,6 +29,7 @@ in neither.
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Collection, Mapping, Sequence
 from typing import Any
@@ -36,9 +37,10 @@ from typing import Any
 from pondie import paths, schema
 from pondie.extraction.models import Prompt
 
-# `preprocess` for the
-# deterministic text transforms selected by --preprocess.
-from pondie.extraction.prompt import worked
+# `preprocess` for `prose_signature`: what makes two prose parse entries the same entry
+# is the parser's own business, and the listing must collapse by the same rule the append
+# refuses to duplicate by, or the two disagree about what a row is.
+from pondie.extraction.prompt import preprocess, worked
 from pondie.extraction.record import ids
 from pondie.formats.values import read as read_value
 from pondie.extraction.record.fix import shape
@@ -111,6 +113,10 @@ def mode_classes(sch: Schema, mode: str) -> tuple[set[str], list[str]]:
         keep = ["analyses"]
         return analysis_side - DETERMINISTIC_CLASSES, keep
 
+    if mode == "single":
+        entities, keep = mode_classes(sch, "entities")
+        return (analysis_side | entities) - DETERMINISTIC_CLASSES, keep + ["analyses"]
+
     roots: list[str] = []
     keep = []
     for attr, slot in study.items():
@@ -128,6 +134,42 @@ def mode_classes(sch: Schema, mode: str) -> tuple[set[str], list[str]]:
 
 def _wrap(text: str) -> str:
     return re.sub(r"\s+", " ", (text or "")).strip()
+
+
+def _foci(points: Sequence[Mapping[str, Any]]) -> str:
+    """The coordinates a listing row covers, as the row's own identity.
+
+    A row used to show `10 foci`: a count. That is enough to emit an analysis for and not
+    enough to decide anything ABOUT the row, and `duplicate_of:<key>` asks for exactly
+    that. 24760016 declined `prose#1` -- "The left amygdala reached significance after
+    applying a SVC (k = 29; -16, -2, -14; Z = 4.33)" -- as a duplicate of `4220#1`, which
+    holds ten coordinates and not that one. The claim was wrong and it was also
+    unanswerable: nothing on the page said what `4220#1` contained.
+
+    A prose row did show its numbers, but only by accident -- they sat inside the sentence,
+    and the sentence was cut at 150 characters. 21 of 34 prose entries over the papers
+    measured lost their coordinate to the cut, 25451388 losing all three of its distinct
+    sentences': `'...applying a SVC ( k = 25; 28'`. So the one row type whose coordinates
+    were visible lost them whenever they fell late in a long sentence.
+
+    Printing them is what makes a decline about this row checkable by the reader who has to
+    make it. Measured at roughly 9 tokens a focus against an input price of $0.05/M.
+    """
+
+    shown = []
+    for point in points:
+        coordinates = point.get("coordinates") or ()
+        if len(coordinates) != 3:
+            continue
+        shown.append(
+            "(" + ", ".join(f"{float(v):g}" for v in coordinates) + ")"
+            # The one fact bearing on a duplicate judgement that the row cannot show by
+            # printing its own numbers. `PROSE_GROUP_NOTE` has explained this marker all
+            # along while only `preprocess.prose_coordinate_block` ever printed it, so the
+            # note annotated a listing that did not carry it.
+            + (" [in a table]" if point.get("also_in_table") else "")
+        )
+    return " ".join(shown) if shown else "none parsed"
 
 
 def enum_of(sch: Schema, range_name: str):
@@ -170,7 +212,9 @@ def render_schema(sch: Schema, names: set[str], study_keep: list[str]) -> str:
         definition = sch.definition(name)
         if definition is None:
             continue
-        attributes = sch.attributes(name)
+        attributes = {
+            k: v for k, v in sch.attributes(name).items() if not schema.code_fills(name, k)
+        }
         if name == "Study":
             attributes = {k: v for k, v in attributes.items() if k in study_keep}
         if not attributes:
@@ -240,18 +284,23 @@ def render_schema(sch: Schema, names: set[str], study_keep: list[str]) -> str:
 PROSE_TABLE_ID = parse_keys.PROSE_TABLE_ID
 
 PROSE_GROUP_NOTE = """
-Reported in PROSE and in no table — proposals, not parse output
+Reported in PROSE and in no table
 
-  Each entry below is one sentence that states a coordinate, found by a cue sweep rather
-  than read off a table. Confirm each against the paper: some are results this paper
-  reports only in the text, others are a seed or sphere centre, an ROI from an atlas, or a
-  peak quoted from another study to compare against.
+  Each entry below is one sentence that states a coordinate. These are PARSE ENTRIES like
+  the table row groups above, in the same `<table_id>#<ordinal>` address space, and an
+  analysis emitted from one is an ORDINARY ANALYSIS: the same name, groups, conditions,
+  effects and `spatial_scope` as any other, judged by the same standard. A result this
+  paper reports only in its text is not a lesser result.
 
-  ACCOUNT FOR EVERY ONE, on the same terms as a table row group. Emit an analysis for a
-  result the paper reports, and for anything else add it to `omitted` with the reason --
-  "seed coordinate", "atlas ROI", "peak cited from another paper". Declining is expected
-  here and is not a failure; declining SILENTLY is, because a sentence left unmentioned is
-  indistinguishable from one overlooked.
+  ACCOUNT FOR EVERY ONE, on exactly the terms a table row group is held to. Emit an
+  analysis for a result the paper reports; put anything else in `omitted` with a reason
+  from the closed list above. Declining SILENTLY is the failure, because a sentence left
+  unmentioned is indistinguishable from one overlooked.
+
+  What differs is the false-positive rate, not the standing. These sentences were found by
+  a cue sweep rather than read off a table, so some state a seed or sphere centre, an ROI
+  from an atlas, or a peak quoted from another study to compare against -- `seed_coordinate`
+  and `cited_from_other_paper` are what those are for. Read the sentence and say which it is.
 
   These entries have NO table. OMIT `tables` for an analysis you emit from one -- there
   is nothing to point at, and a made-up id dangles. `source_table_analysis` is still
@@ -260,7 +309,7 @@ Reported in PROSE and in no table — proposals, not parse output
   A coordinate marked `[in a table]` is reported by a parsed table as well. That does not
   make the sentence a duplicate: a table lists one contrast's peaks, and a sentence naming
   the same voxel for a DIFFERENT comparison is a second analysis. Read which contrast the
-  sentence names before deciding.
+  sentence names before deciding, and name the key you mean in `duplicate_of:<key>`.
 """
 
 ZERO_FOCI_RULE = """
@@ -331,12 +380,53 @@ def demandable_keys(stage1: Mapping[str, Any]) -> set[str]:
     for itself.
     """
 
+    return {key for key, entry in listing_entries(stage1) if entry.get("points")}
+
+
+def listing_entries(stage1: Mapping[str, Any]) -> list[tuple[str, dict]]:
+    """(key, entry) for every row the listing prints, in order.
+
+    One function because `demandable_keys` and `stage1_block` must agree on what was
+    SHOWN -- a post-condition demanding a row the pass never saw is unfair, and a row shown
+    without being demandable is a silent decline. They agreed by both open-coding the same
+    filter, which held until a third rule arrived.
+
+    The third rule is the collapse, which two separate things make necessary. `ProseFoci`
+    writes into the corpus parse and `--redo` ran it again, so a paper accumulated one copy
+    of every prose sentence per re-run: 24760016 held 12 entries for 2 distinct sentences,
+    25451388 15 for 3, 20147457 5 for 1. That one is now fixed at the writer. The other is
+    not fixable there: a sentence can genuinely occur twice in a paper -- a figure caption
+    repeating a body sentence -- and the sweep yields it once per occurrence. 4 of the 10
+    duplicating papers in the corpus are this kind, with the copy sitting next to its
+    original rather than in an appended block.
+
+    Either way a pass had to account for identical rows one at a time, which is what the
+    `duplicate_of:prose#N` chains in those records are -- bookkeeping over a listing that
+    repeated itself, and cover for one claim that was false.
+
+    KEYS ARE COMPUTED BEFORE THE DROP, over the whole parse, so collapsing renumbers
+    nothing: a surviving entry keeps the key it had and a record's `source_table_analysis`
+    goes on resolving. This is also why the collapse belongs here rather than in a rewrite
+    of the parse -- dropping a mid-list entry from the FILE shifts every later key down,
+    which would re-address a record's analyses silently instead of breaking them loudly.
+    """
+
     every = stage1.get("analyses") or []
-    return {
-        key
-        for key, entry in zip(parse_keys.parse_keys(every), every)
-        if not entry.get("withhold") and (entry.get("points") or [])
-    }
+    rows: list[tuple[str, dict]] = []
+    held: set[tuple] = set()
+    for key, entry in zip(parse_keys.parse_keys(every), every):
+        if entry.get("withhold"):
+            continue
+        # Only an entry with coordinates has a signature worth comparing: a parsed table
+        # that yielded no points has an empty one, and several distinct such tables in a
+        # paper would collapse into one row.
+        if entry.get("points"):
+            signature = (entry.get("table_id"), entry.get("name"), preprocess.prose_signature(entry))
+            if signature in held:
+                continue
+            held.add(signature)
+        rows.append((key, entry))
+    return rows
 
 
 def stage1_block(
@@ -362,9 +452,7 @@ def stage1_block(
     # Keys are computed over the FULL parse and the withheld entries dropped afterwards,
     # so hiding one does not renumber its siblings. `parse_keys.parse_keys` explains why
     # a shifted key is worse than a missing one.
-    every = stage1.get("analyses") or []
-    keyed = list(zip(parse_keys.parse_keys(every), every))
-    shown = [(key, a) for key, a in keyed if not a.get("withhold")]
+    shown = listing_entries(stage1)
     if not shown:
         return ""
     analyses = [a for _key, a in shown]
@@ -402,9 +490,27 @@ def stage1_block(
         "",
         "OMITTING IS RECORDED, NOT SILENT. When you omit a listing entry under one of the",
         "rules above, add it to a top-level `omitted` list as",
-        '`{\"key\": \"<parse key>\", \"reason\": \"<why>\"}`. An omission and an oversight look',
-        "identical in the output otherwise, so a listing entry that is neither emitted nor",
-        "recorded here is treated as an oversight and the pass is asked again for it.",
+        '`{\"key\": \"<parse key>\", \"reason\": \"<one of the below>\"}`. An omission and an',
+        "oversight look identical in the output otherwise, so a listing entry that is",
+        "neither emitted nor recorded here is treated as an oversight and asked for again.",
+        "",
+        "THE REASON IS A CLOSED LIST, and each value is a claim about the ENTRY that a",
+        "reader can check against the paper:",
+        "",
+        "  seed_coordinate          a connectivity seed, a sphere centre",
+        "  atlas_roi                an ROI taken from an atlas",
+        "  roi_definition           the table defines regions rather than testing an effect",
+        "  component_map            an ICA or PCA component presented descriptively",
+        "  localizer                localizer coordinates, per subject or per session",
+        "  cited_from_other_paper   a peak quoted from another study to compare against",
+        "  no_tested_effect         demographics, a stimulus list, descriptive means, no test",
+        "  duplicate_of:<parse key> the same result already emitted under that key",
+        "  other:<why>              none of the above fits; say what it is",
+        "",
+        "A reason that describes what YOU did rather than what the entry IS -- for brevity,",
+        "abbreviated, omitted from this pass -- is refused and the entry asked for again.",
+        "On the first run with this channel one paper declined seven table row groups",
+        "carrying 26 coordinates that way, including a 6-focus reappraisal contrast.",
         "",
         "`source_table_analysis` is REQUIRED on every entry you emit here: copy the",
         "bracketed `[parse key: ...]` of the listing entry you emitted it for, verbatim. It",
@@ -469,7 +575,9 @@ def stage1_block(
                 f"   [parse key: {key_by_index[number]}]"
             )
             if analysis.get("description"):
-                lines.append(f"       ({_wrap(analysis['description'])[:150]})")
+                lines.append(f"       ({_wrap(analysis['description'])[:220]})")
+            if points:
+                lines.append(f"       foci: {_foci(points)}")
     return "\n".join(lines) + "\n"
 
 
@@ -566,10 +674,22 @@ _WRAPPER_PLAIN = """Every source-derived value is an ExtractedValue wrapper:
    pass. Spend your output on getting the values right and complete, not on quotation.
 """
 
-VALUE_RULE_EVIDENCE = _WRAPPER_WITH_EVIDENCE + _UNREPORTED_TAIL.format(
-    absent=_ABSENT_WITH_EVIDENCE
-)
-VALUE_RULE_NO_EVIDENCE = _WRAPPER_PLAIN + _UNREPORTED_TAIL.format(absent=_ABSENT_PLAIN)
+_WRAPPER_INDEXED = """Every source-derived value is an ExtractedValue wrapper:
+   {"extraction_status": "extracted", "value": <value>, "value_source": "reported",
+    "evidence": [12, 40]}
+   The paper below is split into numbered sentences, each preceded by its number in
+   brackets: [S12]. `evidence` lists the numbers of the sentences that state the value.
+   Do not quote; the number is the citation, and it is resolved to the sentence for you.
+"""
+
+def value_rule(evidence: str) -> str:
+    """Rule 3 of the system prompt, for one evidence format (`reply_schema.EVIDENCE_FORMATS`)."""
+    head = {"none": _WRAPPER_PLAIN, "quotes": _WRAPPER_WITH_EVIDENCE, "indexed": _WRAPPER_INDEXED}
+    return head[evidence] + _UNREPORTED_TAIL.format(
+        absent=_ABSENT_WITH_EVIDENCE if evidence == "quotes" else _ABSENT_PLAIN
+    )
+
+
 
 DEMANDS_NOTE = """
 This pass emits `analyses`, and the SHOPPING LIST of entities those analyses need.
@@ -652,9 +772,25 @@ filled 178 times and `arms` 33 -- in a corpus of randomised trials, where nearly
 contrast is over an arm. A cell whose level is an arm and whose `FactorLevel` has no `arms`
 cannot be resolved to a treatment or a comparator by anything downstream.
 
-Emit any further entity the paper describes that no analysis referenced -- the participant
-group's demographics, an assessment, the scanner -- as usual. The list is a floor, not a
-ceiling.
+The list is a FLOOR, NOT A CEILING. Emit any further entity the paper describes, and emit
+it whole -- its own attributes and the relationship objects that hold it in place. A
+scanner is an `Acquisition.device`; a preprocessing pipeline is a
+`ModelEstimation.preprocessing`; an instrument that classified a cohort is that group's
+`diagnostic_instrument`; a condition belongs to its task. Emitting the entity and leaving
+the slot that holds it empty is half the work.
+
+AND CONNECT IT. Every entity in the record has to reach an analysis along references, in
+either direction and by a path of any length: an analysis cites a model, the model names
+its preprocessing; an analysis cites a term, the term's level names the arm, the arm names
+the group. If you cannot name the path for an entity, it reaches nothing, and an entity
+that reaches nothing is dropped from the record after this pass -- so emitting it costs the
+work and changes the record not at all.
+
+This paragraph used to end "that no analysis referenced ... as usual", and that is exactly
+what arrived: over 126 papers this pass emitted 17 entities that appear nowhere in the
+shopping list and that nothing in the record reaches -- a handedness inventory, a craving
+questionnaire, a cohort, a result location, and three `devices` and three `preprocessings`
+with no name at all. None was asked for and none could be reached.
 """
 
 #: Keyed by stage. `demands` runs first and emits the analyses plus the shopping list;
@@ -667,7 +803,39 @@ ceiling.
 #: rendered schema; the region paragraph went with them deliberately, because
 #: docs/extraction-workflow-experiments.md records that it was in the prompt while the
 #: failure it warns about happened anyway, which is what motivated the reordering.
-MODE_NOTE = {"demands": DEMANDS_NOTE, "satisfy": SATISFY_NOTE}
+SINGLE_NOTE = """
+Write `analyses` FIRST: it is the first key of the object, before `study` and before every
+entity list, and each analysis names the local_ids of the entities it needs. Then emit those
+entities. The analyses are what this record is for, and a reply that spends itself on
+entities first ends without them -- measured, on papers with dozens of listing entries.
+
+This is the ONLY extraction pass. It emits the WHOLE record in one JSON object: every analysis
+the paper reports, and every entity those analyses reference -- groups, tasks, acquisitions,
+model estimations with their terms, measures, inference settings, regions, assessments, and
+the design with its arms and timepoints. No pass runs after this one to supply what is
+missing, so a local_id you reference that you do not emit here is a dangling reference and
+the record is rejected.
+
+Account for the stage-1 listing below on exactly the terms its own instructions give: an
+analysis for each result the paper reports, with `source_table_analysis` naming the entry,
+or a reasoned entry in a top-level `omitted` list. Tables already exist; do not emit them.
+Emit an Analysis for every tested effect the paper reports, including one that found
+nothing, whether or not the listing has an entry for it. That includes a comparison whose
+result the text describes but whose coordinates are only in a figure or a supplementary
+table -- "reduced grey matter in patients compared to controls (Figure 1, Table S1)" is a
+tested effect with a direction and an `outcome`, and it has no listing entry because its
+table never reached this text. A paper's group comparison is often reported this way while
+its main tables hold covariate analyses; do not let the tables decide what was tested.
+
+A comparison between groups OF a within-participant contrast -- patients versus controls on
+drug cues > neutral cues, users versus non-users on food > non-food -- cells BOTH factors:
+the group levels, signed, and the condition levels, signed, each on its own term. The
+condition term is the first-level stage's (reach it through `inputs_from`) or the condition
+factor of the same model. Leaving the condition cells out records a group difference in an
+unnamed map and loses which contrast was compared.
+"""
+
+MODE_NOTE = {"demands": DEMANDS_NOTE, "satisfy": SATISFY_NOTE, "single": SINGLE_NOTE}
 
 
 def requirements_block(declared: Mapping[str, Any]) -> str:
@@ -754,25 +922,73 @@ def worked_models() -> str:
 #: The demand-driven pair. `demands` renders the analysis side and `satisfy` the entity
 #: side, exactly as `analyses` and `entities` do; what differs is the order they run in and
 #: that the shopping list, not a guess, decides which entities exist.
-MODE_SCHEMA = {"demands": "analyses", "satisfy": "entities"}
+MODE_SCHEMA = {"demands": "analyses", "satisfy": "entities", "single": "single"}
 
 
-def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
-    sch = reader.load(EXTRACTION_SCHEMA)
-    names, study_keep = mode_classes(sch, MODE_SCHEMA.get(mode, mode))
+def payload_keys(mode: str) -> list[str]:
+    """The keys a reply in `mode` holds at its top level.
 
-    # Only the lists that sit directly on Study are offered as top-level payload keys.
-    # `design.arms` and `design.timepoints` are reachable that way too, but naming them
-    # here would contradict rule 2, and merge_payloads resolves a top-level `arms` by
-    # assigning over `design.arms` -- so a payload carrying both silently loses one.
+    Only the lists that sit directly on Study. `design.arms` and `design.timepoints` are
+    reachable that way too, but naming them would contradict rule 2, and merge_payloads
+    resolves a top-level `arms` by assigning over `design.arms` -- so a payload carrying
+    both silently loses one.
+    """
     analysis_side = MODE_SCHEMA.get(mode, mode) == "analyses"
-    payload_keys = [
+    keys = [
         k
         for k, v in schema.entity_lists().items()
-        if "." not in v and v != "tables" and (v == "analyses") == analysis_side
+        if "." not in v
+        and v != "tables"
+        and not schema.code_fills("Study", v)
+        and (mode == "single" or (v == "analyses") == analysis_side)
     ]
     if mode == "demands":
-        payload_keys.append("required_entities")
+        keys.append("required_entities")
+    if mode == "single":
+        keys.append("omitted")
+    return keys
+
+
+def recheck_note(
+    analyses: Sequence[tuple[str, str]],
+    declared: Mapping[str, list[str]],
+    sentences: Sequence[tuple[int, str]],
+) -> str:
+    """The context for `Single.recheck`: what exists, and the sentences to account for."""
+    listed = "\n".join(f"- {local_id}: {name}" for local_id, name in analyses)
+    shown = "\n".join(f"[S{n}] {sentence}" for n, sentence in sentences)
+    return (
+        "\n\n## RECHECK: the record already exists\n\n"
+        f"These analyses are already extracted -- do NOT emit them again:\n{listed}\n\n"
+        "Entities already declared, by list (reference them freely):\n"
+        f"{json.dumps(dict(declared), ensure_ascii=False)}\n\n"
+        "The sentences below report results, and no analysis above cites them. For EACH, "
+        "either emit a NEW analysis for the effect it reports (with any entity it needs that "
+        'is not declared yet), or put it in `omitted` as {"key": "S<number>", "reason": '
+        '"<why it is not a new analysis>"} -- covered by an existing analysis (name it), a '
+        "behavioural or demographic test, or no tested effect. Emit nothing else; every "
+        f"other list stays empty.\n\n{shown}"
+    )
+
+
+def build_prompt(
+    text: str,
+    mode: str,
+    evidence: bool,
+    context: str,
+    evidence_format: str = "quotes",
+) -> Prompt:
+    """`evidence_format` applies when `evidence` is on; `indexed` numbers the paper's
+    sentences, which `evidence.cited.expand` reads back with the same splitter."""
+    sch = reader.load(EXTRACTION_SCHEMA)
+    names, study_keep = mode_classes(sch, MODE_SCHEMA.get(mode, mode))
+    form = evidence_format if evidence else "none"
+
+    lists = payload_keys(mode)
+    if form == "indexed":
+        from pondie.extraction.evidence.cited import numbered
+
+        text = numbered(text)
     # The split IS the cache optimisation, and the earlier attempt failed because it moved
     # content around inside `user` while leaving the mode-specific note in `system`.
     #
@@ -789,11 +1005,11 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
     # context and the paper.
     system = (
         SYSTEM_HEAD.format(
-            lists=", ".join(sorted(payload_keys)),
+            lists=", ".join(sorted(lists)),
             # From `record/ids.py`, so the convention the model is told and the convention
             # the repair pass mints by cannot drift apart.
             id_prefixes=ids.prefix_table(),
-            value_rule=VALUE_RULE_EVIDENCE if evidence else VALUE_RULE_NO_EVIDENCE,
+            value_rule=value_rule(form),
         )
         + "\n\n# Conventions (extraction-readme.md)\n\n"
         + conventions()
@@ -814,6 +1030,136 @@ def build_prompt(text: str, mode: str, evidence: bool, context: str) -> Prompt:
         + "\n\nEmit the JSON object now."
     )
     return Prompt(system=system, user=user)
+
+
+#: Why a listing entry may be declined. CLOSED, because the free-text version was abused
+#: on the first run that had it: 24782800 declined seven table row groups carrying 26
+#: coordinates -- `Emotion regulation > Passive viewing (young)` at 6 foci, `Reappraisal >
+#: Selective Attention (Older)` at 6 -- every one with the reason "emitted listing entry
+#: omitted from this abbreviated pass". That is a statement about the pass, not about the
+#: entry, and `unconsumed_listing` reported the paper clean.
+#:
+#: Each value is a claim about the ENTRY that a reader can check against the paper. The
+#: eight legitimate declines on that run were all `seed_coordinate` or a duplicate.
+OMIT_REASONS = (
+    "seed_coordinate",
+    "atlas_roi",
+    "roi_definition",
+    "component_map",
+    "localizer",
+    "cited_from_other_paper",
+    "no_tested_effect",
+    "duplicate_of",
+    "other",
+)
+
+#: `duplicate_of` and `other` carry a payload after a colon: the parse key duplicated, or
+#: the reason there is no value for. The key is checked; the free text is not, and an
+#: `other` is a decline nobody has vetted -- the payload keeps it, so auditing them is a
+#: query over `omitted` rather than a thing this check can settle.
+_QUALIFIED = ("duplicate_of", "other")
+
+
+def listing_foci(stage1: Mapping[str, Any]) -> dict[str, frozenset]:
+    """Listing key -> the coordinates the parse read under it.
+
+    Beside `demandable_keys` so the two number alike, and for one consumer:
+    `duplicate_of` is the only omit reason the parse can settle, and settling it means
+    comparing coordinates rather than trusting that the key exists.
+    """
+
+    every = stage1.get("analyses") or []
+    out: dict[str, frozenset] = {}
+    for key, entry in zip(parse_keys.parse_keys(every), every):
+        out[key] = frozenset(
+            tuple(point["coordinates"])
+            for point in (entry.get("points") or [])
+            if len(point.get("coordinates") or []) == 3
+        )
+    return out
+
+
+def unsupported_omissions(
+    payload: Mapping[str, Any],
+    listing: Collection[str],
+    foci: Mapping[str, frozenset] | None = None,
+) -> list[str]:
+    """Declines whose reason is not a checkable claim about the entry.
+
+    The channel exists so an omission and an oversight stop looking identical. A reason
+    outside `OMIT_REASONS` puts them back: it satisfies the listing check while saying
+    nothing a reader could verify.
+
+    `duplicate_of` is checked against the parse, and checking that the target EXISTS was
+    not enough. 24760016 declined `prose#1` -- "The left amygdala reached significance
+    after applying a SVC (k = 29; -16, -2, -14; Z = 4.33)" -- as a duplicate of table
+    `4220#1`, a real listing key whose ten coordinates do not include that peak. The claim
+    passed, the entry was dropped, and no emitted analysis carried the focus: a result the
+    paper reports left the record. Six of the other seven duplicate claims on that run
+    were true, same coordinates and same sentence, so the reason is worth keeping -- it
+    just has to be answerable, and with `foci` it is.
+
+    One direction only. A target that does not carry the peak REFUTES the claim; a target
+    that does carry it confirms nothing, because the same coordinate legitimately appears
+    under several analyses -- a small-volume correction inside a region two contrasts both
+    probe lands in near-identical voxels by construction. So a passing `duplicate_of` is
+    an unrefuted claim, not a verified one, and the reason text stays in `omitted` for a
+    reader who wants to go and check.
+    """
+
+    if not listing:
+        # Nothing to account for, so an omission declines nothing: 11950456 has no listing,
+        # recorded four omissions saying so, and was re-asked for a fault no answer can fix.
+        return []
+    bad: list[str] = []
+    for entry in payload.get("omitted") or []:
+        if not isinstance(entry, Mapping):
+            continue
+        key = str(entry.get("key") or "")
+        raw = str(entry.get("reason") or "").strip()
+        head, _, rest = raw.partition(":")
+        head = head.strip()
+        # The DECLINED key, not just the target. The target was checked from the start and
+        # the key was not, so a decline could be about an entry that does not exist:
+        # 20147457 returned `{"key": "possible#1", "reason": "duplicate_of:prose#1"}` over
+        # a listing whose only key is `prose#1`. It satisfies every other rule here -- the
+        # reason is in the vocabulary, the target exists and carries the coordinates -- and
+        # says nothing, because there is no `possible#1` to be a duplicate of anything.
+        # Harmless on its own and not harmless as a habit: `unconsumed_listing` counts a
+        # listing entry as accounted for when `omitted` names it, so a key that drifts by
+        # one character is an entry silently dropped and an omission silently invented.
+        if listing and key not in listing:
+            bad.append(f"{key!r} is declined and is not a listing key")
+            continue
+        if head not in OMIT_REASONS:
+            bad.append(
+                f"{key!r} is declined with {raw[:60]!r}, which is not one of "
+                f"{', '.join(OMIT_REASONS)}"
+            )
+            continue
+        if head in _QUALIFIED and not rest.strip():
+            bad.append(f"{key!r} is declined with {head!r} and nothing after the colon")
+            continue
+        if head == "duplicate_of":
+            target = rest.strip()
+            if listing and target not in listing:
+                bad.append(
+                    f"{key!r} is declined as a duplicate of {target!r}, "
+                    f"which is not a listing key"
+                )
+            elif foci and (mine := foci.get(key)) and not mine <= foci.get(target, frozenset()):
+                missing = sorted(mine - foci.get(target, frozenset()))[:2]
+                bad.append(
+                    f"{key!r} is declined as a duplicate of {target!r}, which does not "
+                    f"carry its coordinates ({', '.join(str(c) for c in missing)})"
+                )
+    if not bad:
+        return []
+    return [
+        f"{len(bad)} omission(s) give no checkable reason: " + "; ".join(bad[:4])
+        + (f" and {len(bad) - 4} more" if len(bad) > 4 else "")
+        + ". A decline is a claim about the ENTRY -- what it is, not what the pass did."
+    ]
 
 
 def unconsumed_listing(payload: Mapping[str, Any], listing: Collection[str]) -> list[str]:
@@ -960,8 +1306,13 @@ def postcondition_failures(
     mode: str,
     declared: Sequence[Mapping[str, Any]] = (),
     listing: Collection[str] = (),
+    foci: Mapping[str, frozenset] | None = None,
+    existing: Collection[str] = (),
 ) -> list[str]:
     """What is wrong with this payload that no schema check would catch.
+
+    `existing` is the local_ids that live outside the payload -- the Tables the `tables`
+    stage copied -- so a reference to one is not reported as dangling.
 
     A pass that returns `{"groups": [], "measures": [], ...}` is well formed, legally empty,
     and builds and validates into a record about no study at all. That failure was 2 runs in
@@ -987,6 +1338,13 @@ def postcondition_failures(
                 f"({', '.join(repr(str(e)[:40]) for e in loose[:3])}): an entity emitted as "
                 "a bare string has lost every field but the fragment shown"
             )
+    if mode == "single":
+        if not payload.get("analyses"):
+            failures.append("no analyses were emitted")
+        failures.extend(unconsumed_listing(payload, listing))
+        failures.extend(unsupported_omissions(payload, listing, foci))
+        failures.extend(dangling_references(payload, existing))
+        return failures
     if MODE_SCHEMA.get(mode, mode) == "analyses":
         if not payload.get("analyses"):
             failures.append("no analyses were emitted")
@@ -998,6 +1356,7 @@ def postcondition_failures(
         if mode == "demands":
             failures.extend(vacuous_entity_demands(payload))
             failures.extend(unconsumed_listing(payload, listing))
+            failures.extend(unsupported_omissions(payload, listing, foci))
             failures.extend(unreachable_entity_demands(payload))
         failures.extend(unreachable_term_demands(payload))
     else:
@@ -1024,6 +1383,28 @@ def postcondition_failures(
                 + ", ".join(sorted(missing)[:8])
             )
     return failures
+
+
+def dangling_references(payload: Mapping[str, Any], existing: Collection[str] = ()) -> list[str]:
+    """References to local_ids this payload never declares.
+
+    For a pass that emits a whole record, so nothing after it can declare them. `existing`
+    names ids that live outside the payload (the tables stage's).
+    """
+    from pondie.extraction.record.fix.link import check_local_ids
+
+    body = {k: v for k, v in payload.items() if k not in ("study", "omitted")}
+    body |= dict(payload.get("study") or {})
+    body["tables"] = [{"local_id": local_id} for local_id in existing]
+    problems = check_local_ids(body, reader.load(EXTRACTION_SCHEMA))
+    if not problems:
+        return []
+    return [
+        f"{len(problems)} cross-reference problem(s): every local_id you reference must be "
+        "an entity you emit in this same object -- "
+        + "; ".join(problems[:12])
+        + (f" and {len(problems) - 12} more" if len(problems) > 12 else "")
+    ]
 
 
 def vacuous_entity_demands(payload: Mapping[str, Any]) -> list[str]:
@@ -1199,10 +1580,23 @@ def normalize(payload: dict[str, Any], mode: str) -> tuple[dict[str, Any], list[
                 payload[key] = hoisted
                 notes.append(f"hoisted {key!r} out of study to the top level")
 
+    # A pass's own outputs, filed under `study` by the model. Left there they reach the
+    # record as undeclared Study attributes, and the post-conditions, which read them at
+    # the top level, see a pass that declined nothing and declared nothing.
+    for key in ("omitted", "required_entities"):
+        nested = study.pop(key, None)
+        if isinstance(nested, list) and nested:
+            held = payload.get(key)
+            payload[key] = (held if isinstance(held, list) else []) + nested
+            notes.append(f"hoisted {key!r} out of study to the top level")
+
     for key in list(payload):
-        # `required_entities` is a top-level output of the demands pass, not a stray Study
-        # attribute; sweeping it under `study` would hide it and the next line drops it.
+        # A pass's own outputs stay at the top level; anything else is a Study attribute.
         if key in schema.entity_lists() or key in ("study", "required_entities", "omitted"):
+            continue
+        if not shape.SLOT_NAME.match(str(key)):
+            payload.pop(key)
+            notes.append(f"dropped top-level {key!r}: not a possible slot name")
             continue
         study[key] = payload.pop(key)
         notes.append(f"moved top-level {key!r} under study")

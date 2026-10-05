@@ -29,6 +29,8 @@ from typing import Any, Mapping, Sequence
 
 import yaml
 
+from pondie.formats import values
+
 HERE = pathlib.Path(__file__).parent
 DATA = HERE / "worked_models"
 REFERENTS = HERE / "referents"
@@ -71,8 +73,7 @@ def _unwrap(value: Any) -> Any:
     return value
 
 
-def _empty(value: Any) -> bool:
-    return value is None or value == [] or value == "" or value == {}
+_empty = values.blank
 
 
 @functools.lru_cache(maxsize=None)

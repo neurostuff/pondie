@@ -64,4 +64,26 @@ def entity_lists() -> dict[str, str]:
     return reader.entity_lists(reader.load(EXTRACTION))
 
 
-__all__ = ["ROOT", "EXTRACTION", "STORAGE", "entity_lists"]
+@lru_cache(maxsize=None)
+def code_fills(class_name: str, attribute: str) -> bool:
+    """Whether code fills this slot rather than a model: `deterministic` in storage, and
+    not a type designator.
+
+    The extraction schema declares such slots back (`extraction-deviations.yaml`) so a
+    record can carry them, which hides the distinction there. Asking a model for one only
+    produces an answer code overwrites, or, where nothing does, one in the wrong shape.
+
+    A designator (`Acquisition.acquisition_type`) is `deterministic` in storage too, but the
+    model names it, and it decides which subclass's slots an entity has.
+    """
+    from pondie.schema import reader
+
+    spec = (reader.load(STORAGE).attributes(class_name) or {}).get(attribute)
+    return (
+        spec is not None
+        and "deterministic" in (spec.in_subset or [])
+        and not spec.designates_type
+    )
+
+
+__all__ = ["ROOT", "EXTRACTION", "STORAGE", "entity_lists", "code_fills"]

@@ -6,46 +6,42 @@
     report = run(papers, settings, GatewayCaller())
     report.summary()
 
-The directory is the journey a paper takes, so where a thing lives says when it happens:
+The directory follows the paper's journey:
 
-    corpus/     getting the paper onto disk. An INPUT -- a run reads it, never writes it
-    prompt/     what the model is asked, and what the paper looks like when it is asked
+    corpus/     getting the paper onto disk; an input a run reads and never writes
+    prompt/     what the model is asked, and how the paper is shown to it
     evidence/   which characters of the paper warrant each value
-    record/     turning the payloads into a record: assemble, repair, check
-    tools/      things done to records afterwards; none of them runs inside a pipeline
+    record/     turning payloads into a record: assemble, deterministic fixes, checks
+    repair/     model-proposed improvements to a built record, guarded
 
-and the modules beside them are what every stage needs:
+and the modules beside them:
 
     models      the pydantic contracts that cross a boundary
     parse       the stage-1 parse document
+    sign_split  splitting a two-signed table into its two contrasts
     llm         the one place a prompt becomes a network call
-    stages      the seven steps, in order
-    driver      sequencing, parallelism and accounting
-    recall      asking a second model for what the first missed
-    repair      improving a built record, and reporting what the attempt broke
+    pubmed      publication type, language and authorship from PubMed
+    stages      the stages, and the two orders they run in
+    driver      scheduling, progress and accounting
 
-`pondie.formats.values` holds the `ExtractedValue` wrapper. It sits at the top of the
-package rather than here because every consumer of a record needs it -- the query engine,
-normalization, the benchmark and the schema reader -- and importing the extraction package
-to read a record closed a cycle.
-
-Every boundary is a named type. Two of the bugs found while writing them down were invisible
-without one: a stage unpacking `build_prompt`'s two halves in the wrong order sent the model
-instructions about a paper it had never been shown, and five modules had each written their
-own `ExtractedValue` unwrapper that disagreed with the others at the edges.
+`pondie.formats.values` holds the `ExtractedValue` wrapper, at the top of the package
+because every reader of a record needs it.
 """
 
-from pondie.extraction.driver import plan, run, run_paper
+from pondie.extraction.driver import plan, run
 from pondie.extraction.llm import Caller, GatewayCaller, MalformedReply, load_env
 from pondie.extraction.stages import (
     DEMAND_DRIVEN,
+    SINGLE_PASS,
     Build,
     Demands,
     Evidence,
     Fill,
     Repair,
+    ProseFoci,
     Satisfy,
     SignSplit,
+    Single,
     Stage,
     Tables,
     sequence,
@@ -58,16 +54,18 @@ __all__ = [
     "load_env",
     "plan",
     "run",
-    "run_paper",
     "sequence",
     "Stage",
     "Tables",
+    "ProseFoci",
     "SignSplit",
+    "Single",
     "Demands",
     "Fill",
     "Satisfy",
     "Evidence",
     "Build",
     "Repair",
+    "SINGLE_PASS",
     "DEMAND_DRIVEN",
 ]

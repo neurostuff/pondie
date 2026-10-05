@@ -221,9 +221,8 @@ def reachable_classes(classes: Mapping[str, object]) -> set[str]:
                     continue
                 queue.append(attribute_range)
                 # A slot may hold any subclass of its declared range, so the variants
-                # come along too. This is not only the abstract case: Acquisition is
-                # concrete and MRI, EEG, PET, and FNIRS all specialize it, and an
-                # extraction record that cannot say which one is useless.
+                # come along too: an Acquisition is an MRI, EEG, PET, FNIRS or
+                # OtherModality, and a record that cannot say which one is useless.
                 queue.extend(subclasses_of(classes, attribute_range))
     return seen
 

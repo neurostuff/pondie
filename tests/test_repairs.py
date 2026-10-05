@@ -15,6 +15,10 @@ import json
 import pytest
 
 from pondie.extraction.record import fix
+from pondie.schema import reader
+import pondie.schema as schema_pkg
+
+_SCH = reader.load(schema_pkg.EXTRACTION)
 
 
 def test_the_declared_repair_order_holds():
@@ -26,7 +30,7 @@ def test_an_order_that_violates_its_own_constraint_is_refused():
     early = fix.Repair("b", "", lambda body, ctx: [])
     assert fix.check_order((late, early))
     with pytest.raises(ValueError):
-        fix.apply_all({}, fix.Context(schema={}), (late, early))
+        fix.apply_all({}, fix.Context(schema=_SCH), (late, early))
 
 
 def test_the_log_says_which_repairs_fired():
@@ -34,7 +38,7 @@ def test_the_log_says_which_repairs_fired():
         fix.Repair("noisy", "", lambda body, ctx: ["did a thing"]),
         fix.Repair("quiet", "", lambda body, ctx: []),
     )
-    log = fix.apply_all({}, fix.Context(schema={}), sequence)
+    log = fix.apply_all({}, fix.Context(schema=_SCH), sequence)
     assert log.fired() == ["noisy"]
     assert log.total == 1
     assert "did a thing" in log.explain()
@@ -190,7 +194,7 @@ def test_a_table_written_as_a_study_attribute_is_rehomed(extraction_schema):
         "analyses": [{"local_id": "a1", "tables": ["tab4"]}],
         "tab4": {"table_number": {"extraction_status": "extracted", "value": 4}},
     }
-    moved = fix.rehome_stray_tables(body, extraction_schema)
+    moved = fix.rehome_keyed_entities(body, extraction_schema)
     assert "tab4" not in body
     assert [t["local_id"] for t in body["tables"]] == ["tab4"]
     assert moved
@@ -198,7 +202,7 @@ def test_a_table_written_as_a_study_attribute_is_rehomed(extraction_schema):
 
 def test_an_unreferenced_stray_key_is_left_reported(extraction_schema):
     body = {"analyses": [], "somethingElse": {"x": 1}}
-    assert fix.rehome_stray_tables(body, extraction_schema) == []
+    assert fix.rehome_keyed_entities(body, extraction_schema) == []
     assert "somethingElse" in body
 
 
@@ -401,6 +405,7 @@ def test_no_parse_means_nothing_is_invented(tmp_path):
 # --- derived analysis ids -----------------------------------------------------
 
 
+
 def test_an_analysis_id_is_derived_from_its_parse_key():
     # A model-chosen id is unstable: over the same 16 papers extracted twice, only four
     # produced identical analysis ids.
@@ -412,16 +417,16 @@ def test_an_analysis_id_is_derived_from_its_parse_key():
             }
         ]
     }
-    notes = fix.derive_analysis_ids(body)
+    notes = fix.derive_analysis_ids(body, _SCH)
     assert body["analyses"][0]["local_id"] == "a_t0035_2"
     assert notes and "t0035#2" in notes[0]
 
 
 def test_deriving_ids_is_idempotent():
     body = {"analyses": [{"local_id": "a_x", "source_table_analysis": _wrapped("t1#1")}]}
-    fix.derive_analysis_ids(body)
+    fix.derive_analysis_ids(body, _SCH)
     first = body["analyses"][0]["local_id"]
-    assert fix.derive_analysis_ids(body) == []
+    assert fix.derive_analysis_ids(body, _SCH) == []
     assert body["analyses"][0]["local_id"] == first
 
 
@@ -433,7 +438,7 @@ def test_analyses_sharing_a_key_are_numbered_apart():
             {"local_id": "a2", "source_table_analysis": _wrapped("t1#1")},
         ]
     }
-    fix.derive_analysis_ids(body)
+    fix.derive_analysis_ids(body, _SCH)
     assert [a["local_id"] for a in body["analyses"]] == ["a_t1_1", "a_t1_1_2"]
 
 
@@ -441,12 +446,11 @@ def test_an_analysis_with_no_key_keeps_the_models_id():
     # 25% of analyses cannot be tied to a row group; inventing a stable-looking id for
     # them would claim the parse identifies something it does not.
     body = {"analyses": [{"local_id": "a_hand_named", "name": _wrapped("x")}]}
-    assert fix.derive_analysis_ids(body) == []
+    assert fix.derive_analysis_ids(body, _SCH) == []
     assert body["analyses"][0]["local_id"] == "a_hand_named"
 
 
 def test_mirror_of_is_repointed_to_the_new_id():
-    # `mirror_of` is the only pointer at an analysis anywhere in the record.
     body = {
         "analyses": [
             {"local_id": "a_described", "source_table_analysis": _wrapped("t1#1")},
@@ -457,9 +461,19 @@ def test_mirror_of_is_repointed_to_the_new_id():
             },
         ]
     }
-    fix.derive_analysis_ids(body)
+    fix.derive_analysis_ids(body, _SCH)
     assert body["analyses"][0]["local_id"] == "a_t1_1"
     assert body["analyses"][1]["mirror_of"] == "a_t1_1"
+
+
+def test_a_coordinate_set_follows_its_analysis_to_the_new_id():
+    # Left on the old id, every coordinate set dangles and the reply is retried for it.
+    body = {
+        "analyses": [{"local_id": "ana_ptsd_lt_hc", "source_table_analysis": _wrapped("prose#1")}],
+        "coordinate_sets": [{"local_id": "cs_1", "analysis": "ana_ptsd_lt_hc"}],
+    }
+    fix.derive_analysis_ids(body, _SCH)
+    assert body["coordinate_sets"][0]["analysis"] == "a_prose_1"
 
 
 def test_a_derived_id_already_taken_leaves_both_alone():
@@ -470,9 +484,106 @@ def test_a_derived_id_already_taken_leaves_both_alone():
             {"local_id": "a_other", "source_table_analysis": _wrapped("t1#1")},
         ]
     }
-    notes = fix.derive_analysis_ids(body)
+    notes = fix.derive_analysis_ids(body, _SCH)
     assert body["analyses"][1]["local_id"] == "a_other"
     assert notes and "already taken" in notes[0]
+
+
+# --- renames follow every reference -----------------------------------------------
+
+
+def _models_sharing(term, *on):
+    """Analyses on the given models, each cell naming `term`; models a and b declare it."""
+    from pondie.extraction.record.fix import link
+
+    def model(mid):
+        return {"local_id": mid, "terms": [{"local_id": term, "name": _wrapped("group")}]}
+
+    body = {
+        "analyses": [
+            {"local_id": f"ana_{m}", "model_estimation": m, "effect": {"cells": [{"term": term}]}}
+            for m in on
+        ],
+        "model_estimations": [model("mod_a"), model("mod_b"), {"local_id": "mod_c", "terms": []}],
+    }
+    return body, link.scope_duplicate_terms
+
+
+def test_a_term_declared_by_two_models_is_scoped_by_each_analysis_model():
+    body, scope = _models_sharing("trm_group", "mod_a", "mod_b")
+    assert scope(body, _SCH)
+    assert [a["effect"]["cells"][0]["term"] for a in body["analyses"]] == [
+        "mod_a.trm_group",
+        "mod_b.trm_group",
+    ]
+
+
+def test_a_reference_that_cannot_be_scoped_puts_the_record_back():
+    # mod_c declares no copy, so its analysis's cell has no scoped id to move to.
+    body, scope = _models_sharing("trm_group", "mod_a", "mod_c")
+    before = json.loads(json.dumps(body))
+    assert scope(body, _SCH) == []
+    assert body == before
+
+
+def test_no_repair_introduces_a_dangling_reference():
+    """Each repair is checked, and one that leaves a reference naming nothing is named."""
+    from pondie.extraction.record.fix import sequence
+
+    def drop_groups(body, ctx):
+        body["groups"] = []
+        return ["dropped every group"]
+
+    bad = sequence.Repair("drop_groups", "a repair that breaks a reference", drop_groups,
+                          stage="shape")
+    body = {"groups": [{"local_id": "grp_ptsd"}],
+            "analyses": [{"local_id": "ana_1", "groups": [{"group": "grp_ptsd"}]}]}
+    log = sequence.apply_all(body, sequence.Context(schema=_SCH), sequence=(bad,))
+    assert log.introduced == {"drop_groups": ["'grp_ptsd' (1 reference)"]}
+    assert "introduced" in log.explain()
+
+
+def test_deriving_ids_introduces_no_dangling_reference():
+    body = {
+        "analyses": [{"local_id": "ana_x", "source_table_analysis": _wrapped("prose#1")}],
+        "coordinate_sets": [{"local_id": "cs_1", "analysis": "ana_x"}],
+    }
+    log = fix.apply_all(body, fix.Context(schema=_SCH), stage="demands")
+    assert log.introduced == {}
+
+
+# --- references to tables ------------------------------------------------------
+
+
+def _table_map(tmp_path):
+    path = tmp_path / "table-map.json"
+    path.write_text("{}")
+    return path
+
+
+def test_a_table_reference_with_no_table_declared_is_dropped(tmp_path):
+    # 26952803: the text keeps captions, not rows, so no Table exists to point at.
+    body = {"analyses": [{"local_id": "a1", "tables": ["table2"]}]}
+    notes = fix.link.settle_table_references(body, _SCH, _table_map(tmp_path))
+    assert "tables" not in body["analyses"][0]
+    assert notes and "no declared table" in notes[0]
+
+
+def test_a_table_reference_is_repointed_to_the_only_table_with_its_number(tmp_path):
+    body = {
+        "tables": [{"local_id": "tbltable2", "table_number": _wrapped("Table 2")},
+                   {"local_id": "tbltableS2", "table_number": _wrapped("Table S2")}],
+        "analyses": [{"local_id": "a1", "tables": ["table2", "tbltableS2"]}],
+    }
+    fix.link.settle_table_references(body, _SCH, _table_map(tmp_path))
+    assert body["analyses"][0]["tables"] == ["tbltable2", "tbltableS2"]
+
+
+def test_table_references_wait_for_the_tables_stage():
+    # Without its table map the tables stage has not run, and the table may yet be declared.
+    body = {"analyses": [{"local_id": "a1", "tables": ["table2"]}]}
+    assert fix.link.settle_table_references(body, _SCH, None) == []
+    assert body["analyses"][0]["tables"] == ["table2"]
 
 
 def test_every_repair_names_a_stage_that_runs():
@@ -701,3 +812,291 @@ def test_a_table_an_analysis_cites_reports_that_analysis_effect():
     # tbl2 is cited by nothing, so its own answer stands
     assert values.read(body["tables"][1]["purpose"]) == "demographics"
     assert filled
+
+
+def test_a_single_valued_enum_is_offered_as_a_choice_not_a_list():
+    """`nu_type` returns an enum's permissible values, which is right -- the model has to be
+    told what it may say. Rendering that list AS the template made a single-valued enum
+    look exactly like a list-valued slot, and the model answered the shape it saw.
+
+    Over 126 papers the repair pass introduced 1,027 validator findings and nearly all were
+    this: `brain_coverage` 86, `spatial_unit` 61, `Measure.type` 51, `design_type` 49,
+    `modality` 45, all "must be a single value, got a 1-item list"."""
+    from pondie.extraction.repair.propose import template_for
+    from pondie.schema import reader
+    import pondie.schema as schema_pkg
+
+    sch = reader.load(schema_pkg.EXTRACTION)
+    body = list(template_for(sch, "Acquisition").values())[0][0]
+
+    assert body["brain_coverage"] == "one of: whole_brain | partial"
+    assert not isinstance(body["brain_coverage"], list), "the shape must not say 'list'"
+    # a multivalued slot still looks like a list, which is the convention the reference
+    # branch of this function already uses for `verbatim-string`
+    multi = [v for k, v in body.items() if sch.is_multivalued("Acquisition", k)]
+    assert all(isinstance(v, list) for v in multi), multi
+
+
+def test_a_one_item_list_for_a_single_valued_slot_is_unwrapped():
+    """The belt to the template's braces: a model may send a list anyway, and nothing
+    should write a value the validator will refuse.
+
+    Two or more is left alone -- that is the model asserting two values for a slot that
+    holds one, a disagreement about the paper rather than a shape to tidy."""
+    from pondie.formats import values
+    from pondie.schema import reader
+    import pondie.schema as schema_pkg
+
+    sch = reader.load(schema_pkg.EXTRACTION)
+
+    assert values.shape(sch, "Acquisition", "brain_coverage", ["whole_brain"]) == "whole_brain"
+    assert values.shape(sch, "Acquisition", "brain_coverage", "partial") == "partial"
+    assert values.shape(sch, "Acquisition", "brain_coverage", ["whole_brain", "partial"]) is None
+
+
+def test_a_coordinate_set_keyed_by_its_tables_local_id_takes_the_parse_key(tmp_path):
+    """28549317: `tbltable2#1` where the parse key is `823#1`."""
+    stage1 = tmp_path / "analyses.json"
+    stage1.write_text(json.dumps({"analyses": [{"table_id": "823"}, {"table_id": "824"}]}))
+    table_map = tmp_path / "table-map.json"
+    table_map.write_text(json.dumps({"823": "tbltable2", "824": "tbltable3"}))
+    body = {"coordinate_sets": [{"local_id": "tbltable2#1", "analysis": "a_823_1"},
+                                {"local_id": "tbltable2#2"}, {"local_id": "text#1"}]}
+    notes = fix.derive.rekey_coordinate_sets(body, stage1, table_map)
+    assert [s["local_id"] for s in body["coordinate_sets"]] == ["823#1", "tbltable2#2", "text#1"]
+    assert len(notes) == 1, "a key the parse lacks, and a text set, are left alone"
+
+
+def test_a_level_differing_only_by_a_hyphen_is_aligned():
+    """17825801: `combat exposed` against the declared `combat-exposed`, 12 cells."""
+    from pondie.extraction.record.fix import link
+
+    body = {
+        "model_estimations": [{"local_id": "m", "terms": [{
+            "local_id": "t", "type": _wrapped("categorical"),
+            "levels": [{"level": _wrapped("combat-exposed")}, {"level": _wrapped("combat-unexposed")}]}]}],
+        "analyses": [{"local_id": "a", "model_estimation": "m", "effect": {"cells": [
+            {"term": "t", "level": _wrapped("combat exposed")},
+            {"term": "t", "level": _wrapped("PTSD twin pairs")}]}}],
+    }
+    link.align_cell_levels(body)
+    cells = body["analyses"][0]["effect"]["cells"]
+    assert cells[0]["level"]["value"] == "combat-exposed"
+    assert cells[1]["level"]["value"] == "PTSD twin pairs", "a longer name is not a spelling"
+
+
+def test_a_p_threshold_is_not_a_comparison():
+    """10526199: 'FTD-MND compared with FTD at P <0.001' signed both levels negative."""
+    from pondie.extraction.record import direction
+
+    assert direction.polarity("FTD-MND compared with FTD at P <0.001, corrected") is None
+    assert direction.polarity("q < 0.05 FDR . patients > controls")[:2] == ("patients", "controls")
+
+
+def test_a_direction_the_pass_called_ambiguous_is_not_filled_from_the_name():
+    body = {"analyses": [{"local_id": "a", "name": _wrapped("FTD > controls"), "effect": {
+        "cells": [{"level": _wrapped("FTD"), "direction": {
+            "extraction_status": "not_reported", "unreported_reason": "ambiguous",
+            "evidence": {"status": "not_applicable"}}}]}}]}
+    assert fix.derive.fill_directions(body) == []
+
+
+def test_a_filled_direction_is_a_whole_wrapper():
+    """In place, a not_reported wrapper kept its reason beside the new value."""
+    body = {"analyses": [{"local_id": "a", "name": _wrapped("FTD > controls"), "effect": {
+        "cells": [{"level": _wrapped("FTD"), "direction": {
+            "extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}}]}}]}
+    fix.derive.fill_directions(body)
+    filled = body["analyses"][0]["effect"]["cells"][0]["direction"]
+    assert filled["value"] == "positive" and "unreported_reason" not in filled
+    assert filled["evidence"] == {"status": "not_found"}
+
+
+def _masked(region_name, search_volume=None, settings=True):
+    inf = {"local_id": "inf1", "correction_scope": _wrapped("whole_brain")}
+    if search_volume:
+        inf["search_volume"] = _wrapped(search_volume)
+    return {
+        "regions": [{"local_id": "reg_gm", "name": _wrapped(region_name)}],
+        "inference_settings": [inf] if settings else [],
+        "analyses": [{"local_id": "a", "spatial_scope": _wrapped("roi"), "regions": ["reg_gm"],
+                      "inference_settings": ["inf1"] if settings else []}],
+    }
+
+
+def test_a_grey_matter_mask_leaves_the_analysis_whole_brain():
+    """18165464: VBM explicitly masked to AAL grey matter, recorded as `roi` over a region
+    named "gray matter regions"; the whole-brain criterion then failed a gold paper."""
+    body = _masked("gray matter regions", search_volume="explicit AAL grey-matter mask")
+    assert fix.derive.rescope_tissue_masks(body)
+    analysis = body["analyses"][0]
+    assert analysis["spatial_scope"]["value"] == "whole_brain" and analysis["regions"] == []
+    assert body["inference_settings"][0]["search_volume"]["value"] == "explicit AAL grey-matter mask"
+
+
+def test_the_mask_moves_to_an_empty_search_volume():
+    body = _masked("grey matter mask")
+    fix.derive.rescope_tissue_masks(body)
+    assert body["inference_settings"][0]["search_volume"]["value"] == "grey matter mask"
+
+
+def test_a_mask_with_nowhere_to_go_is_left_alone():
+    body = _masked("grey matter mask", settings=False)
+    assert fix.derive.rescope_tissue_masks(body) == []
+    assert body["analyses"][0]["spatial_scope"]["value"] == "roi"
+
+
+def test_a_named_structure_is_not_a_mask():
+    assert fix.derive.rescope_tissue_masks(_masked("hippocampus grey matter")) == []
+
+
+def test_an_optional_object_holding_nothing_is_dropped():
+    """25533729: `mediation: {mediator: "", path: not_reported}` on analyses with none."""
+    body = {"analyses": [{"local_id": "a", "effect": {
+        "cells": [{"term": "t", "direction": _wrapped("positive")}],
+        "mediation": {"mediator": "", "path": {"extraction_status": "not_reported",
+                                                 "evidence": {"status": "not_applicable"}}}}}]}
+    assert fix.shape.drop_vacuous_objects(body, _SCH)
+    assert "mediation" not in body["analyses"][0]["effect"]
+    assert body["analyses"][0]["effect"]["cells"], "a required list is never touched"
+
+
+def test_an_object_with_one_value_is_kept():
+    body = {"analyses": [{"local_id": "a", "effect": {
+        "cells": [], "mediation": {"mediator": "trm_x", "path": {
+            "extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}}}}]}
+    assert fix.shape.drop_vacuous_objects(body, _SCH) == []
+
+
+def _cue_body(cell_level):
+    cond = lambda cid, name: {"local_id": cid, "name": _wrapped(name)}
+    return {
+        "tasks": [{"local_id": "task", "conditions": [cond("cond_cocaine", "cocaine cues"),
+                                                     cond("cond_neutral", "neutral cues")]}],
+        "model_estimations": [{"local_id": "m", "terms": [{
+            "local_id": "trm_cue", "type": _wrapped("categorical"),
+            "levels": [{"level": _wrapped("cocaine cues"), "conditions": ["cond_cocaine"]}]}]}],
+        "analyses": [{"local_id": "a", "model_estimation": "m", "effect": {"cells": [
+            {"term": "trm_cue", "level": _wrapped("cocaine cues"), "direction": _wrapped("positive")},
+            {"term": "trm_cue", "level": _wrapped(cell_level), "direction": _wrapped("negative")}]}}],
+    }
+
+
+def test_a_condition_level_a_cell_names_is_declared():
+    """24695721: 'neutral cues' celled against the cue types, missing from the term."""
+    body = _cue_body("neutral cues")
+    assert fix.link.complete_condition_levels(body)
+    levels = body["model_estimations"][0]["terms"][0]["levels"]
+    assert levels[-1]["conditions"] == ["cond_neutral"]
+
+
+def test_a_contrast_label_is_not_declared_a_level():
+    assert fix.link.complete_condition_levels(_cue_body("cocaine vs neutral")) == []
+
+
+def test_scoping_after_a_revert_renames_the_record_not_a_stale_copy():
+    """Review: trm_a reverts (a model-less analysis cells it), then trm_b was 'scoped' on the
+    pre-revert model dicts while the live cells were repointed to undeclared ids."""
+    from pondie.extraction.record import walk
+
+    def term(tid):
+        return {"local_id": tid, "name": _wrapped(tid)}
+    body = {
+        "model_estimations": [{"local_id": "m1", "terms": [term("trm_a"), term("trm_b")]},
+                              {"local_id": "m2", "terms": [term("trm_a"), term("trm_b")]}],
+        "analyses": [
+            {"local_id": "x1", "model_estimation": "m1",
+             "effect": {"cells": [{"term": "trm_a"}, {"term": "trm_b"}]}},
+            {"local_id": "x2", "model_estimation": "m2", "effect": {"cells": [{"term": "trm_b"}]}},
+            {"local_id": "x3", "effect": {"cells": [{"term": "trm_a"}]}},
+        ],
+    }
+    fix.link.scope_duplicate_terms(body, _SCH)
+    assert not walk.dangling(body, _SCH), walk.dangling(body, _SCH)
+
+
+def test_a_partial_model_donor_term_without_an_id_is_no_crash():
+    """Review: a donor term with no local_id raised KeyError and lost the record's build."""
+    def term(tid, name):
+        return {"local_id": tid, "name": _wrapped(name)} if tid else {"name": _wrapped(name)}
+    body = {
+        "model_estimations": [{"local_id": "m1", "terms": [term("trm_dx", "dx")]},
+                              {"local_id": "m2", "terms": [term("trm_dx", "dx"),
+                                                          term("trm_exp", "exp"), term(None, "age")]}],
+        "analyses": [{"local_id": "a", "model_estimation": "m1",
+                      "effect": {"cells": [{"term": "trm_exp"}]}}],
+    }
+    assert fix.link.complete_partial_models(body, _SCH)
+
+
+def test_a_design_with_reasoned_open_fields_is_kept():
+    """Review: a not_reported field with a reason is an answer, and Study.design names no
+    required reference, so fill can still ask about it."""
+    nr = {"extraction_status": "not_reported", "unreported_reason": "outside_text",
+          "evidence": {"status": "not_applicable"}}
+    body = {"design": {"design_type": dict(nr)}, "analyses": []}
+    assert fix.shape.drop_vacuous_objects(body, _SCH) == []
+    assert "design" in body
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("Supplementary Table 2", (True, 2)), ("Table 2 (n = 30)", (False, 2)),
+    ("tbl1_2", (False, 1)), ("pone-0042560-t002", (False, 2)), ("tbltableS2", (True, 2)),
+])
+def test_table_numbers(text, expected):
+    assert fix.link._table_number(text) == expected
+
+
+def test_a_shared_inference_setting_is_not_given_the_mask():
+    """Review: writing the mask into settings a real ROI analysis shares would say the
+    amygdala analysis searched grey matter."""
+    body = _masked("grey matter mask")
+    body["regions"].append({"local_id": "reg_amy", "name": _wrapped("amygdala")})
+    body["analyses"].append({"local_id": "roi", "spatial_scope": _wrapped("roi"),
+                             "regions": ["reg_amy"], "inference_settings": ["inf1"]})
+    assert fix.derive.rescope_tissue_masks(body) == []
+    assert "search_volume" not in body["inference_settings"][0]
+
+
+def test_a_leading_minus_is_not_folded_away():
+    from pondie.extraction.record import spans
+    assert spans.fold_label("-1") != spans.fold_label("1")
+    assert spans.fold_label("combat-exposed") == spans.fold_label("combat exposed")
+
+
+def test_a_quantity_is_not_a_comparison():
+    """20487539: 'more than 1 year of heavy alcohol use' read as a comparison."""
+    from pondie.extraction.record import direction
+
+    assert direction.polarity("Patients with more than 1 year of heavy alcohol use") is None
+    assert direction.polarity("PTSD greater than controls")[2] == 1
+    assert direction.reverse_comparison("PTSD > HC (p < 0.001)") == "PTSD < HC (p < 0.001)"
+    assert direction.same_level("control", "Controls")
+
+
+def test_an_open_slot_is_blank_or_undetermined_and_nothing_else():
+    from pondie.formats import values
+
+    nr = lambda **kw: {"extraction_status": "not_reported",  # noqa: E731
+                       "evidence": {"status": "not_applicable"}, **kw}
+    assert not values.settled(None) and not values.settled("")
+    assert not values.settled(nr(unreported_reason="undetermined"))
+    assert values.settled(nr()), "plain silence is an answer"
+    assert values.settled(nr(unreported_reason="outside_text"))
+    assert values.settled(_wrapped("x"))
+
+
+def test_an_undetermined_direction_is_still_filled_from_the_name():
+    """Audit: fill_directions skipped any reason, so an `undetermined` direction fill would
+    re-ask was not filled from a name that states it."""
+    body = {"analyses": [{"local_id": "a", "name": _wrapped("FTD > controls"), "effect": {
+        "cells": [{"level": _wrapped("FTD"), "direction": {
+            "extraction_status": "not_reported", "unreported_reason": "undetermined",
+            "evidence": {"status": "not_applicable"}}}]}}]}
+    assert fix.derive.fill_directions(body)
+
+
+def test_a_search_volume_naming_regions_does_not_hold_the_mask():
+    """Audit: `\\bmask` accepted 'amygdala mask' as already recording a tissue mask."""
+    body = _masked("grey matter mask", search_volume="amygdala mask")
+    assert fix.derive.rescope_tissue_masks(body) == []

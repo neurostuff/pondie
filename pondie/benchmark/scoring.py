@@ -1799,7 +1799,7 @@ def _pair_gold_to_cells(
             continue
         target = str(entry.get("level") or "")
         if not target:
-            # A slope or product column declares no level, so its cell names none and the
+            # A slope's cell names no level, nor does an unsigned product column's, so the
             # term alone identifies it.
             paired[candidates[0]] = entry
             continue

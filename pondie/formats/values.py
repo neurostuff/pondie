@@ -32,9 +32,10 @@ if TYPE_CHECKING:
 #: field both are.
 ValueSource = Literal["reported", "generated"]
 
-#: `not_applicable` means there is no sentence to quote -- the value came from a table
-#: manifest or from arithmetic. `not_found` means there should be one and neither locator
-#: placed it, which is a defect a reviewer should see rather than a silence.
+#: `not_applicable` belongs to a `not_reported` field only: there is no value to support.
+#: `not_found` is an extracted or generated value with no supporting span -- for a value
+#: read off the paper a defect a reviewer should see, for one code computed (`generated`)
+#: the expected state. Per `EvidenceStatus` in extraction-evidence.yaml.
 EvidenceStatus = Literal["present", "not_found", "not_applicable"]
 
 #: `not_reported` is a positive assertion that the paper is silent. It is NOT the same as
@@ -95,19 +96,48 @@ def wrap(
     evidence: EvidenceStatus,
     reason: UnreportedReason | None = None,
 ) -> dict[str, Any]:
-    """A wrapper around `value`, or a `not_reported` one when there is no value."""
+    """A wrapper around `value`, or a `not_reported` one when there is no value.
+
+    Raises
+    ------
+    ValueError
+        For a value with `not_applicable` evidence, which the schema reserves for
+        `not_reported` fields. A value code produced is `generated` + `not_found`.
+    """
     if value is None or value == "":
         return ExtractedValue(
             extraction_status="not_reported",
             unreported_reason=reason,
             evidence=Evidence(status="not_applicable"),
         ).as_field()
+    if evidence == "not_applicable":
+        raise ValueError(f"a value ({value!r}) cannot have not_applicable evidence")
     return ExtractedValue(
         extraction_status="extracted",
         value=value,
         value_source=source,
         evidence=Evidence(status=evidence),
     ).as_field()
+
+
+#: The `UnreportedReason` that leaves a slot open: "I could not tell", a claim about the pass
+#: and a revisable one. Every other reason describes the paper.
+OPEN = "undetermined"
+
+
+def blank(node: Any) -> bool:
+    """Holds nothing at all: None, an empty string, list or mapping."""
+    return node is None or node == "" or node == [] or node == {}
+
+
+def settled(node: Any) -> bool:
+    """Whether a slot holds an answer: a value, or `not_reported` -- plain silence is an
+    answer -- with any reason but `OPEN`. Blank and `undetermined` are open: what `fill`
+    asks about again, and what a repair may still fill."""
+    if is_field(node):
+        return not (node.get("extraction_status") == "not_reported"
+                    and node.get("unreported_reason") == OPEN)
+    return not blank(node)
 
 
 def is_field(node: Any) -> bool:
@@ -227,12 +257,30 @@ def cast(sch: "Schema", class_name: str, slot: str, value: Any) -> Any:
 
 
 def shape(sch: "Schema", class_name: str, slot: str, value: Any) -> Any:
-    """Ensure list response if field allows multiple values."""
+    """Fit a proposed value to its slot's arity: a list where the slot takes many, a bare
+    value where it takes one.
+
+    The second direction is as necessary as the first. A single-valued slot handed a
+    one-item list is a value the validator rejects -- "must be a single value, got a 1-item
+    list" -- and over 126 papers the repair pass introduced 1,027 such findings, led by
+    `brain_coverage` 86, `spatial_unit` 61, `Measure.type` 51, `design_type` 49,
+    `modality` 45. The cause was a template that rendered an enum's permissible values as a
+    list, so the shape said "give me a list" while the slot took one; `propose.template_for`
+    now states the choice instead. This is the belt to that braces: a model is free to send
+    a list anyway, and nothing downstream should write a value the validator will refuse.
+
+    A list of two or more is NOT unwrapped. That is the model asserting two values for a
+    slot that holds one, which is a disagreement about the paper rather than a shape to
+    tidy, and `cast` returning None for it is the honest answer.
+    """
     result = cast(sch, class_name, slot, value)
     if result is None:
         return None
-    if sch.is_multivalued(class_name, slot) and not isinstance(result, list):
+    many = sch.is_multivalued(class_name, slot)
+    if many and not isinstance(result, list):
         return [result]
+    if not many and isinstance(result, list):
+        return result[0] if len(result) == 1 else None
     return result
 
 

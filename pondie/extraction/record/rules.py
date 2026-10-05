@@ -16,7 +16,7 @@ mechanism here would assert a dependency that does not exist.
 The *order* of the output does follow `RULES`, and nothing consumes it -- but a consumer that
 started to would be depending on something arbitrary.
 
-Each rule recomputes what it needs. `_model_index` is rebuilt 5 times per record and
+Each rule recomputes what it needs. `model_index` is rebuilt 5 times per record and
 `terms_in_scope` 20 times, for 8ms across the whole rule half; threading a shared index
 through nineteen signatures would buy none of that back and would reintroduce exactly the
 shared mutable state the measurements above rule out.
@@ -34,7 +34,9 @@ from pondie.extraction.record.fix.derive import modality_subclasses
 from pondie.extraction.record.effect import (
     NO_LABEL,
     UNDETERMINED_VARIATION,
+    UNRESOLVED_TERM,
     derive_effect_kind,
+    levels_a_cell_may_name,
     terms_in_scope,
 )
 from pondie.formats import values
@@ -169,7 +171,7 @@ class Rule:
     fn: Callable[[Mapping[str, Any], Findings], None]
 
 
-def _model_index(record: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
+def model_index(record: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
     models: dict[str, Mapping[str, Any]] = {}
     for model in record.get("model_estimations") or []:
         if isinstance(model, Mapping) and isinstance(model.get("local_id"), str):
@@ -215,7 +217,7 @@ def check_crossings(record: Mapping[str, Any], findings: Findings) -> None:
     and is expected to answer for itself under review.
     """
 
-    models = _model_index(record)
+    models = model_index(record)
     # signature -> the analyses sharing it. Two analyses of one model with the
     # same cells are the same estimand, so if their prose disagrees about what was
     # tested, at most one of them can be right.
@@ -294,7 +296,7 @@ def check_product_columns(record: Mapping[str, Any], findings: Findings) -> None
     looks like when its interaction table was never extracted at all.
     """
 
-    models = _model_index(record)
+    models = model_index(record)
     celled = {
         cell.get("term")
         for analysis in record.get("analyses") or []
@@ -366,7 +368,7 @@ def check_unsigned_cells(record: Mapping[str, Any], findings: Findings) -> None:
     the old reading looks like, and it routes to review rather than rejecting.
     """
 
-    models = _model_index(record)
+    models = model_index(record)
 
     for index, analysis in enumerate(record.get("analyses") or []):
         if not isinstance(analysis, Mapping):
@@ -669,7 +671,8 @@ def check_derived_columns(record: Mapping[str, Any], findings: Findings) -> None
 
 def check_cell_terms(record: Mapping[str, Any], findings: Findings) -> None:
     """§3 invariants 2, 3 and 4: a cell names a term of its own stage chain, and a
-    level it names is one that term declares.
+    level it names is one that term declares -- or, on a signed cell of a product column,
+    one its categorical components declare.
 
     The three travel together because they are one join failed at different depths. A
     `Cell.term` that resolves nowhere, or to a term of a model this analysis does not
@@ -683,7 +686,7 @@ def check_cell_terms(record: Mapping[str, Any], findings: Findings) -> None:
     reports instead.
     """
 
-    models = _model_index(record)
+    models = model_index(record)
     for index, analysis in enumerate(record.get("analyses") or []):
         if not isinstance(analysis, Mapping):
             continue
@@ -735,16 +738,24 @@ def check_cell_terms(record: Mapping[str, Any], findings: Findings) -> None:
             level = values.read(cell.get("level"))
             if not isinstance(level, str):
                 continue
-            declared = [
-                values.read(entry.get("level"))
-                for entry in (term.get("levels") or [])
-                if isinstance(entry, Mapping)
-            ]
-            declared = [name for name in declared if isinstance(name, str)]
-            if not declared:
+            declared = levels_a_cell_may_name(term, terms, cell.get("direction"))
+            if not declared and term.get("interaction_with"):
+                findings.error(
+                    f"{path}.level",
+                    f"is {level!r} but term {term_id!r} is a product column, whose cell names "
+                    "a level only when signed and a component is continuous; two factors "
+                    "cross in their own cells",
+                )
+            elif not declared:
                 findings.error(
                     f"{path}.level",
                     f"is {level!r} but term {term_id!r} declares " "no levels to match it against",
+                )
+            elif level not in declared and not term.get("levels"):
+                findings.error(
+                    f"{path}.level",
+                    f"{level!r} matches none of the levels of product column {term_id!r}'s "
+                    f"components ({', '.join(repr(name) for name in declared)})",
                 )
             elif level not in declared:
                 findings.error(
@@ -819,7 +830,7 @@ def check_model_stages(record: Mapping[str, Any], findings: Findings) -> None:
     refitted at the stage above from one restated there by mistake.
     """
 
-    models = _model_index(record)
+    models = model_index(record)
 
     for model_id, model in models.items():
         path = f"model_estimations[{model_id}]"
@@ -1368,7 +1379,7 @@ def check_effect_kind(record: Mapping[str, Any], findings: Findings) -> None:
     describe no test are a defect before anything is compared against them.
     """
 
-    models = _model_index(record)
+    models = model_index(record)
     for index, analysis in enumerate(record.get("analyses") or []):
         if not isinstance(analysis, Mapping):
             continue
@@ -1382,8 +1393,8 @@ def check_effect_kind(record: Mapping[str, Any], findings: Findings) -> None:
         if derived == NO_LABEL:
             findings.error(f"{path}.cells", why)
             continue
-        if derived == UNDETERMINED_VARIATION:
-            continue  # a missing `variation_level`, which `check_field` reports at its source
+        if derived in (UNDETERMINED_VARIATION, UNRESOLVED_TERM):
+            continue  # reported at the source: `check_field`, `check_cell_terms`
 
         stated = values.read(effect.get("kind"))
         if stated is None:

@@ -22,9 +22,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
+import logging
 
-from pondie.extraction.record.fix import derive, link, shape
+from pondie.extraction.record import walk
+from pondie.extraction.record.fix import derive, link, reachable, shape
 from pondie.schema.reader import Schema
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -34,6 +38,8 @@ class Context:
     schema: Schema
     stage1: Path | None = None
     table_map: Path | None = None
+    #: The paper, for a repair that needs its own definitions (its abbreviations).
+    text: str = ""
 
 
 #: A repair reports what it changed, one line per change, and mutates the record in
@@ -68,6 +74,8 @@ class RepairLog:
     """What each repair did to one record."""
 
     entries: list[tuple[str, list[str]]] = field(default_factory=list)
+    #: Repair name -> the references it left naming nothing (`apply_all` checks each one).
+    introduced: dict[str, list[str]] = field(default_factory=dict)
 
     def record(self, name: str, changes: list[str]) -> None:
         self.entries.append((name, changes))
@@ -83,9 +91,12 @@ class RepairLog:
         return [name for name, lines in self.entries if lines]
 
     def explain(self) -> str:
-        if not self.total:
+        if not self.total and not self.introduced:
             return "no repairs fired"
-        lines = []
+        lines = [
+            f"{name} introduced dangling reference(s): {', '.join(found)}"
+            for name, found in self.introduced.items()
+        ]
         for name, changed in self.entries:
             if not changed:
                 continue
@@ -101,9 +112,66 @@ def build_sequence() -> tuple[Repair, ...]:
 
     return (
         Repair(
+            "impossible_keys",
+            "drop a key no slot could have, debris from a malformed reply",
+            lambda body, ctx: shape.drop_impossible_keys(body),
+            stage="shape",
+        ),
+        Repair(
+            "keyed_entities",
+            "move an entity written as a key named after its id into its list",
+            lambda body, ctx: shape.rehome_keyed_entities(body, ctx.schema),
+            # Before `wrappers`, so a moved entity's fields are repaired with the rest.
+            after="impossible_keys",
+            stage="shape",
+        ),
+        Repair(
             "wrappers",
             "put a malformed ExtractedValue back into wrapper shape",
             lambda body, ctx: shape.repair_wrappers(body),
+            stage="shape",
+        ),
+        Repair(
+            "misnested",
+            "move a parent's slot out of a child; lift an object out of its own slot",
+            lambda body, ctx: shape.lift_misnested(body, ctx.schema),
+            after="wrappers",
+            stage="shape",
+        ),
+        Repair(
+            "wrapped_entities",
+            "strip wrapper keys from an entity written as if it were a value",
+            lambda body, ctx: shape.unwrap_entities(body, ctx.schema),
+            after="wrappers",
+            stage="shape",
+        ),
+        Repair(
+            "code_filled",
+            "drop a model's value for a slot code fills",
+            lambda body, ctx: shape.drop_code_filled(body, ctx.schema),
+            after="misnested",
+            stage="shape",
+        ),
+        Repair(
+            "slot_name_strings",
+            "drop a bare string naming a slot from a list of objects",
+            lambda body, ctx: shape.drop_stray_slot_names(body, ctx.schema),
+            after="wrappers",
+            stage="shape",
+        ),
+        Repair(
+            "status_as_value",
+            "turn a value that is the word not_reported into a not_reported field",
+            lambda body, ctx: shape.status_as_value(body, ctx.schema),
+            after="wrappers",
+            stage="shape",
+        ),
+        Repair(
+            "vacuous_objects",
+            "drop an optional object that says nothing, as null would",
+            lambda body, ctx: shape.drop_vacuous_objects(body, ctx.schema),
+            # After `status_as_value`, so a status word is already a field that says nothing.
+            after="status_as_value",
             stage="shape",
         ),
         Repair(
@@ -114,9 +182,15 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
-            "table_effects",
-            "mark a table an analysis cites as reporting that analysis's effect",
-            lambda body, ctx: derive.derive_table_effects(body),
+            "correction_regions",
+            "name an ROI correction's regions from the analyses that used it",
+            lambda body, ctx: derive.derive_correction_regions(body),
+            stage="merged",
+        ),
+        Repair(
+            "tissue_masks",
+            "leave a tissue-masked analysis whole-brain, the mask as its search volume",
+            lambda body, ctx: derive.rescope_tissue_masks(body),
             stage="merged",
         ),
         Repair(
@@ -133,22 +207,10 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
-            "stray_tables",
-            "move a Table written as a Study attribute into tables[]",
-            lambda body, ctx: shape.rehome_stray_tables(body, ctx.schema),
-            stage="merged",
-        ),
-        Repair(
             "acquisition_type",
             "fill an acquisition's type from its own modality",
             lambda body, ctx: derive.derive_acquisition_types(body),
             stage="satisfy",
-        ),
-        Repair(
-            "coordinate_space",
-            "fill the space stage 1 already read off the table",
-            lambda body, ctx: derive.derive_coordinate_spaces(body, ctx.stage1, ctx.table_map),
-            stage="merged",
         ),
         Repair(
             "listified",
@@ -171,17 +233,60 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="shape",
         ),
         Repair(
+            "missing_models",
+            "point an analysis with no model at the one model declaring its cells' terms",
+            lambda body, ctx: link.infer_missing_models(body),
+            after="listified",
+            stage="merged",
+        ),
+        Repair(
+            "empty_models",
+            "copy into a model with no terms the terms its analyses borrow from another",
+            lambda body, ctx: link.fill_empty_models(body, ctx.schema),
+            after="listified",
+            stage="merged",
+        ),
+        Repair(
+            "cell_terms",
+            "repoint a cell at the same-named term its model reaches",
+            lambda body, ctx: link.repoint_out_of_scope_terms(body),
+            after="listified",
+            stage="merged",
+        ),
+        Repair(
+            "partial_models",
+            "copy into a model the terms its analyses cell and it lacks, from their declarer",
+            lambda body, ctx: link.complete_partial_models(body, ctx.schema),
+            # After `cell_terms`: a cell naming another model's `trm_group` where its own
+            # model declares a `group` term of its own is repointed, not given a copy.
+            after="cell_terms",
+            stage="merged",
+        ),
+        Repair(
             "cell_levels",
             "rewrite a cell's level to the declared level it folds to",
-            lambda body, ctx: link.align_cell_levels(body),
+            lambda body, ctx: link.align_cell_levels(body, ctx.text),
             after="listified",
+            stage="merged",
+        ),
+        Repair(
+            "condition_levels",
+            "declare a condition factor's level a cell names and the term left out",
+            lambda body, ctx: link.complete_condition_levels(body),
+            # After `cell_levels`, so a level that is a spelling of a declared one is aligned,
+            # not declared a second time.
+            after="cell_levels",
             stage="merged",
         ),
         Repair(
             "scoped_terms",
             "scope two models' identically-named terms by their model",
-            lambda body, ctx: link.scope_duplicate_terms(body),
-            stage="satisfy",
+            lambda body, ctx: link.scope_duplicate_terms(body, ctx.schema),
+            # At the merge, after the models are filled: inside `single` an analysis on a
+            # model with no terms yet names the bare id, which cannot be scoped, so the
+            # rename was reverted and the duplicate reached the record (17825801).
+            after="partial_models",
+            stage="merged",
         ),
         Repair(
             "references",
@@ -191,10 +296,29 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
-            "cell_terms",
-            "repoint a cell at the same-named term its model reaches",
-            lambda body, ctx: link.repoint_out_of_scope_terms(body),
-            after="listified",
+            "table_references",
+            "repoint a reference to an undeclared table by its number, or drop it",
+            lambda body, ctx: link.settle_table_references(body, ctx.schema, ctx.table_map),
+            # After `references`, which repairs a transcription slip of a declared id.
+            after="references",
+            stage="merged",
+        ),
+        Repair(
+            "table_effects",
+            "mark a table an analysis cites as reporting that analysis's effect",
+            lambda body, ctx: derive.derive_table_effects(body),
+            # After `table_references`: a reference repointed `table2 -> tbltable2` is
+            # one this reads.
+            after="table_references",
+            stage="merged",
+        ),
+        Repair(
+            "coordinate_space",
+            "fill the space stage 1 already read off the table",
+            lambda body, ctx: derive.derive_coordinate_spaces(body, ctx.stage1, ctx.table_map),
+            # After `table_references`: a reference repointed `table2 -> tbltable2` is
+            # one this reads.
+            after="table_references",
             stage="merged",
         ),
         Repair(
@@ -210,9 +334,15 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="demands",
         ),
         Repair(
+            "coordinate_set_keys",
+            "key a coordinate set by its parse key, not its table's local_id",
+            lambda body, ctx: derive.rekey_coordinate_sets(body, ctx.stage1, ctx.table_map),
+            stage="demands",
+        ),
+        Repair(
             "derived_ids",
             "rename each analysis to an id the parse determines",
-            lambda body, ctx: derive.derive_analysis_ids(body),
+            lambda body, ctx: derive.derive_analysis_ids(body, ctx.schema),
             after="source_links",
             stage="demands",
         ),
@@ -231,6 +361,13 @@ def build_sequence() -> tuple[Repair, ...]:
             "fill a cell's direction from the contrast's own name",
             lambda body, ctx: derive.fill_directions(body),
             after="cell_levels",
+            stage="merged",
+        ),
+        Repair(
+            "crossed_products",
+            "rewrite a signed cell on a product of two factors as their crossed cells",
+            lambda body, ctx: link.cross_products_of_factors(body),
+            after="directions",
             stage="merged",
         ),
         Repair(
@@ -256,6 +393,22 @@ def build_sequence() -> tuple[Repair, ...]:
             "rebuild the reversed half of every sign-split contrast",
             lambda body, ctx: derive.mirror_withheld(body, ctx.stage1),
             after="directions",
+            stage="merged",
+        ),
+        # LAST at the merge, because it judges the whole assembled record and because
+        # `mirrored` ADDS analyses -- reachability measured before it would call the
+        # entities only a mirrored analysis reaches orphans.
+        #
+        # Also run after the repair sweep, in `repair.stage`, since that pass creates
+        # entities of its own: over 126 papers 111 of 128 orphans came from there and 17
+        # from `satisfy`. Running it in both places is what makes "every entity reaches an
+        # analysis" a property of the record rather than of whichever stages happened to
+        # run -- `--stages` can omit repair, and then this is the only pass that looks.
+        Repair(
+            "unreachable",
+            "drop entities no analysis reaches, by any path in either direction",
+            lambda body, ctx: reachable.drop_unreachable(body),
+            after="mirrored",
             stage="merged",
         ),
     )
@@ -318,5 +471,14 @@ def apply_all(
     for repair in sequence:
         if wanted is not None and repair.stage not in wanted:
             continue
+        before = walk.dangling(body, ctx.schema)
         log.record(repair.name, list(repair.apply(body, ctx)))
+        # A repair that breaks a reference is otherwise seen far downstream, as a fault the
+        # record appears to have been born with.
+        new = walk.dangling(body, ctx.schema) - before
+        if new:
+            found = [f"{name!r} ({n} reference{'s' * (n > 1)})" for name, n in sorted(new.items())]
+            log.introduced[repair.name] = found
+            _log.warning("repair %s introduced dangling reference(s): %s", repair.name,
+                         ", ".join(found))
     return log

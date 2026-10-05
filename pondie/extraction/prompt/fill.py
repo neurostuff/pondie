@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from typing import Any, Iterator, Mapping, MutableMapping, Sequence
 
+from pondie import schema
 from pondie.formats import values
 from pondie.schema.reader import Schema
 
@@ -34,9 +35,10 @@ from pondie.schema.reader import Schema
 #: rather than at the end of the run.
 VOCABULARY = frozenset({"ambiguous", "outside_text", "cited_elsewhere", "undetermined"})
 
-#: The reason that leaves a slot open. Every other value of `UnreportedReason` is a claim
-#: about the paper, and re-asking it would invite the model to overwrite its own finding.
-OPEN = "undetermined"
+#: The reason that leaves a slot open (`values.OPEN`). Every other value of `UnreportedReason`
+#: is a claim about the paper, and re-asking it would invite the model to overwrite its own
+#: finding.
+OPEN = values.OPEN
 
 #: What the model answers for plain silence, and not a member of `UnreportedReason`. The
 #: schema has no token for the ordinary case: `not_reported` already says the attribute was
@@ -76,6 +78,11 @@ Rules:
    not for when choosing between them takes thought. Answering "ambiguous" where a listed
    term describes the situation records the field as blank when the paper settled it.
 7. Do not answer under an id that was not given to you. Ids you invent are discarded."""
+
+#: Added to SYSTEM when the paper is shown as numbered sentences (`evidence.cited`).
+CITE_RULE = """
+Each answer with a value also carries `evidence`: the numbers of the sentences that state
+it, as shown in brackets before each sentence of the paper ([S12]). Do not quote."""
 
 
 def _label(entity: Mapping[str, Any]) -> str:
@@ -158,15 +165,13 @@ def unsettled(payload: Mapping[str, Any], sch: Schema) -> list[dict[str, Any]]:
     for path, cls, entity in _entities(payload, sch):
         label = _label(entity)
         for name, slot, kind in sch.iter_slots(cls):
-            if kind in ("identifier", "reference", "nested"):
+            if kind in ("identifier", "reference", "nested") or schema.code_fills(cls, name):
                 continue
             held = entity.get(name)
             if values.is_field(held):
-                if held.get("extraction_status") != "not_reported":
+                if values.settled(held):
                     continue
-                if held.get("unreported_reason") != OPEN:
-                    continue
-            elif held not in (None, "", [], {}):
+            elif not values.blank(held):
                 # An answer in the wrong shape is still an answer. The extraction passes
                 # emit some slots as bare scalars -- `Cell.direction` comes back as
                 # `"positive"` rather than a wrapper -- and the `wrappers` fix puts them
@@ -186,6 +191,7 @@ def unsettled(payload: Mapping[str, Any], sch: Schema) -> list[dict[str, Any]]:
                     "id": f"{path}.{name}",
                     "owner": f"{cls} {label}",
                     "range": inner[0],
+                    "ranges": inner,
                     "multivalued": sch.is_multivalued(cls, name),
                     "description": (slot.description or "").strip(),
                     "vocabulary": sorted((enum.permissible_values or {}).keys()) if enum else [],
@@ -282,6 +288,9 @@ def apply_fill(
                 "value": answer["value"],
                 "value_source": "reported",
             }
+            quotes = [q for q in answer.get("evidence") or [] if isinstance(q, str)]
+            if quotes:  # cited by sentence number, read back by `evidence.cited`
+                target[name]["evidence"] = {"status": "present", "sets": [{"quotes": quotes}]}
             filled += 1
         elif answer.get("unreported_reason"):
             reason = str(answer["unreported_reason"])

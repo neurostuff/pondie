@@ -37,7 +37,7 @@ from pondie.formats import values
 from pondie.vocabularies.abbreviations import expansions_in
 from pondie.vocabularies.folding import fold, squash
 from pondie.vocabularies import phrases
-from pondie.vocabularies.labels import acronym, content, stem, stems, tokens
+from pondie.vocabularies.labels import acronym, content, stems
 
 VOCAB_DIR = paths.VOCAB
 

@@ -18,10 +18,10 @@ from functools import lru_cache
 from pathlib import Path
 from pondie import schema
 from pondie.extraction.record import direction
-from pondie.extraction.record import ids
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import walk
 from pondie.formats import parse_keys, values
+from pondie.normalization import search_volume
 from pondie.normalization.coordinate_space import normalize as normalize_space
 from pondie.schema import reader
 from pondie.schema.reader import Schema
@@ -178,7 +178,7 @@ def derive_table_effects(body: dict[str, Any]) -> list[str]:
         # An analysis cites it, so any other kind contradicts the record rather than
         # describing it -- which is the contradiction `check_table_content` reports.
         table["purpose"] = values.wrap(
-            "reported_effect", source="generated", evidence="not_applicable"
+            "reported_effect", source="generated", evidence="not_found"
         )
         filled.append(f"tables[{index}].purpose" + (f": was {held!r}" if held else ""))
     return filled
@@ -239,7 +239,7 @@ def derive_denominators(body: dict[str, Any]) -> list[str]:
                         "extraction_status": "extracted",
                         "value": int(base),
                         "value_source": "generated",
-                        "evidence": {"status": "not_applicable"},
+                        "evidence": {"status": "not_found"},
                     }
                 filled.append(f"{owner}[{index}].{slot}.denominator = {int(base)}")
     return filled
@@ -264,8 +264,8 @@ def derive_coordinate_spaces(
     if not (stage1 and stage1.is_file() and table_map and table_map.is_file()):
         return []
 
-    parsed = json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
-    mapping = json.loads(table_map.read_text(encoding="utf-8"))
+    parsed = parse_keys.load(stage1)
+    mapping = parse_keys.load_table_map(table_map)
 
     # Read through the same lexicon `coordinate_space.resolve` reads with, rather than
     # comparing the parser's raw tokens. Stage 1 writes "MNI" for one sentence and "MNI152"
@@ -310,9 +310,10 @@ def fill_directions(body: dict[str, Any]) -> list[str]:
     every case where it disagreed with the extraction pass the pass had said `absent` --
     it recovered five and lost none. See docs/deterministic-direction.md.
 
-    It never overrides a direction the model committed to. A rule that answers a sixth of
-    the cells has no standing to overturn the pass on the rest, and a silent overwrite
-    would hide a disagreement worth reading.
+    It never overrides a direction the model committed to, including a `not_reported` one
+    with a reason (10526199's `ambiguous`). A rule that answers a sixth of the cells has no
+    standing to overturn the pass on the rest, and a silent overwrite would hide a
+    disagreement worth reading.
     """
 
     filled: list[str] = []
@@ -337,16 +338,17 @@ def fill_directions(body: dict[str, Any]) -> list[str]:
             current = values.read(node)
             if current not in (None, "", "absent"):
                 continue
+            # Open (`values.settled`), or plain silence about a sign the name states. A
+            # reason other than `OPEN` -- `ambiguous`, `outside_text` -- is the pass's answer.
+            if values.settled(node) and isinstance(node, Mapping) and node.get(
+                "unreported_reason"
+            ):
+                continue
             level = str(values.read(cell.get("level")) or "")
             derived = direction.direction_of(level, contrast)
             if derived is None:
                 continue
-            if isinstance(node, dict):
-                node["value"] = derived
-                node["extraction_status"] = "extracted"
-                node["value_source"] = "generated"
-            else:
-                cell["direction"] = values.wrap(derived, source="generated", evidence="not_found")
+            cell["direction"] = values.wrap(derived, source="generated", evidence="not_found")
             filled.append(
                 f"{values.read(analysis.get('local_id'))}: "
                 f"{level or '(unnamed level)'} -> {derived}"
@@ -366,7 +368,7 @@ def mirror_withheld(body: dict[str, Any], stage1: Path | None) -> list[str]:
 
     if not (stage1 and stage1.is_file()):
         return []
-    parsed = json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
+    parsed = parse_keys.load(stage1)
     # Keyed alongside the parse so each withheld entry carries the address of its own row
     # group -- the mirrored analysis's only route to the rows it is about.
     keyed = list(zip(parse_keys.parse_keys(parsed), parsed))
@@ -476,10 +478,10 @@ def relabel_conclusions(body: dict[str, Any], sch: Schema) -> list[str]:
 def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> list[str]:
     """Verify, or deterministically fill, each analysis's link to its parsed row group.
 
-    `Analysis.source_table_analysis` is the only exact route from an analysis to its
-    coordinates: the schema stores none, `Table.coordinate_count` says only how many
-    exist, and `tables` cannot disambiguate because a table usually reports several
-    contrasts and several analyses usually cite the same table.
+    `Analysis.source_table_analysis` is an exact route from an analysis to its
+    coordinates (`CoordinateSet.analysis` is the same join from the other side).
+    `tables` cannot stand in for it: a table usually reports several contrasts and
+    several analyses usually cite the same table.
 
     Not left to the model. A key it invents resolves to nothing, and a key it omits
     leaves the join to a later string match -- which is what this slot exists to replace.
@@ -491,7 +493,7 @@ def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> 
 
     if not (stage1 and stage1.is_file()):
         return []
-    parsed = json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
+    parsed = parse_keys.load(stage1)
     if not parsed:
         return []
 
@@ -525,7 +527,7 @@ def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> 
         ]
         if len(same) == 1 and wanted:
             analysis["source_table_analysis"] = values.wrap(
-                same[0], source="generated", evidence="not_applicable"
+                same[0], source="generated", evidence="not_found"
             )
             notes.append(
                 f"{path}: filled {same[0]!r} from the parsed analysis of the " f"same name"
@@ -533,7 +535,7 @@ def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> 
     return notes
 
 
-def derive_analysis_ids(body: dict[str, Any]) -> list[str]:
+def derive_analysis_ids(body: dict[str, Any], sch: Schema) -> list[str]:
     """Rename each analysis to an id the parse determines, not one the model chose.
 
     A model-chosen `local_id` is unstable. Over the same sixteen papers extracted twice,
@@ -544,9 +546,7 @@ def derive_analysis_ids(body: dict[str, Any]) -> list[str]:
     reviewer gave.
 
     `source_table_analysis` is already a deterministic paper-scoped key, so the id is
-    derived from it: `a_<table id>_<ordinal>`. Safe to do here because nothing in the
-    schema references an Analysis by id -- `Study.analyses` is the only slot with that
-    range and it inlines them -- so the sole pointer to follow is `mirror_of`.
+    derived from it: `a_<table id>_<ordinal>`, and every reference to the analysis follows.
 
     An analysis with no key keeps the model's id. That is 25% of them and it is the
     honest outcome: the parse does not determine an id for a row group it cannot identify,
@@ -571,7 +571,7 @@ def derive_analysis_ids(body: dict[str, Any]) -> list[str]:
         key = values.read(analysis.get("source_table_analysis"))
         if not isinstance(key, str) or "#" not in key:
             continue
-        table_id, _, ordinal = key.partition("#")
+        table_id, ordinal = parse_keys.split(key)
         stem = f"a_{re.sub(r'[^A-Za-z0-9]+', '_', table_id).strip('_')}_{ordinal}"
         seen[stem] = seen.get(stem, 0) + 1
         derived = stem if seen[stem] == 1 else f"{stem}_{seen[stem]}"
@@ -590,8 +590,177 @@ def derive_analysis_ids(body: dict[str, Any]) -> list[str]:
             renamed[old] = derived
         notes.append(f"{old!r} -> {derived!r} (from {key!r})")
 
-    # `mirror_of` is the only pointer at an analysis anywhere in the record.
-    for analysis in body.get("analyses") or []:
-        if isinstance(analysis, Mapping) and analysis.get("mirror_of") in renamed:
-            analysis["mirror_of"] = renamed[analysis["mirror_of"]]
+    if renamed:
+        walk.repoint(body, sch, renamed, target="Analysis")
     return notes
+
+
+def rekey_coordinate_sets(
+    body: dict[str, Any], stage1: Path | None, table_map: Path | None
+) -> list[str]:
+    """Key a coordinate set by its parse key where it was keyed by its table's `local_id`.
+
+    A `CoordinateSet.local_id` is the parse key, `<table id>#<ordinal>`, the same key
+    `Analysis.source_table_analysis` holds. 13 of 78 sets in the 55-paper PTSD run used the
+    Table entity's id instead (`tbltable2#1` for parse key `823#1`), while their analyses
+    carried the right key. `table_map` says which parse table each Table came from, so the
+    key is rewritten, and only to a key the parse has.
+    """
+    if not (stage1 and stage1.is_file() and table_map and table_map.is_file()):
+        return []
+    parsed = parse_keys.load(stage1)
+    keys = set(parse_keys.parse_keys(parsed))
+    parse_table = {local: source for source, local in parse_keys.load_table_map(table_map).items()}
+    taken = {
+        entry.get("local_id")
+        for entry in body.get("coordinate_sets") or []
+        if isinstance(entry, Mapping)
+    }
+    fixed: list[str] = []
+    for coordinate_set in body.get("coordinate_sets") or []:
+        if not isinstance(coordinate_set, dict):
+            continue
+        key = coordinate_set.get("local_id")
+        if not isinstance(key, str) or key in keys or "#" not in key:
+            continue
+        table, ordinal = parse_keys.split(key)
+        rekeyed = f"{parse_table.get(table)}#{ordinal}"
+        if table in parse_table and rekeyed in keys and rekeyed not in taken:
+            coordinate_set["local_id"] = rekeyed
+            taken.add(rekeyed)
+            fixed.append(f"coordinate_sets[{key!r}] -> {rekeyed!r}, its table's parse key")
+    return fixed
+
+
+@lru_cache(maxsize=1)
+def _tissue_mask() -> re.Pattern[str] | None:
+    """The schema's own "bare tissue class" name pattern (storage `Region` rule)."""
+    for rule in reader.load(schema.STORAGE).definition("Region").rules or []:
+        conditions = (rule.preconditions.slot_conditions or {}) if rule.preconditions else {}
+        name = conditions.get("name")
+        if name is not None and name.pattern:
+            return re.compile(name.pattern)
+    return None
+
+
+def rescope_tissue_masks(body: dict[str, Any]) -> list[str]:
+    """Apply the schema's prescription for a tissue mask recorded as a region: "Record the
+    mask as InferenceSettings.search_volume and leave the analysis whole-brain."
+
+    A grey-matter mask is the tissue modelled, not a region inference was restricted to.
+    18165464's smokers-vs-never-smokers VBM, explicitly masked to AAL grey matter, came out
+    `roi` over a region named "gray matter regions", so the whole-brain criterion failed a
+    gold paper. Only where every region the analysis (or correction) names is a mask, and
+    only where an inference setting holds or takes the mask, so nothing is lost.
+    """
+    pattern = _tissue_mask()
+    if pattern is None:
+        return []
+    masks = {
+        region["local_id"]: str(values.read(region.get("name")))
+        for region in body.get("regions") or []
+        if isinstance(region, Mapping)
+        and isinstance(region.get("local_id"), str)
+        and pattern.match(str(values.read(region.get("name")) or ""))
+    }
+    if not masks:
+        return []
+    settings = {
+        entry["local_id"]: entry
+        for entry in body.get("inference_settings") or []
+        if isinstance(entry, dict) and isinstance(entry.get("local_id"), str)
+    }
+    fixed: list[str] = []
+    users: dict[str, list[dict]] = {}
+    for analysis in body.get("analyses") or []:
+        if isinstance(analysis, dict):
+            for sid in walk.ids_of(analysis.get("inference_settings")):
+                users.setdefault(sid, []).append(analysis)
+
+    def masked_only(analysis: dict) -> bool:
+        named = walk.ids_of(analysis.get("regions"))
+        return bool(named) and all(n in masks for n in named)
+
+    def keep_mask(targets: list[dict], named: list[str]) -> bool:
+        """Whether every inference setting holds the mask, or can take it without saying
+        it of an analysis that was not masked (a setting shared with a real ROI analysis)."""
+        if not targets:
+            return False
+        writes = []
+        for target in targets:
+            held = str(values.read(target.get("search_volume")) or "")
+            if held:
+                # `search_volume.normalize` is what reads this slot everywhere else; an
+                # "amygdala mask" is REGIONS there, not the tissue modelled.
+                if search_volume.normalize(held).value not in (
+                    search_volume.COMPARTMENT, search_volume.WHOLE_BRAIN
+                ):
+                    return False  # it says something else; the mask would go unrecorded
+                continue
+            if any(not masked_only(a) for a in users.get(target.get("local_id"), [])):
+                return False
+            writes.append(target)
+        for target in writes:
+            target["search_volume"] = values.wrap(
+                ", ".join(masks[n] for n in named), source="generated", evidence="not_found"
+            )
+        return True
+
+    for entity, scope_slot, region_slot, targets in [
+        *(
+            (a, "spatial_scope", "regions",
+             [settings[s] for s in walk.ids_of(a.get("inference_settings")) if s in settings])
+            for a in body.get("analyses") or []
+            if isinstance(a, dict)
+        ),
+        *((s, "correction_scope", "correction_regions", [s]) for s in settings.values()),
+    ]:
+        named = walk.ids_of(entity.get(region_slot))
+        if not named or not all(n in masks for n in named):
+            continue
+        if values.read(entity.get(scope_slot)) != "roi" or not keep_mask(targets, named):
+            continue
+        entity[scope_slot] = values.wrap("whole_brain", source="generated", evidence="not_found")
+        entity[region_slot] = []
+        fixed.append(
+            f"{entity.get('local_id')}.{scope_slot}: roi over {[masks[n] for n in named]} "
+            f"-> whole_brain, the mask kept as search_volume"
+        )
+    return fixed
+
+
+def derive_correction_regions(body: dict[str, Any]) -> list[str]:
+    """Name an ROI correction's regions from the analyses that used it.
+
+    `correction_scope: roi` with no `correction_regions` says the correction was
+    restricted and not to what. When every analysis using that scheme names the same
+    regions, those are what it was restricted to; analyses that disagree, or name none,
+    leave it for the adjudicator.
+    """
+    fixed: list[str] = []
+    for index, scheme in enumerate(body.get("inference_settings") or []):
+        if not isinstance(scheme, dict) or scheme.get("correction_regions"):
+            continue
+        if str(values.read(scheme.get("correction_scope")) or "").strip().lower() != "roi":
+            continue
+        users = [
+            analysis
+            for analysis in body.get("analyses") or []
+            if isinstance(analysis, Mapping)
+            and scheme.get("local_id")
+            in (
+                analysis.get("inference_settings")
+                if isinstance(analysis.get("inference_settings"), list)
+                else [analysis.get("inference_settings")]
+            )
+        ]
+        named = {tuple(analysis.get("regions") or []) for analysis in users}
+        if len(named) != 1 or () in named:
+            continue
+        scheme["correction_regions"] = list(named.pop())
+        fixed.append(
+            f"inference_settings[{index}].correction_regions: the regions its "
+            f"{len(users)} analysis(es) ran over"
+        )
+    return fixed
+

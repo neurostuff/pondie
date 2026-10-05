@@ -24,14 +24,9 @@ from pondie.vocabularies.abbreviations import Abbreviations, expansions_in
 from pondie.vocabularies.folding import variants
 from pondie.vocabularies.mondo import Vocabulary, load_mondo, onvoc_crosswalk
 from pondie.vocabularies.onvoc import load_onvoc
-from pondie.vocabularies.phrases import (  # noqa: F401 -- callers name these from here
-    HEALTHY,
+from pondie.vocabularies.phrases import (
     NO_CONDITION,
     NOT_READ,
-    QUALIFIER,
-    SPLIT,
-    TRAILING,
-    Triaged as Mapped,
     absent,
     triage,
 )

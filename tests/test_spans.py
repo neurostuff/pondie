@@ -64,3 +64,12 @@ def test_verify_rejects_shifted_offsets() -> None:
 def test_verify_rejects_out_of_range_offsets() -> None:
     with pytest.raises(span_tools.SpanResolutionError):
         span_tools.verify("short", {"text": "short", "start_char": 0, "end_char": 999})
+
+
+def test_a_quote_tidying_the_space_beside_a_bracket_still_resolves():
+    """27082610: the render has `(Figure  1 ).`, the model quoted `(Figure 1).`"""
+    text = "Intro. The image was segmented into WM, GM and CSF (Figure  1 ). Next."
+    span = span_tools.resolve(text, "The image was segmented into WM, GM and CSF (Figure 1).")
+    assert span.text == "The image was segmented into WM, GM and CSF (Figure  1 )."
+    with pytest.raises(span_tools.SpanResolutionError):
+        span_tools.resolve(text, "segmented intoWM")

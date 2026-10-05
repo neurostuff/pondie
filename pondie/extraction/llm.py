@@ -56,6 +56,15 @@ RETRYABLE = frozenset({408, 409, 425, 429, 500, 502, 503, 504})
 
 #: How many times a call may fail to land before it counts against `attempts`.
 UNREACHABLE_TRIES = 4
+#: The same for flex's "not sufficient resources", which lasts minutes to hours rather than
+#: seconds: four tries within two minutes lost 7 papers of one night's runs to it. Spaced
+#: 30 s doubling to 10 min, about 45 minutes in all.
+CAPACITY_TRIES = 8
+
+
+def _no_capacity(error: BaseException) -> bool:
+    """Flex's 429 for having no capacity, as opposed to a rate limit."""
+    return "resource_unavailable" in str(error) or "sufficient resources" in str(error)
 
 
 def _transient(error: BaseException) -> bool:
@@ -152,7 +161,7 @@ class GatewayCaller:
                     + [{"role": "user", "content": call.prompt}],
                     max_completion_tokens=call.max_output_tokens,
                     reasoning_effort=call.effort,
-                    **({"response_format": {"type": "json_object"}} if constrain else {}),
+                    **({"response_format": _format(call)} if constrain else {}),
                     **({"service_tier": call.service_tier} if call.service_tier else {}),
                     extra_headers=metadata,
                 )
@@ -167,12 +176,18 @@ class GatewayCaller:
                     )
                     constrain = False
                     continue
-                if _transient(error) and unreachable < UNREACHABLE_TRIES:
+                capacity = _no_capacity(error)
+                if _transient(error) and unreachable < (
+                    CAPACITY_TRIES if capacity else UNREACHABLE_TRIES
+                ):
                     unreachable += 1
                     # The SDK has already backed off twice inside this one call, so this
                     # spaces whole calls. Jittered: eight workers that hit the same limit
                     # would otherwise return in lockstep and hit it again.
-                    time.sleep(min(2.0**unreachable, 30.0) * (0.5 + random.random() / 2))
+                    wait = min(15.0 * 2.0**unreachable, 600.0) if capacity else min(
+                        2.0**unreachable, 30.0
+                    )
+                    time.sleep(wait * (0.5 + random.random() / 2))
                     continue
                 attempt += 1
                 continue
@@ -214,6 +229,8 @@ class GatewayCaller:
                 # it costs an attempt -- unlike a call that never landed.
                 attempt += 1
                 continue
+            if constrain and call.json_schema is not None:
+                payload = _without_nulls(payload)
             return ModelReply(
                 payload=payload,
                 stop_reason=finish,
@@ -225,10 +242,32 @@ class GatewayCaller:
             )
         if isinstance(last, MalformedReply):
             raise last
+        # `from last` chains the cause, and the CLI prints `str(error)`, so the chain was
+        # invisible: a gateway 400 -- a model name the account cannot reach, a parameter it
+        # rejects -- surfaced as `1 attempt(s) failed` and took two further runs at debug to
+        # read off the wire. The reason belongs in the message that gets printed.
         raise RuntimeError(
             f"{stage} for {paper}: {call.attempts} attempt(s) failed"
             + (f" after {unreachable} that never reached the provider" if unreachable else "")
+            + (f": {type(last).__name__}: {str(last)[:400]}" if last else "")
         ) from last
+
+
+def _without_nulls(node):
+    """Remove null-valued keys, everywhere: strict mode's spelling of an absent slot."""
+    if isinstance(node, dict):
+        return {k: _without_nulls(v) for k, v in node.items() if v is not None}
+    if isinstance(node, list):
+        return [_without_nulls(v) for v in node]
+    return node
+
+
+def _format(call: ModelCall) -> dict:
+    """The `response_format` a call asks for: its schema, strictly, or plain JSON mode."""
+    if call.json_schema is None:
+        return {"type": "json_object"}
+    return {"type": "json_schema",
+            "json_schema": {"name": "reply", "strict": True, "schema": call.json_schema}}
 
 
 def _as_json(body: str) -> dict:

@@ -352,12 +352,14 @@ def test_a_modality_no_rule_covers_is_reported_rather_than_guessed():
         ("post-hoc", "exploratory"),
         ("post hoc", "exploratory"),
         ("data-driven", "exploratory"),
-        ("confirmatory", "preregistered"),
-        ("planned comparisons", "preregistered"),
-        ("hypothesis-driven", "preregistered"),
+        ("confirmatory", "planned"),
+        ("planned comparisons", "planned"),
+        ("hypothesis-driven", "planned"),
+        ("registered report", "preregistered"),
+        ("pre-registered on OSF", "preregistered"),
     ],
 )
-def test_a_prespecification_synonym_reaches_one_of_the_two_values(wording, expected):
+def test_a_prespecification_synonym_reaches_its_value(wording, expected):
     assert prespecification.normalize(wording).value == expected
 
 
@@ -535,8 +537,8 @@ def test_a_group_whose_age_was_not_reported_has_no_unit_either():
         ("L", "LEFT"),
         ("male patients", "MALE"),
         ("female patients", "FEMALE"),
-        ("planned", "preregistered"),
-        ("hypothesis-led", "preregistered"),
+        ("planned", "planned"),
+        ("hypothesis-led", "planned"),
         ("random Gaussian fields", "FWE"),
         ("3dClustSim", "FWE"),
         ("clusterwise correction", "OTHER"),

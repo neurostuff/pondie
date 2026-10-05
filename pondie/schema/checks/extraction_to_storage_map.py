@@ -36,9 +36,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Mapping, Sequence
-from pathlib import Path
 
-import yaml
 
 from pondie.schema import EXTRACTION, ROOT, STORAGE
 from pondie.schema.authoring import (
