@@ -1792,3 +1792,43 @@ correct: `walk.repoint`, `complete_condition_levels`, the polarity threshold gua
 Lesson: a second reader on a night's repairs found a record-corrupting regression that the
 rebuild diff could not, because no stored record had that shape. The rebuild diff tests
 what the data contains; review tests what the code allows.
+
+**Decision making, held out (`dm55_s2r`, code `476deaa`):**
+
+| | veto recall | precision | inputs-only recall |
+|---|---|---|---|
+| **held out** | **25/25** | **0.64** | 24/25 |
+| task pattern narrowed (fit to this data) | 25/25 | 0.74 | 24/25 |
+
+- **Recall is complete.** The records answer every criterion on every gold paper. The one
+  inputs-only miss, 24317375, has no coordinates in its inputs.
+- **The held-out false positives (14).** Eight were included by autonima's full-text screener.
+  Six were random negatives, and they were mostly my task pattern:
+  - "probabilistic" matched reinforcement- and category-learning tasks (27710793, 28575424,
+    29590478);
+  - "decision" matched an Ultimatum Game (25720857), a social decision outside the three
+    pooled classes.
+
+  `probabilistic` is dropped, and social-exchange games and feedback-learning tasks
+  (`NOT_DECISION`) are not decision tasks unless risk or gambling words say otherwise.
+- **After the fix:** 9 false positives. 7 are autonima-included, and 2 random: 27986636, a Cups
+  task the screener excluded for having no whole-brain maps; and 28575424, a reinforcement-
+  learning task whose text still says "choice". Against random negatives that is 2 in 15.
+- **Validation:** 38/55 records valid, 44 errors.
+
+## Standing (veto, `--gold-coords`)
+
+| meta-analysis | held-out score | latest | inputs-only | limit on precision |
+|---|---|---|---|---|
+| PTSD | (developed on it) | 19/19, 0.95 | 18/19 | overlap with papers outside the pool |
+| dementia | 23/25, 0.96 | same | 16/25 | - |
+| substance use | (developed earlier) | 21-22/23, 0.85-0.91 | same | disputed negatives the screener included |
+| cue reactivity | 9/25, 0.64 | 19/25, 0.70 | 16/25 | 5 of 8 false positives are screener-included |
+| decision making | 25/25, 0.64 | 25/25, 0.74 | 24/25 | 7 of 9 false positives are screener-included |
+
+**The common precision limit on the two task-fMRI pools is the labels.** Half their negatives
+were drawn from papers autonima's own full-text screener judged eligible but the benchmark
+left out. Those hard negatives make up most of the false positives. Against random
+negatives, precision is 14/15 (cue reactivity) and 13/15 (decision making). The benchmark
+included sets are curated selections from much larger eligible literatures; 90% precision
+against them is not reachable without fitting the query to the labels.
