@@ -1474,3 +1474,42 @@ against its final ones gives identical selection and foci in both draws (18/19, 
 128/143 and 117/143). `repair` buys record validity (36 -> 43 of 55 valid on the first draw)
 and nothing in selection, for 44% of the calls. Kept: the adjudicator settles the
 validator's contradictions, and the sweep fills real gaps (27082610: regions, an assessment).
+
+## Dementia (bvFTD, 35664889) on S2r + repair (`runs/dem55_s2r`, code `5561211`)
+
+The first held-out check of the S2r workflow; nothing was tuned on this pool today.
+
+| run | veto recall | precision | strict recall |
+|---|---|---|---|
+| S2r | 23/25 | 0.96 | 22/25 |
+| medium-effort baseline (`dem_p_effort_medium`, JSON mode) | 22/25 | 0.96 | 16/25 |
+
+Misses: 30718430 (`bvFTD vs control`=F, the supplement-only contrast that has failed in every
+draw) and 31461580 (`no comorbidity`=F). 31873787 passes veto only (`a group of six`=None).
+The false positive is 28474365.
+
+**Inputs-only, without `--gold-coords`, dementia drops to 16/25 (precision 0.94).** Eight gold
+papers carry no coordinates in their inputs: 0 parsed points and 0 prose coordinates,
+though their text describes voxel-wise VBM results. Four have empty parses; four have table
+manifests (`catalog/ace`, `pubget`, `elsevier`) whose captured tables are demographic or
+empty. Their coordinate tables never reached the corpus. For dementia `--gold-coords` means
+"being in the included set counts", so 23/25 is a claim about the extraction given complete
+inputs, not about the corpus as fetched. The gap is ingestion.
+
+**Final records:** 44/55 valid, 24 errors. Fixed from them:
+- **A p-threshold was read as a comparison.** `direction.polarity` read "FTD-MND compared
+  with FTD at P <0.001" as FTD < 0.001, and `fill_directions` signed both of 10526199's
+  levels negative (also 28219620's "at p<0.05"). A left side ending in a lone p/q, or a
+  right side with no letters, is now no comparison.
+- **The pass's `ambiguous` was overwritten.** `fill_directions` filled a `not_reported`
+  direction that carried a reason, in place, so the wrapper kept its `unreported_reason`
+  beside the new value (6 errors). A reasoned `not_reported` is the pass's answer, and a
+  filled direction is built by `values.wrap`. This is the second wrapper bug of the day from
+  writing a wrapper by hand instead of through its constructor (the first was mine).
+- **A non-text quote crashed the build.** `warrant` raised on a quote that was an object, a
+  JSON-mode reply shape. That lost `dem_p_effort_medium` one paper's whole build, which is
+  why that run has 54 records. It is now an unresolved quote.
+
+Rebuilding 329 records changes only the two dementia papers (9 errors removed). Left as
+reported: 25797589's group-named levels on continuous terms (analyses over a patient group
+plus controls, so not a restatement), and the "term name on both stages" findings.
