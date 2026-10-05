@@ -44,11 +44,13 @@ def _value_type(sch: Schema, ranges: Sequence[str], multivalued: bool) -> dict[s
     if enum is not None and len(concrete) == 1:
         node: dict[str, Any] = {"type": "string", "enum": terms}
     elif terms:
-        # An open vocabulary is a plain string to the decoder, which hid its terms: the model
-        # wrote `prespecification` as a sentence 13 times in 15 papers. Named here, they are
-        # what the field asks for first.
-        node = {"type": "string", "description": f"One of: {', '.join(terms)}; the "
-                "paper's own words only when none of these fits."}
+        # An open vocabulary is a plain string to the decoder, so its terms are named here.
+        # The fallback is stated as firmly as the terms: offered only `exploratory` and
+        # `preregistered`, the model wrote `preregistered` for 7 analyses whose papers say
+        # "planned contrasts" or "we predicted" -- a claim none of them makes.
+        node = {"type": "string", "description": f"Use one of: {', '.join(terms)} -- if it "
+                "says what the paper says. If none does, write the paper's own words; never "
+                "the nearest term when it is not true."}
     else:
         node = {"type": _SCALARS.get(concrete[0] if concrete else "string", "string")}
     return {"type": "array", "items": node} if multivalued else node
