@@ -910,6 +910,98 @@ DM_ANALYSIS: list[tuple[str, Callable]] = [
 DM_REQUIRED = ("fMRI", "decision-making task")
 
 
+# ------------------------------------------- problem solving (Bartley 2018, 29944961)
+#
+# Written from the criteria text alone, before any problem-solving record was extracted:
+#
+#   Inclusion: "1) met definition of problem solving 2) BOLD/rCBF increases 3) group-level
+#   effects in healthy adult individuals".  Exclusion: "1) disease, age gender related
+#   group comparison".  Dates: "1/1997 - 3/2015".  Analyses: mathematical, verbal,
+#   visuospatial (and their conjunction).
+#
+# "BOLD/rCBF" admits PET; "increases" is a positive effect; "group-level effects in healthy
+# adult individuals" with "group comparison" excluded is a within-participant effect in
+# healthy adults.
+
+PROBLEM = re.compile(r"problem[- ]solving|reasoning|puzzle|tower of (london|hanoi)|raven|"
+                     r"matri(x|ces)|arithmetic|calculat|mental (math|addition|multiplic)|"
+                     r"\bmath|algebra|equation|number|analog(y|ies|ical)|insight|riddle|"
+                     r"anagram|syllogis|deducti|inducti|\blogic|sudoku|chess|planning|"
+                     r"remote associates|rule (induction|discovery)|mental rotation|"
+                     r"spatial (reasoning|problem)|word problem", re.I)
+DISORDER = re.compile(OTHER_DISORDER.pattern + r"|disorder|patient|disease|syndrome|"
+                      r"dyscalcul|dyslex|injur|deficit|impair", re.I)
+
+
+def healthy_only(record: dict, ix: Index) -> bool | None:
+    """"healthy ... individuals": no cohort asserts a disorder."""
+    entries = [x for g in ix.groups.values() for x in strs(g.get("medical_condition"))
+               + strs(g.get("name"))]
+    if not ix.groups:
+        return None
+    return not any(DISORDER.search(e) for e in asserted(entries))
+
+
+def problem_task(a: dict, record: dict, ix: Index) -> bool | None:
+    """"met definition of problem solving": the analysis's task (or, unlinked, the paper's)."""
+    tasks = [ix.tasks[t] for t in refs(a.get("tasks")) if t in ix.tasks] or list(ix.tasks.values())
+    if not tasks:
+        return None
+    text = " ".join(x for t in tasks for x in strs(t.get("name")) + strs(t.get("description"))
+                    + [y for c in t.get("conditions") or [] if isinstance(c, dict)
+                       for y in strs(c.get("name")) + strs(c.get("description"))])
+    return bool(PROBLEM.search(text))
+
+
+def functional_or_pet(a: dict, record: dict, ix: Index) -> bool | None:
+    """"BOLD/rCBF": an fMRI BOLD measure, or PET blood flow."""
+    m = next((ix.measures[t] for t in refs(a.get("measure")) if t in ix.measures), None)
+    kinds = set(strs(m.get("type"))) if m else set()
+    if kinds:
+        return bool(kinds & (BOLD_TYPES | PET_TYPES))
+    acqs = [ix.acqs.get(x) for x in refs(a.get("acquisitions"))]
+    acqs = [x for x in acqs if x] or list(ix.acqs.values())
+    mods = {x for acq in acqs for x in strs(acq.get("modality"))}
+    return None if not mods else bool(mods & {"fMRI", "PET"})
+
+
+def within_increase(a: dict, record: dict, ix: Index) -> bool | None:
+    """"increases" in "group-level effects", not a group comparison: a positive cell on a
+    within-participant term, and no signed cell on a between-subject one."""
+    cells = _cell_terms(a)
+    if not cells:
+        return None
+    positive_within, signed_between = False, False
+    for cell in cells:
+        term = next((ix.terms.get(t) for t in refs(cell.get("term")) if t in ix.terms), None)
+        level = _level_of(term, " ".join(strs(cell.get("level"))))
+        within = _within(term, level)
+        sign = strs(cell.get("direction"))
+        if within is False and ("positive" in sign or "negative" in sign):
+            signed_between = True
+        elif within is not False and "positive" in sign:
+            positive_within = True
+    if signed_between:
+        return False
+    return True if positive_within else None
+
+
+PS_STUDY: list[tuple[str, Callable]] = [
+    ("original research", original),
+    ("1997 to March 2015", search_window),
+    ("adult", adult),
+    ("healthy", healthy_only),
+    ("reports coordinates", reports_coordinates),
+]
+PS_ANALYSIS: list[tuple[str, Callable]] = [
+    ("fMRI or PET", functional_or_pet),
+    ("problem-solving task", problem_task),
+    ("within-participant increase", within_increase),
+    ("reported foci", reported_foci),
+]
+PS_REQUIRED = ("fMRI or PET", "problem-solving task")
+
+
 # ------------------------------------------------------------------ the registry
 
 @dataclass(frozen=True)
@@ -945,4 +1037,6 @@ SPECS: dict[str, Spec] = {
                      CUE_REQUIRED, []),
     "32078973": Spec(DECISION, CONTROL, None, (1900, (2019, 3)), DM_STUDY, DM_ANALYSIS,
                      DM_REQUIRED, []),
+    "29944961": Spec(PROBLEM, CONTROL, None, ((1997, 1), (2015, 3)), PS_STUDY, PS_ANALYSIS,
+                     PS_REQUIRED, []),
 }
