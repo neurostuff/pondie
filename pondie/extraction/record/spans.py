@@ -80,7 +80,7 @@ def fold_label(value: str) -> str:
 
     `Cell.level` joins to `FactorLevel.level` on the string, and extraction-readme.md §3
     invariant 3 asks that the comparison use the same normalization the mapper applies. That
-    is this: `fold`, then hyphens and dashes as spaces, then collapse whitespace runs, then
+    is this: `fold`, then a hyphen or dash between word characters as a space, then collapse whitespace runs, then
     casefold. Deliberately narrow -- only differences that cannot be semantic. `Healthy
     controls` and `healthy controls` are the same level, as are `combat exposed` and
     `combat-exposed` (17825801); `AD` and `AD group` are not, and calling them equal here
@@ -90,7 +90,8 @@ def fold_label(value: str) -> str:
     whitespace changes the length, which is the one thing `fold` promises never to do.
     """
 
-    return re.sub(r"[\s\-\u2010-\u2015]+", " ", fold(value)).strip().casefold()
+    joined = re.sub(r"(?<=\w)[\-\u2010-\u2015](?=\w)", " ", fold(value))
+    return re.sub(r"\s+", " ", joined).strip().casefold()
 
 
 def _tolerant_pattern(quote: str, *, ignore_case: bool = False) -> re.Pattern[str]:

@@ -632,7 +632,7 @@ def complete_partial_models(body: dict[str, Any], sch: Schema) -> list[str]:
             by_id = {
                 t["local_id"]: t
                 for t in models[donor].get("terms") or []
-                if isinstance(t, Mapping)
+                if isinstance(t, Mapping) and isinstance(t.get("local_id"), str)
             }
             wanted = set(missing)
             for term_id in list(wanted):
@@ -876,6 +876,10 @@ def scope_duplicate_terms(body: dict[str, Any], sch: Schema) -> list[str]:
     scoped: list[str] = []
     for name in sorted(collisions):
         owners = declared_by[name]
+        # Read from `body` every time: a revert below replaces its contents, and renaming
+        # terms in the models list read before it renamed copies no longer in the record.
+        models = [m for m in body.get("model_estimations") or [] if isinstance(m, Mapping)]
+        before = walk.dangling(body, sch)
         # Use each analysis's model to determine which copy it could mean.
         reachable = {
             analysis_index: values.read(analysis.get("model_estimation"))
@@ -898,9 +902,10 @@ def scope_duplicate_terms(body: dict[str, Any], sch: Schema) -> list[str]:
                 if reachable.get(index) == model_id and isinstance(analysis, dict):
                     walk.repoint(analysis, sch, mapping, root="Analysis", target="ModelTerm")
 
-        # A reference still naming the bare id is one this could not scope. Put the record
-        # back rather than leave it dangling.
-        if walk.dangling(body, sch)[name]:
+        # A reference still naming the bare id is one this could not scope, and any other
+        # new dangling reference is a rename gone wrong. Put the record back either way.
+        after = walk.dangling(body, sch)
+        if after[name] or after - before:
             body.clear()
             body.update(snapshot)
             continue
@@ -1140,14 +1145,23 @@ def repair_references(body: dict[str, Any], sch: Schema) -> list[str]:
     return [reference.repoint_to(target) for reference, target in settled.items()]
 
 
-_TABLE_NUMBER = re.compile(r"(s?)0*(\d+)\D*$")
-
-
 def _table_number(text: Any) -> tuple[bool, int] | None:
-    """(supplementary, number) of an id or label: `table2` and `Table 2` -> (False, 2),
-    `tbltableS2` and `Table S2` -> (True, 2)."""
-    found = _TABLE_NUMBER.search(text.lower()) if isinstance(text, str) else None
-    return (bool(found.group(1)), int(found.group(2))) if found else None
+    """(supplementary, number) of a table id or label.
+
+    The number after the table token (`table2`, `tbltableS2`, `pone-0042560-t002`, `tbl1_2`,
+    whose `_2` is a collision suffix), else the first number standing alone (`Table 2`).
+    Parenthetical text is not the number (`Table 2 (n = 30)`), and "supplementary" or an
+    `S` before the digits marks a supplementary table.
+    """
+    if not isinstance(text, str):
+        return None
+    folded = re.sub(r"\([^)]*\)", " ", text.lower())
+    found = re.search(r"(?:table|tbl|\bt)(s?)0*(\d+)", folded) or re.search(
+        r"(?:^|[^a-z0-9])(s?)0*(\d+)", folded
+    )
+    if found is None:
+        return None
+    return ("supplement" in folded or bool(found.group(1)), int(found.group(2)))
 
 
 def settle_table_references(
@@ -1195,7 +1209,9 @@ def settle_table_references(
                     kept.append(match[0])
             else:
                 why = (
-                    "no declared table is so numbered"
+                    "more than one declared table is so numbered"
+                    if len(match) > 1
+                    else "no declared table is so numbered"
                     if tables
                     else "the paper has no declared table"
                 )

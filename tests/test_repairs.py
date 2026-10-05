@@ -992,3 +992,73 @@ def test_a_condition_level_a_cell_names_is_declared():
 
 def test_a_contrast_label_is_not_declared_a_level():
     assert fix.link.complete_condition_levels(_cue_body("cocaine vs neutral")) == []
+
+
+def test_scoping_after_a_revert_renames_the_record_not_a_stale_copy():
+    """Review: trm_a reverts (a model-less analysis cells it), then trm_b was 'scoped' on the
+    pre-revert model dicts while the live cells were repointed to undeclared ids."""
+    from pondie.extraction.record import walk
+
+    def term(tid):
+        return {"local_id": tid, "name": _wrapped(tid)}
+    body = {
+        "model_estimations": [{"local_id": "m1", "terms": [term("trm_a"), term("trm_b")]},
+                              {"local_id": "m2", "terms": [term("trm_a"), term("trm_b")]}],
+        "analyses": [
+            {"local_id": "x1", "model_estimation": "m1",
+             "effect": {"cells": [{"term": "trm_a"}, {"term": "trm_b"}]}},
+            {"local_id": "x2", "model_estimation": "m2", "effect": {"cells": [{"term": "trm_b"}]}},
+            {"local_id": "x3", "effect": {"cells": [{"term": "trm_a"}]}},
+        ],
+    }
+    fix.link.scope_duplicate_terms(body, _SCH)
+    assert not walk.dangling(body, _SCH), walk.dangling(body, _SCH)
+
+
+def test_a_partial_model_donor_term_without_an_id_is_no_crash():
+    """Review: a donor term with no local_id raised KeyError and lost the record's build."""
+    def term(tid, name):
+        return {"local_id": tid, "name": _wrapped(name)} if tid else {"name": _wrapped(name)}
+    body = {
+        "model_estimations": [{"local_id": "m1", "terms": [term("trm_dx", "dx")]},
+                              {"local_id": "m2", "terms": [term("trm_dx", "dx"),
+                                                          term("trm_exp", "exp"), term(None, "age")]}],
+        "analyses": [{"local_id": "a", "model_estimation": "m1",
+                      "effect": {"cells": [{"term": "trm_exp"}]}}],
+    }
+    assert fix.link.complete_partial_models(body, _SCH)
+
+
+def test_a_design_with_reasoned_open_fields_is_kept():
+    """Review: a not_reported field with a reason is an answer, and Study.design names no
+    required reference, so fill can still ask about it."""
+    nr = {"extraction_status": "not_reported", "unreported_reason": "outside_text",
+          "evidence": {"status": "not_applicable"}}
+    body = {"design": {"design_type": dict(nr)}, "analyses": []}
+    assert fix.shape.drop_vacuous_objects(body, _SCH) == []
+    assert "design" in body
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("Supplementary Table 2", (True, 2)), ("Table 2 (n = 30)", (False, 2)),
+    ("tbl1_2", (False, 1)), ("pone-0042560-t002", (False, 2)), ("tbltableS2", (True, 2)),
+])
+def test_table_numbers(text, expected):
+    assert fix.link._table_number(text) == expected
+
+
+def test_a_shared_inference_setting_is_not_given_the_mask():
+    """Review: writing the mask into settings a real ROI analysis shares would say the
+    amygdala analysis searched grey matter."""
+    body = _masked("grey matter mask")
+    body["regions"].append({"local_id": "reg_amy", "name": _wrapped("amygdala")})
+    body["analyses"].append({"local_id": "roi", "spatial_scope": _wrapped("roi"),
+                             "regions": ["reg_amy"], "inference_settings": ["inf1"]})
+    assert fix.derive.rescope_tissue_masks(body) == []
+    assert "search_volume" not in body["inference_settings"][0]
+
+
+def test_a_leading_minus_is_not_folded_away():
+    from pondie.extraction.record import spans
+    assert spans.fold_label("-1") != spans.fold_label("1")
+    assert spans.fold_label("combat-exposed") == spans.fold_label("combat exposed")

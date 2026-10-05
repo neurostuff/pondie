@@ -666,15 +666,35 @@ def rescope_tissue_masks(body: dict[str, Any]) -> list[str]:
         if isinstance(entry, dict) and isinstance(entry.get("local_id"), str)
     }
     fixed: list[str] = []
+    users: dict[str, list[dict]] = {}
+    for analysis in body.get("analyses") or []:
+        if isinstance(analysis, dict):
+            for sid in walk.ids_of(analysis.get("inference_settings")):
+                users.setdefault(sid, []).append(analysis)
+
+    def masked_only(analysis: dict) -> bool:
+        named = walk.ids_of(analysis.get("regions"))
+        return bool(named) and all(n in masks for n in named)
 
     def keep_mask(targets: list[dict], named: list[str]) -> bool:
+        """Whether every inference setting holds the mask, or can take it without saying
+        it of an analysis that was not masked (a setting shared with a real ROI analysis)."""
         if not targets:
             return False
+        writes = []
         for target in targets:
-            if not values.read(target.get("search_volume")):
-                target["search_volume"] = values.wrap(
-                    ", ".join(masks[n] for n in named), source="generated", evidence="not_found"
-                )
+            held = str(values.read(target.get("search_volume")) or "")
+            if held:
+                if not (pattern.search(held) or re.search(r"(?i)\bmask", held)):
+                    return False  # it says something else; the mask would go unrecorded
+                continue
+            if any(not masked_only(a) for a in users.get(target.get("local_id"), [])):
+                return False
+            writes.append(target)
+        for target in writes:
+            target["search_volume"] = values.wrap(
+                ", ".join(masks[n] for n in named), source="generated", evidence="not_found"
+            )
         return True
 
     for entity, scope_slot, region_slot, targets in [

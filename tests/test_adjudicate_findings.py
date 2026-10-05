@@ -688,3 +688,11 @@ def test_keeping_whole_brain_clears_the_regions_beside_it():
     report = _adjudicate(record, caller)
     assert analysis["regions"] == []
     assert report.adjudicated == [f"{case.id}: kept whole_brain; regions cleared"]
+
+
+def test_reversing_a_name_keeps_its_threshold():
+    """Review: 'PTSD > HC (p < 0.001)' answered 'cells' became 'PTSD < HC (p > 0.001)'."""
+    from pondie.extraction.repair.stage import _reverse_name
+    analysis = {"name": _v("PTSD > HC (p < 0.001)")}
+    _reverse_name(analysis)
+    assert values.read(analysis["name"]) == "PTSD < HC (p < 0.001)"

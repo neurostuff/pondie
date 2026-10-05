@@ -340,11 +340,12 @@ def drop_vacuous_demands(body: dict[str, Any]) -> list[str]:
 
 
 def _says_nothing(node: Any) -> bool:
-    """Blank, empty, or a field that holds no value -- recursively for an object."""
+    """Blank, empty, or a field with no value and no reason -- recursively for an object.
+    A `not_reported` field with a reason is an answer, not nothing."""
     if node is None or node == "" or node == [] or node == {}:
         return True
     if values.is_field(node):
-        return node.get("extraction_status") != "extracted"
+        return node.get("extraction_status") != "extracted" and not node.get("unreported_reason")
     if isinstance(node, Mapping):
         return all(_says_nothing(v) for v in node.values())
     if isinstance(node, list):
@@ -353,21 +354,31 @@ def _says_nothing(node: Any) -> bool:
 
 
 def drop_vacuous_objects(body: dict[str, Any], sch: Schema) -> list[str]:
-    """Drop an optional single object that says nothing: what `null` would have said.
+    """Drop an optional object that cannot stand and says nothing: what `null` would say.
 
     Strict decoding makes every slot of an object required, so a model that opens an
     optional one must fill it. 25533729 wrote `mediation: {"mediator": "", "path":
     not_reported}` on four analyses that had no mediation, and each reads as a reference to
-    a term named nothing. Only optional, single-valued nested slots whose every value is
-    blank or unreported; anything carrying an id or an extracted value stays.
+    a term named nothing. Only an optional, single-valued nested object one of whose
+    required references is blank and whose every value says nothing: `Study.design` with
+    open fields is something `fill` still asks about, and is left.
     """
     dropped: list[str] = []
     for slot in walk.slots(body, sch, kinds=("nested",)):
         if slot.attribute.multivalued or slot.attribute.required:
             continue
-        if isinstance(slot.value, Mapping) and slot.value and _says_nothing(slot.value):
+        if not isinstance(slot.value, Mapping) or not slot.value:
+            continue
+        target = sch.ranges(slot.attribute)[0] if sch.ranges(slot.attribute) else None
+        required_refs = [
+            name for name, spec in (sch.attributes(target) or {}).items()
+            if spec.required and sch.classify(name, spec) == "reference"
+        ] if target else []
+        if not any(not walk.ids_of(slot.value.get(name)) for name in required_refs):
+            continue
+        if _says_nothing(slot.value):
             del slot.owner[slot.key]
-            dropped.append(f"{slot.path}: an object holding nothing -- dropped")
+            dropped.append(f"{slot.path}: an object naming nothing it requires -- dropped")
     return dropped
 
 

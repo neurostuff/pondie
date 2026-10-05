@@ -407,12 +407,14 @@ def _reverse_signs(analysis: MutableMapping[str, Any], span: Any = None) -> list
 
 def _reverse_name(analysis: MutableMapping[str, Any], _span: Any = None) -> list[str]:
     """Swap the comparison in the analysis's name: the cells are right and it is not."""
-    name = analysis.get("name")
-    text = values.read(name)
-    if not isinstance(name, dict) or not isinstance(text, str):
+    text = values.read(analysis.get("name"))
+    found = _NAMED.match(text) if isinstance(text, str) else None
+    if found is None:
         return []
-    swapped = text.translate(str.maketrans("<>", "><"))
-    name["value"] = swapped
+    # Only the comparison the case matched: "PTSD > HC (p < 0.001)" keeps its threshold.
+    at = found.start("op")
+    swapped = text[:at] + {"<": ">", ">": "<"}[text[at]] + text[at + 1:]
+    analysis["name"] = values.wrap(swapped, source="generated", evidence="not_found")
     return [f"name: {text!r} -> {swapped!r}"]
 
 

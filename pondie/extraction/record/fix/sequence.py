@@ -194,12 +194,6 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
-            "table_effects",
-            "mark a table an analysis cites as reporting that analysis's effect",
-            lambda body, ctx: derive.derive_table_effects(body),
-            stage="merged",
-        ),
-        Repair(
             "denominators",
             "fill a distribution's denominator from its count and percentage",
             lambda body, ctx: derive.derive_denominators(body),
@@ -217,12 +211,6 @@ def build_sequence() -> tuple[Repair, ...]:
             "fill an acquisition's type from its own modality",
             lambda body, ctx: derive.derive_acquisition_types(body),
             stage="satisfy",
-        ),
-        Repair(
-            "coordinate_space",
-            "fill the space stage 1 already read off the table",
-            lambda body, ctx: derive.derive_coordinate_spaces(body, ctx.stage1, ctx.table_map),
-            stage="merged",
         ),
         Repair(
             "listified",
@@ -313,6 +301,24 @@ def build_sequence() -> tuple[Repair, ...]:
             lambda body, ctx: link.settle_table_references(body, ctx.schema, ctx.table_map),
             # After `references`, which repairs a transcription slip of a declared id.
             after="references",
+            stage="merged",
+        ),
+        Repair(
+            "table_effects",
+            "mark a table an analysis cites as reporting that analysis's effect",
+            lambda body, ctx: derive.derive_table_effects(body),
+            # After `table_references`: a reference repointed `table2 -> tbltable2` is
+            # one this reads.
+            after="table_references",
+            stage="merged",
+        ),
+        Repair(
+            "coordinate_space",
+            "fill the space stage 1 already read off the table",
+            lambda body, ctx: derive.derive_coordinate_spaces(body, ctx.stage1, ctx.table_map),
+            # After `table_references`: a reference repointed `table2 -> tbltable2` is
+            # one this reads.
+            after="table_references",
             stage="merged",
         ),
         Repair(
