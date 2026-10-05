@@ -883,3 +883,30 @@ def test_a_level_differing_only_by_a_hyphen_is_aligned():
     cells = body["analyses"][0]["effect"]["cells"]
     assert cells[0]["level"]["value"] == "combat-exposed"
     assert cells[1]["level"]["value"] == "PTSD twin pairs", "a longer name is not a spelling"
+
+
+def test_a_p_threshold_is_not_a_comparison():
+    """10526199: 'FTD-MND compared with FTD at P <0.001' signed both levels negative."""
+    from pondie.extraction.record import direction
+
+    assert direction.polarity("FTD-MND compared with FTD at P <0.001, corrected") is None
+    assert direction.polarity("q < 0.05 FDR . patients > controls")[:2] == ("patients", "controls")
+
+
+def test_a_direction_the_pass_called_ambiguous_is_not_filled_from_the_name():
+    body = {"analyses": [{"local_id": "a", "name": _wrapped("FTD > controls"), "effect": {
+        "cells": [{"level": _wrapped("FTD"), "direction": {
+            "extraction_status": "not_reported", "unreported_reason": "ambiguous",
+            "evidence": {"status": "not_applicable"}}}]}}]}
+    assert fix.derive.fill_directions(body) == []
+
+
+def test_a_filled_direction_is_a_whole_wrapper():
+    """In place, a not_reported wrapper kept its reason beside the new value."""
+    body = {"analyses": [{"local_id": "a", "name": _wrapped("FTD > controls"), "effect": {
+        "cells": [{"level": _wrapped("FTD"), "direction": {
+            "extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}}]}}]}
+    fix.derive.fill_directions(body)
+    filled = body["analyses"][0]["effect"]["cells"][0]["direction"]
+    assert filled["value"] == "positive" and "unreported_reason" not in filled
+    assert filled["evidence"] == {"status": "not_found"}

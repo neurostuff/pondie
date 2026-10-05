@@ -142,6 +142,10 @@ def polarity(text: str) -> tuple[str, str, int] | None:
         if not match:
             continue
         left, right = match.group("a").strip(" .,:;"), match.group("b").strip(" .,:;")
+        # A threshold is not a comparison: "FTD-MND compared with FTD at P <0.001" read
+        # FTD on the left of `<` and signed both of 10526199's levels negative.
+        if re.search(r"(?i)\b[pq]$", left) or not re.search(r"[A-Za-z]", right):
+            continue
         if _words(left) and _words(right):
             return left, right, sign
     return None

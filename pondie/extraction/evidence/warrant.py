@@ -133,6 +133,12 @@ def _resolve_field(
             continue
         resolved: list[dict[str, object]] = []
         for quote in quotes:
+            if not isinstance(quote, str):
+                # A JSON-mode reply can put an object where the quote goes. It names no
+                # text, and resolving it raised and lost the paper's whole build.
+                report.unresolved.append(f"{path} set[{index}]: a quote that is not text")
+                unlocated += 1
+                continue
             try:
                 placed = [span_tools.resolve(normalized, quote, folded_text=folded)]
             except span_tools.SpanResolutionError as error:

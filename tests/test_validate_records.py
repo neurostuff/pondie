@@ -285,3 +285,13 @@ def test_validator_rejects_evidence_set_without_spans(
     validator = validate_record.Validator(extraction_schema, normalized)
     validator.check_record(broken)
     assert any("at least one span" in error for error in validator.errors), validator.errors
+
+
+def test_a_quote_that_is_not_text_is_unresolved_not_a_crash():
+    """dem_p_effort_medium: a JSON-mode reply put an object where a quote goes, and the
+    whole build raised."""
+    record = {"analyses": [{"name": {
+        "extraction_status": "extracted", "value": "x", "value_source": "reported",
+        "evidence": {"status": "present", "sets": [{"quotes": [{"text": "x"}]}]}}}]}
+    report = warrant.warrant(record, "x marks the spot.")
+    assert report.unresolved and "not text" in report.unresolved[0]

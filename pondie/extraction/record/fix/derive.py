@@ -309,9 +309,10 @@ def fill_directions(body: dict[str, Any]) -> list[str]:
     every case where it disagreed with the extraction pass the pass had said `absent` --
     it recovered five and lost none. See docs/deterministic-direction.md.
 
-    It never overrides a direction the model committed to. A rule that answers a sixth of
-    the cells has no standing to overturn the pass on the rest, and a silent overwrite
-    would hide a disagreement worth reading.
+    It never overrides a direction the model committed to, including a `not_reported` one
+    with a reason (10526199's `ambiguous`). A rule that answers a sixth of the cells has no
+    standing to overturn the pass on the rest, and a silent overwrite would hide a
+    disagreement worth reading.
     """
 
     filled: list[str] = []
@@ -336,16 +337,13 @@ def fill_directions(body: dict[str, Any]) -> list[str]:
             current = values.read(node)
             if current not in (None, "", "absent"):
                 continue
+            if isinstance(node, Mapping) and node.get("unreported_reason"):
+                continue  # `ambiguous`, `outside_text`: the pass looked and said so
             level = str(values.read(cell.get("level")) or "")
             derived = direction.direction_of(level, contrast)
             if derived is None:
                 continue
-            if isinstance(node, dict):
-                node["value"] = derived
-                node["extraction_status"] = "extracted"
-                node["value_source"] = "generated"
-            else:
-                cell["direction"] = values.wrap(derived, source="generated", evidence="not_found")
+            cell["direction"] = values.wrap(derived, source="generated", evidence="not_found")
             filled.append(
                 f"{values.read(analysis.get('local_id'))}: "
                 f"{level or '(unnamed level)'} -> {derived}"
