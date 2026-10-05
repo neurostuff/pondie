@@ -592,6 +592,22 @@ class _ModelPass(_Base):
         return [f"repaired {name}: {len(lines)}" for name, lines in log.entries if lines]
 
 
+def _resolves(analysis: Mapping[str, Any], payload: Mapping[str, Any]) -> bool:
+    """Whether an analysis's model exists and every cell names a term that model reaches."""
+    from pondie.extraction.record.effect import terms_in_scope
+
+    models = {
+        m.get("local_id"): m
+        for m in payload.get("model_estimations") or []
+        if isinstance(m, Mapping)
+    }
+    if analysis.get("model_estimation") not in models:
+        return False
+    scope = terms_in_scope(analysis.get("model_estimation"), models)
+    cells = (analysis.get("effect") or {}).get("cells") or []
+    return all(isinstance(c, Mapping) and c.get("term") in scope for c in cells)
+
+
 def _evidence_form(settings: Settings) -> str:
     """The reply's evidence format: `settings.evidence_format`, or none when not asked."""
     return settings.evidence_format if settings.retrieve_evidence else "none"
@@ -940,6 +956,10 @@ class Single(_ModelPass):
             )
         except Exception as error:  # noqa: BLE001 -- a recheck must not lose the record
             return payload, Cost(), [f"recheck failed: {type(error).__name__}"]
+        kept = settings.payloads / paper.study_id / "raw" / f"{self.name.value}-recheck.json"
+        kept.parent.mkdir(parents=True, exist_ok=True)
+        kept.write_text(json.dumps(reply.payload, indent=1, ensure_ascii=False) + "\n")
+        cost = reply.cost
         cited.expand(reply.payload, _evidence_form(settings), text)
         found, _ = render.normalize(reply.payload, "single")
         known = set(held.get("analyses") or [])
@@ -952,8 +972,22 @@ class Single(_ModelPass):
         merged.setdefault("analyses", []).extend(added)
         declined = [o for o in found.get("omitted") or [] if isinstance(o, Mapping)]
         merged.setdefault("omitted", []).extend(declined)
-        return merged, reply.cost, [
-            f"recheck: {len(candidates)} sentence(s), {len(added)} analysis(es) added, "
+        # Strict decoding fixes the shape, not the references: on 16199014 the recheck added
+        # 17 analyses naming terms (`trm_tanner_stage`, `trm_age`) no model declared. The
+        # completion asks for exactly those; an addition still naming nothing is dropped.
+        failures = render.postcondition_failures(
+            merged, self.mode, (), self.listing(paper, settings),
+            self.listing_foci(paper, settings), self.existing(paper, settings),
+        )
+        notes = []
+        if failures:
+            merged, _failures, more, notes = self.complete(paper, settings, caller, merged, failures)
+            cost = cost + more
+        unread = [a for a in added if not _resolves(a, merged)]
+        merged["analyses"] = [a for a in merged["analyses"] if a not in unread]
+        return merged, cost, notes + [
+            f"recheck: {len(candidates)} sentence(s), {len(added) - len(unread)} analysis(es) "
+            f"added, {len(unread)} dropped for naming undeclared terms, "
             f"{len(declined)} declined"
         ]
 
