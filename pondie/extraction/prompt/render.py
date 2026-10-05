@@ -29,6 +29,7 @@ in neither.
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Collection, Mapping, Sequence
 from typing import Any
@@ -681,36 +682,10 @@ _WRAPPER_INDEXED = """Every source-derived value is an ExtractedValue wrapper:
    Do not quote; the number is the citation, and it is resolved to the sentence for you.
 """
 
-_WRAPPER_INVERTED = """Every source-derived value is an ExtractedValue wrapper:
-   {"extraction_status": "extracted", "value": <value>, "value_source": "reported"}
-   with no `evidence` key. The support goes in ONE top-level `support` list instead: each
-   entry is one sentence copied character-for-character from the paper and the `fields` it
-   supports, as paths `<local_id>.<slot>` -- `grp_ptsd.age_mean`,
-   `ana_1.effect.cells[0].direction`, `study.design.allocation`. Write each sentence once,
-   however many fields it supports.
-"""
-
-#: The empty slot's form when strict decoding requires the reason key to be answered.
-_SILENT_TAIL = """   A slot with no value takes
-   {"extraction_status": "not_reported", "unreported_reason": "silent_default"} when the
-   paper simply does not mention it. Use another reason ONLY where it is not plain silence:
-   ambiguous (the paper addresses it and settles on no one value), outside_text (in a
-   figure, an image-only table or an unfetched supplement), cited_elsewhere (given by
-   reference to another paper), undetermined (the paper bears on it and you could not work
-   it out). A value the paper does not give is silent_default, not undetermined."""
-
-
-def value_rule(evidence: str, silence: bool) -> str:
+def value_rule(evidence: str) -> str:
     """Rule 3 of the system prompt, for one evidence format (`reply_schema.EVIDENCE_FORMATS`)."""
-    head = {
-        "none": _WRAPPER_PLAIN,
-        "quotes": _WRAPPER_WITH_EVIDENCE,
-        "indexed": _WRAPPER_INDEXED,
-        "inverted": _WRAPPER_INVERTED,
-    }[evidence]
-    if silence:
-        return head + _SILENT_TAIL
-    return head + _UNREPORTED_TAIL.format(
+    head = {"none": _WRAPPER_PLAIN, "quotes": _WRAPPER_WITH_EVIDENCE, "indexed": _WRAPPER_INDEXED}
+    return head[evidence] + _UNREPORTED_TAIL.format(
         absent=_ABSENT_WITH_EVIDENCE if evidence == "quotes" else _ABSENT_PLAIN
     )
 
@@ -967,13 +942,34 @@ def payload_keys(mode: str) -> list[str]:
     return keys
 
 
+def recheck_note(
+    analyses: Sequence[tuple[str, str]],
+    declared: Mapping[str, list[str]],
+    sentences: Sequence[tuple[int, str]],
+) -> str:
+    """The context for `Single.recheck`: what exists, and the sentences to account for."""
+    listed = "\n".join(f"- {local_id}: {name}" for local_id, name in analyses)
+    shown = "\n".join(f"[S{n}] {sentence}" for n, sentence in sentences)
+    return (
+        "\n\n## RECHECK: the record already exists\n\n"
+        f"These analyses are already extracted -- do NOT emit them again:\n{listed}\n\n"
+        "Entities already declared, by list (reference them freely):\n"
+        f"{json.dumps(dict(declared), ensure_ascii=False)}\n\n"
+        "The sentences below report results, and no analysis above cites them. For EACH, "
+        "either emit a NEW analysis for the effect it reports (with any entity it needs that "
+        'is not declared yet), or put it in `omitted` as {"key": "S<number>", "reason": '
+        '"<why it is not a new analysis>"} -- covered by an existing analysis (name it), a '
+        "behavioural or demographic test, or no tested effect. Emit nothing else; every "
+        f"other list stays empty.\n\n{shown}"
+    )
+
+
 def build_prompt(
     text: str,
     mode: str,
     evidence: bool,
     context: str,
     evidence_format: str = "quotes",
-    silence: bool = False,
 ) -> Prompt:
     """`evidence_format` applies when `evidence` is on; `indexed` numbers the paper's
     sentences, which `evidence.cited.expand` reads back with the same splitter."""
@@ -981,7 +977,7 @@ def build_prompt(
     names, study_keep = mode_classes(sch, MODE_SCHEMA.get(mode, mode))
     form = evidence_format if evidence else "none"
 
-    lists = payload_keys(mode) + (["support"] if form == "inverted" else [])
+    lists = payload_keys(mode)
     if form == "indexed":
         from pondie.extraction.evidence.cited import numbered
 
@@ -1006,7 +1002,7 @@ def build_prompt(
             # From `record/ids.py`, so the convention the model is told and the convention
             # the repair pass mints by cannot drift apart.
             id_prefixes=ids.prefix_table(),
-            value_rule=value_rule(form, silence),
+            value_rule=value_rule(form),
         )
         + "\n\n# Conventions (extraction-readme.md)\n\n"
         + conventions()

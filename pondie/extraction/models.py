@@ -211,16 +211,11 @@ class Settings(Strict):
     #: Decode `single`, `fill` and `evidence` replies under a schema generated from the
     #: extraction schema (`prompt.reply_schema`) instead of JSON mode.
     structured_outputs: bool = False
-    #: How a `single` reply carries its evidence: a quote per field, or each sentence once
-    #: -- cited by number (`indexed`) or listed with the fields it supports (`inverted`).
-    #: See `evidence.cited`.
-    evidence_format: Literal["quotes", "indexed", "inverted"] = "quotes"
-    #: Offer `silent_default` for a slot the paper does not mention. Strict decoding has to
-    #: answer the reason key, and with nothing else to say it answers `undetermined`.
-    explicit_silence: bool = False
-    #: After `single`, show back the Results sentences about imaging that no analysis
-    #: cites, and ask once for the analyses they report. Indexed evidence only: it is
-    #: the citations that say which sentences an analysis covers (`Single.recheck`).
+    #: How `single` and `fill` cite: a quote per value, or the numbers of the sentences that
+    #: state it, the paper shown numbered (`evidence.cited`).
+    evidence_format: Literal["quotes", "indexed"] = "quotes"
+    #: After `single`, ask once for the analyses reported in Results sentences that no
+    #: analysis cites (`Single.recheck`). Needs `indexed`, whose citations say which.
     recheck_results: bool = False
     zero_foci_rule: bool = True
     #: Passed to every call this run makes. `flex` is cheaper and slower; a run's per-paper
@@ -258,6 +253,12 @@ class Settings(Strict):
     def effort_for(self, stage: "StageName | str") -> str:
         """The reasoning effort a stage's calls are made at."""
         return self.stage_effort.get(StageName(stage), self.effort)
+
+    @model_validator(mode="after")
+    def _recheck_needs_citations(self) -> "Settings":
+        if self.recheck_results and self.evidence_format != "indexed":
+            raise ValueError("recheck_results needs evidence_format='indexed'")
+        return self
 
     @model_validator(mode="after")
     def _build_needs_its_inputs(self) -> "Settings":

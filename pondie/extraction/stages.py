@@ -117,8 +117,6 @@ class _Base:
                 parts["structured_outputs"] = True
             if settings.evidence_format != "quotes":
                 parts["evidence_format"] = settings.evidence_format
-            if settings.explicit_silence:
-                parts["explicit_silence"] = True
             if settings.recheck_results:
                 parts["recheck_results"] = True
         for upstream in self.reads:
@@ -430,7 +428,6 @@ class _ModelPass(_Base):
             settings.retrieve_evidence,
             self.context(paper, settings),
             settings.evidence_format,
-            settings.explicit_silence,
         )
         declared = self.declared(paper, settings)
         listing = self.listing(paper, settings)
@@ -469,9 +466,7 @@ class _ModelPass(_Base):
                         service_tier=settings.service_tier,
                         attempts=1,
                         json_schema=(
-                            reply_schema.for_single(
-                                _evidence_form(settings), settings.explicit_silence
-                            )
+                            reply_schema.for_single(_evidence_form(settings))
                             if settings.structured_outputs and self.mode == "single"
                             else None
                         ),
@@ -496,7 +491,7 @@ class _ModelPass(_Base):
             # Hoisting first: an entity list nested under `study` is otherwise shadowed by
             # an empty top-level sibling, and the post-condition would reject a good answer.
             said = copy.deepcopy(reply.payload)
-            cited_notes = cited.expand(reply.payload, _evidence_form(settings), text)
+            cited_notes = _read_citations(reply.payload, settings, text)
             candidate, candidate_notes = render.normalize(reply.payload, self.mode)
             candidate_notes = cited_notes + candidate_notes
             parsed = True
@@ -546,11 +541,7 @@ class _ModelPass(_Base):
                 cost=cost,
             )
 
-        # The reply as the model wrote it, before normalizing or repair: what a change to the
-        # prompt or the decoding is judged by. Under `raw/`, which no payload merge reads.
-        kept = settings.payloads / paper.study_id / "raw" / f"{self.name.value}.json"
-        kept.parent.mkdir(parents=True, exist_ok=True)
-        kept.write_text(json.dumps(raw, indent=1, ensure_ascii=False) + "\n")
+        _keep_raw(settings, paper, self.name.value, raw)
 
         outcome_notes = list(notes) + truncation_notes
         if parse_failures:
@@ -611,6 +602,19 @@ def _resolves(analysis: Mapping[str, Any], payload: Mapping[str, Any]) -> bool:
 def _evidence_form(settings: Settings) -> str:
     """The reply's evidence format: `settings.evidence_format`, or none when not asked."""
     return settings.evidence_format if settings.retrieve_evidence else "none"
+
+
+def _keep_raw(settings: Settings, paper: Paper, name: str, reply: dict) -> None:
+    """The reply as the model wrote it, before normalizing or repair, under `raw/` -- which
+    no payload merge reads. What a change to the prompt or the decoding is judged by."""
+    kept = settings.payloads / paper.study_id / "raw" / f"{name}.json"
+    kept.parent.mkdir(parents=True, exist_ok=True)
+    kept.write_text(json.dumps(reply, indent=1, ensure_ascii=False) + "\n")
+
+
+def _read_citations(payload: dict, settings: Settings, text: str) -> list[str]:
+    """Turn a reply's cited sentence numbers into quotes, in place, when it cites by number."""
+    return cited.expand(payload, text) if _evidence_form(settings) == "indexed" else []
 
 
 def _paper_text(paper: Paper, settings: Settings) -> str:
@@ -843,7 +847,6 @@ class Single(_ModelPass):
             settings.retrieve_evidence,
             context,
             settings.evidence_format,
-            settings.explicit_silence,
         )
         try:
             reply = caller(
@@ -861,7 +864,7 @@ class Single(_ModelPass):
             )
         except Exception as error:  # noqa: BLE001 -- completion must not lose the record
             return payload, failures, Cost(), [f"completion failed: {type(error).__name__}"]
-        cited.expand(reply.payload, _evidence_form(settings), text)
+        _read_citations(reply.payload, settings, text)
         found, _ = render.normalize(reply.payload, "satisfy")
         merged = _merge_entities(copy.deepcopy(payload), found)
         after = render.postcondition_failures(
@@ -888,12 +891,12 @@ class Single(_ModelPass):
         entities they need that are not there yet, are kept. A sentence the model judges not
         to report one goes in `omitted`, so the answer to each is recorded.
         """
-        if not settings.recheck_results or _evidence_form(settings) != "indexed":
+        if not settings.recheck_results:
             return payload, Cost(), []
         candidates = cited.unanalysed_results(payload, text)
-        spans = preprocess.sentence_spans(text)
         if not candidates:
             return payload, Cost(), ["recheck: every Results sentence about the brain is cited"]
+        spans = preprocess.sentence_spans(text)
         log.info(
             "%s/%s recheck: %d Results sentence(s) no analysis cites",
             paper.study_id,
@@ -905,25 +908,11 @@ class Single(_ModelPass):
             for key in render.payload_keys("single")
             if key != "omitted"
         }
-        listed = "\n".join(
-            f"- {a.get('local_id')}: {values.read(a.get('name'))}"
-            for a in payload.get("analyses") or []
-            if isinstance(a, Mapping)
-        )
-        context = (
-            "\n\n## RECHECK: the record already exists\n\n"
-            "These analyses are already extracted -- do NOT emit them again:\n"
-            f"{listed}\n\nEntities already declared, by list (reference them freely):\n"
-            + json.dumps({k: v for k, v in held.items() if v}, ensure_ascii=False)
-            + "\n\nThe sentences below report results, and no analysis above cites them. "
-            "For EACH, either emit a NEW analysis for the effect it reports (with any entity it "
-            "needs that is not declared yet), or put it in `omitted` as "
-            '{"key": "S<number>", "reason": "<why it is not a new analysis>"} -- covered by '
-            "an existing analysis (name it), a behavioural or demographic test, or no tested "
-            "effect. Emit nothing else; every other list stays empty.\n\n"
-            + "\n".join(
-                f"[S{n}] {text[spans[n - 1][0] : spans[n - 1][1]]}" for n in candidates
-            )
+        context = render.recheck_note(
+            [(a.get("local_id"), values.read(a.get("name")))
+             for a in payload.get("analyses") or [] if isinstance(a, Mapping)],
+            {k: v for k, v in held.items() if v},
+            [(n, text[spans[n - 1][0] : spans[n - 1][1]]) for n in candidates],
         )
         ask = render.build_prompt(
             text,
@@ -931,7 +920,6 @@ class Single(_ModelPass):
             settings.retrieve_evidence,
             self.context(paper, settings) + context,
             settings.evidence_format,
-            settings.explicit_silence,
         )
         try:
             reply = caller(
@@ -944,9 +932,7 @@ class Single(_ModelPass):
                     service_tier=settings.service_tier,
                     attempts=settings.attempts,
                     json_schema=(
-                        reply_schema.for_single(
-                            _evidence_form(settings), settings.explicit_silence
-                        )
+                        reply_schema.for_single(_evidence_form(settings))
                         if settings.structured_outputs
                         else None
                     ),
@@ -956,11 +942,9 @@ class Single(_ModelPass):
             )
         except Exception as error:  # noqa: BLE001 -- a recheck must not lose the record
             return payload, Cost(), [f"recheck failed: {type(error).__name__}"]
-        kept = settings.payloads / paper.study_id / "raw" / f"{self.name.value}-recheck.json"
-        kept.parent.mkdir(parents=True, exist_ok=True)
-        kept.write_text(json.dumps(reply.payload, indent=1, ensure_ascii=False) + "\n")
+        _keep_raw(settings, paper, f"{self.name.value}-recheck", reply.payload)
         cost = reply.cost
-        cited.expand(reply.payload, _evidence_form(settings), text)
+        _read_citations(reply.payload, settings, text)
         found, _ = render.normalize(reply.payload, "single")
         known = set(held.get("analyses") or [])
         added = [
@@ -972,9 +956,8 @@ class Single(_ModelPass):
         merged.setdefault("analyses", []).extend(added)
         declined = [o for o in found.get("omitted") or [] if isinstance(o, Mapping)]
         merged.setdefault("omitted", []).extend(declined)
-        # Strict decoding fixes the shape, not the references: on 16199014 the recheck added
-        # 17 analyses naming terms (`trm_tanner_stage`, `trm_age`) no model declared. The
-        # completion asks for exactly those; an addition still naming nothing is dropped.
+        # Strict decoding fixes a reply's shape, not its references: complete what the
+        # additions leave undeclared, then drop an addition that still names nothing.
         failures = render.postcondition_failures(
             merged, self.mode, (), self.listing(paper, settings),
             self.listing_foci(paper, settings), self.existing(paper, settings),

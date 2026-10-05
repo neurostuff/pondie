@@ -91,7 +91,6 @@ def _extract(args: argparse.Namespace) -> int:
         retrieve_evidence=not args.no_evidence,
         structured_outputs=args.structured_outputs,
         evidence_format=args.evidence_format,
-        explicit_silence=args.explicit_silence,
         recheck_results=args.recheck_results,
         redo=args.redo,
     )
@@ -252,20 +251,15 @@ def main(argv: list[str] | None = None) -> int:
     ex.add_argument(
         "--evidence-format",
         default="quotes",
-        choices=["quotes", "indexed", "inverted"],
-        help="single's evidence: a quote per field, sentence numbers per field, or each "
-        "sentence once with the fields it supports",
+        choices=["quotes", "indexed"],
+        help="how single and fill cite: a quote per value, or the numbers of the sentences "
+        "that state it",
     )
     ex.add_argument(
         "--recheck-results",
         action="store_true",
         help="ask once more for analyses reported in Results sentences no analysis cites "
         "(indexed evidence only)",
-    )
-    ex.add_argument(
-        "--explicit-silence",
-        action="store_true",
-        help="offer silent_default for a slot the paper does not mention",
     )
     ex.add_argument(
         "--effort",

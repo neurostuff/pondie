@@ -1,17 +1,12 @@
-"""Evidence written once per sentence, turned into the evidence each field carries.
+"""Evidence cited by sentence number, turned into the evidence each field carries.
 
-A quote in every field repeats the same sentence wherever one sentence supports several
-values -- a group's n, its sex counts and its diagnosis are often one sentence. Two reply
-formats write each sentence once instead:
+The paper is shown as numbered sentences (`[S12] ...`), and a value's `evidence` lists the
+numbers of the sentences that state it. One sentence often supports several values -- a
+group's n, its sex counts and its diagnosis -- and a number costs a few tokens where a quote
+repeats the sentence. Nothing is quoted, so nothing can be misquoted.
 
-  indexed   the paper is shown as numbered sentences (`[S12] ...`), and a field's
-            `evidence` lists the numbers. Nothing is quoted, so nothing can be misquoted.
-  inverted  a top-level `support` list: each entry one verbatim sentence and the paths of
-            the fields it supports (`grp_ptsd.age_mean`, `ana_1.effect.cells[0].direction`).
-
-`expand` turns either into `{"status": "present", "sets": [{"quotes": [...]}]}` on each
-field -- the shape every other reply has -- so nothing after the model pass changes. It also
-turns `silent_default`, the structured reply's spelling of plain silence, into no reason.
+`expand` turns the numbers into `{"status": "present", "sets": [{"quotes": [...]}]}`, the
+shape every other reply has, so nothing after the model pass changes.
 """
 
 from __future__ import annotations
@@ -19,34 +14,30 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from pondie.extraction.prompt.fill import PLAIN
 from pondie.extraction.prompt.preprocess import sentence_spans
 from pondie.formats import values
 
 
 def numbered(text: str) -> str:
-    """`text` with `[S<n>]` before each sentence, lines kept, so a field can cite a number."""
+    """`text` with `[S<n>]` before each sentence, lines kept."""
     marks = {start: n for n, (start, _end) in enumerate(sentence_spans(text), 1)}
     out, last = [], 0
     for start in sorted(marks):
-        out.append(text[last:start])
-        out.append(f"[S{marks[start]}] ")
+        out += [text[last:start], f"[S{marks[start]}] "]
         last = start
     out.append(text[last:])
     return "".join(out)
 
 
-def expand(payload: dict[str, Any], evidence_format: str, text: str) -> list[str]:
-    """Rewrite `payload`'s cited evidence as per-field quotes, in place. Returns notes."""
-    notes: list[str] = []
-    if evidence_format == "indexed":
-        notes += _expand_indexed(payload, text)
-    elif evidence_format == "inverted":
-        notes += _expand_inverted(payload)
-    silent = _drop_silence(payload)
-    if silent:
-        notes.append(f"{silent} slot(s) marked silent_default: recorded as plain not_reported")
-    return notes
+def _sentences(numbers: Any, text: str, spans: list[tuple[int, int]]) -> tuple[list[str], int]:
+    """The sentences `numbers` name, and how many name none."""
+    found, unknown = [], 0
+    for n in numbers if isinstance(numbers, list) else []:
+        if isinstance(n, int) and 1 <= n <= len(spans):
+            found.append(text[spans[n - 1][0] : spans[n - 1][1]])
+        else:
+            unknown += 1
+    return found, unknown
 
 
 def _fields(node: Any):
@@ -61,103 +52,30 @@ def _fields(node: Any):
             yield from _fields(value)
 
 
-def _cite(field: dict[str, Any], quotes: list[str]) -> None:
-    if quotes:
-        held = field.get("evidence") if isinstance(field.get("evidence"), dict) else {}
-        sets = list(held.get("sets") or []) + [{"quotes": quotes}]
-        field["evidence"] = {"status": "present", "sets": sets}
-
-
-def _expand_indexed(payload: dict[str, Any], text: str) -> list[str]:
+def expand(payload: dict[str, Any], text: str) -> list[str]:
+    """Replace each field's cited numbers with its sentences, in place. Returns notes."""
     spans = sentence_spans(text)
     unknown = 0
     for field in _fields(payload):
-        cited = field.pop("evidence", None)
-        if not isinstance(cited, list):
+        if not isinstance(field.get("evidence"), list):
             continue
-        quotes = []
-        for number in cited:
-            if isinstance(number, int) and 1 <= number <= len(spans):
-                start, end = spans[number - 1]
-                quotes.append(text[start:end])
-            else:
-                unknown += 1
-        _cite(field, quotes)
+        quotes, missed = _sentences(field.pop("evidence"), text, spans)
+        unknown += missed
+        if quotes:
+            field["evidence"] = {"status": "present", "sets": [{"quotes": quotes}]}
     return [f"{unknown} cited sentence number(s) name no sentence"] if unknown else []
 
 
 def quote_answers(answers: dict[str, Any], text: str) -> None:
-    """Replace each `fill` answer's cited sentence numbers with the sentences, in place."""
+    """Replace each `fill` answer's cited numbers with its sentences, in place."""
     spans = sentence_spans(text)
     for answer in answers.values():
         if isinstance(answer, dict) and isinstance(answer.get("evidence"), list):
-            answer["evidence"] = [
-                text[spans[n - 1][0] : spans[n - 1][1]]
-                for n in answer["evidence"]
-                if isinstance(n, int) and 1 <= n <= len(spans)
-            ]
-
-
-_STEP = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
-
-
-def _resolve(path: str, by_id: dict[str, Any], payload: dict[str, Any]) -> Any:
-    """`grp_ptsd.age_mean`, `ana_1.effect.cells[0].direction`, `study.design.allocation`."""
-    steps = [m.group(1) if m.group(1) is not None else int(m.group(2))
-             for m in _STEP.finditer(path.strip())]
-    if not steps:
-        return None
-    node = payload.get("study") if steps[0] == "study" else by_id.get(steps[0])
-    for step in steps[1:]:
-        try:
-            node = node[step]
-        except (KeyError, IndexError, TypeError):
-            return None
-    return node if values.is_field(node) else None
-
-
-def _expand_inverted(payload: dict[str, Any]) -> list[str]:
-    support = payload.pop("support", None) or []
-    by_id: dict[str, Any] = {}
-
-    def index(node: Any) -> None:
-        if isinstance(node, dict) and not values.is_field(node):
-            if isinstance(node.get("local_id"), str):
-                by_id.setdefault(node["local_id"], node)
-            for value in node.values():
-                index(value)
-        elif isinstance(node, list):
-            for value in node:
-                index(value)
-
-    index(payload)
-    unresolved = 0
-    for entry in support:
-        if not isinstance(entry, dict) or not isinstance(entry.get("sentence"), str):
-            continue
-        for path in entry.get("fields") or []:
-            field = _resolve(str(path), by_id, payload)
-            if field is None:
-                unresolved += 1
-            else:
-                _cite(field, [entry["sentence"]])
-    notes = [f"support: {len(support)} sentence(s)"]
-    if unresolved:
-        notes.append(f"{unresolved} supported path(s) name no field")
-    return notes
-
-
-def _drop_silence(payload: dict[str, Any]) -> int:
-    count = 0
-    for field in _fields(payload):
-        if field.get("unreported_reason") == PLAIN:
-            del field["unreported_reason"]
-            count += 1
-    return count
+            answer["evidence"] = _sentences(answer["evidence"], text, spans)[0]
 
 
 #: A sentence that states a result, and one about the brain. Both, to pass over the
-#: demographic and behavioural tests a Results section also reports (age, RT, DEQ scores).
+#: demographic and behavioural tests a Results section also reports.
 _RESULT = re.compile(
     r"\b(significant(ly)?|greater|reduced|smaller|larger|lower|higher|increase[ds]?|"
     r"decrease[ds]?|correlat\w+|[tTFZz]\s*[=(]\s*-?\d|p\s*[<=]\s*0?\.\d|peak)\b"
@@ -173,9 +91,8 @@ _BRAIN = re.compile(
 def unanalysed_results(payload: dict[str, Any], text: str, cap: int = 40) -> list[int]:
     """Numbers of the Results sentences about the brain that no analysis cites.
 
-    A result the extraction read and did not encode: 19538748's fMRI contrasts were cited as
-    the wording of two cell labels and belong to no analysis. The quotes are the expanded
-    citations, matched back to their sentences.
+    A result the extraction read and did not encode. `payload`'s citations must already be
+    expanded; they are matched back to their sentences.
     """
     from pondie.extraction.evidence.retrieval import sectionize
 
@@ -191,10 +108,8 @@ def unanalysed_results(payload: dict[str, Any], text: str, cap: int = 40) -> lis
     results = [(a, b) for a, b, label in sectionize(text) if label == "results"]
     out = []
     for n, (a, b) in enumerate(spans, 1):
-        sentence = text[a:b]
         if n in analysed or (results and not any(x <= a < y for x, y in results)):
             continue
-        if _RESULT.search(sentence) and _BRAIN.search(sentence):
+        if _RESULT.search(text[a:b]) and _BRAIN.search(text[a:b]):
             out.append(n)
     return out[:cap]
-

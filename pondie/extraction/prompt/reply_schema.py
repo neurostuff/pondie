@@ -44,10 +44,9 @@ def _value_type(sch: Schema, ranges: Sequence[str], multivalued: bool) -> dict[s
     if enum is not None and len(concrete) == 1:
         node: dict[str, Any] = {"type": "string", "enum": terms}
     elif terms:
-        # An open vocabulary is a plain string to the decoder, so its terms are named here.
-        # The fallback is stated as firmly as the terms: offered only `exploratory` and
-        # `preregistered`, the model wrote `preregistered` for 7 analyses whose papers say
-        # "planned contrasts" or "we predicted" -- a claim none of them makes.
+        # An open vocabulary is a plain string to the decoder, so its terms are named here,
+        # with the fallback stated as firmly: a thin vocabulary otherwise draws the nearest
+        # term whether or not it is true.
         node = {"type": "string", "description": f"Use one of: {', '.join(terms)} -- if it "
                 "says what the paper says. If none does, write the paper's own words; never "
                 "the nearest term when it is not true."}
@@ -56,23 +55,21 @@ def _value_type(sch: Schema, ranges: Sequence[str], multivalued: bool) -> dict[s
     return {"type": "array", "items": node} if multivalued else node
 
 
-#: How a `single` reply carries its evidence: not at all, a quote per field, sentence
-#: numbers per field, or a top-level list of sentences naming their fields (`evidence.cited`).
-EVIDENCE_FORMATS = ("none", "quotes", "indexed", "inverted")
+#: How a `single` reply carries its evidence: not at all, a quote per field, or the numbers
+#: of the sentences that state it (`evidence.cited`).
+EVIDENCE_FORMATS = ("none", "quotes", "indexed")
 
 
 class _Builder:
-    def __init__(self, sch: Schema, evidence: str, silence: bool) -> None:
+    def __init__(self, sch: Schema, evidence: str) -> None:
         self.sch, self.evidence, self.defs = sch, evidence, {}
         reasons = sch.enums.get("UnreportedReason")
         self.reasons = sorted((reasons.permissible_values or {}).keys()) if reasons else []
-        if silence:
-            self.reasons.append(PLAIN)
 
     def ref(self, name: str) -> dict[str, Any]:
         if name not in self.defs:
             self.defs[name] = {}  # reserved first: classes refer to themselves
-            self.defs[name] = self._build(name)
+            self.defs[name] = self.entity(name)
         return {"$ref": f"#/$defs/{name}"}
 
     def nested(self, name: str) -> dict[str, Any]:
@@ -105,16 +102,8 @@ class _Builder:
                     "type": "array", "items": {"type": "integer"},
                     "description": "Numbers of the sentences ([S12]) that state this value.",
                 }
-            reason = {"type": "string", "enum": self.reasons}
-            if PLAIN in self.reasons:
-                reason["description"] = (
-                    f"{PLAIN} when the paper simply does not mention it; the others only "
-                    "when the paper addresses it without settling one value (ambiguous), "
-                    "puts it in a figure or supplement (outside_text), cites another paper "
-                    "for it (cited_elsewhere), or you could not work it out (undetermined)."
-                )
             absent = {"extraction_status": {"type": "string", "enum": ["not_reported"]},
-                      "unreported_reason": _nullable(reason)}
+                      "unreported_reason": _nullable({"type": "string", "enum": self.reasons})}
             self.defs[key] = {"anyOf": [_object(extracted), _object(absent)]}
         return {"$ref": f"#/$defs/{key}"}
 
@@ -133,7 +122,8 @@ class _Builder:
             node = _value_type(self.sch, ranges, False)
         return {"type": "array", "items": node} if spec.multivalued else node
 
-    def _build(self, name: str, keep: Sequence[str] | None = None) -> dict[str, Any]:
+    def entity(self, name: str, keep: Sequence[str] | None = None) -> dict[str, Any]:
+        """One class as an object, every slot required and the optional ones nullable."""
         properties = {}
         for attr, spec in (self.sch.attributes(name) or {}).items():
             if schema.code_fills(name, attr) or (keep is not None and attr not in keep):
@@ -143,42 +133,31 @@ class _Builder:
         return _object(properties)
 
 
-def single(sch: Schema, evidence: str, silence: bool = False) -> dict[str, Any]:
+def single(sch: Schema, evidence: str) -> dict[str, Any]:
     """The `single` reply: entity lists at the top level, the rest of Study under `study`.
-
-    `evidence` is one of `EVIDENCE_FORMATS`; `silence` offers `silent_default` for a slot
-    the paper does not mention, which strict decoding otherwise answers `undetermined`.
-    """
-    builder = _Builder(sch, evidence, silence)
+    `evidence` is one of `EVIDENCE_FORMATS`."""
+    builder = _Builder(sch, evidence)
     _names, keep = render.mode_classes(sch, "single")
     by_container = sch.classes_by_container()
-    # `analyses` first. Strict decoding writes keys in schema order, and `SINGLE_NOTE` asks
-    # for the analyses before every entity list: a reply made to start on `groups` came
-    # back with every list empty on 3 of 8 papers, and with far fewer analyses on others.
+    # `analyses` first: strict decoding writes keys in schema order, and `SINGLE_NOTE` asks
+    # for the analyses before every entity list. Made to start elsewhere, replies came back
+    # with the lists empty.
     lists = [k for k in render.payload_keys("single") if k in by_container]
     lists.sort(key=lambda key: key != "analyses")
     root = {key: {"type": "array", "items": builder.nested(by_container[key])} for key in lists}
-    root["study"] = builder._build("Study", [k for k in keep if k not in lists])
+    root["study"] = builder.entity("Study", [k for k in keep if k not in lists])
     # `key`, as the listing instructions spell it and `render.unconsumed_listing` reads it.
     root["omitted"] = {"type": "array", "items": _object(
         {"key": {"type": "string"}, "reason": {"type": "string"}})}
-    if evidence == "inverted":
-        root["support"] = {"type": "array", "items": _object({
-            "sentence": {"type": "string",
-                         "description": "One sentence copied verbatim from the paper."},
-            "fields": {"type": "array", "items": {"type": "string"},
-                       "description": "Paths of the fields it supports: grp_a.age_mean, "
-                       "ana_1.effect.cells[0].direction, study.design.allocation."},
-        })}
     return {**_object(root), "$defs": builder.defs}
 
 
-@lru_cache(maxsize=8)
-def for_single(evidence: str, silence: bool = False) -> dict[str, Any]:
+@lru_cache(maxsize=4)
+def for_single(evidence: str) -> dict[str, Any]:
     """`single` against the extraction schema, built once per run."""
     from pondie.schema import reader
 
-    return single(reader.load(schema.EXTRACTION), evidence, silence)
+    return single(reader.load(schema.EXTRACTION), evidence)
 
 
 def fill(sch: Schema, rows: Sequence[Mapping[str, Any]], cite: bool = False) -> dict[str, Any]:

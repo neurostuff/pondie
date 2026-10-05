@@ -25,7 +25,7 @@ def _objects(node):
 def test_every_object_is_closed_and_requires_every_property():
     """Strict mode refuses a schema where either fails, so the call would be rejected."""
     for evidence in reply_schema.EVIDENCE_FORMATS:
-        for node in _objects(reply_schema.single(_sch(), evidence, silence=True)):
+        for node in _objects(reply_schema.single(_sch(), evidence)):
             assert node["additionalProperties"] is False
             assert sorted(node["required"]) == sorted(node["properties"])
 

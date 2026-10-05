@@ -22,38 +22,12 @@ def test_numbered_marks_every_sentence_and_keeps_the_text():
 def test_a_cited_number_becomes_the_exact_sentence_and_resolves():
     age = _v(34.6, evidence=[3])
     payload = {"groups": [{"local_id": "grp_ptsd", "age_mean": age, "n": _v(12, evidence=[99])}]}
-    notes = cited.expand(payload, "indexed", TEXT)
+    notes = cited.expand(payload, TEXT)
     quote = age["evidence"]["sets"][0]["quotes"][0]
     assert quote == "Their mean age was 34.6 years."
     assert spans.resolve(TEXT, quote).exact
     assert "evidence" not in payload["groups"][0]["n"], "a number naming no sentence cites nothing"
     assert any("name no sentence" in n for n in notes)
-
-
-def test_one_sentence_listed_once_supports_every_field_it_names():
-    payload = {
-        "groups": [{"local_id": "grp_ptsd", "name": _v("PTSD"), "n": _v(12)}],
-        "analyses": [{"local_id": "ana_1", "effect": {"cells": [{"term": "trm_g",
-                                                                 "direction": _v("negative")}]}}],
-        "study": {"design": {"allocation": _v("not_applicable")}},
-        "support": [{"sentence": "Twelve patients (8 females) had PTSD.",
-                     "fields": ["grp_ptsd.name", "grp_ptsd.n", "ana_1.effect.cells[0].direction",
-                                "study.design.allocation", "grp_ptsd.nothing"]}],
-    }
-    notes = cited.expand(payload, "inverted", TEXT)
-    assert "support" not in payload
-    for field in (payload["groups"][0]["n"], payload["study"]["design"]["allocation"],
-                  payload["analyses"][0]["effect"]["cells"][0]["direction"]):
-        assert field["evidence"]["sets"][0]["quotes"] == ["Twelve patients (8 females) had PTSD."]
-    assert any("name no field" in n for n in notes)
-
-
-def test_silent_default_becomes_plain_not_reported():
-    field = {"extraction_status": "not_reported", "unreported_reason": "silent_default"}
-    kept = {"extraction_status": "not_reported", "unreported_reason": "outside_text"}
-    cited.expand({"groups": [{"local_id": "g", "a": field, "b": kept}]}, "quotes", TEXT)
-    assert field == {"extraction_status": "not_reported"}
-    assert kept["unreported_reason"] == "outside_text"
 
 
 def test_a_fill_answer_cites_numbers_and_the_slot_gets_the_sentences():
@@ -81,3 +55,15 @@ def test_results_sentences_about_the_brain_that_no_analysis_cites_are_candidates
     found = cited.unanalysed_results(payload, text)
     shown = [text[a:b] for n, (a, b) in enumerate(cited.sentence_spans(text), 1) if n in found]
     assert shown == ["Controls showed greater activation in the left insula during encoding."]
+
+
+def test_a_recheck_without_sentence_numbers_is_refused():
+    """It needs the citations to know which Results sentences an analysis covers."""
+    import pytest
+
+    from pondie.extraction.models import Settings
+
+    with pytest.raises(ValueError, match="indexed"):
+        Settings(payloads="p", records="r", model="m", recheck_results=True)
+    Settings(payloads="p", records="r", model="m", recheck_results=True,
+             evidence_format="indexed")

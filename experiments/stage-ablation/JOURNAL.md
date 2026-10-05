@@ -1086,3 +1086,8 @@ was re-asked. S2 was stopped at 19/20 (17825801, a gold paper, stuck in those re
 - Explicit silence closes the slots `fill` would re-ask: S1/S2 papers often took one call in
   total, but on some papers the original's `fill` adds 50–140 values the single pass does
   not. S2r (indexed, no silence) tests whether that second look is worth its calls.
+
+Removed after measurement (recoverable from git before the "Prune the S2r workflow"
+commit): the `inverted` evidence format (lower evidence coverage, 3x slower) and
+`explicit_silence` (29% of its `silent_default` claims contradicted by a value the original
+pipeline found, and it closes the slots `fill` re-asks). S1 and S2 above used silence.
