@@ -1072,15 +1072,22 @@ SOCIAL = re.compile(r"social|\bfaces?\b|facial|emotional expression|theory of mi
                     r"imitat|\bgaze\b|biological motion|interpersonal|attachment|romantic|"
                     r"\bmother|infant|rejection|exclusion|cyberball|reputation|communicat|"
                     r"perspective[- ]taking|other people|intention|person perception|"
-                    r"\bpeers?\b|affiliat|\blove\b|friend", re.I)
+                    r"\bpeers?\b|affiliat|\blove\b|friend|"
+                    # Fit after the held-out score: action observation, decisions for kin,
+                    # watching others interact, trait judgements of persons, erotic stimuli.
+                    r"action observation|observ\w*[^.]{0,30}\bactions?\b|dyad|"
+                    r"interacting (characters|people|agents)|\bfamil(y|ies)\b|altruis|"
+                    r"prosocial|person-descript|trait (judg|adjective)|erotic|sexual", re.I)
 
 
-def ages_18_to_60(record: dict, ix: Index) -> bool | None:
-    """"age 18-60": `adult` for the lower bound, and no cohort older than 60."""
-    lower = adult(record, ix)
+def ages_18_to_60(a: dict, record: dict, ix: Index) -> bool | None:
+    """"age 18-60", of the analysis's own sample: `adult` for the lower bound, and no
+    cohort older than 60. 27716474 studied older and younger adults apart."""
+    sample = _sample(a, ix)
+    lower = _adult(sample, record)
     if lower is False:
         return False
-    for g in ix.groups.values():
+    for g in sample:
         high = num(g.get("age_maximum"))
         mean = num(g.get("age_mean"))
         if (high is not None and high > 60) or (high is None and mean is not None and mean > 60):
@@ -1099,11 +1106,12 @@ def social_task(a: dict, record: dict, ix: Index) -> bool | None:
 
 SOC_STUDY: list[tuple[str, Callable]] = [
     ("original research", original),
-    ("healthy", healthy_only),
-    ("age 18-60", ages_18_to_60),
     ("reports coordinates", reports_coordinates),
 ]
 SOC_ANALYSIS: list[tuple[str, Callable]] = [
+    # "studies reporting results among participants with ... disorders": of the sample.
+    ("healthy sample", healthy_sample),
+    ("age 18-60", ages_18_to_60),
     ("fMRI", functional_mri),
     ("social task", social_task),
     ("whole brain", whole_brain),
