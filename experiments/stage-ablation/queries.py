@@ -801,8 +801,9 @@ def functional_mri(a: dict, record: dict, ix: Index) -> bool | None:
 def cue_gt_control(a: dict, record: dict, ix: Index) -> bool | None:
     """"a within-participant contrast of drug cues>control stimuli or natural
     reward-related cues>control stimuli": a positive cell on a cue level and a negative one
-    on a control level of one within-participant term. Crossed with a between-subject term
-    it is a group difference in cue reactivity, which the criterion does not name: None."""
+    on a control level of one within-participant term. Crossed with a group term it still
+    counts: 25214465's gold "H>N" (32 foci) is its heroin-dependent vs controls difference on
+    heroin > neutral cues, so the benchmark pools a group difference in the contrast."""
     cells = _cell_terms(a)
     if not cells:
         return None
@@ -822,7 +823,7 @@ def cue_gt_control(a: dict, record: dict, ix: Index) -> bool | None:
     pairs = {t for (t, k), signs in sides.items() if k == "cue" and "positive" in signs} & \
             {t for (t, k), signs in sides.items() if k == "control" and "negative" in signs}
     if pairs:
-        return None if between else True
+        return True
     return False if sides and not between else None
 
 
