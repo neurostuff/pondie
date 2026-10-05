@@ -81,7 +81,7 @@ def test_the_single_pass_runs_both_halves_payload_repairs():
     assert set(Single().repair_stage) == {"shape", "demands", "satisfy"}
 
 
-def test_a_retry_that_comes_back_empty_does_not_replace_a_good_answer(tmp_path):
+def test_a_retry_that_comes_back_empty_does_not_replace_a_good_answer(tmp_path, caplog):
     """The pass keeps its best attempt, not its last.
 
     The first reply has an analysis and one fault (a reference it does not declare), so it
@@ -106,10 +106,13 @@ def test_a_retry_that_comes_back_empty_does_not_replace_a_good_answer(tmp_path):
 
     settings = Settings(payloads=tmp_path / "p", records=tmp_path / "r", model="m",
                         stages=(StageName.single,))
-    outcome = Single().run(paper, settings, caller)
+    with caplog.at_level("INFO", logger="pondie"):
+        outcome = Single().run(paper, settings, caller)
     written = json.loads(outcome.produced[0].read_text())
     assert [a["local_id"] for a in written["analyses"]] == ["ana_1"]
     assert any("mea_missing" in n for n in outcome.notes)
+    # Each failed attempt is logged as it happens, not only in the notes at the end.
+    assert "S1/single attempt 1/3 failed" in caplog.text and "mea_missing" in caplog.text
 
 
 def _staged(tmp_path):

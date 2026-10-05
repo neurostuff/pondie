@@ -18,6 +18,7 @@ from __future__ import annotations
 import copy
 import functools
 import json
+import logging
 import re
 import shutil
 from dataclasses import dataclass
@@ -43,6 +44,8 @@ from pondie.extraction.evidence import cited
 from pondie.extraction.prompt import preprocess, render, reply_schema, worked
 from pondie.formats import parse_keys, table_parse, text_index, values
 from pondie.schema import reader
+
+log = logging.getLogger("pondie")
 
 #: Written into every record's `extraction_metadata`, so a record says which pipeline made
 #: it. Bump it when a change would make two records incomparable.
@@ -505,6 +508,16 @@ class _ModelPass(_Base):
                 )
             if not failures:
                 break
+            # As it happens, not only in the outcome: a stage can spend most of an hour on
+            # retries, and its notes are written only when it ends.
+            log.info(
+                "%s/%s attempt %d/%d failed: %s",
+                paper.study_id,
+                self.name.value,
+                attempt,
+                settings.attempts,
+                "; ".join(failures)[:300],
+            )
         failures = best_failures if best is not None else failures
 
         if parsed and failures:
@@ -785,6 +798,12 @@ class Single(_ModelPass):
         ]
         if not declared:
             return payload, failures, Cost(), []
+        log.info(
+            "%s/%s completion: asking for %d undeclared entit(ies)",
+            paper.study_id,
+            self.name.value,
+            len(declared),
+        )
         shown = json.dumps(payload.get("analyses") or [], ensure_ascii=False)[:60_000]
         context = (
             render.requirements_block({"required_entities": declared})
