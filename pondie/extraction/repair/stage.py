@@ -117,9 +117,12 @@ class Case:
     names: str = ""
     #: What else an answer writes, by option, on the same owner as `slot`. An answer
     #: settling one half of a contradiction must make the other half agree with it.
-    then: Mapping[str, Callable[[MutableMapping[str, Any]], list[str]]] = field(
+    then: Mapping[str, Callable[[MutableMapping[str, Any], Any], list[str]]] = field(
         default_factory=dict
     )
+    #: False for a case answered only through `then`: `slot` names what it is about, and
+    #: no option is a value to write there.
+    writes: bool = True
 
 
 #: The scope/regions pairs: what volume was searched, and the regions it was restricted to.
@@ -134,12 +137,13 @@ def contradictions(record: Mapping[str, Any], sch: Schema) -> list[Case]:
 
     - a whole-brain or searchlight scope beside named regions, and an ROI scope beside none;
     - a cell level that none of its term's declared levels spells;
-    - an `effect.kind` its own cells contradict.
+    - an `effect.kind` its own cells contradict;
+    - an analysis named "A < B" whose cells sign A above B, or the reverse.
 
     Not dangling references, the largest group a repaired record carries: those come from a
     deletion, and the answer is not to delete rather than to ask.
     """
-    return _scopes(record, sch) + _levels(record) + _kinds(record)
+    return _scopes(record, sch) + _levels(record) + _kinds(record) + _named_directions(record)
 
 
 def _scopes(record: Mapping[str, Any], sch: Schema) -> list[Case]:
@@ -291,7 +295,7 @@ def _withheld(cells: Any, terms: Mapping[str, Any]) -> str | None:
     return derive_effect_kind(withheld, terms)[0]
 
 
-def _withhold_signs(effect: MutableMapping[str, Any]) -> list[str]:
+def _withhold_signs(effect: MutableMapping[str, Any], _span: Any = None) -> list[str]:
     """Mark each `undirected` cell's sign as not reported: a directional test whose
     direction the paper did not print (extraction-readme.md §2)."""
     changed = []
@@ -300,6 +304,116 @@ def _withhold_signs(effect: MutableMapping[str, Any]) -> list[str]:
             cell["direction"] = values.wrap(None, source="reported", evidence="not_applicable")
             changed.append(f"cells[{index}].direction: undirected -> not_reported")
     return changed
+
+
+#: "A < B" or "A > B" in an analysis name, up to a parenthesis or the end. A p-value
+#: threshold ("P < 0.01") is not a comparison, so the right side must start with a letter.
+_NAMED = re.compile(r"^(?P<left>[^<>]*?[A-Za-z][^<>]*?)\s*(?P<op>[<>])\s*(?P<right>[A-Za-z][^<>(]*)")
+_FILLER = {"group", "groups", "the", "and", "vs", "of", "with", "in", "patients", "subjects"}
+_SIGN = {"positive": 1, "negative": -1}
+
+
+def _words(text: Any) -> set[str]:
+    """Content words, singular: the level `control` beside the name's `Controls`."""
+    found = re.findall(r"[a-z0-9]+", str(text or "").lower())
+    return {w[:-1] if len(w) > 3 and w.endswith("s") else w for w in found if w not in _FILLER}
+
+
+def _named_against_cells(name: Any, cells: Any) -> bool:
+    """Whether the name's stated comparison is the reverse of every signed cell's: each
+    cell's level names one side only, and every one carries that side's opposite sign."""
+    found = _NAMED.match(str(name or ""))
+    if not found or not isinstance(cells, list):
+        return False
+    left, right = _words(found["left"]), _words(found["right"])
+    above = 0 if found["op"] == ">" else 1  # the side the comparison puts higher
+    verdicts = []
+    for cell in cells:
+        if not isinstance(cell, Mapping):
+            continue
+        sign = _SIGN.get(values.read(cell.get("direction")))
+        level = _words(values.read(cell.get("level")))
+        if sign is None or not level:
+            continue
+        side = 0 if level & left and not level & right else 1 if level & right and not level & left else None
+        if side is None:
+            return False
+        verdicts.append(sign == (1 if side == above else -1))
+    return len(verdicts) >= 2 and not any(verdicts)
+
+
+def _located(record: Mapping[str, Any], analysis: Mapping[str, Any]) -> str:
+    """" It is row group 3 of Table 3." when the analysis is linked to one; else ""."""
+    key = values.read(analysis.get("source_table_analysis"))
+    tables = {t.get("local_id"): t for t in record.get("tables") or [] if isinstance(t, Mapping)}
+    linked = [tables[t] for t in analysis.get("tables") or [] if t in tables]
+    if not isinstance(key, str) or "#" not in key or len(linked) != 1:
+        return ""
+    label = values.read(linked[0].get("table_number"))
+    if not label:
+        return ""
+    label = label if str(label).lower().startswith("table") else f"Table {label}"
+    return f" It is row group {key.rpartition('#')[2]} of {label}."
+
+
+def _named_directions(record: Mapping[str, Any]) -> list[Case]:
+    out: list[Case] = []
+    for analysis in record.get("analyses") or []:
+        if not isinstance(analysis, Mapping) or not isinstance(analysis.get("effect"), Mapping):
+            continue
+        name = values.read(analysis.get("name"))
+        if not _named_against_cells(name, analysis["effect"].get("cells")):
+            continue
+        out.append(
+            Case(
+                id=f"analyses/{analysis.get('local_id')}/effect.cells.direction",
+                question=(
+                    f"Analysis {name!r} is named for one direction of comparison, and its "
+                    f"cells sign the levels the other way.{_located(record, analysis)} "
+                    f"Which does the paper report: "
+                    f"'name' (the cells' signs are reversed) or 'cells' (the name is)? Quote "
+                    f"what states the direction of THIS comparison -- its table row or "
+                    f"heading, or its sentence -- not another contrast's result. A contrast "
+                    f"that found nothing keeps the signs of what was tested."
+                ),
+                options=("name", "cells"),
+                container="analyses",
+                local_id=str(analysis.get("local_id")),
+                slot="effect",
+                then={"name": _reverse_signs, "cells": _reverse_name},
+                writes=False,
+            )
+        )
+    return out
+
+
+def _reverse_signs(analysis: MutableMapping[str, Any], span: Any = None) -> list[str]:
+    """Swap every signed cell's direction, cited by the adjudicated sentence."""
+    changed = []
+    for index, cell in enumerate((analysis.get("effect") or {}).get("cells") or []):
+        sign = values.read(cell.get("direction")) if isinstance(cell, Mapping) else None
+        if sign not in _SIGN:
+            continue
+        flipped = "negative" if sign == "positive" else "positive"
+        cell["direction"] = {
+            "extraction_status": "extracted",
+            "value": flipped,
+            "value_source": "reported",
+            "evidence": {"status": "present", "sets": [{"source": "repair_pass", "spans": [span]}]},
+        }
+        changed.append(f"cells[{index}].direction: {sign} -> {flipped}")
+    return changed
+
+
+def _reverse_name(analysis: MutableMapping[str, Any], _span: Any = None) -> list[str]:
+    """Swap the comparison in the analysis's name: the cells are right and it is not."""
+    name = analysis.get("name")
+    text = values.read(name)
+    if not isinstance(name, dict) or not isinstance(text, str):
+        return []
+    swapped = text.translate(str.maketrans("<>", "><"))
+    name["value"] = swapped
+    return [f"name: {text!r} -> {swapped!r}"]
 
 
 def _descend(entity: Any, path: tuple[str | int, ...]) -> MutableMapping[str, Any] | None:
@@ -455,9 +569,10 @@ def adjudicate(
         if case.names and value not in UNRESTRICTED:
             _name_regions(record, sch, entity, case, row, text, quote, abbreviations, report)
             continue
-        if values.read(owner.get(case.slot)) == value:
-            also = case.then[value](owner) if value in case.then else []
-            report.adjudicated.append(f"{case.id}: kept {value}" + "".join(f"; {a}" for a in also))
+        if not case.writes or values.read(owner.get(case.slot)) == value:
+            also = case.then[value](owner, span) if value in case.then else []
+            said = f"kept {value}" if case.writes else value
+            report.adjudicated.append(f"{case.id}: {said}" + "".join(f"; {a}" for a in also))
             answered.append(case.id)
             continue
         # Through the guards, like every other write. Coercing a cited free-text scope to a
@@ -481,7 +596,7 @@ def adjudicate(
         }
         if case.clears and value in UNRESTRICTED:
             owner[case.clears] = []
-        also = case.then[value](owner) if value in case.then else []
+        also = case.then[value](owner, span) if value in case.then else []
         report.adjudicated.append(f"{case.id}: {value}" + "".join(f"; {a}" for a in also))
         answered.append(case.id)
     # An answer counts only if the contradiction it answered is gone. "kept contrast" on

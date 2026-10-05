@@ -19,7 +19,8 @@ TEXT = (
     "Hippocampal and amygdala volumes were manually traced on each T1 image. "
     "Left hippocampal volume was smaller in PTSD than in healthy controls. "
     "The PTSD group showed greater activation than the control group. "
-    "There was no significant difference in hippocampal volume between the groups."
+    "There was no significant difference in hippocampal volume between the groups. "
+    "Grey matter volume was reduced in PTSD relative to controls."
 )
 
 
@@ -629,3 +630,47 @@ def test_a_model_with_its_own_same_named_term_is_repointed_not_given_a_copy():
     [wb] = [m for m in record["model_estimations"] if m["local_id"] == "mod_wb"]
     assert [t["local_id"] for t in wb["terms"]] == ["trm_group_wb"]
     assert {c["term"] for c in record["analyses"][0]["effect"]["cells"]} == {"trm_group_wb"}
+
+
+def _named(name, ptsd, control):
+    record = _effect_record("control group", "contrast")
+    analysis = record["analyses"][0]
+    analysis["name"] = _v(name)
+    analysis["effect"]["cells"] = [
+        {"term": "trm_group", "level": _v("PTSD"), "direction": _v(ptsd)},
+        {"term": "trm_group", "level": _v("control group"), "direction": _v(control)}]
+    return record
+
+
+REDUCED = "Grey matter volume was reduced in PTSD relative to controls."
+
+
+@pytest.mark.parametrize("name, ptsd, control, raised", [
+    ("PTSD < controls", "positive", "negative", True),      # 21418787: signs reversed
+    ("PTSD < controls", "negative", "positive", False),
+    ("PTSD vs controls, P < 0.01 corrected", "positive", "negative", False),  # a threshold
+])
+def test_a_name_stating_the_reverse_of_the_cells_is_a_case(name, ptsd, control, raised):
+    cases = [c for c in stage.contradictions(_named(name, ptsd, control), _sch())
+             if c.id.endswith("direction")]
+    assert bool(cases) is raised
+
+
+def test_answering_name_reverses_the_cells_signs():
+    record = _named("PTSD < controls", "positive", "negative")
+    [case] = [c for c in stage.contradictions(record, _sch()) if c.id.endswith("direction")]
+    caller, _ = _answering({"id": case.id, "value": "name", "quote": REDUCED})
+    report = _adjudicate(record, caller)
+    cells = record["analyses"][0]["effect"]["cells"]
+    assert [values.read(c["direction"]) for c in cells] == ["negative", "positive"]
+    assert not any("still contradicted" in line for line in report.adjudicated)
+
+
+def test_answering_cells_reverses_the_names_comparison():
+    """30343133: the parse titled it 'PTSD > TD', the cells agreed, the name said '<'."""
+    record = _named("PTSD < controls", "positive", "negative")
+    [case] = [c for c in stage.contradictions(record, _sch()) if c.id.endswith("direction")]
+    caller, _ = _answering({"id": case.id, "value": "cells", "quote": REDUCED})
+    _adjudicate(record, caller)
+    assert values.read(record["analyses"][0]["name"]) == "PTSD > controls"
+    assert values.read(record["analyses"][0]["effect"]["cells"][0]["direction"]) == "positive"

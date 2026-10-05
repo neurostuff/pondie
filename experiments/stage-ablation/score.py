@@ -165,6 +165,9 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool,
             foci_hit += sum(any(gold.near(g, q) for q in selected) for g in gpts)
             foci_sel += len(selected)
             foci_sel_gold += sum(any(gold.near(q, g) for g in gpts) for q in selected)
+            if detail and gpts:
+                hit = sum(any(gold.near(g, q) for q in selected) for g in gpts)
+                print(f"  foci {pmid}: {hit}/{len(gpts)} gold found, {len(selected)} selected")
 
     def rate(label, key):
         group = [r for _, lab, r in rows if lab == label]
