@@ -154,8 +154,12 @@ wording does not say, which is `UNKNOWN`.
 The negation rule is decisive and first: "not pre-registered" contains "pre-registered". Same
 case as `medication_status`. Seeded from the vocabulary's synonyms, same reason as `modality`.
 
-Bare `planned` says what "planned comparison" says and `hypothesis-led` says what
-"hypothesis-driven" says; both are in. What is left over 1,817 records is 8 mangled spellings of
+`preregistered` is a record outside the paper (a registry entry, a registered report, a
+published protocol); `planned` is the paper's own account that the contrast was fixed in
+advance. They were one value until 7 of 51 extracted analyses on the PTSD benchmark were
+written `preregistered` for "planned contrasts" and "we predicted", and 10 more fell back to
+free text ("planned", "hypothesis-driven"). Bare `planned` says what "planned comparison" says
+and `hypothesis-led` says what "hypothesis-driven" says; both go to `planned`. What is left over 1,817 records is 8 mangled spellings of
 the permissible value itself — `prereglstered`, `prere_registered`, `preregestistered` — and
 those are **not** absorbed here. No paper wrote them; a model mangling an enum value is an
 extraction defect, and a lexicon that quietly accepts it hides the defect and invites the next
