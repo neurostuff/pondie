@@ -1706,3 +1706,28 @@ draw.
 | dementia | held out for S2r | 23/25 | 0.96 | 16/25 (8 gold papers' coordinate tables missing from the corpus) |
 | substance use | developed earlier | 21-22/23 | 0.85-0.91 | same |
 | cue reactivity | held out (9/25, 0.64), then fit | 19/25 | 0.70 | 16/25 |
+
+## Decision making (Poudel 2020, 32078973): a fifth meta-analysis, held out
+
+Chosen from autonima's projects for criteria a record can answer: English fMRI (PET
+excluded), whole brain (ROI excluded), coordinates, by 3/2019, any population. The
+criterion that needs judgement is the task: risky, ambiguous or perceptual decision making,
+read off the analysis's task name, description and conditions (`DECISION`). Executive
+function (22282036) was passed over: its benchmark row carries the criteria of the
+nicotine-administration meta-analysis, a data error in neurometabench.
+
+**Query** committed before any record (`5fde88e`).
+
+**Pool:** `make_pool.py`, seed 0. Ten of the draw (5 gold, 5 negatives) had no text in the
+catalog or the old corpus. They were replaced from the same strata (gold; autonima-included;
+other screened) with seed 1, taking the first candidates that have text. So this pool is 25
+gold and 30 negatives with text, not a pure seed-0 draw.
+
+Run: `dm55_s2r` (code `476deaa`, every fix so far).
+
+**Cue reactivity, one more query change.** 27459715's cues are beer-flavour sprays
+(gustatory), and the second draw recorded the task as gustatory + visual, so it passed
+`visual cues`. A visual channel beside a gustatory, olfactory or tactile one now answers
+None, following the criterion: "other sensory cues ... were not considered". Scores are
+unchanged, because `visual cues` is not a required criterion and None passes veto. Making
+it required would also fail the 2 gold papers whose modality is unrecorded.
