@@ -826,6 +826,13 @@ table -- "reduced grey matter in patients compared to controls (Figure 1, Table 
 tested effect with a direction and an `outcome`, and it has no listing entry because its
 table never reached this text. A paper's group comparison is often reported this way while
 its main tables hold covariate analyses; do not let the tables decide what was tested.
+
+A comparison between groups OF a within-participant contrast -- patients versus controls on
+drug cues > neutral cues, users versus non-users on food > non-food -- cells BOTH factors:
+the group levels, signed, and the condition levels, signed, each on its own term. The
+condition term is the first-level stage's (reach it through `inputs_from`) or the condition
+factor of the same model. Leaving the condition cells out records a group difference in an
+unnamed map and loses which contrast was compared.
 """
 
 MODE_NOTE = {"demands": DEMANDS_NOTE, "satisfy": SATISFY_NOTE, "single": SINGLE_NOTE}
