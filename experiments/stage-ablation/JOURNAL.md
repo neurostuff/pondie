@@ -1865,3 +1865,26 @@ coordinates. The misses are query gaps, read before any change:
   clinical case report with a single-subject experiment. The problem-solving criteria have
   no original-research clause at all.
 - 23883107: `within-participant increase`=None.
+
+## Social processing (36436737): a seventh meta-analysis, held out (partial)
+
+**Query (`081d288`):** fMRI during a social task (`SOCIAL`), healthy participants (no cohort
+asserts a disorder), aged 18-60, whole brain. **Pool:** 7 papers without text replaced from
+their strata. Flex capacity failures slowed both late runs badly. With 37 of 55 social
+records in, held out:
+
+| | veto recall | precision | inputs-only recall |
+|---|---|---|---|
+| social, held out, 37/55 records | 16/20 | 0.84 | 14/20 |
+| problem solving, held out, 51/55 records | 18/23 | 0.69 | 18/23 |
+
+Social misses: three gold papers whose task `SOCIAL` does not recognise (18783371,
+21703352, 23813661), and one `age 18-60`=False (27716474). Not yet diagnosed or changed.
+
+### Flex capacity
+
+Seven papers across the night's runs failed with flex's 429 "does not have sufficient
+resources" or read timeouts. The client gave up after 4 tries within about two minutes,
+while a capacity shortage lasts much longer. That error now gets 8 tries spaced 30 s
+doubling to 10 min, about 45 minutes in all (`b08baf1`). The failed papers are to be
+resumed into their runs.
