@@ -177,7 +177,10 @@ def test_keeping_a_contrast_marks_its_undirected_signs_not_reported():
     caller, _ = _answering({"id": case.id, "value": "contrast", "quote": NULL})
     report = _adjudicate(record, caller)
     cells = record["analyses"][0]["effect"]["cells"]
-    assert [c["direction"] for c in cells] == [{"extraction_status": "not_reported"}] * 2
+    assert [c["direction"]["extraction_status"] for c in cells] == ["not_reported"] * 2
+    validator = Validator(_sch(), None)
+    validator.check_record(record)
+    assert not [e for e in validator.errors if "direction" in e or "effect.kind" in e]
     assert not [c for c in stage.contradictions(record, _sch()) if c.slot == "kind"]
     assert report.adjudicated[0].startswith(f"{case.id}: kept contrast; cells[0].direction")
 

@@ -275,6 +275,9 @@ def _kinds(record: Mapping[str, Any]) -> list[Case]:
     return out
 
 
+_NOT_REPORTED = values.wrap(None, source="reported", evidence="not_applicable")
+
+
 def _undirected(cell: Any) -> bool:
     return isinstance(cell, Mapping) and values.read(cell.get("direction")) == "undirected"
 
@@ -284,7 +287,7 @@ def _withheld(cells: Any, terms: Mapping[str, Any]) -> str | None:
     every cell is undirected; else None."""
     if not cells or not all(_undirected(c) for c in cells):
         return None
-    withheld = [{**c, "direction": {"extraction_status": "not_reported"}} for c in cells]
+    withheld = [{**c, "direction": _NOT_REPORTED} for c in cells]
     return derive_effect_kind(withheld, terms)[0]
 
 
@@ -294,7 +297,7 @@ def _withhold_signs(effect: MutableMapping[str, Any]) -> list[str]:
     changed = []
     for index, cell in enumerate(effect.get("cells") or []):
         if _undirected(cell):
-            cell["direction"] = {"extraction_status": "not_reported"}
+            cell["direction"] = values.wrap(None, source="reported", evidence="not_applicable")
             changed.append(f"cells[{index}].direction: undirected -> not_reported")
     return changed
 

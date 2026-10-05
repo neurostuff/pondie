@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pondie import paths
 from pondie.extraction.llm import GatewayCaller, load_env
 from pondie.extraction.models import Paper, Settings, StageName
-from pondie.extraction.record.validate import EXTRACTION_SCHEMA
+from pondie.extraction.record.validate import EXTRACTION_SCHEMA, Validator
 from pondie.extraction.repair import stage
 from pondie.formats import text_index
 from pondie.schema import reader
@@ -42,12 +42,15 @@ def main() -> int:
     def one(path):
         pmid = path.name.split(".")[0]
         record = json.loads(path.read_text())
+        before = json.loads(json.dumps(record))
         text, _digest, _sections = text_index.load(Paper.best(pmid, dst / "corpus").text)
         report = stage.Report()
         cases = len(stage.contradictions(record, sch))
         reply = stage.adjudicate(record, sch, text, caller, study_id=pmid, model=MODEL,
                                  report=report, service_tier="flex", effort=effort,
                                  abbreviations=stage._abbreviations(text, pmid))
+        # As `stage.run` does: an answer that breaks the record is reported, not trusted.
+        report.introduced = Validator(sch, text).diff(before, record)
         (dst / "records" / path.name).write_text(json.dumps(record, indent=1))
         return pmid, cases, report, reply
 
@@ -58,6 +61,8 @@ def main() -> int:
             for line in report.adjudicated:
                 tally[line.split(": ", 1)[1].split(",")[0].split(" ")[0]] += 1
             print(f"{pmid}: {cases} case(s); " + "; ".join(report.adjudicated)[:400], flush=True)
+            for finding in report.introduced:
+                print(f"    introduced: {finding}", flush=True)
             for refusal in report.refused:
                 print(f"    refused {refusal.slot}: {refusal.why}", flush=True)
     print(f"\n{calls} call(s); outcomes: {dict(tally)}")
