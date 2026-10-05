@@ -140,6 +140,54 @@ def align_cell_levels(body: dict[str, Any], text: str = "") -> list[str]:
     return fixed
 
 
+def complete_condition_levels(body: dict[str, Any]) -> list[str]:
+    """Declare a condition factor's level that a cell names and the term left out.
+
+    24695721 cells cocaine, sexual and aversive cues against neutral cues on one term, and
+    the term declares only the first three. The record declares `cond_neutral` ("neutral
+    cues"), so the missing level is that condition's. Only on a term whose every level
+    carries a condition, for a cell level folding to exactly one condition no other level of
+    the term holds: "cocaine vs neutral" names no condition and is still reported.
+    """
+    conditions: dict[str, list[str]] = {}
+    for task in body.get("tasks") or []:
+        for condition in (task.get("conditions") or []) if isinstance(task, Mapping) else []:
+            if isinstance(condition, Mapping) and isinstance(condition.get("local_id"), str):
+                folded = span_tools.fold_label(str(values.read(condition.get("name")) or ""))
+                if folded:
+                    conditions.setdefault(folded, []).append(condition["local_id"])
+    models = {
+        m.get("local_id"): m for m in body.get("model_estimations") or [] if isinstance(m, Mapping)
+    }
+    fixed: list[str] = []
+    for analysis in body.get("analyses") or []:
+        if not isinstance(analysis, Mapping):
+            continue
+        scope = terms_in_scope(analysis.get("model_estimation"), models)
+        for cell in (analysis.get("effect") or {}).get("cells") or []:
+            if not isinstance(cell, Mapping):
+                continue
+            term, level = scope.get(cell.get("term")), values.read(cell.get("level"))
+            if not isinstance(term, dict) or not isinstance(level, str):
+                continue
+            levels = [lv for lv in term.get("levels") or [] if isinstance(lv, Mapping)]
+            if not levels or not all(walk.ids_of(lv.get("conditions")) for lv in levels):
+                continue
+            names = {span_tools.fold_label(str(values.read(lv.get("level")) or "")) for lv in levels}
+            folded = span_tools.fold_label(level)
+            match = conditions.get(folded, [])
+            held = {c for lv in levels for c in walk.ids_of(lv.get("conditions"))}
+            if folded in names or len(match) != 1 or match[0] in held:
+                continue
+            term["levels"].append({
+                "level": values.wrap(level, source="generated", evidence="not_found"),
+                "conditions": [match[0]],
+            })
+            fixed.append(f"{term.get('local_id')}: declared level {level!r} ({match[0]}), "
+                         f"which a cell names")
+    return fixed
+
+
 def link_entities_by_name(body: dict[str, Any], sch: Schema) -> list[str]:
     """Write a reference where a name settles which entity it means.
 

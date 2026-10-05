@@ -282,6 +282,15 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
+            "condition_levels",
+            "declare a condition factor's level a cell names and the term left out",
+            lambda body, ctx: link.complete_condition_levels(body),
+            # After `cell_levels`, so a level that is a spelling of a declared one is aligned,
+            # not declared a second time.
+            after="cell_levels",
+            stage="merged",
+        ),
+        Repair(
             "scoped_terms",
             "scope two models' identically-named terms by their model",
             lambda body, ctx: link.scope_duplicate_terms(body, ctx.schema),

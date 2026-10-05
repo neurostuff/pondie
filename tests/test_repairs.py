@@ -966,3 +966,29 @@ def test_an_object_with_one_value_is_kept():
         "cells": [], "mediation": {"mediator": "trm_x", "path": {
             "extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}}}}]}
     assert fix.shape.drop_vacuous_objects(body, _SCH) == []
+
+
+def _cue_body(cell_level):
+    cond = lambda cid, name: {"local_id": cid, "name": _wrapped(name)}
+    return {
+        "tasks": [{"local_id": "task", "conditions": [cond("cond_cocaine", "cocaine cues"),
+                                                     cond("cond_neutral", "neutral cues")]}],
+        "model_estimations": [{"local_id": "m", "terms": [{
+            "local_id": "trm_cue", "type": _wrapped("categorical"),
+            "levels": [{"level": _wrapped("cocaine cues"), "conditions": ["cond_cocaine"]}]}]}],
+        "analyses": [{"local_id": "a", "model_estimation": "m", "effect": {"cells": [
+            {"term": "trm_cue", "level": _wrapped("cocaine cues"), "direction": _wrapped("positive")},
+            {"term": "trm_cue", "level": _wrapped(cell_level), "direction": _wrapped("negative")}]}}],
+    }
+
+
+def test_a_condition_level_a_cell_names_is_declared():
+    """24695721: 'neutral cues' celled against the cue types, missing from the term."""
+    body = _cue_body("neutral cues")
+    assert fix.link.complete_condition_levels(body)
+    levels = body["model_estimations"][0]["terms"][0]["levels"]
+    assert levels[-1]["conditions"] == ["cond_neutral"]
+
+
+def test_a_contrast_label_is_not_declared_a_level():
+    assert fix.link.complete_condition_levels(_cue_body("cocaine vs neutral")) == []
