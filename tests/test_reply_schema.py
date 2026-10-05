@@ -56,9 +56,30 @@ def test_a_type_designated_slot_offers_each_subclass_with_its_name_fixed():
 def test_fill_answers_each_asked_id_with_a_typed_value_or_a_reason():
     rows = [{"id": "groups[g].age_mean", "range": "float", "ranges": ["float"],
              "multivalued": False}]
-    answer = reply_schema.fill(_sch(), rows)["properties"]["groups[g].age_mean"]["anyOf"]
+    schema = reply_schema.fill(_sch(), rows)
+    answer = schema["properties"]["groups[g].age_mean"]["anyOf"]
     assert answer[0]["properties"]["value"] == {"type": "number"}
-    assert "silent_default" in answer[1]["properties"]["unreported_reason"]["enum"]
+    reason = answer[1]["properties"]["unreported_reason"]["$ref"].rsplit("/", 1)[1]
+    assert "silent_default" in schema["$defs"][reason]["enum"]
+
+
+def _enum_values(node):
+    if isinstance(node, dict):
+        return len(node.get("enum", [])) + sum(_enum_values(v) for v in node.values())
+    if isinstance(node, list):
+        return sum(_enum_values(v) for v in node)
+    return 0
+
+
+def test_a_full_fill_batch_stays_under_the_strict_enum_limit():
+    """250 rows each repeated the reasons: 14 of 55 PTSD papers' batches passed 1,000 enum
+    values and the gateway rejected the schema."""
+    rows = [{"id": f"analyses[a{i}].effect.cells[0].direction", "range": "Direction",
+             "ranges": ["Direction"], "multivalued": False} for i in range(250)]
+    inline = sum(_enum_values(reply_schema._value_type(_sch(), ["Direction"], False))
+                 for _ in rows)
+    assert inline == 1000, "inline, the direction enum alone reaches the limit"
+    assert _enum_values(reply_schema.fill(_sch(), rows)) < 100
 
 
 def test_a_call_with_a_schema_asks_for_it_strictly_and_reads_null_as_absent():

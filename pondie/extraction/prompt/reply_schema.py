@@ -160,6 +160,28 @@ def for_single(evidence: str) -> dict[str, Any]:
     return single(reader.load(schema.EXTRACTION), evidence)
 
 
+def _shared_enums(node: Any, defs: dict[str, Any]) -> Any:
+    """`node` with every enum-bearing type moved to `defs` once and referenced.
+
+    Strict decoding allows 1,000 enum values per schema. A `fill` batch of 250 rows repeated
+    the five unreported reasons in every row: 14 of 55 PTSD papers' first batches carried
+    over 1,000, and the gateway rejected them, so `fill` ran unconstrained.
+    """
+    if isinstance(node, dict):
+        if "enum" in node:
+            key = f"enum{len(defs)}"
+            for name, existing in defs.items():
+                if existing == node:
+                    key = name
+                    break
+            defs.setdefault(key, node)
+            return {"$ref": f"#/$defs/{key}"}
+        return {k: _shared_enums(v, defs) for k, v in node.items()}
+    if isinstance(node, list):
+        return [_shared_enums(v, defs) for v in node]
+    return node
+
+
 def fill(sch: Schema, rows: Sequence[Mapping[str, Any]], cite: bool = False) -> dict[str, Any]:
     """The `fill` reply: every asked id, answered with a value of its type or a reason.
     `cite` adds the numbers of the sentences that state a value (`evidence.cited`)."""
@@ -172,7 +194,9 @@ def fill(sch: Schema, rows: Sequence[Mapping[str, Any]], cite: bool = False) -> 
             value["evidence"] = {"type": "array", "items": {"type": "integer"}}
         answers[row["id"]] = {"anyOf": [_object(value),
                                         _object({"unreported_reason": reasons})]}
-    return _object(answers)
+    defs: dict[str, Any] = {}
+    shaped = _shared_enums(_object(answers), defs)
+    return {**shaped, "$defs": defs} if defs else shaped
 
 
 def evidence(ids: Sequence[str]) -> dict[str, Any]:
