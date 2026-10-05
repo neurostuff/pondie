@@ -1049,11 +1049,9 @@ class _Reference:
         return f"{self.slot.path}: {self.id!r} -> {target!r}"
 
 
-def _dangling(body: dict[str, Any], sch: Schema, declared: Mapping[str, str]):
-    for slot in walk.references(body, sch):
-        for position, local_id in enumerate(walk.ids_of(slot.value)):
-            if local_id not in declared:
-                yield _Reference(slot=slot, position=position, id=local_id)
+def _dangling(body: dict[str, Any], sch: Schema):
+    for slot, position, local_id in walk.dangling_references(body, sch):
+        yield _Reference(slot=slot, position=position, id=local_id)
 
 
 def _transcription_slip(reference: _Reference, declared: Mapping[str, str]) -> str | None:
@@ -1131,7 +1129,7 @@ def repair_references(body: dict[str, Any], sch: Schema) -> list[str]:
 
     proposed: dict[_Reference, str] = {}
     slips: dict[_Reference, str] = {}
-    for reference in _dangling(body, sch, declared):
+    for reference in _dangling(body, sch):
         slip = _transcription_slip(reference, declared)
         if slip:
             slips[reference] = slip
@@ -1233,12 +1231,7 @@ def check_local_ids(body: dict[str, Any], sch: Schema) -> list[str]:
     ExtractedString, and Predictor.source is a nested object, not a reference.
     """
 
-    # Collected by walking, not by iterating the Study lists: ModelTerm lives under
-    # `model_estimations[].terms` and Condition under `tasks[].conditions`, so a
-    # top-level sweep declares neither and every `Cell.term` and
-    # `FactorLevel.conditions` reference reads as dangling when it is in fact fine.
-    declared: set[str] = set()
-    # Counted as well as collected: a reference resolves to a *set* membership, so two
+    # Counted: a reference resolves to a *set* membership, so two
     # entities sharing a local_id both "resolve" and nothing downstream can tell which
     # one a Cell.term meant. Sibling model estimations that share covariate names --
     # term_age, term_sex -- produce this without anything looking wrong.
@@ -1249,7 +1242,6 @@ def check_local_ids(body: dict[str, Any], sch: Schema) -> list[str]:
             if values.is_field(node):
                 return
             if isinstance(node.get("local_id"), str):
-                declared.add(node["local_id"])
                 times[node["local_id"]] = times.get(node["local_id"], 0) + 1
             for value in node.values():
                 collect(value)
@@ -1264,36 +1256,10 @@ def check_local_ids(body: dict[str, Any], sch: Schema) -> list[str]:
         if count > 1
     ]
 
-    def visit(node: Any, class_name: str, path: str) -> None:
-        if not isinstance(node, dict) or values.is_field(node):
-            return
-        # Without resolving the designator, every reference declared on a payload subclass
-        # -- the seed and target regions of a ConnectivityDetails -- is never visited, so a
-        # dangling one reads as fine.
-        class_name = sch.designated_type(node, class_name)
-        attributes = sch.attributes(class_name)
-        for key, value in node.items():
-            attribute = attributes.get(key)
-            if attribute is None:
-                continue
-            here = f"{path}.{key}"
-            kind = sch.classify(key, attribute)
-            if kind == "reference":
-                refs = (
-                    [value] if isinstance(value, str) else value if isinstance(value, list) else []
-                )
-                for ref in refs:
-                    if isinstance(ref, str) and ref and ref not in declared:
-                        problems.append(f"{here} -> unknown local_id {ref!r}")
-            elif kind == "nested":
-                target = attribute.range
-                if isinstance(target, str):
-                    for index, item in enumerate(value if isinstance(value, list) else [value]):
-                        suffix = f"[{index}]" if isinstance(value, list) else ""
-                        visit(item, target, f"{here}{suffix}")
-
-    # From Study rather than from the entity lists, so that references living under a
-    # non-list slot -- `design.arms[].`, and anything added there later -- are checked
-    # too. `_entity_lists()` holds dotted paths that `body.get()` cannot resolve.
-    visit(body, "Study", "Study")
+    # The walk is `walk`'s: from Study, through the type designator, so a reference under
+    # a non-list slot or on a payload subclass is checked too.
+    problems += [
+        f"{slot.path} -> unknown local_id {name!r}"
+        for slot, _position, name in walk.dangling_references(body, sch)
+    ]
     return problems

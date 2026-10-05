@@ -205,15 +205,24 @@ def repoint(
     return changed
 
 
+def dangling_references(
+    body: dict, schema: Schema, *, root: str = "Study"
+) -> Iterator[tuple[Slot, int, str]]:
+    """(slot, position in it, id) for every reference naming an id no entity declares.
+
+    The one definition of "dangling": `dangling` counts it, `fix.link`'s reference repair
+    and `check_local_ids`' report read it, and `apply_all` compares it around each repair.
+    """
+    declared = declared_ids(body, schema, root=root)
+    for slot in references(body, schema, root=root):
+        for position, name in enumerate(ids_of(slot.value)):
+            if name not in declared:
+                yield slot, position, name
+
+
 def dangling(body: dict, schema: Schema, *, root: str = "Study") -> Counter[str]:
     """The referenced ids no entity declares, with how many references name each."""
-    declared = declared_ids(body, schema, root=root)
-    return Counter(
-        name
-        for slot in references(body, schema, root=root)
-        for name in ids_of(slot.value)
-        if name not in declared
-    )
+    return Counter(name for _slot, _position, name in dangling_references(body, schema, root=root))
 
 
 def ids_of(value: Any) -> list[str]:
