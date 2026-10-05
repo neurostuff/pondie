@@ -865,3 +865,21 @@ def test_a_coordinate_set_keyed_by_its_tables_local_id_takes_the_parse_key(tmp_p
     notes = fix.derive.rekey_coordinate_sets(body, stage1, table_map)
     assert [s["local_id"] for s in body["coordinate_sets"]] == ["823#1", "tbltable2#2", "text#1"]
     assert len(notes) == 1, "a key the parse lacks, and a text set, are left alone"
+
+
+def test_a_level_differing_only_by_a_hyphen_is_aligned():
+    """17825801: `combat exposed` against the declared `combat-exposed`, 12 cells."""
+    from pondie.extraction.record.fix import link
+
+    body = {
+        "model_estimations": [{"local_id": "m", "terms": [{
+            "local_id": "t", "type": _wrapped("categorical"),
+            "levels": [{"level": _wrapped("combat-exposed")}, {"level": _wrapped("combat-unexposed")}]}]}],
+        "analyses": [{"local_id": "a", "model_estimation": "m", "effect": {"cells": [
+            {"term": "t", "level": _wrapped("combat exposed")},
+            {"term": "t", "level": _wrapped("PTSD twin pairs")}]}}],
+    }
+    link.align_cell_levels(body)
+    cells = body["analyses"][0]["effect"]["cells"]
+    assert cells[0]["level"]["value"] == "combat-exposed"
+    assert cells[1]["level"]["value"] == "PTSD twin pairs", "a longer name is not a spelling"

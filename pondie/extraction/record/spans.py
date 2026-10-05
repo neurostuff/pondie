@@ -80,16 +80,17 @@ def fold_label(value: str) -> str:
 
     `Cell.level` joins to `FactorLevel.level` on the string, and extraction-readme.md §3
     invariant 3 asks that the comparison use the same normalization the mapper applies. That
-    is this: `fold`, then collapse whitespace runs, then casefold. Deliberately narrow --
-    only differences that cannot be semantic. `Healthy controls` and `healthy controls` are
-    the same level; `AD` and `AD group` are not, and calling them equal here would hide the
-    join failure rather than report it.
+    is this: `fold`, then hyphens and dashes as spaces, then collapse whitespace runs, then
+    casefold. Deliberately narrow -- only differences that cannot be semantic. `Healthy
+    controls` and `healthy controls` are the same level, as are `combat exposed` and
+    `combat-exposed` (17825801); `AD` and `AD group` are not, and calling them equal here
+    would hide the join failure rather than report it.
 
     Not `fold`, and it must not be used where an offset survives the call: collapsing
     whitespace changes the length, which is the one thing `fold` promises never to do.
     """
 
-    return re.sub(r"\s+", " ", fold(value)).strip().casefold()
+    return re.sub(r"[\s\-\u2010-\u2015]+", " ", fold(value)).strip().casefold()
 
 
 def _tolerant_pattern(quote: str, *, ignore_case: bool = False) -> re.Pattern[str]:
