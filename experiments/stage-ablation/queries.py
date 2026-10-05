@@ -127,6 +127,10 @@ class Index:
                        if isinstance(m, dict)}
         self.assessments = {a.get("local_id"): a for a in record.get("assessments") or []
                             if isinstance(a, dict)}
+        self.tasks = {t.get("local_id"): t for t in record.get("tasks") or []
+                      if isinstance(t, dict)}
+        self.conditions = {c.get("local_id"): c for t in self.tasks.values()
+                           for c in t.get("conditions") or [] if isinstance(c, dict)}
         self.terms = {}
         for m in self.models.values():
             for t in m.get("terms") or []:
@@ -687,6 +691,122 @@ SUD_ANALYSIS: list[tuple[str, Callable]] = [
 SUD_REQUIRED = ("structural MRI", "grey matter, voxel-wise", "users vs controls")
 
 
+# ------------------------------------------- cue reactivity (Hill-Bowen 2021, 34400176)
+#
+# Written from the criteria text alone, before any cue-reactivity record was extracted:
+#
+#   "First, only empirical English language fMRI studies assessing drug or natural
+#   reward-related cue-reactivity using visual stimuli were included (other sensory cues
+#   [e.g., gustatory, olfactory, tactile] were not considered). Second, only studies
+#   reporting activity foci as 3D coordinates (X, Y, Z) in Talairach or Montreal
+#   Neurological Institute (MNI) stereotaxic space were included (studies involving regions
+#   of interest [ROIs] derived from a brain parcellation scheme were excluded given the
+#   absence of coordinates). Third, experiments reporting coordinates from whole-brain or
+#   small-volume corrected analyses involving a within-participant contrast of drug
+#   cues>control stimuli or natural reward-related cues>control stimuli were included."
+#   Exclusion: "1) ROI". Dates: "- 8/1/2020". Analyses: pooled, drug, natural.
+#
+# A small-volume correction is a correction over an ROI on a whole-brain model, so
+# `whole_brain` already admits it; an ROI *analysis* is excluded.
+
+CUE = re.compile(r"drug|alcohol|beer|wine|liquor|smok|cigarette|tobacco|nicotine|cocaine|"
+                 r"crack|heroin|opioid|opiate|cannabis|marijuana|methamphetamine|amphetamine|"
+                 r"gambl|food|meal|snack|palatable|sweet|chocolate|sex|erotic|porn|nude|"
+                 r"romantic|reward|money|monetary|appetitive|craving", re.I)
+CONTROL = re.compile(r"neutral|control|non[- ]?(drug|food|alcohol|smok|cue|sex|erotic|reward)|"
+                     r"scrambled|household|object|furniture|tool|landscape|nature|water|"
+                     r"office|blurred|mosaic", re.I)
+
+
+def _condition_text(level: dict | None, label: str, ix: Index) -> str:
+    """A level's label and everything its conditions say about their stimuli."""
+    parts = [label]
+    for cid in refs(level.get("conditions")) if level else []:
+        c = ix.conditions.get(cid) or {}
+        parts += strs(c.get("name")) + strs(c.get("stimulus_content")) + strs(c.get("description"))
+    return " ".join(parts)
+
+
+def _within(term: dict | None, level: dict | None) -> bool | None:
+    """Whether a term varies within participants: its own `variation_level`, else what its
+    level is carried by (conditions are within, cohorts are between)."""
+    stated = strs(term.get("variation_level")) if term else []
+    if "within_subject" in stated:
+        return True
+    if "between_subject" in stated:
+        return False
+    if level and refs(level.get("conditions")):
+        return True
+    if level and refs(level.get("groups")):
+        return False
+    return None
+
+
+def visual_cues(a: dict, record: dict, ix: Index) -> bool | None:
+    """"using visual stimuli": the analysis's task (or, unlinked, the paper's tasks)."""
+    tasks = [ix.tasks[t] for t in refs(a.get("tasks")) if t in ix.tasks] or list(ix.tasks.values())
+    mods = {m for t in tasks for m in strs(t.get("stimulus_modality"))}
+    if not mods:
+        return None
+    return "visual" in mods
+
+
+def functional_mri(a: dict, record: dict, ix: Index) -> bool | None:
+    """"fMRI studies": a BOLD measure, or an fMRI acquisition where the measure says nothing."""
+    m = next((ix.measures[t] for t in refs(a.get("measure")) if t in ix.measures), None)
+    kinds = set(strs(m.get("type"))) if m else set()
+    if kinds:
+        return bool(kinds & BOLD_TYPES)
+    acqs = [ix.acqs.get(x) for x in refs(a.get("acquisitions"))]
+    acqs = [x for x in acqs if x] or list(ix.acqs.values())
+    mods = {x for acq in acqs for x in strs(acq.get("modality"))}
+    return None if not mods else "fMRI" in mods
+
+
+def cue_gt_control(a: dict, record: dict, ix: Index) -> bool | None:
+    """"a within-participant contrast of drug cues>control stimuli or natural
+    reward-related cues>control stimuli": a positive cell on a cue level and a negative one
+    on a control level of one within-participant term. Crossed with a between-subject term
+    it is a group difference in cue reactivity, which the criterion does not name: None."""
+    cells = _cell_terms(a)
+    if not cells:
+        return None
+    sides, between = {}, False
+    for cell in cells:
+        term = next((ix.terms.get(t) for t in refs(cell.get("term")) if t in ix.terms), None)
+        label = " ".join(strs(cell.get("level")))
+        level = _level_of(term, label)
+        within = _within(term, level)
+        if within is False:
+            between = True
+            continue
+        text = _condition_text(level, label, ix)
+        kind = "control" if CONTROL.search(text) else "cue" if CUE.search(text) else None
+        sign = " ".join(strs(cell.get("direction")))
+        sides.setdefault((id(term), kind), set()).add(sign)
+    pairs = {t for (t, k), signs in sides.items() if k == "cue" and "positive" in signs} & \
+            {t for (t, k), signs in sides.items() if k == "control" and "negative" in signs}
+    if pairs:
+        return None if between else True
+    return False if sides and not between else None
+
+
+CUE_STUDY: list[tuple[str, Callable]] = [
+    ("original research", original),
+    ("English", english),
+    ("by August 2020", search_window),
+    ("reports coordinates", reports_coordinates),
+]
+CUE_ANALYSIS: list[tuple[str, Callable]] = [
+    ("fMRI", functional_mri),
+    ("visual cues", visual_cues),
+    ("whole brain", whole_brain),
+    ("cue > control", cue_gt_control),
+    ("reported foci", reported_foci),
+]
+CUE_REQUIRED = ("fMRI", "cue > control")
+
+
 # ------------------------------------------------------------------ the registry
 
 @dataclass(frozen=True)
@@ -717,4 +837,7 @@ SPECS: dict[str, Spec] = {
                      SUD_REQUIRED, []),
     "35664889": Spec(BVFTD, HEALTHY_CONTROL, None, (1900, (2020, 5)), DEMENTIA_STUDY,
                      DEMENTIA_ANALYSIS, DEMENTIA_REQUIRED, DEMENTIA_POOLED),
+    # No cohort criterion: `case`/`comparison` are unused by these predicates.
+    "34400176": Spec(CUE, CONTROL, None, (1900, (2020, 8)), CUE_STUDY, CUE_ANALYSIS,
+                     CUE_REQUIRED, []),
 }
