@@ -1100,6 +1100,10 @@ def unsupported_omissions(
     reader who wants to go and check.
     """
 
+    if not listing:
+        # Nothing to account for, so an omission declines nothing: 11950456 has no listing,
+        # recorded four omissions saying so, and was re-asked for a fault no answer can fix.
+        return []
     bad: list[str] = []
     for entry in payload.get("omitted") or []:
         if not isinstance(entry, Mapping):

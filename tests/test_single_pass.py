@@ -250,3 +250,11 @@ def test_a_fault_a_repair_fixes_does_not_cost_a_retry(tmp_path):
 
 def test_a_fault_no_repair_fixes_is_still_retried(tmp_path):
     assert _calls_for(tmp_path, _two_models("trm_nowhere")) == ["single"] * 3
+
+
+def test_an_omission_without_a_listing_is_no_fault():
+    """11950456 has no listing, recorded omissions saying so, and was re-asked."""
+    payload = {"analyses": [_analysis()],
+               "omitted": [{"key": "stage-1 table listing", "reason": "none was supplied"}]}
+    assert render.postcondition_failures(payload, "single", listing=set()) == []
+    assert render.postcondition_failures(payload, "single", listing={"t1#1"}) != []

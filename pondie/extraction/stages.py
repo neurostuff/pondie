@@ -990,8 +990,9 @@ class Single(_ModelPass):
         entities = {k: v for k, v in found.items() if k != "analyses"}
         merged = _merge_entities(copy.deepcopy(payload), entities)
         merged.setdefault("analyses", []).extend(added)
+        # Not into `omitted`, which is the listing's ledger: a recheck decline is about a
+        # sentence, and stays in the raw reply kept above.
         declined = [o for o in found.get("omitted") or [] if isinstance(o, Mapping)]
-        merged.setdefault("omitted", []).extend(declined)
         # Strict decoding fixes a reply's shape, not its references: complete what the
         # additions leave undeclared, then drop an addition that still names nothing.
         failures = render.postcondition_failures(
