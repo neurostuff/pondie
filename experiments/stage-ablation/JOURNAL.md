@@ -1745,3 +1745,9 @@ substance use):
 
 No rule admits a negative. The first two guarded against draws that did not recur; the
 last two earn their place on gold papers.
+
+**Review item 11 (overlap threshold), measured on the 4 PTSD runs.** `min_shared_authors` = 2 and
+3 make the same three exclusions in every run. At 4, 19538748 ~ 16371250 is lost (precision
+0.95 -> 0.90); at 5, 23113800 ~ 19942229 too (0.86). The threshold sits at the top of a
+plateau, not on an edge: lowering it changes nothing, and raising it misses real re-reports.
+Substance use and the other pools have no overlap criterion.
