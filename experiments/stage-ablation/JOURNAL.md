@@ -1920,3 +1920,44 @@ better: negation scoping, healthy cohorts, comparison parsing.
 |---|---|---|---|
 | problem solving | 20/25, 0.69 | 21/25, 0.68 | 20/25 |
 | social | 18/25, 0.86 | 18/25, 0.86 | 16/25 |
+
+### Social and problem solving, after reading their misses (fit to this data)
+
+**Social: 18/25 -> 23/25 at 0.85.** All 4 false positives are papers autonima's screener
+included. The changes:
+- `SOCIAL` gained five kinds of task: action observation, decisions for kin, watching
+  others interact, trait judgements of persons, and erotic stimuli.
+- "healthy" and "age 18-60" are now of the analysis's sample, following the criteria's own
+  wording: "studies reporting results *among* participants with ... disorders".
+  27716474 studied older and younger adults apart.
+
+Still missed: 29723244, which PubMed types as a meta-analysis (it also reports an
+experiment); and 27716474, whose younger cohort's minimum age is 17.
+
+**Problem solving: 20/25 -> 25/25 at 0.71.** 8 of 10 false positives are screener-included.
+The changes:
+- A positive slope across one healthy sample is an increase, not a group comparison:
+  23883107's gold analyses are its "Verbalization" and "Visualization" regressions.
+- `PROBLEM` reads "solved ... problems", relational reasoning and transitive inference, and
+  the analysis's own name (19320546's task text never names the paradigm).
+- "Case reports" are original research. 20183185, a single-subject Tower of London fMRI
+  study, is gold. `compare_queries.py`: no other pool moves.
+
+## Standing, seven meta-analyses (veto, `--gold-coords`)
+
+| meta-analysis | held out | after fixes fit to it | false positives that are screener-included |
+|---|---|---|---|
+| PTSD | (developed on it) | 19/19, 0.95 | - |
+| dementia | 23/25, 0.96 | same | - |
+| substance use | (developed earlier) | 21-22/23, 0.85-0.91 | 3 of 4 |
+| cue reactivity | 9/25, 0.64 | 19/25, 0.70 | 5 of 8 |
+| decision making | 25/25, 0.64 | 25/25, 0.74 | 7 of 9 |
+| problem solving | 20/25, 0.69 | 25/25, 0.71 | 8 of 10 |
+| social | 18/25, 0.86 | 23/25, 0.85 | 4 of 4 |
+
+What generalised: the record structure answered every new meta-analysis's criteria
+without schema changes. What the held-out scores show is the query, not the extraction.
+Every new pool's misses were mainly the query's vocabulary for its task, and criteria read
+at the wrong level (the paper where the analysis's sample was meant). Precision on the
+task-fMRI pools is capped by negatives the benchmark left out and autonima's own screener
+judged eligible.
