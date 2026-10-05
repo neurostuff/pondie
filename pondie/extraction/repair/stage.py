@@ -32,7 +32,7 @@ from typing import Any, Callable, Mapping, MutableMapping
 from pondie.extraction.evidence.retrieval import sectionize
 from pondie.extraction.models import ModelCall
 from pondie.extraction.prompt import render
-from pondie.extraction.record import rules
+from pondie.extraction.record import direction, rules
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record.effect import (
     NO_LABEL,
@@ -306,54 +306,26 @@ def _withhold_signs(effect: MutableMapping[str, Any], _span: Any = None) -> list
     return changed
 
 
-#: "A < B" or "A > B" in an analysis name, up to a parenthesis or the end. A p-value
-#: threshold ("P < 0.01") is not a comparison, so the right side must start with a letter.
-_NAMED = re.compile(r"^(?P<left>[^<>]*?[A-Za-z][^<>]*?)\s*(?P<op>[<>])\s*(?P<right>[A-Za-z][^<>(]*)")
-_FILLER = {"group", "groups", "the", "and", "vs", "of", "with", "in", "patients", "subjects"}
 _SIGN = {"positive": 1, "negative": -1}
 
 
-def _words(text: Any) -> set[str]:
-    """Content words, singular: the level `control` beside the name's `Controls`."""
-    found = re.findall(r"[a-z0-9]+", str(text or "").lower())
-    return {w[:-1] if len(w) > 3 and w.endswith("s") else w for w in found if w not in _FILLER}
-
-
 def _named_against_cells(name: Any, cells: Any) -> bool:
-    """Whether the name's stated comparison is the reverse of every signed cell's: each
-    cell's level names one side only, and every one carries that side's opposite sign."""
-    found = _NAMED.match(str(name or ""))
-    if not found or not isinstance(cells, list):
+    """Whether the name's stated comparison (`direction.direction_of`, which `fill_directions`
+    signs cells by) is the reverse of every signed cell's sign, on at least two cells."""
+    if not isinstance(name, str) or not isinstance(cells, list):
         return False
-    left, right = _words(found["left"]), _words(found["right"])
-    above = 0 if found["op"] == ">" else 1  # the side the comparison puts higher
     verdicts = []
     for cell in cells:
         if not isinstance(cell, Mapping):
             continue
-        sign = _SIGN.get(values.read(cell.get("direction")))
-        level = _words(values.read(cell.get("level")))
-        if sign is None or not level:
+        sign, level = values.read(cell.get("direction")), values.read(cell.get("level"))
+        if sign not in _SIGN or not isinstance(level, str) or not level:
             continue
-        side = 0 if level & left and not level & right else 1 if level & right and not level & left else None
-        if side is None:
+        named = direction.direction_of(level, name)
+        if named is None:
             return False
-        verdicts.append(sign == (1 if side == above else -1))
+        verdicts.append(named == sign)
     return len(verdicts) >= 2 and not any(verdicts)
-
-
-def _located(record: Mapping[str, Any], analysis: Mapping[str, Any]) -> str:
-    """" It is row group 3 of Table 3." when the analysis is linked to one; else ""."""
-    key = values.read(analysis.get("source_table_analysis"))
-    tables = {t.get("local_id"): t for t in record.get("tables") or [] if isinstance(t, Mapping)}
-    linked = [tables[t] for t in analysis.get("tables") or [] if t in tables]
-    if not isinstance(key, str) or "#" not in key or len(linked) != 1:
-        return ""
-    label = values.read(linked[0].get("table_number"))
-    if not label:
-        return ""
-    label = label if str(label).lower().startswith("table") else f"Table {label}"
-    return f" It is row group {key.rpartition('#')[2]} of {label}."
 
 
 def _named_directions(record: Mapping[str, Any]) -> list[Case]:
@@ -408,14 +380,25 @@ def _reverse_signs(analysis: MutableMapping[str, Any], span: Any = None) -> list
 def _reverse_name(analysis: MutableMapping[str, Any], _span: Any = None) -> list[str]:
     """Swap the comparison in the analysis's name: the cells are right and it is not."""
     text = values.read(analysis.get("name"))
-    found = _NAMED.match(text) if isinstance(text, str) else None
-    if found is None:
+    swapped = direction.reverse_comparison(text) if isinstance(text, str) else None
+    if swapped is None:
         return []
-    # Only the comparison the case matched: "PTSD > HC (p < 0.001)" keeps its threshold.
-    at = found.start("op")
-    swapped = text[:at] + {"<": ">", ">": "<"}[text[at]] + text[at + 1:]
     analysis["name"] = values.wrap(swapped, source="generated", evidence="not_found")
     return [f"name: {text!r} -> {swapped!r}"]
+
+
+def _located(record: Mapping[str, Any], analysis: Mapping[str, Any]) -> str:
+    """" It is row group 3 of Table 3." when the analysis is linked to one; else ""."""
+    key = values.read(analysis.get("source_table_analysis"))
+    tables = {t.get("local_id"): t for t in record.get("tables") or [] if isinstance(t, Mapping)}
+    linked = [tables[t] for t in analysis.get("tables") or [] if t in tables]
+    if not isinstance(key, str) or "#" not in key or len(linked) != 1:
+        return ""
+    label = values.read(linked[0].get("table_number"))
+    if not label:
+        return ""
+    label = label if str(label).lower().startswith("table") else f"Table {label}"
+    return f" It is row group {key.rpartition('#')[2]} of {label}."
 
 
 def _consequences(case: Case, value: str, owner: MutableMapping[str, Any], span: Any) -> list[str]:

@@ -1062,3 +1062,13 @@ def test_a_leading_minus_is_not_folded_away():
     from pondie.extraction.record import spans
     assert spans.fold_label("-1") != spans.fold_label("1")
     assert spans.fold_label("combat-exposed") == spans.fold_label("combat exposed")
+
+
+def test_a_quantity_is_not_a_comparison():
+    """20487539: 'more than 1 year of heavy alcohol use' read as a comparison."""
+    from pondie.extraction.record import direction
+
+    assert direction.polarity("Patients with more than 1 year of heavy alcohol use") is None
+    assert direction.polarity("PTSD greater than controls")[2] == 1
+    assert direction.reverse_comparison("PTSD > HC (p < 0.001)") == "PTSD < HC (p < 0.001)"
+    assert direction.same_level("control", "Controls")

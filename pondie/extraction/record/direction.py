@@ -30,8 +30,9 @@ _COMPARISONS: tuple[tuple[re.Pattern[str], int], ...] = (
     # runs to the end of the definition and swallows a group name held constant across
     # the contrast -- "7d > 28d . ALFF differences in the CCD group" matched CCD to the
     # right side and directed a `held` cell.
-    (re.compile(r"(?P<a>[^<>.,;]+?)\s*>\s*(?P<b>[^<>.,;]+)"), +1),
-    (re.compile(r"(?P<a>[^<>.,;]+?)\s*<\s*(?P<b>[^<>.,;]+)"), -1),
+    # A parenthesis ends one too: "PTSD > HC (p < 0.001)" is HC, not "HC (p".
+    (re.compile(r"(?P<a>[^<>.,;(]+?)\s*>\s*(?P<b>[^<>.,;(]+)"), +1),
+    (re.compile(r"(?P<a>[^<>.,;(]+?)\s*<\s*(?P<b>[^<>.,;(]+)"), -1),
     (
         re.compile(
             r"(?P<a>[^.,;]+?)\s+(?:greater|higher|larger|stronger|increased|more)\s+"
@@ -113,6 +114,13 @@ def _words(text: str) -> frozenset[str]:
     return labels.content(text or "", stop=_STOP)
 
 
+def _singular(words: frozenset[str]) -> frozenset[str]:
+    """`controls` as `control`: a level is named in the singular and a comparison in the
+    plural ("Combined PTSD and major depression groups < Controls", 21418787)."""
+    return frozenset(w[:-1] if len(w) > 3 and w.endswith("s") and not w.endswith("ss") else w
+                     for w in words)
+
+
 def same_level(a: str, b: str) -> bool:
     """Do these two strings name the same level?
 
@@ -125,7 +133,7 @@ def same_level(a: str, b: str) -> bool:
     silently match everything.
     """
 
-    left_all, right_all = _tokens(a), _tokens(b)
+    left_all, right_all = _singular(_tokens(a)), _singular(_tokens(b))
     if not left_all or not right_all:
         return False
     left, right = left_all - _STOP, right_all - _STOP
@@ -134,21 +142,47 @@ def same_level(a: str, b: str) -> bool:
     return left <= right or right <= left
 
 
-def polarity(text: str) -> tuple[str, str, int] | None:
-    """(left side, right side, +1 or -1) for a contrast named as a comparison."""
-
-    for pattern, sign in _COMPARISONS:
+def _comparison(text: str) -> tuple[re.Match[str], int] | None:
+    """The first match that reads as a comparison of two named things, and its sign."""
+    for index, (pattern, sign) in enumerate(_COMPARISONS):
         match = pattern.search(text or "")
         if not match:
             continue
         left, right = match.group("a").strip(" .,:;"), match.group("b").strip(" .,:;")
-        # A threshold is not a comparison: "FTD-MND compared with FTD at P <0.001" read
-        # FTD on the left of `<` and signed both of 10526199's levels negative.
+        # A threshold is not a comparison: "FTD-MND compared with FTD at P <0.001" signed
+        # both of 10526199's levels negative.
         if re.search(r"(?i)\b[pq]$", left) or not re.search(r"[A-Za-z]", right):
             continue
+        # Nor is a worded quantity: "patients with more than 1 year of heavy alcohol use"
+        # (20487539). Only the worded forms -- `7d > 28d` compares two levels.
+        if index >= 2 and not re.match(r"[A-Za-z]", right):
+            continue
         if _words(left) and _words(right):
-            return left, right, sign
+            return match, sign
     return None
+
+
+def polarity(text: str) -> tuple[str, str, int] | None:
+    """(left side, right side, +1 or -1) for a contrast named as a comparison."""
+    found = _comparison(text)
+    if found is None:
+        return None
+    match, sign = found
+    return match.group("a").strip(" .,:;"), match.group("b").strip(" .,:;"), sign
+
+
+def reverse_comparison(text: str) -> str | None:
+    """`text` with its comparison's `<`/`>` swapped, and nothing else; None when the
+    comparison is worded ("greater than") or there is none."""
+    found = _comparison(text)
+    if found is None:
+        return None
+    match, _sign = found
+    between = text[match.end("a"):match.start("b")]
+    if not re.fullmatch(r"\s*[<>]\s*", between):
+        return None
+    op = match.end("a") + between.index(between.strip())
+    return text[:op] + {"<": ">", ">": "<"}[text[op]] + text[op + 1:]
 
 
 def direction_of(level: str, contrast: str) -> str | None:
