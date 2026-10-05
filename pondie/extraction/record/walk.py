@@ -16,6 +16,9 @@ recursion with the loop body buried in it:
     for slot in slots(body, schema):           # every declared slot, whatever its kind
     for entity in entities(body, schema):      # every node with a local_id, and its class
 
+A repair that renames an entity repoints what refers to it with `repoint`, which takes the
+reference slots from the schema rather than a list of the ones its author knew about.
+
 Generators rather than a visitor callback, because the caller then reads as a loop over the
 thing it cares about. `drop_redundant_cell_levels` and `align_cell_levels` stay hand-written:
 they walk analyses and model terms together, which is a join and not a traversal.
@@ -26,6 +29,7 @@ to `slot.owner[slot.key]` or delete it while iterating -- which is what a repair
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -171,6 +175,45 @@ def declared_ids(body: dict, schema: Schema, *, root: str = "Study") -> dict[str
         if entity.local_id:
             found[entity.local_id] = entity.class_name
     return found
+
+
+def repoint(
+    node: dict,
+    schema: Schema,
+    mapping: Mapping[str, str],
+    *,
+    root: str = "Study",
+    target: str | None = None,
+) -> int:
+    """Rewrite every reference in `node`, an entity of class `root`, through `mapping`.
+
+    `target` limits the rewrite to slots whose range is that class or a subclass of it, for
+    a mapping that renames ids of one class. Returns how many references changed.
+    """
+    targets = None if target is None else {target, *schema.subclasses(target)}
+    changed = 0
+    for slot in references(node, schema, root=root):
+        if targets is not None and not targets & set(schema.ranges(slot.attribute)):
+            continue
+        if isinstance(slot.value, str) and slot.value in mapping:
+            slot.owner[slot.key] = mapping[slot.value]
+            changed += 1
+        elif isinstance(slot.value, list):
+            new = [mapping.get(v, v) if isinstance(v, str) else v for v in slot.value]
+            changed += sum(a != b for a, b in zip(new, slot.value))
+            slot.owner[slot.key] = new
+    return changed
+
+
+def dangling(body: dict, schema: Schema, *, root: str = "Study") -> Counter[str]:
+    """The referenced ids no entity declares, with how many references name each."""
+    declared = declared_ids(body, schema, root=root)
+    return Counter(
+        name
+        for slot in references(body, schema, root=root)
+        for name in ids_of(slot.value)
+        if name not in declared
+    )
 
 
 def ids_of(value: Any) -> list[str]:

@@ -22,9 +22,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
+import logging
 
+from pondie.extraction.record import walk
 from pondie.extraction.record.fix import derive, link, reachable, shape
 from pondie.schema.reader import Schema
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -70,6 +74,8 @@ class RepairLog:
     """What each repair did to one record."""
 
     entries: list[tuple[str, list[str]]] = field(default_factory=list)
+    #: Repair name -> the references it left naming nothing (`apply_all` checks each one).
+    introduced: dict[str, list[str]] = field(default_factory=dict)
 
     def record(self, name: str, changes: list[str]) -> None:
         self.entries.append((name, changes))
@@ -85,9 +91,12 @@ class RepairLog:
         return [name for name, lines in self.entries if lines]
 
     def explain(self) -> str:
-        if not self.total:
+        if not self.total and not self.introduced:
             return "no repairs fired"
-        lines = []
+        lines = [
+            f"{name} introduced dangling reference(s): {', '.join(found)}"
+            for name, found in self.introduced.items()
+        ]
         for name, changed in self.entries:
             if not changed:
                 continue
@@ -231,7 +240,7 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "empty_models",
             "copy into a model with no terms the terms its analyses borrow from another",
-            lambda body, ctx: link.fill_empty_models(body),
+            lambda body, ctx: link.fill_empty_models(body, ctx.schema),
             after="listified",
             stage="merged",
         ),
@@ -245,7 +254,7 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "scoped_terms",
             "scope two models' identically-named terms by their model",
-            lambda body, ctx: link.scope_duplicate_terms(body),
+            lambda body, ctx: link.scope_duplicate_terms(body, ctx.schema),
             stage="satisfy",
         ),
         Repair(
@@ -406,5 +415,14 @@ def apply_all(
     for repair in sequence:
         if wanted is not None and repair.stage not in wanted:
             continue
+        before = walk.dangling(body, ctx.schema)
         log.record(repair.name, list(repair.apply(body, ctx)))
+        # A repair that breaks a reference is otherwise seen far downstream, as a fault the
+        # record appears to have been born with.
+        new = walk.dangling(body, ctx.schema) - before
+        if new:
+            found = [f"{name!r} ({n} reference{'s' * (n > 1)})" for name, n in sorted(new.items())]
+            log.introduced[repair.name] = found
+            _log.warning("repair %s introduced dangling reference(s): %s", repair.name,
+                         ", ".join(found))
     return log

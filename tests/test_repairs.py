@@ -18,6 +18,8 @@ from pondie.extraction.record import fix
 from pondie.schema import reader
 import pondie.schema as schema_pkg
 
+_SCH = reader.load(schema_pkg.EXTRACTION)
+
 
 def test_the_declared_repair_order_holds():
     assert fix.check_order(fix.build_sequence()) == []
@@ -28,7 +30,7 @@ def test_an_order_that_violates_its_own_constraint_is_refused():
     early = fix.Repair("b", "", lambda body, ctx: [])
     assert fix.check_order((late, early))
     with pytest.raises(ValueError):
-        fix.apply_all({}, fix.Context(schema={}), (late, early))
+        fix.apply_all({}, fix.Context(schema=_SCH), (late, early))
 
 
 def test_the_log_says_which_repairs_fired():
@@ -36,7 +38,7 @@ def test_the_log_says_which_repairs_fired():
         fix.Repair("noisy", "", lambda body, ctx: ["did a thing"]),
         fix.Repair("quiet", "", lambda body, ctx: []),
     )
-    log = fix.apply_all({}, fix.Context(schema={}), sequence)
+    log = fix.apply_all({}, fix.Context(schema=_SCH), sequence)
     assert log.fired() == ["noisy"]
     assert log.total == 1
     assert "did a thing" in log.explain()
@@ -402,7 +404,6 @@ def test_no_parse_means_nothing_is_invented(tmp_path):
 
 # --- derived analysis ids -----------------------------------------------------
 
-_SCH = reader.load(schema_pkg.EXTRACTION)
 
 
 def test_an_analysis_id_is_derived_from_its_parse_key():
@@ -486,6 +487,69 @@ def test_a_derived_id_already_taken_leaves_both_alone():
     notes = fix.derive_analysis_ids(body, _SCH)
     assert body["analyses"][1]["local_id"] == "a_other"
     assert notes and "already taken" in notes[0]
+
+
+# --- renames follow every reference -----------------------------------------------
+
+
+def _models_sharing(term, *on):
+    """Analyses on the given models, each cell naming `term`; models a and b declare it."""
+    from pondie.extraction.record.fix import link
+
+    def model(mid):
+        return {"local_id": mid, "terms": [{"local_id": term, "name": _wrapped("group")}]}
+
+    body = {
+        "analyses": [
+            {"local_id": f"ana_{m}", "model_estimation": m, "effect": {"cells": [{"term": term}]}}
+            for m in on
+        ],
+        "model_estimations": [model("mod_a"), model("mod_b"), {"local_id": "mod_c", "terms": []}],
+    }
+    return body, link.scope_duplicate_terms
+
+
+def test_a_term_declared_by_two_models_is_scoped_by_each_analysis_model():
+    body, scope = _models_sharing("trm_group", "mod_a", "mod_b")
+    assert scope(body, _SCH)
+    assert [a["effect"]["cells"][0]["term"] for a in body["analyses"]] == [
+        "mod_a.trm_group",
+        "mod_b.trm_group",
+    ]
+
+
+def test_a_reference_that_cannot_be_scoped_puts_the_record_back():
+    # mod_c declares no copy, so its analysis's cell has no scoped id to move to.
+    body, scope = _models_sharing("trm_group", "mod_a", "mod_c")
+    before = json.loads(json.dumps(body))
+    assert scope(body, _SCH) == []
+    assert body == before
+
+
+def test_no_repair_introduces_a_dangling_reference():
+    """Each repair is checked, and one that leaves a reference naming nothing is named."""
+    from pondie.extraction.record.fix import sequence
+
+    def drop_groups(body, ctx):
+        body["groups"] = []
+        return ["dropped every group"]
+
+    bad = sequence.Repair("drop_groups", "a repair that breaks a reference", drop_groups,
+                          stage="shape")
+    body = {"groups": [{"local_id": "grp_ptsd"}],
+            "analyses": [{"local_id": "ana_1", "groups": [{"group": "grp_ptsd"}]}]}
+    log = sequence.apply_all(body, sequence.Context(schema=_SCH), sequence=(bad,))
+    assert log.introduced == {"drop_groups": ["'grp_ptsd' (1 reference)"]}
+    assert "introduced" in log.explain()
+
+
+def test_deriving_ids_introduces_no_dangling_reference():
+    body = {
+        "analyses": [{"local_id": "ana_x", "source_table_analysis": _wrapped("prose#1")}],
+        "coordinate_sets": [{"local_id": "cs_1", "analysis": "ana_x"}],
+    }
+    log = fix.apply_all(body, fix.Context(schema=_SCH), stage="demands")
+    assert log.introduced == {}
 
 
 def test_every_repair_names_a_stage_that_runs():

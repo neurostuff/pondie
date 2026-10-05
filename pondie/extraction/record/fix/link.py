@@ -446,7 +446,7 @@ def infer_missing_models(body: dict[str, Any]) -> list[str]:
     return fixed
 
 
-def fill_empty_models(body: dict[str, Any]) -> list[str]:
+def fill_empty_models(body: dict[str, Any], sch: Schema) -> list[str]:
     """Give a model with no terms the terms its analyses' cells borrow from one other model.
 
     An extractor declaring one design several times writes it out once: 30343133 tests
@@ -518,18 +518,9 @@ def fill_empty_models(body: dict[str, Any]) -> list[str]:
         model["terms"] = json.loads(json.dumps(designs[donor]))
         for term in model["terms"]:
             term["local_id"] = scoped[term["local_id"]]
-            if isinstance(term.get("interaction_with"), list):
-                term["interaction_with"] = [
-                    scoped.get(t, t) if isinstance(t, str) else t for t in term["interaction_with"]
-                ]
+            walk.repoint(term, sch, scoped, root="ModelTerm", target="ModelTerm")
         for analysis in analyses:
-            effect = analysis.get("effect") or {}
-            for cell in effect.get("cells") or []:
-                if isinstance(cell, dict) and cell.get("term") in scoped:
-                    cell["term"] = scoped[cell["term"]]
-            mediation = effect.get("mediation")
-            if isinstance(mediation, dict) and mediation.get("mediator") in scoped:
-                mediation["mediator"] = scoped[mediation["mediator"]]
+            walk.repoint(analysis, sch, scoped, root="Analysis", target="ModelTerm")
         fixed.append(
             f"model_estimations[{model_id!r}]: had no terms; copied {len(scoped)} from "
             f"{donor!r}, which its {len(analyses)} analysis(es)' cells named"
@@ -694,7 +685,7 @@ def _levels_of(term: Mapping[str, Any]) -> list[tuple[str, Any]]:
     ]
 
 
-def scope_duplicate_terms(body: dict[str, Any]) -> list[str]:
+def scope_duplicate_terms(body: dict[str, Any], sch: Schema) -> list[str]:
     """Make two models' identically-named terms distinguishable, by their model.
 
     A term's id is only meaningful inside the model that declares it, but the record's id
@@ -751,24 +742,6 @@ def scope_duplicate_terms(body: dict[str, Any]) -> list[str]:
     if not collisions:
         return []
 
-    def rewrite(node: Any, mapping: Mapping[str, str]) -> None:
-        """Repoint every reference-shaped string, whatever slot it sits in."""
-        if isinstance(node, Mapping):
-            for key, value in list(node.items()):
-                if key == "local_id":
-                    continue
-                if isinstance(value, str) and value in mapping:
-                    node[key] = mapping[value]
-                elif isinstance(value, list):
-                    node[key] = [mapping.get(v, v) if isinstance(v, str) else v for v in value]
-                    for item in node[key]:
-                        rewrite(item, mapping)
-                else:
-                    rewrite(value, mapping)
-        elif isinstance(node, list):
-            for value in node:
-                rewrite(value, mapping)
-
     scoped: list[str] = []
     for name in sorted(collisions):
         owners = declared_by[name]
@@ -786,17 +759,17 @@ def scope_duplicate_terms(body: dict[str, Any]) -> list[str]:
                 continue
             mapping = {name: f"{model_id}.{name}"}
             for term in model.get("terms") or []:
-                if isinstance(term, Mapping) and term.get("local_id") == name:
-                    term["local_id"] = mapping[name]
-            rewrite(model.get("terms"), mapping)
+                if isinstance(term, dict):
+                    if term.get("local_id") == name:
+                        term["local_id"] = mapping[name]
+                    walk.repoint(term, sch, mapping, root="ModelTerm", target="ModelTerm")
             for index, analysis in enumerate(body.get("analyses") or []):
-                if reachable.get(index) == model_id:
-                    rewrite(analysis, mapping)
+                if reachable.get(index) == model_id and isinstance(analysis, dict):
+                    walk.repoint(analysis, sch, mapping, root="Analysis", target="ModelTerm")
 
-        # Any surviving mention of the bare name in a non-declaration position is a
-        # reference this could not scope. Put the record back rather than leave it
-        # dangling.
-        if json.dumps(body).count(f'"{name}"') > 0:
+        # A reference still naming the bare id is one this could not scope. Put the record
+        # back rather than leave it dangling.
+        if walk.dangling(body, sch)[name]:
             body.clear()
             body.update(snapshot)
             continue

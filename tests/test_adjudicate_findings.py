@@ -378,7 +378,7 @@ def test_a_cell_outside_its_model_chain_derives_no_kind_and_raises_no_kind_case(
 
 def test_an_empty_model_gets_the_terms_its_analyses_borrow_from_one_other():
     record = _seeds()
-    assert link.fill_empty_models(record)
+    assert link.fill_empty_models(record, _sch())
     pcc = record["model_estimations"][2]
     assert [t["local_id"] for t in pcc["terms"]] == [
         "mod_pcc.trm_group", "mod_pcc.trm_age", "mod_pcc.trm_gxa"]
@@ -401,7 +401,7 @@ def test_an_empty_model_does_not_take_a_term_another_analysis_tests():
     record["analyses"].append({"local_id": "ana_total", "model_estimation": "mod_vmpfc",
                                "effect": {"cells": [{"term": "trm_total",
                                                      "direction": _v("negative")}]}})
-    link.fill_empty_models(record)
+    link.fill_empty_models(record, _sch())
     copied = [t["local_id"] for t in record["model_estimations"][2]["terms"]]
     assert copied == ["mod_pcc.trm_group", "mod_pcc.trm_age", "mod_pcc.trm_gxa"]
 
@@ -411,7 +411,7 @@ def test_the_donor_is_the_one_model_declaring_every_borrowed_term():
     record = _seeds(borrowed=("trm_gxa", "trm_age"))
     record["model_estimations"][1]["terms"].append(
         {"local_id": "trm_age", "name": _v("age"), "type": _v("continuous")})
-    assert link.fill_empty_models(record)
+    assert link.fill_empty_models(record, _sch())
     assert "mod_pcc.trm_gxa" in [t["local_id"] for t in record["model_estimations"][2]["terms"]]
 
 
@@ -422,7 +422,7 @@ def test_donors_declaring_the_same_design_are_one_donor():
     record["model_estimations"][0]["terms"].append(
         json.loads(json.dumps(record["model_estimations"][1]["terms"][0])))
     record["model_estimations"][0]["terms"] = [record["model_estimations"][0]["terms"][-1]]
-    assert link.fill_empty_models(record)
+    assert link.fill_empty_models(record, _sch())
     assert [t["local_id"] for t in record["model_estimations"][2]["terms"]] == ["mod_pcc.trm_sex"]
 
 
@@ -433,12 +433,12 @@ def test_donors_declaring_different_designs_are_none():
     # designs must not need anything hashable.
     other["levels"] = [{"level": {"level": _v("female")}}, {"level": {"level": _v("male")}}]
     record["model_estimations"][0]["terms"] = [other]
-    assert link.fill_empty_models(record) == []
+    assert link.fill_empty_models(record, _sch()) == []
 
 def test_an_empty_model_borrowing_from_two_models_is_left():
     """No model declares both borrowed terms: no one design the record states to copy."""
     record = _seeds(borrowed=("trm_gxa", "trm_sex"))
-    assert link.fill_empty_models(record) == []
+    assert link.fill_empty_models(record, _sch()) == []
     assert record["model_estimations"][2]["terms"] == []
 
 

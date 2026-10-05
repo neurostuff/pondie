@@ -543,8 +543,7 @@ def derive_analysis_ids(body: dict[str, Any], sch: Schema) -> list[str]:
     reviewer gave.
 
     `source_table_analysis` is already a deterministic paper-scoped key, so the id is
-    derived from it: `a_<table id>_<ordinal>`. Every reference slot whose range is
-    Analysis (`mirror_of`, `CoordinateSet.analysis`) follows the rename.
+    derived from it: `a_<table id>_<ordinal>`, and every reference to the analysis follows.
 
     An analysis with no key keeps the model's id. That is 25% of them and it is the
     honest outcome: the parse does not determine an id for a row group it cannot identify,
@@ -588,13 +587,8 @@ def derive_analysis_ids(body: dict[str, Any], sch: Schema) -> list[str]:
             renamed[old] = derived
         notes.append(f"{old!r} -> {derived!r} (from {key!r})")
 
-    for slot in walk.references(body, sch) if renamed else ():
-        if "Analysis" not in sch.ranges(slot.attribute):
-            continue
-        if isinstance(slot.value, str):
-            slot.owner[slot.key] = renamed.get(slot.value, slot.value)
-        elif isinstance(slot.value, list):
-            slot.owner[slot.key] = [renamed.get(v, v) if isinstance(v, str) else v for v in slot.value]
+    if renamed:
+        walk.repoint(body, sch, renamed, target="Analysis")
     return notes
 
 
