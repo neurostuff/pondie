@@ -1455,3 +1455,16 @@ disagreements are not hand-checked.
 The dementia draw's failed attempts so far are references to models and terms declared
 nowhere (`mod_dti_fbi_regression`, `trm_lobule_vi_volume`). That is a real omission, for the
 retry or the completion call.
+
+**Review item 15 (does `analyses` first under strict decoding bring back dangling
+references?).** Calls by stage over 55 PTSD papers, from `usage.jsonl`:
+
+| run | single | fill | evidence | repair | total |
+|---|---|---|---|---|---|
+| original (JSON mode) | 101 | 84 | 89 | 107 | 381 |
+| S2r | 66 | 72 | 14 | 119 | 271 |
+| S2r rerun | 71 | 78 | 15 | 127 | 291 |
+
+`single` needs fewer attempts under strict decoding (1.2-1.3 per paper, against 1.8), so it
+does not. `repair` is now the largest consumer, 44% of calls. Its proposer sweep was judged
+"not worth it for selection" on an older pipeline, and has not been re-measured on S2r.
