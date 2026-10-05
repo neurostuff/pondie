@@ -824,10 +824,11 @@ def check_model_stages(record: Mapping[str, Any], findings: Findings) -> None:
     deliberate refit and silently absorbs the violation when it is not. A validator that
     merely does not hang on bad input has not reported it.
 
-    Neither has ever fired on the corpus. They are in because a cycle is a hang as well
-    as a falsehood, and because a first-level `motion` shadowing a group-level `motion`
-    makes two columns indistinguishable in one term list -- a reader cannot tell a column
-    refitted at the stage above from one restated there by mistake.
+    They are in because a cycle is a hang as well as a falsehood, and because a first-level
+    `motion` shadowing a group-level `motion` makes two columns indistinguishable in one
+    term list -- a reader cannot tell a column refitted at the stage above from one
+    restated there by mistake. The name check also catches a wrong link: two sibling
+    subject models that share term names, both named in one group model's `inputs_from`.
     """
 
     models = model_index(record)

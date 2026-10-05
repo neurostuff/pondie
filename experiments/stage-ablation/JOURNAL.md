@@ -2023,3 +2023,57 @@ terms (`link.scope_duplicate_terms`), so nothing scopes a condition to its task.
 **Not new:** 27855282's levels "FnatFnat", "AnatFnat" are the paper's own condition codes
 ("[FnatFnat > AnatFnat]"). That is the known class of a cell level that matches none of
 its term's declared levels.
+
+### Repair's reference links: two regressions in `guard.resolve`, fixed
+
+**Fault 1: siblings.** `repair` named link targets by label, and a model estimation's label is
+its `model_type`. Siblings share it: 18439411's three subject models are all "GLM". The
+proposer's list of link targets (`propose.candidates`) showed labels only ("GLM; GLM;
+GLM"), and the prompt said to name one "exactly as listed". So the reply could only say
+"GLM", and `resolve` took the first match. Over the 13 stored runs, 32 of 125 `inputs_from`
+writes appended a sibling to a group model that already had its own input. Examples: the
+gonogo group fed by the n-back subject model, and three PPI group models fed by one seed's
+subject model. That caused 59 of the 63 errors `repair` introduced.
+
+**Fault 2: direction.** The label match strips punctuation, so "Cigarette Resist < Neutral"
+equalled "Cigarette Resist > Neutral" (17217932). With both present the first was taken; with
+one present, a name for the other direction resolved to it.
+
+**Fix.**
+- `candidates` lists each target as `` `local_id` (label) `` and asks for the id. `resolve`
+  takes an exact id first.
+- `resolve` resolves a name to nothing when it matches several entities.
+- `resolve` discards a label that names the opposite comparison (`direction.polarity`,
+  sides compared with `direction.same_level`).
+
+**A/B** (`exp/repair_ab.py`): `repair` re-run from the stored pre-repair records of 32
+papers, old code against fixed code. Each run logs every `resolve` call.
+
+| | old | fixed |
+|---|---|---|
+| errors `repair` introduced | 34 | 11 |
+| `inputs_from` links added | 56 (27 appended to a filled list) | 21 (0 appended) |
+| names given as an exact id | 153 of 3,940 | 3,805 of 3,867 |
+| names matching several entities | 315 | none |
+| `mirror_of` links added | 0 | 6 |
+
+All 11 errors left are a group model restating a term name of the stage it was fit on.
+That link is right; the restated term came from `single`. `analyses.assessments` fell from
+145 to 88 links. That is entity creation, not resolution: on the two papers that account for
+21 of the fall, the old arm created an assessment ("Comprehensive medical questionnaire") and
+linked every analysis to it, and the fixed arm created none. Creation is unchanged by this
+fix, and the old arm's two draws differ from each other by as much elsewhere.
+
+**Build regression check:** the saved replies of 9 stored runs, rebuilt under current code
+and validated with one validator, record by record. No record gains an error. Errors fall in
+three runs (dementia 52 to 43, cue 67 to 58, problem solving 40 to 36).
+
+**Post-mortem.**
+- **How it came to be:** `resolve` was written when references were named by label, and
+  `existing` was later given ids ("a version listing labels alone added 0 links"), but
+  `candidates`, the other half of the same prompt, was not.
+- **Why it wasn't obvious:** the rule that caught the result reads as being about term
+  names, not links, so its errors looked like the model restating terms. `repair`'s report
+  named them under `introduced` and kept the write.
+- **What prevents it:** a reference is an id, never a label; a lookup that cannot name one
+  entity names none.

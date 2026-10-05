@@ -1269,3 +1269,64 @@ def test_a_structure_a_flat_reply_cannot_carry_is_still_left_alone(storage_schem
 
     assert flat(storage_schema, "Condition")
     assert not flat(storage_schema, "Effect")
+
+
+def _three_subject_glms():
+    """18439411: three subject-level models labelled alike, each feeding its own group."""
+    glm = {"extraction_status": "extracted", "value": "GLM"}
+    return {"model_estimations": [
+        {"local_id": "mod_subject_stable", "model_type": glm},
+        {"local_id": "mod_subject_unstable", "model_type": glm},
+        {"local_id": "mod_subject_nonsocial", "model_type": glm},
+        {"local_id": "mod_group_unstable", "model_type": {"extraction_status": "extracted", "value": "random-effects group analysis"}},
+    ]}
+
+
+def test_a_label_several_entities_share_resolves_to_none(storage_schema):
+    """18439411: "GLM" named all three subject models, and the first was linked to every
+    group model. A link that cannot be pinned to one entity is left out, not guessed."""
+    record = _three_subject_glms()
+    assert edit_module.resolve(record, storage_schema, "ModelEstimation", "GLM") == []
+    assert edit_module.resolve(record, storage_schema, "ModelEstimation", "general linear model GLM") == []
+
+
+def test_an_id_resolves_where_its_label_cannot(storage_schema):
+    record = _three_subject_glms()
+    assert edit_module.resolve(
+        record, storage_schema, "ModelEstimation", ["mod_subject_unstable"]
+    ) == ["mod_subject_unstable"]
+    assert edit_module.resolve(
+        record, storage_schema, "ModelEstimation", "random-effects group analysis"
+    ) == ["mod_group_unstable"]
+
+
+def test_link_candidates_are_listed_by_id(storage_schema):
+    """The proposer was shown "GLM; GLM; GLM" and told to name one exactly as listed."""
+    from pondie.extraction.repair import propose
+
+    shown = propose.candidates(storage_schema, _three_subject_glms(), "ModelEstimation")
+    assert "`mod_subject_unstable` (GLM)" in shown
+    assert "by its `local_id`" in shown
+
+
+def _two_directions():
+    """17217932: each table reports a contrast and its reverse as two analyses."""
+    name = lambda x: {"extraction_status": "extracted", "value": x}  # noqa: E731
+    return {"analyses": [
+        {"local_id": "a_tbl2_1", "name": name("Cigarette Resist > Neutral")},
+        {"local_id": "a_tbl2_2", "name": name("Cigarette Resist < Neutral")},
+    ]}
+
+
+def test_a_comparison_resolves_to_its_own_direction(storage_schema):
+    """17217932: the label match ignores `<` and `>`, so both analyses matched and the
+    first -- the opposite direction -- was taken."""
+    record = _two_directions()
+    assert edit_module.resolve(record, storage_schema, "Analysis", "Cigarette Resist < Neutral") == ["a_tbl2_2"]
+    assert edit_module.resolve(record, storage_schema, "Analysis", "Neutral > Cigarette Resist") == ["a_tbl2_2"]
+
+
+def test_a_comparison_never_resolves_to_its_reverse(storage_schema):
+    record = _two_directions()
+    record["analyses"] = record["analyses"][:1]  # only "Cigarette Resist > Neutral"
+    assert edit_module.resolve(record, storage_schema, "Analysis", "Cigarette Resist < Neutral") == []
