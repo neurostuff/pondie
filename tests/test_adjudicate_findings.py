@@ -568,3 +568,42 @@ def test_a_value_cannot_be_wrapped_with_not_applicable_evidence():
         values.wrap("x", source="generated", evidence="not_applicable")
     assert values.wrap(None, source="reported", evidence="not_applicable")[
         "extraction_status"] == "not_reported"
+
+
+def _partial():
+    """17825801: one diagnosis x exposure design, fitted unadjusted and adjusted for age."""
+    def term(tid, name, kind):
+        return {"local_id": tid, "name": _v(name), "type": _v(kind)}
+    return {
+        "model_estimations": [
+            {"local_id": "mod_unadj", "terms": [term("trm_dx", "Diagnosis", "categorical"),
+                                                term("trm_exp", "Exposure", "categorical"),
+                                                term("trm_icv", "ICV", "continuous")]},
+            {"local_id": "mod_age", "terms": [term("trm_dx", "Diagnosis", "categorical"),
+                                              term("trm_age", "age", "continuous")]},
+        ],
+        "analyses": [{"local_id": "a_age", "model_estimation": "mod_age", "effect": {"cells": [
+            {"term": "trm_dx", "direction": _v("positive")},
+            {"term": "trm_exp", "direction": _v("negative")}]}}],
+    }
+
+
+def test_a_partial_model_gets_the_celled_term_it_lacks_and_not_the_donors_covariates():
+    record = _partial()
+    assert link.complete_partial_models(record, _sch())
+    terms = [t["local_id"] for t in record["model_estimations"][1]["terms"]]
+    assert terms == ["trm_dx", "trm_age", "mod_age.trm_exp"]
+    cells = record["analyses"][0]["effect"]["cells"]
+    assert [c["term"] for c in cells] == ["trm_dx", "mod_age.trm_exp"]
+    validator = Validator(_sch(), None)
+    validator.check_record(record)
+    assert not [e for e in validator.errors if "does not reach" in e]
+
+
+def test_donors_that_disagree_leave_a_partial_model_alone():
+    record = _partial()
+    other = json.loads(json.dumps(record["model_estimations"][0]))
+    other["local_id"] = "mod_other"
+    other["terms"][1]["name"] = _v("Combat exposure, three levels")
+    record["model_estimations"].append(other)
+    assert link.complete_partial_models(record, _sch()) == []

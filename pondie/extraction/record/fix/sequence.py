@@ -245,6 +245,13 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
+            "partial_models",
+            "copy into a model the terms its analyses cell and it lacks, from their declarer",
+            lambda body, ctx: link.complete_partial_models(body, ctx.schema),
+            after="empty_models",
+            stage="merged",
+        ),
+        Repair(
             "cell_levels",
             "rewrite a cell's level to the declared level it folds to",
             lambda body, ctx: link.align_cell_levels(body, ctx.text),
@@ -255,7 +262,11 @@ def build_sequence() -> tuple[Repair, ...]:
             "scoped_terms",
             "scope two models' identically-named terms by their model",
             lambda body, ctx: link.scope_duplicate_terms(body, ctx.schema),
-            stage="satisfy",
+            # At the merge, after the models are filled: inside `single` an analysis on a
+            # model with no terms yet names the bare id, which cannot be scoped, so the
+            # rename was reverted and the duplicate reached the record (17825801).
+            after="partial_models",
+            stage="merged",
         ),
         Repair(
             "references",

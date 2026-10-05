@@ -534,6 +534,83 @@ def fill_empty_models(body: dict[str, Any], sch: Schema) -> list[str]:
     return fixed
 
 
+def complete_partial_models(body: dict[str, Any], sch: Schema) -> list[str]:
+    """Give a model the terms its analyses' cells name and it lacks, from the model that
+    declares them.
+
+    `fill_empty_models` for a model that declares some terms but not all its analyses test.
+    17825801 fits one diagnosis x combat-exposure design four ways, unadjusted and adjusted
+    for age, combat severity or others. `mod_age` declares diagnosis and age, its analysis
+    "Diagnosis x Combat Exposure Interaction -- Age" cells `trm_exposure`, and only
+    `mod_unadjusted` declares it. The cell is the evidence the model had the term.
+
+    Only the missing terms that are celled, and what they are products of, are copied: the
+    donor's covariates are its own adjustment, not this model's. Copies are scoped
+    `<model>.<term>` and the cells repointed. Several donors are fine when they agree on the
+    copied terms; donors that disagree leave the model for the report.
+    """
+    models = {
+        m["local_id"]: m
+        for m in body.get("model_estimations") or []
+        if isinstance(m, dict) and isinstance(m.get("local_id"), str)
+    }
+    declared_by: dict[str, set[str]] = {}
+    for model_id, model in models.items():
+        for term in model.get("terms") or []:
+            if isinstance(term, Mapping) and isinstance(term.get("local_id"), str):
+                declared_by.setdefault(term["local_id"], set()).add(model_id)
+    fixed: list[str] = []
+    for model_id, model in models.items():
+        if not model.get("terms"):
+            continue  # `fill_empty_models`' case
+        analyses = [
+            a
+            for a in body.get("analyses") or []
+            if isinstance(a, dict) and a.get("model_estimation") == model_id
+        ]
+        named = {
+            cell.get("term")
+            for a in analyses
+            for cell in (a.get("effect") or {}).get("cells") or []
+            if isinstance(cell, Mapping) and isinstance(cell.get("term"), str)
+        }
+        scope = set(terms_in_scope(model_id, models))
+        missing = named - scope
+        if not missing or not all(declared_by.get(t) for t in missing):
+            continue
+        donors = set.intersection(*(declared_by[t] for t in missing)) - {model_id}
+        copies = {}
+        for donor in donors:
+            by_id = {
+                t["local_id"]: t
+                for t in models[donor].get("terms") or []
+                if isinstance(t, Mapping)
+            }
+            wanted = set(missing)
+            for term_id in list(wanted):
+                wanted |= {
+                    c
+                    for c in by_id[term_id].get("interaction_with") or []
+                    if isinstance(c, str) and c in by_id and c not in scope
+                }
+            copies[donor] = [by_id[t] for t in sorted(wanted)]
+        if len({tuple(map(_design, terms)) for terms in copies.values()}) != 1:
+            continue  # no donor, or donors that would give different terms
+        donor = min(copies)
+        scoped = {t["local_id"]: f"{model_id}.{t['local_id']}" for t in copies[donor]}
+        for term in json.loads(json.dumps(copies[donor])):
+            term["local_id"] = scoped[term["local_id"]]
+            walk.repoint(term, sch, scoped, root="ModelTerm", target="ModelTerm")
+            model["terms"].append(term)
+        for analysis in analyses:
+            walk.repoint(analysis, sch, scoped, root="Analysis", target="ModelTerm")
+        fixed.append(
+            f"model_estimations[{model_id!r}]: lacked {sorted(missing)} its analyses cell; "
+            f"copied {len(scoped)} term(s) from {donor!r}"
+        )
+    return fixed
+
+
 def _borrowed_terms(
     donor: Mapping[str, Any], named: set[Any], celled_by: Mapping[str, set[str]]
 ) -> list[Mapping[str, Any]]:
