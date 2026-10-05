@@ -1751,3 +1751,44 @@ last two earn their place on gold papers.
 0.95 -> 0.90); at 5, 23113800 ~ 19942229 too (0.86). The threshold sits at the top of a
 plateau, not on an edge: lowering it changes nothing, and raising it misses real re-reports.
 Substance use and the other pools have no overlap criterion.
+
+## A code review of tonight's repairs (subagent, read-only)
+
+The reviewer read `git diff 97dad25..HEAD -- pondie/` for correctness and found eight faults.
+All are fixed, each with a test:
+
+1. **`scope_duplicate_terms`, my regression, high severity.** After a revert
+   (`body.clear(); body.update(snapshot)`), the models list read before the loop still
+   pointed at the pre-revert dicts. The next collision renamed terms no longer in the
+   record while repointing the live cells, leaving them dangling, and the new check
+   (`dangling[name]`) passed, because the bare declarations were still in the record.
+   - *How it came to be:* I replaced a crude whole-record string check with a narrower one
+     and did not notice that the crude check also covered this.
+   - *Fix:* the models are re-read for each name, and any increase in dangling references
+     reverts.
+2. **`_reverse_name`** flipped every `<` and `>` in a name, the p-threshold in "PTSD > HC
+   (p < 0.001)" too. Now only the comparison the case matched.
+3. **`complete_partial_models`** raised on a donor term without a `local_id`, which would
+   lose the record's build.
+4. **`drop_vacuous_objects`** would drop `Study.design` with reasoned `not_reported`
+   fields, before `fill` could ask about it. Now only an object whose required reference is
+   blank, and a reasoned `not_reported` is an answer.
+5. **Ordering:** `table_effects` and `coordinate_space` ran before `table_references`, so a
+   repointed table got neither.
+6. **`_table_number`** misread "Supplementary Table 2", "Table 2 (n = 30)" and the `tbl1_2`
+   collision suffix. On rebuild this un-did a real mislink: 30739462's "Supplementary
+   Table 1" had been linked to main Table 1.
+7. **`rescope_tissue_masks`** wrote the mask into inference settings shared with a genuine
+   ROI analysis. It now does so only where no unmasked analysis shares them, and only when
+   an existing `search_volume` already names the mask.
+8. **`fold_label`** folded a leading minus away (`-1` equal to `1`). Now only a hyphen
+   between word characters is folded.
+
+Rebuilding 385 records changes only 30739462 (fault 6). The review also confirmed as
+correct: `walk.repoint`, `complete_condition_levels`, the polarity threshold guard,
+`_named_against_cells`, the guard's `choices`, the kind re-check, `_shared_enums` and
+`rekey_coordinate_sets`.
+
+Lesson: a second reader on a night's repairs found a record-corrupting regression that the
+rebuild diff could not, because no stored record had that shape. The rebuild diff tests
+what the data contains; review tests what the code allows.
