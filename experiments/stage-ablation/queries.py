@@ -24,6 +24,9 @@ one, or a between-subject regression on PTSD severity in a sample that is not PT
 from __future__ import annotations
 
 import re
+
+from pondie.normalization import is_healthy
+from pondie.vocabularies.phrases import triage
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -44,23 +47,11 @@ NOT_ORIGINAL = {"review", "systematic review", "meta-analysis", "editorial", "le
                 "comment", "case reports"}
 
 
-#: An entry that states an absence: "No current or past psychiatric disorders", "without
-#: PTSD", "never had PTSD". Richer extractions list a control cohort's exclusions this way,
-#: and a predicate reading condition words without it reads them as diagnoses.
-NEGATION = re.compile(r"^\s*(no|none|not|non|never|without|absence|absent|free of|negative for)\b|"
-                      r"\b(no|without|never had|no history of|free of)\s", re.I)
-
-
-#: Where one entry's clauses part: "17 survivors were diagnosed with recent-onset PTSD; 10
-#: survivors without PTSD participated" asserts PTSD in its first clause only.
-CLAUSE = re.compile(r";|\.\s+(?=[A-Z])")
-
-
 def asserted(entries: list[str]) -> list[str]:
-    """The clauses that assert a condition rather than its absence. Read per clause: a whole
-    entry dropped for one negated clause took the disorder its other clauses assert with it."""
-    clauses = (c.strip() for e in entries for c in CLAUSE.split(e))
-    return [c for c in clauses if c and not NEGATION.search(c)]
+    """The conditions the entries assert, as pondie's condition triage reads them: negation
+    scoped (`no psychiatric disorder`, `free from psychiatric symptoms`), compounds split
+    (`cocaine abuse or dependence`), and what `Group.is_healthy` is derived from."""
+    return [head for e in entries for head in triage(e).heads]
 
 
 def val(node: Any) -> Any:
@@ -167,6 +158,10 @@ def cohort_status(group: dict, case: re.Pattern, comparison: re.Pattern) -> bool
             return False
         if case.search(text):
             return True
+        # A label naming some other condition is another diagnosis; its description is
+        # not read for one: 26673947's nfvPPA cohort was "matched with bvFTD patients".
+        if slots[0] == "name" and asserted(strs(group.get("medical_condition"))):
+            return None
     return None
 
 
@@ -206,8 +201,12 @@ def adult(record: dict, ix: Index) -> bool | None:
     these papers that table never reached the text -- so a stated population is what the
     record has, and it is what a meta-analyst reads too.
     """
+    return _adult(list(ix.groups.values()), record)
+
+
+def _adult(groups: list[dict], record: dict) -> bool | None:
     numbers = []
-    for g in ix.groups.values():
+    for g in groups:
         low, mean = num(g.get("age_minimum")), num(g.get("age_mean"))
         if low is not None:
             numbers.append(low >= 18)
@@ -215,7 +214,7 @@ def adult(record: dict, ix: Index) -> bool | None:
             numbers.append(mean >= 18)
     if False in numbers:
         return False
-    words = " ".join(x for g in ix.groups.values() for slot in
+    words = " ".join(x for g in groups for slot in
                      ("name", "description", "inclusion_criteria", "population_characteristics",
                       "sample_source") for x in strs(g.get(slot)))
     words += " " + " ".join(strs((record.get("study") or record).get("description")))
@@ -933,13 +932,47 @@ DISORDER = re.compile(OTHER_DISORDER.pattern + r"|disorder|patient|disease|syndr
                       r"dyscalcul|dyslex|injur|deficit|impair", re.I)
 
 
-def healthy_only(record: dict, ix: Index) -> bool | None:
-    """"healthy ... individuals": no cohort asserts a disorder."""
-    entries = [x for g in ix.groups.values() for x in strs(g.get("medical_condition"))
-               + strs(g.get("name"))]
-    if not ix.groups:
+def _healthy(groups: list[dict]) -> bool | None:
+    """Every cohort's `Group.is_healthy` (derived where the record lacks it), and none
+    named for a disorder ("patients with schizophrenia")."""
+    if not groups:
         return None
-    return not any(DISORDER.search(e) for e in asserted(entries))
+    flags = []
+    for g in groups:
+        flag = val(g.get("is_healthy"))
+        if flag not in (True, False):
+            flag = is_healthy.derive(g)
+        if any(DISORDER.search(head) for head in asserted(strs(g.get("name")))):
+            flag = False
+        flags.append(flag)
+    if False in flags:
+        return False
+    return True if all(f is True for f in flags) else None
+
+
+def healthy_only(record: dict, ix: Index) -> bool | None:
+    """"healthy ... individuals", of every cohort in the paper."""
+    return _healthy(list(ix.groups.values()))
+
+
+def _sample(a: dict, ix: Index) -> list[dict]:
+    """The cohorts an analysis ran in, or the paper's when it names none."""
+    named = [ix.groups[g] for entry in a.get("groups") or []
+             for g in refs(entry.get("group") if isinstance(entry, dict) else entry)
+             if g in ix.groups]
+    return named or list(ix.groups.values())
+
+
+def healthy_sample(a: dict, record: dict, ix: Index) -> bool | None:
+    """"group-level effects in healthy adult individuals": of the analysis's own sample.
+    24221533 compares alcohol-dependent subjects with controls; its gold effect is the
+    controls' own."""
+    return _healthy(_sample(a, ix))
+
+
+def adult_sample(a: dict, record: dict, ix: Index) -> bool | None:
+    """`adult`, of the analysis's own sample: 14741309 studied children and adults apart."""
+    return _adult(_sample(a, ix), record)
 
 
 def problem_task(a: dict, record: dict, ix: Index) -> bool | None:
@@ -989,11 +1022,11 @@ def within_increase(a: dict, record: dict, ix: Index) -> bool | None:
 PS_STUDY: list[tuple[str, Callable]] = [
     ("original research", original),
     ("1997 to March 2015", search_window),
-    ("adult", adult),
-    ("healthy", healthy_only),
     ("reports coordinates", reports_coordinates),
 ]
 PS_ANALYSIS: list[tuple[str, Callable]] = [
+    ("adult sample", adult_sample),
+    ("healthy sample", healthy_sample),
     ("fMRI or PET", functional_or_pet),
     ("problem-solving task", problem_task),
     ("within-participant increase", within_increase),
