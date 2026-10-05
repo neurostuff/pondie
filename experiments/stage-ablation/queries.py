@@ -128,6 +128,26 @@ class Index:
                 if isinstance(t, dict):
                     self.terms[t.get("local_id")] = t
 
+    def tasks_of(self, a: dict) -> list[dict]:
+        """The analysis's tasks, or the paper's when it links none."""
+        return [self.tasks[t] for t in refs(a.get("tasks")) if t in self.tasks] or list(
+            self.tasks.values())
+
+    def acqs_of(self, a: dict) -> list[dict]:
+        """The analysis's acquisitions, or the paper's when it links none."""
+        return [self.acqs[x] for x in refs(a.get("acquisitions")) if self.acqs.get(x)] or list(
+            self.acqs.values())
+
+    def measure_of(self, a: dict) -> dict | None:
+        return next((self.measures[t] for t in refs(a.get("measure")) if t in self.measures), None)
+
+    def model_of(self, a: dict) -> dict | None:
+        return next((self.models[t] for t in refs(a.get("model_estimation")) if t in self.models),
+                    None)
+
+    def term_of(self, cell: dict) -> dict | None:
+        return next((self.terms.get(t) for t in refs(cell.get("term")) if t in self.terms), None)
+
     def group_text(self, gid: str) -> str:
         g = self.groups.get(gid) or {}
         return " ".join(strs(g.get("name")) + strs(g.get("medical_condition"))
@@ -139,6 +159,17 @@ class Index:
 
     # the PTSD name, kept for callers written against it
     is_ptsd_group = is_case
+
+
+def task_text(tasks: list[dict], task_slots: tuple[str, ...] = ("name", "description"),
+              condition_slots: tuple[str, ...] = ("name", "description")) -> str:
+    """What the tasks, and their conditions, say: the text a task criterion reads."""
+    return " ".join(
+        x for t in tasks
+        for x in [y for slot in task_slots for y in strs(t.get(slot))]
+        + [y for c in t.get("conditions") or [] if isinstance(c, dict)
+           for slot in condition_slots for y in strs(c.get(slot))]
+    )
 
 
 def cohort_status(group: dict, case: re.Pattern, comparison: re.Pattern) -> bool | None:
@@ -287,12 +318,11 @@ PTSD_STUDY: list[tuple[str, Callable]] = [
 def structural(a: dict, record: dict, ix: Index) -> bool | None:
     # The measure is the surer sign: 22453299's VBM contrast points at the paper's only
     # declared acquisition, the fMRI one, because the T1 the VBM used was never emitted.
-    m = next((ix.measures[t] for t in refs(a.get("measure")) if t in ix.measures), None)
+    m = ix.measure_of(a)
     if m is not None and ("structural_morphometry" in strs(m.get("family"))
                           or any(GREY.search(k) for k in strs(m.get("type")) + strs(m.get("source_label")))):
         return True
-    acqs = [ix.acqs.get(x) for x in refs(a.get("acquisitions"))]
-    acqs = [x for x in acqs if x] or list(ix.acqs.values())
+    acqs = ix.acqs_of(a)
     mods = [s for x in acqs for s in strs(x.get("modality"))]
     if not mods:
         return None
@@ -301,14 +331,14 @@ def structural(a: dict, record: dict, ix: Index) -> bool | None:
 
 def grey_voxelwise(a: dict, record: dict, ix: Index) -> bool | None:
     """Grey matter, measured voxel-wise ("other non-voxel-based morphometry" excluded)."""
-    m = next((ix.measures[t] for t in refs(a.get("measure")) if t in ix.measures), None)
+    m = ix.measure_of(a)
     kinds = (strs(m.get("type")) + strs(m.get("source_label")) + strs(m.get("specific_metric"))
              if m else [])
     if not kinds:
         return None
     if not any(GREY.search(k) for k in kinds):
         return False
-    model = next((ix.models[t] for t in refs(a.get("model_estimation")) if t in ix.models), None)
+    model = ix.model_of(a)
     unit = strs(model.get("spatial_unit")) if model else []
     if unit and not any(u == "voxel" for u in unit):
         return False
@@ -338,7 +368,7 @@ def _level_of(term: dict | None, label: str) -> dict | None:
 
 def _cell_cohort(cell: dict, ix: Index) -> tuple[bool | None, dict | None, dict | None]:
     """(is the contrasted level a PTSD cohort?, the term, the level) for one cell."""
-    term = next((ix.terms.get(t) for t in refs(cell.get("term")) if t in ix.terms), None)
+    term = ix.term_of(cell)
     label = " ".join(strs(cell.get("level")))
     level = _level_of(term, label)
     groups = refs(level.get("groups")) if level else []
@@ -429,7 +459,7 @@ def ptsd_decrease(a: dict, record: dict, ix: Index) -> bool | None:
         direction = " ".join(strs(cell.get("direction")))
         if direction not in ("positive", "negative"):
             continue
-        term = next((ix.terms.get(t) for t in refs(cell.get("term")) if t in ix.terms), None)
+        term = ix.term_of(cell)
         level = " ".join(strs(cell.get("level")))
         groups = []
         if term is not None:
@@ -569,11 +599,10 @@ OTHER_TRACER = re.compile(r"amyloid|pib|florbetapir|florbetaben|flutemetamol|tau
 
 def vbm_fmri_or_fdg(a: dict, record: dict, ix: Index) -> bool | None:
     """(3): VBM, fMRI (resting-state or task) or FDG-PET."""
-    m = next((ix.measures[t] for t in refs(a.get("measure")) if t in ix.measures), None)
+    m = ix.measure_of(a)
     kinds = set(strs(m.get("type"))) if m else set()
     label = " ".join(strs(m.get("source_label")) + strs(m.get("specific_metric"))) if m else ""
-    acqs = [ix.acqs.get(x) for x in refs(a.get("acquisitions"))]
-    acqs = [x for x in acqs if x] or list(ix.acqs.values())
+    acqs = ix.acqs_of(a)
     mods = {x for acq in acqs for x in strs(acq.get("modality"))}
     acq_text = " ".join(x for acq in acqs for x in strs(acq.get("acquisition_type")))
     if not kinds and not mods:
@@ -582,7 +611,7 @@ def vbm_fmri_or_fdg(a: dict, record: dict, ix: Index) -> bool | None:
     # "grey matter intensity" (26401935's bvFTD-vs-controls atrophy analysis), so the
     # label decides as well as the type -- as `grey_voxelwise` already does for PTSD.
     if kinds & GREY_TYPES or (GREY.search(label) and not kinds & (BOLD_TYPES | PET_TYPES)):
-        model = next((ix.models[t] for t in refs(a.get("model_estimation")) if t in ix.models), None)
+        model = ix.model_of(a)
         unit = strs(model.get("spatial_unit")) if model else []
         return not unit or "voxel" in unit
     if kinds & BOLD_TYPES:
@@ -769,7 +798,7 @@ def whole_brain_or_svc(a: dict, record: dict, ix: Index) -> bool | None:
         return None
     if "whole_brain" in scope:
         return True
-    model = next((ix.models[t] for t in refs(a.get("model_estimation")) if t in ix.models), None)
+    model = ix.model_of(a)
     unit = set(strs(model.get("spatial_unit"))) if model else set()
     if unit & {"voxel", "vertex"}:
         return True
@@ -778,7 +807,7 @@ def whole_brain_or_svc(a: dict, record: dict, ix: Index) -> bool | None:
 
 def visual_cues(a: dict, record: dict, ix: Index) -> bool | None:
     """"using visual stimuli": the analysis's task (or, unlinked, the paper's tasks)."""
-    tasks = [ix.tasks[t] for t in refs(a.get("tasks")) if t in ix.tasks] or list(ix.tasks.values())
+    tasks = ix.tasks_of(a)
     mods = {m for t in tasks for m in strs(t.get("stimulus_modality"))}
     if not mods:
         return None
@@ -790,16 +819,19 @@ def visual_cues(a: dict, record: dict, ix: Index) -> bool | None:
     return None if mods & {"gustatory", "olfactory", "tactile"} else True
 
 
-def functional_mri(a: dict, record: dict, ix: Index) -> bool | None:
-    """"fMRI studies": a BOLD measure, or an fMRI acquisition where the measure says nothing."""
-    m = next((ix.measures[t] for t in refs(a.get("measure")) if t in ix.measures), None)
+def _measured(a: dict, ix: Index, types: set[str], modalities: set[str]) -> bool | None:
+    """The measure's type decides; the acquisition's modality only where it says nothing."""
+    m = ix.measure_of(a)
     kinds = set(strs(m.get("type"))) if m else set()
     if kinds:
-        return bool(kinds & BOLD_TYPES)
-    acqs = [ix.acqs.get(x) for x in refs(a.get("acquisitions"))]
-    acqs = [x for x in acqs if x] or list(ix.acqs.values())
-    mods = {x for acq in acqs for x in strs(acq.get("modality"))}
-    return None if not mods else "fMRI" in mods
+        return bool(kinds & types)
+    mods = {x for acq in ix.acqs_of(a) for x in strs(acq.get("modality"))}
+    return None if not mods else bool(mods & modalities)
+
+
+def functional_mri(a: dict, record: dict, ix: Index) -> bool | None:
+    """"fMRI studies": a BOLD measure, or an fMRI acquisition where the measure says nothing."""
+    return _measured(a, ix, BOLD_TYPES, {"fMRI"})
 
 
 def cue_gt_control(a: dict, record: dict, ix: Index) -> bool | None:
@@ -813,7 +845,7 @@ def cue_gt_control(a: dict, record: dict, ix: Index) -> bool | None:
         return None
     sides, between = {}, False
     for cell in cells:
-        term = next((ix.terms.get(t) for t in refs(cell.get("term")) if t in ix.terms), None)
+        term = ix.term_of(cell)
         label = " ".join(strs(cell.get("level")))
         level = _level_of(term, label)
         within = _within(term, level)
@@ -880,12 +912,10 @@ RISK_WORDS = re.compile(r"gambl|lotter|\brisk|ambigu|wager|balloon|iowa|cups tas
 def decision_task(a: dict, record: dict, ix: Index) -> bool | None:
     """"risky-, ambiguous- and perceptual-DM": the analysis's task (or, unlinked, the paper's
     tasks) is one where participants choose."""
-    tasks = [ix.tasks[t] for t in refs(a.get("tasks")) if t in ix.tasks] or list(ix.tasks.values())
+    tasks = ix.tasks_of(a)
     if not tasks:
         return None
-    text = " ".join(x for t in tasks for x in strs(t.get("name")) + strs(t.get("description"))
-                    + [y for c in t.get("conditions") or [] if isinstance(c, dict)
-                       for y in strs(c.get("name")) + strs(c.get("description"))])
+    text = task_text(tasks)
     # Social exchange is a decision, but not one of the three the meta-analysis pools
     # (25720857's Ultimatum Game); nor is learning from probabilistic feedback (27710793,
     # 28575424, 29590478) -- "probabilistic" was dropped from DECISION for it.
@@ -977,25 +1007,16 @@ def adult_sample(a: dict, record: dict, ix: Index) -> bool | None:
 
 def problem_task(a: dict, record: dict, ix: Index) -> bool | None:
     """"met definition of problem solving": the analysis's task (or, unlinked, the paper's)."""
-    tasks = [ix.tasks[t] for t in refs(a.get("tasks")) if t in ix.tasks] or list(ix.tasks.values())
+    tasks = ix.tasks_of(a)
     if not tasks:
         return None
-    text = " ".join(x for t in tasks for x in strs(t.get("name")) + strs(t.get("description"))
-                    + [y for c in t.get("conditions") or [] if isinstance(c, dict)
-                       for y in strs(c.get("name")) + strs(c.get("description"))])
+    text = task_text(tasks)
     return bool(PROBLEM.search(text))
 
 
 def functional_or_pet(a: dict, record: dict, ix: Index) -> bool | None:
     """"BOLD/rCBF": an fMRI BOLD measure, or PET blood flow."""
-    m = next((ix.measures[t] for t in refs(a.get("measure")) if t in ix.measures), None)
-    kinds = set(strs(m.get("type"))) if m else set()
-    if kinds:
-        return bool(kinds & (BOLD_TYPES | PET_TYPES))
-    acqs = [ix.acqs.get(x) for x in refs(a.get("acquisitions"))]
-    acqs = [x for x in acqs if x] or list(ix.acqs.values())
-    mods = {x for acq in acqs for x in strs(acq.get("modality"))}
-    return None if not mods else bool(mods & {"fMRI", "PET"})
+    return _measured(a, ix, BOLD_TYPES | PET_TYPES, {"fMRI", "PET"})
 
 
 def within_increase(a: dict, record: dict, ix: Index) -> bool | None:
@@ -1006,7 +1027,7 @@ def within_increase(a: dict, record: dict, ix: Index) -> bool | None:
         return None
     positive_within, signed_between = False, False
     for cell in cells:
-        term = next((ix.terms.get(t) for t in refs(cell.get("term")) if t in ix.terms), None)
+        term = ix.term_of(cell)
         level = _level_of(term, " ".join(strs(cell.get("level"))))
         within = _within(term, level)
         sign = strs(cell.get("direction"))
@@ -1069,13 +1090,10 @@ def ages_18_to_60(record: dict, ix: Index) -> bool | None:
 
 def social_task(a: dict, record: dict, ix: Index) -> bool | None:
     """"a social-related task": the analysis's task (or, unlinked, the paper's)."""
-    tasks = [ix.tasks[t] for t in refs(a.get("tasks")) if t in ix.tasks] or list(ix.tasks.values())
+    tasks = ix.tasks_of(a)
     if not tasks:
         return None
-    text = " ".join(x for t in tasks for x in strs(t.get("name")) + strs(t.get("description"))
-                    + strs(t.get("stimuli"))
-                    + [y for c in t.get("conditions") or [] if isinstance(c, dict)
-                       for y in strs(c.get("name")) + strs(c.get("stimulus_content"))])
+    text = task_text(tasks, ("name", "description", "stimuli"), ("name", "stimulus_content"))
     return bool(SOCIAL.search(text))
 
 
