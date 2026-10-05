@@ -1468,3 +1468,9 @@ references?).** Calls by stage over 55 PTSD papers, from `usage.jsonl`:
 `single` needs fewer attempts under strict decoding (1.2-1.3 per paper, against 1.8), so it
 does not. `repair` is now the largest consumer, 44% of calls. Its proposer sweep was judged
 "not worth it for selection" on an older pipeline, and has not been re-measured on S2r.
+
+**`repair` and selection, re-measured on S2r.** Scoring each PTSD draw's `unrepaired/` records
+against its final ones gives identical selection and foci in both draws (18/19, 0.95; foci
+128/143 and 117/143). `repair` buys record validity (36 -> 43 of 55 valid on the first draw)
+and nothing in selection, for 44% of the calls. Kept: the adjudicator settles the
+validator's contradictions, and the sweep fills real gaps (27082610: regions, an assessment).
