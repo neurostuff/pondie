@@ -277,7 +277,7 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "derived_ids",
             "rename each analysis to an id the parse determines",
-            lambda body, ctx: derive.derive_analysis_ids(body),
+            lambda body, ctx: derive.derive_analysis_ids(body, ctx.schema),
             after="source_links",
             stage="demands",
         ),

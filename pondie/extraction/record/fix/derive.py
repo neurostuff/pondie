@@ -532,7 +532,7 @@ def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> 
     return notes
 
 
-def derive_analysis_ids(body: dict[str, Any]) -> list[str]:
+def derive_analysis_ids(body: dict[str, Any], sch: Schema) -> list[str]:
     """Rename each analysis to an id the parse determines, not one the model chose.
 
     A model-chosen `local_id` is unstable. Over the same sixteen papers extracted twice,
@@ -543,9 +543,8 @@ def derive_analysis_ids(body: dict[str, Any]) -> list[str]:
     reviewer gave.
 
     `source_table_analysis` is already a deterministic paper-scoped key, so the id is
-    derived from it: `a_<table id>_<ordinal>`. Safe to do here because nothing in the
-    schema references an Analysis by id -- `Study.analyses` is the only slot with that
-    range and it inlines them -- so the sole pointer to follow is `mirror_of`.
+    derived from it: `a_<table id>_<ordinal>`. Every reference slot whose range is
+    Analysis (`mirror_of`, `CoordinateSet.analysis`) follows the rename.
 
     An analysis with no key keeps the model's id. That is 25% of them and it is the
     honest outcome: the parse does not determine an id for a row group it cannot identify,
@@ -589,10 +588,13 @@ def derive_analysis_ids(body: dict[str, Any]) -> list[str]:
             renamed[old] = derived
         notes.append(f"{old!r} -> {derived!r} (from {key!r})")
 
-    # `mirror_of` is the only pointer at an analysis anywhere in the record.
-    for analysis in body.get("analyses") or []:
-        if isinstance(analysis, Mapping) and analysis.get("mirror_of") in renamed:
-            analysis["mirror_of"] = renamed[analysis["mirror_of"]]
+    for slot in walk.references(body, sch) if renamed else ():
+        if "Analysis" not in sch.ranges(slot.attribute):
+            continue
+        if isinstance(slot.value, str):
+            slot.owner[slot.key] = renamed.get(slot.value, slot.value)
+        elif isinstance(slot.value, list):
+            slot.owner[slot.key] = [renamed.get(v, v) if isinstance(v, str) else v for v in slot.value]
     return notes
 
 

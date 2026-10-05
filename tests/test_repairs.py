@@ -15,6 +15,8 @@ import json
 import pytest
 
 from pondie.extraction.record import fix
+from pondie.schema import reader
+import pondie.schema as schema_pkg
 
 
 def test_the_declared_repair_order_holds():
@@ -400,6 +402,8 @@ def test_no_parse_means_nothing_is_invented(tmp_path):
 
 # --- derived analysis ids -----------------------------------------------------
 
+_SCH = reader.load(schema_pkg.EXTRACTION)
+
 
 def test_an_analysis_id_is_derived_from_its_parse_key():
     # A model-chosen id is unstable: over the same 16 papers extracted twice, only four
@@ -412,16 +416,16 @@ def test_an_analysis_id_is_derived_from_its_parse_key():
             }
         ]
     }
-    notes = fix.derive_analysis_ids(body)
+    notes = fix.derive_analysis_ids(body, _SCH)
     assert body["analyses"][0]["local_id"] == "a_t0035_2"
     assert notes and "t0035#2" in notes[0]
 
 
 def test_deriving_ids_is_idempotent():
     body = {"analyses": [{"local_id": "a_x", "source_table_analysis": _wrapped("t1#1")}]}
-    fix.derive_analysis_ids(body)
+    fix.derive_analysis_ids(body, _SCH)
     first = body["analyses"][0]["local_id"]
-    assert fix.derive_analysis_ids(body) == []
+    assert fix.derive_analysis_ids(body, _SCH) == []
     assert body["analyses"][0]["local_id"] == first
 
 
@@ -433,7 +437,7 @@ def test_analyses_sharing_a_key_are_numbered_apart():
             {"local_id": "a2", "source_table_analysis": _wrapped("t1#1")},
         ]
     }
-    fix.derive_analysis_ids(body)
+    fix.derive_analysis_ids(body, _SCH)
     assert [a["local_id"] for a in body["analyses"]] == ["a_t1_1", "a_t1_1_2"]
 
 
@@ -441,12 +445,11 @@ def test_an_analysis_with_no_key_keeps_the_models_id():
     # 25% of analyses cannot be tied to a row group; inventing a stable-looking id for
     # them would claim the parse identifies something it does not.
     body = {"analyses": [{"local_id": "a_hand_named", "name": _wrapped("x")}]}
-    assert fix.derive_analysis_ids(body) == []
+    assert fix.derive_analysis_ids(body, _SCH) == []
     assert body["analyses"][0]["local_id"] == "a_hand_named"
 
 
 def test_mirror_of_is_repointed_to_the_new_id():
-    # `mirror_of` is the only pointer at an analysis anywhere in the record.
     body = {
         "analyses": [
             {"local_id": "a_described", "source_table_analysis": _wrapped("t1#1")},
@@ -457,9 +460,19 @@ def test_mirror_of_is_repointed_to_the_new_id():
             },
         ]
     }
-    fix.derive_analysis_ids(body)
+    fix.derive_analysis_ids(body, _SCH)
     assert body["analyses"][0]["local_id"] == "a_t1_1"
     assert body["analyses"][1]["mirror_of"] == "a_t1_1"
+
+
+def test_a_coordinate_set_follows_its_analysis_to_the_new_id():
+    # Left on the old id, every coordinate set dangles and the reply is retried for it.
+    body = {
+        "analyses": [{"local_id": "ana_ptsd_lt_hc", "source_table_analysis": _wrapped("prose#1")}],
+        "coordinate_sets": [{"local_id": "cs_1", "analysis": "ana_ptsd_lt_hc"}],
+    }
+    fix.derive_analysis_ids(body, _SCH)
+    assert body["coordinate_sets"][0]["analysis"] == "a_prose_1"
 
 
 def test_a_derived_id_already_taken_leaves_both_alone():
@@ -470,7 +483,7 @@ def test_a_derived_id_already_taken_leaves_both_alone():
             {"local_id": "a_other", "source_table_analysis": _wrapped("t1#1")},
         ]
     }
-    notes = fix.derive_analysis_ids(body)
+    notes = fix.derive_analysis_ids(body, _SCH)
     assert body["analyses"][1]["local_id"] == "a_other"
     assert notes and "already taken" in notes[0]
 
