@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from pondie.extraction.record import ids
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import walk
@@ -1007,6 +1008,67 @@ def repair_references(body: dict[str, Any], sch: Schema) -> list[str]:
 
     settled = {**slips, **_without_collapses(proposed)}
     return [reference.repoint_to(target) for reference, target in settled.items()]
+
+
+_TABLE_NUMBER = re.compile(r"(s?)0*(\d+)\D*$")
+
+
+def _table_number(text: Any) -> tuple[bool, int] | None:
+    """(supplementary, number) of an id or label: `table2` and `Table 2` -> (False, 2),
+    `tbltableS2` and `Table S2` -> (True, 2)."""
+    found = _TABLE_NUMBER.search(text.lower()) if isinstance(text, str) else None
+    return (bool(found.group(1)), int(found.group(2))) if found else None
+
+
+def settle_table_references(body: dict[str, Any], sch: Schema, table_map: Path | None) -> list[str]:
+    """Repoint or drop a reference to a table no Table entity declares.
+
+    Tables come from the parse, never from a model pass, so no retry can declare the table a
+    dangling reference names. 26952803's text keeps its tables' captions but not their rows,
+    the parse found none, and `single` wrote `tables: ["table2"]` twice before a third
+    attempt left it out. A reference is repointed when exactly one declared table carries
+    its number, and dropped otherwise.
+
+    Only once the `tables` stage has run (it always writes `table_map`): before that, the
+    table may yet be declared.
+    """
+    if table_map is None or not table_map.is_file():
+        return []
+    tables = {
+        t["local_id"]: t
+        for t in body.get("tables") or []
+        if isinstance(t, Mapping) and isinstance(t.get("local_id"), str)
+    }
+    by_number: dict[tuple[bool, int] | None, list[str]] = {}
+    for local_id, table in tables.items():
+        by_number.setdefault(_table_number(values.read(table.get("table_number"))), []).append(
+            local_id
+        )
+    targets = {"Table", *sch.subclasses("Table")}
+    fixed: list[str] = []
+    for slot in walk.references(body, sch):
+        if not targets & set(sch.ranges(slot.attribute)):
+            continue
+        named = walk.ids_of(slot.value)
+        if all(i in tables for i in named):
+            continue
+        kept: list[str] = []
+        for i in named:
+            number = _table_number(i)
+            match = [i] if i in tables else by_number.get(number, []) if number else []
+            if len(match) == 1:
+                if match[0] != i:
+                    fixed.append(f"{slot.path}: {i!r} -> {match[0]!r}, the only table so numbered")
+                if match[0] not in kept:
+                    kept.append(match[0])
+            else:
+                why = "no declared table is so numbered" if tables else "the paper has no declared table"
+                fixed.append(f"{slot.path}: {i!r} dropped -- {why}")
+        if kept:
+            slot.owner[slot.key] = kept if isinstance(slot.value, list) else kept[0]
+        else:
+            del slot.owner[slot.key]
+    return fixed
 
 
 def check_local_ids(body: dict[str, Any], sch: Schema) -> list[str]:

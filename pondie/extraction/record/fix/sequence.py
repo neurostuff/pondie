@@ -265,6 +265,14 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
+            "table_references",
+            "repoint a reference to an undeclared table by its number, or drop it",
+            lambda body, ctx: link.settle_table_references(body, ctx.schema, ctx.table_map),
+            # After `references`, which repairs a transcription slip of a declared id.
+            after="references",
+            stage="merged",
+        ),
+        Repair(
             "cell_terms",
             "repoint a cell at the same-named term its model reaches",
             lambda body, ctx: link.repoint_out_of_scope_terms(body),

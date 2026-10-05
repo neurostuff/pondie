@@ -552,6 +552,40 @@ def test_deriving_ids_introduces_no_dangling_reference():
     assert log.introduced == {}
 
 
+# --- references to tables ------------------------------------------------------
+
+
+def _table_map(tmp_path):
+    path = tmp_path / "table-map.json"
+    path.write_text("{}")
+    return path
+
+
+def test_a_table_reference_with_no_table_declared_is_dropped(tmp_path):
+    # 26952803: the text keeps captions, not rows, so no Table exists to point at.
+    body = {"analyses": [{"local_id": "a1", "tables": ["table2"]}]}
+    notes = fix.link.settle_table_references(body, _SCH, _table_map(tmp_path))
+    assert "tables" not in body["analyses"][0]
+    assert notes and "no declared table" in notes[0]
+
+
+def test_a_table_reference_is_repointed_to_the_only_table_with_its_number(tmp_path):
+    body = {
+        "tables": [{"local_id": "tbltable2", "table_number": _wrapped("Table 2")},
+                   {"local_id": "tbltableS2", "table_number": _wrapped("Table S2")}],
+        "analyses": [{"local_id": "a1", "tables": ["table2", "tbltableS2"]}],
+    }
+    fix.link.settle_table_references(body, _SCH, _table_map(tmp_path))
+    assert body["analyses"][0]["tables"] == ["tbltable2", "tbltableS2"]
+
+
+def test_table_references_wait_for_the_tables_stage():
+    # Without its table map the tables stage has not run, and the table may yet be declared.
+    body = {"analyses": [{"local_id": "a1", "tables": ["table2"]}]}
+    assert fix.link.settle_table_references(body, _SCH, None) == []
+    assert body["analyses"][0]["tables"] == ["table2"]
+
+
 def test_every_repair_names_a_stage_that_runs():
     """A repair with no group never runs, and nothing would say so: `apply_all` filters by
     stage and a typo simply matches nothing."""

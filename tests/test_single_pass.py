@@ -248,6 +248,27 @@ def test_a_fault_a_repair_fixes_does_not_cost_a_retry(tmp_path):
     assert _calls_for(tmp_path, _two_models("trm_group")) == ["single"]
 
 
+def test_a_reference_to_a_table_the_parse_lost_does_not_cost_a_retry(tmp_path):
+    """26952803: no table survived ingestion, and `single` named `table2` from the text. No
+    retry can declare a Table, so the reference is dropped rather than asked for again."""
+    import json
+
+    from pondie.extraction.stages import Tables
+
+    paper = _staged(tmp_path)
+    settings = Settings(payloads=tmp_path / "p", records=tmp_path / "r", model="m",
+                        stages=(StageName.single,), complete_references=False)
+    tables = Tables().produces(paper, settings)
+    tables.parent.mkdir(parents=True, exist_ok=True)
+    tables.write_text(json.dumps({"tables": []}))
+    paper.table_map.write_text("{}")
+    reply = {"analyses": [{**_analysis(), "tables": ["table2"]}]}
+    assert render.postcondition_failures(reply, "single"), "raw: a fault"
+    seen = []
+    Single().run(paper, settings, _scripted([reply] * 3, seen))
+    assert seen == ["single"]
+
+
 def test_a_fault_no_repair_fixes_is_still_retried(tmp_path):
     assert _calls_for(tmp_path, _two_models("trm_nowhere")) == ["single"] * 3
 
