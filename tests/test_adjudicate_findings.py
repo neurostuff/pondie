@@ -607,3 +607,24 @@ def test_donors_that_disagree_leave_a_partial_model_alone():
     other["terms"][1]["name"] = _v("Combat exposure, three levels")
     record["model_estimations"].append(other)
     assert link.complete_partial_models(record, _sch()) == []
+
+
+def test_a_model_with_its_own_same_named_term_is_repointed_not_given_a_copy():
+    """19794316: `mod_group_wholebrain` declares its own `group` term; its cells named the
+    ROI model's `trm_group`. Run before `cell_terms`, the partial-model repair copied
+    `trm_group` in beside it."""
+    from pondie.extraction.record import fix
+
+    def term(tid):
+        return {"local_id": tid, "name": _v("group"), "type": _v("categorical"),
+                "levels": [{"level": _v("PTSD")}, {"level": _v("control")}]}
+    record = {
+        "model_estimations": [{"local_id": "mod_roi", "terms": [term("trm_group")]},
+                              {"local_id": "mod_wb", "terms": [term("trm_group_wb")]}],
+        "analyses": [{"local_id": "a_wb", "model_estimation": "mod_wb", "effect": {"cells": [
+            {"term": "trm_group", "level": _v("PTSD"), "direction": _v("positive")},
+            {"term": "trm_group", "level": _v("control"), "direction": _v("negative")}]}}],
+    }
+    fix.apply_all(record, fix.Context(schema=_sch()), stage="merged")
+    assert [t["local_id"] for t in record["model_estimations"][1]["terms"]] == ["trm_group_wb"]
+    assert {c["term"] for c in record["analyses"][0]["effect"]["cells"]} == {"trm_group_wb"}

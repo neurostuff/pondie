@@ -245,10 +245,19 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
+            "cell_terms",
+            "repoint a cell at the same-named term its model reaches",
+            lambda body, ctx: link.repoint_out_of_scope_terms(body),
+            after="listified",
+            stage="merged",
+        ),
+        Repair(
             "partial_models",
             "copy into a model the terms its analyses cell and it lacks, from their declarer",
             lambda body, ctx: link.complete_partial_models(body, ctx.schema),
-            after="empty_models",
+            # After `cell_terms`: a cell naming another model's `trm_group` where its own
+            # model declares a `group` term of its own is repointed, not given a copy.
+            after="cell_terms",
             stage="merged",
         ),
         Repair(
@@ -281,13 +290,6 @@ def build_sequence() -> tuple[Repair, ...]:
             lambda body, ctx: link.settle_table_references(body, ctx.schema, ctx.table_map),
             # After `references`, which repairs a transcription slip of a declared id.
             after="references",
-            stage="merged",
-        ),
-        Repair(
-            "cell_terms",
-            "repoint a cell at the same-named term its model reaches",
-            lambda body, ctx: link.repoint_out_of_scope_terms(body),
-            after="listified",
             stage="merged",
         ),
         Repair(
