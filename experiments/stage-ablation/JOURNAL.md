@@ -1176,3 +1176,46 @@ their analysis's `source_table_analysis`. All 3 that differ are from 28549317, k
 the table's `local_id` (`tbltable2#1`) where the analyses carry the parse key (`823#1`).
 One of them links an `anchor` set to an analysis, which the schema allows only for
 results. No rule checks that the two joins agree.
+
+### `single` retried on table references no retry could clear
+
+**What happened.** 26952803 spent two full `single` attempts on `Analysis.tables:
+["table2"]` before a third left the slot out. That cost about 6 minutes on flex and two
+full-prompt calls.
+
+**Upstream cause: the tables were lost at ingestion.** The `old-corpus` text keeps each
+table's caption and footnotes but no rows. Its `tables.jsonl` is empty and the parse is
+`autonima/empty`. PubMed has no PMC copy (no PMCID). Two of the 55 PTSD papers are like
+this:
+
+| paper | tables lost | in the meta-analysis |
+|---|---|---|
+| 26952803 | 3, two of them coordinate tables | yes |
+| 22948482 | 6, including Table 5's VBM findings | no |
+
+Their coordinates cannot be recovered from this corpus.
+
+**Why retries could not succeed.** With an empty parse the prompt has no table listing,
+so no `[no table local_id — OMIT tables]` line. The model sees "Table 2" in the text and
+cites it. The retry note says "every local_id you reference must be an entity you emit",
+but `single` cannot emit a Table; only the `tables` stage declares them.
+
+**How it came to be.** The same reasoning was written down once, for *declarations*
+("Tables are copied from the pubget manifest, never extracted, so a declaration naming one
+asks this pass for something it is forbidden to emit. Demanding it spends the whole retry
+budget on a fault no retry can clear"). It was never applied to *references*. The fact
+that Tables come from code lives in a comment and a `startswith("tbl")` test, not in one
+place both checks consult. The `tables` stage even noted "no Table records, so no
+`Analysis.tables` target exists", but no code reads stage notes.
+
+**What changed.** `settle_table_references` (merge repairs, so `_judged` applies it too)
+works on any reference whose range is Table. It repoints to the only declared table
+carrying the reference's number, keeping supplementary tables (`S2`) apart from main ones
+(`2`), and drops the reference otherwise. It waits for the `tables` stage: until
+`table_map` exists, a table may yet be declared. On 75 rebuilt records, dangling table
+references went from 6 to 0: all six were 17892884's `table_2`, repointed to `tbltable2`.
+Nothing else changed.
+
+**Noted.** The `Validator`'s error count does not include dangling references
+(`check_local_ids` reports them separately, in the build report's `dangling`). So
+17892884's 12 errors did not move when its 6 dangling references were fixed.
