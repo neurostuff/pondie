@@ -1387,3 +1387,42 @@ PTSD the flag compensates for one ingestion loss and admits no false positive. T
 excluded by `reports coordinates` alone are 16701903 (a null result) and 19914045 (a priori
 ROI), each with a reason of its own in the negatives list above. Both scorings are now
 reported for each meta-analysis.
+
+## The PTSD rerun (`ptsd55_s2r2`, code `d11af84`: null-result sentence, adjudicator fixes)
+
+| run | veto recall | precision | foci recall | foci precision |
+|---|---|---|---|---|
+| `ptsd55_s2r` | 18/19 | 0.95 | 128/143 | 155/173 |
+| `ptsd55_s2r2` | 18/19 | 0.95 | 117/143 | 139/156 |
+
+Inputs-only scoring, without `--gold-coords`, gives 17/19 at 0.94 for both, the loss again
+being 26952803. The foci drop is one paper: **21418787 went from 11/12 gold foci to 0/12.**
+Its analysis `a_803_1` "Combined PTSD and major depression groups < Controls (brain volume
+reduction)" carried cells PTSD +, major depression +, control −. That is the reverse of its
+own name and of the parse's entry, so it left the PTSD-decrease pool. The first run had it
+right.
+
+**Name against cells.** A new adjudicator case fires when an analysis's name states `A < B`
+or `A > B`, every signed cell's level names one side only, and all of them carry the
+opposite sign. P-value thresholds ("P < 0.01") are excluded. Across ~380 stored records it
+fires on exactly two analyses, both in this rerun:
+- 21418787: the signs were wrong.
+- 30343133: the name was wrong. The parse titles that row group "PTSD > TD", the cells
+  agree, and the model renamed it "PTSD < TD".
+
+The answer is 'name' (reverse the signs) or 'cells' (reverse the name's comparison).
+
+**The first version of the question got 30343133 wrong.** Asked only "which does the paper
+report", the model quoted the *other* contrast's result ("sustained decreases in GMV ... in
+youths with PTSD") and reversed the cells. That turned the null PTSD > TD contrast, an empty
+row in Table 3, into a copy of TD > PTSD. Telling it to quote what states the direction of
+*this* comparison, and that a null contrast keeps what was tested, did not change the
+answer. Saying where the analysis is ("It is row group 3 of Table 3") did. Both are now
+right: 21418787's signs are reversed, and 30343133's name becomes "PTSD > TD".
+
+Lesson, for the adjudicator generally: a verified quote proves the sentence exists, not that
+it is about the case. A case should locate its subject as precisely as the record allows.
+
+Whether the null-result sentence caused 21418787's flip cannot be told from one case. In
+three earlier runs no such reversal occurred, so the dementia draw (same sentence) is
+watched for it.
