@@ -1513,3 +1513,65 @@ inputs, not about the corpus as fetched. The gap is ingestion.
 Rebuilding 329 records changes only the two dementia papers (9 errors removed). Left as
 reported: 25797589's group-named levels on continuous terms (analyses over a patient group
 plus controls, so not a restatement), and the "term name on both stages" findings.
+
+## Substance use (36115222) on S2r + repair (`runs/sud55_s2r`, code `101d37e`)
+
+Three papers failed on flex capacity (429 "Flex does not have sufficient resources", and a
+timeout, each after 4 tries over about two hours). They were resumed into the same run;
+completed stages are cached.
+
+| run | veto recall | precision | strict recall |
+|---|---|---|---|
+| S2r | 22/23 | 0.85 | 22/23 |
+| medium baseline (`sud_medium-v1`) | 22/23 | 0.88 | 22/23 |
+
+Inputs-only scores are identical. Every substance-use gold paper's inputs carry coordinates.
+
+**The miss, 18165464, is now fixed.** VBM explicitly masked to AAL grey matter was recorded
+as `roi` over a region named "gray matter regions", so `whole brain`=False. The schema
+already prescribes the fix in its Region rule: "Record the mask as
+InferenceSettings.search_volume and leave the analysis whole-brain". But its name pattern
+did not include "regions", and nothing applied the prescription.
+- The pattern now includes "regions" (study_schema `21369ac`, local, not pushed).
+- `rescope_tissue_masks` applies the prescription, reading the pattern from the schema
+  rule. It acts only where every region named is a mask and an inference setting holds or
+  takes the mask.
+- Rebuilding 440 records changes only that paper, and the query then selects it: 23/23
+  on a new draw.
+
+**The four false positives are disputed labels, not record errors.** Autonima's full-text
+screener included three of them:
+- 29058369: alcohol-dependent patients vs controls, VBM.
+- 30082140: synthetic-cannabinoid users vs controls.
+- 30643026: 14-year-olds with one or two cannabis uses vs THC-naive controls.
+
+The fourth, 26133201 (stimulant dependence vs controls, group × sex, women-only group
+effect), the screener excluded for having no main between-group contrast. The baseline
+excluded it only because its record said `English`=False, which was wrong (PubMed: "eng").
+None is excluded by anything in the criteria text ("GM volume differences between
+substance users and controls"; no pharmacological manipulation, lesions, or other
+disorders). I have not fit the query to them. The 90% precision target is not met here,
+in either pipeline, and the limit is the labels.
+
+## A fresh PTSD draw on current code (`runs/ptsd55_s2r3`, code `54622dc`)
+
+| | veto recall | precision | foci recall | foci precision | valid records | errors |
+|---|---|---|---|---|---|---|
+| `--gold-coords` | **19/19** | 0.95 | 128/143 | 155/178 | 45/54 | 14 |
+| inputs-only | 18/19 | 0.95 | | | | |
+
+One negative (19996042) failed on flex capacity. 32490056, missed in every earlier draw,
+was found. The inputs-only miss is 26952803, whose tables were lost at ingestion. Errors
+fell from 30 (first S2r run) to 14.
+
+Adjudicator outcomes across the S2r runs show the warrant-guard fix at work. Refusals:
+
+| run | refusals |
+|---|---|
+| `ptsd55_s2r2` (before the fix) | 42 |
+| `ptsd55_s2r3` | 1 |
+| `dem55_s2r` | 1 |
+| `sud55_s2r` | 3 |
+
+Rejected quotes are rare, 3 in one run, so moving the adjudicator to indexed citations is
+not worth doing yet.
