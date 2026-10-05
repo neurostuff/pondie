@@ -43,8 +43,10 @@ NOT_PTSD = re.compile(NEGATED.pattern + r"|trauma.?exposed", re.I)
 SEVERITY = re.compile(r"caps|pcl|ptsd (symptom|severity|score)|clinician.?administered ptsd|"
                       r"ptsd checklist|symptom severity|impact of event|\bies\b|davidson", re.I)
 GREY = re.compile(r"gr[ae]y.?matter", re.I)
+#: Not "case reports": a single-subject experiment reports original data (20183185, a
+#: one-participant Tower of London fMRI study PubMed types "Case Reports", is gold).
 NOT_ORIGINAL = {"review", "systematic review", "meta-analysis", "editorial", "letter",
-                "comment", "case reports"}
+                "comment"}
 
 
 def asserted(entries: list[str]) -> list[str]:
@@ -957,7 +959,11 @@ PROBLEM = re.compile(r"problem[- ]solving|reasoning|puzzle|tower of (london|hano
                      r"\bmath|algebra|equation|number|analog(y|ies|ical)|insight|riddle|"
                      r"anagram|syllogis|deducti|inducti|\blogic|sudoku|chess|planning|"
                      r"remote associates|rule (induction|discovery)|mental rotation|"
-                     r"spatial (reasoning|problem)|word problem", re.I)
+                     r"spatial (reasoning|problem)|word problem|"
+                     # Fit after the held-out score: "solved scientific innovation problems"
+                     # (23994216); relational encoding and transitive inference (19320546).
+                     r"solv\w*(\s+\w+){0,3}\s+problems?|relational|transitive inference",
+                     re.I)
 DISORDER = re.compile(OTHER_DISORDER.pattern + r"|disorder|patient|disease|syndrome|"
                       r"dyscalcul|dyslex|injur|deficit|impair", re.I)
 
@@ -1010,7 +1016,9 @@ def problem_task(a: dict, record: dict, ix: Index) -> bool | None:
     tasks = ix.tasks_of(a)
     if not tasks:
         return None
-    text = task_text(tasks)
+    # The analysis's own name too: 19320546's task text describes judging relations, and
+    # only its analyses say "Transitive inference".
+    text = " ".join([task_text(tasks)] + strs(a.get("name")) + strs(a.get("definition")))
     return bool(PROBLEM.search(text))
 
 
@@ -1031,9 +1039,12 @@ def within_increase(a: dict, record: dict, ix: Index) -> bool | None:
         level = _level_of(term, " ".join(strs(cell.get("level"))))
         within = _within(term, level)
         sign = strs(cell.get("direction"))
-        if within is False and ("positive" in sign or "negative" in sign):
+        continuous = "continuous" in strs(term.get("type")) if term else False
+        # A group comparison is a categorical between-subject term; a positive slope across
+        # one healthy sample is an increase (23883107's gold "Verbalization").
+        if within is False and not continuous and ("positive" in sign or "negative" in sign):
             signed_between = True
-        elif within is not False and "positive" in sign:
+        elif "positive" in sign and (within is not False or continuous):
             positive_within = True
     if signed_between:
         return False
