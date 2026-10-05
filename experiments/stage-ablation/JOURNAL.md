@@ -1379,3 +1379,11 @@ Others (open): the panel's standard errors treat repeated papers as independent;
 fixes were each fitted to one paper; the overlap thresholds were fitted to about 3 pairs;
 the adjudicated labels are one rater's; `Analysis.outcome`'s accuracy is unmeasured; the
 recall effect of `_judged` accepting first attempts is unmeasured.
+
+**Item 1 measured on PTSD.** Without `--gold-coords` (coordinates from inputs for both classes)
+veto recall goes from 18/19 to 17/19, and precision from 0.95 to 0.94. The paper that flips
+is 26952803, the gold paper whose tables were lost at ingestion. No negative changes. So on
+PTSD the flag compensates for one ingestion loss and admits no false positive. The negatives
+excluded by `reports coordinates` alone are 16701903 (a null result) and 19914045 (a priori
+ROI), each with a reason of its own in the negatives list above. Both scorings are now
+reported for each meta-analysis.
