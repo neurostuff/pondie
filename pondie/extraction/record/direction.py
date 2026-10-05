@@ -208,11 +208,11 @@ def direction_of(level: str, contrast: str) -> str | None:
 #: Directions that survive a reversal unchanged. `undirected` has no sign to flip;
 #: `held` marks a level the contrast holds constant, which is true from either side.
 _FIXED = frozenset({"undirected", "held", "absent"})
-_OPPOSITE = {"positive": "negative", "negative": "positive"}
+OPPOSITE = {"positive": "negative", "negative": "positive"}
 
 
 def reverse(direction: str) -> str:
-    return _OPPOSITE.get(direction, direction) if direction not in _FIXED else direction
+    return OPPOSITE.get(direction, direction) if direction not in _FIXED else direction
 
 
 #: Statistics with no sign to reverse. A p-value is positive in either reading of a

@@ -20,6 +20,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from pondie.extraction.record import ids
+from pondie.extraction.record.direction import OPPOSITE as _OPPOSITE
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import walk
 from pondie.extraction.record.effect import levels_a_cell_may_name, terms_in_scope
@@ -816,7 +817,6 @@ def _crossed_cells(
     ]
 
 
-_OPPOSITE = {"positive": "negative", "negative": "positive"}
 
 
 def _levels_of(term: Mapping[str, Any]) -> list[tuple[str, Any]]:

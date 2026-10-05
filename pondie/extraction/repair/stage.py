@@ -366,13 +366,8 @@ def _reverse_signs(analysis: MutableMapping[str, Any], span: Any = None) -> list
         sign = values.read(cell.get("direction")) if isinstance(cell, Mapping) else None
         if sign not in _SIGN:
             continue
-        flipped = "negative" if sign == "positive" else "positive"
-        cell["direction"] = {
-            "extraction_status": "extracted",
-            "value": flipped,
-            "value_source": "reported",
-            "evidence": {"status": "present", "sets": [{"source": "repair_pass", "spans": [span]}]},
-        }
+        flipped = direction.reverse(sign)
+        cell["direction"] = edit_module.cited(flipped, span)
         changed.append(f"cells[{index}].direction: {sign} -> {flipped}")
     return changed
 
@@ -580,15 +575,7 @@ def adjudicate(
             report.refused.extend(refused)
             report.adjudicated.append(f"{case.id}: refused, {refused[0].why}")
             continue
-        owner[case.slot] = {
-            "extraction_status": "extracted",
-            "value": value,
-            "value_source": "reported",
-            "evidence": {
-                "status": "present",
-                "sets": [{"source": "repair_pass", "spans": [span]}],
-            },
-        }
+        owner[case.slot] = edit_module.cited(value, span)
         also = _consequences(case, value, owner, span)
         report.adjudicated.append(f"{case.id}: {value}" + "".join(f"; {a}" for a in also))
         answered.append(case.id)

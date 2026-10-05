@@ -905,7 +905,17 @@ def _placed(value: Any, text: str, quote: str = "") -> dict | None:
         span_tools.verify(text, span)
     except Exception:
         return None
+    return _repair_evidence(span)
+
+
+def _repair_evidence(span: dict) -> dict:
     return {"status": "present", "sets": [{"source": "repair_pass", "spans": [span]}]}
+
+
+def cited(value: Any, span: dict) -> dict:
+    """A reported value this pass wrote, with the sentence that warrants it."""
+    return {"extraction_status": "extracted", "value": value, "value_source": "reported",
+            "evidence": _repair_evidence(span)}
 
 
 def _wrap(value: Any, text: str, source: str = "reported", quote: str = "") -> dict:
