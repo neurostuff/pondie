@@ -1626,3 +1626,37 @@ was `cue55_s2r`: `tables` + `prose` + `split`, then S2r + repair, on code `43d66
   15 random negatives, precision is 1 false positive in 15; against the 15 the benchmark
   left out despite autonima including them, it is 5 in 15. The benchmark's 191 papers are
   a selection from a larger eligible literature.
+
+### Cue reactivity: a group difference *in* the cue contrast
+
+**The benchmark pools such a difference.** 25214465's gold analysis "H>N" (32 foci) is its
+heroin-dependent vs controls difference on heroin > neutral cues: the table the record
+links, and the paper's own heading "Heroin-dependent individuals versus healthy controls:
+heroin-related > neutral cues". The query had returned None for a cue pair crossed with a
+group term, reading the criterion's "within-participant contrast" narrowly. It now counts
+the pair (16/25 at 0.73, fit to this data).
+
+**Extraction left the contrast in the name.** 29 analyses, 19 in gold papers, compared
+groups on a cue > neutral map and celled only the group term. That loses which contrast
+was compared, though the schema's `Cell.term` says a group contrast of a first-level
+condition is celled on that stage's term.
+
+**Probe, one change.** A paragraph in `SINGLE_NOTE`: such a comparison cells both factors,
+the group levels and the condition levels, each on its own term. Run on the 11 affected
+papers (`runs/cue_note`, `single` + `build`, one draw, 13 calls), against the same papers
+in `cue55_s2r`:
+- 3 gold papers become selectable: 20172508; 25214465 (0/6 analyses read as cue > control,
+  now 8/10); and 30217552.
+- The 2 negatives were already selected and stay so; no new false positive.
+- 4 gold papers do not move. Their failures are other shapes: a correlation with sexual
+  desire; a cue vs fixation contrast; a cue-type main effect on a four-cell term.
+
+Adopted (`f5f53d5`). A full cue draw on it (`cue55_s2r2`) is the confirmation.
+
+### Optional objects that say nothing
+
+Strict decoding requires every slot of an object a model opens. 25533729 wrote
+`mediation: {mediator: "", path: not_reported}` on four analyses that had no mediation.
+`drop_vacuous_objects` removes an optional, single-valued nested object whose every value
+is blank or unreported, which is what `null` would have said. Rebuilding 385 records changed
+only that paper.
