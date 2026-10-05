@@ -18,7 +18,8 @@ from pondie.schema import reader
 TEXT = (
     "Hippocampal and amygdala volumes were manually traced on each T1 image. "
     "Left hippocampal volume was smaller in PTSD than in healthy controls. "
-    "The PTSD group showed greater activation than the control group."
+    "The PTSD group showed greater activation than the control group. "
+    "There was no significant difference in hippocampal volume between the groups."
 )
 
 
@@ -150,6 +151,57 @@ def test_an_effect_kind_its_cells_contradict_offers_both_and_writes_the_answer()
     report = _adjudicate(record, caller)
     assert values.read(record["analyses"][0]["effect"]["kind"]) == case.options[0]
     assert report.adjudicated == [f"{case.id}: {case.options[0]}"]
+
+
+NULL = "There was no significant difference in hippocampal volume between the groups."
+
+
+def _null_contrast():
+    """22952599, 23021615, 28549317: a null two-group comparison stated as a contrast, its
+    cells `undirected` -- which derives `omnibus`."""
+    record = _effect_record("control group", "contrast")
+    for cell in record["analyses"][0]["effect"]["cells"]:
+        cell["direction"] = _v("undirected")
+    return record
+
+
+def _kind_case(record):
+    [case] = [c for c in stage.contradictions(record, _sch()) if c.slot == "kind"]
+    return case
+
+
+def test_keeping_a_contrast_marks_its_undirected_signs_not_reported():
+    record = _null_contrast()
+    case = _kind_case(record)
+    assert case.options == ("omnibus", "contrast") and "not reported" in case.question
+    caller, _ = _answering({"id": case.id, "value": "contrast", "quote": NULL})
+    report = _adjudicate(record, caller)
+    cells = record["analyses"][0]["effect"]["cells"]
+    assert [c["direction"] for c in cells] == [{"extraction_status": "not_reported"}] * 2
+    assert not [c for c in stage.contradictions(record, _sch()) if c.slot == "kind"]
+    assert report.adjudicated[0].startswith(f"{case.id}: kept contrast; cells[0].direction")
+
+
+def test_answering_omnibus_leaves_the_undirected_cells_as_they_are():
+    record = _null_contrast()
+    case = _kind_case(record)
+    _adjudicate(record, _answering({"id": case.id, "value": "omnibus", "quote": NULL})[0])
+    effect = record["analyses"][0]["effect"]
+    assert values.read(effect["kind"]) == "omnibus"
+    assert [values.read(c["direction"]) for c in effect["cells"]] == ["undirected"] * 2
+
+
+def test_an_answer_that_leaves_the_contradiction_standing_is_reported_so():
+    # Keeping `interaction` cannot add the cells an interaction needs.
+    record = _effect_record("control group", "interaction")
+    case = _kind_case(record)
+    quote = "The PTSD group showed greater activation than the control group."
+    caller, _ = _answering({"id": case.id, "value": "interaction", "quote": quote})
+    report = _adjudicate(record, caller)
+    assert report.adjudicated == [
+        f"{case.id}: kept interaction",
+        f"{case.id}: still contradicted after the answer",
+    ]
 
 
 def test_every_case_goes_in_one_call():

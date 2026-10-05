@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any, Mapping, MutableMapping
+from typing import Any, Callable, Mapping, MutableMapping
 
 from pondie.extraction.evidence.retrieval import sectionize
 from pondie.extraction.models import ModelCall
@@ -115,6 +115,11 @@ class Case:
     within: tuple[str | int, ...] = ()
     #: The reference slot an answer of `roi` fills with the regions it names.
     names: str = ""
+    #: What else an answer writes, by option, on the same owner as `slot`. An answer
+    #: settling one half of a contradiction must make the other half agree with it.
+    then: Mapping[str, Callable[[MutableMapping[str, Any]], list[str]]] = field(
+        default_factory=dict
+    )
 
 
 #: The scope/regions pairs: what volume was searched, and the regions it was restricted to.
@@ -241,22 +246,57 @@ def _kinds(record: Mapping[str, Any]) -> list[Case]:
             derived,
         ):
             continue
+        question = (
+            f"Analysis {edit_module.label_of(analysis)!r} says its effect is "
+            f"{stated!r}, but its cells describe {derived!r} ({why}). Which is the "
+            f"test the paper reports?"
+        )
+        then = {}
+        if _withheld(effect.get("cells"), terms) == stated:
+            question += (
+                " Its cells are all `undirected`, which marks a test with no per-level sign"
+                " (an F or chi-square over the factor). A directional test (t, z) that found"
+                f" nothing, or whose direction the paper does not print, is still {stated!r};"
+                " answering that marks the cells' sign as not reported."
+            )
+            then = {str(stated): _withhold_signs}
         out.append(
             Case(
                 id=f"analyses/{analysis.get('local_id')}/effect.kind",
-                question=(
-                    f"Analysis {edit_module.label_of(analysis)!r} says its effect is "
-                    f"{stated!r}, but its cells describe {derived!r} ({why}). Which is the "
-                    f"test the paper reports?"
-                ),
+                question=question,
                 options=(derived, str(stated)),
                 container="analyses",
                 local_id=str(analysis.get("local_id")),
                 slot="kind",
                 within=("effect",),
+                then=then,
             )
         )
     return out
+
+
+def _undirected(cell: Any) -> bool:
+    return isinstance(cell, Mapping) and values.read(cell.get("direction")) == "undirected"
+
+
+def _withheld(cells: Any, terms: Mapping[str, Any]) -> str | None:
+    """The kind `cells` would derive with every `undirected` sign marked not reported, when
+    every cell is undirected; else None."""
+    if not cells or not all(_undirected(c) for c in cells):
+        return None
+    withheld = [{**c, "direction": {"extraction_status": "not_reported"}} for c in cells]
+    return derive_effect_kind(withheld, terms)[0]
+
+
+def _withhold_signs(effect: MutableMapping[str, Any]) -> list[str]:
+    """Mark each `undirected` cell's sign as not reported: a directional test whose
+    direction the paper did not print (extraction-readme.md §2)."""
+    changed = []
+    for index, cell in enumerate(effect.get("cells") or []):
+        if _undirected(cell):
+            cell["direction"] = {"extraction_status": "not_reported"}
+            changed.append(f"cells[{index}].direction: undirected -> not_reported")
+    return changed
 
 
 def _descend(entity: Any, path: tuple[str | int, ...]) -> MutableMapping[str, Any] | None:
@@ -382,6 +422,7 @@ def adjudicate(
     answers = reply.payload
 
     by_id = {c.id: c for c in cases}
+    answered: list[str] = []
     for row in answers.get("resolutions") or []:
         case = by_id.get(str(row.get("id", "")).strip())
         value = str(row.get("value", "")).strip()
@@ -412,7 +453,9 @@ def adjudicate(
             _name_regions(record, sch, entity, case, row, text, quote, abbreviations, report)
             continue
         if values.read(owner.get(case.slot)) == value:
-            report.adjudicated.append(f"{case.id}: kept {value}")
+            also = case.then[value](owner) if value in case.then else []
+            report.adjudicated.append(f"{case.id}: kept {value}" + "".join(f"; {a}" for a in also))
+            answered.append(case.id)
             continue
         # Through the guards, like every other write. Coercing a cited scope to a bare enum
         # is exactly the shape `refuses_losing_the_warrant` exists for. The quote goes with
@@ -434,7 +477,15 @@ def adjudicate(
         }
         if case.clears and value in UNRESTRICTED:
             owner[case.clears] = []
-        report.adjudicated.append(f"{case.id}: {value}")
+        also = case.then[value](owner) if value in case.then else []
+        report.adjudicated.append(f"{case.id}: {value}" + "".join(f"; {a}" for a in also))
+        answered.append(case.id)
+    # An answer counts only if the contradiction it answered is gone. "kept contrast" on
+    # cells that still derive `omnibus` read as resolved while the record still disagreed.
+    standing = {c.id for c in contradictions(record, sch)}
+    for case_id in answered:
+        if case_id in standing:
+            report.adjudicated.append(f"{case_id}: still contradicted after the answer")
     # Returned, not logged. `llm.py`: "Cost is returned rather than logged, because a stage
     # that has to scrape its own spend out of its own logging cannot be summed."
     return reply

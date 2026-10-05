@@ -1020,7 +1020,9 @@ def _table_number(text: Any) -> tuple[bool, int] | None:
     return (bool(found.group(1)), int(found.group(2))) if found else None
 
 
-def settle_table_references(body: dict[str, Any], sch: Schema, table_map: Path | None) -> list[str]:
+def settle_table_references(
+    body: dict[str, Any], sch: Schema, table_map: Path | None
+) -> list[str]:
     """Repoint or drop a reference to a table no Table entity declares.
 
     Tables come from the parse, never from a model pass, so no retry can declare the table a
@@ -1062,7 +1064,11 @@ def settle_table_references(body: dict[str, Any], sch: Schema, table_map: Path |
                 if match[0] not in kept:
                     kept.append(match[0])
             else:
-                why = "no declared table is so numbered" if tables else "the paper has no declared table"
+                why = (
+                    "no declared table is so numbered"
+                    if tables
+                    else "the paper has no declared table"
+                )
                 fixed.append(f"{slot.path}: {i!r} dropped -- {why}")
         if kept:
             slot.owner[slot.key] = kept if isinstance(slot.value, list) else kept[0]
