@@ -1731,3 +1731,17 @@ Run: `dm55_s2r` (code `476deaa`, every fix so far).
 None, following the criterion: "other sensory cues ... were not considered". Scores are
 unchanged, because `visual cues` is not a required criterion and None passes veto. Making
 it required would also fail the 2 gold papers whose modality is unrecorded.
+
+**Review item 9 (query rules fitted to one paper), measured.** `ablate_rules.py` reverts one
+rule at a time in a copy of `queries.py` and rescores 9 stored runs (4 PTSD, 2 dementia, 3
+substance use):
+
+| rule | reverting it |
+|---|---|
+| "negative for PTSD" is a comparison cohort | moves no paper |
+| a grey-matter label answers "structural MRI" | moves no paper |
+| a level holding any case cohort is the case side | loses gold 21418787 in `ptsd55_s2r` ("combined PTSD and major depression" level); no negative |
+| dementia modality read from the measure's label | loses 2-3 gold per dementia draw (25009480, 25797589, 31873787, 31887311); no negative |
+
+No rule admits a negative. The first two guarded against draws that did not recur; the
+last two earn their place on gold papers.
