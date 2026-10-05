@@ -1850,3 +1850,18 @@ against them is not reachable without fitting the query to the labels.
 
 **Pool:** seed 0. Two negatives without text were replaced from their strata
 (`replace_missing.py`, now a script). Run: `ps55_s2r` (code `2ebd8a0`).
+
+**Problem solving, preliminary held-out score** (`ps55_s2r`, 50 of 55 records, flex slow):
+veto recall 18/23 at 0.69. Inputs-only is the same, since every gold paper's inputs carry
+coordinates. The misses are query gaps, read before any change:
+- 23994216: the task "solved scientific innovation problems"; `PROBLEM` has "problem
+  solving", not "solved ... problems".
+- 19320546: relational reasoning ("judged whether the target relation was valid given the
+  source relations"), none of whose words `PROBLEM` has.
+- 14741309: studied children and adults separately. `adult` is a study criterion, so the
+  child group fails the paper, though the meta takes the adult group's effects.
+- 20183185: a single-subject fMRI study, which PubMed types "Case Reports"; `original`
+  counts case reports as not original. That rule was written for PTSD and conflates a
+  clinical case report with a single-subject experiment. The problem-solving criteria have
+  no original-research clause at all.
+- 23883107: `within-participant increase`=None.
