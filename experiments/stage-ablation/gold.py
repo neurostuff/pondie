@@ -15,7 +15,8 @@ BENCH = Path("/data/james/pondie-vs-fulltext/repos/neurometabench/data")
 #: meta pmid -> nimads project directory
 PROJECTS = {"36100907": "vbm_of_ptsd", "35664889": "dementia",
             "36115222": "vbm_of_substance_use", "34400176": "cue_reactivity",
-            "32078973": "decision_making", "29944961": "problem_solving"}
+            "32078973": "decision_making", "29944961": "problem_solving",
+            "36436737": "social"}
 
 #: Corrections to the benchmark, each argued in JOURNAL.md. wrong pmid -> right pmid.
 REMAP = {

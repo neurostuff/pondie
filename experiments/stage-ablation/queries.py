@@ -1002,6 +1002,65 @@ PS_ANALYSIS: list[tuple[str, Callable]] = [
 PS_REQUIRED = ("fMRI or PET", "problem-solving task")
 
 
+# ------------------------------------------- social processing (Pintos Lobo 2023, 36436737)
+#
+# Written from the criteria text alone, before any social record was extracted:
+#
+#   Inclusion: "1) functional MRI scan while a human was completing a social-related task;
+#   2) healthy participants, age 18-60 3) whole-brain".  Exclusion: "results of region of
+#   interest (ROI) analyses, systematic reviews or meta-analyses, and studies reporting
+#   results among participants with psychiatric and/or neurological disorders".  No dates.
+#   Analyses: global, affiliation, social communication, self, others.
+
+SOCIAL = re.compile(r"social|\bfaces?\b|facial|emotional expression|theory of mind|"
+                    r"mentaliz|mentalis|false[- ]belief|empath|trust game|cooperat|fairness|"
+                    r"ultimatum|dictator|prisoner|moral|self[- ]referen|self[- ]relevan|"
+                    r"imitat|\bgaze\b|biological motion|interpersonal|attachment|romantic|"
+                    r"\bmother|infant|rejection|exclusion|cyberball|reputation|communicat|"
+                    r"perspective[- ]taking|other people|intention|person perception|"
+                    r"\bpeers?\b|affiliat|\blove\b|friend", re.I)
+
+
+def ages_18_to_60(record: dict, ix: Index) -> bool | None:
+    """"age 18-60": `adult` for the lower bound, and no cohort older than 60."""
+    lower = adult(record, ix)
+    if lower is False:
+        return False
+    for g in ix.groups.values():
+        high = num(g.get("age_maximum"))
+        mean = num(g.get("age_mean"))
+        if (high is not None and high > 60) or (high is None and mean is not None and mean > 60):
+            return False
+    return lower
+
+
+def social_task(a: dict, record: dict, ix: Index) -> bool | None:
+    """"a social-related task": the analysis's task (or, unlinked, the paper's)."""
+    tasks = [ix.tasks[t] for t in refs(a.get("tasks")) if t in ix.tasks] or list(ix.tasks.values())
+    if not tasks:
+        return None
+    text = " ".join(x for t in tasks for x in strs(t.get("name")) + strs(t.get("description"))
+                    + strs(t.get("stimuli"))
+                    + [y for c in t.get("conditions") or [] if isinstance(c, dict)
+                       for y in strs(c.get("name")) + strs(c.get("stimulus_content"))])
+    return bool(SOCIAL.search(text))
+
+
+SOC_STUDY: list[tuple[str, Callable]] = [
+    ("original research", original),
+    ("healthy", healthy_only),
+    ("age 18-60", ages_18_to_60),
+    ("reports coordinates", reports_coordinates),
+]
+SOC_ANALYSIS: list[tuple[str, Callable]] = [
+    ("fMRI", functional_mri),
+    ("social task", social_task),
+    ("whole brain", whole_brain),
+    ("reported foci", reported_foci),
+]
+SOC_REQUIRED = ("fMRI", "social task")
+
+
 # ------------------------------------------------------------------ the registry
 
 @dataclass(frozen=True)
@@ -1039,4 +1098,6 @@ SPECS: dict[str, Spec] = {
                      DM_REQUIRED, []),
     "29944961": Spec(PROBLEM, CONTROL, None, ((1997, 1), (2015, 3)), PS_STUDY, PS_ANALYSIS,
                      PS_REQUIRED, []),
+    "36436737": Spec(SOCIAL, CONTROL, None, (1900, 2100), SOC_STUDY, SOC_ANALYSIS,
+                     SOC_REQUIRED, []),
 }
