@@ -1828,7 +1828,7 @@ what the data contains; review tests what the code allows.
 
 **The common precision limit on the two task-fMRI pools is the labels.** Half their negatives
 were drawn from papers autonima's own full-text screener judged eligible but the benchmark
-left out. Those hard negatives make up most of the false positives. Against random
-negatives, precision is 14/15 (cue reactivity) and 13/15 (decision making). The benchmark
+left out. Those hard negatives make up most of the false positives. Of the random
+negatives, the query selects 1 of 15 (cue reactivity) and 2 of 15 (decision making). The benchmark
 included sets are curated selections from much larger eligible literatures; 90% precision
 against them is not reachable without fitting the query to the labels.
