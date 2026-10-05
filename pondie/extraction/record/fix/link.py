@@ -473,12 +473,7 @@ def infer_missing_models(body: dict[str, Any]) -> list[str]:
     (17892884's `ana_t2_hippocampus_group`, whose cells name `mod_repeated_hippocampus`'s
     group term). Two candidates, or none, leave it reported.
     """
-    declared_by: dict[str, set[str]] = {}
-    for model in body.get("model_estimations") or []:
-        if isinstance(model, Mapping) and isinstance(model.get("local_id"), str):
-            for term in model.get("terms") or []:
-                if isinstance(term, Mapping) and isinstance(term.get("local_id"), str):
-                    declared_by.setdefault(term["local_id"], set()).add(model["local_id"])
+    declared_by = _declared_by(_models(body))
     fixed: list[str] = []
     for index, analysis in enumerate(body.get("analyses") or []):
         if not isinstance(analysis, dict) or analysis.get("model_estimation"):
@@ -522,59 +517,29 @@ def fill_empty_models(body: dict[str, Any], sch: Schema) -> list[str]:
     16701903 declared one `group` factor in two models -- and none, or donors that disagree,
     leave the model for the report.
     """
-
-    models = {
-        m["local_id"]: m
-        for m in body.get("model_estimations") or []
-        if isinstance(m, dict) and isinstance(m.get("local_id"), str)
-    }
-    declared_by: dict[str, set[str]] = {}
-    for model_id, model in models.items():
-        for term in model.get("terms") or []:
-            if isinstance(term, Mapping) and isinstance(term.get("local_id"), str):
-                declared_by.setdefault(term["local_id"], set()).add(model_id)
+    models = _models(body)
+    declared_by = _declared_by(models)
     celled_by: dict[str, set[str]] = {}
     for analysis in body.get("analyses") or []:
         if isinstance(analysis, Mapping):
-            for cell in (analysis.get("effect") or {}).get("cells") or []:
-                if isinstance(cell, Mapping) and isinstance(cell.get("term"), str):
-                    celled_by.setdefault(cell["term"], set()).add(
-                        str(analysis.get("model_estimation"))
-                    )
+            for term_id in _celled([analysis]) if isinstance(analysis, dict) else ():
+                celled_by.setdefault(term_id, set()).add(str(analysis.get("model_estimation")))
     fixed: list[str] = []
     for model_id, model in models.items():
         if model.get("terms"):
             continue
-        analyses = [
-            a
-            for a in body.get("analyses") or []
-            if isinstance(a, dict) and a.get("model_estimation") == model_id
-        ]
-        named = {
-            cell.get("term")
-            for a in analyses
-            for cell in (a.get("effect") or {}).get("cells") or []
-            if isinstance(cell, Mapping)
-        }
+        analyses = _analyses_on(body, model_id)
+        named = _celled(analyses)
         if not named or set(terms_in_scope(model_id, models)) & named:
             continue
-        designs = {
-            donor: _borrowed_terms(models[donor], named, celled_by)
-            for donor in set.intersection(*(declared_by.get(t, set()) for t in named))
-        }
-        if len({tuple(map(_design, terms)) for terms in designs.values()}) != 1:
-            continue  # no donor, or donors that would give different designs
-        donor = min(designs)
-        scoped = {
-            term["local_id"]: f"{model_id}.{term['local_id'].removeprefix(f'{donor}.')}"
-            for term in designs[donor]
-        }
-        model["terms"] = json.loads(json.dumps(designs[donor]))
-        for term in model["terms"]:
-            term["local_id"] = scoped[term["local_id"]]
-            walk.repoint(term, sch, scoped, root="ModelTerm", target="ModelTerm")
-        for analysis in analyses:
-            walk.repoint(analysis, sch, scoped, root="Analysis", target="ModelTerm")
+        donor = _agreed({
+            d: _borrowed_terms(models[d], named, celled_by)
+            for d in set.intersection(*(declared_by.get(t, set()) for t in named))
+        })
+        if donor is None:
+            continue
+        scoped = _copy_terms(model_id, model, donor,
+                             _borrowed_terms(models[donor], named, celled_by), analyses, sch)
         fixed.append(
             f"model_estimations[{model_id!r}]: had no terms; copied {len(scoped)} from "
             f"{donor!r}, which its {len(analyses)} analysis(es)' cells named"
@@ -597,66 +562,113 @@ def complete_partial_models(body: dict[str, Any], sch: Schema) -> list[str]:
     `<model>.<term>` and the cells repointed. Several donors are fine when they agree on the
     copied terms; donors that disagree leave the model for the report.
     """
-    models = {
-        m["local_id"]: m
-        for m in body.get("model_estimations") or []
-        if isinstance(m, dict) and isinstance(m.get("local_id"), str)
-    }
-    declared_by: dict[str, set[str]] = {}
-    for model_id, model in models.items():
-        for term in model.get("terms") or []:
-            if isinstance(term, Mapping) and isinstance(term.get("local_id"), str):
-                declared_by.setdefault(term["local_id"], set()).add(model_id)
+    models = _models(body)
+    declared_by = _declared_by(models)
     fixed: list[str] = []
     for model_id, model in models.items():
         if not model.get("terms"):
             continue  # `fill_empty_models`' case
-        analyses = [
-            a
-            for a in body.get("analyses") or []
-            if isinstance(a, dict) and a.get("model_estimation") == model_id
-        ]
-        named = {
-            cell.get("term")
-            for a in analyses
-            for cell in (a.get("effect") or {}).get("cells") or []
-            if isinstance(cell, Mapping) and isinstance(cell.get("term"), str)
-        }
+        analyses = _analyses_on(body, model_id)
         scope = set(terms_in_scope(model_id, models))
-        missing = named - scope
+        missing = _celled(analyses) - scope
         if not missing or not all(declared_by.get(t) for t in missing):
             continue
-        donors = set.intersection(*(declared_by[t] for t in missing)) - {model_id}
-        copies = {}
-        for donor in donors:
-            by_id = {
-                t["local_id"]: t
-                for t in models[donor].get("terms") or []
-                if isinstance(t, Mapping) and isinstance(t.get("local_id"), str)
-            }
-            wanted = set(missing)
-            for term_id in list(wanted):
-                wanted |= {
-                    c
-                    for c in by_id[term_id].get("interaction_with") or []
-                    if isinstance(c, str) and c in by_id and c not in scope
-                }
-            copies[donor] = [by_id[t] for t in sorted(wanted)]
-        if len({tuple(map(_design, terms)) for terms in copies.values()}) != 1:
-            continue  # no donor, or donors that would give different terms
-        donor = min(copies)
-        scoped = {t["local_id"]: f"{model_id}.{t['local_id']}" for t in copies[donor]}
-        for term in json.loads(json.dumps(copies[donor])):
-            term["local_id"] = scoped[term["local_id"]]
-            walk.repoint(term, sch, scoped, root="ModelTerm", target="ModelTerm")
-            model["terms"].append(term)
-        for analysis in analyses:
-            walk.repoint(analysis, sch, scoped, root="Analysis", target="ModelTerm")
+        candidates = {
+            d: _missing_terms(models[d], missing, scope)
+            for d in set.intersection(*(declared_by[t] for t in missing)) - {model_id}
+        }
+        donor = _agreed(candidates)
+        if donor is None:
+            continue
+        scoped = _copy_terms(model_id, model, donor, candidates[donor], analyses, sch)
         fixed.append(
             f"model_estimations[{model_id!r}]: lacked {sorted(missing)} its analyses cell; "
             f"copied {len(scoped)} term(s) from {donor!r}"
         )
     return fixed
+
+
+def _missing_terms(
+    donor: Mapping[str, Any], missing: set[str], scope: set[str]
+) -> list[Mapping[str, Any]]:
+    """The donor's terms a partial model lacks and cells, and what those are products of,
+    in the donor's order."""
+    by_id = {
+        t["local_id"]: t
+        for t in donor.get("terms") or []
+        if isinstance(t, Mapping) and isinstance(t.get("local_id"), str)
+    }
+    wanted = set(missing)
+    for term_id in list(missing):
+        wanted |= {
+            c for c in by_id[term_id].get("interaction_with") or []
+            if isinstance(c, str) and c in by_id and c not in scope
+        }
+    return [term for term_id, term in by_id.items() if term_id in wanted]
+
+
+def _models(body: dict[str, Any]) -> dict[str, dict]:
+    return {
+        m["local_id"]: m
+        for m in body.get("model_estimations") or []
+        if isinstance(m, dict) and isinstance(m.get("local_id"), str)
+    }
+
+
+def _declared_by(models: Mapping[str, Mapping[str, Any]]) -> dict[str, set[str]]:
+    """term local_id -> the models declaring it."""
+    declared_by: dict[str, set[str]] = {}
+    for model_id, model in models.items():
+        for term in model.get("terms") or []:
+            if isinstance(term, Mapping) and isinstance(term.get("local_id"), str):
+                declared_by.setdefault(term["local_id"], set()).add(model_id)
+    return declared_by
+
+
+def _analyses_on(body: dict[str, Any], model_id: str) -> list[dict]:
+    return [
+        a
+        for a in body.get("analyses") or []
+        if isinstance(a, dict) and a.get("model_estimation") == model_id
+    ]
+
+
+def _celled(analyses: list[dict]) -> set[str]:
+    """The term ids these analyses' cells name."""
+    return {
+        cell["term"]
+        for a in analyses
+        for cell in (a.get("effect") or {}).get("cells") or []
+        if isinstance(cell, Mapping) and isinstance(cell.get("term"), str)
+    }
+
+
+def _agreed(candidates: Mapping[str, list[Mapping[str, Any]]]) -> str | None:
+    """The donor to copy from, when every candidate would give the same terms (`_design`);
+    None for no candidate, or candidates that disagree."""
+    if len({tuple(map(_design, terms)) for terms in candidates.values()}) != 1:
+        return None
+    return min(candidates)
+
+
+def _copy_terms(
+    model_id: str, model: dict, donor: str, terms: list[Mapping[str, Any]],
+    analyses: list[dict], sch: Schema,
+) -> dict[str, str]:
+    """Copy `terms` from `donor` into `model`, scoped `<model>.<term>` -- a donor's own
+    scope prefix dropped, so a copy of a copy is not scoped twice -- and repoint the
+    analyses' cells. Returns the renames."""
+    scoped = {
+        t["local_id"]: f"{model_id}.{t['local_id'].removeprefix(f'{donor}.')}" for t in terms
+    }
+    model.setdefault("terms", [])
+    for term in json.loads(json.dumps(terms)):
+        term["local_id"] = scoped[term["local_id"]]
+        walk.repoint(term, sch, scoped, root="ModelTerm", target="ModelTerm")
+        model["terms"].append(term)
+    for analysis in analyses:
+        walk.repoint(analysis, sch, scoped, root="Analysis", target="ModelTerm")
+    return scoped
 
 
 def _borrowed_terms(
@@ -837,15 +849,7 @@ def scope_duplicate_terms(body: dict[str, Any], sch: Schema) -> list[str]:
     not declare it -- is reverted and left for the report.
     """
 
-    models = [m for m in body.get("model_estimations") or [] if isinstance(m, Mapping)]
-    declared_by: dict[str, set[str]] = {}
-    for model in models:
-        model_id = model.get("local_id")
-        if not isinstance(model_id, str):
-            continue
-        for term in model.get("terms") or []:
-            if isinstance(term, Mapping) and isinstance(term.get("local_id"), str):
-                declared_by.setdefault(term["local_id"], set()).add(model_id)
+    declared_by = _declared_by(_models(body))
 
     counts: dict[str, int] = {}
 

@@ -696,3 +696,18 @@ def test_reversing_a_name_keeps_its_threshold():
     analysis = {"name": _v("PTSD > HC (p < 0.001)")}
     _reverse_name(analysis)
     assert values.read(analysis["name"]) == "PTSD < HC (p < 0.001)"
+
+
+def test_a_copy_of_a_copied_term_is_scoped_once():
+    """Audit: complete_partial_models did not drop a donor's scope prefix, so a term copied
+    from a model fill_empty_models had filled became `mod_c.mod_b.trm_exp`."""
+    record = _partial()
+    record["model_estimations"].append({"local_id": "mod_c", "terms": [
+        {"local_id": "trm_age", "name": _v("age"), "type": _v("continuous")}]})
+    record["model_estimations"][0]["local_id"] = "mod_b"
+    record["model_estimations"][0]["terms"][1]["local_id"] = "mod_b.trm_exp"
+    record["analyses"].append({"local_id": "a_c", "model_estimation": "mod_c", "effect": {
+        "cells": [{"term": "mod_b.trm_exp", "direction": _v("positive")}]}})
+    link.complete_partial_models(record, _sch())
+    [mod_c] = [m for m in record["model_estimations"] if m["local_id"] == "mod_c"]
+    assert "mod_c.trm_exp" in [t["local_id"] for t in mod_c["terms"]]
