@@ -1961,3 +1961,37 @@ Every new pool's misses were mainly the query's vocabulary for its task, and cri
 at the wrong level (the paper where the analysis's sample was meant). Precision on the
 task-fMRI pools is capped by negatives the benchmark left out and autonima's own screener
 judged eligible.
+
+## Second draws of problem solving and social (same papers, same code, fresh model sample)
+
+`ps55_s2r_rep2` and `soc55_s2r_rep2`: code `aa66dfa`, the query as fit after the first
+draw. Both draws were re-scored with that one query, so they differ only in the model's
+sample (veto, `--gold-coords`).
+
+| | first draw (the one the query was fit to) | second draw | second draw, inputs-only |
+|---|---|---|---|
+| problem solving | 25/25, 0.71 | 22/24, 0.67 | 21/24 |
+| social | 23/25, 0.85 | 19/23, 0.83 | 17/23 |
+
+Failed at `single` because attempts never returned: 17851092 (problem solving), 24936688
+and 27716474 (social), so there are 24 and 23 gold papers. On the papers both draws scored,
+the second loses 2 problem-solving gold papers and 3 social ones, and gains none:
+
+- **19656506:** problem-solving task=F. The task is "learning-testing paradigm" where draw 1 wrote
+  "Learning-testing Chinese logogriph problem-solving task". The description still says
+  "tried to solve target or baseline logogriphs"; `PROBLEM` reads "solved ... problems".
+- **23994216:** within-participant increase=F.
+- **21955370:** social task=F. "modified Stroop test in a virtual situation of competition" where
+  draw 1 wrote "virtual social-competition context". The description says "competing
+  against a purported human or machine opponent"; `SOCIAL` has no word for an opponent.
+- **27622781:** social task=F. "Working memory task", with "no competition" conditions.
+- **29039129:** fails no criterion at the paper level; no one analysis met them all.
+
+**Assumption, now tested and false:** that the query's task vocabulary, fit to one draw's
+records, reads the papers. It read the first draw's *wording*. A task's name changes
+between draws; the facts in its description and conditions do not, and the query does not
+read them in enough ways.
+
+**What would test it properly:** widen the task vocabulary from what the task
+descriptions say ("solve", "opponent", "compet"). Then score on a third draw, not on
+either of these, since tuning on this pair would fit it again.
