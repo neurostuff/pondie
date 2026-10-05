@@ -626,5 +626,6 @@ def test_a_model_with_its_own_same_named_term_is_repointed_not_given_a_copy():
             {"term": "trm_group", "level": _v("control"), "direction": _v("negative")}]}}],
     }
     fix.apply_all(record, fix.Context(schema=_sch()), stage="merged")
-    assert [t["local_id"] for t in record["model_estimations"][1]["terms"]] == ["trm_group_wb"]
+    [wb] = [m for m in record["model_estimations"] if m["local_id"] == "mod_wb"]
+    assert [t["local_id"] for t in wb["terms"]] == ["trm_group_wb"]
     assert {c["term"] for c in record["analyses"][0]["effect"]["cells"]} == {"trm_group_wb"}
