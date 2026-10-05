@@ -43,7 +43,8 @@ def test_a_closed_vocabulary_is_an_enum_and_an_open_one_a_string():
     kind = defs["ExtractedEffectKind__wrapper"]["anyOf"][0]["properties"]["value"]
     assert "contrast" in kind["enum"]
     species = defs["ExtractedSpecies__wrapper"]["anyOf"][0]["properties"]["value"]
-    assert species == {"type": "string"}
+    assert species["type"] == "string" and "enum" not in species
+    assert "human" in species["description"], "an open vocabulary still names its terms"
 
 
 def test_a_type_designated_slot_offers_each_subclass_with_its_name_fixed():

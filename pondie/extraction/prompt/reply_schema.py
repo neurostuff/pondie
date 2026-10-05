@@ -40,9 +40,15 @@ def _value_type(sch: Schema, ranges: Sequence[str], multivalued: bool) -> dict[s
     """A value's type: a closed vocabulary's terms, an open one's string, or a scalar."""
     concrete = [r for r in ranges if r != "Any"]
     enum = next((sch.enums[r] for r in concrete if r in sch.enums), None)
+    terms = sorted((enum.permissible_values or {}).keys()) if enum is not None else []
     if enum is not None and len(concrete) == 1:
-        node: dict[str, Any] = {"type": "string",
-                                "enum": sorted((enum.permissible_values or {}).keys())}
+        node: dict[str, Any] = {"type": "string", "enum": terms}
+    elif terms:
+        # An open vocabulary is a plain string to the decoder, which hid its terms: the model
+        # wrote `prespecification` as a sentence 13 times in 15 papers. Named here, they are
+        # what the field asks for first.
+        node = {"type": "string", "description": f"One of: {', '.join(terms)}; the "
+                "paper's own words only when none of these fits."}
     else:
         node = {"type": _SCALARS.get(concrete[0] if concrete else "string", "string")}
     return {"type": "array", "items": node} if multivalued else node

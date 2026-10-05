@@ -92,6 +92,7 @@ def _extract(args: argparse.Namespace) -> int:
         structured_outputs=args.structured_outputs,
         evidence_format=args.evidence_format,
         explicit_silence=args.explicit_silence,
+        recheck_results=args.recheck_results,
         redo=args.redo,
     )
     papers = _papers(
@@ -254,6 +255,12 @@ def main(argv: list[str] | None = None) -> int:
         choices=["quotes", "indexed", "inverted"],
         help="single's evidence: a quote per field, sentence numbers per field, or each "
         "sentence once with the fields it supports",
+    )
+    ex.add_argument(
+        "--recheck-results",
+        action="store_true",
+        help="ask once more for analyses reported in Results sentences no analysis cites "
+        "(indexed evidence only)",
     )
     ex.add_argument(
         "--explicit-silence",

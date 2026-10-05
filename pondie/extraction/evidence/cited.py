@@ -154,3 +154,47 @@ def _drop_silence(payload: dict[str, Any]) -> int:
             del field["unreported_reason"]
             count += 1
     return count
+
+
+#: A sentence that states a result, and one about the brain. Both, to pass over the
+#: demographic and behavioural tests a Results section also reports (age, RT, DEQ scores).
+_RESULT = re.compile(
+    r"\b(significant(ly)?|greater|reduced|smaller|larger|lower|higher|increase[ds]?|"
+    r"decrease[ds]?|correlat\w+|[tTFZz]\s*[=(]\s*-?\d|p\s*[<=]\s*0?\.\d|peak)\b"
+)
+_BRAIN = re.compile(
+    r"\b(activation|activity|volume|gr[ae]y matter|white matter|density|thickness|"
+    r"connectivity|bold|signal|cluster|voxel|fractional anisotropy|cortex|cortical|gyrus|"
+    r"hippocamp\w*|amygdala|insula\w*|cingulate|thalam\w*|striatum|talairach|mni)\b",
+    re.I,
+)
+
+
+def unanalysed_results(payload: dict[str, Any], text: str, cap: int = 40) -> list[int]:
+    """Numbers of the Results sentences about the brain that no analysis cites.
+
+    A result the extraction read and did not encode: 19538748's fMRI contrasts were cited as
+    the wording of two cell labels and belong to no analysis. The quotes are the expanded
+    citations, matched back to their sentences.
+    """
+    from pondie.extraction.evidence.retrieval import sectionize
+
+    spans = sentence_spans(text)
+    number = {text[a:b]: n for n, (a, b) in enumerate(spans, 1)}
+    analysed = {
+        number[q]
+        for field in _fields(payload.get("analyses") or [])
+        for s in (field.get("evidence") or {}).get("sets") or []
+        for q in s.get("quotes") or []
+        if q in number
+    }
+    results = [(a, b) for a, b, label in sectionize(text) if label == "results"]
+    out = []
+    for n, (a, b) in enumerate(spans, 1):
+        sentence = text[a:b]
+        if n in analysed or (results and not any(x <= a < y for x, y in results)):
+            continue
+        if _RESULT.search(sentence) and _BRAIN.search(sentence):
+            out.append(n)
+    return out[:cap]
+

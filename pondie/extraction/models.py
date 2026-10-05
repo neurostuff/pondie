@@ -218,6 +218,10 @@ class Settings(Strict):
     #: Offer `silent_default` for a slot the paper does not mention. Strict decoding has to
     #: answer the reason key, and with nothing else to say it answers `undetermined`.
     explicit_silence: bool = False
+    #: After `single`, show back the Results sentences about imaging that no analysis
+    #: cites, and ask once for the analyses they report. Indexed evidence only: it is
+    #: the citations that say which sentences an analysis covers (`Single.recheck`).
+    recheck_results: bool = False
     zero_foci_rule: bool = True
     #: Passed to every call this run makes. `flex` is cheaper and slower; a run's per-paper
     #: progress line is what tells a slow call from a hung one.

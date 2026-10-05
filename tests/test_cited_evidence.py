@@ -66,3 +66,18 @@ def test_a_fill_answer_cites_numbers_and_the_slot_gets_the_sentences():
     age = payload["groups"][0]["age_mean"]
     assert age["value"] == 34.6
     assert age["evidence"]["sets"][0]["quotes"] == ["Their mean age was 34.6 years."]
+
+
+def test_results_sentences_about_the_brain_that_no_analysis_cites_are_candidates():
+    """19538748's fMRI contrasts were cited as two cell labels' wording and belonged to no
+    analysis. Demographic tests in the same section are not candidates."""
+    text = ("## Methods\nTwelve patients were scanned.\n## Results\n"
+            "Patients had less gray matter in the insula (T = 4.6).\n"
+            "Controls showed greater activation in the left insula during encoding.\n"
+            "The groups did not differ in age (t = 0.5, p = 0.6).")
+    vbm = "Patients had less gray matter in the insula (T = 4.6)."
+    payload = {"analyses": [{"local_id": "ana_vbm", "name": _v("VBM",
+               evidence={"status": "present", "sets": [{"quotes": [vbm]}]})}]}
+    found = cited.unanalysed_results(payload, text)
+    shown = [text[a:b] for n, (a, b) in enumerate(cited.sentence_spans(text), 1) if n in found]
+    assert shown == ["Controls showed greater activation in the left insula during encoding."]

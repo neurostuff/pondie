@@ -119,6 +119,8 @@ class _Base:
                 parts["evidence_format"] = settings.evidence_format
             if settings.explicit_silence:
                 parts["explicit_silence"] = True
+            if settings.recheck_results:
+                parts["recheck_results"] = True
         for upstream in self.reads:
             output = settings.payloads / paper.study_id / f"{upstream.value}.json"
             stamp = pipeline.Stamp.read(output, upstream.value)
@@ -414,6 +416,10 @@ class _ModelPass(_Base):
         """A last step after the attempts. `(payload, failures, cost, notes)`; no-op here."""
         return payload, failures, Cost(), []
 
+    def recheck(self, paper, settings, caller, payload, text):
+        """A look for results the reply read and did not encode. `(payload, cost, notes)`."""
+        return payload, Cost(), []
+
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
         if self.done(paper, settings):
             return self._skip(paper)
@@ -524,6 +530,10 @@ class _ModelPass(_Base):
             payload, failures, more_cost, more_notes = self.complete(
                 paper, settings, caller, payload, failures
             )
+            cost = cost + more_cost
+            notes = list(notes) + more_notes
+        if parsed:
+            payload, more_cost, more_notes = self.recheck(paper, settings, caller, payload, text)
             cost = cost + more_cost
             notes = list(notes) + more_notes
 
@@ -854,6 +864,98 @@ class Single(_ModelPass):
         if _severity(after) <= _severity(failures) and len(still) < len(missing):
             return merged, after, reply.cost, [note]
         return payload, failures, reply.cost, [note + "; kept the uncompleted reply"]
+
+    def recheck(self, paper, settings, caller, payload, text):
+        """Ask once for the analyses reported in Results sentences no analysis cites.
+
+        The same strict schema as the pass itself; only analyses with new ids, and the
+        entities they need that are not there yet, are kept. A sentence the model judges not
+        to report one goes in `omitted`, so the answer to each is recorded.
+        """
+        if not settings.recheck_results or _evidence_form(settings) != "indexed":
+            return payload, Cost(), []
+        candidates = cited.unanalysed_results(payload, text)
+        spans = preprocess.sentence_spans(text)
+        if not candidates:
+            return payload, Cost(), ["recheck: every Results sentence about the brain is cited"]
+        log.info(
+            "%s/%s recheck: %d Results sentence(s) no analysis cites",
+            paper.study_id,
+            self.name.value,
+            len(candidates),
+        )
+        held = {
+            key: [e.get("local_id") for e in payload.get(key) or [] if isinstance(e, Mapping)]
+            for key in render.payload_keys("single")
+            if key != "omitted"
+        }
+        listed = "\n".join(
+            f"- {a.get('local_id')}: {values.read(a.get('name'))}"
+            for a in payload.get("analyses") or []
+            if isinstance(a, Mapping)
+        )
+        context = (
+            "\n\n## RECHECK: the record already exists\n\n"
+            "These analyses are already extracted -- do NOT emit them again:\n"
+            f"{listed}\n\nEntities already declared, by list (reference them freely):\n"
+            + json.dumps({k: v for k, v in held.items() if v}, ensure_ascii=False)
+            + "\n\nThe sentences below report results, and no analysis above cites them. "
+            "For EACH, either emit a NEW analysis for the effect it reports (with any entity it "
+            "needs that is not declared yet), or put it in `omitted` as "
+            '{"key": "S<number>", "reason": "<why it is not a new analysis>"} -- covered by '
+            "an existing analysis (name it), a behavioural or demographic test, or no tested "
+            "effect. Emit nothing else; every other list stays empty.\n\n"
+            + "\n".join(
+                f"[S{n}] {text[spans[n - 1][0] : spans[n - 1][1]]}" for n in candidates
+            )
+        )
+        ask = render.build_prompt(
+            text,
+            "single",
+            settings.retrieve_evidence,
+            self.context(paper, settings) + context,
+            settings.evidence_format,
+            settings.explicit_silence,
+        )
+        try:
+            reply = caller(
+                ModelCall(
+                    model=settings.model,
+                    system=ask.system,
+                    prompt=ask.user,
+                    max_output_tokens=settings.max_output_tokens,
+                    effort=settings.effort_for(self.name),
+                    service_tier=settings.service_tier,
+                    attempts=settings.attempts,
+                    json_schema=(
+                        reply_schema.for_single(
+                            _evidence_form(settings), settings.explicit_silence
+                        )
+                        if settings.structured_outputs
+                        else None
+                    ),
+                ),
+                paper=paper.study_id,
+                stage=f"{self.name.value}-recheck",
+            )
+        except Exception as error:  # noqa: BLE001 -- a recheck must not lose the record
+            return payload, Cost(), [f"recheck failed: {type(error).__name__}"]
+        cited.expand(reply.payload, _evidence_form(settings), text)
+        found, _ = render.normalize(reply.payload, "single")
+        known = set(held.get("analyses") or [])
+        added = [
+            a for a in found.get("analyses") or []
+            if isinstance(a, Mapping) and a.get("local_id") and a["local_id"] not in known
+        ]
+        entities = {k: v for k, v in found.items() if k != "analyses"}
+        merged = _merge_entities(copy.deepcopy(payload), entities)
+        merged.setdefault("analyses", []).extend(added)
+        declined = [o for o in found.get("omitted") or [] if isinstance(o, Mapping)]
+        merged.setdefault("omitted", []).extend(declined)
+        return merged, reply.cost, [
+            f"recheck: {len(candidates)} sentence(s), {len(added)} analysis(es) added, "
+            f"{len(declined)} declined"
+        ]
 
     def existing(self, paper: Paper, settings: Settings) -> Collection[str]:
         tables = Tables().produces(paper, settings)
