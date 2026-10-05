@@ -1995,3 +1995,31 @@ read them in enough ways.
 **What would test it properly:** widen the task vocabulary from what the task
 descriptions say ("solve", "opponent", "compet"). Then score on a third draw, not on
 either of these, since tuning on this pair would fit it again.
+
+### New error classes in the second draws
+
+**Duplicate term names in a stage chain:** 15 and 14 in the second draws, against 2 and 4 in
+the first.
+- **Not the code:** each draw's saved replies give the same count under `2ebd8a0` or
+  `aa66dfa` (1 and 0 for draw 1, 7 and 7 for draw 2), and the prompt diff between the two
+  versions is a renamed constant. The difference is the model's sample.
+- **Repair doubles it in every run.** The repair model fills an open `inputs_from` slot,
+  which links a model to the one it was fit on. With the stages linked, the rule compares
+  their term names. The repair names each such fault under `introduced` and keeps the
+  write: 7 of the 20 papers whose repair wrote `inputs_from`.
+- **Two kinds.** Most are a group model restating a subject-level term, which is what the
+  rule is for. Some are sibling inputs: 18022606's group model takes two parallel subject
+  models that both have "problem size", and 18439411's two subject models both have
+  "player status". `_chain_terms` collects every model below, so siblings collide.
+  Neither is a stage above the other, so this looks like a false positive in the rule.
+- **Stale docstring:** "Neither has ever fired on the corpus" (`rules.py`) is no longer true.
+
+**A condition id declared under two tasks:** the first reference problem since the audit.
+27855282 declares `cond_localizer_silent` and `cond_localizer_vocal` under both its tasks,
+and the reply already had them that way. `single`'s check only rejects ids that are
+referenced but never declared (`_missing_ids`). `build` scopes duplicate ids only for
+terms (`link.scope_duplicate_terms`), so nothing scopes a condition to its task.
+
+**Not new:** 27855282's levels "FnatFnat", "AnatFnat" are the paper's own condition codes
+("[FnatFnat > AnatFnat]"). That is the known class of a cell level that matches none of
+its term's declared levels.
