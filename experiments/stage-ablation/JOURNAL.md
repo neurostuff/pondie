@@ -1426,3 +1426,11 @@ it is about the case. A case should locate its subject as precisely as the recor
 Whether the null-result sentence caused 21418787's flip cannot be told from one case. In
 three earlier runs no such reversal occurred, so the dementia draw (same sentence) is
 watched for it.
+
+**Review item 13 (`Analysis.outcome` against linked foci).** Over the linked analyses of the
+two 55-paper PTSD runs: 107 `significant_effect` with foci > 0 in each run, and 13 and 10
+`no_significant_effect` with foci > 0. No analysis says significant with zero foci. Spot
+check on gold 17923164: `prose#2`'s two peaks are printed, but the sentence says the
+difference "did not survive a SVC", so `no_significant_effect` is right and the foci count
+alone would have been wrong. Reading `outcome` before foci is supported here. The remaining
+disagreements are not hand-checked.
