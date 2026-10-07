@@ -53,7 +53,13 @@ directory under `data/runs/`:
 ```bash
 pondie extract --pmids papers.pmids --run v3 --model <model> --env .env
 pondie extract --pmids papers.pmids --run v3 --model <model> --plan   # spend nothing
+pondie extract --pmids papers.pmids --run v3-codex --model <model> --backend codex
 ```
+
+`--backend codex` sends the same calls through `codex exec` on the `codex login` account
+instead of the gateway (`CodexCaller`): same model, effort, system prompt and schema. It
+sends no service tier (the account refuses `flex`) and no output cap, reports no finish
+reason, and codex adds about 4.5k tokens of its own preamble per call.
 
 Eight stages by default, and the order is the design:
 
