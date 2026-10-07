@@ -62,7 +62,7 @@ def _papers(root: Path, ids: Path, flavour: Flavour | str) -> list[Paper]:
 def _extract(args: argparse.Namespace) -> int:
     import logging
 
-    from pondie.extraction import GatewayCaller, load_env, plan, run, sequence
+    from pondie.extraction import CodexCaller, GatewayCaller, load_env, plan, run, sequence
 
     # Configured here, not at import: the application decides how a library logs. `--log`
     # sets pondie's level; other libraries (LinkML, the HTTP client) log warnings only.
@@ -105,12 +105,13 @@ def _extract(args: argparse.Namespace) -> int:
         return 0
     log = logging.getLogger("pondie")
     log.info(
-        "run %s: %d paper(s), stages %s, model %s, tier %s, effort %s, %d worker(s)",
+        "run %s: %d paper(s), stages %s, model %s via %s, tier %s, effort %s, %d worker(s)",
         args.run,
         len(papers),
         " > ".join(s.name.value for s in sequence(settings)),
         settings.model,
-        settings.service_tier or "provider default",
+        args.backend,
+        "not sent" if args.backend == "codex" else settings.service_tier or "provider default",
         ", ".join(
             f"{s.name.value}={settings.effort_for(s.name)}"
             for s in sequence(settings)
@@ -122,7 +123,7 @@ def _extract(args: argparse.Namespace) -> int:
     report = run(
         papers,
         settings,
-        GatewayCaller(),
+        CodexCaller() if args.backend == "codex" else GatewayCaller(),
         workers=args.workers,
         progress=not args.no_progress,
     )
@@ -280,6 +281,13 @@ def main(argv: list[str] | None = None) -> int:
         choices=["", "flex", "default", "priority"],
         help="the provider's service tier; `flex` is cheaper and slower, '' leaves the "
         "provider's default",
+    )
+    ex.add_argument(
+        "--backend",
+        default="gateway",
+        choices=["gateway", "codex"],
+        help="how calls reach the model: the API gateway, or `codex exec` on the "
+        "`codex login` account (same model and effort; no service tier)",
     )
     ex.add_argument(
         "--no-evidence",

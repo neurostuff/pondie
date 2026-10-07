@@ -29,7 +29,7 @@ because every reader of a record needs it.
 """
 
 from pondie.extraction.driver import plan, run
-from pondie.extraction.llm import Caller, GatewayCaller, MalformedReply, load_env
+from pondie.extraction.llm import Caller, CodexCaller, GatewayCaller, MalformedReply, load_env
 from pondie.extraction.stages import (
     DEMAND_DRIVEN,
     SINGLE_PASS,
@@ -49,6 +49,7 @@ from pondie.extraction.stages import (
 
 __all__ = [
     "Caller",
+    "CodexCaller",
     "GatewayCaller",
     "MalformedReply",
     "load_env",
