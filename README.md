@@ -61,12 +61,12 @@ instead of the gateway (`CodexCaller`): same model, effort, system prompt and sc
 sends no service tier (the account refuses `flex`) and no output cap, reports no finish
 reason, and codex adds about 4.5k tokens of its own preamble per call.
 
-Eight stages by default, and the order is the design:
+Seven stages by default, and the order is the design. Coordinates come from the stage-1
+parse, which carries those a paper states in prose as well as those in its tables:
 
 | stage | model | what it does |
 |---|---|---|
 | `tables` | no | mints the Table ids analyses reference, from the printed table number rather than the staging flavour's key, and copies `caption` and `footer` as the literal strings they are. Reads the manifest where there is one and the stage-1 parse where there is not — a paper with no manifest used to get no Table at all, and every `Analysis.tables` reference in it dangled |
-| `prose` | no | appends coordinates the paper states in prose and no table reports. The schema stores no coordinates, so a focus that is not a parse entry has nowhere to live |
 | `split` | no | a parse reporting both signs is two contrasts; the half the paper never describes is withheld and rebuilt by arithmetic |
 | `single` | yes | the whole record in one call, shown the stage-1 listing, held to the listing checks and to a dangling-reference check, retried with the faults named, keeping the best attempt. `--structured-outputs` decodes it (and `fill`, `evidence`) under a strict schema generated from the extraction schema; `--recheck-results` asks once more for analyses in Results sentences no analysis cites |
 | `fill` | yes | asks for the slots still open, round after round, until none are — a shape for finishing an entity rather than deciding it exists |

@@ -17,7 +17,7 @@ layout `pondie.paths` describes, extracted with `--flavour pubget`:
 
     <out>/corpus/<study>/identifiers.json
     <out>/corpus/<study>/processed/pubget/{text.txt,tables.jsonl,metadata.json}
-    <out>/corpus/<study>/stage1/analyses.json       the parse; prose and split rewrite it
+    <out>/corpus/<study>/stage1/analyses.json       the parse; split rewrites it
     <out>/corpus/<study>/stage1/analyses.orig.json  as copied, to reset a re-run
     <out>/pubget.pmids          pmid<TAB>study<TAB>pubget, one per bundled paper
     <out>/bundle.jsonl          one line per scanned folder: taken, or why not

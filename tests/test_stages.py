@@ -1361,38 +1361,11 @@ def test_a_model_answer_in_a_deterministic_slot_is_overwritten(tmp_path):
     assert tallies["is_healthy"]["overruled"] == 1
 
 
-def test_rerunning_the_prose_pass_does_not_append_the_sentences_again(tmp_path):
-    """`ProseFoci` is the one stage that writes a CORPUS INPUT, and `--redo` asks it to run
-    again. The append was unconditional, so each re-run added another copy of every prose
-    sentence and no run ever took one away: 24760016 reached 12 entries for 2 distinct
-    sentences, 25451388 15 for 3, 20147457 5 for 1.
-
-    The size was the lesser harm. The listing then showed six identical rows a pass had to
-    account for one at a time, which is what the `duplicate_of:prose#N` chains in those
-    records are -- and one of those chains was cover for a claim that was false."""
-
-    paper = _paper(tmp_path)
-    paper.text.write_text(
-        "### RESULTS\nThe left amygdala reached significance after applying a "
-        "SVC ( k = 29; -16, -2, -14 [x, y, z]; Z = 4.33).\n"
-    )
-    settings = _settings(tmp_path, stages=(StageName.prose_foci,), redo=True)
-
-    counts = []
-    for _ in range(3):
-        assert run([paper], settings, Recorder()).failures == ()
-        held = json.loads(paper.parse.read_text())["analyses"]
-        counts.append(sum(1 for a in held if a.get("table_id") == "prose"))
-
-    assert counts[0] >= 1, "the sentence states a coordinate and must be found"
-    assert counts == [counts[0]] * 3, f"re-runs appended: {counts}"
-
-
-def test_tables_stays_fresh_after_prose_and_split_rewrite_the_parse(tmp_path):
+def test_tables_stays_fresh_after_split_rewrites_the_parse(tmp_path):
     """A resume must not re-run `tables`, or every model pass after it is paid for again.
 
-    `prose` appends to the parse and `split` rewrites it, both after `tables`; the table
-    list they leave is the one `tables` read.
+    `split` rewrites the parse after `tables`; the table list it leaves is the one `tables`
+    read.
     """
     from pondie.extraction.stages import Tables
 
@@ -1402,8 +1375,11 @@ def test_tables_stays_fresh_after_prose_and_split_rewrite_the_parse(tmp_path):
     settings = _settings(tmp_path)
     before = Tables().depends_on(paper, settings)
     document = json.loads(paper.parse.read_text())
-    document["analyses"].append({"table_id": "prose", "name": "", "points": [], "from_prose": True})
-    document["prose_foci_applied"] = True
+    document["analyses"].append(
+        {"table_id": "t1", "table_number": "1", "name": "B > A", "withhold": True,
+         "points": [{"coordinates": [1, 2, 3]}]}
+    )
+    document["sign_split_applied"] = True
     paper.parse.write_text(json.dumps(document))
     assert Tables().depends_on(paper, settings) == before
 

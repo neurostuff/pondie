@@ -8,7 +8,7 @@
 # OFFSET and LIMIT take a slice of $BUNDLE/pubget.pmids, so the corpus can be run in
 # shards under one RUN. A re-run with the same RUN resumes: each stage whose inputs are
 # unchanged is skipped. The run reads its own copy of each paper (runs/$RUN/corpus),
-# because the prose and split stages rewrite stage1/analyses.json. TIER is the service
+# because the split stage rewrites stage1/analyses.json. TIER is the service
 # tier: flex (cheaper, slower), default, priority, or empty for the provider's default.
 # BACKEND=codex sends the calls through `codex exec` on the `codex login` account
 # instead of the gateway; it needs no ENV_FILE and sends no TIER.
@@ -39,7 +39,7 @@ echo "$(date +%T) $RUN: $(wc -l < "$PMIDS") paper(s) from $PMIDS via $BACKEND"
 PONDIE_DATA_DIR=$BUNDLE "$PYTHON" -m pondie.cli extract \
   --pmids "$PMIDS" --run "$RUN" --corpus "$RUN_DIR/corpus" --flavour pubget \
   --model @psyc-aid338-ope-333f18/gpt-6-luna --backend "$BACKEND" ${ENV_ARGS[@]+"${ENV_ARGS[@]}"} \
-  --stages tables prose split single fill evidence build repair \
+  --stages tables split single fill evidence build repair \
   --structured-outputs --evidence-format indexed \
   --service-tier "${TIER-flex}" --stage-effort single=medium fill=low evidence=low repair=medium \
   --workers "${WORKERS:-20}" --no-progress 2>&1 | tee -a "$RUN_DIR/run.log"

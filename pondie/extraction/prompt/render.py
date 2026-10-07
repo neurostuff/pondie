@@ -36,11 +36,7 @@ from typing import Any
 
 from pondie import paths, schema
 from pondie.extraction.models import Prompt
-
-# `preprocess` for `prose_signature`: what makes two prose parse entries the same entry
-# is the parser's own business, and the listing must collapse by the same rule the append
-# refuses to duplicate by, or the two disagree about what a row is.
-from pondie.extraction.prompt import preprocess, worked
+from pondie.extraction.prompt import worked
 from pondie.extraction.record import ids
 from pondie.formats.values import read as read_value
 from pondie.extraction.record.fix import shape
@@ -164,9 +160,7 @@ def _foci(points: Sequence[Mapping[str, Any]]) -> str:
         shown.append(
             "(" + ", ".join(f"{float(v):g}" for v in coordinates) + ")"
             # The one fact bearing on a duplicate judgement that the row cannot show by
-            # printing its own numbers. `PROSE_GROUP_NOTE` has explained this marker all
-            # along while only `preprocess.prose_coordinate_block` ever printed it, so the
-            # note annotated a listing that did not carry it.
+            # printing its own numbers; `PROSE_GROUP_NOTE` explains it.
             + (" [in a table]" if point.get("also_in_table") else "")
         )
     return " ".join(shown) if shown else "none parsed"
@@ -391,16 +385,11 @@ def listing_entries(stage1: Mapping[str, Any]) -> list[tuple[str, dict]]:
     without being demandable is a silent decline. They agreed by both open-coding the same
     filter, which held until a third rule arrived.
 
-    The third rule is the collapse, which two separate things make necessary. `ProseFoci`
-    writes into the corpus parse and `--redo` ran it again, so a paper accumulated one copy
-    of every prose sentence per re-run: 24760016 held 12 entries for 2 distinct sentences,
-    25451388 15 for 3, 20147457 5 for 1. That one is now fixed at the writer. The other is
-    not fixable there: a sentence can genuinely occur twice in a paper -- a figure caption
-    repeating a body sentence -- and the sweep yields it once per occurrence. 4 of the 10
-    duplicating papers in the corpus are this kind, with the copy sitting next to its
-    original rather than in an appended block.
-
-    Either way a pass had to account for identical rows one at a time, which is what the
+    The third rule is the collapse. A sentence can genuinely occur twice in a paper -- a
+    figure caption repeating a body sentence -- and a prose sweep yields it once per
+    occurrence; parses written by the retired `prose` stage also hold one copy per re-run
+    (24760016 held 12 entries for 2 distinct sentences). A pass then had to account for
+    identical rows one at a time, which is what the
     `duplicate_of:prose#N` chains in those records are -- bookkeeping over a listing that
     repeated itself, and cover for one claim that was false.
 
@@ -421,12 +410,24 @@ def listing_entries(stage1: Mapping[str, Any]) -> list[tuple[str, dict]]:
         # that yielded no points has an empty one, and several distinct such tables in a
         # paper would collapse into one row.
         if entry.get("points"):
-            signature = (entry.get("table_id"), entry.get("name"), preprocess.prose_signature(entry))
+            signature = (entry.get("table_id"), entry.get("name"), _row_signature(entry))
             if signature in held:
                 continue
             held.add(signature)
         rows.append((key, entry))
     return rows
+
+
+def _row_signature(entry: Mapping[str, Any]) -> tuple:
+    """What a reader of the listing tells two entries apart by: the text and the points.
+
+    `also_in_table` is excluded deliberately: it is a fact about the rest of the parse, not
+    about this entry, and two entries differing only in it read the same in the listing.
+    """
+    return (
+        " ".join((entry.get("description") or "").split()),
+        tuple(tuple(point.get("coordinates") or ()) for point in entry.get("points") or []),
+    )
 
 
 def stage1_block(

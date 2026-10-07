@@ -51,7 +51,6 @@ def test_the_pipeline_is_one_ordering(tmp_path):
     settings = Settings(payloads=tmp_path, records=tmp_path, model="m")
     assert [stage.name.value for stage in sequence(settings)] == [
         "tables",
-        "prose",
         "split",
         "single",
         "fill",
