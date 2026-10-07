@@ -42,7 +42,7 @@ from pondie.extraction.sign_split import adopt_withholding, split_opposite_signs
 from pondie.extraction.record.ids import table_local_id
 from pondie.extraction.evidence import cited
 from pondie.extraction.prompt import preprocess, render, reply_schema, worked
-from pondie.formats import parse_keys, table_parse, text_index, values
+from pondie.formats import table_parse, text_index, values
 from pondie.schema import reader
 
 log = logging.getLogger("pondie")
@@ -191,8 +191,8 @@ class Tables(_Base):
     def depends_on(self, paper: Paper, settings: Settings) -> dict[str, Any]:
         """The manifest and the parse's table list, which is all this stage reads.
 
-        Not the parse file: `prose` and `split` rewrite it after this stage runs, which would
-        make it, and every model stage after it, stale on each resume.
+        Not the parse file: `split` rewrites it after this stage runs, which would make it,
+        and every model stage after it, stale on each resume.
         """
         parts = super().depends_on(paper, settings)
         manifest = paper.study_dir / "processed" / paper.flavour.value / "tables.jsonl"
@@ -259,75 +259,6 @@ class Tables(_Base):
             study_id=paper.study_id,
             produced=(self._write(paper, settings, {"tables": tables}),),
             notes=(note,),
-        )
-
-
-@dataclass(frozen=True)
-class ProseFoci(_Base):
-    """Append coordinates the paper states in prose and not in tables.
-
-    Note: this could still miss legitimate analyses that report the same coordinates.
-
-    The append is BY SIGNATURE, because this is the one stage that writes a corpus input
-    and `--redo` asks it to run again. It was an unconditional extend, so every re-run
-    added another copy of every prose sentence to the file and no run ever took one away:
-    24760016 reached 12 entries for 2 distinct sentences, 25451388 15 for 3, 20147457 5
-    for 1. The damage is not just size. The listing then shows six identical rows that a
-    pass must account for one by one, which is what the `duplicate_of:prose#N` chains in
-    those records are, and one of those chains hid a real false claim -- the entry's own
-    coordinates were the only way to tell the copies apart and the listing truncated them
-    away. Idempotent here; `pondie normalize prose-foci` takes the copies back out.
-    """
-
-    name: StageName = StageName.prose_foci
-
-    def produces(self, paper: Paper, settings: Settings) -> Path:
-        return paper.parse
-
-    def done(self, paper: Paper, settings: Settings) -> bool:
-        if settings.redo or not paper.parse.is_file():
-            return False
-        return bool(TableParse.load(paper.parse).document.get("prose_foci_applied"))
-
-    def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
-        if self.done(paper, settings):
-            return self._skip(paper)
-        if not paper.parse.is_file():
-            return self._skip(paper, "no parse to append to")
-        parse = TableParse.load(paper.parse)
-        before = parse.document.get("analyses") or []
-        entries = preprocess.prose_parse_entries(
-            paper.text.read_text(encoding="utf-8", errors="replace"),
-            parse.coordinates,
-        )
-        held = {
-            preprocess.prose_signature(entry)
-            for entry in before
-            if entry.get("table_id") == parse_keys.PROSE_TABLE_ID
-        }
-        fresh = []
-        for entry in entries:
-            signature = preprocess.prose_signature(entry)
-            if signature in held:
-                continue
-            held.add(signature)
-            fresh.append(entry)
-        parse.document["analyses"] = [*before, *fresh]
-        parse.document["prose_foci_applied"] = True
-        parse.save()
-        return StageOutcome(
-            stage=self.name,
-            study_id=paper.study_id,
-            produced=(paper.parse,),
-            notes=(
-                f"{len(fresh)} prose coordinate sentence(s) appended "
-                f"to {len(before)} parsed"
-                + (
-                    f"; {len(entries) - len(fresh)} already held"
-                    if len(fresh) != len(entries)
-                    else ""
-                ),
-            ),
         )
 
 
@@ -776,23 +707,15 @@ class Demands(_ModelPass):
     def context(self, paper: Paper, settings: Settings) -> str:
         """Reading the Table->Analyses parse."""
         parse = TableParse.read(paper.parse)
-        block = ""
-        if parse.document:
-            table_ids = (
-                json.loads(paper.table_map.read_text("utf-8")) if paper.table_map.is_file() else {}
-            )
-            block = render.stage1_block(
-                parse.document,
-                table_ids,
-                zero_foci_rule=settings.zero_foci_rule,
-            )
-        # Offered as proposals the pass confirms or drops, and offered whether or not a
-        # parse exists: of the 88 cue_reactivity papers stating a Results coordinate no
-        # table carries, 49 have no parsed table at all, and returning early on a missing
-        # parse would withhold the list from exactly those.
-        return block + preprocess.prose_coordinate_block(
-            paper.text.read_text(encoding="utf-8", errors="replace"),
-            parse.coordinates,
+        if not parse.document:
+            return ""
+        table_ids = (
+            json.loads(paper.table_map.read_text("utf-8")) if paper.table_map.is_file() else {}
+        )
+        return render.stage1_block(
+            parse.document,
+            table_ids,
+            zero_foci_rule=settings.zero_foci_rule,
         )
 
 
@@ -1485,7 +1408,6 @@ class Repair(_Base):
 
 DEMAND_DRIVEN: tuple[Stage, ...] = (
     Tables(),
-    ProseFoci(),
     SignSplit(),
     Demands(),
     Satisfy(),
@@ -1498,7 +1420,6 @@ DEMAND_DRIVEN: tuple[Stage, ...] = (
 #: The default: the same deterministic stages around one extraction call.
 SINGLE_PASS: tuple[Stage, ...] = (
     Tables(),
-    ProseFoci(),
     SignSplit(),
     Single(),
     Fill(),

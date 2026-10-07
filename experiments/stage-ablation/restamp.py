@@ -1,6 +1,6 @@
 """Re-stamp a run's existing stage outputs under the current code, without re-running them.
 
-    python restamp.py --run pondie_single-v4 --pmids all_ptsd.pmids --stages tables prose split single
+    python restamp.py --run pondie_single-v4 --pmids all_ptsd.pmids --stages tables split single
 
 For when a stage's `depends_on` changed but its output did not -- the `tables` fix in
 545896c -- so a seeded run can reuse the payloads instead of re-asking the model.

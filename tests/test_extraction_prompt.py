@@ -730,11 +730,11 @@ def _prose(sentence: str, coordinate: tuple[float, float, float], also: bool = F
 
 
 def test_a_prose_sentence_the_parse_repeated_is_one_row() -> None:
-    """`ProseFoci` writes into the corpus parse and `--redo` ran it again, so a paper
-    gained a copy of every prose sentence per re-run: 24760016 held 12 entries for 2
-    distinct sentences, 25451388 15 for 3, 20147457 5 for 1. The pass then had to account
-    for six identical rows one at a time, and `also_in_table` -- a fact about the rest of
-    the parse, not about the sentence -- is the only thing that differed between copies."""
+    """Parses written by the retired `prose` stage hold one copy of every prose sentence
+    per re-run (24760016: 12 entries for 2 distinct sentences), and a sentence can occur
+    twice in a paper. The pass then had to account for identical rows one at a time, and
+    `also_in_table` -- a fact about the rest of the parse, not about the sentence -- is the
+    only thing that differed between copies."""
 
     left = "The left amygdala reached significance after applying a SVC (k = 29; -16, -2, -14)."
     right = "Lower activation in the right amygdala was reached after a SVC (k = 25; 28, 0, -12)."
@@ -813,11 +813,9 @@ def test_a_prose_entry_is_held_to_the_table_standard() -> None:
 
 
 def test_a_voxel_a_table_also_reports_is_marked() -> None:
-    """`PROSE_GROUP_NOTE` has explained this marker all along, while the only renderer that
-    printed it was `preprocess.prose_coordinate_block` -- a different block. So the note
-    annotated a listing that did not carry the thing it described, and the one fact bearing
-    on a duplicate judgement that a row cannot show by printing its own numbers was
-    missing."""
+    """`PROSE_GROUP_NOTE` explains this marker, so the listing has to carry it: it is the
+    one fact bearing on a duplicate judgement that a row cannot show by printing its own
+    numbers."""
 
     doc = {"analyses": [{
         "table_id": "prose", "name": "", "description": "A peak at (9, -12, -6).",

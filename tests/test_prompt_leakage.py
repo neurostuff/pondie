@@ -24,7 +24,6 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 GOLD = ROOT / "benchmarks" / "gold"
 from pondie.extraction.repair import propose as recall, propose_with_extractor as recall_llm
-from pondie.extraction.prompt import preprocess
 from pondie.extraction.prompt import render as er
 from pondie.schema import reader
 
@@ -70,11 +69,6 @@ def static_prompt_sources() -> dict[str, str]:
         "representing-models.md section 5": er.worked_models(),
         "SYSTEM_HEAD": er.SYSTEM_HEAD,
         "ZERO_FOCI_RULE": er.ZERO_FOCI_RULE,
-        # The preprocessing digests' preambles. Their bodies are derived from the paper
-        # and so are input, but the headings and cautions around them are as static as
-        # SYSTEM_HEAD and a gold phrase written into one would leak the same way.
-        "preprocess.PROSE_COORD_TITLE": preprocess.PROSE_COORD_TITLE,
-        "preprocess.PROSE_COORD_NOTE": preprocess.PROSE_COORD_NOTE,
         # The repair proposers' static halves. Neither was listed here, and an explanation
         # of the experiment written inside `SHAPE`'s literal rather than beside it was sent
         # to the model as part of its instructions before anything noticed.

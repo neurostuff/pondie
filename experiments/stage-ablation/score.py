@@ -81,21 +81,18 @@ def foci_of(run_dir: Path, pmid: str, keys: list[str]) -> list[tuple]:
 
 
 def input_coordinates(pmid: str) -> int:
-    """Coordinates the paper's INPUTS carry: parsed table points plus prose coordinates.
+    """Coordinates the paper's INPUTS carry: the points of its coordinate parse.
 
     Deterministic and arm-independent, read from the base corpus, so every arm answers
-    "reported coordinate-based results" the same way.
+    "reported coordinate-based results" the same way. The upstream parse holds prose
+    coordinates as well as table ones; a corpus built from an older parse undercounts a
+    paper that states its coordinates only in prose.
     """
-    from pondie.extraction.prompt import preprocess
-
     base = paths.DATA / "corpus" / pmid
     if not base.is_dir():
         return 0
     parse = json.loads((base / "stage1/analyses.orig.json").read_text())
-    known = [tuple(p["coordinates"]) for a in parse.get("analyses") or [] for p in a.get("points") or []]
-    text = (base / "processed/local/text.tables.txt").read_text(encoding="utf-8", errors="replace")
-    prose = sum(len(e.get("points") or []) for e in preprocess.prose_parse_entries(text, known))
-    return len(known) + prose
+    return sum(len(a.get("points") or []) for a in parse.get("analyses") or [])
 
 
 def annotate_foci(record: dict, run_dir: Path, pmid: str) -> None:

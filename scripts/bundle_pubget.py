@@ -5,19 +5,24 @@
 
 A paper is taken when its ns-pond data folder has pubget's text, its table manifest and a
 coordinate parse (`stage1/analyses.json`) with at least one point, all of whose tables are
-in the manifest, and when the text carries those tables: one of a table's points is on a
-table row of `text.txt` (a tab-separated or `|` line) for at least one parsed table. A
-parsed table not found that way is listed in the paper's `tables_not_in_text`; most are
-parse errors (a table of lake depths read as coordinates), so they do not exclude the
-paper. pubget inserts each table at its position as tab-separated rows, so the text needs
-no rebuild.
+in the manifest, and when it has a result coordinate: a parsed table the text carries (one
+of its points is on a table row of `text.txt`, a tab-separated or `|` line), or a prose
+entry upstream read as a `result`. A parsed table not found in the text is listed in the
+paper's `tables_not_in_text`; most are parse errors (a table of lake depths read as
+coordinates), so they do not exclude the paper. pubget inserts each table at its position
+as tab-separated rows, so the text needs no rebuild.
+
+The parse holds coordinates stated in prose as entries with `table_id: "prose"` and a
+`role` (`result`, `roi`, `seed`, `target`). They have no table, so the manifest and
+table-row tests skip them, and a paper whose only points are prose seeds, ROIs or targets
+reports no result to extract.
 
 The data folder is only read. Each bundled paper is a copy of what the stages read, in the
 layout `pondie.paths` describes, extracted with `--flavour pubget`:
 
     <out>/corpus/<study>/identifiers.json
     <out>/corpus/<study>/processed/pubget/{text.txt,tables.jsonl,metadata.json}
-    <out>/corpus/<study>/stage1/analyses.json       the parse; prose and split rewrite it
+    <out>/corpus/<study>/stage1/analyses.json       the parse; split rewrites it
     <out>/corpus/<study>/stage1/analyses.orig.json  as copied, to reset a re-run
     <out>/pubget.pmids          pmid<TAB>study<TAB>pubget, one per bundled paper
     <out>/bundle.jsonl          one line per scanned folder: taken, or why not
@@ -33,6 +38,7 @@ import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
+from pondie.formats.parse_keys import PROSE_TABLE_ID
 from pondie.formats.table_parse import normalize_number
 
 DATA = Path("/data/alejandro/projects/ns-pond/data")
@@ -97,15 +103,23 @@ def scan(study_dir: Path) -> dict:
     points = sum(len(a.get("points") or []) for a in analyses)
     if not points:
         return row | {"reason": "no coordinates in the parse"}
-    parsed = {str(a.get("table_id")) for a in analyses if a.get("points")}
+    # Prose entries share the parse but have no table: they are held to neither the
+    # manifest nor the table-row test, and count when upstream read them as a result.
+    prose = [a for a in analyses if str(a.get("table_id")) == PROSE_TABLE_ID]
+    tabled = [a for a in analyses if str(a.get("table_id")) != PROSE_TABLE_ID]
+    results = sum(len(a.get("points") or []) for a in prose if a.get("role") == "result")
+    parsed = {str(a.get("table_id")) for a in tabled if a.get("points")}
     if not parsed <= manifest:
         return row | {"reason": "parse names tables the manifest lacks: "
                       + ", ".join(sorted(parsed - manifest))}
-    absent = tables_not_in_text(text, analyses)
-    if len(absent) == len(parsed):
-        return row | {"reason": "table rows not in the text: " + ", ".join(absent)}
+    absent = tables_not_in_text(text, tabled)
+    if len(absent) == len(parsed) and not results:
+        detail = ", ".join(absent) if parsed else "only seed/roi/target points in prose"
+        return row | {"reason": "no result coordinates: " + detail}
     return row | {"taken": True, "analyses": len(analyses), "points": points,
-                  "tables": len(parsed), "tables_not_in_text": absent, "chars": len(text)}
+                  "tables": len(parsed), "tables_not_in_text": absent,
+                  "prose_points": sum(len(a.get("points") or []) for a in prose),
+                  "prose_result_points": results, "chars": len(text)}
 
 
 def copy_one(src: Path, dest: Path) -> None:

@@ -11,7 +11,7 @@ One output shape per paper, the layout `pondie.paths` reads with flavour `local`
 
     <out>/<pmid>/processed/local/text.tables.txt   article text + every table as markdown
     <out>/<pmid>/processed/local/tables.jsonl      the manifest `Tables` copies
-    <out>/<pmid>/stage1/analyses.json              coordinate parse (prose/split rewrite it)
+    <out>/<pmid>/stage1/analyses.json              coordinate parse (split rewrites it)
     <out>/<pmid>/stage1/analyses.orig.json         immutable copy, to reset between arms
     <out>/<pmid>/provenance.json                   which source, and why
 
