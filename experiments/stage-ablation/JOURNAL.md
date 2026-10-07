@@ -1961,3 +1961,161 @@ Every new pool's misses were mainly the query's vocabulary for its task, and cri
 at the wrong level (the paper where the analysis's sample was meant). Precision on the
 task-fMRI pools is capped by negatives the benchmark left out and autonima's own screener
 judged eligible.
+
+## Second draws of problem solving and social (same papers, same code, fresh model sample)
+
+`ps55_s2r_rep2` and `soc55_s2r_rep2`: code `aa66dfa`, the query as fit after the first
+draw. Both draws were re-scored with that one query, so they differ only in the model's
+sample (veto, `--gold-coords`).
+
+| | first draw (the one the query was fit to) | second draw | second draw, inputs-only |
+|---|---|---|---|
+| problem solving | 25/25, 0.71 | 22/24, 0.67 | 21/24 |
+| social | 23/25, 0.85 | 19/23, 0.83 | 17/23 |
+
+Failed at `single` because attempts never returned: 17851092 (problem solving), 24936688
+and 27716474 (social), so there are 24 and 23 gold papers. On the papers both draws scored,
+the second loses 2 problem-solving gold papers and 3 social ones, and gains none:
+
+- **19656506:** problem-solving task=F. The task is "learning-testing paradigm" where draw 1 wrote
+  "Learning-testing Chinese logogriph problem-solving task". The description still says
+  "tried to solve target or baseline logogriphs"; `PROBLEM` reads "solved ... problems".
+- **23994216:** within-participant increase=F.
+- **21955370:** social task=F. "modified Stroop test in a virtual situation of competition" where
+  draw 1 wrote "virtual social-competition context". The description says "competing
+  against a purported human or machine opponent"; `SOCIAL` has no word for an opponent.
+- **27622781:** social task=F. "Working memory task", with "no competition" conditions.
+- **29039129:** fails no criterion at the paper level; no one analysis met them all.
+
+**Assumption, now tested and false:** that the query's task vocabulary, fit to one draw's
+records, reads the papers. It read the first draw's *wording*. A task's name changes
+between draws; the facts in its description and conditions do not, and the query does not
+read them in enough ways.
+
+**What would test it properly:** widen the task vocabulary from what the task
+descriptions say ("solve", "opponent", "compet"). Then score on a third draw, not on
+either of these, since tuning on this pair would fit it again.
+
+### New error classes in the second draws
+
+**Duplicate term names in a stage chain:** 15 and 14 in the second draws, against 2 and 4 in
+the first.
+- **Not the code:** each draw's saved replies give the same count under `2ebd8a0` or
+  `aa66dfa` (1 and 0 for draw 1, 7 and 7 for draw 2), and the prompt diff between the two
+  versions is a renamed constant. The difference is the model's sample.
+- **Repair doubles it in every run.** The repair model fills an open `inputs_from` slot,
+  which links a model to the one it was fit on. With the stages linked, the rule compares
+  their term names. The repair names each such fault under `introduced` and keeps the
+  write: 7 of the 20 papers whose repair wrote `inputs_from`.
+- **Two kinds.** Most are a group model restating a subject-level term, which is what the
+  rule is for. Some are sibling inputs: 18022606's group model takes two parallel subject
+  models that both have "problem size", and 18439411's two subject models both have
+  "player status". `_chain_terms` collects every model below, so siblings collide.
+  Neither is a stage above the other, so this looks like a false positive in the rule.
+- **Stale docstring:** "Neither has ever fired on the corpus" (`rules.py`) is no longer true.
+
+**A condition id declared under two tasks:** the first reference problem since the audit.
+27855282 declares `cond_localizer_silent` and `cond_localizer_vocal` under both its tasks,
+and the reply already had them that way. `single`'s check only rejects ids that are
+referenced but never declared (`_missing_ids`). `build` scopes duplicate ids only for
+terms (`link.scope_duplicate_terms`), so nothing scopes a condition to its task.
+
+**Not new:** 27855282's levels "FnatFnat", "AnatFnat" are the paper's own condition codes
+("[FnatFnat > AnatFnat]"). That is the known class of a cell level that matches none of
+its term's declared levels.
+
+### Repair's reference links: two regressions in `guard.resolve`, fixed
+
+**Fault 1: siblings.** `repair` named link targets by label, and a model estimation's label is
+its `model_type`. Siblings share it: 18439411's three subject models are all "GLM". The
+proposer's list of link targets (`propose.candidates`) showed labels only ("GLM; GLM;
+GLM"), and the prompt said to name one "exactly as listed". So the reply could only say
+"GLM", and `resolve` took the first match. Over the 13 stored runs, 32 of 125 `inputs_from`
+writes appended a sibling to a group model that already had its own input. Examples: the
+gonogo group fed by the n-back subject model, and three PPI group models fed by one seed's
+subject model. That caused 59 of the 63 errors `repair` introduced.
+
+**Fault 2: direction.** The label match strips punctuation, so "Cigarette Resist < Neutral"
+equalled "Cigarette Resist > Neutral" (17217932). With both present the first was taken; with
+one present, a name for the other direction resolved to it.
+
+**Fix.**
+- `candidates` lists each target as `` `local_id` (label) `` and asks for the id. `resolve`
+  takes an exact id first.
+- `resolve` resolves a name to nothing when it matches several entities.
+- `resolve` discards a label that names the opposite comparison (`direction.polarity`,
+  sides compared with `direction.same_level`).
+
+**A/B** (`exp/repair_ab.py`): `repair` re-run from the stored pre-repair records of 32
+papers, old code against fixed code. Each run logs every `resolve` call.
+
+| | old | fixed |
+|---|---|---|
+| errors `repair` introduced | 34 | 11 |
+| `inputs_from` links added | 56 (27 appended to a filled list) | 21 (0 appended) |
+| names given as an exact id | 153 of 3,940 | 3,805 of 3,867 |
+| names matching several entities | 315 | none |
+| `mirror_of` links added | 0 | 6 |
+
+All 11 errors left are a group model restating a term name of the stage it was fit on.
+That link is right; the restated term came from `single`. `analyses.assessments` fell from
+145 to 88 links. That is entity creation, not resolution: on the two papers that account for
+21 of the fall, the old arm created an assessment ("Comprehensive medical questionnaire") and
+linked every analysis to it, and the fixed arm created none. Creation is unchanged by this
+fix, and the old arm's two draws differ from each other by as much elsewhere.
+
+**Build regression check:** the saved replies of 9 stored runs, rebuilt under current code
+and validated with one validator, record by record. No record gains an error. Errors fall in
+three runs (dementia 52 to 43, cue 67 to 58, problem solving 40 to 36).
+
+**Post-mortem.**
+- **How it came to be:** `resolve` was written when references were named by label, and
+  `existing` was later given ids ("a version listing labels alone added 0 links"), but
+  `candidates`, the other half of the same prompt, was not.
+- **Why it wasn't obvious:** the rule that caught the result reads as being about term
+  names, not links, so its errors looked like the model restating terms. `repair`'s report
+  named them under `introduced` and kept the write.
+- **What prevents it:** a reference is an id, never a label; a lookup that cannot name one
+  entity names none.
+
+### A term restated from a stage below: merged into the lower term (`link.merge_restated_terms`)
+
+The schema has already settled this. `representing-models.md` §5.12 says "The lower column
+is never copied upward". §5.5's audited 2x2 factorial (pmid 37559139) declares only the
+between-subject factors on the group stage and cites the first-level task term through
+`inputs_from`, and its audit removed "task and group were each declared twice, once per
+stage".
+
+**The fix.** A model's term is dropped when exactly one term below it, through `inputs_from`,
+has the same name, type and levels. Every reference to it is repointed to the lower term,
+and the lower term gains what only the copy said: a blank slot filled, the entities carrying
+each level. It leaves alone:
+- a factor coded differently at the two stages, where the levels differ;
+- two same-named terms below, as when siblings feed a conjunction;
+- product columns. A product column is its components, and 12217967's two "VOI x task x
+  time" columns crossed different ones; merging them by name gave a cell a level its new
+  components lack.
+
+It runs in `build` (after `scoped_terms`) and at the end of `repair`, because `repair`'s
+`inputs_from` writes are what expose most duplicates.
+
+**Checked on the stored runs, no model calls.**
+
+| | without | with |
+|---|---|---|
+| stage-chain errors, final records (9 runs) | 67 | 32 |
+| all errors, final records | 323 | 288 |
+| valid final records | 372 | 386 |
+| stage-chain errors, built records | 21 | 4 |
+| records gaining any error (final or built) | | 0 |
+| papers whose query selection changes (veto, `--gold-coords`) | | 0 |
+
+**What is left.** Of the 32 still in the final records, 26 are siblings: mostly
+links the old `resolve` wrote (dm55_s2r alone has 13), which `ace625d` stops at source. The
+other 6 are three product columns and three copies whose levels differ from the lower term,
+which is left for review by design.
+
+**Open question:** siblings legitimately feeding one model. For example, 21334351's
+conjunction takes two pipelines, each with its own "task condition". Checking names down
+each input separately would accept that, but it would also stop the rule catching a wrong
+sibling link, which is how this whole thread began.

@@ -79,9 +79,9 @@ INSTRUCTION = """\
 `local_id` exactly; the reply is then an edit of that entity rather than a new one. Leave it
 out for an entity you are adding. Never invent an id for one that is not listed.
 
-A cross-reference names another entity. Give the name exactly as listed, or omit the field
-entirely when there is nothing to point at: a reference has no "not reported" form, so an
-empty string or a guess is worse than an absent field.
+A cross-reference names another entity. Give its `local_id` where it is listed, or omit the
+field entirely when there is nothing to point at: a reference has no "not reported" form, so
+an empty string or a guess is worse than an absent field.
 
 Do not invent a value to fill a field. If the paper does not state it, leave the field out.
 
@@ -419,8 +419,11 @@ def candidates(sch: Schema, record: Mapping[str, Any], class_name: str) -> str:
         if kind != "reference" or not isinstance(slot.range, str):
             continue
         key = sch.containers().get(slot.range)
+        # By id as well as label: siblings share a label -- three subject-level models all
+        # "GLM" on 18439411 -- and a label is then no address. Named by label alone, the
+        # reply could only say "GLM", which linked every group model to the first of them.
         listed = "; ".join(
-            label
+            f"`{entity['local_id']}` ({label})" if entity.get("local_id") else label
             for entity in (record.get(key) or [])
             if isinstance(entity, Mapping)
             for label in [label_of(entity)]
@@ -435,7 +438,7 @@ def candidates(sch: Schema, record: Mapping[str, Any], class_name: str) -> str:
     return (
         "## Links this record can carry\n\n"
         + "\n".join(blocks)
-        + "\n\nName an entity in the slot that describes it, exactly as listed where it is "
+        + "\n\nName an entity in the slot that describes it, by its `local_id` where it is "
         "listed. Name one the paper describes even if it is not listed. Leave a slot out "
         "when the paper gives nothing to put there -- an empty slot is a claim in itself "
         "where the description above says so.\n\n"

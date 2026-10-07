@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from typing import Any, Callable, Mapping, MutableMapping
 
-from pondie.extraction.record import ids, spans as span_tools
+from pondie.extraction.record import direction, ids, spans as span_tools
 from pondie.extraction.record.fix import derive, shape
 from pondie.extraction.record.effect import terms_in_scope
 from pondie.extraction.record.ids import label_of
@@ -415,6 +415,15 @@ def resolve(
     It is also on the class: without that, `inputs_from` -- which the schema says targets a
     ModelEstimation -- resolved to a Condition nested under a Task because the name matched,
     and a type-violating link is worse than a missing one.
+
+    A name matching several entities resolves to none. Siblings share a label -- a model's
+    label is its `model_type`, and 18439411's three subject-level models are all "GLM" --
+    and taking the first linked the unstable- and non-social-condition group models to the
+    stable condition's subject model.
+
+    Nor does a name match the opposite comparison. The label match ignores punctuation, so
+    "Cigarette Resist < Neutral" equalled "Cigarette Resist > Neutral" (17217932), and a
+    link written to the wrong one moves its coordinates into the other direction's map.
     """
     container = sch.containers().get(target_class, "")
     pool = {
@@ -427,26 +436,37 @@ def resolve(
         if not isinstance(raw, str) or not raw.strip():
             continue
         want = re.sub(r"[^a-z0-9]+", " ", raw.lower()).strip()
-        hit = (
-            raw
-            if raw in pool
-            else next(
-                (
-                    lid
-                    for lid, label in pool.items()
-                    if re.sub(r"[^a-z0-9]+", " ", label.lower()).strip() == want
-                ),
-                None,
-            )
-        )
-        if hit is None:
-            hit = next(
-                (lid for lid, label in pool.items() if same_entity(label, raw, abbreviations)),
-                None,
-            )
+        if raw in pool:
+            matches = [raw]
+        else:
+            matches = [
+                lid
+                for lid, label in pool.items()
+                if re.sub(r"[^a-z0-9]+", " ", label.lower()).strip() == want
+            ] or [lid for lid, label in pool.items() if same_entity(label, raw, abbreviations)]
+            matches = [lid for lid in matches if not _opposite(raw, pool[lid])]
+        hit = matches[0] if len(matches) == 1 else None
         if hit and hit not in out:
             out.append(hit)
     return out
+
+
+def _opposite(one: str, other: str) -> bool:
+    """Do two names compare the same two things in opposite directions?
+
+    "A > B" against "A < B" or "B > A". Names that compare different things, or that are
+    not comparisons, are not opposites; matching decides those.
+    """
+    left, right = direction.polarity(one), direction.polarity(other)
+    if left is None or right is None:
+        return False
+    (a1, b1, sign1), (a2, b2, sign2) = left, right
+    same = direction.same_level
+    if same(a1, a2) and same(b1, b2):
+        return sign1 != sign2
+    if same(a1, b2) and same(b1, a2):
+        return sign1 == sign2
+    return False
 
 
 def create(

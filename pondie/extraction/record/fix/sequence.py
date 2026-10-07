@@ -289,10 +289,19 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
+            "restated_terms",
+            "drop a term a model restates from a stage below it, citing the lower one",
+            lambda body, ctx: link.merge_restated_terms(body, ctx.schema),
+            # After `scoped_terms`, so a scoped id is the one repointed to; at the merge,
+            # because `inputs_from` and the lower stage's terms are in different payloads.
+            after="scoped_terms",
+            stage="merged",
+        ),
+        Repair(
             "references",
             "repoint a dangling reference where the choice is forced",
             lambda body, ctx: link.repair_references(body, ctx.schema),
-            after="scoped_terms",
+            after="restated_terms",
             stage="merged",
         ),
         Repair(

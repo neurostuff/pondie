@@ -46,6 +46,7 @@ from pondie.extraction.record.validate import EXTRACTION_SCHEMA, Validator
 from pondie.extraction.repair import guard as edit_module
 from pondie.extraction.repair.guard import UNRESTRICTED, Edit, Refusal, refusals
 from pondie.extraction.repair.propose import candidates, existing, sweep_order
+from pondie.extraction.record.fix.link import merge_restated_terms
 from pondie.extraction.record.fix.reachable import drop_unreachable
 from pondie.formats import parse_keys, values
 from pondie.schema import reader
@@ -90,6 +91,8 @@ class Report:
     #: Entities removed from the record because no analysis reached them. Reported rather
     #: than silent: the entity is out of the record, not deleted from the audit trail.
     dropped: list[str] = field(default_factory=list)
+    #: Terms dropped as restatements of a lower stage's (`link.merge_restated_terms`).
+    merged: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
         return (
@@ -642,6 +645,10 @@ def run(
         if reply is not None:
             report.cost = reply.cost
             report.traces = ((reply.trace_id, reply.cache_status),) if reply.trace_id else ()
+
+    # Here as well as in `build`: a link this pass wrote to `inputs_from` can put a model's
+    # term above the same term at the stage it now reaches, which `build` never saw.
+    report.merged += merge_restated_terms(record, sch)
 
     # LAST, because it judges what everything above produced. The proposer creates an entity
     # whenever the model proposes one and never asks whether anything will point at it:
