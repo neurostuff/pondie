@@ -6,7 +6,7 @@ schema commit, the date and the paper count.
 
 ## Requirements
 
-- Python 3.11 or later (`uv` is used when installed, otherwise `python3 -m venv`)
+- Python 3.12 (`uv` fetches it when installed; otherwise `python3.12 -m venv`)
 - the codex CLI, logged in: `npm install -g @openai/codex`, then `codex login`
 - disk for a second copy of the corpus: a run copies each paper into `runs/<RUN>/corpus`,
   because the `split` stage rewrites its parse
