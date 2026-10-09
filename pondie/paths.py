@@ -120,9 +120,9 @@ class Flavour(str, Enum):
         return self.value in PUBGET_LAYOUT
 
 
-#: The flavours pubget's extraction lays out, by name, for code that switches on the
-#: string rather than the enum.
-PUBGET_LAYOUT = frozenset({"pubget", "pmc", "europepmc"})
+#: The flavours pubget's extraction lays out, by name and in `Flavour` order, for code that
+#: switches on the string rather than the enum.
+PUBGET_LAYOUT = ("pubget", "pmc", "europepmc")
 
 
 # The accessors below are for code that READS the corpus. `extraction.corpus` builds it --

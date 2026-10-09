@@ -311,13 +311,16 @@ def test_stage_one_reads_a_pmc_paper_as_pubget(tmp_path, source):
     """Ingestion writes these with pubget's extraction: its manifest, its CSV, its sidecar."""
     from pondie.extraction.corpus import tables as stage1
 
+    # The layout on beast: CSVs and sidecars flat in source/<source>/, and tables/
+    # holding only the raw JATS, named by table id.
     study = tmp_path / "s"
     (study / "processed" / source).mkdir(parents=True)
-    tables = study / "source" / source / "tables"
-    tables.mkdir(parents=True)
+    flat = study / "source" / source
+    (flat / "tables").mkdir(parents=True)
+    (flat / "tables" / "t1.xml").write_text("<table-wrap/>", encoding="utf-8")
     csv_text = "Region,x,y,z,t\nAmygdala,-20,-4,-16,4.2\n"
-    (tables / "table_000.csv").write_text(csv_text, encoding="utf-8")
-    (tables / "table_000_info.json").write_text(json.dumps({"n_header_rows": 1}))
+    (flat / "table_000.csv").write_text(csv_text, encoding="utf-8")
+    (flat / "table_000_info.json").write_text(json.dumps({"n_header_rows": 1}))
     (study / "processed" / source / "tables.jsonl").write_text(
         json.dumps(
             {
@@ -335,6 +338,28 @@ def test_stage_one_reads_a_pmc_paper_as_pubget(tmp_path, source):
 
     assert stage1.table_flavour(study) == source
     [table] = stage1.coordinate_tables(study)
+    assert table["csv_path"] == flat / "table_000.csv", "the CSV, not the raw JATS"
     assert table["csv_text"] == csv_text, "a pubget-layout CSV is sent byte for byte"
-    grid = tp.read_table(study / "source" / source, "table_000.csv", flavour=source)
-    assert grid is not None
+
+
+def test_a_pmc_text_with_tables_inline_is_read_as_it_stands(tmp_path):
+    """Its text.txt came from a pubget build rebuild does not have, so no local is built."""
+    from pondie.extraction.corpus import rebuild
+
+    study = tmp_path / "s"
+    for flavour, text in (("pmc", "Results.\n"), ("elsevier", "Results.\n")):
+        (study / "processed" / flavour).mkdir(parents=True)
+        (study / "processed" / flavour / "text.txt").write_text(text, encoding="utf-8")
+    assert rebuild.read_as_is(study) == study / "processed" / "pmc" / "text.txt"
+    assert rebuild.choose_flavour(study) is None, "an elsevier local would outrank it"
+    with pytest.raises(rebuild.BuildError):
+        rebuild.build_one(study, None, "", allow_drift=True)
+
+    plain = tmp_path / "p"
+    (plain / "processed" / "pubget").mkdir(parents=True)
+    (plain / "processed" / "pubget" / "text.txt").write_text("Results.\n", encoding="utf-8")
+    assert rebuild.read_as_is(plain) is None
+    (plain / "processed" / "pubget" / "text.txt").write_text(
+        "Table 1\nregion\t10\t20\t30\n", encoding="utf-8"
+    )
+    assert rebuild.read_as_is(plain) is not None, "pubget with its tables inline"

@@ -355,7 +355,7 @@ def check_equivalence(rebuilt: str, corpus: str) -> str | None:
 
 #: Best first. The order is `pipeline.kinds.TEXT_FLAVOURS` minus `local`, which is what this
 #: module produces rather than reads.
-FLAVOURS = ("pubget", "pmc", "europepmc", "elsevier", "ace")
+FLAVOURS = ("pubget", "elsevier", "ace")
 
 
 def write_local(out_dir: Path, text: str, *, overwrite: bool) -> None:
@@ -386,6 +386,28 @@ def write_local(out_dir: Path, text: str, *, overwrite: bool) -> None:
         handle.write(text)
 
 
+def read_as_is(study_dir: Path) -> Path | None:
+    """A pubget-layout text.txt that is read as it stands rather than rebuilt, or None.
+
+    PMC and Europe PMC papers, and pubget papers extracted since ingestion's extractor
+    started inserting each table at its position (keep-tables), already carry their tables
+    inline, from a pubget build this module does not have, so a rebuild cannot reproduce
+    them. Writing `local` for one anyway would rank above it and move every offset.
+    """
+    for flavour in paths.PUBGET_LAYOUT:
+        text = study_dir / "processed" / flavour / "text.txt"
+        if text.is_file() and (flavour != "pubget" or _tables_inline(text)):
+            return text
+    return None
+
+
+def _tables_inline(text: Path) -> bool:
+    """Whether the text has a table row in it: pubget inlines each table as tab-separated
+    rows, and its plain text has none."""
+    with text.open(encoding="utf-8") as handle:
+        return any("\t" in line for line in handle)
+
+
 def choose_flavour(study_dir: Path) -> str | None:
     """The best flavour this study can actually be built from, or None.
 
@@ -395,12 +417,12 @@ def choose_flavour(study_dir: Path) -> str | None:
     `text.txt` is an elsevier or ace paper as far as this module is concerned.
     """
 
+    if read_as_is(study_dir) is not None:
+        return None
     for flavour in FLAVOURS:
         if not (study_dir / "processed" / flavour / "text.txt").is_file():
             continue
-        if flavour in paths.PUBGET_LAYOUT and not (
-            study_dir / "source" / flavour / "article.xml"
-        ).is_file():
+        if flavour == "pubget" and not (study_dir / "source" / "pubget" / "article.xml").is_file():
             continue
         return flavour
     return None
@@ -453,22 +475,25 @@ def build_one(
     are appended to their corpus text, which moves nothing.
     """
 
+    as_is = read_as_is(study_dir)
+    if as_is is not None:
+        raise BuildError(f"{as_is} already carries its tables; it is read as it stands")
     flavour = flavour or choose_flavour(study_dir)
     if flavour is None:
         raise BuildError(
             f"no buildable flavour under {study_dir}: none of {FLAVOURS} has a text.txt "
-            "(and pubget, pmc and europepmc also need source/<flavour>/article.xml)"
+            "(and pubget also needs source/pubget/article.xml)"
         )
-    if flavour not in paths.PUBGET_LAYOUT:
+    if flavour != "pubget":
         return build_appended_one(study_dir, flavour, overwrite=overwrite)
 
-    article_dir = study_dir / "source" / flavour
+    article_dir = study_dir / "source" / "pubget"
     article_xml = article_dir / "article.xml"
-    corpus_path = study_dir / "processed" / flavour / "text.txt"
+    corpus_path = study_dir / "processed" / "pubget" / "text.txt"
 
     if not article_xml.is_file():
         raise BuildError(
-            f"no {article_xml}. Add 'source/{flavour}/article.xml' to sync.WANTED "
+            f"no {article_xml}. Add 'source/pubget/article.xml' to sync.WANTED "
             "and re-sync; a missing article is a failure, not a skip, because the "
             "rebuilt text is what every offset will address."
         )
@@ -504,7 +529,7 @@ def build_one(
         return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
     provenance = {
-        "flavour": flavour,
+        "flavour": "pubget",
         "pubget_commit": commit,
         "preserve_crossrefs": PRESERVE_CROSSREFS,
         "tables_parsed": tables_report["parsed"],
@@ -565,11 +590,15 @@ def main() -> int:
     failures = []
     for pmid, study, _axis in read_pmids(args.pmids):
         study_dir = args.texts / study
+        as_is = read_as_is(study_dir)
+        if as_is is not None:
+            print(f"  {study}  pmid {pmid}  {as_is.parent.name}/text.txt already carries "
+                  "its tables; read as it stands")
+            continue
         try:
             if args.check_only:
-                flavour = choose_flavour(study_dir) or "pubget"
-                article_dir = study_dir / "source" / flavour
-                corpus_path = study_dir / "processed" / flavour / "text.txt"
+                article_dir = study_dir / "source" / "pubget"
+                corpus_path = study_dir / "processed" / "pubget" / "text.txt"
                 if not (article_dir / "article.xml").is_file():
                     raise BuildError(f"no {article_dir / 'article.xml'}")
                 raw = build(
@@ -577,7 +606,6 @@ def main() -> int:
                     article_dir,
                     text_module,
                     keep_tables=False,
-                    style=False,
                 )
                 problem = check_equivalence(raw, corpus_path.read_text(encoding="utf-8"))
                 if problem:
@@ -585,9 +613,9 @@ def main() -> int:
                 print(f"  {study}  pmid {pmid}  reproduces the corpus text ({len(raw):,} ch)")
             else:
                 flavour = choose_flavour(study_dir)
-                if flavour in paths.PUBGET_LAYOUT and text_module is None:
+                if flavour == "pubget" and text_module is None:
                     raise BuildError(
-                        f"{study} is a {flavour} paper and no pubget checkout loaded; "
+                        f"{study} is a pubget paper and no pubget checkout loaded; "
                         "pass --pubget"
                     )
                 info = build_one(

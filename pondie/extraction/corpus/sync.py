@@ -49,7 +49,7 @@ WANTED = [
     # misses and extracted by pubget, so the same files under their own source name.
     *(
         f"{kind}/{source}/{name}"
-        for source in ("pmc", "europepmc")
+        for source in paths.PUBGET_LAYOUT[1:]
         for kind, name in (
             ("processed", "text.txt"),
             ("processed", "tables.jsonl"),
@@ -59,6 +59,13 @@ WANTED = [
             ("source", "article.xml"),
             ("source", "tables/"),
         )
+    ),
+    # The ingestion workflow copies pubget's table CSVs and their sidecars flat into
+    # `source/<source>/`, beside `tables/`, which holds only each table's raw JATS.
+    *(
+        f"source/{source}/{pattern}"
+        for source in paths.PUBGET_LAYOUT
+        for pattern in ("table_*.csv", "table_*_info.json")
     ),
     # Elsevier is the second source, and for 10,594 papers of the corpus the best one
     # available: it ships a table manifest for every paper it covers, where pubget misses
@@ -147,7 +154,7 @@ def report(destination: Path) -> str:
     """
 
     parts = []
-    for flavour in ("pubget", "pmc", "europepmc", "elsevier", "ace"):
+    for flavour in (*paths.PUBGET_LAYOUT, "elsevier", "ace"):
         text = destination / "processed" / flavour / "text.txt"
         if not text.is_file():
             continue
@@ -163,7 +170,7 @@ def report(destination: Path) -> str:
         parts.append(f"{flavour} {size}" + (f", {found} table file(s)" if found else ""))
     if not parts:
         return "NO TEXT in any flavour"
-    for flavour in sorted(paths.PUBGET_LAYOUT):
+    for flavour in paths.PUBGET_LAYOUT:
         if (
             not (destination / "source" / flavour / "article.xml").is_file()
             and (destination / "processed" / flavour / "text.txt").is_file()
