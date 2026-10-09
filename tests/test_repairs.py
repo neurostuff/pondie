@@ -469,11 +469,11 @@ def test_mirror_of_is_repointed_to_the_new_id():
 def test_a_coordinate_set_follows_its_analysis_to_the_new_id():
     # Left on the old id, every coordinate set dangles and the reply is retried for it.
     body = {
-        "analyses": [{"local_id": "ana_ptsd_lt_hc", "source_table_analysis": _wrapped("prose#1")}],
+        "analyses": [{"local_id": "ana_ptsd_lt_hc", "source_table_analysis": _wrapped("text#1")}],
         "coordinate_sets": [{"local_id": "cs_1", "analysis": "ana_ptsd_lt_hc"}],
     }
     fix.derive_analysis_ids(body, _SCH)
-    assert body["coordinate_sets"][0]["analysis"] == "a_prose_1"
+    assert body["coordinate_sets"][0]["analysis"] == "a_text_1"
 
 
 def test_a_derived_id_already_taken_leaves_both_alone():
@@ -545,7 +545,7 @@ def test_no_repair_introduces_a_dangling_reference():
 
 def test_deriving_ids_introduces_no_dangling_reference():
     body = {
-        "analyses": [{"local_id": "ana_x", "source_table_analysis": _wrapped("prose#1")}],
+        "analyses": [{"local_id": "ana_x", "source_table_analysis": _wrapped("text#1")}],
         "coordinate_sets": [{"local_id": "cs_1", "analysis": "ana_x"}],
     }
     log = fix.apply_all(body, fix.Context(schema=_SCH), stage="demands")
@@ -1190,3 +1190,40 @@ def test_a_product_column_is_not_merged_by_its_name():
             term["interaction_with"] = ["trm_other"]
             term["levels"] = []
     assert fix.link.merge_restated_terms(body, _SCH) == []
+
+
+# --- text keys -----------------------------------------------------------------
+
+
+def test_a_text_entry_is_keyed_text_as_the_schema_spells_it():
+    from pondie.formats import parse_keys
+
+    entries = [{"table_id": "t1"}, {"table_id": "prose"}, {"table_id": "prose"}]
+    assert parse_keys.parse_keys(entries) == ["t1#1", "text#1", "text#2"]
+    assert parse_keys.canonical("prose#2") == "text#2"
+    assert parse_keys.canonical("t1#1") == "t1#1"
+    assert parse_keys.canonical(None) is None
+
+
+def test_a_record_keyed_prose_is_respelled_before_its_keys_are_checked(tmp_path):
+    """An old record's `prose#1` would otherwise name no row group and be dropped."""
+    stage1 = tmp_path / "analyses.json"
+    stage1.write_text(json.dumps({"analyses": [
+        {"table_id": "prose", "name": "A > B", "points": [{"coordinates": [1, 2, 3]}]}]}))
+    body = {
+        "analyses": [{"local_id": "ana_x", "source_table_analysis": _wrapped("prose#1")}],
+        "coordinate_sets": [{"local_id": "prose#1", "analysis": "ana_x"}],
+    }
+    log = fix.apply_all(body, fix.Context(schema=_SCH, stage1=stage1), stage="demands")
+    assert body["analyses"][0]["source_table_analysis"]["value"] == "text#1"
+    assert body["coordinate_sets"][0]["local_id"] == "text#1"
+    assert dict(log.entries)["text_keys"]
+    assert not dict(log.entries).get("source_links"), "the respelled key resolves"
+
+
+def test_an_old_prose_key_still_joins_to_its_points():
+    from pondie.normalization import coordinate_space
+
+    analysis = {"source_table_analysis": _wrapped("prose#1")}
+    decision = coordinate_space.resolve(analysis, {}, {"text#1": [{"space": "MNI"}]})
+    assert decision.value == "MNI"

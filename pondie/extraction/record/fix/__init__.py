@@ -30,6 +30,7 @@ from pondie.extraction.record.fix.derive import (
     mirror_withheld,
     relabel_conclusions,
     resolve_source_table_analysis,
+    respell_text_keys,
 )
 from pondie.extraction.record.fix.link import (
     align_cell_levels,
@@ -99,6 +100,7 @@ __all__ = [
     "repair_wrappers",
     "repoint_out_of_scope_terms",
     "resolve_source_table_analysis",
+    "respell_text_keys",
     "scope_duplicate_terms",
     "unwrap_entities",
     "unwrap_plain_slots",
