@@ -21,7 +21,8 @@
         "end_char": 74185,
         "parent_section": "Tables"
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -1012,7 +1013,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "100-ms sinusoidal tones at 2250 Hz presented binaurally through plastic tubes, with interaural intensity differences representing left and right locations and equal intensity representing the middle location.",
+        "value": [
+          "100-ms sinusoidal tones at 2250 Hz presented binaurally through plastic tubes, with interaural intensity differences representing left and right locations and equal intensity representing the middle location."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -1029,7 +1032,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -1211,7 +1214,9 @@
       ],
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Auditory tones and a white square presented in spatially varying locations.",
+        "value": [
+          "Auditory tones and a white square presented in spatially varying locations."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -1228,7 +1233,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -1941,7 +1946,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 1e-07,
         "value_source": "reported",
@@ -1960,7 +1965,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",

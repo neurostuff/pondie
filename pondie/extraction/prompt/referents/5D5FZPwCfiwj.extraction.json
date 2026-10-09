@@ -164,7 +164,8 @@
         "start_char": 49364,
         "end_char": 50514
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -1874,7 +1875,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Images of low-calorie foods such as cucumbers, celery, broccoli, and carrots, and high-calorie foods such as chocolate bars, cookies, ice cream, and potato chips.",
+        "value": [
+          "Images of low-calorie foods such as cucumbers, celery, broccoli, and carrots, and high-calorie foods such as chocolate bars, cookies, ice cream, and potato chips."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -1891,7 +1894,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -3950,7 +3953,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 2.3,
         "value_source": "reported",
@@ -3969,7 +3972,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "Z",
         "value_source": "reported",

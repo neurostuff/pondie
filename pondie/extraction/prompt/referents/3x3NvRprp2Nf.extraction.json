@@ -161,7 +161,8 @@
         "start_char": 50534,
         "end_char": 51269
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -5003,7 +5004,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Numerical stimuli",
+        "value": [
+          "Numerical stimuli"
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -5020,7 +5023,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -5125,7 +5128,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Left- or right-facing arrows and auditory stop signals",
+        "value": [
+          "Left- or right-facing arrows and auditory stop signals"
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -5142,7 +5147,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -5388,7 +5393,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.001,
         "value_source": "reported",
@@ -5416,7 +5421,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",

@@ -5,7 +5,8 @@
     "extractor_version": "review-bootstrap-0.1.0",
     "source_text_hash": "08b40622554a44270a926f77b58d41869c02c7a4843ec3da81eb195f10190663",
     "extraction_date": "2026-08-12",
-    "paper_sections": []
+    "paper_sections": [],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -1678,7 +1679,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Triads of three black words on a green background, including normal and mirrored words.",
+        "value": [
+          "Triads of three black words on a green background, including normal and mirrored words."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -1695,7 +1698,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"

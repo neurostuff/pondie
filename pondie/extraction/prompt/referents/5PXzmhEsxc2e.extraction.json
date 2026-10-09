@@ -130,7 +130,8 @@
         "end_char": 48344,
         "parent_section": "Discussion"
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -2651,7 +2652,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Spoken sentences, including syntactically ambiguous, unambiguous, filler, unacceptable, and acoustic baseline stimuli.",
+        "value": [
+          "Spoken sentences, including syntactically ambiguous, unambiguous, filler, unacceptable, and acoustic baseline stimuli."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -2668,7 +2671,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -2786,7 +2789,9 @@
       ],
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "The same spoken sentence stimuli used in the task experiment.",
+        "value": [
+          "The same spoken sentence stimuli used in the task experiment."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -2803,7 +2808,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "none"
@@ -3055,7 +3060,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.01,
         "value_source": "reported",
@@ -3074,7 +3079,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",

@@ -175,7 +175,8 @@
         "end_char": 50263,
         "parent_section": "Discussion"
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -2959,7 +2960,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Sixteen schematic faces as targets and 64 scene pictures as background distractors.",
+        "value": [
+          "Sixteen schematic faces as targets and 64 scene pictures as background distractors."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -2976,7 +2979,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -3255,7 +3258,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.01,
         "value_source": "reported",
@@ -3283,7 +3286,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",
@@ -3389,7 +3392,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.001,
         "value_source": "reported",
@@ -3408,7 +3411,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",

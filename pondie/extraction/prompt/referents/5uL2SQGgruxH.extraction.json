@@ -176,7 +176,8 @@
         "start_char": 32718,
         "end_char": 43253
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -4124,7 +4125,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Running Danish speech and multitalker babble.",
+        "value": [
+          "Running Danish speech and multitalker babble."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -4141,7 +4144,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "speech",

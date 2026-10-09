@@ -192,7 +192,8 @@
         "start_char": 49341,
         "end_char": 49366
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -3104,7 +3105,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Written instructions presented on a screen behind the scanner; a sound signaled the end of the imagery or rest phase.",
+        "value": [
+          "Written instructions presented on a screen behind the scanner; a sound signaled the end of the imagery or rest phase."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -3121,7 +3124,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "none"
@@ -3319,7 +3322,7 @@
           ]
         }
       },
-      "cluster_forming_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.001,
         "value_source": "reported",

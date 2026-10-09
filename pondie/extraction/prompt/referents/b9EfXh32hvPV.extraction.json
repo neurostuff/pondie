@@ -163,7 +163,8 @@
         "start_char": 56459,
         "end_char": 56639
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -4516,7 +4517,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.001,
         "value_source": "reported",
@@ -4535,7 +4536,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",

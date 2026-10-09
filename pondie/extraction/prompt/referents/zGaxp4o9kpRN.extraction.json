@@ -192,7 +192,8 @@
         "end_char": 51191,
         "parent_section": "Author contributions"
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -1495,7 +1496,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Twenty-five six-second stereo naturalistic music clips, five each from Ambient, Country, Heavy Metal, Rock & Roll, and Symphonic genres.",
+        "value": [
+          "Twenty-five six-second stereo naturalistic music clips, five each from Ambient, Country, Heavy Metal, Rock & Roll, and Symphonic genres."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -1512,7 +1515,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -3294,7 +3297,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.001,
         "value_source": "reported",
@@ -3322,7 +3325,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",
@@ -3348,12 +3351,6 @@
               ]
             }
           ]
-        }
-      },
-      "cluster_forming_threshold_value": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
         }
       },
       "cluster_extent_threshold": {

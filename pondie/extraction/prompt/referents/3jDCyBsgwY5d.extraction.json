@@ -170,7 +170,8 @@
         "end_char": 57728,
         "parent_section": "Methods"
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -3257,7 +3258,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Pure tones",
+        "value": [
+          "Pure tones"
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -3274,7 +3277,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "none"
@@ -3463,7 +3466,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Natural voice recordings of Italian vowels",
+        "value": [
+          "Natural voice recordings of Italian vowels"
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -3480,7 +3485,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "none"
@@ -3656,7 +3661,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "covert_response"
@@ -3821,7 +3826,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "speech"
@@ -4166,7 +4171,7 @@
           ]
         }
       },
-      "cluster_forming_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.05,
         "value_source": "reported",

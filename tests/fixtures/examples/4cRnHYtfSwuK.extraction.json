@@ -160,7 +160,8 @@
         "start_char": 44918,
         "end_char": 45127
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -463,31 +464,6 @@
           "region_left_amygdala"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "extracted",
-          "value": "decreased",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "The left amygdala exhibited decreased connectivity with additional regions including the vlPFC, precuneus, superior and middle temporal regions, and primary motor cortex in MDD patients compared to HC, suggesting a lateralized pattern of reduced RSFC in MDD.",
-                    "start_char": 21532,
-                    "end_char": 21790
-                  }
-                ]
-              }
-            ]
-          }
-        },
         "edges": [],
         "modulatory_input": {
           "extraction_status": "not_reported",
@@ -781,31 +757,6 @@
           "region_left_amygdala"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "extracted",
-          "value": "increased",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "increased connectivity with the bilateral temporal poles",
-                    "start_char": 1239,
-                    "end_char": 1295
-                  }
-                ]
-              }
-            ]
-          }
-        },
         "edges": [],
         "modulatory_input": {
           "extraction_status": "not_reported",
@@ -1099,31 +1050,6 @@
           "region_right_amygdala"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "extracted",
-          "value": "decreased",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "significantly decreased functional connectivity",
-                    "start_char": 21327,
-                    "end_char": 21374
-                  }
-                ]
-              }
-            ]
-          }
-        },
         "edges": [],
         "modulatory_input": {
           "extraction_status": "not_reported",
@@ -1406,31 +1332,6 @@
           "region_right_amygdala"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "extracted",
-          "value": "increased",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "Besides reduced RSFC, both the left and right amygdala exhibited increased connectivity with the contralateral temporal poles in MDD patients, compared to HC.",
-                    "start_char": 21791,
-                    "end_char": 21949
-                  }
-                ]
-              }
-            ]
-          }
-        },
         "edges": [],
         "modulatory_input": {
           "extraction_status": "not_reported",
@@ -4070,7 +3971,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Black crosshair at the center of a projection screen.",
+        "value": [
+          "Black crosshair at the center of a projection screen."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -4087,7 +3990,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "none"
@@ -4473,7 +4376,7 @@
           "status": "not_found"
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 2.3,
         "value_source": "reported",
@@ -4492,7 +4395,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "z",
         "value_source": "reported",
@@ -4509,12 +4412,6 @@
               ]
             }
           ]
-        }
-      },
-      "cluster_forming_threshold_value": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
         }
       },
       "cluster_extent_threshold": {
@@ -4637,7 +4534,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 2.3,
         "value_source": "reported",
@@ -4665,7 +4562,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "z",
         "value_source": "reported",

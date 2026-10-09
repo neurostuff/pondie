@@ -21,7 +21,8 @@
         "end_char": 47511,
         "parent_section": "Tables"
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -2883,7 +2884,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Happy, angry, and neutral facial expressions from a standard series.",
+        "value": [
+          "Happy, angry, and neutral facial expressions from a standard series."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -2900,7 +2903,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"

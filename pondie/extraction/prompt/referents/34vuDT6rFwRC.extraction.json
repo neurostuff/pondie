@@ -5,7 +5,8 @@
     "extractor_version": "review-bootstrap-0.1.0",
     "source_text_hash": "7bb1f2b73301289fec72e7ead81c7ef76c5e8c119f814b39a738d45daacf2194",
     "extraction_date": "2026-08-12",
-    "paper_sections": []
+    "paper_sections": [],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -2018,7 +2019,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Binaurally recorded broadband noise from a moving loudspeaker, with moving and static control stimuli.",
+        "value": [
+          "Binaurally recorded broadband noise from a moving loudspeaker, with moving and static control stimuli."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -2035,7 +2038,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"

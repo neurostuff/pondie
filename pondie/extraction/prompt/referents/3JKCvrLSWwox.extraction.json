@@ -223,7 +223,8 @@
         "start_char": 55557,
         "end_char": 64637
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -1298,44 +1299,6 @@
           "reg-astg"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "extracted",
-          "value": "positive",
-          "value_source": "generated",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "The aSTG seed showed significant positive connectivity across the entire length of STG through primary auditory cortex and into supramarginal gyrus (SMG).",
-                    "start_char": 38313,
-                    "end_char": 38467
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "extracted",
-          "value": "increased",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "Increased Correlation",
-                    "start_char": 62092,
-                    "end_char": 62113
-                  }
-                ]
-              }
-            ]
-          }
-        },
         "edges": [],
         "inference_target": {
           "extraction_status": "extracted",
@@ -1500,44 +1463,6 @@
           "reg-astg"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "extracted",
-          "value": "negative",
-          "value_source": "generated",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "Reduced Correlation",
-                    "start_char": 62506,
-                    "end_char": 62525
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "extracted",
-          "value": "decreased",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "Reduced Correlation",
-                    "start_char": 62506,
-                    "end_char": 62525
-                  }
-                ]
-              }
-            ]
-          }
-        },
         "edges": [],
         "inference_target": {
           "extraction_status": "extracted",
@@ -1702,44 +1627,6 @@
           "reg-aitg"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "extracted",
-          "value": "positive",
-          "value_source": "generated",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "Increased Correlation",
-                    "start_char": 62092,
-                    "end_char": 62113
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "extracted",
-          "value": "increased",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "Increased Correlation",
-                    "start_char": 62092,
-                    "end_char": 62113
-                  }
-                ]
-              }
-            ]
-          }
-        },
         "edges": [],
         "inference_target": {
           "extraction_status": "extracted",
@@ -1937,44 +1824,6 @@
           "reg-aitg"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "extracted",
-          "value": "negative",
-          "value_source": "generated",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "Reduced Correlation",
-                    "start_char": 62506,
-                    "end_char": 62525
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "extracted",
-          "value": "decreased",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "Reduced Correlation",
-                    "start_char": 62506,
-                    "end_char": 62525
-                  }
-                ]
-              }
-            ]
-          }
-        },
         "edges": [],
         "inference_target": {
           "extraction_status": "extracted",
@@ -3169,7 +3018,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Spoken and written auditory-feature words, visual-feature words, and meaningless nonwords.",
+        "value": [
+          "Spoken and written auditory-feature words, visual-feature words, and meaningless nonwords."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -3186,7 +3037,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -3313,7 +3164,7 @@
           "status": "not_applicable"
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "none"
@@ -6381,7 +6232,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 2.3,
         "value_source": "reported",
@@ -6400,7 +6251,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "z",
         "value_source": "reported",
@@ -6507,7 +6358,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 2.3,
         "value_source": "reported",
@@ -6535,7 +6386,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "z",
         "value_source": "reported",

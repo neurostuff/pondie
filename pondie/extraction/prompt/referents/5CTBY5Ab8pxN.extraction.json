@@ -229,7 +229,8 @@
         "start_char": 61125,
         "end_char": 61739
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -5448,7 +5449,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Erotic, positive-emotional and neutral photographs from the International Affective Picture System.",
+        "value": [
+          "Erotic, positive-emotional and neutral photographs from the International Affective Picture System."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -5465,7 +5468,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -5651,7 +5654,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Whole-body frontal photographs of naked adults and children.",
+        "value": [
+          "Whole-body frontal photographs of naked adults and children."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -5668,7 +5673,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "none"

@@ -192,7 +192,8 @@
         "end_char": 68119,
         "parent_section": "Ethics statement"
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -672,18 +673,6 @@
           "reg-posterior-right-dlpfc"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
         "inference_target": {
           "extraction_status": "extracted",
           "value": "connectivity_parameter",
@@ -959,18 +948,6 @@
           "reg-posterior-right-dlpfc"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
         "inference_target": {
           "extraction_status": "extracted",
           "value": "connectivity_parameter",
@@ -1246,18 +1223,6 @@
           "reg-posterior-right-dlpfc"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
         "inference_target": {
           "extraction_status": "extracted",
           "value": "connectivity_parameter",
@@ -1627,18 +1592,6 @@
           "reg-anterior-right-dlpfc"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
         "inference_target": {
           "extraction_status": "extracted",
           "value": "connectivity_parameter",
@@ -1986,18 +1939,6 @@
           "reg-posterior-right-dlpfc"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
         "inference_target": {
           "extraction_status": "extracted",
           "value": "connectivity_parameter",
@@ -2641,7 +2582,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "none"
@@ -4895,7 +4836,7 @@
           ]
         }
       },
-      "cluster_forming_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.001,
         "value_source": "reported",
@@ -4993,7 +4934,7 @@
           ]
         }
       },
-      "cluster_forming_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.001,
         "value_source": "reported",

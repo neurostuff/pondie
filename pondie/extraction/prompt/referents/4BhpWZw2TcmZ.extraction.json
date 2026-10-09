@@ -121,7 +121,8 @@
         "start_char": 37695,
         "end_char": 37720
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -1600,7 +1601,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "84 images depicting 42 fat and 42 thin female bodies, plus scrambled control stimuli.",
+        "value": [
+          "84 images depicting 42 fat and 42 thin female bodies, plus scrambled control stimuli."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -1617,7 +1620,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "none"
@@ -4547,19 +4550,13 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "not_reported",
         "evidence": {
           "status": "not_applicable"
         }
       },
-      "voxelwise_threshold_type": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "cluster_forming_threshold_value": {
+      "height_threshold_type": {
         "extraction_status": "not_reported",
         "evidence": {
           "status": "not_applicable"

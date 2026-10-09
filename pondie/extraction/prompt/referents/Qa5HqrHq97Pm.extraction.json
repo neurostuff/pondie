@@ -149,7 +149,8 @@
         "start_char": 41139,
         "end_char": 41803
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -4366,7 +4367,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Three-dimensional graphics designed by Shepard and Metzler.",
+        "value": [
+          "Three-dimensional graphics designed by Shepard and Metzler."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -4383,7 +4386,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -4841,19 +4844,13 @@
           "status": "not_found"
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "not_reported",
         "evidence": {
           "status": "not_applicable"
         }
       },
-      "voxelwise_threshold_type": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
-        }
-      },
-      "cluster_forming_threshold_value": {
+      "height_threshold_type": {
         "extraction_status": "not_reported",
         "evidence": {
           "status": "not_applicable"

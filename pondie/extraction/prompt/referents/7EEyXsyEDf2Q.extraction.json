@@ -105,7 +105,8 @@
         "start_char": 46901,
         "end_char": 98686
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -4142,18 +4143,6 @@
           "reg-left-insula-seed"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
         "edges": []
       },
       "acquisitions": [
@@ -4331,18 +4320,6 @@
           "reg-left-insula-seed"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
         "edges": []
       },
       "acquisitions": [
@@ -4553,18 +4530,6 @@
           "reg-left-insula-seed"
         ],
         "target_regions": [],
-        "parameter_sign": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "not_reported",
-          "evidence": {
-            "status": "not_applicable"
-          }
-        },
         "edges": []
       },
       "acquisitions": [
@@ -6047,7 +6012,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "36 bisyllabic French pseudowords, presented binaurally.",
+        "value": [
+          "36 bisyllabic French pseudowords, presented binaurally."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -6064,7 +6031,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"

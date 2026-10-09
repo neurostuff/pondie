@@ -265,7 +265,8 @@
         "start_char": 45394,
         "end_char": 45500
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -6014,7 +6015,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Cards with values from 1 to 9, followed by monetary reward or punishment outcome cues.",
+        "value": [
+          "Cards with values from 1 to 9, followed by monetary reward or punishment outcome cues."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -6031,7 +6034,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"

@@ -5,7 +5,8 @@
     "extractor_version": "review-bootstrap-0.1.0",
     "source_text_hash": "0c00905ae8bddafd62d027df6da24c0e714bdee76fdb1dea2777d9761c534e1c",
     "extraction_date": "2026-08-12",
-    "paper_sections": []
+    "paper_sections": [],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -1661,7 +1662,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Words and greyscale photographs of famous faces.",
+        "value": [
+          "Words and greyscale photographs of famous faces."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -1678,7 +1681,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"

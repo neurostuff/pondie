@@ -153,7 +153,8 @@
         "start_char": 51386,
         "end_char": 51482
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -3053,7 +3054,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Animated landscape, bones, Sparky the dog, prize boxes, and animated win or lose feedback with sound effects.",
+        "value": [
+          "Animated landscape, bones, Sparky the dog, prize boxes, and animated win or lose feedback with sound effects."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -3070,7 +3073,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -3408,7 +3411,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.005,
         "value_source": "reported",
@@ -3416,7 +3419,7 @@
           "status": "not_found"
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",
@@ -3541,7 +3544,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.005,
         "value_source": "reported",
@@ -3549,7 +3552,7 @@
           "status": "not_found"
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",
@@ -3674,7 +3677,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.005,
         "value_source": "reported",
@@ -3693,7 +3696,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",

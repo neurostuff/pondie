@@ -280,7 +280,8 @@
         "start_char": 74108,
         "end_char": 74133
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -2203,13 +2204,15 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Photographic two-frame sequences showing right hands grasping or withdrawing from potentially harmful or neutral objects.",
+        "value": [
+          "Photographic two-frame sequences showing right hands grasping or withdrawing from potentially harmful or neutral objects."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "not_found"
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -2312,7 +2315,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "The same two-frame hand–object action sequences used in the imaging experiment.",
+        "value": [
+          "The same two-frame hand–object action sequences used in the imaging experiment."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -2329,7 +2334,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -3359,7 +3364,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.005,
         "value_source": "reported",
@@ -3396,7 +3401,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",
@@ -3431,12 +3436,6 @@
               ]
             }
           ]
-        }
-      },
-      "cluster_forming_threshold_value": {
-        "extraction_status": "not_reported",
-        "evidence": {
-          "status": "not_applicable"
         }
       },
       "cluster_extent_threshold": {

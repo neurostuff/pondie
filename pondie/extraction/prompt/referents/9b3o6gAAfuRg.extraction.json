@@ -114,7 +114,8 @@
         "start_char": 38645,
         "end_char": 49372
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -936,7 +937,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Grayscale images of two famous Israeli politicians and two cup types; each identity or cup type was represented by eight images.",
+        "value": [
+          "Grayscale images of two famous Israeli politicians and two cup types; each identity or cup type was represented by eight images."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -953,7 +956,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -1142,7 +1145,7 @@
       "acquisitions": [
         "acq-fmri"
       ],
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"

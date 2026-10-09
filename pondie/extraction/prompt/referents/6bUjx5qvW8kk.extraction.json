@@ -161,7 +161,8 @@
         "start_char": 51198,
         "end_char": 83638
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -6117,7 +6118,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Left- or right-pointing arrows presented in one of eight possible locations.",
+        "value": [
+          "Left- or right-pointing arrows presented in one of eight possible locations."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -6134,7 +6137,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -6359,7 +6362,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Low-pitched tones from 400 to 484 Hz and high-pitched tones from 1016 to 1100 Hz.",
+        "value": [
+          "Low-pitched tones from 400 to 484 Hz and high-pitched tones from 1016 to 1100 Hz."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -6376,7 +6381,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -7129,7 +7134,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.01,
         "value_source": "reported",
@@ -7148,7 +7153,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",
@@ -7251,7 +7256,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.01,
         "value_source": "reported",
@@ -7288,7 +7293,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",
@@ -7439,7 +7444,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.001,
         "value_source": "reported",
@@ -7476,7 +7481,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",
@@ -7618,7 +7623,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.01,
         "value_source": "reported",
@@ -7655,7 +7660,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",

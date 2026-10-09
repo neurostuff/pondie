@@ -137,7 +137,8 @@
         "start_char": 29659,
         "end_char": 30431
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -3514,7 +3515,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Letters presented for 200 ms followed by a 1800 ms interval.",
+        "value": [
+          "Letters presented for 200 ms followed by a 1800 ms interval."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -3531,7 +3534,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"

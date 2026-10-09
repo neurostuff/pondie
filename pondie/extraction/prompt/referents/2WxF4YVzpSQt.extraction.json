@@ -206,7 +206,8 @@
         "start_char": 41688,
         "end_char": 41773
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -1635,113 +1636,18 @@
           "reg-right-dlpfc",
           "reg-left-vmpfc"
         ],
-        "parameter_sign": {
-          "extraction_status": "extracted",
-          "value": "positive",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "enhanced excitatory effects",
-                    "start_char": 1275,
-                    "end_char": 1302
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "extracted",
-          "value": "increased",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "enhanced excitatory effects",
-                    "start_char": 1275,
-                    "end_char": 1302
-                  }
-                ]
-              }
-            ]
-          }
-        },
         "edges": [
           {
             "source_region": "reg-right-caudate",
-            "target_region": "reg-right-insula",
-            "directionality": {
-              "extraction_status": "extracted",
-              "value": "directed",
-              "value_source": "generated",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "right insula to right DLPFC",
-                        "start_char": 1383,
-                        "end_char": 1410
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+            "target_region": "reg-right-insula"
           },
           {
             "source_region": "reg-right-insula",
-            "target_region": "reg-right-dlpfc",
-            "directionality": {
-              "extraction_status": "extracted",
-              "value": "directed",
-              "value_source": "generated",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "left putamen to left VMPFC",
-                        "start_char": 1416,
-                        "end_char": 1442
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+            "target_region": "reg-right-dlpfc"
           },
           {
             "source_region": "reg-left-putamen",
-            "target_region": "reg-left-vmpfc",
-            "directionality": {
-              "extraction_status": "extracted",
-              "value": "directed",
-              "value_source": "generated",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "right caudate to right insula",
-                        "start_char": 26656,
-                        "end_char": 26685
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+            "target_region": "reg-left-vmpfc"
           }
         ],
         "inference_target": {
@@ -2045,159 +1951,26 @@
           "reg-left-vmpfc",
           "reg-right-insula"
         ],
-        "parameter_sign": {
-          "extraction_status": "extracted",
-          "value": "positive",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "enhanced excitatory effects",
-                    "start_char": 1275,
-                    "end_char": 1302
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        "parameter_change": {
-          "extraction_status": "extracted",
-          "value": "increased",
-          "value_source": "reported",
-          "evidence": {
-            "status": "present",
-            "sets": [
-              {
-                "spans": [
-                  {
-                    "text": "enhanced excitatory effects",
-                    "start_char": 1275,
-                    "end_char": 1302
-                  }
-                ]
-              }
-            ]
-          }
-        },
         "edges": [
           {
             "source_region": "reg-right-dlpfc2",
-            "target_region": "reg-right-dlpfc",
-            "directionality": {
-              "extraction_status": "extracted",
-              "value": "directed",
-              "value_source": "generated",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "right DLPFC2 to right DLPFC",
-                        "start_char": 26893,
-                        "end_char": 26920
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+            "target_region": "reg-right-dlpfc"
           },
           {
             "source_region": "reg-right-dlpfc2",
-            "target_region": "reg-left-vmpfc",
-            "directionality": {
-              "extraction_status": "extracted",
-              "value": "directed",
-              "value_source": "generated",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "right DLPFC2 to left VMPFC",
-                        "start_char": 26922,
-                        "end_char": 26948
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+            "target_region": "reg-left-vmpfc"
           },
           {
             "source_region": "reg-left-spl",
-            "target_region": "reg-right-dlpfc",
-            "directionality": {
-              "extraction_status": "extracted",
-              "value": "directed",
-              "value_source": "generated",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "left SPL to right DLPFC",
-                        "start_char": 27126,
-                        "end_char": 27149
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+            "target_region": "reg-right-dlpfc"
           },
           {
             "source_region": "reg-right-caudate",
-            "target_region": "reg-right-dlpfc",
-            "directionality": {
-              "extraction_status": "extracted",
-              "value": "directed",
-              "value_source": "generated",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "right caudate to right DLPFC",
-                        "start_char": 27151,
-                        "end_char": 27179
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+            "target_region": "reg-right-dlpfc"
           },
           {
             "source_region": "reg-right-gpi",
-            "target_region": "reg-right-insula",
-            "directionality": {
-              "extraction_status": "extracted",
-              "value": "directed",
-              "value_source": "generated",
-              "evidence": {
-                "status": "present",
-                "sets": [
-                  {
-                    "spans": [
-                      {
-                        "text": "right GPi to right insula",
-                        "start_char": 27185,
-                        "end_char": 27210
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
+            "target_region": "reg-right-insula"
           }
         ],
         "inference_target": {
@@ -3059,7 +2832,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Geometric cues, high-calorie foods, low-calorie foods, and pixelated control objects.",
+        "value": [
+          "Geometric cues, high-calorie foods, low-calorie foods, and pixelated control objects."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -3076,7 +2851,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -5944,7 +5719,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.001,
         "value_source": "reported",
@@ -5963,7 +5738,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p",
         "value_source": "reported",

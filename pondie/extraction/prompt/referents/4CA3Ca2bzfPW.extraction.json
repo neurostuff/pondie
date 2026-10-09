@@ -21,7 +21,8 @@
         "end_char": 87957,
         "parent_section": "Tables"
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -3052,7 +3053,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Standardized facial images and geometric shapes.",
+        "value": [
+          "Standardized facial images and geometric shapes."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -3069,7 +3072,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"

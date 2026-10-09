@@ -217,7 +217,8 @@
         "start_char": 55833,
         "end_char": 55869
       }
-    ]
+    ],
+    "repaired_by": "schema-migrate-1"
   },
   "description": {
     "extraction_status": "extracted",
@@ -1770,7 +1771,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Three wines with identical retail price, delivered through an electronic syringe pump; price and payment information were displayed.",
+        "value": [
+          "Three wines with identical retail price, delivered through an electronic syringe pump; price and payment information were displayed."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -1787,7 +1790,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -1896,7 +1899,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Displays containing one to four boxes and a hidden circle.",
+        "value": [
+          "Displays containing one to four boxes and a hidden circle."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -1913,7 +1918,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -2032,7 +2037,9 @@
       },
       "stimuli": {
         "extraction_status": "extracted",
-        "value": "Gabor patches with individually adapted tilt difficulty.",
+        "value": [
+          "Gabor patches with individually adapted tilt difficulty."
+        ],
         "value_source": "reported",
         "evidence": {
           "status": "present",
@@ -2049,7 +2056,7 @@
           ]
         }
       },
-      "response_mode": {
+      "response_modality": {
         "extraction_status": "extracted",
         "value": [
           "button_press"
@@ -3188,7 +3195,7 @@
           ]
         }
       },
-      "voxelwise_threshold_value": {
+      "height_threshold_value": {
         "extraction_status": "extracted",
         "value": 0.001,
         "value_source": "reported",
@@ -3207,7 +3214,7 @@
           ]
         }
       },
-      "voxelwise_threshold_type": {
+      "height_threshold_type": {
         "extraction_status": "extracted",
         "value": "p uncorrected",
         "value_source": "reported",
