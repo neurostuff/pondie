@@ -17,12 +17,18 @@ from pathlib import Path
 from typing import Any
 
 
-#: The `table_id` a prose-derived parse entry carries, making its keys `prose#1`, `prose#2`,
-#: distinct from any real table's. Here and not with the stage that writes it, because
-#: `benchmark` and `query` both compare against it and neither imports `extraction` -- the
-#: same argument this module exists for. It was a constant in the prompt renderer and a bare
-#: literal in the two places that write it.
+#: The `table_id` the upstream parse gives an entry read from the text rather than a table.
+#: Here and not with the stage that writes it, because `benchmark` and `query` both compare
+#: against it and neither imports `extraction` -- the same argument this module exists for.
 PROSE_TABLE_ID = "prose"
+
+#: What such an entry's key is spelled with: `text#1`, `text#2`, as study_schema spells a
+#: text analysis's key (`ParsedAnalysis.key`), distinct from any real table's.
+TEXT_KEY_PREFIX = "text"
+
+#: The spelling records written before `TEXT_KEY_PREFIX` hold, `prose#1`. Read, never
+#: written: `canonical` turns it into the current one.
+OLD_TEXT_KEY_PREFIX = "prose"
 
 
 def parse_keys(analyses: list[dict]) -> list[str]:
@@ -46,8 +52,21 @@ def parse_keys(analyses: list[dict]) -> list[str]:
     for entry in analyses:
         table_id = str((entry or {}).get("table_id") or "")
         ordinals[table_id] = ordinals.get(table_id, 0) + 1
-        keys.append(f"{table_id}#{ordinals[table_id]}")
+        prefix = TEXT_KEY_PREFIX if table_id == PROSE_TABLE_ID else table_id
+        keys.append(f"{prefix}#{ordinals[table_id]}")
     return keys
+
+
+def canonical(key: object) -> object:
+    """`key` in the current spelling: `prose#3` -> `text#3`. Anything else is returned as is.
+
+    For reading a record against keys `parse_keys` mints, so a record written before the
+    respelling still joins to its rows.
+    """
+    old = f"{OLD_TEXT_KEY_PREFIX}#"
+    if isinstance(key, str) and key.startswith(old):
+        return f"{TEXT_KEY_PREFIX}#{key[len(old):]}"
+    return key
 
 
 def split(key: str) -> tuple[str, str]:

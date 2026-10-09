@@ -450,12 +450,12 @@ def test_a_coordinate_stated_in_prose_is_demanded_like_a_table_row() -> None:
         ]
     }
 
-    assert render.demandable_keys(doc) == {"t1#1", "prose#1"}
+    assert render.demandable_keys(doc) == {"t1#1", "text#1"}
 
     declined = {"analyses": [], "omitted": [
-        {"key": "prose#1", "reason": "seed coordinate, not a reported result"}]}
-    assert render.unconsumed_listing(declined, {"prose#1"}) == []
-    assert render.unconsumed_listing({"analyses": []}, {"prose#1"})
+        {"key": "text#1", "reason": "seed coordinate, not a reported result"}]}
+    assert render.unconsumed_listing(declined, {"text#1"}) == []
+    assert render.unconsumed_listing({"analyses": []}, {"text#1"})
 
 
 def test_a_listing_entry_neither_emitted_nor_omitted_is_a_failure() -> None:
@@ -621,14 +621,14 @@ def test_a_decline_must_name_what_the_entry_is() -> None:
     "emitted listing entry omitted from this abbreviated pass", and the listing check
     reported the paper clean."""
 
-    listing = {"t1#1", "t1#2", "prose#1"}
+    listing = {"t1#1", "t1#2", "text#1"}
 
     abuse = {"omitted": [{"key": "t1#1",
                           "reason": "emitted listing entry omitted from this abbreviated pass"}]}
     assert render.unsupported_omissions(abuse, listing)
 
     for good in ("seed_coordinate", "atlas_roi", "no_tested_effect",
-                 "duplicate_of: prose#1", "other: a null result with no surviving cluster"):
+                 "duplicate_of: text#1", "other: a null result with no surviving cluster"):
         ok = {"omitted": [{"key": "t1#1", "reason": good}]}
         assert render.unsupported_omissions(ok, listing) == [], good
 
@@ -636,7 +636,7 @@ def test_a_decline_must_name_what_the_entry_is() -> None:
 def test_a_duplicate_must_name_a_key_that_exists() -> None:
     """`duplicate_of` is the one reason the parse can check, so it is checked."""
 
-    listing = {"t1#1", "prose#1"}
+    listing = {"t1#1", "text#1"}
 
     assert render.unsupported_omissions(
         {"omitted": [{"key": "t1#1", "reason": "duplicate_of: t9#9"}]}, listing)
@@ -647,10 +647,10 @@ def test_a_duplicate_must_name_a_key_that_exists() -> None:
 
 
 def test_a_duplicate_must_carry_the_declined_entry_s_coordinates() -> None:
-    """24760016, the one false claim in a manual read of nine. `prose#1` -- "The left
+    """24760016, the one false claim in a manual read of nine. `text#1` -- "The left
     amygdala reached significance after applying a SVC (k = 29; -16, -2, -14; Z = 4.33)"
     -- was declined as a duplicate of `4220#1`, a real listing key whose coordinates do
-    not include that peak. The peak appeared only under `prose#1` and `prose#3`, both
+    not include that peak. The peak appeared only under `text#1` and `text#3`, both
     declined, so the finding left the record while every aggregate called the paper clean.
 
     Both sides of this comparison are read off the stage-1 parse. The pass supplies the
@@ -668,18 +668,18 @@ def test_a_duplicate_must_carry_the_declined_entry_s_coordinates() -> None:
     foci = render.listing_foci(doc)
     listing = render.demandable_keys(doc)
 
-    assert foci["prose#1"] == frozenset({(-16, -2, -14)})
+    assert foci["text#1"] == frozenset({(-16, -2, -14)})
 
     declined = {"analyses": [], "omitted": [
-        {"key": "prose#1", "reason": "duplicate_of: 4220#1"}]}
+        {"key": "text#1", "reason": "duplicate_of: 4220#1"}]}
     failures = render.unsupported_omissions(declined, listing, foci)
     assert failures, "the target does not carry the peak"
     assert "-16, -2, -14" in failures[0].replace("(", "").replace(")", "")
 
     # and the claim stands where the target does carry them
-    wider = foci | {"prose#1": foci["4220#1"] | foci["prose#1"]}
+    wider = foci | {"text#1": foci["4220#1"] | foci["text#1"]}
     kept = {"analyses": [], "omitted": [
-        {"key": "4220#1", "reason": "duplicate_of: prose#1"}]}
+        {"key": "4220#1", "reason": "duplicate_of: text#1"}]}
     assert render.unsupported_omissions(kept, listing, wider) == []
 
 
@@ -716,9 +716,9 @@ def test_an_uncheckable_duplicate_is_still_allowed_through() -> None:
         {"table_id": "t1", "name": "A > B", "points": [{"coordinates": [1, 2, 3]}]},
         {"table_id": "prose", "points": [{"coordinates": [1, 2, 3]}]},
     ]}
-    foci = render.listing_foci(doc) | {"prose#1": frozenset()}
-    declined = {"analyses": [], "omitted": [{"key": "prose#1", "reason": "duplicate_of: t1#1"}]}
-    assert render.unsupported_omissions(declined, {"t1#1", "prose#1"}, foci) == []
+    foci = render.listing_foci(doc) | {"text#1": frozenset()}
+    declined = {"analyses": [], "omitted": [{"key": "text#1", "reason": "duplicate_of: t1#1"}]}
+    assert render.unsupported_omissions(declined, {"t1#1", "text#1"}, foci) == []
 
 
 def _prose(sentence: str, coordinate: tuple[float, float, float], also: bool = False) -> dict:
@@ -747,12 +747,12 @@ def test_a_prose_sentence_the_parse_repeated_is_one_row() -> None:
         _prose(left, (-16, -2, -14)),
     ]}
 
-    assert render.demandable_keys(doc) == {"4220#1", "prose#1", "prose#2"}
+    assert render.demandable_keys(doc) == {"4220#1", "text#1", "text#2"}
 
     # the surviving keys are the low ones, so nothing a record already points at moves
     block = render.stage1_block(doc, {"4220": "tbl1"})
-    assert "prose#3" not in block and "prose#5" not in block
-    assert block.count("prose#1") == 1
+    assert "text#3" not in block and "text#5" not in block
+    assert block.count("text#1") == 1
 
 
 def test_two_tables_the_parse_found_no_coordinates_in_stay_apart() -> None:
@@ -798,7 +798,7 @@ def test_a_long_prose_sentence_keeps_its_coordinate() -> None:
 def test_a_prose_entry_is_held_to_the_table_standard() -> None:
     """They were headed "proposals, not parse output" and told that "declining is expected
     here and is not a failure", while being parse entries in the same address space that
-    produce ordinary analyses -- 24760016's `prose#1` carries the same 17 slots, groups and
+    produce ordinary analyses -- 24760016's `text#1` carries the same 17 slots, groups and
     `spatial_scope` as its table siblings. The decline rate ran at 38% against 14% for
     table entries. What actually differs is the cue sweep's false-positive rate, which the
     closed vocabulary already names."""
@@ -830,8 +830,8 @@ def test_a_voxel_a_table_also_reports_is_marked() -> None:
 def test_a_decline_must_be_about_an_entry_that_exists() -> None:
     """The `duplicate_of` TARGET was checked from the start and the declined key was not,
     so a decline could be about nothing: 20147457 returned
-    `{"key": "possible#1", "reason": "duplicate_of:prose#1"}` over a listing whose only key
-    is `prose#1`. It satisfies every other rule -- the reason is in the vocabulary, the
+    `{"key": "possible#1", "reason": "duplicate_of:text#1"}` over a listing whose only key
+    is `text#1`. It satisfies every other rule -- the reason is in the vocabulary, the
     target exists and carries the coordinates.
 
     It matters because `unconsumed_listing` treats a listing entry as accounted for when
@@ -839,13 +839,13 @@ def test_a_decline_must_be_about_an_entry_that_exists() -> None:
     omission silently invented, which is the exact pair of failures the channel exists to
     keep apart."""
 
-    listing = {"prose#1"}
-    invented = {"omitted": [{"key": "possible#1", "reason": "duplicate_of:prose#1"}]}
+    listing = {"text#1"}
+    invented = {"omitted": [{"key": "possible#1", "reason": "duplicate_of:text#1"}]}
 
     failures = render.unsupported_omissions(invented, listing)
     assert failures and "not a listing key" in failures[0]
 
-    real = {"omitted": [{"key": "prose#1", "reason": "seed_coordinate"}]}
+    real = {"omitted": [{"key": "text#1", "reason": "seed_coordinate"}]}
     assert render.unsupported_omissions(real, listing) == []
 
     # No listing to check against is not the same as a key that fails the check.
@@ -855,13 +855,13 @@ def test_a_decline_must_be_about_an_entry_that_exists() -> None:
 def test_collapsing_a_duplicate_does_not_renumber_its_siblings() -> None:
     """A duplicate is not always in an appended block at the end. In 4 of the 10
     duplicating papers in the corpus the copy sits NEXT TO its original, because the
-    sentence genuinely occurs twice in the paper -- 26509115 has `prose#4` repeating
-    `prose#2` with `prose#3` between them, and 27444935 has `prose#3` repeating `prose#2`
-    ahead of a distinct `prose#4`.
+    sentence genuinely occurs twice in the paper -- 26509115 has `text#4` repeating
+    `text#2` with `text#3` between them, and 27444935 has `text#3` repeating `text#2`
+    ahead of a distinct `text#4`.
 
     So a key is computed over the whole parse before anything is dropped. Removing the
     entry from the FILE instead would shift every later key down and re-address a record's
-    analyses silently; here `prose#4` stays `prose#4`."""
+    analyses silently; here `text#4` stays `text#4`."""
 
     doc = {"analyses": [
         _prose("Greater volume in the right medial temporal lobe (26, -8, -20).", (26, -8, -20)),
@@ -870,6 +870,6 @@ def test_collapsing_a_duplicate_does_not_renumber_its_siblings() -> None:
         _prose("Carrying more risk alleles was associated with greater atrophy (8, 4, 2).", (8, 4, 2)),
     ]}
 
-    assert render.demandable_keys(doc) == {"prose#1", "prose#2", "prose#4"}
+    assert render.demandable_keys(doc) == {"text#1", "text#2", "text#4"}
     foci = render.listing_foci(doc)
-    assert foci["prose#4"] == frozenset({(8.0, 4.0, 2.0)}), "the key still addresses its own entry"
+    assert foci["text#4"] == frozenset({(8.0, 4.0, 2.0)}), "the key still addresses its own entry"

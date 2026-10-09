@@ -46,6 +46,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 from pondie import schema
+from pondie.formats import parse_keys
 from pondie.schema import reader
 from pondie.schema.reader import EXTRACTED_VALUE, LOCAL_ID
 
@@ -721,7 +722,8 @@ class Aligner:
 
     def provenance(self, entity: Entity) -> str:
         field = entity.fields.get(self.PROVENANCE)
-        return str(getattr(field, "value", "") or "") if field is not None else ""
+        value = getattr(field, "value", "") if field is not None else ""
+        return str(parse_keys.canonical(value) or "")
 
     def pair_score(self, etype: str, a: Entity, b: Entity) -> float:
         if etype == "Analysis":

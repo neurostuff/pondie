@@ -182,6 +182,14 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="merged",
         ),
         Repair(
+            "text_keys",
+            "respell a `prose#N` parse key as the schema's `text#N`",
+            lambda body, ctx: derive.respell_text_keys(body),
+            # Before anything that joins a key to the parse: `coordinate_space`,
+            # `source_links`, `coordinate_set_keys`, `derived_ids`, `mirrored`.
+            stage="demands",
+        ),
+        Repair(
             "correction_regions",
             "name an ROI correction's regions from the analyses that used it",
             lambda body, ctx: derive.derive_correction_regions(body),

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from pondie.normalization import OTHER, UNKNOWN
 from pondie.normalization._lexicon import ClosedField, Decision, Rule
+from pondie.formats import parse_keys
 from pondie.normalization._records import value_of
 
 MNI, TAL = "MNI", "TAL"
@@ -54,7 +55,7 @@ def resolve(analysis: dict, record: dict, points_by_key: dict | None = None) -> 
     if len(seen) > 1:
         return Decision(UNKNOWN, "tables disagree")
 
-    key = str(value_of(analysis.get("source_table_analysis")) or "")
+    key = str(parse_keys.canonical(value_of(analysis.get("source_table_analysis"))) or "")
     # Normalized before they are compared, as the tables are. Stage 1 writes "MNI" for one
     # sentence and "MNI152" for the next, and a set of the raw tokens reads two spellings of
     # one space as a conflict.
