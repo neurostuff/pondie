@@ -86,10 +86,18 @@ class Flavour(str, Enum):
     from markup, and that reconstruction has been measured losing minus signs and decimal
     points where a text-layer repair did not catch them. Where an XML render exists it is
     the more faithful source.
+
+    `pmc` and `europepmc` are the same JATS XML fetched from NCBI and Europe PMC for the
+    papers pubget's Open Access query misses (author manuscripts, mostly), and the ingestion
+    workflow runs pubget's own extraction over them. Their layout is pubget's under another
+    directory name, so they rank beside pubget. A paper has one of the three: ingestion
+    takes the first source that succeeds.
     """
 
     local = "local"
     pubget = "pubget"
+    pmc = "pmc"
+    europepmc = "europepmc"
     elsevier = "elsevier"
     pdf = "pdf"
     ace = "ace"
@@ -104,6 +112,17 @@ class Flavour(str, Enum):
         finds nothing, which reads downstream as a paper with no text at all.
         """
         return "text.tables.txt" if self is Flavour.local else "text.txt"
+
+    @property
+    def pubget_layout(self) -> bool:
+        """Whether this render is laid out by pubget's extraction: `article.xml`, and each
+        table as `table_NNN.csv` with its `_info.json` sidecar."""
+        return self.value in PUBGET_LAYOUT
+
+
+#: The flavours pubget's extraction lays out, by name, for code that switches on the
+#: string rather than the enum.
+PUBGET_LAYOUT = frozenset({"pubget", "pmc", "europepmc"})
 
 
 # The accessors below are for code that READS the corpus. `extraction.corpus` builds it --
@@ -151,6 +170,7 @@ __all__ = [
     "SELECTION",
     "CACHE",
     "Flavour",
+    "PUBGET_LAYOUT",
     "run",
     "stage1",
     "table_map",

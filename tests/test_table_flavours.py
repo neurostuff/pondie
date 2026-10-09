@@ -280,3 +280,61 @@ def test_a_manifest_naming_a_file_pubget_never_wrote_falls_back_to_the_id(tmp_pa
     )
     got = stage1.coordinate_tables(study)
     assert len(got) == 1 and got[0]["csv_text"].strip()
+
+
+def test_pmc_and_europepmc_rank_beside_pubget():
+    """The same JATS XML, extracted by pubget: above elsevier, and laid out as pubget."""
+    from pondie.paths import Flavour
+
+    order = [f.name for f in Flavour]
+    for name in ("pmc", "europepmc"):
+        assert order.index("pubget") < order.index(name) < order.index("elsevier")
+        assert Flavour(name).filename == "text.txt"
+    assert {f.value for f in Flavour if f.pubget_layout} == {"pubget", "pmc", "europepmc"}
+
+
+@pytest.mark.parametrize("source", ["pmc", "europepmc"])
+def test_best_takes_a_pmc_paper_over_elsevier(tmp_path, source):
+    from pondie.extraction.models import Flavour, Paper
+
+    study = tmp_path / "s"
+    for flavour in (source, "elsevier", "ace"):
+        target = study / "processed" / flavour
+        target.mkdir(parents=True)
+        (target / "text.txt").write_text(flavour, encoding="utf-8")
+
+    assert Paper.best("s", tmp_path).flavour is Flavour(source)
+
+
+@pytest.mark.parametrize("source", ["pmc", "europepmc"])
+def test_stage_one_reads_a_pmc_paper_as_pubget(tmp_path, source):
+    """Ingestion writes these with pubget's extraction: its manifest, its CSV, its sidecar."""
+    from pondie.extraction.corpus import tables as stage1
+
+    study = tmp_path / "s"
+    (study / "processed" / source).mkdir(parents=True)
+    tables = study / "source" / source / "tables"
+    tables.mkdir(parents=True)
+    csv_text = "Region,x,y,z,t\nAmygdala,-20,-4,-16,4.2\n"
+    (tables / "table_000.csv").write_text(csv_text, encoding="utf-8")
+    (tables / "table_000_info.json").write_text(json.dumps({"n_header_rows": 1}))
+    (study / "processed" / source / "tables.jsonl").write_text(
+        json.dumps(
+            {
+                "table_id": "t1",
+                "table_number": "1",
+                "caption": "Peaks",
+                "footer": "",
+                "contains_coordinates": True,
+                "metadata": {"data_path": f"/elsewhere/{source}/table_000.csv"},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert stage1.table_flavour(study) == source
+    [table] = stage1.coordinate_tables(study)
+    assert table["csv_text"] == csv_text, "a pubget-layout CSV is sent byte for byte"
+    grid = tp.read_table(study / "source" / source, "table_000.csv", flavour=source)
+    assert grid is not None

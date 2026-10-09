@@ -170,7 +170,7 @@ def table_flavour(study_dir: Path) -> str | None:
     the sync had fetched correctly.
     """
 
-    for flavour in ("pubget", "elsevier"):
+    for flavour in ("pubget", "pmc", "europepmc", "elsevier"):
         if (study_dir / "processed" / flavour / "tables.jsonl").is_file():
             return flavour
     return None
@@ -249,7 +249,7 @@ def coordinate_tables(study_dir: Path, flavour: str | None = None) -> list[dict]
                 file=sys.stderr,
             )
             continue
-        if flavour == "pubget" and raw_path.suffix.lower() == ".csv":
+        if flavour in paths.PUBGET_LAYOUT and raw_path.suffix.lower() == ".csv":
             # Byte for byte what stage 1 has always sent, so the 49 pubget studies here
             # parse exactly as they would have before elsevier was supported.
             text = raw_path.read_text(encoding="utf-8")

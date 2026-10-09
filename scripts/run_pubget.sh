@@ -37,7 +37,7 @@ done < "$PMIDS"
 echo "$(date +%T) $RUN: $(wc -l < "$PMIDS") paper(s) from $PMIDS via $BACKEND"
 
 PONDIE_DATA_DIR=$BUNDLE "$PYTHON" -m pondie.cli extract \
-  --pmids "$PMIDS" --run "$RUN" --corpus "$RUN_DIR/corpus" --flavour pubget \
+  --pmids "$PMIDS" --run "$RUN" --corpus "$RUN_DIR/corpus" --flavour best \
   --model @psyc-aid338-ope-333f18/gpt-6-luna --backend "$BACKEND" ${ENV_ARGS[@]+"${ENV_ARGS[@]}"} \
   --stages tables split single fill evidence build repair \
   --structured-outputs --evidence-format indexed \

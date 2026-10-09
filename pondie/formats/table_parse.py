@@ -292,6 +292,9 @@ def _rows_from_csv(path: Path) -> tuple[list[list[str]], int, dict[str, Any]]:
 #: `<study>/source/<flavour>/`.
 READERS: dict[str, Any] = {
     "pubget": _rows_from_csv,
+    # Fetched from NCBI and Europe PMC, then extracted by pubget: its CSVs, its sidecars.
+    "pmc": _rows_from_csv,
+    "europepmc": _rows_from_csv,
     "elsevier": _rows_from_cals,
     "ace": _rows_from_html,
 }

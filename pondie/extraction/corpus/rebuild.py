@@ -355,7 +355,7 @@ def check_equivalence(rebuilt: str, corpus: str) -> str | None:
 
 #: Best first. The order is `pipeline.kinds.TEXT_FLAVOURS` minus `local`, which is what this
 #: module produces rather than reads.
-FLAVOURS = ("pubget", "elsevier", "ace")
+FLAVOURS = ("pubget", "pmc", "europepmc", "elsevier", "ace")
 
 
 def write_local(out_dir: Path, text: str, *, overwrite: bool) -> None:
@@ -398,7 +398,9 @@ def choose_flavour(study_dir: Path) -> str | None:
     for flavour in FLAVOURS:
         if not (study_dir / "processed" / flavour / "text.txt").is_file():
             continue
-        if flavour == "pubget" and not (study_dir / "source" / "pubget" / "article.xml").is_file():
+        if flavour in paths.PUBGET_LAYOUT and not (
+            study_dir / "source" / flavour / "article.xml"
+        ).is_file():
             continue
         return flavour
     return None
@@ -455,18 +457,18 @@ def build_one(
     if flavour is None:
         raise BuildError(
             f"no buildable flavour under {study_dir}: none of {FLAVOURS} has a text.txt "
-            "(and pubget also needs source/pubget/article.xml)"
+            "(and pubget, pmc and europepmc also need source/<flavour>/article.xml)"
         )
-    if flavour != "pubget":
+    if flavour not in paths.PUBGET_LAYOUT:
         return build_appended_one(study_dir, flavour, overwrite=overwrite)
 
-    article_dir = study_dir / "source" / "pubget"
+    article_dir = study_dir / "source" / flavour
     article_xml = article_dir / "article.xml"
-    corpus_path = study_dir / "processed" / "pubget" / "text.txt"
+    corpus_path = study_dir / "processed" / flavour / "text.txt"
 
     if not article_xml.is_file():
         raise BuildError(
-            f"no {article_xml}. Add 'source/pubget/article.xml' to sync.WANTED "
+            f"no {article_xml}. Add 'source/{flavour}/article.xml' to sync.WANTED "
             "and re-sync; a missing article is a failure, not a skip, because the "
             "rebuilt text is what every offset will address."
         )
@@ -502,7 +504,7 @@ def build_one(
         return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
     provenance = {
-        "flavour": "pubget",
+        "flavour": flavour,
         "pubget_commit": commit,
         "preserve_crossrefs": PRESERVE_CROSSREFS,
         "tables_parsed": tables_report["parsed"],
@@ -565,8 +567,9 @@ def main() -> int:
         study_dir = args.texts / study
         try:
             if args.check_only:
-                article_dir = study_dir / "source" / "pubget"
-                corpus_path = study_dir / "processed" / "pubget" / "text.txt"
+                flavour = choose_flavour(study_dir) or "pubget"
+                article_dir = study_dir / "source" / flavour
+                corpus_path = study_dir / "processed" / flavour / "text.txt"
                 if not (article_dir / "article.xml").is_file():
                     raise BuildError(f"no {article_dir / 'article.xml'}")
                 raw = build(
@@ -582,9 +585,9 @@ def main() -> int:
                 print(f"  {study}  pmid {pmid}  reproduces the corpus text ({len(raw):,} ch)")
             else:
                 flavour = choose_flavour(study_dir)
-                if flavour == "pubget" and text_module is None:
+                if flavour in paths.PUBGET_LAYOUT and text_module is None:
                     raise BuildError(
-                        f"{study} is a pubget paper and no pubget checkout loaded; "
+                        f"{study} is a {flavour} paper and no pubget checkout loaded; "
                         "pass --pubget"
                     )
                 info = build_one(
