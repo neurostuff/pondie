@@ -47,6 +47,25 @@ Rules:
    from, not a sentence containing the term."""
 
 
+#: SYSTEM for a run that cites by sentence number, as `single` and `fill` do there. Rule 2
+#: has nothing to guard: a number cannot be misquoted.
+SYSTEM_INDEXED = """You locate supporting sentences in a scientific paper.
+
+You are given a paper as numbered sentences ([S12] ...) and a list of facts already
+extracted from it, each with an id and the value that was recorded. For each id, return
+the numbers of the sentences that state that value.
+
+Rules:
+1. Emit ONE JSON object mapping id -> list of sentence numbers. No prose, no markdown fence.
+2. Prefer one sentence. Cite more only when the value is stated across several.
+3. If the paper does not state the fact anywhere, return null for that id. Do not
+   guess and do not cite a sentence that merely mentions the topic. An unsupported id is
+   recorded honestly as unsupported; a wrong number is a false citation.
+4. Some values are classifications the paper never words that way (a controlled
+   term such as "between_subject"). Cite the sentence the classification was read
+   from, not a sentence containing the term."""
+
+
 #: How much of a sentence a lifted clause may carry. Long enough that `build_record`
 #: can resolve it unambiguously, short enough that it is a citation and not a page.
 _CLAUSE_CAP = 400
@@ -116,6 +135,39 @@ def literal_quotes(payload: dict[str, Any], text: str) -> dict[str, str]:
     trivial is simply left out, and the caller sends it to the model as before.
     """
     out: dict[str, str] = {}
+    for path, start, end in _unique_values(payload, text):
+        quote = _clause(text, start, end)
+        # Short clauses go to the model. `build_record` locates a quote by matching it in
+        # the document, so a fragment that is itself ambiguous trades one guess for another.
+        if len(quote) < 20 or text.count(quote) != 1:
+            continue
+        out[path] = quote
+    return out
+
+
+def literal_sentences(payload: dict[str, Any], text: str) -> dict[str, tuple[str, int]]:
+    """`literal_quotes` for a run citing by sentence number: the whole sentence each unique
+    value sits in, with its offset.
+
+    Whole sentences, because every other span in such a run is one -- so a record reads back
+    into sentence numbers exactly. And no length or uniqueness test on the quote: those
+    exist because a lifted clause is placed by searching for it, and this one is placed by
+    its offset.
+    """
+    from pondie.extraction.prompt.preprocess import sentence_spans
+
+    spans = sentence_spans(text)
+    out: dict[str, tuple[str, int]] = {}
+    for path, start, end in _unique_values(payload, text):
+        covering = [(a, b) for a, b in spans if a < end and start < b]
+        if covering:
+            a, b = covering[0][0], covering[-1][1]
+            out[path] = (text[a:b], a)
+    return out
+
+
+def _unique_values(payload: dict[str, Any], text: str):
+    """`(path, start, end)` for every field whose own value occurs exactly once in `text`."""
     for path, field in iter_fields(payload):
         if field.get("extraction_status") != "extracted":
             continue
@@ -130,15 +182,8 @@ def literal_quotes(payload: dict[str, Any], text: str) -> dict[str, str]:
         if pattern is None:
             continue
         found = list(pattern.finditer(text))
-        if len(found) != 1:
-            continue
-        quote = _clause(text, found[0].start(), found[0].end())
-        # Short clauses go to the model. `build_record` locates a quote by matching it in
-        # the document, so a fragment that is itself ambiguous trades one guess for another.
-        if len(quote) < 20 or text.count(quote) != 1:
-            continue
-        out[path] = quote
-    return out
+        if len(found) == 1:
+            yield path, found[0].start(), found[0].end()
 
 
 def iter_fields(node: Any, path: str = ""):
@@ -178,9 +223,10 @@ def own_evidence(payload: dict[str, Any], text: str) -> set[str]:
 
 def apply_evidence(
     payload: dict[str, Any],
-    quotes: dict[str, str],
+    quotes: dict[str, str | list[str]],
     literal: frozenset[str] | set[str] = frozenset(),
     kept: frozenset[str] | set[str] = frozenset(),
+    starts: dict[str, list[int]] | None = None,
 ) -> EvidenceCounts:
     """Put an evidence block on every field of a payload, in place.
 
@@ -196,6 +242,9 @@ def apply_evidence(
     retriever found, gets `present`. A field that is asserted but that neither locator
     could place gets `not_found`, which is a defect a reviewer should see rather than a
     silence.
+
+    A path's quotes are one string, or several cited sentences; `starts` holds the offsets
+    of cited sentences, for `warrant` to place them where they were cited.
     """
 
     counts = dict.fromkeys(EvidenceCounts.model_fields, 0)
@@ -210,6 +259,7 @@ def apply_evidence(
             continue
 
         quote = quotes.get(path)
+        quote = [quote] if isinstance(quote, str) else list(quote or [])
         # Labelled, not just ordered. The two sets were already two different locators, but
         # only by position, so nothing downstream could say which warranted a value or count
         # how often each was right. `literal` names the paths `literal_quotes` settled
@@ -217,7 +267,10 @@ def apply_evidence(
         # that never happened, on the one field whose whole purpose is telling the
         # locators apart.
         source = "literal_match" if path in literal else "model_quote"
-        sets = [{"source": source, "quotes": [quote]}] if quote else []
+        sets = [{"source": source, "quotes": quote}] if quote else []
+        where = (starts or {}).get(path)
+        if sets and isinstance(where, list) and len(where) == len(quote):
+            sets[0]["starts"] = where
         second = None
         if second:
             sets.append({"source": "retriever", "quotes": [second]})

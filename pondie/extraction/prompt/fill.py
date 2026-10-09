@@ -290,7 +290,11 @@ def apply_fill(
             }
             quotes = [q for q in answer.get("evidence") or [] if isinstance(q, str)]
             if quotes:  # cited by sentence number, read back by `evidence.cited`
-                target[name]["evidence"] = {"status": "present", "sets": [{"quotes": quotes}]}
+                cited_set = {"quotes": quotes}
+                starts = answer.get("starts")
+                if isinstance(starts, list) and len(starts) == len(quotes):
+                    cited_set["starts"] = starts
+                target[name]["evidence"] = {"status": "present", "sets": [cited_set]}
             filled += 1
         elif answer.get("unreported_reason"):
             reason = str(answer["unreported_reason"])

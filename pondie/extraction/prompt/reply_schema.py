@@ -199,6 +199,8 @@ def fill(sch: Schema, rows: Sequence[Mapping[str, Any]], cite: bool = False) -> 
     return {**shaped, "$defs": defs} if defs else shaped
 
 
-def evidence(ids: Sequence[str]) -> dict[str, Any]:
-    """The `evidence` reply: a quote per asked id, or null where the paper states none."""
-    return _object({i: _nullable({"type": "string"}) for i in ids})
+def evidence(ids: Sequence[str], indexed: bool = False) -> dict[str, Any]:
+    """The `evidence` reply: a quote per asked id -- or, `indexed`, the numbers of the
+    sentences that state it -- and null where the paper states none."""
+    answer = {"type": "array", "items": {"type": "integer"}} if indexed else {"type": "string"}
+    return _object({i: _nullable(answer) for i in ids})

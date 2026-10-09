@@ -6,7 +6,11 @@ group's n, its sex counts and its diagnosis -- and a number costs a few tokens w
 repeats the sentence. Nothing is quoted, so nothing can be misquoted.
 
 `expand` turns the numbers into `{"status": "present", "sets": [{"quotes": [...]}]}`, the
-shape every other reply has, so nothing after the model pass changes.
+shape every other reply has, so nothing after the model pass changes -- with `starts`
+beside `quotes`, each sentence's offset. A number names one occurrence and a quote names
+none: `warrant` places a quote by searching for it, and a short sentence ("Table 4", a
+heading like "ALFF") is also words inside longer ones, so without the offset its span
+landed wherever the text first occurred.
 """
 
 from __future__ import annotations
@@ -29,15 +33,18 @@ def numbered(text: str) -> str:
     return "".join(out)
 
 
-def _sentences(numbers: Any, text: str, spans: list[tuple[int, int]]) -> tuple[list[str], int]:
-    """The sentences `numbers` name, and how many name none."""
-    found, unknown = [], 0
+def cite(
+    numbers: Any, text: str, spans: list[tuple[int, int]]
+) -> tuple[list[str], list[int], int]:
+    """The sentences `numbers` name, where each starts, and how many name none."""
+    found, starts, unknown = [], [], 0
     for n in numbers if isinstance(numbers, list) else []:
         if isinstance(n, int) and 1 <= n <= len(spans):
             found.append(text[spans[n - 1][0] : spans[n - 1][1]])
+            starts.append(spans[n - 1][0])
         else:
             unknown += 1
-    return found, unknown
+    return found, starts, unknown
 
 
 def _fields(node: Any):
@@ -59,19 +66,21 @@ def expand(payload: dict[str, Any], text: str) -> list[str]:
     for field in _fields(payload):
         if not isinstance(field.get("evidence"), list):
             continue
-        quotes, missed = _sentences(field.pop("evidence"), text, spans)
+        quotes, starts, missed = cite(field.pop("evidence"), text, spans)
         unknown += missed
         if quotes:
-            field["evidence"] = {"status": "present", "sets": [{"quotes": quotes}]}
+            cited_set = {"quotes": quotes, "starts": starts}
+            field["evidence"] = {"status": "present", "sets": [cited_set]}
     return [f"{unknown} cited sentence number(s) name no sentence"] if unknown else []
 
 
 def quote_answers(answers: dict[str, Any], text: str) -> None:
-    """Replace each `fill` answer's cited numbers with its sentences, in place."""
+    """Replace each `fill` answer's cited numbers with its sentences and their offsets
+    (`starts`), in place."""
     spans = sentence_spans(text)
     for answer in answers.values():
         if isinstance(answer, dict) and isinstance(answer.get("evidence"), list):
-            answer["evidence"] = _sentences(answer["evidence"], text, spans)[0]
+            answer["evidence"], answer["starts"], _ = cite(answer["evidence"], text, spans)
 
 
 #: A sentence that states a result, and one about the brain. Both, to pass over the
