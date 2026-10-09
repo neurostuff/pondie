@@ -42,6 +42,39 @@ def test_a_fill_answer_cites_numbers_and_the_slot_gets_the_sentences():
     assert age["evidence"]["sets"][0]["quotes"] == ["Their mean age was 34.6 years."]
 
 
+#: "Table 4" is a sentence of its own (the table's label line) and also occurs earlier,
+#: inside a longer one. Searching for the cited sentence's text finds the earlier one.
+REPEATED = ("## Results\nPeaks are listed in Table 4 below.\nTable 4\n"
+            "Peaks of the group contrast.")
+LABEL = REPEATED.index("\nTable 4\n") + 1
+
+
+def _placed(field):
+    from pondie.extraction.evidence import warrant
+
+    warrant.warrant({"field": field}, REPEATED)
+    return [(s["start_char"], s["text"]) for st in field["evidence"]["sets"] for s in st["spans"]]
+
+
+def test_a_cited_sentence_is_placed_where_it_was_cited_not_where_its_text_first_occurs():
+    """23QRyA7agtip cited [S202], the "Table 4" label line, and its span landed on the
+    "(Table 4)" inside an earlier sentence; 22fv2dADxHqR's "ALFF" heading landed in the
+    abstract. The number says which occurrence, and that has to survive becoming a quote."""
+    key = _v("t4#1", evidence=[3])
+    cited.expand({"analyses": [{"local_id": "a", "source_table_analysis": key}]}, REPEATED)
+    assert _placed(key) == [(LABEL, "Table 4")]
+
+
+def test_a_fill_answer_is_placed_where_its_sentence_was_cited():
+    from pondie.extraction.prompt import fill
+
+    payload = {"analyses": [{"local_id": "a", "source_table_analysis": None}]}
+    answers = {"analyses[a].source_table_analysis": {"value": "t4#1", "evidence": [3]}}
+    cited.quote_answers(answers, REPEATED)
+    fill.apply_fill(payload, answers, ["analyses[a].source_table_analysis"])
+    assert _placed(payload["analyses"][0]["source_table_analysis"]) == [(LABEL, "Table 4")]
+
+
 def test_results_sentences_about_the_brain_that_no_analysis_cites_are_candidates():
     """19538748's fMRI contrasts were cited as two cell labels' wording and belonged to no
     analysis. Demographic tests in the same section are not candidates."""
