@@ -22,6 +22,7 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
@@ -298,6 +299,36 @@ class CodexError(RuntimeError):
         self.status_code = status_code
 
 
+class CodexUsageLimit(CodexError):
+    """The `codex login` account's allowance is spent. `retry_at` is when codex says it
+    resets, or None when the message names no time."""
+
+    def __init__(self, message: str, retry_at: datetime | None):
+        super().__init__(message)
+        self.retry_at = retry_at
+
+
+#: "You've hit your usage limit. Try again at 11:36 PM." -- a local clock time.
+_RETRY_AT = re.compile(r"try again at (\d{1,2}):(\d{2})\s*([AP]M)", re.I)
+
+#: The longest one wait for a reset may last, and the wait when no time is given.
+_USAGE_WAIT_CAP = 24 * 3600.0
+_USAGE_WAIT_UNKNOWN = 1800.0
+
+
+def _retry_at(message: str, now: datetime | None = None) -> datetime | None:
+    """The next local time matching the "Try again at" clause, or None."""
+    match = _RETRY_AT.search(message)
+    if not match:
+        return None
+    hour, minute, half = int(match[1]) % 12, int(match[2]), match[3].upper()
+    now = now or datetime.now()
+    at = now.replace(
+        hour=hour + (12 if half == "PM" else 0), minute=minute, second=0, microsecond=0
+    )
+    return at if at > now else at + timedelta(days=1)
+
+
 #: Codex features that put a tool, or instructions about one, in front of the model. A
 #: pondie call is one prompt and one JSON answer; every tool is prompt the API route does
 #: not send, and a turn the model could spend on something other than answering. Measured
@@ -403,20 +434,41 @@ class CodexCaller(_RetryingCaller):
                 schema = Path(work) / "schema.json"
                 schema.write_text(json.dumps(call.json_schema), encoding="utf-8")
                 args += ["--output-schema", str(schema)]
-            started = time.time()
-            try:
-                done = subprocess.run(
-                    [*args, "-"],
-                    input=call.prompt,
-                    capture_output=True,
-                    text=True,
-                    cwd=work,
-                    env=env,
-                    timeout=self._timeout,
-                )
-            except subprocess.TimeoutExpired as error:
-                raise TimeoutError(f"codex exec gave no answer in {self._timeout:.0f}s") from error
-        return _codex_reply(done, seconds=round(time.time() - started, 2))
+            # A spent allowance is waited out here, below the retry loop: it is neither the
+            # model's fault nor a blip, and failing on it fails every paper a long run
+            # reaches until the reset -- each spends its attempts in seconds.
+            while True:
+                started = time.time()
+                try:
+                    done = subprocess.run(
+                        [*args, "-"],
+                        input=call.prompt,
+                        capture_output=True,
+                        text=True,
+                        cwd=work,
+                        env=env,
+                        timeout=self._timeout,
+                    )
+                except subprocess.TimeoutExpired as error:
+                    raise TimeoutError(
+                        f"codex exec gave no answer in {self._timeout:.0f}s"
+                    ) from error
+                try:
+                    return _codex_reply(done, seconds=round(time.time() - started, 2))
+                except CodexUsageLimit as limit:
+                    now = datetime.now()
+                    wait = (
+                        (limit.retry_at - now).total_seconds() + 60
+                        if limit.retry_at
+                        else _USAGE_WAIT_UNKNOWN
+                    )
+                    wait = min(max(wait, 60.0), _USAGE_WAIT_CAP)
+                    print(
+                        f"  {stage} for {paper}: codex usage limit; waiting until "
+                        f"{(now + timedelta(seconds=wait)):%H:%M}",
+                        file=sys.stderr,
+                    )
+                    time.sleep(wait)
 
 
 def _codex_reply(done: subprocess.CompletedProcess, *, seconds: float) -> _Sent:
@@ -441,6 +493,8 @@ def _codex_reply(done: subprocess.CompletedProcess, *, seconds: float) -> _Sent:
             failure = failure or event.get("message", "")
     if usage is None:
         detail = failure or done.stderr.strip()[-400:] or f"exit status {done.returncode}"
+        if "usage limit" in detail.lower():
+            raise CodexUsageLimit(f"codex exec: {detail}", _retry_at(detail))
         status = re.search(r'"status"\s*:\s*(\d{3})', detail)
         raise CodexError(f"codex exec: {detail}", int(status.group(1)) if status else None)
     return _Sent(
