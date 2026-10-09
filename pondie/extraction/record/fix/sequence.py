@@ -186,8 +186,9 @@ def build_sequence() -> tuple[Repair, ...]:
             "respell a `prose#N` parse key as the schema's `text#N`",
             lambda body, ctx: derive.respell_text_keys(body),
             # Before anything that joins a key to the parse: `coordinate_space`,
-            # `source_links`, `coordinate_set_keys`, `derived_ids`, `mirrored`.
-            stage="demands",
+            # `source_links`, `coordinate_set_keys`, `derived_ids`, `mirrored`. `shape`, so
+            # it runs on every path: the merge (AT_MERGE) as well as each payload.
+            stage="shape",
         ),
         Repair(
             "correction_regions",

@@ -1214,7 +1214,7 @@ def test_a_record_keyed_prose_is_respelled_before_its_keys_are_checked(tmp_path)
         "analyses": [{"local_id": "ana_x", "source_table_analysis": _wrapped("prose#1")}],
         "coordinate_sets": [{"local_id": "prose#1", "analysis": "ana_x"}],
     }
-    log = fix.apply_all(body, fix.Context(schema=_SCH, stage1=stage1), stage="demands")
+    log = fix.apply_all(body, fix.Context(schema=_SCH, stage1=stage1), stage=fix.AFTER_DEMANDS)
     assert body["analyses"][0]["source_table_analysis"]["value"] == "text#1"
     assert body["coordinate_sets"][0]["local_id"] == "text#1"
     assert dict(log.entries)["text_keys"]
@@ -1227,3 +1227,10 @@ def test_an_old_prose_key_still_joins_to_its_points():
     analysis = {"source_table_analysis": _wrapped("prose#1")}
     decision = coordinate_space.resolve(analysis, {}, {"text#1": [{"space": "MNI"}]})
     assert decision.value == "MNI"
+
+
+def test_the_merge_respells_a_prose_key_from_a_payload_written_before():
+    """`build` runs only AT_MERGE; a resumed run merges demands payloads keyed `prose#`."""
+    body = {"analyses": [{"local_id": "ana_x", "source_table_analysis": _wrapped("prose#1")}]}
+    fix.apply_all(body, fix.Context(schema=_SCH), stage=fix.AT_MERGE)
+    assert body["analyses"][0]["source_table_analysis"]["value"] == "text#1"
