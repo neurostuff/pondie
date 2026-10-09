@@ -289,12 +289,14 @@ class Schema:
                       `ExtractionMetadata` and `PaperSection` pipeline fields.
 
         Ownership separates nested from reference, and this reads the schema's own
-        `inlined` / `inlined_as_list` rather than LinkML's *inference* of them -- which is
-        the opposite answer for every reference here. `SchemaView.is_inlined` returns True
-        for 38 slots this calls references, because LinkML inlines a class range whose
-        target declares no `identifier` slot, and `local_id` is deliberately not one: it is
-        a document-local address, unique within a record and meaningless outside it, which
-        is a different thing from a LinkML identifier.
+        `inlined` / `inlined_as_list` rather than LinkML's *inference* of them. The two
+        agree now that `local_id` is each class's `identifier` -- unique within a record,
+        which is the whole dataset it is unique in -- but they did not while it was not:
+        LinkML inlines a class range whose target declares no identifier, so
+        `SchemaView.is_inlined` called 38 of these references nested, and every generator
+        built from the schema demanded a whole record where a `local_id` string belongs.
+        The explicit flags stay the reading here so that the answer never again rests on an
+        inference.
 
         The distinction therefore rests on a schema property that nothing else states and
         the failure mode is quiet: adding `inlined_as_list: true` to `Analysis.tables` -- a

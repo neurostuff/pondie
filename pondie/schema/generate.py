@@ -17,7 +17,10 @@ The projection is mechanical:
   * attributes marked `model_extracted` are kept; `deterministic` ones are dropped,
     because code fills them -- an API lookup, a derivation, a generated identifier
   * `id` becomes `local_id`: extraction assigns document-local keys, and the storage
-    identifier is minted at ingestion
+    identifier is minted at ingestion. It stays LinkML's `identifier`, because a reference
+    resolves through it: without one, LinkML inlines every class range, and every
+    generator -- pydantic, JSON Schema -- demands a nested record where the record holds a
+    `local_id` string. A record is the whole dataset an identifier is unique within
   * a scalar or enum range becomes the matching `ExtractedValue` subtype. The enum
     wrappers are generated here, one per vocabulary, and keep the storage range exactly:
     a bare enum stays closed, an `any_of: [<Enum>, string]` keeps its escape hatch
@@ -383,9 +386,10 @@ def project_attribute(
     if attribute.get("identifier") is True:
         # Storage mints the identifier at ingestion; extraction assigns a key that is
         # only meaningful inside the one document, so the name changes with the meaning.
-        # It is not an extracted value: nothing in the paper supplies it.
+        # It is not an extracted value: nothing in the paper supplies it. It is still the
+        # class's identifier -- the slot a bare reference to the class resolves through.
         attribute_name = LOCAL_ID
-        output.pop("identifier", None)
+        output["identifier"] = True
         output["range"] = "string"
         output["required"] = True
     elif attribute.get("designates_type") is True:
@@ -411,7 +415,7 @@ def project_attribute(
                 output.pop("multivalued", None)
 
     ordered = {}
-    for key in ("range", "multivalued", "required", "inlined", "inlined_as_list"):
+    for key in ("identifier", "range", "multivalued", "required", "inlined", "inlined_as_list"):
         if key in output:
             ordered[key] = output.pop(key)
     ordered.update(output)

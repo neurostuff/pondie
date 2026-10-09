@@ -15,12 +15,12 @@ from pondie import schema
 
 #: Every slot that holds another entity's `local_id` rather than the entity itself.
 #:
-#: Pinned as a list, because the distinction rests on a property of the schema that nothing
-#: else states. LinkML's own `is_inlined` says True for all 38 of these -- it inlines a class
-#: range whose target declares no `identifier`, and `local_id` deliberately is not one. A
+#: Pinned as a list, because the distinction rests on the schema's `inlined` flags. A
 #: one-line `inlined_as_list: true` on any of them would reclassify it `nested` and the
 #: prompt would start asking the model for whole records where a list of ids belongs. That
-#: edit should turn this test red, not re-cache a prompt.
+#: edit should turn this test red, not re-cache a prompt. LinkML's own `is_inlined` agrees
+#: with the list only because `local_id` is each class's `identifier`; before it was, LinkML
+#: inlined all 38 of these, and `test_linkml_agrees_on_what_is_inlined` holds that line.
 REFERENCE_SLOTS = frozenset(
     {
         "Acquisition.device",
@@ -80,6 +80,31 @@ def test_the_reference_slots_are_exactly_these(extraction_schema):
         f"newly nested: {sorted(REFERENCE_SLOTS - found)}, "
         f"newly a reference: {sorted(found - REFERENCE_SLOTS)}"
     )
+
+
+def test_linkml_agrees_on_what_is_inlined(extraction_schema):
+    """Every generator built from the schema reads LinkML's inference, not our flags.
+
+    LinkML inlines a class range whose target has no `identifier`, so the moment `local_id`
+    stops being one, pydantic and JSON Schema generated from the extraction schema demand a
+    nested record wherever a record holds a `local_id` string.
+    """
+    view = extraction_schema.view
+    disagree = [
+        f"{name}.{slot_name} ({kind})"
+        for name in extraction_schema.classes
+        for slot_name, _, kind in extraction_schema.iter_slots(name)
+        if kind in ("nested", "reference")
+        and (kind == "nested") != bool(view.is_inlined(view.induced_slot(slot_name, name)))
+    ]
+    assert disagree == []
+
+
+def test_local_id_is_the_identifier(extraction_schema):
+    for name in extraction_schema.classes:
+        slot = extraction_schema.attributes(name).get(reader.LOCAL_ID)
+        if slot is not None:
+            assert slot.identifier is True, name
 
 
 def test_attributes_cannot_be_mutated_by_a_caller(extraction_schema):
