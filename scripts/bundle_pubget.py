@@ -1,9 +1,14 @@
-"""Bundle every pubget paper with extracted coordinates into a corpus `pondie extract` reads.
+"""Bundle every pubget-extracted paper with coordinates into a corpus `pondie extract` reads.
 
     python scripts/bundle_pubget.py --out /data/james/pubget-bundle --scan-only
     python scripts/bundle_pubget.py --out /data/james/pubget-bundle [--limit 5]
 
-A paper is taken when its ns-pond data folder has pubget's text, its table manifest and a
+pubget-extracted means pubget, PMC or Europe PMC: ingestion fetches the last two for the
+papers pubget's Open Access query misses and runs pubget's extraction over them, so each
+writes pubget's layout under its own `processed/<source>/`. A folder has one of the three;
+`SOURCES` is the order taken if it had more.
+
+A paper is taken when its ns-pond data folder has that source's text, its table manifest and a
 coordinate parse (`stage1/analyses.json`) with at least one point, all of whose tables are
 in the manifest, and when it has a result coordinate: a parsed table the text carries (one
 of its points is on a table row of `text.txt`, a tab-separated or `|` line), or a prose
@@ -18,13 +23,13 @@ table-row tests skip them, and a paper whose only points are prose seeds, ROIs o
 reports no result to extract.
 
 The data folder is only read. Each bundled paper is a copy of what the stages read, in the
-layout `pondie.paths` describes, extracted with `--flavour pubget`:
+layout `pondie.paths` describes, extracted with `--flavour best`:
 
     <out>/corpus/<study>/identifiers.json
-    <out>/corpus/<study>/processed/pubget/{text.txt,tables.jsonl,metadata.json}
+    <out>/corpus/<study>/processed/<source>/{text.txt,tables.jsonl,metadata.json}
     <out>/corpus/<study>/stage1/analyses.json       the parse; split rewrites it
     <out>/corpus/<study>/stage1/analyses.orig.json  as copied, to reset a re-run
-    <out>/pubget.pmids          pmid<TAB>study<TAB>pubget, one per bundled paper
+    <out>/pubget.pmids          pmid<TAB>study<TAB>source, one per bundled paper
     <out>/bundle.jsonl          one line per scanned folder: taken, or why not
 """
 
@@ -39,20 +44,24 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 from pondie.formats.parse_keys import PROSE_TABLE_ID
+from pondie.paths import Flavour
 from pondie.formats.table_parse import normalize_number
 
 DATA = Path("/data/alejandro/projects/ns-pond/data")
 
-#: What the stages read, relative to a study folder.
+#: The sources pubget's extraction lays out, in the order `paths.Flavour` ranks them.
+SOURCES = tuple(f.value for f in Flavour if f.pubget_layout)
+
+#: What the stages read, relative to a study folder; `{source}` is the paper's.
 COPIED = (
     "identifiers.json",
-    "processed/pubget/text.txt",
-    "processed/pubget/tables.jsonl",
-    "processed/pubget/metadata.json",
+    "processed/{source}/text.txt",
+    "processed/{source}/tables.jsonl",
+    "processed/{source}/metadata.json",
     "stage1/analyses.json",
 )
-REQUIRED = ("identifiers.json", "processed/pubget/text.txt",
-            "processed/pubget/tables.jsonl", "stage1/analyses.json")
+REQUIRED = ("identifiers.json", "processed/{source}/text.txt",
+            "processed/{source}/tables.jsonl", "stage1/analyses.json")
 
 _NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
 
@@ -80,21 +89,31 @@ def tables_not_in_text(text: str, analyses: list[dict]) -> list[str]:
     return sorted(t for t, hit in seen.items() if not hit)
 
 
+def source_of(study_dir: Path) -> str | None:
+    """The first of `SOURCES` this folder has processed output for."""
+    return next((s for s in SOURCES if (study_dir / "processed" / s).is_dir()), None)
+
+
 def scan(study_dir: Path) -> dict:
     """Whether a data folder can be bundled, and why not when it cannot."""
     row: dict = {"study": study_dir.name, "taken": False}
+    source = source_of(study_dir)
+    if source is None:
+        return row | {"reason": "no pubget-extracted source"}
+    row["source"] = source
+    processed = study_dir / "processed" / source
     for need in REQUIRED:
-        if not (study_dir / need).is_file():
-            return row | {"reason": f"no {need}"}
+        if not (study_dir / need.format(source=source)).is_file():
+            return row | {"reason": f"no {need.format(source=source)}"}
     try:
         row["pmid"] = str(json.loads((study_dir / "identifiers.json").read_text())["pmid"] or "")
         parse = json.loads((study_dir / "stage1/analyses.json").read_text(encoding="utf-8"))
         manifest = {
             str(json.loads(line).get("table_id"))
-            for line in (study_dir / "processed/pubget/tables.jsonl").read_text().splitlines()
+            for line in (processed / "tables.jsonl").read_text().splitlines()
             if line.strip()
         }
-        text = (study_dir / "processed/pubget/text.txt").read_text(encoding="utf-8")
+        text = (processed / "text.txt").read_text(encoding="utf-8")
     except (ValueError, KeyError, UnicodeDecodeError) as error:
         return row | {"reason": f"unreadable: {error}"[:200]}
     if not row["pmid"]:
@@ -122,10 +141,10 @@ def scan(study_dir: Path) -> dict:
                   "prose_result_points": results, "chars": len(text)}
 
 
-def copy_one(src: Path, dest: Path) -> None:
+def copy_one(src: Path, dest: Path, source: str = "pubget") -> None:
     if dest.exists():
         shutil.rmtree(dest)
-    for item in COPIED:
+    for item in (c.format(source=source) for c in COPIED):
         if (src / item).is_file():
             (dest / item).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src / item, dest / item)
@@ -145,7 +164,7 @@ def main() -> int:
     if args.out.resolve().is_relative_to(args.data.resolve()):
         sys.exit("--out must not be inside --data")
     args.out.mkdir(parents=True, exist_ok=True)
-    folders = sorted(p for p in args.data.iterdir() if (p / "processed/pubget").is_dir())
+    folders = sorted(p for p in args.data.iterdir() if source_of(p))
     with ProcessPoolExecutor(args.workers) as pool:
         scanned = list(pool.map(scan, folders, chunksize=64))
     # One folder per pmid: two neurostore ids for one article would be extracted twice.
@@ -157,15 +176,16 @@ def main() -> int:
             else:
                 first[r["pmid"]] = r["study"]
     taken = [r for r in scanned if r["taken"]]
-    print(f"{len(folders)} folders with pubget output; {len(taken)} eligible", file=sys.stderr)
+    print(f"{len(folders)} folders with {'/'.join(SOURCES)} output; {len(taken)} eligible",
+          file=sys.stderr)
 
     if not args.scan_only:
         todo = taken[: args.limit] if args.limit else taken
         for r in todo:
-            copy_one(args.data / r["study"], args.out / "corpus" / r["study"])
+            copy_one(args.data / r["study"], args.out / "corpus" / r["study"], r["source"])
         with open(args.out / "pubget.pmids", "w") as fh:
             fh.write("# pmid\tstudy\tsource\n")
-            fh.writelines(f"{r['pmid']}\t{r['study']}\tpubget\n" for r in todo)
+            fh.writelines(f"{r['pmid']}\t{r['study']}\t{r['source']}\n" for r in todo)
         print(f"bundled {len(todo)} into {args.out / 'corpus'}", file=sys.stderr)
 
     with open(args.out / "bundle.jsonl", "w") as fh:

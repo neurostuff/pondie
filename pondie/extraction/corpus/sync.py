@@ -11,6 +11,7 @@ Layout mirrors the corpus so paths in the record and in the pond agree:
       identifiers.json
       processed/pubget/{text.txt,tables.jsonl,analyses.jsonl,coordinates.csv,metadata.json}
       source/pubget/tables/          <- CSVs + *_info.json + tables.xml, for the re-parse
+      processed/{pmc,europepmc}/, source/{pmc,europepmc}/   <- the same, as pubget lays them out
       source/ace/<pmid>.html         <- for reading the paper
 
 `data/corpus/` is gitignored: it is bulk source material, not schema.
@@ -44,6 +45,28 @@ WANTED = [
     # silently -- so `report()` below names a study that arrived without one.
     "source/pubget/article.xml",
     "source/pubget/tables/",
+    # PMC and Europe PMC: the same XML, fetched for the papers pubget's Open Access query
+    # misses and extracted by pubget, so the same files under their own source name.
+    *(
+        f"{kind}/{source}/{name}"
+        for source in paths.PUBGET_LAYOUT[1:]
+        for kind, name in (
+            ("processed", "text.txt"),
+            ("processed", "tables.jsonl"),
+            ("processed", "analyses.jsonl"),
+            ("processed", "coordinates.csv"),
+            ("processed", "metadata.json"),
+            ("source", "article.xml"),
+            ("source", "tables/"),
+        )
+    ),
+    # The ingestion workflow copies pubget's table CSVs and their sidecars flat into
+    # `source/<source>/`, beside `tables/`, which holds only each table's raw JATS.
+    *(
+        f"source/{source}/{pattern}"
+        for source in paths.PUBGET_LAYOUT
+        for pattern in ("table_*.csv", "table_*_info.json")
+    ),
     # Elsevier is the second source, and for 10,594 papers of the corpus the best one
     # available: it ships a table manifest for every paper it covers, where pubget misses
     # ~900 of its own and ace ships none. Same layout as pubget, so the same two things are
@@ -131,7 +154,7 @@ def report(destination: Path) -> str:
     """
 
     parts = []
-    for flavour in ("pubget", "elsevier", "ace"):
+    for flavour in (*paths.PUBGET_LAYOUT, "elsevier", "ace"):
         text = destination / "processed" / flavour / "text.txt"
         if not text.is_file():
             continue
@@ -147,11 +170,12 @@ def report(destination: Path) -> str:
         parts.append(f"{flavour} {size}" + (f", {found} table file(s)" if found else ""))
     if not parts:
         return "NO TEXT in any flavour"
-    if (
-        not (destination / "source" / "pubget" / "article.xml").is_file()
-        and (destination / "processed" / "pubget" / "text.txt").is_file()
-    ):
-        parts.append("NO article.xml")
+    for flavour in paths.PUBGET_LAYOUT:
+        if (
+            not (destination / "source" / flavour / "article.xml").is_file()
+            and (destination / "processed" / flavour / "text.txt").is_file()
+        ):
+            parts.append(f"NO {flavour} article.xml")
     return " | ".join(parts)
 
 

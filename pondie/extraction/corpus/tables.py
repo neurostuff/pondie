@@ -170,7 +170,7 @@ def table_flavour(study_dir: Path) -> str | None:
     the sync had fetched correctly.
     """
 
-    for flavour in ("pubget", "elsevier"):
+    for flavour in (*paths.PUBGET_LAYOUT, "elsevier"):
         if (study_dir / "processed" / flavour / "tables.jsonl").is_file():
             return flavour
     return None
@@ -233,15 +233,20 @@ def coordinate_tables(study_dir: Path, flavour: str | None = None) -> list[dict]
     if flavour is None:
         return []
     manifest = read_manifest(study_dir, flavour)
-    tables_dir = study_dir / "source" / flavour / "tables"
+    # `tables/`, then the source directory itself: the ingestion workflow copies a
+    # pubget-layout paper's CSVs and sidecars flat into `source/<flavour>/`, and keeps
+    # only each table's raw JATS under `tables/`.
+    roots = (study_dir / "source" / flavour / "tables", study_dir / "source" / flavour)
     out = []
     for table in manifest.values():
         if not table["contains_coordinates"]:
             continue
         name = table["data_file"]
-        raw_path = tables_dir / name if name else None
-        if raw_path is None or not raw_path.is_file():
-            raw_path = _fallback_path(tables_dir, table["table_id"], name)
+        raw_path = next((r / name for r in roots if name and (r / name).is_file()), None)
+        if raw_path is None:
+            raw_path = next(
+                (f for r in roots if (f := _fallback_path(r, table["table_id"], name))), None
+            )
         if raw_path is None:
             print(
                 f"    WARNING: no {flavour} table for {table['table_id']} "
@@ -249,7 +254,7 @@ def coordinate_tables(study_dir: Path, flavour: str | None = None) -> list[dict]
                 file=sys.stderr,
             )
             continue
-        if flavour == "pubget" and raw_path.suffix.lower() == ".csv":
+        if flavour in paths.PUBGET_LAYOUT and raw_path.suffix.lower() == ".csv":
             # Byte for byte what stage 1 has always sent, so the 49 pubget studies here
             # parse exactly as they would have before elsevier was supported.
             text = raw_path.read_text(encoding="utf-8")

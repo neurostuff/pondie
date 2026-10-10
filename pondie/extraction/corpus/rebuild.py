@@ -386,6 +386,28 @@ def write_local(out_dir: Path, text: str, *, overwrite: bool) -> None:
         handle.write(text)
 
 
+def read_as_is(study_dir: Path) -> Path | None:
+    """A pubget-layout text.txt that is read as it stands rather than rebuilt, or None.
+
+    PMC and Europe PMC papers, and pubget papers extracted since ingestion's extractor
+    started inserting each table at its position (keep-tables), already carry their tables
+    inline, from a pubget build this module does not have, so a rebuild cannot reproduce
+    them. Writing `local` for one anyway would rank above it and move every offset.
+    """
+    for flavour in paths.PUBGET_LAYOUT:
+        text = study_dir / "processed" / flavour / "text.txt"
+        if text.is_file() and (flavour != "pubget" or _tables_inline(text)):
+            return text
+    return None
+
+
+def _tables_inline(text: Path) -> bool:
+    """Whether the text has a table row in it: pubget inlines each table as tab-separated
+    rows, and its plain text has none."""
+    with text.open(encoding="utf-8") as handle:
+        return any("\t" in line for line in handle)
+
+
 def choose_flavour(study_dir: Path) -> str | None:
     """The best flavour this study can actually be built from, or None.
 
@@ -395,6 +417,8 @@ def choose_flavour(study_dir: Path) -> str | None:
     `text.txt` is an elsevier or ace paper as far as this module is concerned.
     """
 
+    if read_as_is(study_dir) is not None:
+        return None
     for flavour in FLAVOURS:
         if not (study_dir / "processed" / flavour / "text.txt").is_file():
             continue
@@ -451,6 +475,9 @@ def build_one(
     are appended to their corpus text, which moves nothing.
     """
 
+    as_is = read_as_is(study_dir)
+    if as_is is not None:
+        raise BuildError(f"{as_is} already carries its tables; it is read as it stands")
     flavour = flavour or choose_flavour(study_dir)
     if flavour is None:
         raise BuildError(
@@ -563,6 +590,11 @@ def main() -> int:
     failures = []
     for pmid, study, _axis in read_pmids(args.pmids):
         study_dir = args.texts / study
+        as_is = read_as_is(study_dir)
+        if as_is is not None:
+            print(f"  {study}  pmid {pmid}  {as_is.parent.name}/text.txt already carries "
+                  "its tables; read as it stands")
+            continue
         try:
             if args.check_only:
                 article_dir = study_dir / "source" / "pubget"
@@ -574,7 +606,6 @@ def main() -> int:
                     article_dir,
                     text_module,
                     keep_tables=False,
-                    style=False,
                 )
                 problem = check_equivalence(raw, corpus_path.read_text(encoding="utf-8"))
                 if problem:

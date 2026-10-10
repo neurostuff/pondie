@@ -65,3 +65,27 @@ def test_a_table_the_manifest_lacks_still_refuses(tmp_path):
     row = bundle.scan(folder(tmp_path, [stray, prose("result")], TABLE_TEXT))
     assert not row["taken"]
     assert "t9" in row["reason"]
+
+
+def test_a_pmc_paper_is_bundled_from_its_own_source(tmp_path):
+    """PMC and Europe PMC papers are pubget-extracted under `processed/<source>/`."""
+    study = folder(tmp_path, [prose("result")])
+    (study / "processed/pubget").rename(study / "processed/pmc")
+    row = bundle.scan(study)
+    assert row["taken"], row
+    assert row["source"] == "pmc"
+
+    (study / "processed/pmc/metadata.json").write_text("{}")
+    dest = tmp_path / "out" / "S1"
+    bundle.copy_one(study, dest, row["source"])
+    assert (dest / "processed/pmc/text.txt").is_file()
+    assert (dest / "processed/pmc/metadata.json").is_file()
+    assert not (dest / "processed/pubget").exists()
+
+
+def test_a_folder_with_no_pubget_extracted_source_is_refused(tmp_path):
+    study = folder(tmp_path, [prose("result")])
+    (study / "processed/pubget").rename(study / "processed/elsevier")
+    row = bundle.scan(study)
+    assert not row["taken"]
+    assert row["reason"] == "no pubget-extracted source"
