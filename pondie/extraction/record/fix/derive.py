@@ -416,13 +416,13 @@ def mirror_withheld(body: dict[str, Any], stage1: Path | None) -> list[str]:
                 by_key.setdefault(key, []).append(analysis)
 
     # The fallback, for the analyses that carry no key at all -- `derive_analysis_ids`
-    # measures that at about a quarter of them. Folded, which is the discipline
-    # `resolve_source_table_analysis` already uses for names in this module; the raw `==`
+    # measures that at about a quarter of them. Joined on `normalize_name`, as
+    # `resolve_source_table_analysis` does; the raw `==`
     # this replaced lost a match to a trailing space.
     by_folded_name: dict[str, list[Mapping[str, Any]]] = {}
     for analysis in analyses:
         if isinstance(analysis, Mapping):
-            name = span_tools.fold_label(str(values.read(analysis.get("name")) or ""))
+            name = normalize_name(str(values.read(analysis.get("name")) or ""))
             if name:
                 by_folded_name.setdefault(name, []).append(analysis)
 
@@ -432,7 +432,7 @@ def mirror_withheld(body: dict[str, Any], stage1: Path | None) -> list[str]:
         described = by_key.get(target or "", [])
         route = "parse key"
         if not described:
-            described = by_folded_name.get(span_tools.fold_label(entry["mirror_of"]), [])
+            described = by_folded_name.get(normalize_name(str(entry["mirror_of"])), [])
             route = "name"
         if not described:
             made.append(

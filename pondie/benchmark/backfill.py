@@ -43,6 +43,7 @@ from typing import Any, Iterable, Mapping
 from pondie import paths
 from pondie.formats import parse_keys
 from pondie.benchmark import REFERENCE
+from study_schema.keys import normalize_name
 
 SLOT = "source_table_analysis"
 
@@ -55,7 +56,7 @@ def _read(node: Any) -> Any:
 
 
 def _norm(text: Any) -> str:
-    return " ".join(str(text or "").lower().split())
+    return normalize_name(str(text or ""))
 
 
 def entry_id(entries: list[Mapping[str, Any]], position: int) -> str:

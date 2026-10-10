@@ -19,12 +19,12 @@ from collections import Counter, defaultdict
 
 from pondie import schema
 from pondie.extraction.record import rules
-from pondie.extraction.record.rules import _model_index, terms_in_scope
+from pondie.extraction.record.rules import model_index, terms_in_scope
 from pondie.formats import values
 from pondie.formats.values import iter_fields
 from pondie.normalization._records import iter_records
-from study_schema.keys import normalize_name
 from pondie.schema import reader
+from study_schema.keys import normalize_name
 
 fold = lambda s: normalize_name(str(s or ""))  # noqa: E731
 
@@ -160,7 +160,7 @@ def queryability(body: dict, out: Counter) -> None:
     Counted per (analysis, level) pair rather than per distinct level, because that is what
     a query traverses: one unwritten link costs every analysis whose model reaches the term.
     """
-    models = _model_index(body)
+    models = model_index(body)
     for analysis in body.get("analyses") or []:
         if not isinstance(analysis, dict):
             continue
@@ -410,7 +410,7 @@ def main() -> int:
                 evidence_missing[owner] += 1
 
         # 6 -- a cell naming a level on a term that declares none
-        models = _model_index(body)
+        models = model_index(body)
         for analysis in body.get("analyses") or []:
             if not isinstance(analysis, dict):
                 continue

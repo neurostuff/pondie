@@ -27,6 +27,7 @@ from pondie.extraction.record.effect import levels_a_cell_may_name, terms_in_sco
 from pondie.formats import values
 from pondie.schema.reader import Schema
 from pondie.vocabularies import abbreviations
+from study_schema.keys import normalize_name
 from typing import Any
 import json
 import re
@@ -246,7 +247,7 @@ def link_entities_by_name(body: dict[str, Any], sch: Schema) -> list[str]:
         local_id = node.get("local_id")
         if isinstance(local_id, str) and local_id:
             for slot in NAMING_SLOTS:
-                name = _fold_name(values.read(node.get(slot)))
+                name = _name_key(values.read(node.get(slot)))
                 if name:
                     index.setdefault(name, []).append((class_name, local_id))
         for key, attribute in attributes.items():
@@ -268,7 +269,7 @@ def link_entities_by_name(body: dict[str, Any], sch: Schema) -> list[str]:
             return
         class_name = sch.designated_type(node, class_name)
         mine = node.get("local_id") if isinstance(node.get("local_id"), str) else None
-        names = [n for n in (_fold_name(values.read(node.get(s))) for s in NAMING_SLOTS) if n]
+        names = [n for n in (_name_key(values.read(node.get(s))) for s in NAMING_SLOTS) if n]
         for key, attribute in sch.attributes(class_name).items():
             kind = sch.classify(key, attribute)
             if kind == "nested" and isinstance(attribute.range, str) and key in node:
@@ -302,7 +303,13 @@ def link_entities_by_name(body: dict[str, Any], sch: Schema) -> list[str]:
     return fixed
 
 
+def _name_key(text: Any) -> str:
+    """The key two names join on. Keeps `<`, `>`, `+` and `-`: `PO > Sil` is not `PO < Sil`."""
+    return normalize_name(str(text or ""))
+
+
 def _fold_name(text: Any) -> str:
+    """Lossy fold for the containment test in `_restates`; never a join key."""
     return re.sub(r"[^a-z0-9]+", "", str(text or "").lower())
 
 
@@ -417,7 +424,7 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
                 cell.pop("level", None)
                 fixed.append(f"{path}: {level!r} restated term {term_id!r} -- dropped")
                 continue
-            if _fold_name(level) == _fold_name(values.read(term.get("type"))):
+            if _name_key(level) == _name_key(values.read(term.get("type"))):
                 cell.pop("level", None)
                 fixed.append(f"{path}: {level!r} restated the term's type -- dropped")
                 continue
@@ -444,7 +451,7 @@ def drop_redundant_cell_levels(body: dict[str, Any]) -> list[str]:
             # product column. The level belongs to a term the cell does not name, which is
             # `check_cell_terms`' finding and not something to resolve here.
             if any(
-                _fold_name(level) == _fold_name(values.read(entry.get("level")))
+                _name_key(level) == _name_key(values.read(entry.get("level")))
                 for other in terms.values()
                 for entry in (other.get("levels") or [])
                 if isinstance(entry, Mapping)
