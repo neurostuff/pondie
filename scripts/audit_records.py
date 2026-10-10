@@ -19,13 +19,14 @@ from collections import Counter, defaultdict
 
 from pondie import schema
 from pondie.extraction.record import rules
-from pondie.extraction.record.rules import _model_index, terms_in_scope
+from pondie.extraction.record.rules import model_index, terms_in_scope
 from pondie.formats import values
 from pondie.formats.values import iter_fields
 from pondie.normalization._records import iter_records
 from pondie.schema import reader
+from study_schema.keys import normalize_name
 
-fold = lambda s: re.sub(r"[^a-z0-9]+", "", str(s or "").lower())  # noqa: E731
+fold = lambda s: normalize_name(str(s or ""))  # noqa: E731
 
 #: A `Cell.level` on a continuous term that says which way the effect went. It is not a
 #: level -- `Cell.direction` is the slot for it, and 211 of the 214 already hold it.
@@ -159,7 +160,7 @@ def queryability(body: dict, out: Counter) -> None:
     Counted per (analysis, level) pair rather than per distinct level, because that is what
     a query traverses: one unwritten link costs every analysis whose model reaches the term.
     """
-    models = _model_index(body)
+    models = model_index(body)
     for analysis in body.get("analyses") or []:
         if not isinstance(analysis, dict):
             continue
@@ -409,7 +410,7 @@ def main() -> int:
                 evidence_missing[owner] += 1
 
         # 6 -- a cell naming a level on a term that declares none
-        models = _model_index(body)
+        models = model_index(body)
         for analysis in body.get("analyses") or []:
             if not isinstance(analysis, dict):
                 continue

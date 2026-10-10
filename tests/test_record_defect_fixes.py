@@ -113,6 +113,31 @@ def test_a_level_links_to_the_condition_it_names(extraction_schema):
     assert changed and "cond_smoking_cue" in changed[0]
 
 
+def _condition_named(name):
+    return {
+        "tasks": [
+            {"local_id": "tsk1", "conditions": [{"local_id": "cond_x", "name": warranted(name)}]}
+        ]
+    }
+
+
+@pytest.mark.parametrize(
+    "level, condition",
+    [("PO < Sil", "PO > Sil"), ("PO > Sil", "PO < Sil"), ("A-B", "A+B"), ("A+B", "A-B")],
+)
+def test_opposite_contrasts_are_not_linked_by_name(extraction_schema, level, condition):
+    record = _level_record(level, **_condition_named(condition))
+    fix.link_entities_by_name(record, extraction_schema)
+    assert not record["model_estimations"][0]["terms"][0]["levels"][0].get("conditions")
+
+
+@pytest.mark.parametrize("level", ["po > sil", "PO  >   Sil", " PO > Sil "])
+def test_case_and_whitespace_variants_still_link_by_name(extraction_schema, level):
+    record = _level_record(level, **_condition_named("PO > Sil"))
+    fix.link_entities_by_name(record, extraction_schema)
+    assert record["model_estimations"][0]["terms"][0]["levels"][0]["conditions"] == ["cond_x"]
+
+
 def test_a_level_links_to_the_timepoint_it_names(extraction_schema):
     record = _level_record(
         "predose",
