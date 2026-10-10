@@ -1,7 +1,9 @@
-"""`Analysis.coordinate_space` -> MNI, TAL, OTHER or UNKNOWN.
+"""`Analysis.coordinate_space` -> MNI, TAL, OTHER or None.
 
 MNI and TAL are the two spaces a coordinate transform can move between; OTHER is a
-third space it must refuse, and UNKNOWN is no information. `resolve` answers from the
+stated third space it must refuse, and None is no space stated (or one naming both).
+The alias table is `study_schema.spaces`, shared with ingestion and neurostore, so a
+space pondie reads and the point neurostore stores agree. `resolve` answers from the
 most authoritative source that has an answer.
 
 Why, with the measurements: docs/normalization-rationale.md, "coordinate_space".
@@ -9,32 +11,38 @@ Why, with the measurements: docs/normalization-rationale.md, "coordinate_space".
 
 from __future__ import annotations
 
-from pondie.normalization import OTHER, UNKNOWN
-from pondie.normalization._lexicon import ClosedField, Decision, Rule
+from study_schema.spaces import MNI, OTHER, RULES, SPACES, TAL, normalize_space
+
+from pondie.normalization._lexicon import Decision, field_report
 from pondie.formats import parse_keys
 from pondie.normalization._records import value_of
 
-MNI, TAL = "MNI", "TAL"
-VALUES = (MNI, TAL, OTHER, UNKNOWN)
+VALUES = SPACES
+__all__ = ["MNI", "OTHER", "TAL", "VALUES", "normalize", "report", "resolve"]
 
-RULES = (
-    Rule.of(
-        MNI,
-        r"\bmni|\bnmi\b|\bicbm|montreal\s+neurolog|"
-        r"international\s+consortium\s+for\s+brain\s+mapping|\bcolin\s*27",
-    ),
-    Rule.of(TAL, r"\btal\b|t[ao]l[ai]+r[ai]+ch|tournoux"),
-    Rule.of(
-        OTHER,
-        r"^\s*other\s*$|\bsurface\b|\bfsaverage|\bfsLR\b|\bnative\b|"
-        r"\bdartel\b|\bsuit\b|\bfmrib58|custom(?:i[sz]ed)?\b|in-house|"
-        r"\w+[\s-]specific\b|\bspm\s?\d+\b",
-    ),
-)
+_OTHER_RULE = dict(RULES)[OTHER]
 
-FIELD = ClosedField("analyses.coordinate_space", RULES, VALUES)
-normalize = FIELD.normalize
-report = FIELD.report
+
+def normalize(text: object) -> Decision:
+    """`study_schema.spaces.normalize_space`, with the reason the query funnel prints.
+
+    An OTHER no rule named is `unmatched` and carries its text: it is still OTHER, but it
+    is what a missing rule gets written from.
+    """
+    raw = text if isinstance(text, str) else ""
+    if not raw.strip():
+        return Decision(None, "empty", raw)
+    space = normalize_space(raw)
+    if space is None:
+        hits = [s for s, pattern in RULES if s != OTHER and pattern.search(raw)]
+        return Decision(None, "matches MNI and TAL" if len(hits) > 1 else "not stated", raw)
+    if space == OTHER and not _OTHER_RULE.search(raw):
+        return Decision(OTHER, "unmatched", raw)
+    return Decision(space, "lexical", raw)
+
+
+def report(patterns: tuple[str, ...] | None = None) -> str:
+    return field_report("analyses.coordinate_space", normalize, VALUES, patterns)
 
 
 def resolve(analysis: dict, record: dict, points_by_key: dict | None = None) -> Decision:
@@ -49,11 +57,11 @@ def resolve(analysis: dict, record: dict, points_by_key: dict | None = None) -> 
         for t in (record.get("tables") or [])
         if isinstance(t, dict) and str(value_of(t.get("local_id"))) in wanted
     }
-    seen.discard(UNKNOWN)
+    seen.discard(None)
     if len(seen) == 1:
         return Decision(seen.pop(), "tables agree")
     if len(seen) > 1:
-        return Decision(UNKNOWN, "tables disagree")
+        return Decision(None, "tables disagree")
 
     key = str(parse_keys.canonical(value_of(analysis.get("source_table_analysis"))) or "")
     # Normalized before they are compared, as the tables are. Stage 1 writes "MNI" for one
@@ -62,12 +70,10 @@ def resolve(analysis: dict, record: dict, points_by_key: dict | None = None) -> 
     parsed = [normalize(p.get("space")) for p in ((points_by_key or {}).get(key) or [])]
     spaces = {d.value for d in parsed if d}
     if len(spaces) == 1:
-        return Decision(spaces.pop(), "parsed coordinates")
+        # An OTHER no rule named is not reported as though the parse answered: carrying
+        # its text is what the missing rule gets written from.
+        unmatched = next((d for d in parsed if d.reason == "unmatched"), None)
+        return unmatched or Decision(spaces.pop(), "parsed coordinates")
     if len(spaces) > 1:
-        return Decision(UNKNOWN, "point spaces disagree")
-    # A token no rule matched decided nothing, so it cannot be reported as though the parse
-    # answered. Carrying the text is what the missing rule gets written from.
-    unmatched = next((d.text for d in parsed if d.reason == "unmatched"), "")
-    if unmatched:
-        return Decision(UNKNOWN, "unmatched", unmatched)
-    return Decision(UNKNOWN, own.reason, own.text)
+        return Decision(None, "point spaces disagree")
+    return Decision(None, own.reason, own.text)

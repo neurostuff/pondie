@@ -30,7 +30,7 @@ import re
 from collections import Counter
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -44,7 +44,7 @@ from pondie.normalization import UNKNOWN, contrasts, coordinate_space  # noqa: E
 ACTIVE, CONTROL = "ACTIVE", "CONTROL"
 
 SpatialScope = Literal["whole_brain", "roi", "searchlight", "other"]
-Space = Literal["MNI", "TAL", "OTHER", "UNKNOWN"]
+Space = Optional[Literal["MNI", "TAL", "OTHER"]]
 Contrast = Literal["any", "within_subject", "between_group"]
 
 

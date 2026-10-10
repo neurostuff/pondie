@@ -86,13 +86,15 @@ and summarise the decisions" now serves both.
 
 ## `coordinate_space`
 
-`Analysis.coordinate_space` → MNI, TAL, OTHER or UNKNOWN. The record keeps the source's own
-words for the same reason `Measure.source_label` does; this maps them onto the four values a
-query and a coordinate transform need.
+`Analysis.coordinate_space` → MNI, TAL, OTHER or None, through `study_schema.spaces`, the
+alias table ingestion and neurostore read with too. The record keeps the source's own words
+for the same reason `Measure.source_label` does; this maps them onto the values a query and
+a coordinate transform need.
 
 More than a spelling exercise, because this field decides whether coordinates are moved: a
-wrong answer displaces foci by 5–10 mm. So `OTHER` (a third space, refuse to transform) and
-`UNKNOWN` (no information, a caller may default) must not be collapsed.
+wrong answer displaces foci by 5–10 mm. `OTHER` is a stated third space; None is no space
+stated, or a string naming both. Neither is transformed and neither is defaulted to MNI.
+A stated space no rule names is OTHER with `reason="unmatched"`, so the residual still lists it.
 
 **Resolution precedence.** The schema's own: the analysis's field beats a table's, and both
 beat the spaces stage 1 read off the coordinates. That last fallback is not decoration — it

@@ -32,6 +32,9 @@ dependencies = [
     # as a term the vocabulary does not cover. The corpus is a separate download:
     # python -m nltk.downloader wordnet
     "nltk",
+    # `study_schema.spaces`, the coordinate-space alias table shared with ingestion and
+    # neurostore. Pinned to a study_schema main commit that contains #22.
+    "study-schema @ git+https://github.com/neurostuff/study_schema.git@df8f21ef37b8a0be41c8d259b0f1e56ffccaaf52",
 ]
 
 [project.optional-dependencies]
