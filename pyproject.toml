@@ -33,8 +33,8 @@ dependencies = [
     # python -m nltk.downloader wordnet
     "nltk",
     # `study_schema.spaces`, the coordinate-space alias table shared with ingestion and
-    # neurostore. Pinned to a study_schema main commit that contains #22.
-    "study-schema @ git+https://github.com/neurostuff/study_schema.git@df8f21ef37b8a0be41c8d259b0f1e56ffccaaf52",
+    # neurostore. Pinned to a study_schema main commit that contains #22 and `keys.normalize_name`.
+    "study-schema @ git+https://github.com/neurostuff/study_schema.git@106744d82c5f05a4b67530a8f1169b6e0efe1880",
 ]
 
 [project.optional-dependencies]

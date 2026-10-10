@@ -375,6 +375,22 @@ def test_a_missing_key_is_filled_from_a_unique_name_match(tmp_path):
     assert notes
 
 
+def test_the_opposite_direction_is_never_matched_by_name(tmp_path):
+    # Only "PO > Sil" is parsed; the record's "PO < Sil" is a different contrast and must
+    # not take its points.
+    stage1 = _stage1(tmp_path, [{"table_id": "t1", "name": "PO > Sil"}])
+    body = {"analyses": [{"local_id": "a1", "tables": ["t1"], "name": _wrapped("PO < Sil")}]}
+    assert fix.resolve_source_table_analysis(body, stage1) == []
+    assert "source_table_analysis" not in body["analyses"][0]
+
+
+def test_case_and_whitespace_differences_still_match(tmp_path):
+    stage1 = _stage1(tmp_path, [{"table_id": "t1", "name": "PO > Sil"}])
+    body = {"analyses": [{"local_id": "a1", "tables": ["t1"], "name": _wrapped("po>  SIL")}]}
+    fix.resolve_source_table_analysis(body, stage1)
+    assert body["analyses"][0]["source_table_analysis"]["value"] == "t1#1"
+
+
 def test_an_ambiguous_name_leaves_the_analysis_honestly_unjoinable(tmp_path):
     # Two row groups with the same name: the join is a guess, and the slot stays empty.
     stage1 = _stage1(

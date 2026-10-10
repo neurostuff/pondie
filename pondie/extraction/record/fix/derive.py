@@ -25,6 +25,7 @@ from pondie.normalization import search_volume
 from pondie.normalization.coordinate_space import normalize as normalize_space
 from pondie.schema import reader
 from pondie.schema.reader import Schema
+from study_schema.keys import normalize_name
 from typing import Any
 import json
 import re
@@ -536,7 +537,8 @@ def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> 
     keys = dict(zip(parse_keys.parse_keys(parsed), parsed))
 
     def fold(text: Any) -> str:
-        return re.sub(r"[^a-z0-9]+", "", str(text or "").lower())
+        # Keeps `<` and `>`: "PO > Sil" and "PO < Sil" are opposite contrasts.
+        return normalize_name(str(text or ""))
 
     notes: list[str] = []
     for index, analysis in enumerate(body.get("analyses") or []):

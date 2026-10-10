@@ -23,9 +23,10 @@ from pondie.extraction.record.rules import _model_index, terms_in_scope
 from pondie.formats import values
 from pondie.formats.values import iter_fields
 from pondie.normalization._records import iter_records
+from study_schema.keys import normalize_name
 from pondie.schema import reader
 
-fold = lambda s: re.sub(r"[^a-z0-9]+", "", str(s or "").lower())  # noqa: E731
+fold = lambda s: normalize_name(str(s or ""))  # noqa: E731
 
 #: A `Cell.level` on a continuous term that says which way the effect went. It is not a
 #: level -- `Cell.direction` is the slot for it, and 211 of the 214 already hold it.
