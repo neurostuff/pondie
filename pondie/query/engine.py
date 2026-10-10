@@ -635,7 +635,7 @@ def select(
                 lost[f"space={resolved.value} ({resolved.reason})"] += 1
                 continue
 
-            entry = keyed.get(value_of(analysis.get("source_table_analysis")))
+            entry = keyed.get(parse_keys.canonical(value_of(analysis.get("source_table_analysis"))))
             if entry is None:
                 # Two different problems, and only one is the extraction's fault.
                 lost["no stage-1 parse synced" if not keyed else "no joinable row group"] += 1

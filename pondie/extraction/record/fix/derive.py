@@ -475,6 +475,39 @@ def relabel_conclusions(body: dict[str, Any], sch: Schema) -> list[str]:
     return fixed
 
 
+def respell_text_keys(body: dict[str, Any]) -> list[str]:
+    """Rewrite a `prose#N` parse key as `text#N`, the spelling `parse_keys` now mints.
+
+    In `Analysis.source_table_analysis` and `CoordinateSet.local_id`, the two slots that
+    hold one; nothing references a coordinate set by id. A record written before the respelling otherwise names keys the parse
+    no longer has, and `resolve_source_table_analysis` drops them as names of no row group.
+    """
+    notes: list[str] = []
+    for index, analysis in enumerate(body.get("analyses") or []):
+        if not isinstance(analysis, dict):
+            continue
+        node = analysis.get("source_table_analysis")
+        old = values.read(node)
+        new = parse_keys.canonical(old)
+        if new == old:
+            continue
+        if values.is_field(node):
+            node["value"] = new
+        else:
+            analysis["source_table_analysis"] = new
+        notes.append(f"analyses[{index}].source_table_analysis: {old!r} -> {new!r}")
+
+    for coordinate_set in body.get("coordinate_sets") or []:
+        if not isinstance(coordinate_set, dict):
+            continue
+        old = coordinate_set.get("local_id")
+        new = parse_keys.canonical(old)
+        if new != old:
+            coordinate_set["local_id"] = new
+            notes.append(f"coordinate_sets[{old!r}] -> {new!r}")
+    return notes
+
+
 def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> list[str]:
     """Verify, or deterministically fill, each analysis's link to its parsed row group.
 

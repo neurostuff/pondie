@@ -247,7 +247,9 @@ def test_evidence_asks_about_the_fields_that_exist_not_about_the_paper(tmp_path,
     caller = Recorder()
     monkeypatch.setattr(
         "pondie.extraction.evidence.quote.apply_evidence",
-        lambda payload, quotes, literal=frozenset(), kept=frozenset(): EvidenceCounts(),
+        lambda payload, quotes, literal=frozenset(), kept=frozenset(), starts=None: (
+            EvidenceCounts()
+        ),
     )
     outcome = Evidence().run(paper, settings, caller)
     assert not outcome.skipped and outcome.ok
@@ -285,6 +287,68 @@ def test_evidence_writes_its_blocks_into_the_payloads(tmp_path):
     # the pass that produced the values.
     backup = json.loads((settings.payloads / "S1" / "noev" / "satisfy.json").read_text())
     assert "evidence" not in backup["groups"][0]["name"]
+
+
+def _repeated_paper(tmp_path):
+    from tests.test_cited_evidence import REPEATED
+
+    paper = _paper(tmp_path)
+    paper.text.write_text(REPEATED)
+    return paper
+
+
+def test_evidence_cites_sentence_numbers_when_the_run_does(tmp_path):
+    """In an indexed run `single` and `fill` cite by number; the quoting pass was the one
+    model pass still copying text, and the one whose citations could not be told apart
+    from the same words elsewhere in the paper."""
+    from tests.test_cited_evidence import LABEL
+
+    from pondie.extraction.evidence import warrant
+    from pondie.extraction.stages import Evidence
+
+    calls = []
+
+    class Citer:
+        def __call__(self, call, *, paper, stage):
+            calls.append(call)
+            return ModelReply(payload={"groups[0].name": [3]}, cost=Cost())
+
+    paper = _repeated_paper(tmp_path)
+    settings = _settings(tmp_path, stages=(StageName.evidence,), evidence_format="indexed",
+                         structured_outputs=True)
+    payload = settings.payloads / "S1" / "single.json"
+    payload.parent.mkdir(parents=True)
+    payload.write_text(json.dumps(
+        {"groups": [{"name": {"extraction_status": "extracted", "value": "table four"}}]}))
+
+    assert Evidence().run(paper, settings, Citer()).ok
+    [call] = calls
+    assert "[S3] Table 4" in call.system, "the paper is shown numbered"
+    reply = call.json_schema["properties"]["groups[0].name"]
+    assert {"type": "array", "items": {"type": "integer"}} in reply["anyOf"]
+    name = json.loads(payload.read_text())["groups"][0]["name"]
+    assert name["evidence"]["sets"][0]["quotes"] == ["Table 4"]
+    warrant.warrant(name, paper.text.read_text())
+    assert name["evidence"]["sets"][0]["spans"][0]["start_char"] == LABEL
+
+
+def test_a_literal_match_in_an_indexed_run_is_the_whole_sentence_where_it_sits(tmp_path):
+    """Every other span in an indexed run is a whole sentence, so a record converts back to
+    sentence numbers exactly; a clause lifted around the value would be the one exception."""
+    from pondie.extraction.stages import Evidence
+
+    paper = _repeated_paper(tmp_path)
+    settings = _settings(tmp_path, stages=(StageName.evidence,), evidence_format="indexed")
+    payload = settings.payloads / "S1" / "single.json"
+    payload.parent.mkdir(parents=True)
+    payload.write_text(json.dumps(
+        {"analyses": [{"name": {"extraction_status": "extracted", "value": "group contrast"}}]}))
+
+    assert Evidence().run(paper, settings, Recorder()).ok
+    sets = json.loads(payload.read_text())["analyses"][0]["name"]["evidence"]["sets"]
+    sentence = "Peaks of the group contrast."
+    assert sets == [{"source": "literal_match", "quotes": [sentence],
+                     "starts": [paper.text.read_text().index(sentence)]}]
 
 
 def test_a_started_but_unfinished_evidence_stage_is_not_done(tmp_path):

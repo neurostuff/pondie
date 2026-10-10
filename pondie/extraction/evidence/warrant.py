@@ -132,7 +132,12 @@ def _resolve_field(
         if not isinstance(quotes, list):
             continue
         resolved: list[dict[str, object]] = []
-        for quote in quotes:
+        # Where each quote was cited, when it was cited by sentence number: the occurrence
+        # to take when the same words also sit elsewhere in the paper.
+        starts = evidence_set.get("starts")
+        if not (isinstance(starts, list) and len(starts) == len(quotes)):
+            starts = [None] * len(quotes)
+        for quote, near in zip(quotes, starts):
             if not isinstance(quote, str):
                 # A JSON-mode reply can put an object where the quote goes. It names no
                 # text, and resolving it raised and lost the paper's whole build.
@@ -140,7 +145,14 @@ def _resolve_field(
                 unlocated += 1
                 continue
             try:
-                placed = [span_tools.resolve(normalized, quote, folded_text=folded)]
+                placed = [
+                    span_tools.resolve(
+                        normalized,
+                        quote,
+                        near=near if isinstance(near, int) else None,
+                        folded_text=folded,
+                    )
+                ]
             except span_tools.SpanResolutionError as error:
                 # A quote joining two non-adjacent fragments with "..." is not in the
                 # document and never can be, but each fragment is, and an EvidenceSet

@@ -24,6 +24,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Mapping
 
+from pondie.formats import parse_keys
 from pondie.normalization import coordinate_space
 from pondie.query.engine import _points
 
@@ -152,8 +153,6 @@ def gold_spaces(bench: Path, project: str) -> dict[str, set[str]]:
 
 def parse_entries(stage1: Path | None, pmid: str) -> dict[str, dict] | None:
     """`<table>#<n>` -> its parsed row group, or None when the paper has no parse."""
-    from pondie.formats import parse_keys
-
     if stage1 is None:
         return None
     path = stage1 / pmid / "stage1" / "analyses.json"
@@ -171,7 +170,7 @@ def foci_of(analysis: Mapping[str, Any], body: Mapping[str, Any],
     uses, so a map built here and a map built by `pondie query` place their foci
     identically.
     """
-    entry = entries.get(str(read(analysis.get("source_table_analysis")) or ""))
+    entry = entries.get(str(parse_keys.canonical(read(analysis.get("source_table_analysis"))) or ""))
     if entry is None:
         return None
     by_key = {key: e.get("points") for key, e in entries.items()}
@@ -189,7 +188,7 @@ def raw_foci_of(analysis: Mapping[str, Any], body: Mapping[str, Any],
     points sit in cue reactivity's studyset as Talairach -- and an arm that converted
     first would differ from the others by a transform as well as by its selector.
     """
-    entry = entries.get(str(read(analysis.get("source_table_analysis")) or ""))
+    entry = entries.get(str(parse_keys.canonical(read(analysis.get("source_table_analysis"))) or ""))
     if entry is None:
         return None
     by_key = {key: e.get("points") for key, e in entries.items()}

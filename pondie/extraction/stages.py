@@ -1111,12 +1111,15 @@ class Evidence(_Base):
             return self._skip(paper)
         from pondie.extraction.evidence.quote import (
             SYSTEM,
+            SYSTEM_INDEXED,
             apply_evidence,
             describe,
             iter_fields,
             literal_quotes,
+            literal_sentences,
             own_evidence,
         )
+        from pondie.extraction.prompt.preprocess import sentence_spans
 
         targets = self._payloads(paper, settings)
         if not targets:
@@ -1135,6 +1138,11 @@ class Evidence(_Base):
         text = paper.text.read_text(encoding="utf-8", errors="replace")
         # What `build` resolves quotes against, so a kept citation is one it will place.
         normalized = text_index.load(paper.text)[0]
+        # Cited by number in a run where `single` and `fill` are: the same numbering of the
+        # same text, so a number here names the sentence it names there.
+        indexed = _evidence_form(settings) == "indexed"
+        shown = cited.numbered(normalized) if indexed else text
+        sentences = sentence_spans(normalized) if indexed else []
         cost = Cost()
         traces: list[tuple[str, str]] = []
         truncated: list[str] = []
@@ -1146,7 +1154,14 @@ class Evidence(_Base):
             # Try finding a unique quote first.
             # If the value only occurs once in the paper,
             # then that's likely the evidence for that value.
-            quotes: dict[str, str] = literal_quotes(payload, text)
+            quotes: dict[str, str | list[str]]
+            starts: dict[str, list[int]] = {}
+            if indexed:
+                found = literal_sentences(payload, normalized)
+                quotes = {path: [quote] for path, (quote, _at) in found.items()}
+                starts = {path: [at] for path, (_quote, at) in found.items()}
+            else:
+                quotes = dict(literal_quotes(payload, text))
             literal = set(quotes)
             kept = own_evidence(payload, normalized)
             wanted = [
@@ -1166,15 +1181,21 @@ class Evidence(_Base):
                         # Paper in the system half, the chunk of facts in the user half:
                         # this stage walks a record in batches and re-sent the whole text
                         # with each one. See the note in `Fill` above.
-                        system=f"{SYSTEM}\n\n{render.paper_block(text)}",
-                        prompt=f"# Facts needing a supporting quote\n\n{listing}\n\n"
-                        "Return the JSON object mapping each id to its quote now.",
+                        system=f"{SYSTEM_INDEXED if indexed else SYSTEM}\n\n"
+                        f"{render.paper_block(shown)}",
+                        prompt=(
+                            f"# Facts needing a supporting sentence\n\n{listing}\n\n"
+                            "Return the JSON object mapping each id to its sentence numbers now."
+                            if indexed
+                            else f"# Facts needing a supporting quote\n\n{listing}\n\n"
+                            "Return the JSON object mapping each id to its quote now."
+                        ),
                         max_output_tokens=settings.max_output_tokens,
                         effort=settings.effort_for(self.name),
                         service_tier=settings.service_tier,
                         attempts=settings.attempts,
                         json_schema=(
-                            reply_schema.evidence([path for path, _field in chunk])
+                            reply_schema.evidence([path for path, _field in chunk], indexed)
                             if settings.structured_outputs
                             else None
                         ),
@@ -1182,7 +1203,14 @@ class Evidence(_Base):
                     paper=paper.study_id,
                     stage=self.name.value,
                 )
-                returned = {k: v for k, v in reply.payload.items() if isinstance(v, str)}
+                returned: dict[str, str | list[str]] = {}
+                for key, answer in reply.payload.items():
+                    if indexed:
+                        sentences_cited, at, _unknown = cited.cite(answer, normalized, sentences)
+                        if sentences_cited:
+                            returned[key], starts[key] = sentences_cited, at
+                    elif isinstance(answer, str):
+                        returned[key] = answer
                 if reply.stop_reason and reply.stop_reason != "stop":
                     truncated.append(
                         f"{target.name} batch {begin // self.batch + 1} finished on "
@@ -1193,7 +1221,7 @@ class Evidence(_Base):
                 traces.append((reply.trace_id, reply.cache_status))
 
             totals = totals + apply_evidence(
-                payload, quotes, literal=frozenset(literal), kept=frozenset(kept)
+                payload, quotes, literal=frozenset(literal), kept=frozenset(kept), starts=starts
             )
             target.write_text(
                 json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"

@@ -186,3 +186,26 @@ def test_an_unparseable_body_is_a_failed_attempt(codex):
     with pytest.raises(MalformedReply) as raised:
         caller(call(attempts=1), paper="S1", stage="single")
     assert raised.value.cost.input_tokens == 100
+
+
+LIMIT = "You’ve hit your usage limit. Try again at 11:36 PM."
+
+
+def test_a_spent_allowance_is_waited_out_not_failed(codex, monkeypatch):
+    """The account's limit used to fail each paper in seconds: no status, so a model fault."""
+    waits = []
+    monkeypatch.setattr(llm.time, "sleep", waits.append)
+    caller, calls = codex([{"type": "turn.failed", "error": {"message": LIMIT}}], ok('{"a": 1}'))
+    reply = caller(call(attempts=1), paper="S1", stage="single")
+    assert reply.payload == {"a": 1} and len(calls()) == 2
+    assert len(waits) == 1 and 60 <= waits[0] <= llm._USAGE_WAIT_CAP
+
+
+def test_the_reset_time_is_the_next_one_on_the_clock():
+    from datetime import datetime
+
+    evening = datetime(2026, 10, 7, 19, 21)
+    assert llm._retry_at(LIMIT, evening) == datetime(2026, 10, 7, 23, 36)
+    assert llm._retry_at(LIMIT, datetime(2026, 10, 7, 23, 50)) == datetime(2026, 10, 8, 23, 36)
+    assert llm._retry_at("Try again at 12:05 AM.", evening) == datetime(2026, 10, 8, 0, 5)
+    assert llm._retry_at("You've hit your usage limit.", evening) is None
