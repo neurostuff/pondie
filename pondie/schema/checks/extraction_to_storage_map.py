@@ -6,7 +6,7 @@ it is also the thing that can quietly stop being true. What this script asserts 
 "almost": that the correspondence really is one-to-one everywhere the map does not
 explicitly say otherwise, and that the few things it does say still hold.
 
-Four checks, each failing in its own way:
+Four checks (identity, derivations, vocabularies, conditional_fields), each failing in its own way:
 
   identity        Every storage field a model fills has an extraction field of the same
                   name on the same class, and every extraction field has a storage field
@@ -27,6 +27,9 @@ Four checks, each failing in its own way:
                   route back to a permissible value; now the extractor emits a value
                   storage already accepts, and what has to hold instead is that the
                   projection did not quietly open or close a vocabulary on the way.
+
+  conditional_fields
+                  Every `Class.field` under `conditional_fields` exists in both schemas.
 
 Run `python3 -m pondie.schema.generate --check` alongside this: that asserts the extraction schema is
 the projection it claims to be, and this asserts the map over it is honest.
@@ -191,6 +194,26 @@ def check_derivations(
     return problems
 
 
+def check_conditional_fields(
+    storage: Mapping[str, object], extraction: Mapping[str, object], mapping: Mapping
+) -> list[str]:
+    """Assert every `conditional_fields` entry names a field in both schemas.
+
+    These are extraction fields copied by identity under a condition, so a rename or a
+    misspelling on either side would otherwise leave the entry describing nothing.
+    """
+
+    problems: list[str] = []
+    for path in sorted(mapping.get("conditional_fields") or {}):
+        class_name, _, attribute_name = str(path).rpartition(".")
+        for side, classes in (("storage", storage), ("extraction", extraction)):
+            if class_name not in classes:
+                problems.append(f"conditional_fields names a class {side} does not have: {path}")
+            elif attribute_name not in own_attributes(classes, class_name):
+                problems.append(f"conditional_fields names a field {side} does not have: {path}")
+    return problems
+
+
 def value_declaration(
     extraction: Mapping[str, object], wrapper_name: str
 ) -> Mapping[str, object] | None:
@@ -292,6 +315,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ("identity", check_identity(storage, extraction)),
         ("derivations", check_derivations(storage, extraction, mapping)),
         ("vocabularies", check_vocabularies(storage, extraction, enums)),
+        ("conditional_fields", check_conditional_fields(storage, extraction, mapping)),
     ]
 
     failed = False
