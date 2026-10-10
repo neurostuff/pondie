@@ -278,7 +278,9 @@ def derive_coordinate_spaces(
         if not local:
             continue
         read = (normalize_space(p.get("space")) for p in analysis.get("points") or [])
-        spaces_by_table.setdefault(local, set()).update(d.value for d in read if d)
+        spaces_by_table.setdefault(local, set()).update(
+            d.value for d in read if d and d.reason != "unmatched"
+        )
 
     filled: list[str] = []
     for index, analysis in enumerate(body.get("analyses") or []):

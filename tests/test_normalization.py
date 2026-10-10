@@ -15,15 +15,16 @@ from pondie.normalization import (
 from pondie.vocabularies import folding
 
 
-def test_a_space_naming_both_is_unknown_rather_than_a_guess():
+def test_a_space_naming_both_is_none_rather_than_a_guess():
     assert coordinate_space.normalize("MNI152").value == "MNI"
     ambiguous = coordinate_space.normalize("MNI/TAL")
-    assert ambiguous.value == "UNKNOWN" and "MNI and TAL" in ambiguous.reason
+    assert ambiguous.value is None and "MNI and TAL" in ambiguous.reason
 
 
-def test_other_and_unknown_are_not_the_same_claim():
+def test_other_and_none_are_not_the_same_claim():
     assert coordinate_space.normalize("fsaverage").value == "OTHER", "a third space"
-    assert coordinate_space.normalize("").value == "UNKNOWN", "no information"
+    assert coordinate_space.normalize("").value is None, "no information"
+    assert coordinate_space.normalize("unknown").value is None, "no information"
 
 
 def test_negation_decides_medication_status():
@@ -396,7 +397,7 @@ def test_a_space_name_is_matched_without_a_trailing_boundary():
 
 
 def test_a_template_a_study_built_for_itself_is_a_third_space():
-    """OTHER refuses the transform; UNKNOWN lets a caller default, so the two must not swap."""
+    """A stated space no rule names is still OTHER, flagged `unmatched` for the residual."""
     for text in (
         "customized template",
         "in-house DARTEL template",
@@ -406,7 +407,8 @@ def test_a_template_a_study_built_for_itself_is_a_third_space():
     ):
         assert coordinate_space.normalize(text).value == "OTHER", text
     for text in ("template image space", "reference atlas"):
-        assert coordinate_space.normalize(text).value == "UNKNOWN", text
+        decided = coordinate_space.normalize(text)
+        assert (decided.value, decided.reason) == ("OTHER", "unmatched"), text
 
 
 def test_a_space_spelled_out_reaches_the_same_answer_as_its_acronym():

@@ -36,12 +36,13 @@ class Rule:
 
 @dataclass(frozen=True)
 class Decision:
-    value: str
+    #: None only for `coordinate_space`, whose vocabulary is study_schema's.
+    value: str | None
     reason: str
     text: str = ""
 
     def __bool__(self) -> bool:
-        return self.value != UNKNOWN
+        return self.value not in (UNKNOWN, None)
 
 
 def classify(text: object, rules: tuple[Rule, ...], ambiguous_to: str = UNKNOWN) -> Decision:

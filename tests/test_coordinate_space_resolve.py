@@ -37,7 +37,7 @@ def test_two_spellings_of_one_space_are_not_a_conflict():
 
 
 def test_two_spaces_are_a_conflict_and_the_transform_must_not_run():
-    assert resolve(ANALYSIS, NO_TABLES, points("MNI", "TALAIRACH")).value == "UNKNOWN"
+    assert resolve(ANALYSIS, NO_TABLES, points("MNI", "TALAIRACH")).value is None
 
 
 def test_a_space_no_rule_matched_does_not_claim_the_parse_answered():
@@ -46,13 +46,13 @@ def test_a_space_no_rule_matched_does_not_claim_the_parse_answered():
     Carrying the token is what the missing rule gets written from.
     """
     decided = resolve(ANALYSIS, NO_TABLES, points("REFERENCE ATLAS"))
-    assert decided.value == "UNKNOWN"
+    assert decided.value == "OTHER"
     assert (decided.reason, decided.text) == ("unmatched", "REFERENCE ATLAS")
 
 
-def test_nothing_anywhere_is_unknown_and_says_why():
+def test_nothing_anywhere_is_none_and_says_why():
     decided = resolve(ANALYSIS, NO_TABLES, points())
-    assert (decided.value, decided.reason) == ("UNKNOWN", "empty")
+    assert (decided.value, decided.reason) == (None, "empty")
 
 
 def test_the_deriver_reads_the_same_lexicon_as_the_resolver(tmp_path):
