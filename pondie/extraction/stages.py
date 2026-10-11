@@ -42,7 +42,7 @@ from pondie.extraction.sign_split import adopt_withholding, split_opposite_signs
 from pondie.extraction.record.ids import table_local_id
 from pondie.extraction.evidence import cited
 from pondie.extraction.prompt import preprocess, render, reply_schema, worked
-from pondie.formats import table_parse, text_index, values
+from pondie.formats import coordinate_parse, table_parse, text_index, values
 from pondie.schema import reader
 
 log = logging.getLogger("pondie")
@@ -63,6 +63,10 @@ class Stage(Protocol):
     def depends_on(self, paper: Paper, settings: Settings) -> Mapping[str, Any]:
         """What the stage reads, and subsequently, what invalidates their cache."""
         ...
+
+
+def _parse_id(path: Path) -> str:
+    return str(json.loads(path.read_text(encoding="utf-8")).get("parse_id") or "")
 
 
 @dataclass(frozen=True)
@@ -99,6 +103,11 @@ class _Base:
             ),
             "flavour": paper.flavour.value,
         }
+        if paper.parse_source == coordinate_parse.FROM_PARSE:
+            # A stage-1 key and a parse key name the same analysis differently, and a new
+            # parse rekeys every one: a payload written against another parse is stale.
+            # Absent on the stage-1 path, so its caches stay valid.
+            parts["parse"] = {"source": paper.parse_source, "parse_id": _parse_id(paper.parse)}
         if self.reads_the_parse:
             parts["parse"] = (
                 text_index.text_hash(paper.parse.read_text(encoding="utf-8", errors="replace"))
@@ -221,7 +230,7 @@ class Tables(_Base):
             sources = TableParse.read(paper.parse).source_tables()
             origin = (
                 "the stage-1 parse"
-                if paper.parse_source == "stage1"
+                if paper.parse_source == coordinate_parse.FROM_STAGE1
                 else "parse/coordinate_parse.json"
             )
 
@@ -282,7 +291,7 @@ class SignSplit(_Base):
         return paper.parse
 
     def done(self, paper: Paper, settings: Settings) -> bool:
-        if paper.parse_source == "coordinate_parse":
+        if paper.parse_source == coordinate_parse.FROM_PARSE:
             return False
         if settings.redo or not paper.parse.is_file():
             return False
@@ -293,7 +302,7 @@ class SignSplit(_Base):
         return not adopted.notes
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
-        if paper.parse_source == "coordinate_parse":
+        if paper.parse_source == coordinate_parse.FROM_PARSE:
             # The parse declares its own split, on both halves, and is ingestion's file:
             # nothing is written. The note is also where a run says which parse it read.
             parse = TableParse.load(paper.parse)

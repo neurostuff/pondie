@@ -199,6 +199,15 @@ def build_sequence() -> tuple[Repair, ...]:
             stage="demands",
         ),
         Repair(
+            "legacy_keys_at_merge",
+            "map a positional stage-1 key a stored payload holds to the CoordinateParse's key",
+            lambda body, ctx: derive.map_legacy_keys(body, ctx.stage1),
+            # A payload written against stage 1 and still fresh reaches the merge without
+            # passing `legacy_keys` again. Idempotent: a mapped key is the parse's own.
+            after="legacy_keys",
+            stage="merged",
+        ),
+        Repair(
             "correction_regions",
             "name an ROI correction's regions from the analyses that used it",
             lambda body, ctx: derive.derive_correction_regions(body),

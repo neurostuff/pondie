@@ -26,6 +26,7 @@ from typing import Annotated, ClassVar, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from pondie import paths
+from pondie.formats import coordinate_parse
 
 #: Re-exported: a render is a fact about the corpus layout, so `paths` owns it.
 Flavour = paths.Flavour
@@ -86,7 +87,11 @@ class Paper(Strict):
     @property
     def parse_source(self) -> str:
         """Which of the two `parse` is, for the notes that say what a run read."""
-        return "coordinate_parse" if self.parse.parent.name == "parse" else "stage1"
+        return (
+            coordinate_parse.FROM_PARSE
+            if coordinate_parse.is_coordinate_parse(self.parse)
+            else coordinate_parse.FROM_STAGE1
+        )
 
     @property
     def table_map(self) -> Path:

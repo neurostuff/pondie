@@ -8,6 +8,7 @@ a valid run is.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections import Counter
 from pathlib import Path
@@ -187,6 +188,32 @@ def _normalize(args: argparse.Namespace) -> int:
     return 0
 
 
+def _id_map(args: argparse.Namespace) -> int:
+    from pondie import paths, schema
+    from pondie.extraction.record.fix import legacy_id_map
+    from pondie.formats import coordinate_parse
+    from pondie.schema import reader
+
+    sch = reader.load(schema.STORAGE)
+    args.out.mkdir(parents=True, exist_ok=True)
+    tally = {"records": 0, "written": 0, "no_parse": 0, "keys": 0, "ids": 0, "unmapped": 0}
+    for path in sorted(args.records.glob("*.extraction.json")):
+        tally["records"] += 1
+        study = path.name.split(".")[0]
+        parse = paths.analyses(study, args.corpus)
+        if not coordinate_parse.is_coordinate_parse(parse):
+            tally["no_parse"] += 1
+            continue
+        found = legacy_id_map(json.loads(path.read_text(encoding="utf-8")), parse, sch)
+        doc = {"study": study, "parse_id": json.loads(parse.read_text()).get("parse_id"), **found}
+        (args.out / f"{study}.id-map.json").write_text(json.dumps(doc, indent=1) + "\n")
+        tally["written"] += 1
+        for name in ("keys", "ids", "unmapped"):
+            tally[name] += len(found[name])
+    print(json.dumps(tally))
+    return 0
+
+
 def _select(args: argparse.Namespace) -> int:
     from pondie.query.engine import Selection, select
 
@@ -331,6 +358,15 @@ def main(argv: list[str] | None = None) -> int:
         "coordinates inside the region they searched",
     )
     se.set_defaults(fn=_select)
+
+    im = sub.add_parser(
+        "id-map",
+        help="old stage-1 key and analysis id -> the CoordinateParse's, per stored record",
+    )
+    im.add_argument("--records", type=Path, required=True, help="dir of <study>.extraction.json")
+    im.add_argument("--corpus", type=Path, default=paths.CORPUS)
+    im.add_argument("--out", type=Path, required=True, help="writes <study>.id-map.json here")
+    im.set_defaults(fn=_id_map)
 
     from pondie.benchmark import CANDIDATE, REFERENCE
 

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
@@ -123,26 +124,70 @@ def _signature(entry: Mapping[str, Any]) -> tuple:
     return tuple(sorted(tuple(p.get("coordinates") or ()) for p in entry.get("points") or []))
 
 
+def _slot(entry: Mapping[str, Any]) -> tuple[str, str]:
+    return str(entry.get("table_id") or ""), normalize_name(str(entry.get("name") or ""))
+
+
+@dataclass(frozen=True)
+class LegacyMatch:
+    """Which positional stage-1 keys map to a parse key, and why each other one does not."""
+
+    mapping: dict[str, str]
+    unmapped: dict[str, str]
+
+
+def match_legacy_keys(
+    stage1_entries: list[dict[str, Any]], parse_entries: Iterable[Mapping[str, Any]]
+) -> LegacyMatch:
+    """Positional stage-1 key -> the parse's key for the same analysis, one-to-one.
+
+    The two documents share a table, a name and the points. Within one (table, normalized
+    name) slot a lone entry on each side is the same analysis; otherwise only equal points
+    pair them. A parse key two stage-1 keys would reach is given to neither: two analyses
+    the paper reports apart must not become one.
+    """
+    stage1_entries = list(stage1_entries)
+    old_keys = parse_keys.positional_keys(stage1_entries)
+    parse_slots: dict[tuple[str, str], list[Mapping[str, Any]]] = {}
+    for entry in parse_entries:
+        parse_slots.setdefault(_slot(entry), []).append(entry)
+    stage1_slots: dict[tuple[str, str], list[int]] = {}
+    for index, entry in enumerate(stage1_entries):
+        stage1_slots.setdefault(_slot(entry), []).append(index)
+
+    claims: dict[str, list[str]] = {}
+    unmapped: dict[str, str] = {}
+    for slot, indices in stage1_slots.items():
+        hits = parse_slots.get(slot, [])
+        if not hits:
+            for i in indices:
+                unmapped[old_keys[i]] = "no analysis of the parse has its table and name"
+            continue
+        if len(hits) == 1 and len(indices) == 1:
+            claims.setdefault(str(hits[0]["key"]), []).append(old_keys[indices[0]])
+            continue
+        for i in indices:
+            same = [h for h in hits if _signature(h) == _signature(stage1_entries[i])]
+            if len(same) == 1:
+                claims.setdefault(str(same[0]["key"]), []).append(old_keys[i])
+            else:
+                unmapped[old_keys[i]] = (
+                    f"{len(indices)} stage-1 and {len(hits)} parse analyses share its table "
+                    f"and name, and {len(same)} of the parse's have its points"
+                )
+    mapping: dict[str, str] = {}
+    for new, olds in claims.items():
+        if len(olds) == 1:
+            mapping[olds[0]] = new
+        else:
+            for old in olds:
+                others = ", ".join(repr(o) for o in olds if o != old)
+                unmapped[old] = f"parse key {new!r} is also the match of {others}"
+    return LegacyMatch(mapping=mapping, unmapped=unmapped)
+
+
 def legacy_key_map(
     stage1_entries: list[dict[str, Any]], parse_entries: Iterable[Mapping[str, Any]]
 ) -> dict[str, str]:
-    """Positional stage-1 key -> the parse's key for the same analysis, where it is certain.
-
-    For a record written against stage 1 (`tbl0003#2`) read once the paper has a parse. The
-    same analysis is the entry under the same table with the same normalized name; where
-    the name recurs under one table, its points decide, and where they do not decide the
-    key is left unmapped rather than guessed.
-    """
-    candidates: dict[tuple[str, str], list[Mapping[str, Any]]] = {}
-    for entry in parse_entries:
-        slot = (str(entry.get("table_id") or ""), normalize_name(str(entry.get("name") or "")))
-        candidates.setdefault(slot, []).append(entry)
-    mapping: dict[str, str] = {}
-    for old, entry in zip(parse_keys.positional_keys(stage1_entries), stage1_entries):
-        slot = (str(entry.get("table_id") or ""), normalize_name(str(entry.get("name") or "")))
-        hits = candidates.get(slot, [])
-        if len(hits) > 1:
-            hits = [h for h in hits if _signature(h) == _signature(entry)]
-        if len(hits) == 1:
-            mapping[old] = str(hits[0]["key"])
-    return mapping
+    """`match_legacy_keys`'s mapping alone."""
+    return match_legacy_keys(stage1_entries, parse_entries).mapping

@@ -573,8 +573,8 @@ def stage1_block(
                 notes.append("/".join(kinds))
             role = analysis.get("role")
             if analysis.get("key") and role and role != "result":
-                # The CoordinateParse's role is the ingestion classifier's proposal. An OMIT
-                # reason the pass records for this key is the reviewed correction, and wins.
+                # The CoordinateParse's role is the ingestion classifier's proposal: shown as
+                # that, and the pass may omit the analysis.
                 kind = analysis.get("anchor_kind")
                 notes.append(f"role {role}{f' ({kind})' if kind else ''}, proposed")
             lines.append(
