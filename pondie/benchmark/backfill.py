@@ -103,10 +103,10 @@ def backfill(reference: Path, corpus: Path, write: bool) -> dict[str, int]:
     tally = {"analyses": 0, "joined": 0, "already": 0, "no_entry": 0, "repeated_name": 0}
     for path in sorted(reference.glob("*.extraction.json")):
         study = path.name.split(".")[0]
-        stage1 = corpus / study / "stage1" / "analyses.json"
-        if not stage1.is_file():
+        parse = paths.analyses(study, corpus)
+        if not parse.is_file():
             continue
-        entries = json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
+        entries = parse_keys.load(parse)
         by_name = _by_name(entries)
 
         record = json.loads(path.read_text(encoding="utf-8"))

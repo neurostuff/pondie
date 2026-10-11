@@ -1,0 +1,837 @@
+{
+ "analyses": [
+  {
+   "source": "prose",
+   "role": "result",
+   "name": "PO > Sil",
+   "description": null,
+   "table_id": "prose",
+   "table_number": null,
+   "table_caption": "",
+   "table_footer": "",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      12.0,
+      -2.0,
+      8.0
+     ],
+     "space": "MNI",
+     "sign": "unsigned",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "source": "prose",
+   "role": "result",
+   "name": "NO > Sil",
+   "description": null,
+   "table_id": "prose",
+   "table_number": null,
+   "table_caption": "",
+   "table_footer": "",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      14.0,
+      -6.0,
+      -4.0
+     ],
+     "space": "MNI",
+     "sign": "unsigned",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "source": "prose",
+   "role": "result",
+   "name": "PC > Sil",
+   "description": null,
+   "table_id": "prose",
+   "table_number": null,
+   "table_caption": "",
+   "table_footer": "",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      12.0,
+      -2.0,
+      8.0
+     ],
+     "space": "MNI",
+     "sign": "unsigned",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "source": "prose",
+   "role": "result",
+   "name": "NC > Sil",
+   "description": null,
+   "table_id": "prose",
+   "table_number": null,
+   "table_caption": "",
+   "table_footer": "",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      14.0,
+      -6.0,
+      -4.0
+     ],
+     "space": "MNI",
+     "sign": "unsigned",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "name": "PO+NO+PC+NC > Sil",
+   "description": null,
+   "table_id": "tbl0003",
+   "table_number": 3,
+   "table_caption": "Whole-brain random-effects tests of speech content and social relationship processing.",
+   "table_footer": "Threshold for reporting for all contrasts was P < 0.001 and whole-brain cluster-corrected P < 0.05 for FWE. All subpeaks at least 10 mm apart are reported for each cluster. L: left, R: right, m: mid, c: caudal, CC: caudal colliculus, CN: caudate nucleus, ESG: ectosylvian gyrus, MGB: medial geniculate body, MTg: mesencephalic tegmentum, SG: Sylvian gyrus, THA: thalamus, n.s.: no significant clusters. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      -4.0,
+      -24.0,
+      2.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 10.241,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 358,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      6.0,
+      -26.0,
+      -2.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": true,
+     "values": [
+      {
+       "value": 11.087,
+       "kind": "T"
+      }
+     ]
+    },
+    {
+     "coordinates": [
+      12.0,
+      -18.0,
+      -2.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": true,
+     "values": [
+      {
+       "value": 8.209,
+       "kind": "T"
+      }
+     ]
+    },
+    {
+     "coordinates": [
+      -24.0,
+      -18.0,
+      22.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 4.524,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 188,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      -20.0,
+      -8.0,
+      22.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": true,
+     "values": [
+      {
+       "value": 5.226,
+       "kind": "T"
+      }
+     ]
+    },
+    {
+     "coordinates": [
+      -24.0,
+      -18.0,
+      4.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": true,
+     "values": [
+      {
+       "value": 8.255,
+       "kind": "T"
+      }
+     ]
+    },
+    {
+     "coordinates": [
+      24.0,
+      -18.0,
+      12.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 7.293,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 148,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      -18.0,
+      -10.0,
+      -4.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 5.523,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 41,
+     "cluster_measure": "voxels"
+    }
+   ]
+  },
+  {
+   "name": "PO+PC > NO+NC",
+   "description": null,
+   "table_id": "tbl0003",
+   "table_number": 3,
+   "table_caption": "Whole-brain random-effects tests of speech content and social relationship processing.",
+   "table_footer": "Threshold for reporting for all contrasts was P < 0.001 and whole-brain cluster-corrected P < 0.05 for FWE. All subpeaks at least 10 mm apart are reported for each cluster. L: left, R: right, m: mid, c: caudal, CC: caudal colliculus, CN: caudate nucleus, ESG: ectosylvian gyrus, MGB: medial geniculate body, MTg: mesencephalic tegmentum, SG: Sylvian gyrus, THA: thalamus, n.s.: no significant clusters. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      12.0,
+      -12.0,
+      6.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 6.122,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 16,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      -16.0,
+      -4.0,
+      -4.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 7.054,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 195,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      -24.0,
+      -12.0,
+      0.0
+     ],
+     "space": "MNI",
+     "sign": "unsigned",
+     "is_subpeak": true
+    },
+    {
+     "coordinates": [
+      -18.0,
+      -20.0,
+      14.0
+     ],
+     "space": "MNI",
+     "sign": "unsigned",
+     "is_subpeak": true
+    },
+    {
+     "coordinates": [
+      24.0,
+      -14.0,
+      0.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 10.939,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 171,
+     "cluster_measure": "voxels"
+    }
+   ]
+  },
+  {
+   "name": "PO > NO",
+   "description": null,
+   "table_id": "tbl0003",
+   "table_number": 3,
+   "table_caption": "Whole-brain random-effects tests of speech content and social relationship processing.",
+   "table_footer": "Threshold for reporting for all contrasts was P < 0.001 and whole-brain cluster-corrected P < 0.05 for FWE. All subpeaks at least 10 mm apart are reported for each cluster. L: left, R: right, m: mid, c: caudal, CC: caudal colliculus, CN: caudate nucleus, ESG: ectosylvian gyrus, MGB: medial geniculate body, MTg: mesencephalic tegmentum, SG: Sylvian gyrus, THA: thalamus, n.s.: no significant clusters. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      -6.0,
+      -16.0,
+      -2.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 6.978,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 20,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      4.0,
+      -12.0,
+      2.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 5.7,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 41,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      -10.0,
+      -2.0,
+      8.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 7.893,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 44,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      -20.0,
+      -18.0,
+      14.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 8.788,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 180,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      -20.0,
+      -8.0,
+      2.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": true,
+     "values": [
+      {
+       "value": 6.696,
+       "kind": "T"
+      }
+     ]
+    },
+    {
+     "coordinates": [
+      28.0,
+      -22.0,
+      8.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 6.728,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 176,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      26.0,
+      -16.0,
+      0.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": true,
+     "values": [
+      {
+       "value": 9.064,
+       "kind": "T"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PC > NC",
+   "description": null,
+   "table_id": "tbl0003",
+   "table_number": 3,
+   "table_caption": "Whole-brain random-effects tests of speech content and social relationship processing.",
+   "table_footer": "Threshold for reporting for all contrasts was P < 0.001 and whole-brain cluster-corrected P < 0.05 for FWE. All subpeaks at least 10 mm apart are reported for each cluster. L: left, R: right, m: mid, c: caudal, CC: caudal colliculus, CN: caudate nucleus, ESG: ectosylvian gyrus, MGB: medial geniculate body, MTg: mesencephalic tegmentum, SG: Sylvian gyrus, THA: thalamus, n.s.: no significant clusters. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      26.0,
+      -20.0,
+      2.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 4.65,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 52,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      22.0,
+      -12.0,
+      -6.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": true,
+     "values": [
+      {
+       "value": 7.389,
+       "kind": "T"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PO > PC",
+   "description": null,
+   "table_id": "tbl0003",
+   "table_number": 3,
+   "table_caption": "Whole-brain random-effects tests of speech content and social relationship processing.",
+   "table_footer": "Threshold for reporting for all contrasts was P < 0.001 and whole-brain cluster-corrected P < 0.05 for FWE. All subpeaks at least 10 mm apart are reported for each cluster. L: left, R: right, m: mid, c: caudal, CC: caudal colliculus, CN: caudate nucleus, ESG: ectosylvian gyrus, MGB: medial geniculate body, MTg: mesencephalic tegmentum, SG: Sylvian gyrus, THA: thalamus, n.s.: no significant clusters. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      -20.0,
+      -14.0,
+      -6.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 7.025,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 23,
+     "cluster_measure": "voxels"
+    }
+   ]
+  },
+  {
+   "name": "PO-PC > NO-NC",
+   "description": null,
+   "table_id": "tbl0003",
+   "table_number": 3,
+   "table_caption": "Whole-brain random-effects tests of speech content and social relationship processing.",
+   "table_footer": "Threshold for reporting for all contrasts was P < 0.001 and whole-brain cluster-corrected P < 0.05 for FWE. All subpeaks at least 10 mm apart are reported for each cluster. L: left, R: right, m: mid, c: caudal, CC: caudal colliculus, CN: caudate nucleus, ESG: ectosylvian gyrus, MGB: medial geniculate body, MTg: mesencephalic tegmentum, SG: Sylvian gyrus, THA: thalamus, n.s.: no significant clusters. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      -8.0,
+      -6.0,
+      2.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 6.442,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 53,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      -8.0,
+      4.0,
+      2.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": true,
+     "values": [
+      {
+       "value": 4.587,
+       "kind": "T"
+      }
+     ]
+    },
+    {
+     "coordinates": [
+      -16.0,
+      -22.0,
+      2.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 6.809,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 30,
+     "cluster_measure": "voxels"
+    }
+   ]
+  },
+  {
+   "name": "PO+NO+PC+NC > Sil",
+   "description": null,
+   "table_id": "tbl0004",
+   "table_number": 4,
+   "table_caption": "Random-effects tests of speech content and social relationship processing within the pre-defined ROIs.",
+   "table_footer": "Threshold for reporting for all contrasts was P < 0.001 and small-volume cluster-corrected P < 0.05 for FWE. The single strongest peak is reported per cluster. All tests were performed within both of the pre-defined ROIs (L/R CN, L/R AM). L: left, R: right, CN: caudate nucleus, AM: amygdala, n.s.: no significant clusters in either ROI. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      -14.0,
+      -6.0,
+      -6.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 4.542,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 4,
+     "cluster_measure": "voxels"
+    }
+   ]
+  },
+  {
+   "name": "PO+PC > NO+NC",
+   "description": null,
+   "table_id": "tbl0004",
+   "table_number": 4,
+   "table_caption": "Random-effects tests of speech content and social relationship processing within the pre-defined ROIs.",
+   "table_footer": "Threshold for reporting for all contrasts was P < 0.001 and small-volume cluster-corrected P < 0.05 for FWE. The single strongest peak is reported per cluster. All tests were performed within both of the pre-defined ROIs (L/R CN, L/R AM). L: left, R: right, CN: caudate nucleus, AM: amygdala, n.s.: no significant clusters in either ROI. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      -16.0,
+      -4.0,
+      -6.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 6.656,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 15,
+     "cluster_measure": "voxels"
+    }
+   ]
+  },
+  {
+   "name": "PO > NO",
+   "description": null,
+   "table_id": "tbl0004",
+   "table_number": 4,
+   "table_caption": "Random-effects tests of speech content and social relationship processing within the pre-defined ROIs.",
+   "table_footer": "Threshold for reporting for all contrasts was P < 0.001 and small-volume cluster-corrected P < 0.05 for FWE. The single strongest peak is reported per cluster. All tests were performed within both of the pre-defined ROIs (L/R CN, L/R AM). L: left, R: right, CN: caudate nucleus, AM: amygdala, n.s.: no significant clusters in either ROI. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      -10.0,
+      -2.0,
+      8.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 7.893,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 13,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      -14.0,
+      -6.0,
+      -4.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 6.167,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 8,
+     "cluster_measure": "voxels"
+    }
+   ]
+  },
+  {
+   "name": "PO > PC",
+   "description": null,
+   "table_id": "tbl0004",
+   "table_number": 4,
+   "table_caption": "Random-effects tests of speech content and social relationship processing within the pre-defined ROIs.",
+   "table_footer": "Threshold for reporting for all contrasts was P < 0.001 and small-volume cluster-corrected P < 0.05 for FWE. The single strongest peak is reported per cluster. All tests were performed within both of the pre-defined ROIs (L/R CN, L/R AM). L: left, R: right, CN: caudate nucleus, AM: amygdala, n.s.: no significant clusters in either ROI. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      -12.0,
+      -2.0,
+      8.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 6.03,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 4,
+     "cluster_measure": "voxels"
+    }
+   ]
+  },
+  {
+   "name": "PO - PC > NO - NC",
+   "description": null,
+   "table_id": "tbl0004",
+   "table_number": 4,
+   "table_caption": "Random-effects tests of speech content and social relationship processing within the pre-defined ROIs.",
+   "table_footer": "Threshold for reporting for all contrasts was P < 0.001 and small-volume cluster-corrected P < 0.05 for FWE. The single strongest peak is reported per cluster. All tests were performed within both of the pre-defined ROIs (L/R CN, L/R AM). L: left, R: right, CN: caudate nucleus, AM: amygdala, n.s.: no significant clusters in either ROI. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      -8.0,
+      -2.0,
+      6.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 6.197,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 29,
+     "cluster_measure": "voxels"
+    }
+   ]
+  },
+  {
+   "name": "PO+NO > PC+NC",
+   "description": null,
+   "table_id": "tbl0005",
+   "table_number": 5,
+   "table_caption": "Covariate effects of attachment scores on speech content and social relationship processing.",
+   "table_footer": "Threshold for reporting the covariate effect for all contrasts was P < 0.001 and whole-brain or small-volume cluster-corrected P < 0.05 for FWE. The single strongest peak is reported per cluster. All tests were performed over the whole brain and within both of the pre-defined ROIs (L/R CN, L/R AM). Italic indicates tendency. L: left, R: right, CN: caudate nucleus, PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      -6.0,
+      -2.0,
+      6.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 5.32,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 13,
+     "cluster_measure": "voxels"
+    }
+   ]
+  },
+  {
+   "name": "NO > NC",
+   "description": null,
+   "table_id": "tbl0005",
+   "table_number": 5,
+   "table_caption": "Covariate effects of attachment scores on speech content and social relationship processing.",
+   "table_footer": "Threshold for reporting the covariate effect for all contrasts was P < 0.001 and whole-brain or small-volume cluster-corrected P < 0.05 for FWE. The single strongest peak is reported per cluster. All tests were performed over the whole brain and within both of the pre-defined ROIs (L/R CN, L/R AM). Italic indicates tendency. L: left, R: right, CN: caudate nucleus, PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "coordinate_space": "MNI",
+   "points": [
+    {
+     "coordinates": [
+      -6.0,
+      -6.0,
+      4.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 5.5,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 16,
+     "cluster_measure": "voxels"
+    },
+    {
+     "coordinates": [
+      8.0,
+      -6.0,
+      8.0
+     ],
+     "space": "MNI",
+     "sign": "positive",
+     "is_subpeak": false,
+     "values": [
+      {
+       "value": 4.44,
+       "kind": "T"
+      }
+     ],
+     "cluster_size": 4,
+     "cluster_measure": "voxels"
+    }
+   ]
+  }
+ ]
+}

@@ -20,7 +20,7 @@ from pondie import schema
 from pondie.extraction.record import direction
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import walk
-from pondie.formats import parse_keys, values
+from pondie.formats import coordinate_parse, parse_keys, values
 from pondie.normalization import search_volume
 from pondie.normalization.coordinate_space import normalize as normalize_space
 from pondie.schema import reader
@@ -508,6 +508,67 @@ def respell_text_keys(body: dict[str, Any]) -> list[str]:
         if new != old:
             coordinate_set["local_id"] = new
             notes.append(f"coordinate_sets[{old!r}] -> {new!r}")
+    return notes
+
+
+def map_legacy_keys(body: dict[str, Any], parse: Path | None) -> list[str]:
+    """Rewrite each positional stage-1 key the record holds to the CoordinateParse's key.
+
+    Only where the paper has a parse and the stage-1 document the record was keyed
+    against is still beside it; `coordinate_parse.legacy_key_map` decides which keys map.
+    A key that does not map is reported and left for `source_links` to judge, which drops
+    one naming no analysis of the parse and refills the slot by name where it can.
+    """
+    if not coordinate_parse.is_coordinate_parse(parse) or not parse.is_file():
+        return []
+    stage1 = coordinate_parse.legacy_stage1(parse)
+    current = parse_keys.load(parse)
+    known = set(parse_keys.parse_keys(current))
+    held = [
+        key
+        for key in (
+            *(values.read(a.get("source_table_analysis")) for a in body.get("analyses") or []
+              if isinstance(a, Mapping)),
+            *(c.get("local_id") for c in body.get("coordinate_sets") or [] if isinstance(c, Mapping)),
+        )
+        if isinstance(key, str) and "#" in key and key not in known
+    ]
+    if not held:
+        return []
+    if not stage1.is_file():
+        return [f"{key!r}: not a key of the parse, and no stage1/analyses.json to map it from" for key in held]
+    mapping = coordinate_parse.legacy_key_map(parse_keys.load(stage1), current)
+
+    notes: list[str] = []
+    for index, analysis in enumerate(body.get("analyses") or []):
+        if not isinstance(analysis, dict):
+            continue
+        node = analysis.get("source_table_analysis")
+        old = values.read(node)
+        if not isinstance(old, str) or old in known or "#" not in old:
+            continue
+        new = mapping.get(old)
+        path = f"analyses[{index}].source_table_analysis"
+        if new is None:
+            notes.append(f"{path}: stage-1 key {old!r} maps to no one analysis of the parse -- left")
+            continue
+        if values.is_field(node):
+            node["value"] = new
+        else:
+            analysis["source_table_analysis"] = new
+        notes.append(f"{path}: stage-1 key {old!r} -> parse key {new!r}")
+    for coordinate_set in body.get("coordinate_sets") or []:
+        if not isinstance(coordinate_set, dict):
+            continue
+        old = coordinate_set.get("local_id")
+        if not isinstance(old, str) or old in known or "#" not in old:
+            continue
+        new = mapping.get(old)
+        if new is None:
+            notes.append(f"coordinate_sets[{old!r}]: maps to no one analysis of the parse -- left")
+            continue
+        coordinate_set["local_id"] = new
+        notes.append(f"coordinate_sets[{old!r}] -> {new!r}, the parse's key")
     return notes
 
 

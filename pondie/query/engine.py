@@ -542,9 +542,8 @@ def select(
         # `keyed` was always empty: every analysis was dropped as "no joinable row group"
         # -- blaming the extractor for a missing key -- and the parsed-coordinate fallback
         # that answers the space for 11% of analyses could never fire either.
-        stage1 = paths.stage1(study)
-        if stage1.is_file():
-            parsed = json.loads(stage1.read_text()).get("analyses") or []
+        parsed = parse_keys.load(paths.analyses(study))
+        if parsed:
             keyed = dict(zip(parse_keys.parse_keys(parsed), parsed))
         points_by_key = {k: (v.get("points") or []) for k, v in keyed.items()}
         wants_arms = selection.arm_contrast is not None or selection.treatment_exposure is not None

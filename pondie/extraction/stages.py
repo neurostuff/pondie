@@ -219,7 +219,7 @@ class Tables(_Base):
             # an absent one does, and the fallback is what keeps the prompt's table headings
             # backed by a declared entity either way.
             sources = TableParse.read(paper.parse).source_tables()
-            origin = "the stage-1 parse"
+            origin = f"the {paper.parse_source} parse"
 
         tables, id_map, taken = [], {}, set()
         for index, source in enumerate(sources, start=1):
@@ -278,6 +278,8 @@ class SignSplit(_Base):
         return paper.parse
 
     def done(self, paper: Paper, settings: Settings) -> bool:
+        if paper.parse_source == "coordinate_parse":
+            return False
         if settings.redo or not paper.parse.is_file():
             return False
         parse = TableParse.load(paper.parse)
@@ -287,6 +289,19 @@ class SignSplit(_Base):
         return not adopted.notes
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
+        if paper.parse_source == "coordinate_parse":
+            # The parse declares its own split, on both halves, and is ingestion's file:
+            # nothing is written. The note is also where a run says which parse it read.
+            parse = TableParse.load(paper.parse)
+            return StageOutcome(
+                stage=self.name,
+                study_id=paper.study_id,
+                produced=(),
+                notes=(
+                    f"read parse/coordinate_parse.json ({len(parse.analyses)} analyses, "
+                    f"{len(parse.withheld())} withheld by the parse's sign split); keys from the parse",
+                ),
+            )
         if self.done(paper, settings):
             return self._skip(paper)
         parse = TableParse.load(paper.parse)
@@ -303,6 +318,7 @@ class SignSplit(_Base):
             study_id=paper.study_id,
             produced=(paper.parse,),
             notes=(
+                "read stage1/analyses.json (no parse/coordinate_parse.json); positional keys",
                 *split.notes,
                 f"{len(before)} -> {len(adopted.analyses)} analyses, "
                 f"{adopted.withheld} withheld",

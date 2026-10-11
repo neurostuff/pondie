@@ -1,0 +1,1037 @@
+{
+ "header": {
+  "artifact_kind": "coordinate_parse",
+  "schema_version": "0.6.0",
+  "article_id": "wjkrusokqlf4",
+  "identifiers": {
+   "pmid": "34411741",
+   "doi": "10.1016/j.neuroimage.2021.118480",
+   "neurostore_base_study_id": "gx2zzUbbydf9"
+  },
+  "producer": {
+   "name": "ns-pond-ingestion-workflow",
+   "version": "paper_parse.1",
+   "stage": "sync"
+  },
+  "inputs": [
+   {
+    "artifact_kind": "parsed_paper",
+    "fingerprint": "22897ca8caf9c70c62f21090690d0ab0e2f0731fd1d3878e985a2c0d78bba335"
+   },
+   {
+    "artifact_kind": "analyses",
+    "fingerprint": "58580a6b4dab41750b85daed7ad02075"
+   }
+  ]
+ },
+ "parse_id": "dadeae7855f87777a1432ae14854677c4aa1cdc41a7b3439f5dc50abfea68a14",
+ "text_sha256": "22897ca8caf9c70c62f21090690d0ab0e2f0731fd1d3878e985a2c0d78bba335",
+ "analyses": [
+  {
+   "key": "text#3d3ed67111b0",
+   "text_spans": [
+    {
+     "start_char": 21737,
+     "end_char": 21746
+    }
+   ],
+   "origin": "text",
+   "name": "PO > Sil",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "points": [
+    {
+     "coordinates": [
+      12.0,
+      -2.0,
+      8.0
+     ],
+     "text_span": {
+      "start_char": 21737,
+      "end_char": 21746
+     },
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "text#de5dad167b9d",
+   "text_spans": [
+    {
+     "start_char": 21754,
+     "end_char": 21764
+    }
+   ],
+   "origin": "text",
+   "name": "NO > Sil",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "points": [
+    {
+     "coordinates": [
+      14.0,
+      -6.0,
+      -4.0
+     ],
+     "text_span": {
+      "start_char": 21754,
+      "end_char": 21764
+     },
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "tbl0003#f87da7d6063a",
+   "cells": [
+    {
+     "row": 1,
+     "column_group": 0
+    },
+    {
+     "row": 2,
+     "column_group": 0
+    },
+    {
+     "row": 3,
+     "column_group": 0
+    },
+    {
+     "row": 4,
+     "column_group": 0
+    },
+    {
+     "row": 5,
+     "column_group": 0
+    },
+    {
+     "row": 6,
+     "column_group": 0
+    },
+    {
+     "row": 7,
+     "column_group": 0
+    },
+    {
+     "row": 8,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0003",
+   "name": "PO+NO+PC+NC > Sil",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      -4.0,
+      -24.0,
+      2.0
+     ],
+     "row": 1,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 10.241
+      }
+     ],
+     "cluster_size": 358.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      6.0,
+      -26.0,
+      -2.0
+     ],
+     "row": 2,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 11.087
+      }
+     ],
+     "is_subpeak": true
+    },
+    {
+     "coordinates": [
+      12.0,
+      -18.0,
+      -2.0
+     ],
+     "row": 3,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 8.209
+      }
+     ],
+     "is_subpeak": true
+    },
+    {
+     "coordinates": [
+      -24.0,
+      -18.0,
+      22.0
+     ],
+     "row": 4,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 4.524
+      }
+     ],
+     "cluster_size": 188.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      -20.0,
+      -8.0,
+      22.0
+     ],
+     "row": 5,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 5.226
+      }
+     ],
+     "is_subpeak": true
+    },
+    {
+     "coordinates": [
+      -24.0,
+      -18.0,
+      4.0
+     ],
+     "row": 6,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 8.255
+      }
+     ],
+     "is_subpeak": true
+    },
+    {
+     "coordinates": [
+      24.0,
+      -18.0,
+      12.0
+     ],
+     "row": 7,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 7.293
+      }
+     ],
+     "cluster_size": 148.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      -18.0,
+      -10.0,
+      -4.0
+     ],
+     "row": 8,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 5.523
+      }
+     ],
+     "cluster_size": 41.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "tbl0003#bbbd5a9573fe",
+   "cells": [
+    {
+     "row": 11,
+     "column_group": 0
+    },
+    {
+     "row": 12,
+     "column_group": 0
+    },
+    {
+     "row": 13,
+     "column_group": 0
+    },
+    {
+     "row": 14,
+     "column_group": 0
+    },
+    {
+     "row": 15,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0003",
+   "name": "PO+PC > NO+NC",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      12.0,
+      -12.0,
+      6.0
+     ],
+     "row": 11,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 6.122
+      }
+     ],
+     "cluster_size": 16.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      -16.0,
+      -4.0,
+      -4.0
+     ],
+     "row": 12,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 7.054
+      }
+     ],
+     "cluster_size": 195.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      -24.0,
+      -12.0,
+      0.0
+     ],
+     "row": 13,
+     "column_group": 0,
+     "is_subpeak": true
+    },
+    {
+     "coordinates": [
+      -18.0,
+      -20.0,
+      14.0
+     ],
+     "row": 14,
+     "column_group": 0,
+     "is_subpeak": true
+    },
+    {
+     "coordinates": [
+      24.0,
+      -14.0,
+      0.0
+     ],
+     "row": 15,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 10.939
+      }
+     ],
+     "cluster_size": 171.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "tbl0003#ac6ef3aacb51",
+   "cells": [
+    {
+     "row": 17,
+     "column_group": 0
+    },
+    {
+     "row": 18,
+     "column_group": 0
+    },
+    {
+     "row": 19,
+     "column_group": 0
+    },
+    {
+     "row": 20,
+     "column_group": 0
+    },
+    {
+     "row": 21,
+     "column_group": 0
+    },
+    {
+     "row": 22,
+     "column_group": 0
+    },
+    {
+     "row": 23,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0003",
+   "name": "PO > NO",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      -6.0,
+      -16.0,
+      -2.0
+     ],
+     "row": 17,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 6.978
+      }
+     ],
+     "cluster_size": 20.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      4.0,
+      -12.0,
+      2.0
+     ],
+     "row": 18,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 5.7
+      }
+     ],
+     "cluster_size": 41.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      -10.0,
+      -2.0,
+      8.0
+     ],
+     "row": 19,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 7.893
+      }
+     ],
+     "cluster_size": 44.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      -20.0,
+      -18.0,
+      14.0
+     ],
+     "row": 20,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 8.788
+      }
+     ],
+     "cluster_size": 180.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      -20.0,
+      -8.0,
+      2.0
+     ],
+     "row": 21,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 6.696
+      }
+     ],
+     "is_subpeak": true
+    },
+    {
+     "coordinates": [
+      28.0,
+      -22.0,
+      8.0
+     ],
+     "row": 22,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 6.728
+      }
+     ],
+     "cluster_size": 176.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      26.0,
+      -16.0,
+      0.0
+     ],
+     "row": 23,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 9.064
+      }
+     ],
+     "is_subpeak": true
+    }
+   ]
+  },
+  {
+   "key": "tbl0003#40e8f6d13242",
+   "cells": [
+    {
+     "row": 25,
+     "column_group": 0
+    },
+    {
+     "row": 26,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0003",
+   "name": "PC > NC",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      26.0,
+      -20.0,
+      2.0
+     ],
+     "row": 25,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 4.65
+      }
+     ],
+     "cluster_size": 52.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      22.0,
+      -12.0,
+      -6.0
+     ],
+     "row": 26,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 7.389
+      }
+     ],
+     "is_subpeak": true
+    }
+   ]
+  },
+  {
+   "key": "tbl0003#aaab03421cee",
+   "cells": [
+    {
+     "row": 31,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0003",
+   "name": "PO > PC",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      -20.0,
+      -14.0,
+      -6.0
+     ],
+     "row": 31,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 7.025
+      }
+     ],
+     "cluster_size": 23.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "tbl0003#b4bf550605b7",
+   "cells": [
+    {
+     "row": 36,
+     "column_group": 0
+    },
+    {
+     "row": 37,
+     "column_group": 0
+    },
+    {
+     "row": 38,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0003",
+   "name": "PO-PC > NO-NC",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      -8.0,
+      -6.0,
+      2.0
+     ],
+     "row": 36,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 6.442
+      }
+     ],
+     "cluster_size": 53.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      -8.0,
+      4.0,
+      2.0
+     ],
+     "row": 37,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 4.587
+      }
+     ],
+     "is_subpeak": true
+    },
+    {
+     "coordinates": [
+      -16.0,
+      -22.0,
+      2.0
+     ],
+     "row": 38,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 6.809
+      }
+     ],
+     "cluster_size": 30.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "tbl0004#294634710878",
+   "cells": [
+    {
+     "row": 1,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0004",
+   "name": "PO+NO+PC+NC > Sil",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      -14.0,
+      -6.0,
+      -6.0
+     ],
+     "row": 1,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 4.542
+      }
+     ],
+     "cluster_size": 4.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "tbl0004#f1df671acd4a",
+   "cells": [
+    {
+     "row": 4,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0004",
+   "name": "PO+PC > NO+NC",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      -16.0,
+      -4.0,
+      -6.0
+     ],
+     "row": 4,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 6.656
+      }
+     ],
+     "cluster_size": 15.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "tbl0004#fabbcc2b3dc4",
+   "cells": [
+    {
+     "row": 6,
+     "column_group": 0
+    },
+    {
+     "row": 7,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0004",
+   "name": "PO > NO",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      -10.0,
+      -2.0,
+      8.0
+     ],
+     "row": 6,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 7.893
+      }
+     ],
+     "cluster_size": 13.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      -14.0,
+      -6.0,
+      -4.0
+     ],
+     "row": 7,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 6.167
+      }
+     ],
+     "cluster_size": 8.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "tbl0004#42dd25abdb1b",
+   "cells": [
+    {
+     "row": 14,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0004",
+   "name": "PO > PC",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      -12.0,
+      -2.0,
+      8.0
+     ],
+     "row": 14,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 6.03
+      }
+     ],
+     "cluster_size": 4.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "tbl0004#a628f2352247",
+   "cells": [
+    {
+     "row": 19,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0004",
+   "name": "PO - PC > NO - NC",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      -8.0,
+      -2.0,
+      6.0
+     ],
+     "row": 19,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 6.197
+      }
+     ],
+     "cluster_size": 29.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "tbl0005#d3748461511d",
+   "cells": [
+    {
+     "row": 3,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0005",
+   "name": "PO+NO > PC+NC",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      -6.0,
+      -2.0,
+      6.0
+     ],
+     "row": 3,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 5.32
+      }
+     ],
+     "cluster_size": 13.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    }
+   ]
+  },
+  {
+   "key": "tbl0005#38954bd135d1",
+   "cells": [
+    {
+     "row": 5,
+     "column_group": 0
+    },
+    {
+     "row": 6,
+     "column_group": 0
+    }
+   ],
+   "origin": "table",
+   "table_id": "tbl0005",
+   "name": "NO > NC",
+   "coordinate_space": "MNI",
+   "role": "result",
+   "role_source": "proposal",
+   "statistic": "t",
+   "points": [
+    {
+     "coordinates": [
+      -6.0,
+      -6.0,
+      4.0
+     ],
+     "row": 5,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 5.5
+      }
+     ],
+     "cluster_size": 16.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    },
+    {
+     "coordinates": [
+      8.0,
+      -6.0,
+      8.0
+     ],
+     "row": 6,
+     "column_group": 0,
+     "values": [
+      {
+       "kind": "t",
+       "value": 4.44
+      }
+     ],
+     "cluster_size": 4.0,
+     "cluster_measure": "voxels",
+     "is_subpeak": false
+    }
+   ]
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "tbl0002",
+   "reading": "rejected_by_triage",
+   "reason": "residual"
+  },
+  {
+   "table_id": "tbl0003",
+   "reading": "coordinates"
+  },
+  {
+   "table_id": "tbl0004",
+   "reading": "coordinates"
+  },
+  {
+   "table_id": "tbl0005",
+   "reading": "coordinates"
+  },
+  {
+   "table_id": "tbl0006",
+   "reading": "rejected_by_triage",
+   "reason": "residual"
+  }
+ ],
+ "text_sweep": {
+  "passages_found": 1,
+  "passages_read": 1,
+  "truncated": false,
+  "points_dropped_as_table_restatements": 2
+ }
+}

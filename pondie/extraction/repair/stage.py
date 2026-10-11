@@ -396,7 +396,9 @@ def _located(record: Mapping[str, Any], analysis: Mapping[str, Any]) -> str:
     if not label:
         return ""
     label = label if str(label).lower().startswith("table") else f"Table {label}"
-    return f" It is row group {parse_keys.split(key)[1]} of {label}."
+    ordinal = parse_keys.split(key)[1]
+    # A CoordinateParse key ends in a digest, which numbers nothing.
+    return f" It is row group {ordinal} of {label}." if ordinal.isdigit() else f" It is from {label}."
 
 
 def _consequences(case: Case, value: str, owner: MutableMapping[str, Any], span: Any) -> list[str]:

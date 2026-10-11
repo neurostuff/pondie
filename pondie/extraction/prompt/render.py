@@ -571,6 +571,12 @@ def stage1_block(
                 notes.append("/".join(spaces))
             if kinds:
                 notes.append("/".join(kinds))
+            role = analysis.get("role")
+            if analysis.get("key") and role and role != "result":
+                # The CoordinateParse's role is the ingestion classifier's proposal. An OMIT
+                # reason the pass records for this key is the reviewed correction, and wins.
+                kind = analysis.get("anchor_kind")
+                notes.append(f"role {role}{f' ({kind})' if kind else ''}, proposed")
             lines.append(
                 f"  {number}. {analysis.get('name')}   · {' · '.join(notes)}"
                 f"   [parse key: {key_by_index[number]}]"

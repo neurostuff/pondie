@@ -8,7 +8,9 @@ which is indistinguishable from a vocabulary that simply does not have the word.
 One layout, and the shape of it is the point:
 
     data/corpus/<study_id>/     the synced paper. An INPUT: fetched, never written by a run
-      stage1/analyses.json          the coordinate-table parse
+      parse/coordinate_parse.json   the coordinate parse (study_schema CoordinateParse)
+      parse/parsed_paper.json       the parsed paper (study_schema ParsedPaper)
+      stage1/analyses.json          the legacy coordinate-table parse, for a paper with no parse/
       stage1/table-map.json         manifest table_id -> record Table local_id
       processed/<flavour>/          the text every offset addresses
       source/<flavour>/             what the text was built from
@@ -137,6 +139,18 @@ def stage1(study: str, corpus: Path = CORPUS) -> Path:
     return corpus / study / "stage1" / "analyses.json"
 
 
+def coordinate_parse(study: str, corpus: Path = CORPUS) -> Path:
+    """Ingestion's CoordinateParse for one study, written by its sync stage."""
+    return corpus / study / "parse" / "coordinate_parse.json"
+
+
+def analyses(study: str, corpus: Path = CORPUS) -> Path:
+    """The parse a reader takes the paper's analyses from: the CoordinateParse where the
+    paper has one, else the legacy `stage1/analyses.json`."""
+    parse = coordinate_parse(study, corpus)
+    return parse if parse.is_file() else stage1(study, corpus)
+
+
 def table_map(study: str, corpus: Path = CORPUS) -> Path:
     """Manifest `table_id` -> the `Table.local_id` an `Analysis.tables` reference holds."""
     return corpus / study / "stage1" / "table-map.json"
@@ -173,6 +187,8 @@ __all__ = [
     "PUBGET_LAYOUT",
     "run",
     "stage1",
+    "coordinate_parse",
+    "analyses",
     "table_map",
     "text",
     "best_text",

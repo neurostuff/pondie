@@ -80,7 +80,13 @@ class Paper(Strict):
 
     @property
     def parse(self) -> Path:
-        return paths.stage1(self.study_id, self.root)
+        """The CoordinateParse where ingestion wrote one, else the legacy stage-1 parse."""
+        return paths.analyses(self.study_id, self.root)
+
+    @property
+    def parse_source(self) -> str:
+        """Which of the two `parse` is, for the notes that say what a run read."""
+        return "coordinate_parse" if self.parse.parent.name == "parse" else "stage1"
 
     @property
     def table_map(self) -> Path:

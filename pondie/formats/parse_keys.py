@@ -32,7 +32,23 @@ OLD_TEXT_KEY_PREFIX = "prose"
 
 
 def parse_keys(analyses: list[dict]) -> list[str]:
-    """A stable address per parsed entry, positionally aligned with `analyses`.
+    """Each entry's key, positionally aligned with `analyses`.
+
+    An entry read from ingestion's CoordinateParse carries the parse's own `key`, and that
+    is its address. Only a stage-1 document, whose entries have none, is numbered by
+    `positional_keys`. A document mixing the two is refused: numbering the keyless entries
+    would mint positional keys beside the parse's, which is what reading the parse ends.
+    """
+    keyed = [bool((entry or {}).get("key")) for entry in analyses]
+    if all(keyed) and analyses:
+        return [str(entry["key"]) for entry in analyses]
+    if any(keyed):
+        raise ValueError("a parse document mixes keyed and unkeyed entries")
+    return positional_keys(analyses)
+
+
+def positional_keys(analyses: list[dict]) -> list[str]:
+    """A stage-1 address per parsed entry, positionally aligned with `analyses`.
 
     `Analysis.source_table_analysis` holds one of these, as does a `CoordinateSet.local_id`:
     the exact route between an analysis and the coordinate rows it was read off. Both sides
@@ -76,10 +92,16 @@ def split(key: str) -> tuple[str, str]:
 
 
 def load(stage1: Path | None) -> list[dict[str, Any]]:
-    """A stage-1 parse's entries, or none when there is no parse file."""
+    """A parse's entries, or none when there is no parse file.
+
+    `stage1` is whichever file `Paper.parse` chose: a CoordinateParse is read through
+    study_schema's model, a stage-1 document as it is.
+    """
     if not (stage1 and stage1.is_file()):
         return []
-    return json.loads(stage1.read_text(encoding="utf-8")).get("analyses") or []
+    from pondie.formats.coordinate_parse import read_document
+
+    return read_document(stage1).get("analyses") or []
 
 
 def load_table_map(table_map: Path | None) -> dict[str, str]:

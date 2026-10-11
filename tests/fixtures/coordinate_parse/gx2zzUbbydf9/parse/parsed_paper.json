@@ -1,0 +1,1290 @@
+{
+ "header": {
+  "artifact_kind": "parsed_paper",
+  "schema_version": "0.6.0",
+  "article_id": "wjkrusokqlf4",
+  "identifiers": {
+   "pmid": "34411741",
+   "doi": "10.1016/j.neuroimage.2021.118480",
+   "neurostore_base_study_id": "gx2zzUbbydf9"
+  },
+  "producer": {
+   "name": "ns-pond-ingestion-workflow",
+   "version": "paper_parse.1",
+   "stage": "sync"
+  },
+  "inputs": [
+   {
+    "artifact_kind": "extraction",
+    "fingerprint": "e772995907cb3e723db5433cd0e5cc37"
+   },
+   {
+    "artifact_kind": "triage",
+    "fingerprint": "028b60f240a289496d195856943b98a4"
+   }
+  ]
+ },
+ "source": "elsevier",
+ "text_path": "processed/elsevier/text.txt",
+ "text_sha256": "22897ca8caf9c70c62f21090690d0ab0e2f0731fd1d3878e985a2c0d78bba335",
+ "text_length": 43267,
+ "bibliography": {
+  "title": "Social relationship-dependent neural response to speech in dogs",
+  "authors": [
+   "Anna Gábor",
+   "A. Andics",
+   "Á. Miklósi",
+   "Kálmán Czeibert",
+   "Cecília Carreiro",
+   "M. Gácsi"
+  ],
+  "journal": "NeuroImage",
+  "publication_year": 2021,
+  "abstract": "In humans, social relationship with the speaker affects neural processing of speech, as exemplified by children's auditory and reward responses to their mother's utterances. Family dogs show human analogue attachment behavior towards the owner, and neuroimaging revealed auditory cortex and reward center sensitivity to verbal praises in dog brains. Combining behavioral and non-invasive fMRI data, we investigated the effect of dogs' social relationship with the speaker on speech processing. Dogs listened to praising and neutral speech from their owners and a control person. We found positive correlation between dogs' behaviorally measured attachment scores towards their owners and neural activity increase for the owner's voice in the caudate nucleus; and activity increase in the secondary auditory caudal ectosylvian gyrus and the caudate nucleus for the owner's praise. Through identifying social relationship-dependent neural reward responses, our study reveals similarities in neural mechanisms modulated by infant-mother and dog-owner attachment.",
+  "language": [
+   "eng"
+  ],
+  "publication_types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "keywords": [
+   "Attachment",
+   "Auditory cortex",
+   "Dog",
+   "Reward system",
+   "Speech processing",
+   "fMRI"
+  ],
+  "provider": "semantic_scholar"
+ },
+ "is_meta_analysis": false,
+ "sections": [
+  {
+   "kind": "other",
+   "start_char": 0,
+   "end_char": 211
+  },
+  {
+   "kind": "abstract",
+   "start_char": 211,
+   "end_char": 1285
+  },
+  {
+   "kind": "introduction",
+   "start_char": 1285,
+   "end_char": 6673
+  },
+  {
+   "kind": "methods",
+   "start_char": 6673,
+   "end_char": 23594
+  },
+  {
+   "kind": "results",
+   "start_char": 23594,
+   "end_char": 33285
+  },
+  {
+   "kind": "discussion",
+   "start_char": 33285,
+   "end_char": 43267
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "tbl0002",
+   "number": "2",
+   "caption": "Detailed description of the scoring of dogs’ attachment behavior in the SST.",
+   "footer": "The table shows the description of the scored dog behaviors to assess attachment. For description of SST episodes, see Table 2. This scoring is adapted from the study of Kovács et al. (2018) and Lenkei et al. (2021). D: dog, O: owner, S: stranger.",
+   "raw_path": "source/elsevier/tables/tbl0002.xml",
+   "column_headings": [
+    "Owner",
+    "Episode",
+    "Description of the scored behaviors",
+    "Score"
+   ],
+   "rows": [
+    {
+     "row": 0,
+     "cells": [
+      "Present",
+      "1, 2, 4, 6",
+      "When D does not explore or play it is close to O (within 1 m)",
+      "1"
+     ]
+    },
+    {
+     "row": 1,
+     "cells": [
+      "",
+      "1",
+      "D watches or follows O during the first block carrying for more than half of the time",
+      "1"
+     ]
+    },
+    {
+     "row": 2,
+     "cells": [
+      "",
+      "2",
+      "D follows O to the door when she first leaves",
+      "1"
+     ]
+    },
+    {
+     "row": 3,
+     "cells": [
+      "",
+      "4",
+      "D approaches O in reaching distance and wags tail/jumps/spins when O first enters",
+      "1"
+     ]
+    },
+    {
+     "row": 4,
+     "cells": [
+      "",
+      "4",
+      "D watches or follows O for more than half of the time during the second block carrying",
+      "1"
+     ]
+    },
+    {
+     "row": 5,
+     "cells": [
+      "",
+      "4",
+      "D follows O to the door when she leaves the second time",
+      "0.5"
+     ]
+    },
+    {
+     "row": 6,
+     "cells": [
+      "",
+      "6",
+      "D approaches O in reaching distance and wags tail/jumps/spins when O enters the second time",
+      "0.5"
+     ]
+    },
+    {
+     "row": 7,
+     "cells": [
+      "Absent",
+      "3",
+      "D stands by or orients at O’s door (for at least 5 s - 0.5; almost all the time - 1) during the first separation",
+      "0.5-1"
+     ]
+    },
+    {
+     "row": 8,
+     "cells": [
+      "",
+      "3",
+      "D does not play with S although it played with her for more than 10 s in Episode 2",
+      "1"
+     ]
+    },
+    {
+     "row": 9,
+     "cells": [
+      "",
+      "3, 5",
+      "D vocalizes (except asking for ball from S)",
+      "0.5"
+     ]
+    },
+    {
+     "row": 10,
+     "cells": [
+      "",
+      "3, 5",
+      "D is at O’s chair for more than half of the time if it is not at the door",
+      "0.5"
+     ]
+    },
+    {
+     "row": 11,
+     "cells": [
+      "",
+      "5",
+      "D stands by or orients at O’s door (for at least 5 s) during the second separation",
+      "1"
+     ]
+    },
+    {
+     "row": 12,
+     "cells": [
+      "",
+      "5",
+      "D tries to sneak out through the door instead of greeting S when she enters",
+      "0.5"
+     ]
+    },
+    {
+     "row": 13,
+     "cells": [
+      "",
+      "6",
+      "D stands by or orients at O’s door (for at least 5 s) during the third separation",
+      "0.5"
+     ]
+    }
+   ],
+   "coordinate_space_hint": "MNI",
+   "triage": {
+    "passes": false,
+    "score": 0.0023,
+    "route": "residual",
+    "located_by": "none"
+   }
+  },
+  {
+   "table_id": "tbl0003",
+   "number": "3",
+   "caption": "Whole-brain random-effects tests of speech content and social relationship processing.",
+   "footer": "Threshold for reporting for all contrasts was P < 0.001 and whole-brain cluster-corrected P < 0.05 for FWE. All subpeaks at least 10 mm apart are reported for each cluster. L: left, R: right, m: mid, c: caudal, CC: caudal colliculus, CN: caudate nucleus, ESG: ectosylvian gyrus, MGB: medial geniculate body, MTg: mesencephalic tegmentum, SG: Sylvian gyrus, THA: thalamus, n.s.: no significant clusters. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "raw_path": "source/elsevier/tables/tbl0003.xml",
+   "column_headings": [
+    "Contrast",
+    "Brain region",
+    "x",
+    "y",
+    "z",
+    "cluster size",
+    "T12",
+    "PFWE"
+   ],
+   "rows": [
+    {
+     "row": 0,
+     "cells": [
+      "Auditory",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 1,
+     "cells": [
+      "PO+NO+PC+NC > Sil",
+      "L CC/MGB",
+      "-4",
+      "-24",
+      "2",
+      "358",
+      "10.241",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 2,
+     "cells": [
+      "",
+      "R CC/MGB",
+      "6",
+      "-26",
+      "-2",
+      "",
+      "11.087",
+      ""
+     ]
+    },
+    {
+     "row": 3,
+     "cells": [
+      "",
+      "R diencephalon",
+      "12",
+      "-18",
+      "-2",
+      "",
+      "8.209",
+      ""
+     ]
+    },
+    {
+     "row": 4,
+     "cells": [
+      "",
+      "L mESG",
+      "-24",
+      "-18",
+      "22",
+      "188",
+      "4.524",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 5,
+     "cells": [
+      "",
+      "L rESG",
+      "-20",
+      "-8",
+      "22",
+      "",
+      "5.226",
+      ""
+     ]
+    },
+    {
+     "row": 6,
+     "cells": [
+      "",
+      "L cESG",
+      "-24",
+      "-18",
+      "4",
+      "",
+      "8.255",
+      ""
+     ]
+    },
+    {
+     "row": 7,
+     "cells": [
+      "",
+      "R mESG",
+      "24",
+      "-18",
+      "12",
+      "148",
+      "7.293",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 8,
+     "cells": [
+      "",
+      "L cSG",
+      "-18",
+      "-10",
+      "-4",
+      "41",
+      "5.523",
+      "0.001"
+     ]
+    },
+    {
+     "row": 9,
+     "cells": [
+      "PO+NO+PC+NC < Sil",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 10,
+     "cells": [
+      "Speech content",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 11,
+     "cells": [
+      "PO+PC > NO+NC",
+      "R THA",
+      "12",
+      "-12",
+      "6",
+      "16",
+      "6.122",
+      "0.037"
+     ]
+    },
+    {
+     "row": 12,
+     "cells": [
+      "",
+      "L cSG",
+      "-16",
+      "-4",
+      "-4",
+      "195",
+      "7.054",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 13,
+     "cells": [
+      "",
+      "L cSG",
+      "-24",
+      "-12",
+      "0",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 14,
+     "cells": [
+      "",
+      "L mESG",
+      "-18",
+      "-20",
+      "14",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 15,
+     "cells": [
+      "",
+      "R cSG",
+      "24",
+      "-14",
+      "0",
+      "171",
+      "10.939",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 16,
+     "cells": [
+      "PO+PC < NO+NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 17,
+     "cells": [
+      "PO > NO",
+      "L MTg/MGB",
+      "-6",
+      "-16",
+      "-2",
+      "20",
+      "6.978",
+      "0.015"
+     ]
+    },
+    {
+     "row": 18,
+     "cells": [
+      "",
+      "R MTg/MGB/THA",
+      "4",
+      "-12",
+      "2",
+      "41",
+      "5.700",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 19,
+     "cells": [
+      "",
+      "L CN",
+      "-10",
+      "-2",
+      "8",
+      "44",
+      "7.893",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 20,
+     "cells": [
+      "",
+      "L mESG",
+      "-20",
+      "-18",
+      "14",
+      "180",
+      "8.788",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 21,
+     "cells": [
+      "",
+      "L cSG",
+      "-20",
+      "-8",
+      "2",
+      "",
+      "6.696",
+      ""
+     ]
+    },
+    {
+     "row": 22,
+     "cells": [
+      "",
+      "R mESG",
+      "28",
+      "-22",
+      "8",
+      "176",
+      "6.728",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 23,
+     "cells": [
+      "",
+      "R cSG",
+      "26",
+      "-16",
+      "0",
+      "",
+      "9.064",
+      ""
+     ]
+    },
+    {
+     "row": 24,
+     "cells": [
+      "PO < NO",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 25,
+     "cells": [
+      "PC > NC",
+      "R mESG",
+      "26",
+      "-20",
+      "2",
+      "52",
+      "4.650",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 26,
+     "cells": [
+      "",
+      "R cSG",
+      "22",
+      "-12",
+      "-6",
+      "",
+      "7.389",
+      ""
+     ]
+    },
+    {
+     "row": 27,
+     "cells": [
+      "PC < NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 28,
+     "cells": [
+      "Social relationship",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 29,
+     "cells": [
+      "PO+NO > PC+NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 30,
+     "cells": [
+      "PO+NO < PC+NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 31,
+     "cells": [
+      "PO > PC",
+      "L cESG",
+      "-20",
+      "-14",
+      "-6",
+      "23",
+      "7.025",
+      "0.006"
+     ]
+    },
+    {
+     "row": 32,
+     "cells": [
+      "PO < PC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 33,
+     "cells": [
+      "NO > NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 34,
+     "cells": [
+      "NO < NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 35,
+     "cells": [
+      "Speech content × Social relationship"
+     ]
+    },
+    {
+     "row": 36,
+     "cells": [
+      "PO-PC > NO-NC",
+      "L THA",
+      "-8",
+      "-6",
+      "2",
+      "53",
+      "6.442",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 37,
+     "cells": [
+      "",
+      "L CN",
+      "-8",
+      "4",
+      "2",
+      "",
+      "4.587",
+      ""
+     ]
+    },
+    {
+     "row": 38,
+     "cells": [
+      "",
+      "L cESG",
+      "-16",
+      "-22",
+      "2",
+      "30",
+      "6.809",
+      "0.002"
+     ]
+    },
+    {
+     "row": 39,
+     "cells": [
+      "PO-PC < NO-NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    }
+   ],
+   "coordinate_space_hint": "MNI",
+   "triage": {
+    "passes": true,
+    "score": 0.9838,
+    "route": "candidates",
+    "located_by": "header"
+   }
+  },
+  {
+   "table_id": "tbl0004",
+   "number": "4",
+   "caption": "Random-effects tests of speech content and social relationship processing within the pre-defined ROIs.",
+   "footer": "Threshold for reporting for all contrasts was P < 0.001 and small-volume cluster-corrected P < 0.05 for FWE. The single strongest peak is reported per cluster. All tests were performed within both of the pre-defined ROIs (L/R CN, L/R AM). L: left, R: right, CN: caudate nucleus, AM: amygdala, n.s.: no significant clusters in either ROI. PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "raw_path": "source/elsevier/tables/tbl0004.xml",
+   "column_headings": [
+    "Contrast",
+    "Brain region",
+    "x",
+    "y",
+    "z",
+    "cluster size",
+    "T12",
+    "PFWE"
+   ],
+   "rows": [
+    {
+     "row": 0,
+     "cells": [
+      "Auditory",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 1,
+     "cells": [
+      "PO+NO+PC+NC > Sil",
+      "L AM",
+      "-14",
+      "-6",
+      "-6",
+      "4",
+      "4.542",
+      "0.031"
+     ]
+    },
+    {
+     "row": 2,
+     "cells": [
+      "PO+NO+PC+NC < Sil",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 3,
+     "cells": [
+      "Speech content",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 4,
+     "cells": [
+      "PO+PC > NO+NC",
+      "L AM",
+      "-16",
+      "-4",
+      "-6",
+      "15",
+      "6.656",
+      "0.002"
+     ]
+    },
+    {
+     "row": 5,
+     "cells": [
+      "PO+PC < NO+NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 6,
+     "cells": [
+      "PO > NO",
+      "L CN",
+      "-10",
+      "-2",
+      "8",
+      "13",
+      "7.893",
+      "0.004"
+     ]
+    },
+    {
+     "row": 7,
+     "cells": [
+      "",
+      "L AM",
+      "-14",
+      "-6",
+      "-4",
+      "8",
+      "6.167",
+      "0.009"
+     ]
+    },
+    {
+     "row": 8,
+     "cells": [
+      "PO < NO",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 9,
+     "cells": [
+      "PC > NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 10,
+     "cells": [
+      "PC < NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 11,
+     "cells": [
+      "Social relationship",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 12,
+     "cells": [
+      "PO+NO > PC+NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 13,
+     "cells": [
+      "PO+NO < PC+NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 14,
+     "cells": [
+      "PO > PC",
+      "L CN",
+      "-12",
+      "-2",
+      "8",
+      "4",
+      "6.030",
+      "0.045"
+     ]
+    },
+    {
+     "row": 15,
+     "cells": [
+      "PO < PC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 16,
+     "cells": [
+      "NO > NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 17,
+     "cells": [
+      "NO < NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 18,
+     "cells": [
+      "Speech content × Social relationship"
+     ]
+    },
+    {
+     "row": 19,
+     "cells": [
+      "PO - PC > NO - NC",
+      "L CN",
+      "-8",
+      "-2",
+      "6",
+      "29",
+      "6.197",
+      "<0.001"
+     ]
+    },
+    {
+     "row": 20,
+     "cells": [
+      "PO - PC < NO - NC",
+      "n.s.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    }
+   ],
+   "coordinate_space_hint": "MNI",
+   "triage": {
+    "passes": true,
+    "score": 0.9823,
+    "route": "candidates",
+    "located_by": "header"
+   }
+  },
+  {
+   "table_id": "tbl0005",
+   "number": "5",
+   "caption": "Covariate effects of attachment scores on speech content and social relationship processing.",
+   "footer": "Threshold for reporting the covariate effect for all contrasts was P < 0.001 and whole-brain or small-volume cluster-corrected P < 0.05 for FWE. The single strongest peak is reported per cluster. All tests were performed over the whole brain and within both of the pre-defined ROIs (L/R CN, L/R AM). Italic indicates tendency. L: left, R: right, CN: caudate nucleus, PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person, Sil: silence. N = 14.",
+   "raw_path": "source/elsevier/tables/tbl0005.xml",
+   "column_headings": [
+    "Contrast",
+    "Brain region",
+    "x",
+    "y",
+    "z",
+    "cluster size",
+    "T12",
+    "PFWE",
+    "Search space"
+   ],
+   "rows": [
+    {
+     "row": 0,
+     "cells": [
+      "Auditory",
+      "no significant effects for any contrasts"
+     ]
+    },
+    {
+     "row": 1,
+     "cells": [
+      "Speech content",
+      "no significant effects for any contrasts"
+     ]
+    },
+    {
+     "row": 2,
+     "cells": [
+      "Social relationship",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "row": 3,
+     "cells": [
+      "PO+NO > PC+NC",
+      "L CN",
+      "-6",
+      "-2",
+      "6",
+      "13",
+      "5.32",
+      "0.054",
+      "whole brain"
+     ]
+    },
+    {
+     "row": 4,
+     "cells": [
+      "",
+      "L CN",
+      "-6",
+      "-2",
+      "6",
+      "4",
+      "5.32",
+      "0.045",
+      "L/R CN"
+     ]
+    },
+    {
+     "row": 5,
+     "cells": [
+      "NO > NC",
+      "L CN",
+      "-6",
+      "-6",
+      "4",
+      "16",
+      "5.50",
+      "0.030",
+      "whole brain"
+     ]
+    },
+    {
+     "row": 6,
+     "cells": [
+      "",
+      "R CN",
+      "8",
+      "-6",
+      "8",
+      "4",
+      "4.44",
+      "0.047",
+      "L/R CN"
+     ]
+    },
+    {
+     "row": 7,
+     "cells": [
+      "",
+      "L CN",
+      "-6",
+      "-2",
+      "6",
+      "6",
+      "4.69",
+      "0.024",
+      "L/R CN"
+     ]
+    },
+    {
+     "row": 8,
+     "cells": [
+      "Speech content × Social relationship",
+      "no significant effects for any contrasts"
+     ]
+    }
+   ],
+   "coordinate_space_hint": "MNI",
+   "triage": {
+    "passes": true,
+    "score": 0.9934,
+    "route": "candidates",
+    "located_by": "header"
+   }
+  },
+  {
+   "table_id": "tbl0006",
+   "number": "6",
+   "caption": "Partial correlation effects of attachment scores and CN contrasts after correction for basic acoustic parameters.",
+   "footer": "L: left, R: right, CN: caudate nucleus, PO: praise by the owner, NO: neutral speech by the owner, PC: praise by a control person, NC: neutral speech by a control person. N = 14.",
+   "raw_path": "source/elsevier/tables/tbl0006.xml",
+   "column_headings": [
+    "Contrast",
+    "Brain region",
+    "Control",
+    "R2",
+    "P"
+   ],
+   "rows": [
+    {
+     "row": 0,
+     "cells": [
+      "NO > NC",
+      "R CN",
+      "F0",
+      "0.573",
+      "0.040"
+     ]
+    },
+    {
+     "row": 1,
+     "cells": [
+      "NO > NC",
+      "L CN",
+      "F0",
+      "0.650",
+      "0.016"
+     ]
+    },
+    {
+     "row": 2,
+     "cells": [
+      "PO+NO > PC+NC",
+      "L CN",
+      "F0",
+      "0.671",
+      "0.012"
+     ]
+    },
+    {
+     "row": 3,
+     "cells": [
+      "NO > NC",
+      "R CN",
+      "F0 range",
+      "0.777",
+      "0.002"
+     ]
+    },
+    {
+     "row": 4,
+     "cells": [
+      "NO > NC",
+      "L CN",
+      "F0 range",
+      "0.785",
+      "0.001"
+     ]
+    },
+    {
+     "row": 5,
+     "cells": [
+      "PO+NO > PC+NC",
+      "L CN",
+      "F0 range",
+      "0.803",
+      "0.001"
+     ]
+    }
+   ],
+   "coordinate_space_hint": "MNI",
+   "triage": {
+    "passes": false,
+    "score": 0.0673,
+    "route": "residual",
+    "located_by": "none"
+   }
+  }
+ ]
+}
