@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from pondie.formats import parse_keys
+from pondie.formats.coordinate_parse import is_coordinate_parse, read_document
 
 
 @dataclass
@@ -116,7 +117,7 @@ class TableParse:
 
     @classmethod
     def load(cls, path: Path) -> "TableParse":
-        return cls(path, json.loads(path.read_text(encoding="utf-8")))
+        return cls(path, read_document(path))
 
     @classmethod
     def read(cls, path: Path) -> "TableParse":
@@ -130,7 +131,14 @@ class TableParse:
         except (OSError, json.JSONDecodeError):
             return cls(path, {})
 
+    @property
+    def is_coordinate_parse(self) -> bool:
+        """Read from ingestion's contract file, which pondie never rewrites."""
+        return is_coordinate_parse(self.path)
+
     def save(self) -> None:
+        if self.is_coordinate_parse:
+            raise PermissionError(f"{self.path} is ingestion's CoordinateParse, not pondie's")
         self.path.write_text(
             json.dumps(self.document, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
         )

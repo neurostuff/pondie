@@ -31,6 +31,8 @@ from pondie.extraction.record.fix.derive import (
     relabel_conclusions,
     resolve_source_table_analysis,
     respell_text_keys,
+    legacy_id_map,
+    map_legacy_keys,
 )
 from pondie.extraction.record.fix.link import (
     align_cell_levels,
@@ -101,6 +103,8 @@ __all__ = [
     "repoint_out_of_scope_terms",
     "resolve_source_table_analysis",
     "respell_text_keys",
+    "legacy_id_map",
+    "map_legacy_keys",
     "scope_duplicate_terms",
     "unwrap_entities",
     "unwrap_plain_slots",

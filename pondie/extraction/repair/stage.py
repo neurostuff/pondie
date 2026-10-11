@@ -396,6 +396,9 @@ def _located(record: Mapping[str, Any], analysis: Mapping[str, Any]) -> str:
     if not label:
         return ""
     label = label if str(label).lower().startswith("table") else f"Table {label}"
+    if not parse_keys.is_positional(key):
+        # A CoordinateParse key ends in a digest, which numbers nothing.
+        return f" It is from {label}."
     return f" It is row group {parse_keys.split(key)[1]} of {label}."
 
 

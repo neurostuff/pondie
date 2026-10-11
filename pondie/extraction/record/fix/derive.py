@@ -13,6 +13,8 @@ each one sits where it does.
 
 from __future__ import annotations
 
+from collections import Counter
+
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
@@ -20,7 +22,7 @@ from pondie import schema
 from pondie.extraction.record import direction
 from pondie.extraction.record import spans as span_tools
 from pondie.extraction.record import walk
-from pondie.formats import parse_keys, values
+from pondie.formats import coordinate_parse, parse_keys, values
 from pondie.normalization import search_volume
 from pondie.normalization.coordinate_space import normalize as normalize_space
 from pondie.schema import reader
@@ -509,6 +511,125 @@ def respell_text_keys(body: dict[str, Any]) -> list[str]:
             coordinate_set["local_id"] = new
             notes.append(f"coordinate_sets[{old!r}] -> {new!r}")
     return notes
+
+
+def map_legacy_keys(body: dict[str, Any], parse: Path | None) -> list[str]:
+    """Rewrite each positional stage-1 key to the parse's key; see `_map_legacy_keys`."""
+    return _map_legacy_keys(body, parse)[0]
+
+
+def _map_legacy_keys(
+    body: dict[str, Any], parse: Path | None
+) -> tuple[list[str], dict[str, str]]:
+    """Rewrite each positional stage-1 key the record holds to the CoordinateParse's key.
+
+    Only where the paper has a parse and the stage-1 document the record was keyed
+    against is still beside it; `coordinate_parse.match_legacy_keys` decides which keys
+    map. A key that does not map, or whose parse key another analysis or coordinate set
+    of the record already holds, is reported and left for `source_links` to judge. Returns
+    the notes, and each key left with the reason.
+    """
+    if not coordinate_parse.is_coordinate_parse(parse) or not parse.is_file():
+        return [], {}
+    current = parse_keys.load(parse)
+    known = set(parse_keys.parse_keys(current))
+
+    def legacy(key: Any) -> bool:
+        return isinstance(key, str) and "#" in key and key not in known
+
+    analyses = [a for a in body.get("analyses") or [] if isinstance(a, dict)]
+    sets = [c for c in body.get("coordinate_sets") or [] if isinstance(c, dict)]
+    linked = [values.read(a.get("source_table_analysis")) for a in analyses]
+    held = sorted({k for k in linked + [c.get("local_id") for c in sets] if legacy(k)})
+    if not held:
+        return [], {}
+    stage1 = coordinate_parse.legacy_stage1(parse)
+    if not stage1.is_file():
+        reason = "not a key of the parse, and no stage1/analyses.json"
+        return [f"{key!r}: {reason}" for key in held], dict.fromkeys(held, reason)
+    match = coordinate_parse.match_legacy_keys(parse_keys.load(stage1), current)
+
+    # A parse key the record already holds, under its own name, belongs to that analysis or
+    # set; giving it to a second would make two of the paper's analyses one.
+    taken = {k for k in linked + [c.get("local_id") for c in sets] if k in known}
+    mapping: dict[str, str] = {}
+    refused: dict[str, str] = {}
+    for old in held:
+        new = match.mapping.get(old)
+        if new is None:
+            refused[old] = match.unmapped.get(old, "not a key of the stage-1 document")
+        elif new in taken:
+            refused[old] = f"ambiguous: its parse key {new!r} is already held in the record"
+        else:
+            mapping[old] = new
+
+    notes: list[str] = []
+    for index, analysis in enumerate(body.get("analyses") or []):
+        if not isinstance(analysis, dict):
+            continue
+        node = analysis.get("source_table_analysis")
+        old = values.read(node)
+        if not legacy(old):
+            continue
+        path = f"analyses[{index}].source_table_analysis"
+        if old in refused:
+            notes.append(f"{path}: stage-1 key {old!r} left: {refused[old]}")
+            continue
+        if values.is_field(node):
+            node["value"] = mapping[old]
+        else:
+            analysis["source_table_analysis"] = mapping[old]
+        notes.append(f"{path}: stage-1 key {old!r} -> parse key {mapping[old]!r}")
+    before = Counter(c.get("local_id") for c in sets)
+    for coordinate_set in sets:
+        old = coordinate_set.get("local_id")
+        if not legacy(old):
+            continue
+        if old in refused:
+            notes.append(f"coordinate_sets[{old!r}]: left: {refused[old]}")
+            continue
+        coordinate_set["local_id"] = mapping[old]
+        notes.append(f"coordinate_sets[{old!r}] -> {mapping[old]!r}, the parse's key")
+    after = Counter(c.get("local_id") for c in sets)
+    made = {k for k, n in after.items() if n > 1 and n > before.get(k, 0)}
+    assert not made, f"map_legacy_keys gave coordinate sets one local_id: {sorted(made)}"
+    return notes, refused
+
+
+def legacy_id_map(record: Mapping[str, Any], parse: Path, sch: Schema) -> dict[str, Any]:
+    """Old key -> new key and old analysis id -> new id, for a record keyed against stage 1.
+
+    What a review layer addressing an analysis by `local_id` rewrites its answers through
+    once the paper is re-extracted on its CoordinateParse. Taken by running the two repairs
+    that decide the ids, `legacy_keys` then `derived_ids`, on a copy of the old record, so
+    the map is what a re-extraction derives and not a second account of it. An analysis
+    whose key does not map is listed with the reason and gets no new id.
+    """
+    import copy
+
+    body = copy.deepcopy(dict(record.get("study") or record))
+    analyses = [a for a in body.get("analyses") or [] if isinstance(a, dict)]
+    old_ids = [a.get("local_id") for a in analyses]
+    old_keys = [values.read(a.get("source_table_analysis")) for a in analyses]
+    _, refused = _map_legacy_keys(body, parse)
+    known = set(parse_keys.parse_keys(parse_keys.load(parse)))
+    keys: dict[str, str] = {}
+    unmapped: dict[str, str] = {}
+    for old, analysis in zip(old_keys, analyses):
+        new = values.read(analysis.get("source_table_analysis"))
+        if not isinstance(old, str) or "#" not in old or old in known:
+            continue
+        if new in known:
+            keys[old] = new
+        else:
+            unmapped[old] = refused.get(old, "not mapped")
+    derive_analysis_ids(body, sch)
+    ids = {
+        old: analysis.get("local_id")
+        for old, key, analysis in zip(old_ids, old_keys, analyses)
+        if isinstance(old, str) and key in keys and analysis.get("local_id") != old
+    }
+    return {"keys": keys, "ids": ids, "unmapped": unmapped}
 
 
 def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> list[str]:

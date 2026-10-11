@@ -42,7 +42,7 @@ from pondie.extraction.sign_split import adopt_withholding, split_opposite_signs
 from pondie.extraction.record.ids import table_local_id
 from pondie.extraction.evidence import cited
 from pondie.extraction.prompt import preprocess, render, reply_schema, worked
-from pondie.formats import table_parse, text_index, values
+from pondie.formats import coordinate_parse, table_parse, text_index, values
 from pondie.schema import reader
 
 log = logging.getLogger("pondie")
@@ -63,6 +63,10 @@ class Stage(Protocol):
     def depends_on(self, paper: Paper, settings: Settings) -> Mapping[str, Any]:
         """What the stage reads, and subsequently, what invalidates their cache."""
         ...
+
+
+def _parse_id(path: Path) -> str:
+    return str(json.loads(path.read_text(encoding="utf-8")).get("parse_id") or "")
 
 
 @dataclass(frozen=True)
@@ -99,6 +103,11 @@ class _Base:
             ),
             "flavour": paper.flavour.value,
         }
+        if paper.parse_source == coordinate_parse.FROM_PARSE:
+            # A stage-1 key and a parse key name the same analysis differently, and a new
+            # parse rekeys every one: a payload written against another parse is stale.
+            # Absent on the stage-1 path, so its caches stay valid.
+            parts["parse"] = {"source": paper.parse_source, "parse_id": _parse_id(paper.parse)}
         if self.reads_the_parse:
             parts["parse"] = (
                 text_index.text_hash(paper.parse.read_text(encoding="utf-8", errors="replace"))
@@ -219,7 +228,11 @@ class Tables(_Base):
             # an absent one does, and the fallback is what keeps the prompt's table headings
             # backed by a declared entity either way.
             sources = TableParse.read(paper.parse).source_tables()
-            origin = "the stage-1 parse"
+            origin = (
+                "the stage-1 parse"
+                if paper.parse_source == coordinate_parse.FROM_STAGE1
+                else "parse/coordinate_parse.json"
+            )
 
         tables, id_map, taken = [], {}, set()
         for index, source in enumerate(sources, start=1):
@@ -278,6 +291,8 @@ class SignSplit(_Base):
         return paper.parse
 
     def done(self, paper: Paper, settings: Settings) -> bool:
+        if paper.parse_source == coordinate_parse.FROM_PARSE:
+            return False
         if settings.redo or not paper.parse.is_file():
             return False
         parse = TableParse.load(paper.parse)
@@ -287,6 +302,19 @@ class SignSplit(_Base):
         return not adopted.notes
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
+        if paper.parse_source == coordinate_parse.FROM_PARSE:
+            # The parse declares its own split, on both halves, and is ingestion's file:
+            # nothing is written. The note is also where a run says which parse it read.
+            parse = TableParse.load(paper.parse)
+            return StageOutcome(
+                stage=self.name,
+                study_id=paper.study_id,
+                produced=(),
+                notes=(
+                    f"read parse/coordinate_parse.json ({len(parse.analyses)} analyses, "
+                    f"{len(parse.withheld())} withheld by its sign split); keys from the parse",
+                ),
+            )
         if self.done(paper, settings):
             return self._skip(paper)
         parse = TableParse.load(paper.parse)
@@ -303,6 +331,7 @@ class SignSplit(_Base):
             study_id=paper.study_id,
             produced=(paper.parse,),
             notes=(
+                "read stage1/analyses.json (no parse/coordinate_parse.json); positional keys",
                 *split.notes,
                 f"{len(before)} -> {len(adopted.analyses)} analyses, "
                 f"{adopted.withheld} withheld",
