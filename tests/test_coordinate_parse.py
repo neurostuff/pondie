@@ -23,7 +23,10 @@ from pondie.formats import coordinate_parse, parse_keys
 
 STUDY = "gx2zzUbbydf9"
 FIXTURE = Path(__file__).parent / "fixtures" / "coordinate_parse" / STUDY
-POSITIONAL = re.compile(r"#\d+$")
+
+
+def _field(value):
+    return {"value": value, "extraction_status": "extracted"}
 
 
 @pytest.fixture
@@ -60,7 +63,9 @@ def test_every_key_is_the_parses_own_and_none_is_positional(corpus):
     entries = parse_keys.load(paper.parse)
     keys = parse_keys.parse_keys(entries)
     assert keys == [a["key"] for a in _raw(corpus)["analyses"]]
-    assert not [k for k in keys if POSITIONAL.search(k)]
+    assert not [k for k in keys if parse_keys.is_positional(k)]
+    # tbl0004's first key is all digits, which a digit test alone calls positional.
+    assert "tbl0004#294634710878" in keys
 
 
 def test_document_carries_tables_roles_and_spaces_from_the_parse(corpus):
@@ -76,8 +81,10 @@ def test_document_carries_tables_roles_and_spaces_from_the_parse(corpus):
 
 def test_keys_survive_reordering_and_a_dropped_sibling(corpus):
     before = dict(
-        zip(parse_keys.parse_keys(parse_keys.load(Paper(study_id=STUDY, root=corpus).parse)),
-            (e["name"] for e in parse_keys.load(Paper(study_id=STUDY, root=corpus).parse)))
+        zip(
+            parse_keys.parse_keys(parse_keys.load(Paper(study_id=STUDY, root=corpus).parse)),
+            (e["name"] for e in parse_keys.load(Paper(study_id=STUDY, root=corpus).parse)),
+        )
     )
     raw = _raw(corpus)
     raw["analyses"] = list(reversed(raw["analyses"]))
@@ -92,7 +99,7 @@ def test_keys_survive_reordering_and_a_dropped_sibling(corpus):
 def test_listing_prints_parse_keys_and_demands_them(corpus):
     doc = TableParse.load(Paper(study_id=STUDY, root=corpus).parse).document
     block = render.stage1_block(doc, {"tbl0003": "tbl3", "tbl0004": "tbl4", "tbl0005": "tbl5"})
-    printed = re.findall(r"\[parse key: ([^\]]+)\]", block)
+    printed = [k for k in re.findall(r"\[parse key: ([^\]]+)\]", block) if k != "..."]
     assert printed == [a["key"] for a in _raw(corpus)["analyses"]]
     assert render.demandable_keys(doc) == set(printed)
 
@@ -112,8 +119,11 @@ def test_record_links_resolve_to_parse_keys_end_to_end(corpus):
     body = {
         "analyses": [
             {"local_id": "a1", "name": "PO > NO", "tables": ["tbl0004"]},
-            {"local_id": "a2", "name": "PO > Sil",
-             "source_table_analysis": {"value": "text#3d3ed67111b0"}},
+            {
+                "local_id": "a2",
+                "name": "PO > Sil",
+                "source_table_analysis": _field("text#3d3ed67111b0"),
+            },
             {"local_id": "a3", "name": "Made up", "source_table_analysis": "tbl0003#9"},
         ]
     }
@@ -130,7 +140,7 @@ def test_stage1_keys_in_an_existing_record_map_to_the_parse(corpus):
     body = {
         "analyses": [
             # stage 1's third tbl0003 entry is "PO > NO"
-            {"local_id": "a1", "name": "x", "source_table_analysis": {"value": "tbl0003#3"}},
+            {"local_id": "a1", "name": "x", "source_table_analysis": _field("tbl0003#3")},
             # stage 1's "PC > Sil", which the parse dropped
             {"local_id": "a2", "name": "y", "source_table_analysis": "text#3"},
         ],
@@ -175,13 +185,16 @@ def test_a_sign_split_in_the_parse_is_withheld_and_mirrored(corpus):
     assert inverse["key"] not in render.demandable_keys(doc)
     body = {
         "analyses": [
-            {"local_id": "a_po_no", "name": {"value": "PO > NO"},
-             "source_table_analysis": {"value": original["key"]}}
+            {
+                "local_id": "a_po_no",
+                "name": _field("PO > NO"),
+                "source_table_analysis": _field(original["key"]),
+            }
         ]
     }
-    fix.mirror_withheld(body, paper.parse)
+    notes = fix.mirror_withheld(body, paper.parse)
     mirrored = [a for a in body["analyses"] if a.get("mirror_of") == "a_po_no"]
-    assert mirrored
+    assert mirrored, notes
     assert mirrored[0]["source_table_analysis"]["value"] == inverse["key"]
 
 

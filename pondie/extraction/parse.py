@@ -138,7 +138,7 @@ class TableParse:
 
     def save(self) -> None:
         if self.is_coordinate_parse:
-            raise PermissionError(f"{self.path} is ingestion's CoordinateParse; pondie does not write it")
+            raise PermissionError(f"{self.path} is ingestion's CoordinateParse, not pondie's")
         self.path.write_text(
             json.dumps(self.document, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
         )

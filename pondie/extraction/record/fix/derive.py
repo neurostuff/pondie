@@ -524,19 +524,18 @@ def map_legacy_keys(body: dict[str, Any], parse: Path | None) -> list[str]:
     stage1 = coordinate_parse.legacy_stage1(parse)
     current = parse_keys.load(parse)
     known = set(parse_keys.parse_keys(current))
+    analyses = [a for a in body.get("analyses") or [] if isinstance(a, Mapping)]
+    sets = [c for c in body.get("coordinate_sets") or [] if isinstance(c, Mapping)]
     held = [
         key
-        for key in (
-            *(values.read(a.get("source_table_analysis")) for a in body.get("analyses") or []
-              if isinstance(a, Mapping)),
-            *(c.get("local_id") for c in body.get("coordinate_sets") or [] if isinstance(c, Mapping)),
-        )
+        for key in [values.read(a.get("source_table_analysis")) for a in analyses]
+        + [c.get("local_id") for c in sets]
         if isinstance(key, str) and "#" in key and key not in known
     ]
     if not held:
         return []
     if not stage1.is_file():
-        return [f"{key!r}: not a key of the parse, and no stage1/analyses.json to map it from" for key in held]
+        return [f"{key!r}: not a key of the parse, and no stage1/analyses.json" for key in held]
     mapping = coordinate_parse.legacy_key_map(parse_keys.load(stage1), current)
 
     notes: list[str] = []
@@ -550,7 +549,7 @@ def map_legacy_keys(body: dict[str, Any], parse: Path | None) -> list[str]:
         new = mapping.get(old)
         path = f"analyses[{index}].source_table_analysis"
         if new is None:
-            notes.append(f"{path}: stage-1 key {old!r} maps to no one analysis of the parse -- left")
+            notes.append(f"{path}: stage-1 key {old!r} maps to no one analysis of the parse")
             continue
         if values.is_field(node):
             node["value"] = new

@@ -219,7 +219,11 @@ class Tables(_Base):
             # an absent one does, and the fallback is what keeps the prompt's table headings
             # backed by a declared entity either way.
             sources = TableParse.read(paper.parse).source_tables()
-            origin = f"the {paper.parse_source} parse"
+            origin = (
+                "the stage-1 parse"
+                if paper.parse_source == "stage1"
+                else "parse/coordinate_parse.json"
+            )
 
         tables, id_map, taken = [], {}, set()
         for index, source in enumerate(sources, start=1):
@@ -299,7 +303,7 @@ class SignSplit(_Base):
                 produced=(),
                 notes=(
                     f"read parse/coordinate_parse.json ({len(parse.analyses)} analyses, "
-                    f"{len(parse.withheld())} withheld by the parse's sign split); keys from the parse",
+                    f"{len(parse.withheld())} withheld by its sign split); keys from the parse",
                 ),
             )
         if self.done(paper, settings):

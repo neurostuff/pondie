@@ -85,6 +85,22 @@ def canonical(key: object) -> object:
     return key
 
 
+#: The length of the digest a CoordinateParse key ends in (`study_schema.keys`).
+DIGEST_LENGTH = 12
+
+
+def is_positional(key: object) -> bool:
+    """Whether `key` is a stage-1 `<table_id>#<ordinal>` rather than a CoordinateParse key.
+
+    By length as well as digits: a 12-character hex digest is all digits often enough to
+    matter (0.4% of keys), and no table has 10^11 entries.
+    """
+    if not isinstance(key, str) or "#" not in key:
+        return False
+    ordinal = split(key)[1]
+    return ordinal.isdigit() and len(ordinal) < DIGEST_LENGTH
+
+
 def split(key: str) -> tuple[str, str]:
     """(table_id, ordinal) of a key: the ordinal follows the last `#`."""
     table_id, _, ordinal = key.rpartition("#")

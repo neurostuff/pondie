@@ -148,7 +148,7 @@ def analyses(study: str, corpus: Path = CORPUS) -> Path:
     """The parse a reader takes the paper's analyses from: the CoordinateParse where the
     paper has one, else the legacy `stage1/analyses.json`."""
     parse = coordinate_parse(study, corpus)
-    return parse if parse.is_file() else stage1(study, corpus)
+    return parse if parse.is_file() else stage1(study, corpus=corpus)
 
 
 def table_map(study: str, corpus: Path = CORPUS) -> Path:
