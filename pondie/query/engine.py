@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import glob as globlib
 import json
+import logging
 import re
 from collections import Counter
 from collections.abc import Mapping
@@ -38,6 +39,8 @@ from pondie import paths
 from pondie.formats import parse_keys
 from pondie.formats.values import value_of
 from pondie.normalization import UNKNOWN, contrasts, coordinate_space  # noqa: E402
+
+_log = logging.getLogger(__name__)
 
 #: The two sides of an allocated contrast, named here because `contrasts` speaks of
 #: interventions and comparators and the rest of this module of active and control.
@@ -542,7 +545,14 @@ def select(
         # `keyed` was always empty: every analysis was dropped as "no joinable row group"
         # -- blaming the extractor for a missing key -- and the parsed-coordinate fallback
         # that answers the space for 11% of analyses could never fire either.
-        parsed = parse_keys.load(paths.analyses(study))
+        try:
+            parsed = parse_keys.load(paths.analyses(study))
+        except Exception as error:
+            # A parse that fails its model is a broken contract for this study only; one
+            # stale parse must not abort the query for the rest.
+            _log.warning("%s: parse unreadable, study dropped: %s", study, error)
+            lost["parse unreadable"] += 1
+            continue
         if parsed:
             keyed = dict(zip(parse_keys.parse_keys(parsed), parsed))
         points_by_key = {k: (v.get("points") or []) for k, v in keyed.items()}

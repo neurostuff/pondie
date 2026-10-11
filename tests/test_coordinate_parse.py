@@ -408,6 +408,48 @@ def test_select_joins_a_record_on_the_parse_key(corpus, tmp_path, monkeypatch):
     assert outcome.rows[0]["points"] == [p["coordinates"] for p in expected["points"]]
 
 
+def test_the_four_mirrored_roi_centres_are_anchors_not_results(corpus):
+    by_name = {}
+    for entry in TableParse.load(Paper(study_id=STUDY, root=corpus).parse).document["analyses"]:
+        if entry["table_id"] == parse_keys.PROSE_TABLE_ID:
+            by_name[entry["name"]] = (entry["role"], entry["anchor_kind"])
+    assert by_name == {
+        name: ("anchor", "roi") for name in ("PO > Sil", "NO > Sil", "PC > Sil", "NC > Sil")
+    }
+
+
+def test_one_unreadable_parse_drops_its_study_and_the_others_continue(corpus, tmp_path, monkeypatch):
+    from pondie import paths
+    from pondie.query.engine import Selection, select
+
+    broken = tmp_path / "BAD" / "parse"
+    broken.mkdir(parents=True)
+    raw = _raw(corpus)
+    raw["analyses"][0]["points"] = "not a list"
+    (broken / "coordinate_parse.json").write_text(json.dumps(raw))
+    good = corpus / STUDY / "parse" / "coordinate_parse.json"
+    monkeypatch.setattr(
+        paths,
+        "analyses",
+        lambda study, corpus=None: good if study == STUDY else broken / "coordinate_parse.json",
+    )
+    record = {"analyses": [{
+        "local_id": "a1",
+        "name": _field("PO > NO"),
+        "source_table_analysis": _field(PO_NO),
+        "coordinate_space": _field("MNI"),
+        "spatial_scope": _field("whole_brain"),
+    }]}
+    paths_written = []
+    for study in ("BAD", STUDY):  # the broken one sorts first
+        path = tmp_path / f"{study}.extraction.json"
+        path.write_text(json.dumps(record))
+        paths_written.append(str(path))
+    outcome = select(Selection(records=tuple(paths_written)))
+    assert outcome.lost["parse unreadable"] == 1
+    assert [r["study"] for r in outcome.rows] == [STUDY], dict(outcome.lost)
+
+
 def test_backfill_writes_the_parse_key(corpus, tmp_path):
     from pondie.benchmark.backfill import SLOT, backfill
 
