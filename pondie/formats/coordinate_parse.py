@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping
@@ -69,17 +70,24 @@ def read_document(path: Path) -> dict[str, Any]:
 
 
 def to_document(parse: CoordinateParse, paper: ParsedPaper | None = None) -> dict[str, Any]:
-    """Raises ValueError for an analysis whose key is not the one its content gives.
+    """Raises ValueError for an analysis whose key is not the one its content gives, and for
+    a key that more than one analysis carries.
 
     The key is the analysis's identity to ingestion, pondie and neurostore alike
     (`ParsedAnalysis.key`), so a record citing any other key names an analysis that the
-    others never mint.
+    others never mint. Identical content is one analysis, so a repeated key is a parse
+    that lists it twice, and neurostore refuses it as a duplicate.
     """
     stale = [f"{a.key} (gives {key_for(a)})" for a in parse.analyses if a.key != key_for(a)]
-    if stale:
-        raise ValueError(
-            f"parse {parse.parse_id} has keys its analyses do not give: " + ", ".join(stale)
-        )
+    counts = Counter(a.key for a in parse.analyses)
+    duplicated = [f"{key} (x{n})" for key, n in counts.items() if n > 1]
+    if stale or duplicated:
+        problems = []
+        if stale:
+            problems.append("keys its analyses do not give: " + ", ".join(stale))
+        if duplicated:
+            problems.append("keys more than one analysis carries: " + ", ".join(duplicated))
+        raise ValueError(f"parse {parse.parse_id} has " + "; ".join(problems))
     tables = {t.table_id: t for t in (paper.tables or [])} if paper else {}
     names = {a.key: a.name for a in parse.analyses}
     entries = []

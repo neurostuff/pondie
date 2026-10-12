@@ -69,12 +69,57 @@ def test_every_key_is_the_parses_own_and_none_is_positional(corpus):
     assert not [k for k in keys if parse_keys.is_positional(k)]
     # A digest made only of digits is still a parse key: a digit test alone calls it
     # positional.
-    assert not parse_keys.is_positional("analysis#2946347108781234")
     assert parse_keys.is_positional("tbl0004#3")
+    assert len(set(keys)) == len(keys) == 17
 
 
 def _content_key(analysis: dict) -> str:
     return key_for(ParsedAnalysis.model_validate(analysis))
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "analysis#0123456789abcdef1",
+        "analysis#0123456789abcde",
+        "analysis#0123456789abcdef0",
+        "analysis#0123456789ABCDEF",
+        "xanalysis#0123456789abcdef",
+        "analysis#0123456789abcdeg",
+        "text#dcf3d5417a44",
+        None,
+        3,
+    ],
+)
+def test_only_sixteen_lower_case_hex_after_analysis_is_a_content_key(key):
+    assert not parse_keys.is_content_key(key)
+    assert parse_keys.is_content_key("analysis#0123456789abcdef")
+
+
+@pytest.mark.parametrize("key", ["text#1", "t1#2", "prose#3", "tbl0004#3"])
+def test_a_table_or_text_ordinal_is_positional(key):
+    assert parse_keys.is_positional(key)
+
+
+@pytest.mark.parametrize(
+    "key", ["123", "text#dcf3d5417a44", "analysis#XYZ", "text#", None, 3, "analysis#0123456789abcdef"]
+)
+def test_what_is_not_an_ordinal_after_a_hash_is_not_positional(key):
+    assert not parse_keys.is_positional(key)
+
+
+def test_a_content_key_whose_digest_is_all_digits_is_not_positional(corpus):
+    base = _raw(corpus)["analyses"][6]
+    for n in range(20000):
+        key = _content_key({**base, "name": f"{base['name']} {n}"})
+        if key.removeprefix("analysis#").isdigit():
+            break
+    else:
+        pytest.fail("no all-digit digest in 20000 names")
+    assert parse_keys.is_content_key(key)
+    assert not parse_keys.is_positional(key)
+    # 20 digits after the prefix is a longer ordinal, not a content key.
+    assert parse_keys.is_positional("analysis#29463471087812345678")
 
 
 def test_a_parse_still_keyed_by_where_it_was_read_is_refused(corpus):
@@ -91,6 +136,77 @@ def test_a_changed_point_under_its_old_key_is_refused(corpus):
     _write_raw(corpus, raw)
     with pytest.raises(ValueError, match=PO_NO):
         TableParse.load(Paper(study_id=STUDY, root=corpus).parse)
+
+
+def _no_points_copy(raw: dict) -> dict:
+    analysis = json.loads(json.dumps(raw["analyses"][6]))
+    analysis.update(name="NO > Sil, n.s.", points=[])
+    return analysis
+
+
+def test_an_analysis_without_points_is_keyed_like_any_other(corpus):
+    raw = _raw(corpus)
+    analysis = _no_points_copy(raw)
+    analysis["key"] = _content_key(analysis)
+    raw["analyses"].append(analysis)
+    _write_raw(corpus, raw)
+    doc = TableParse.load(Paper(study_id=STUDY, root=corpus).parse).document
+    assert doc["analyses"][-1]["key"] == analysis["key"]
+    assert doc["analyses"][-1]["points"] == []
+
+    analysis["key"] = "analysis#0000000000000000"
+    _write_raw(corpus, raw)
+    with pytest.raises(ValueError, match="analysis#0000000000000000"):
+        TableParse.load(Paper(study_id=STUDY, root=corpus).parse)
+
+
+@pytest.mark.parametrize(
+    "respell",
+    [
+        lambda key: key[:-1] + ("0" if key[-1] != "0" else "1"),
+        lambda key: "analysis#" + key.removeprefix("analysis#").upper(),
+    ],
+    ids=["last digit differs", "upper case"],
+)
+def test_a_key_that_is_only_nearly_the_content_key_is_refused(corpus, respell):
+    raw = _raw(corpus)
+    # Upper-casing needs a digest with a letter in it.
+    assert any(c in "abcdef" for c in raw["analyses"][0]["key"].removeprefix("analysis#"))
+    raw["analyses"][0]["key"] = respell(raw["analyses"][0]["key"])
+    _write_raw(corpus, raw)
+    with pytest.raises(ValueError, match="gives"):
+        TableParse.load(Paper(study_id=STUDY, root=corpus).parse)
+
+
+def test_every_stale_key_is_reported_not_only_the_first(corpus):
+    raw = _raw(corpus)
+    raw["analyses"][6]["points"][0]["coordinates"][0] += 2
+    raw["analyses"][0]["key"] = "text#dcf3d5417a44"
+    _write_raw(corpus, raw)
+    with pytest.raises(ValueError) as error:
+        TableParse.load(Paper(study_id=STUDY, root=corpus).parse)
+    assert PO_NO in str(error.value) and "text#dcf3d5417a44" in str(error.value)
+
+
+def test_a_key_carried_by_two_analyses_is_refused(corpus):
+    raw = _raw(corpus)
+    raw["analyses"].append(json.loads(json.dumps(raw["analyses"][6])))
+    raw["analyses"].append(json.loads(json.dumps(raw["analyses"][0])))
+    _write_raw(corpus, raw)
+    with pytest.raises(ValueError) as error:
+        TableParse.load(Paper(study_id=STUDY, root=corpus).parse)
+    message = str(error.value)
+    assert f"{PO_NO} (x2)" in message and f"{raw['analyses'][0]['key']} (x2)" in message
+
+
+def test_stale_and_repeated_keys_are_reported_together(corpus):
+    raw = _raw(corpus)
+    raw["analyses"].append(json.loads(json.dumps(raw["analyses"][6])))
+    raw["analyses"][0]["key"] = "text#dcf3d5417a44"
+    _write_raw(corpus, raw)
+    with pytest.raises(ValueError) as error:
+        TableParse.load(Paper(study_id=STUDY, root=corpus).parse)
+    assert "text#dcf3d5417a44" in str(error.value) and f"{PO_NO} (x2)" in str(error.value)
 
 
 def test_both_halves_of_a_sign_split_carry_their_own_content_keys(corpus):
