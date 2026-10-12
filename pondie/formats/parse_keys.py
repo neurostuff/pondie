@@ -13,6 +13,7 @@ pipelines the package advertises.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -85,20 +86,24 @@ def canonical(key: object) -> object:
     return key
 
 
-#: The length of the digest a CoordinateParse key ends in (`study_schema.keys`).
-DIGEST_LENGTH = 12
+#: A CoordinateParse key, `analysis#<16 hex>`, as `study_schema.keys.analysis_key` mints it.
+CONTENT_KEY = re.compile(r"analysis#[0-9a-f]{16}")
+
+
+def is_content_key(key: object) -> bool:
+    """Whether `key` is spelled as a CoordinateParse key, `analysis#<16 hex>`."""
+    return isinstance(key, str) and CONTENT_KEY.fullmatch(key) is not None
 
 
 def is_positional(key: object) -> bool:
     """Whether `key` is a stage-1 `<table_id>#<ordinal>` rather than a CoordinateParse key.
 
-    By length as well as digits: a 12-character hex digest is all digits often enough to
-    matter (0.4% of keys), and no table has 10^11 entries.
+    A content key's digest is all digits often enough to matter (0.05% of keys), so the
+    digit test alone would call it positional.
     """
-    if not isinstance(key, str) or "#" not in key:
+    if not isinstance(key, str) or "#" not in key or is_content_key(key):
         return False
-    ordinal = split(key)[1]
-    return ordinal.isdigit() and len(ordinal) < DIGEST_LENGTH
+    return split(key)[1].isdigit()
 
 
 def split(key: str) -> tuple[str, str]:

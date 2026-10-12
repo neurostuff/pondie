@@ -14,6 +14,8 @@ import shutil
 from pathlib import Path
 
 import pytest
+from study_schema.keys import key_for
+from study_schema.models.paper_parse import ParsedAnalysis
 
 from pondie.extraction.models import Paper, Settings
 from pondie.extraction.parse import TableParse
@@ -67,18 +69,71 @@ def test_every_key_is_the_parses_own_and_none_is_positional(corpus):
     assert not [k for k in keys if parse_keys.is_positional(k)]
     # A digest made only of digits is still a parse key: a digit test alone calls it
     # positional.
-    assert not parse_keys.is_positional("tbl0004#294634710878")
+    assert not parse_keys.is_positional("analysis#2946347108781234")
+    assert parse_keys.is_positional("tbl0004#3")
+
+
+def _content_key(analysis: dict) -> str:
+    return key_for(ParsedAnalysis.model_validate(analysis))
+
+
+def test_a_parse_still_keyed_by_where_it_was_read_is_refused(corpus):
+    raw = _raw(corpus)
+    raw["analyses"][0]["key"] = "text#dcf3d5417a44"  # the 12-hex key it had before
+    _write_raw(corpus, raw)
+    with pytest.raises(ValueError, match=r"text#dcf3d5417a44 \(gives analysis#cb3d034ab6f29bd0\)"):
+        TableParse.load(Paper(study_id=STUDY, root=corpus).parse)
+
+
+def test_a_changed_point_under_its_old_key_is_refused(corpus):
+    raw = _raw(corpus)
+    raw["analyses"][6]["points"][0]["coordinates"][0] += 2
+    _write_raw(corpus, raw)
+    with pytest.raises(ValueError, match=PO_NO):
+        TableParse.load(Paper(study_id=STUDY, root=corpus).parse)
+
+
+def test_both_halves_of_a_sign_split_carry_their_own_content_keys(corpus):
+    raw = _raw(corpus)
+    parent = raw["analyses"].pop(4)
+    original = json.loads(json.dumps(parent))
+    original["points"] = parent["points"][:5]
+    original["split"] = {"half": "original", "rule": "sign_of_directional_statistic"}
+    inverse = json.loads(json.dumps(parent))
+    inverse["name"] = "Sil > PO+NO+PC+NC"
+    inverse["points"] = parent["points"][5:]
+    original["key"], inverse["key"] = _content_key(original), _content_key(inverse)
+    inverse["split"] = {
+        "half": "inverse",
+        "original_analysis": original["key"],
+        "rule": "sign_of_directional_statistic",
+    }
+    raw["analyses"][4:4] = [original, inverse]
+    _write_raw(corpus, raw)
+    doc = TableParse.load(Paper(study_id=STUDY, root=corpus).parse).document
+    by_key = {e["key"]: e for e in doc["analyses"]}
+    assert len({original["key"], inverse["key"], parent["key"]}) == 3
+    assert by_key[inverse["key"]]["withhold"] and by_key[inverse["key"]]["mirror_of"] == (
+        parent["name"]
+    )
+    assert not by_key[original["key"]].get("withhold")
+
+    # A half that kept the key of the analysis it was split from is not that analysis.
+    inverse["key"] = parent["key"]
+    _write_raw(corpus, raw)
+    with pytest.raises(ValueError, match=parent["key"]):
+        TableParse.load(Paper(study_id=STUDY, root=corpus).parse)
 
 
 def test_document_carries_tables_roles_and_spaces_from_the_parse(corpus):
     doc = TableParse.load(Paper(study_id=STUDY, root=corpus).parse).document
     by_key = {e["key"]: e for e in doc["analyses"]}
-    table = by_key["tbl0003#b67d45b7c84f"]
+    table = by_key["analysis#94744710d9bcdd01"]
     assert (table["name"], table["table_id"], table["table_number"]) == ("PO > NO", "tbl0003", "3")
     assert table["table_caption"].startswith("Whole-brain random-effects tests")
     assert table["role"] == "result"
     assert {p["space"] for p in table["points"]} == {"MNI"}
-    assert by_key["text#dcf3d5417a44"]["table_id"] == parse_keys.PROSE_TABLE_ID
+    assert by_key["analysis#cb3d034ab6f29bd0"]["table_id"] == parse_keys.PROSE_TABLE_ID
 
 
 def test_keys_survive_reordering_and_a_dropped_sibling(corpus):
@@ -112,7 +167,7 @@ def test_listing_shows_a_proposed_non_result_role(corpus):
     _write_raw(corpus, raw)
     doc = TableParse.load(Paper(study_id=STUDY, root=corpus).parse).document
     block = render.stage1_block(doc, {"tbl0003": "tbl3"})
-    line = next(line for line in block.splitlines() if "tbl0003#0e7ce757a988" in line)
+    line = next(line for line in block.splitlines() if "analysis#a26edb17fbd2d8df" in line)
     assert "role anchor (seed), proposed" in line
 
 
@@ -124,21 +179,21 @@ def test_record_links_resolve_to_parse_keys_end_to_end(corpus):
             {
                 "local_id": "a2",
                 "name": "PO > Sil",
-                "source_table_analysis": _field("text#dcf3d5417a44"),
+                "source_table_analysis": _field("analysis#cb3d034ab6f29bd0"),
             },
             {"local_id": "a3", "name": "Made up", "source_table_analysis": "tbl0003#9"},
         ]
     }
     notes = fix.resolve_source_table_analysis(body, paper.parse)
     a1, a2, a3 = body["analyses"]
-    assert a1["source_table_analysis"]["value"] == "tbl0004#e10d99f119d5"
-    assert a2["source_table_analysis"]["value"] == "text#dcf3d5417a44"
+    assert a1["source_table_analysis"]["value"] == "analysis#21803e7d543d0a3f"
+    assert a2["source_table_analysis"]["value"] == "analysis#cb3d034ab6f29bd0"
     assert "source_table_analysis" not in a3
     assert any("'tbl0003#9' names no parsed row group" in n for n in notes)
 
 
-PO_SIL, PC_SIL = "text#dcf3d5417a44", "text#a83e27154bee"
-PO_NO = "tbl0003#b67d45b7c84f"
+PO_SIL, PC_SIL = "analysis#cb3d034ab6f29bd0", "analysis#4676bae78d89db85"
+PO_NO = "analysis#94744710d9bcdd01"
 
 
 def test_stage1_keys_in_an_existing_record_map_to_the_parse(corpus):
@@ -191,14 +246,14 @@ def test_two_same_named_stage1_entries_never_share_one_parse_key():
         {"table_id": "tbl0002", "name": "Patients > Controls",
          "points": [{"coordinates": [-40, 2, 8]}]},
     ]
-    parse = [{"key": "tbl0002#aaaaaaaaaaaa", "table_id": "tbl0002",
+    parse = [{"key": "analysis#aaaaaaaaaaaaaaaa", "table_id": "tbl0002",
               "name": "Patients > Controls", "points": [{"coordinates": [0, 0, 0]}]}]
     match = coordinate_parse.match_legacy_keys(stage1, parse)
     assert match.mapping == {}
     assert set(match.unmapped) == {"tbl0002#1", "tbl0002#2"}
     parse[0]["points"] = [{"coordinates": [10, 20, 30]}]
     match = coordinate_parse.match_legacy_keys(stage1, parse)
-    assert match.mapping == {"tbl0002#1": "tbl0002#aaaaaaaaaaaa"}
+    assert match.mapping == {"tbl0002#1": "analysis#aaaaaaaaaaaaaaaa"}
     assert "1 parse analyses share its table and name" in match.unmapped["tbl0002#2"]
     # Equal points as well: neither can be told apart, so neither maps.
     stage1[1]["points"] = [{"coordinates": [10, 20, 30]}]
@@ -376,9 +431,9 @@ def test_the_id_map_follows_a_stage1_record_to_its_parse_ids(corpus, tmp_path):
     assert found["parse_id"] == _raw(corpus)["parse_id"]
     assert found["keys"] == {"tbl0003#3": PO_NO, "text#1": PO_SIL, "text#3": PC_SIL}
     assert found["ids"] == {
-        "a_tbl0003_3": "a_tbl0003_b67d45b7c84f",
-        "a_text_1": "a_text_dcf3d5417a44",
-        "a_text_3": "a_text_a83e27154bee",
+        "a_tbl0003_3": "a_analysis_94744710d9bcdd01",
+        "a_text_1": "a_analysis_cb3d034ab6f29bd0",
+        "a_text_3": "a_analysis_4676bae78d89db85",
     }
     assert found["unmapped"] == {"tbl0009#1": "not a key of the stage-1 document"}
 
@@ -459,7 +514,7 @@ def test_backfill_writes_the_parse_key(corpus, tmp_path):
     path.write_text(json.dumps({"analyses": [{"local_id": "a1", "name": _field("PC > NC")}]}))
     backfill(reference, corpus, write=True)
     joined = json.loads(path.read_text())["analyses"][0][SLOT]["value"]
-    assert joined == "tbl0003#0b0e7dfc137c"
+    assert joined == "analysis#3413a57935c7ed1f"
 
 
 def test_a_repair_prompt_names_a_parse_keyed_analysis_by_table_alone():
