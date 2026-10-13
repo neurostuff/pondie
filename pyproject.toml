@@ -33,8 +33,9 @@ dependencies = [
     # python -m nltk.downloader wordnet
     "nltk",
     # `study_schema.spaces`, the coordinate-space alias table shared with ingestion and
-    # neurostore, and `models.paper_parse`, the CoordinateParse pondie reads. Pinned to study_schema main.
-    "study-schema @ git+https://github.com/neurostuff/study_schema.git@38f014c9914363782dec82917459296c7668ef1e",
+    # neurostore, `models.paper_parse`, the CoordinateParse pondie reads, and `keys`, the analysis
+    # key it checks each parse analysis against. Pinned to study_schema main.
+    "study-schema @ git+https://github.com/neurostuff/study_schema.git@2cc7bec2a2c67c4ac7feb4e74a04f4e013e9329a",
 ]
 
 [project.optional-dependencies]

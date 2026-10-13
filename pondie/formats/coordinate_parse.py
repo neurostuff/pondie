@@ -1,9 +1,10 @@
 """Reading ingestion's CoordinateParse as the document every parse reader here takes.
 
 `<study>/parse/coordinate_parse.json` is study_schema's contract and the one producer of a
-paper's analyses. Each analysis carries its own `key`, derived from where it was read, so a
-re-run, a reordering or a dropped sibling leaves it alone. `stage1/analyses.json` keys its
-entries by position (`t1#2`), which is why it is read only for a paper that has no parse.
+paper's analyses. Each analysis carries its own `key`, derived from its name, space and
+points, so a re-run, a reordering or a dropped sibling leaves it alone. `stage1/analyses.json`
+keys its entries by position (`t1#2`), which is why it is read only for a paper that has no
+parse.
 
 The parse is converted to the shape `stage1/analyses.json` has, with the key added to each
 entry, rather than every reader learning a second shape: the listing, the record repairs,
@@ -15,11 +16,12 @@ from __future__ import annotations
 
 import json
 import logging
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from study_schema.keys import normalize_name
+from study_schema.keys import key_for, normalize_name
 from study_schema.models.paper_parse import CoordinateParse, ParsedPaper
 
 from pondie.formats import parse_keys
@@ -48,8 +50,9 @@ def legacy_stage1(path: Path) -> Path:
 def read_document(path: Path) -> dict[str, Any]:
     """The parse at `path` as a stage1-shaped document, whichever of the two files it is.
 
-    Raises as `json.loads` and pydantic do: a coordinate parse that fails study_schema's
-    model is a broken contract, not a paper with no analyses.
+    Raises as `json.loads`, pydantic and `to_document` do: a coordinate parse that fails
+    study_schema's model, or whose keys are not its analyses' own, is a broken contract, not a
+    paper with no analyses.
     """
     raw = json.loads(path.read_text(encoding="utf-8"))
     if not is_coordinate_parse(path):
@@ -67,6 +70,24 @@ def read_document(path: Path) -> dict[str, Any]:
 
 
 def to_document(parse: CoordinateParse, paper: ParsedPaper | None = None) -> dict[str, Any]:
+    """Raises ValueError for an analysis whose key is not the one its content gives, and for
+    a key that more than one analysis carries.
+
+    The key is the analysis's identity to ingestion, pondie and neurostore alike
+    (`ParsedAnalysis.key`), so a record citing any other key names an analysis that the
+    others never mint. Identical content is one analysis, so a repeated key is a parse
+    that lists it twice, and neurostore refuses it as a duplicate.
+    """
+    stale = [f"{a.key} (gives {key_for(a)})" for a in parse.analyses if a.key != key_for(a)]
+    counts = Counter(a.key for a in parse.analyses)
+    duplicated = [f"{key} (x{n})" for key, n in counts.items() if n > 1]
+    if stale or duplicated:
+        problems = []
+        if stale:
+            problems.append("keys its analyses do not give: " + ", ".join(stale))
+        if duplicated:
+            problems.append("keys more than one analysis carries: " + ", ".join(duplicated))
+        raise ValueError(f"parse {parse.parse_id} has " + "; ".join(problems))
     tables = {t.table_id: t for t in (paper.tables or [])} if paper else {}
     names = {a.key: a.name for a in parse.analyses}
     entries = []
