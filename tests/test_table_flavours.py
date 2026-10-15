@@ -98,7 +98,7 @@ def test_a_hidden_screen_reader_cell_is_not_part_of_the_header():
 
 def test_a_flavour_with_no_reader_says_so_rather_than_returning_nothing():
     with pytest.raises(ValueError, match="no table reader"):
-        tp.read_table(FIXTURES / "ace", "1.html", flavour="springer")
+        tp.read_table(FIXTURES / "ace", "1.html", flavour="wiley")
 
 
 @pytest.mark.parametrize("name,flavour", CASES)
@@ -290,7 +290,45 @@ def test_pmc_and_europepmc_rank_beside_pubget():
     for name in ("pmc", "europepmc"):
         assert order.index("pubget") < order.index(name) < order.index("elsevier")
         assert Flavour(name).filename == "text.txt"
-    assert {f.value for f in Flavour if f.pubget_layout} == {"pubget", "pmc", "europepmc"}
+    assert {f.value for f in Flavour if f.pubget_layout} == {
+        "pubget",
+        "pmc",
+        "europepmc",
+        "springer",
+    }
+
+
+def test_springer_ranks_right_after_elsevier():
+    """Springer Nature's JATS is laid out as pubget, but ingestion tries it after elsevier."""
+    from pondie.paths import Flavour
+
+    order = [f.name for f in Flavour]
+    assert order.index("elsevier") + 1 == order.index("springer") < order.index("pdf")
+    assert Flavour.springer.filename == "text.txt"
+
+
+def test_best_takes_elsevier_over_springer_and_springer_over_pdf(tmp_path):
+    from pondie.extraction.models import Flavour, Paper
+
+    study = tmp_path / "s"
+    for flavour in ("pdf", "springer", "elsevier", "ace"):
+        target = study / "processed" / flavour
+        target.mkdir(parents=True)
+        (target / "text.txt").write_text(flavour, encoding="utf-8")
+    assert Paper.best("s", tmp_path).flavour is Flavour.elsevier
+    (study / "processed" / "elsevier" / "text.txt").unlink()
+    assert Paper.best("s", tmp_path).flavour is Flavour.springer
+
+
+def test_table_flavour_prefers_elsevier_to_springer(tmp_path):
+    """Both ship a manifest; the one `Paper.best` reads must be the one whose tables are sent."""
+    from pondie.extraction.corpus import tables as stage1
+
+    study = tmp_path / "s"
+    for flavour in ("springer", "elsevier"):
+        (study / "processed" / flavour).mkdir(parents=True)
+        (study / "processed" / flavour / "tables.jsonl").write_text("", encoding="utf-8")
+    assert stage1.table_flavour(study) == "elsevier"
 
 
 @pytest.mark.parametrize("source", ["pmc", "europepmc"])
@@ -306,7 +344,7 @@ def test_best_takes_a_pmc_paper_over_elsevier(tmp_path, source):
     assert Paper.best("s", tmp_path).flavour is Flavour(source)
 
 
-@pytest.mark.parametrize("source", ["pmc", "europepmc"])
+@pytest.mark.parametrize("source", ["pmc", "europepmc", "springer"])
 def test_stage_one_reads_a_pmc_paper_as_pubget(tmp_path, source):
     """Ingestion writes these with pubget's extraction: its manifest, its CSV, its sidecar."""
     from pondie.extraction.corpus import tables as stage1
@@ -363,3 +401,14 @@ def test_a_pmc_text_with_tables_inline_is_read_as_it_stands(tmp_path):
         "Table 1\nregion\t10\t20\t30\n", encoding="utf-8"
     )
     assert rebuild.read_as_is(plain) is not None, "pubget with its tables inline"
+
+
+def test_read_table_reads_a_springer_csv(tmp_path):
+    tables = tmp_path / "tables"
+    tables.mkdir()
+    (tables / "table_000.csv").write_text(
+        "Region,x,y,z\nAmygdala,-20,-4,-16\nHippocampus,-26,-18,-14\n", encoding="utf-8"
+    )
+    (tables / "table_000_info.json").write_text(json.dumps({"n_header_rows": 1}))
+    table = tp.read_table(tmp_path, "table_000.csv", flavour="springer")
+    assert table["axis_cols"], "the x/y/z columns were not found"

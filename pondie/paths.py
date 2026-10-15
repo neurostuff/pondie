@@ -94,6 +94,10 @@ class Flavour(str, Enum):
     workflow runs pubget's own extraction over them. Their layout is pubget's under another
     directory name, so they rank beside pubget. A paper has one of the three: ingestion
     takes the first source that succeeds.
+
+    `springer` is Springer Nature's Open Access JATS, also extracted by pubget's code and
+    laid out as pubget. It ranks right after `elsevier`, matching the order ingestion
+    downloads in, and ahead of the PDF and ace renders.
     """
 
     local = "local"
@@ -101,6 +105,7 @@ class Flavour(str, Enum):
     pmc = "pmc"
     europepmc = "europepmc"
     elsevier = "elsevier"
+    springer = "springer"
     pdf = "pdf"
     ace = "ace"
 
@@ -122,9 +127,9 @@ class Flavour(str, Enum):
         return self.value in PUBGET_LAYOUT
 
 
-#: The flavours pubget's extraction lays out, by name and in `Flavour` order, for code that
-#: switches on the string rather than the enum.
-PUBGET_LAYOUT = ("pubget", "pmc", "europepmc")
+#: The flavours pubget's extraction lays out, by name, for code that switches on the string
+#: rather than the enum. Not the whole of `Flavour` order: `springer` ranks below elsevier.
+PUBGET_LAYOUT = ("pubget", "pmc", "europepmc", "springer")
 
 
 # The accessors below are for code that READS the corpus. `extraction.corpus` builds it --
