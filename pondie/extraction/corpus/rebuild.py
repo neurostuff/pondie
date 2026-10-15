@@ -389,9 +389,9 @@ def write_local(out_dir: Path, text: str, *, overwrite: bool) -> None:
 def read_as_is(study_dir: Path) -> Path | None:
     """A pubget-layout text.txt that is read as it stands rather than rebuilt, or None.
 
-    PMC and Europe PMC papers, and pubget papers extracted since ingestion's extractor
-    started inserting each table at its position (keep-tables), already carry their tables
-    inline, from a pubget build this module does not have, so a rebuild cannot reproduce
+    PMC, Europe PMC and Springer papers, and pubget papers extracted since ingestion's
+    extractor started inserting each table at its position (keep-tables), already carry
+    their tables inline, from a pubget build this module does not have, so a rebuild cannot reproduce
     them. Writing `local` for one anyway would rank above it and move every offset.
     """
     for flavour in paths.PUBGET_LAYOUT:

@@ -170,7 +170,7 @@ def table_flavour(study_dir: Path) -> str | None:
     the sync had fetched correctly.
     """
 
-    for flavour in (*paths.PUBGET_LAYOUT, "elsevier"):
+    for flavour in (f.value for f in paths.Flavour if f.pubget_layout or f.value == "elsevier"):
         if (study_dir / "processed" / flavour / "tables.jsonl").is_file():
             return flavour
     return None

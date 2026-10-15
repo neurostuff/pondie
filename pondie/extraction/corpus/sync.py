@@ -11,7 +11,8 @@ Layout mirrors the corpus so paths in the record and in the pond agree:
       identifiers.json
       processed/pubget/{text.txt,tables.jsonl,analyses.jsonl,coordinates.csv,metadata.json}
       source/pubget/tables/          <- CSVs + *_info.json + tables.xml, for the re-parse
-      processed/{pmc,europepmc}/, source/{pmc,europepmc}/   <- the same, as pubget lays them out
+      processed/{pmc,europepmc,springer}/, source/{pmc,europepmc,springer}/
+                                     <- the same, as pubget lays them out
       source/ace/<pmid>.html         <- for reading the paper
 
 `data/corpus/` is gitignored: it is bulk source material, not schema.
@@ -45,7 +46,7 @@ WANTED = [
     # silently -- so `report()` below names a study that arrived without one.
     "source/pubget/article.xml",
     "source/pubget/tables/",
-    # PMC and Europe PMC: the same XML, fetched for the papers pubget's Open Access query
+    # PMC, Europe PMC and Springer: the same XML, fetched for the papers pubget's Open Access query
     # misses and extracted by pubget, so the same files under their own source name.
     *(
         f"{kind}/{source}/{name}"
@@ -154,7 +155,8 @@ def report(destination: Path) -> str:
     """
 
     parts = []
-    for flavour in (*paths.PUBGET_LAYOUT, "elsevier", "ace"):
+    reported = (*paths.PUBGET_LAYOUT, "elsevier", "ace")
+    for flavour in (f.value for f in paths.Flavour if f.value in reported):
         text = destination / "processed" / flavour / "text.txt"
         if not text.is_file():
             continue
