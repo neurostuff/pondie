@@ -155,7 +155,8 @@ def report(destination: Path) -> str:
     """
 
     parts = []
-    for flavour in (*paths.PUBGET_LAYOUT, "elsevier", "ace"):
+    reported = (*paths.PUBGET_LAYOUT, "elsevier", "ace")
+    for flavour in (f.value for f in paths.Flavour if f.value in reported):
         text = destination / "processed" / flavour / "text.txt"
         if not text.is_file():
             continue

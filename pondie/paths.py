@@ -92,8 +92,8 @@ class Flavour(str, Enum):
     `pmc` and `europepmc` are the same JATS XML fetched from NCBI and Europe PMC for the
     papers pubget's Open Access query misses (author manuscripts, mostly), and the ingestion
     workflow runs pubget's own extraction over them. Their layout is pubget's under another
-    directory name, so they rank beside pubget. A paper has one of the three: ingestion
-    takes the first source that succeeds.
+    directory name, so they rank beside pubget. A paper has one source: ingestion
+    takes the first that succeeds.
 
     `springer` is Springer Nature's Open Access JATS, also extracted by pubget's code and
     laid out as pubget. It ranks right after `elsevier`, matching the order ingestion
