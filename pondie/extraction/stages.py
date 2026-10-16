@@ -167,8 +167,8 @@ def prompt_digest() -> str:
         Path(worked.__file__),
         schema.ROOT / "extraction-readme.md",
         schema.ROOT / "representing-models.md",
-        schema.ROOT / "extraction-deviations.yaml",
-        *sorted((schema.ROOT / "neuroimaging-study-extraction").glob("*.yaml")),
+        schema.LINKML / "extraction-deviations.yaml",
+        *sorted((schema.LINKML / "neuroimaging-study-extraction").glob("*.yaml")),
     ]
     return pipeline.digest_of(
         {

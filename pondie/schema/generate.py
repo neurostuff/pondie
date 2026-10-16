@@ -46,7 +46,7 @@ from pathlib import Path
 
 import yaml
 
-from pondie.schema import ROOT, STORAGE
+from pondie.schema import LINKML, STORAGE
 from pondie.schema.authoring import (
     load_yaml,
     IN_SUBSET,
@@ -60,11 +60,11 @@ from pondie.schema.authoring import (
 )
 
 SOURCE_ENTRYPOINT = STORAGE
-SOURCE_MODULES = ROOT / "neuroimaging-study-storage"
+SOURCE_MODULES = LINKML / "neuroimaging-study-storage"
 SOURCE_STEM = "neuroimaging-study-storage"
 TARGET_STEM = "neuroimaging-study-extraction"
-DEVIATIONS = ROOT / "extraction-deviations.yaml"
-EVIDENCE_SCHEMA = ROOT / "extraction-evidence.yaml"
+DEVIATIONS = LINKML / "extraction-deviations.yaml"
+EVIDENCE_SCHEMA = LINKML / "extraction-evidence.yaml"
 
 #: The subset naming attributes a language model reads out of the paper.
 EXTRACTED_SUBSET = "model_extracted"
@@ -383,9 +383,9 @@ def project_attribute(
     if attribute.get("identifier") is True:
         # Storage mints the identifier at ingestion; extraction assigns a key that is
         # only meaningful inside the one document, so the name changes with the meaning.
-        # It is not an extracted value: nothing in the paper supplies it.
+        # It is not an extracted value: nothing in the paper supplies it. It stays the
+        # class's `identifier`: a bare reference to the class resolves through it.
         attribute_name = LOCAL_ID
-        output.pop("identifier", None)
         output["range"] = "string"
         output["required"] = True
     elif attribute.get("designates_type") is True:
@@ -758,8 +758,8 @@ def describe(documents: Mapping[str, dict], report: Report) -> list[str]:
 
 
 def generated_paths() -> list[Path]:
-    directory = ROOT / TARGET_STEM
-    paths = [ROOT / f"{TARGET_STEM}.yaml"]
+    directory = LINKML / TARGET_STEM
+    paths = [LINKML / f"{TARGET_STEM}.yaml"]
     if directory.is_dir():
         paths.extend(sorted(directory.glob("*.yaml")))
     return paths
@@ -783,7 +783,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not arguments.quiet:
         print("\n".join(describe(documents, report)))
 
-    expected = {ROOT / path: text for path, text in texts.items()}
+    expected = {LINKML / path: text for path, text in texts.items()}
     if arguments.check:
         stale = [
             path
@@ -793,9 +793,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         orphaned = [path for path in generated_paths() if path not in expected]
         if stale or orphaned:
             for path in stale:
-                print(f"out of date: {path.relative_to(ROOT)}", file=sys.stderr)
+                print(f"out of date: {path.relative_to(LINKML)}", file=sys.stderr)
             for path in orphaned:
-                print(f"no longer generated: {path.relative_to(ROOT)}", file=sys.stderr)
+                print(f"no longer generated: {path.relative_to(LINKML)}", file=sys.stderr)
             print("Run: python3 -m pondie.schema.generate", file=sys.stderr)
             return 1
         print("Generated extraction schema is up to date.")

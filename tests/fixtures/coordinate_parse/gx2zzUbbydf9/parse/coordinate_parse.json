@@ -1,12 +1,13 @@
 {
   "header": {
     "artifact_kind": "coordinate_parse",
-    "schema_version": "0.6.0",
+    "schema_version": "0.7.0",
     "article_id": "wjkrusokqlf4",
     "identifiers": {
       "pmid": "34411741",
       "pmcid": null,
       "doi": "10.1016/j.neuroimage.2021.118480",
+      "publication_status": "published",
       "neurostore_base_study_id": "gx2zzUbbydf9"
     },
     "producer": {

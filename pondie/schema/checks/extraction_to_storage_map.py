@@ -41,7 +41,7 @@ import argparse
 from collections.abc import Mapping, Sequence
 
 
-from pondie.schema import EXTRACTION, ROOT, STORAGE
+from pondie.schema import EXTRACTION, LINKML, STORAGE
 from pondie.schema.authoring import (
     load_yaml,
     LOCAL_ID,
@@ -53,8 +53,8 @@ from pondie.schema.authoring import (
     own_attributes,
 )
 
-MAP = ROOT / "extraction-to-storage.map.yaml"
-DEVIATIONS = ROOT / "extraction-deviations.yaml"
+MAP = LINKML / "extraction-to-storage.map.yaml"
+DEVIATIONS = LINKML / "extraction-deviations.yaml"
 
 EXTRACTED_SUBSET = "model_extracted"
 DETERMINISTIC_SUBSET = "deterministic"
