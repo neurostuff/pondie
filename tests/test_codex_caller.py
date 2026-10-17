@@ -80,9 +80,10 @@ def codex(tmp_path, monkeypatch):
     )
     binary.chmod(binary.stat().st_mode | stat.S_IEXEC)
 
-    def make(*answers):
+    def make(*answers, **caller_kw):
         replies.write_text(json.dumps(answers))
-        return CodexCaller(binary=str(binary)), lambda: json.loads(log.read_text())
+        caller = CodexCaller(binary=str(binary), **caller_kw)
+        return caller, lambda: json.loads(log.read_text())
 
     return make
 
@@ -191,11 +192,12 @@ def test_an_unparseable_body_is_a_failed_attempt(codex):
 LIMIT = "You’ve hit your usage limit. Try again at 11:36 PM."
 
 
-def test_a_spent_allowance_is_waited_out_not_failed(codex, monkeypatch):
+def test_a_spent_allowance_is_waited_out_not_failed(codex):
     """The account's limit used to fail each paper in seconds: no status, so a model fault."""
     waits = []
-    monkeypatch.setattr(llm.time, "sleep", waits.append)
-    caller, calls = codex([{"type": "turn.failed", "error": {"message": LIMIT}}], ok('{"a": 1}'))
+    caller, calls = codex(
+        [{"type": "turn.failed", "error": {"message": LIMIT}}], ok('{"a": 1}'), sleep=waits.append
+    )
     reply = caller(call(attempts=1), paper="S1", stage="single")
     assert reply.payload == {"a": 1} and len(calls()) == 2
     assert len(waits) == 1 and 60 <= waits[0] <= llm._USAGE_WAIT_CAP

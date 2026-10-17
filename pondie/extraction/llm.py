@@ -24,7 +24,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Callable, Protocol, runtime_checkable
 
 from pondie.extraction.models import Cost, ModelCall, ModelReply
 
@@ -387,8 +387,15 @@ class CodexCaller(_RetryingCaller):
     A gateway model name, `@provider/model`, is sent as `model`.
     """
 
-    def __init__(self, binary: str = "codex", timeout: float = 3600.0):
-        self._binary, self._timeout = binary, timeout
+    def __init__(
+        self,
+        binary: str = "codex",
+        timeout: float = 3600.0,
+        sleep: Callable[[float], None] = time.sleep,
+    ):
+        # Injected so a test can record the wait without patching `time.sleep`, which every
+        # thread in the process shares.
+        self._binary, self._timeout, self._sleep = binary, timeout, sleep
         # Asked of the installed codex, not assumed: an unknown name to `--disable` is a
         # hard error, so one feature renamed in an upgrade would fail every call. Asking
         # here also finds a missing binary before the first paper, where `_transient` would
@@ -468,7 +475,7 @@ class CodexCaller(_RetryingCaller):
                         f"{(now + timedelta(seconds=wait)):%H:%M}",
                         file=sys.stderr,
                     )
-                    time.sleep(wait)
+                    self._sleep(wait)
 
 
 def _codex_reply(done: subprocess.CompletedProcess, *, seconds: float) -> _Sent:
