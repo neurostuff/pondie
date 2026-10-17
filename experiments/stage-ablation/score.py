@@ -100,8 +100,17 @@ def annotate_foci(record: dict, run_dir: Path, pmid: str) -> None:
 
 
 def load(run_dir: Path, raw: bool) -> dict[str, dict]:
+    """pmid -> the record, with its paper's language and publication types joined on.
+
+    The join reads `<run_dir>/corpus/<pmid>/parse/parsed_paper.json` and raises where a
+    paper has none: a corpus built before the parse (only `stage1/`) cannot be scored,
+    because every criterion on those two fields would silently read "cannot say".
+    """
     folder = run_dir / ("records_raw" if raw else "records")
-    return {p.name.split(".")[0]: json.loads(p.read_text()) for p in folder.glob("*.extraction.json")}
+    records = {p.name.split(".")[0]: json.loads(p.read_text()) for p in folder.glob("*.extraction.json")}
+    for pmid, record in records.items():
+        record.update(publication_facts(pmid, run_dir / "corpus"))
+    return records
 
 
 def cost(run_dir: Path) -> dict:
@@ -125,7 +134,6 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool,
     foci_hit = foci_total = foci_sel = foci_sel_gold = 0
     for pmid, record in sorted(records.items()):
         record["local_id"] = pmid
-        record.update(publication_facts(pmid, run_dir / "corpus"))
         record["_pubyear"] = years.get(pmid)
         from pondie.query.overlap import date_key
         when = authors.get(pmid, {}).get("pubdate")

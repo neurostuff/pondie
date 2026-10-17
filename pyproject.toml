@@ -35,7 +35,7 @@ dependencies = [
     # `study_schema.spaces`, the coordinate-space alias table shared with ingestion and
     # neurostore, `models.paper_parse`, the CoordinateParse pondie reads, and `keys`, the analysis
     # key it checks each parse analysis against. Pinned to study_schema main.
-    "study-schema @ git+https://github.com/neurostuff/study_schema.git@b314eb3bba4dbefe075a9fcdb3684ab86ba4b616",
+    "study-schema @ git+https://github.com/neurostuff/study_schema.git@49938bd8f04fe40f073eaf95800ab6e8e92af6dc",
 ]
 
 [project.optional-dependencies]

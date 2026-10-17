@@ -74,9 +74,8 @@ def _entries(
 def authorship(pmids: Iterable[str], **kwargs) -> dict[str, dict]:
     """pmid -> {"authors": [...], "pubdate": "2006 Jan 30"}, verbatim from `esummary`.
 
-    They are what a query
-    about two papers at once needs -- whether the same group could have reported the same
-    participants twice, and which report came first. See `pondie.query.overlap`.
+    They are what a query about two papers at once needs -- whether the same group could
+    have reported the same participants twice, and which report came first. See `pondie.query.overlap`.
     """
     return {
         uid: {

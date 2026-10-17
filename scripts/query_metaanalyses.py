@@ -541,8 +541,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--records", required=True)
     ap.add_argument("--bench", required=True, type=Path)
-    ap.add_argument("--corpus", type=Path, default=None,
-                    help="where each paper's parse/parsed_paper.json is (default: the data dir)")
+    ap.add_argument("--corpus", type=Path, default=paths.CORPUS,
+                    help="where each paper's <study id>/parse/parsed_paper.json is")
     ap.add_argument("--repair", action="store_true",
                     help="apply the deterministic repairs first, to measure what they buy "
                          "a query rather than what they buy a check")
@@ -577,9 +577,8 @@ def main() -> int:
             fix.unwrap_singleton_lists(body, _SCH)
             fix.link_entities_by_name(body, _SCH)
             fix.drop_redundant_cell_levels(body)
-        pmid = Path(path).name.split(".")[0]
-        body.update(publication_facts(pmid, args.corpus or paths.CORPUS))
-        records[Path(path).parent.name][pmid] = body
+        body.update(publication_facts(body["local_id"], args.corpus))
+        records[Path(path).parent.name][Path(path).name.split(".")[0]] = body
 
     for meta_pmid, (project, predicates) in QUERIES.items():
         here = records.get(project) or {}

@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from study_schema.keys import key_for, normalize_name
-from study_schema.models.paper_parse import CoordinateParse, ParsedPaper
+from study_schema.models.paper_parse import Bibliography, CoordinateParse, ParsedPaper
 
 from pondie import paths
 from pondie.formats import parse_keys
@@ -47,15 +47,15 @@ def publication_facts(study: str, corpus: Path = paths.CORPUS) -> dict[str, list
     """`study_type` and `language` of one paper, from its parsed paper's bibliography.
 
     A record carries neither, so a criterion on them joins the record to its paper here.
-    Empty when the paper has no parsed paper, which a predicate reads as "cannot say".
+    Raises for a paper with no parsed paper, and for a bibliography that is not the current
+    contract's: a missing file reads the same as a wrong corpus path, so a caller that can
+    do without must count the papers it skipped. Only the bibliography is validated; the
+    rest of the parse is the text and its tables.
     """
-    path = paths.parsed_paper(study, corpus)
-    if not path.is_file():
-        return {}
-    paper = ParsedPaper.model_validate(json.loads(path.read_text(encoding="utf-8")))
-    bibliography = paper.bibliography
+    raw = json.loads(paths.parsed_paper(study, corpus).read_text(encoding="utf-8"))
+    bibliography = Bibliography.model_validate(raw["bibliography"])
     return {
-        "study_type": list(bibliography.publication_types or []),
+        "study_type": [str(t) for t in bibliography.publication_types or []],
         "language": list(bibliography.language or []),
     }
 
