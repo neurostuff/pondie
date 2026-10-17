@@ -78,10 +78,11 @@ def test_fill_does_not_ask_for_slots_code_fills():
 
 
 def test_a_models_value_for_a_slot_code_fills_is_dropped():
-    """The model's `language` wrapper survived as "must be a string, got dict"."""
-    body = {"language": [_v("English")], "groups": [{"local_id": "g", "is_healthy": _v(True)}]}
+    """The model's wrapper for a slot code fills survived as "must be a string, got dict"."""
+    group = {"local_id": "g", "is_healthy": _v(True), "age_unit_normalized": _v("years")}
+    body = {"groups": [group]}
     dropped = shape.drop_code_filled(body, reader.load(schema.EXTRACTION))
-    assert "language" not in body and "is_healthy" not in body["groups"][0]
+    assert "age_unit_normalized" not in group and "is_healthy" not in group
     assert len(dropped) == 2
 
 
@@ -235,24 +236,31 @@ def test_a_key_no_slot_could_have_is_dropped_at_any_depth():
     assert body["analyses"][0] == {"local_id": "ana_1", "notes": note}
     assert dropped == ["Study.analyses[0]: dropped ':{', not a possible slot name"]
 
-# --- PubMed --------------------------------------------------------------------------------
+# --- what the record does not carry -------------------------------------------------------
 
 
-def test_build_fills_language_and_study_type_from_pubmed(monkeypatch):
-    from pondie.extraction import pubmed, stages
+def test_the_record_carries_no_bibliographic_fact():
+    """Language, publication types and identifiers are the parse's bibliography and header;
+    a record that held them would be a second copy to keep in step."""
+    slots = reader.load(schema.EXTRACTION).attributes("Study")
+    for slot in ("language", "study_type", "publication_status", "license", "oa_status"):
+        assert slot not in slots, slot
 
-    asked = []
 
-    def summaries(pmids, **_):
-        asked.extend(pmids)
-        return {"123": {"study_type": ["Journal Article"], "language": ["eng"]}}
+def test_is_healthy_is_declared_and_uses_a_permissible_value_source():
+    """`ValueSource` offers `reported` and `generated`. `apply` wrote `derived`, which is
+    neither, so every group it touched was a validation error."""
+    from pondie.extraction.record.validate import _VALUE_SOURCE
+    from pondie.normalization.is_healthy import apply
 
-    monkeypatch.setattr(pubmed, "summaries", summaries)
-    record = {"local_id": "123"}
-    note = stages._fill_from_pubmed(record, "123")
-    assert record["language"] == ["eng"] and record["study_type"] == ["Journal Article"]
-    assert "pubmed:" in note
-    assert stages._fill_from_pubmed({"local_id": "S1"}, "S1") == "" and asked == ["123"]
+    assert reader.load(schema.EXTRACTION).attributes("Group").get("is_healthy") is not None
+
+    record = {"groups": [{"local_id": "g1", "medical_condition": {
+        "value": ["obesity"], "extraction_status": "extracted"}}]}
+    apply(record)
+    written = record["groups"][0]["is_healthy"]
+    assert written["value"] is False
+    assert written["value_source"] in _VALUE_SOURCE
 
 
 # --- visibility ----------------------------------------------------------------------------

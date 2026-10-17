@@ -346,7 +346,7 @@ def has_direction(record: dict) -> bool | None:
 def english(record: dict) -> bool | None:
     """"only empirical English language MRI studies" / "written in the English language".
 
-    `Study.language`, filled from PubMed by `pondie.extraction.pubmed`. Stated by at least
+    The parsed paper's `bibliography.language`, which a record does not carry. Stated by at least
     six of the sixteen and unexpressible until the slot existed: a record that does not
     carry the field cannot say, which is what an unfilled corpus should read as.
     """

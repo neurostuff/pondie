@@ -36,10 +36,6 @@ backoff and does not fail the paper; if many are logged, lower `WORKERS`.
 `events.jsonl` (per-stage timing), `payloads/` (each model reply) and `unrepaired/` (the
 records before `repair`).
 
-`Study.language` and `Study.study_type` are left unset: `build` fills them from PubMed only
-when the study id is a PMID, and these are neurostore ids. `pubget.pmids` maps each study
-to its PMID, so they can be filled afterwards with `pondie.extraction.pubmed`.
-
 ## Contents
 
 | path | |
