@@ -30,6 +30,8 @@ jobs:
       - run: pip install -e ".[dev]"
       # Negation scope for medication_status.
       - run: python -m spacy download en_core_web_sm
+      # Plural folding; the lexical-layer test needs the corpus.
+      - run: python -m nltk.downloader wordnet
 
       - name: Generated extraction schema is current
         run: python -m pondie.schema.generate --check
@@ -58,6 +60,8 @@ jobs:
       # `tests` only: the submodule has its own suite and conftest. `python -m` puts the
       # checkout on sys.path, which test_stages needs to import `tests`.
       - name: Test
+        # pipefail, which the default `bash -e` lacks: without it `| tee` hides a pytest failure.
+        shell: bash
         run: |
           python -m pytest tests -rs --durations=25 \
             --cov --cov-report=xml --cov-report=html --cov-report=term | tee pytest.log
