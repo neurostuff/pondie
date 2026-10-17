@@ -409,7 +409,7 @@ def drop_code_filled(body: dict[str, Any], sch: Schema) -> list[str]:
     """Remove a model's value for a slot code fills (`schema.code_fills`).
 
     Code writes these after the merge (`is_healthy`, the normalized demographics,
-    `mirror_of`, PubMed's `language` and `study_type`); a model's answer is either
+    `mirror_of`); a model's answer is either
     overwritten or, where nothing overwrites it, left in the wrong shape.
     """
     dropped: list[str] = []

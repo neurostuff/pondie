@@ -20,7 +20,7 @@ and the modules beside them:
     parse       the stage-1 parse document
     sign_split  splitting a two-signed table into its two contrasts
     llm         the one place a prompt becomes a network call
-    pubmed      publication type, language and authorship from PubMed
+    pubmed      authorship and publication date from PubMed, for the overlap query
     stages      the stages, and the two orders they run in
     driver      scheduling, progress and accounting
 

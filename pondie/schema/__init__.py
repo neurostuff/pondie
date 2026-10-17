@@ -37,7 +37,7 @@ def _root() -> Path:
         if override
         else Path(__file__).resolve().parents[2] / "study_schema"
     )
-    if not (candidate / "neuroimaging-study-storage.yaml").is_file():
+    if not (candidate / "src" / "study_schema" / "linkml" / "neuroimaging-study-storage.yaml").is_file():
         remedy = (
             "point PONDIE_SCHEMA_DIR at a study-schema checkout"
             if override
@@ -51,8 +51,12 @@ def _root() -> Path:
 #: The study-schema checkout: LinkML YAML, and the prose sent to the model as prompt input.
 ROOT = _root()
 
-EXTRACTION = ROOT / "neuroimaging-study-extraction.yaml"
-STORAGE = ROOT / "neuroimaging-study-storage.yaml"
+#: The LinkML schemas live inside the checkout's package (`src/study_schema/linkml`); the
+#: prose and the priorities table stay at its top level.
+LINKML = ROOT / "src" / "study_schema" / "linkml"
+
+EXTRACTION = LINKML / "neuroimaging-study-extraction.yaml"
+STORAGE = LINKML / "neuroimaging-study-storage.yaml"
 
 @lru_cache(maxsize=1)
 def entity_lists() -> dict[str, str]:
@@ -86,4 +90,4 @@ def code_fills(class_name: str, attribute: str) -> bool:
     )
 
 
-__all__ = ["ROOT", "EXTRACTION", "STORAGE", "entity_lists", "code_fills"]
+__all__ = ["ROOT", "LINKML", "EXTRACTION", "STORAGE", "entity_lists", "code_fills"]

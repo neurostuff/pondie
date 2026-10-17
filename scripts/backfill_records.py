@@ -14,10 +14,6 @@ general, so both are checked rather than assumed:
                        repair fixes a defect that was already one. A slot that had been
                        multivalued then and scalar now would need a different argument.
 
-  `study_type`         Comes from PubMed rather than from the paper, so it does not depend
-  `language`           on the schema the record was extracted against at all. One
-                       `esummary` call fills both.
-
 
 Everything else is left alone. `--all-repairs` runs the rest, and they are not the default
 because each carries its own staleness argument and this script should not make five at once.
@@ -37,7 +33,6 @@ from collections import Counter
 from pathlib import Path
 
 from pondie import schema
-from pondie.extraction import pubmed
 from pondie.extraction.record import builder as br, fix
 from pondie.schema import reader
 
@@ -49,7 +44,6 @@ def main() -> int:
     ap.add_argument("--records", required=True)
     ap.add_argument("--write", action="store_true", help="without it, nothing is written")
     ap.add_argument("--all-repairs", action="store_true")
-    ap.add_argument("--no-pubmed", action="store_true")
     args = ap.parse_args()
 
     paths = sorted(glob.glob(args.records))
@@ -57,12 +51,6 @@ def main() -> int:
     for path in paths:
         raw = json.loads(Path(path).read_text())
         bodies[Path(path)] = raw
-
-    types: dict[str, list[str]] = {}
-    if not args.no_pubmed:
-        pmids = [p.name.split(".")[0] for p in bodies]
-        types = pubmed.summaries(pmids)
-        print(f"PubMed answered for {len(types):,} of {len(pmids):,} ids")
 
     sch = reader.load(schema.EXTRACTION)
     changed = Counter()
@@ -72,7 +60,6 @@ def main() -> int:
         before = json.dumps(body, sort_keys=True)
         counts = {
             "unwrap_singletons": len(fix.unwrap_singleton_lists(body, sch)),
-            "pubmed": len(pubmed.fill(body, types)),
         }
         if args.all_repairs:
             counts["name_links"] = len(fix.link_entities_by_name(body, sch))

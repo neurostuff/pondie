@@ -1,13 +1,16 @@
 {
   "header": {
     "artifact_kind": "parsed_paper",
-    "schema_version": "0.6.0",
+    "schema_version": "0.8.0",
     "article_id": "wjkrusokqlf4",
     "identifiers": {
       "pmid": "34411741",
       "pmcid": null,
       "doi": "10.1016/j.neuroimage.2021.118480",
-      "neurostore_base_study_id": "gx2zzUbbydf9"
+      "preprint_dois": null,
+      "preprint_pmid": null,
+      "preprint_pmcid": null,
+      "publication_status": "published"
     },
     "producer": {
       "name": "ns-pond-ingestion-workflow",
@@ -28,7 +31,8 @@
         "producer_version": null
       }
     ],
-    "created_at": null
+    "created_at": null,
+    "neurostore_base_study_id": "gx2zzUbbydf9"
   },
   "source": "elsevier",
   "source_reason": null,
@@ -66,11 +70,31 @@
       "Speech processing",
       "fMRI"
     ],
-    "license": null,
-    "open_access": null,
+    "license": {
+      "license_id": "all-rights-reserved",
+      "determination": "assumed",
+      "stated_by": null,
+      "stated_as": null
+    },
     "corrections": null,
-    "provider": "semantic_scholar"
+    "provider": "semantic_scholar",
+    "oa_status": null,
+    "abstract_provider": null
   },
+  "text_copy": {
+    "route": "publisher",
+    "version": "vor",
+    "license": {
+      "license_id": "all-rights-reserved",
+      "determination": "assumed",
+      "stated_by": null,
+      "stated_as": null
+    },
+    "url": null,
+    "preprint_server": null,
+    "access": "tdm_grant"
+  },
+  "reported_copies": null,
   "is_meta_analysis": false,
   "is_meta_analysis_basis": null,
   "sections": [

@@ -1,13 +1,16 @@
 {
   "header": {
     "artifact_kind": "coordinate_parse",
-    "schema_version": "0.6.0",
+    "schema_version": "0.8.0",
     "article_id": "wjkrusokqlf4",
     "identifiers": {
       "pmid": "34411741",
       "pmcid": null,
       "doi": "10.1016/j.neuroimage.2021.118480",
-      "neurostore_base_study_id": "gx2zzUbbydf9"
+      "preprint_dois": null,
+      "preprint_pmid": null,
+      "preprint_pmcid": null,
+      "publication_status": "published"
     },
     "producer": {
       "name": "ns-pond-ingestion-workflow",
@@ -28,7 +31,8 @@
         "producer_version": null
       }
     ],
-    "created_at": null
+    "created_at": null,
+    "neurostore_base_study_id": "gx2zzUbbydf9"
   },
   "parse_id": "227fe6e157784ffe5964c4c294777370c6896f071ff9b351aeddbb6a31cbaac1",
   "text_sha256": "22897ca8caf9c70c62f21090690d0ab0e2f0731fd1d3878e985a2c0d78bba335",

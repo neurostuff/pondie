@@ -22,8 +22,9 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from study_schema.keys import key_for, normalize_name
-from study_schema.models.paper_parse import CoordinateParse, ParsedPaper
+from study_schema.models.paper_parse import Bibliography, CoordinateParse, ParsedPaper
 
+from pondie import paths
 from pondie.formats import parse_keys
 
 _log = logging.getLogger(__name__)
@@ -40,6 +41,23 @@ FROM_STAGE1 = "stage1"
 
 def is_coordinate_parse(path: Path | None) -> bool:
     return bool(path) and path.name == COORDINATE_PARSE and path.parent.name == PARSE_DIR
+
+
+def publication_facts(study: str, corpus: Path = paths.CORPUS) -> dict[str, list[str]]:
+    """`study_type` and `language` of one paper, from its parsed paper's bibliography.
+
+    A record carries neither, so a criterion on them joins the record to its paper here.
+    Raises for a paper with no parsed paper, and for a bibliography that is not the current
+    contract's: a missing file reads the same as a wrong corpus path, so a caller that can
+    do without must count the papers it skipped. Only the bibliography is validated; the
+    rest of the parse is the text and its tables.
+    """
+    raw = json.loads(paths.parsed_paper(study, corpus).read_text(encoding="utf-8"))
+    bibliography = Bibliography.model_validate(raw["bibliography"])
+    return {
+        "study_type": [str(t) for t in bibliography.publication_types or []],
+        "language": list(bibliography.language or []),
+    }
 
 
 def legacy_stage1(path: Path) -> Path:
