@@ -21,6 +21,7 @@ import gold
 import queries
 from pondie import paths
 from pondie.extraction import pubmed
+from pondie.formats.coordinate_parse import publication_facts
 from pondie.formats.parse_keys import parse_keys
 
 PUBMED_CACHE = Path(__file__).with_name("pubmed.json")
@@ -30,20 +31,6 @@ GOLD_COORDS = False
 OVERLAP = False
 #: Set by --labels: "benchmark" (as published) or "adjudicated" (gold.ADJUDICATED applied).
 LABELS = "benchmark"
-
-
-def bibliography(run_dir: Path, pmids: list[str]) -> dict:
-    """pmid -> {"study_type", "language"} from each paper's parsed paper, where it has one."""
-    found = {}
-    for pmid in pmids:
-        path = run_dir / "corpus" / pmid / "parse" / "parsed_paper.json"
-        if path.is_file():
-            bib = json.loads(path.read_text()).get("bibliography") or {}
-            found[pmid] = {
-                "study_type": bib.get("publication_types") or [],
-                "language": bib.get("language") or [],
-            }
-    return found
 
 
 def authorship(pmids: list[str]) -> dict:
@@ -130,7 +117,6 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool,
           quiet: bool = False) -> dict:
     run_dir = paths.run(run)
     records = load(run_dir, raw)
-    facts = bibliography(run_dir, sorted(records))
     years = pubyears(sorted(records))
     authors = authorship(sorted(records))
     positives = gold.labels(meta, LABELS)
@@ -139,7 +125,7 @@ def score(run: str, raw: bool, meta: str, negatives: set[str], detail: bool,
     foci_hit = foci_total = foci_sel = foci_sel_gold = 0
     for pmid, record in sorted(records.items()):
         record["local_id"] = pmid
-        record.update(facts.get(pmid, {}))
+        record.update(publication_facts(pmid, run_dir / "corpus"))
         record["_pubyear"] = years.get(pmid)
         from pondie.query.overlap import date_key
         when = authors.get(pmid, {}).get("pubdate")

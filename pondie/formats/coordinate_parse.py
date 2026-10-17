@@ -24,6 +24,7 @@ from typing import Any, Iterable, Mapping
 from study_schema.keys import key_for, normalize_name
 from study_schema.models.paper_parse import CoordinateParse, ParsedPaper
 
+from pondie import paths
 from pondie.formats import parse_keys
 
 _log = logging.getLogger(__name__)
@@ -40,6 +41,23 @@ FROM_STAGE1 = "stage1"
 
 def is_coordinate_parse(path: Path | None) -> bool:
     return bool(path) and path.name == COORDINATE_PARSE and path.parent.name == PARSE_DIR
+
+
+def publication_facts(study: str, corpus: Path = paths.CORPUS) -> dict[str, list[str]]:
+    """`study_type` and `language` of one paper, from its parsed paper's bibliography.
+
+    A record carries neither, so a criterion on them joins the record to its paper here.
+    Empty when the paper has no parsed paper, which a predicate reads as "cannot say".
+    """
+    path = paths.parsed_paper(study, corpus)
+    if not path.is_file():
+        return {}
+    paper = ParsedPaper.model_validate(json.loads(path.read_text(encoding="utf-8")))
+    bibliography = paper.bibliography
+    return {
+        "study_type": list(bibliography.publication_types or []),
+        "language": list(bibliography.language or []),
+    }
 
 
 def legacy_stage1(path: Path) -> Path:

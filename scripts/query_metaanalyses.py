@@ -29,6 +29,9 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Callable
 
+from pondie import paths
+from pondie.formats.coordinate_parse import publication_facts
+
 UNANSWERABLE = None
 
 #: Spelled-out names are the half a short regex misses. `18801475` says "Montreal
@@ -346,9 +349,8 @@ def has_direction(record: dict) -> bool | None:
 def english(record: dict) -> bool | None:
     """"only empirical English language MRI studies" / "written in the English language".
 
-    The parsed paper's `bibliography.language`, which a record does not carry. Stated by at least
-    six of the sixteen and unexpressible until the slot existed: a record that does not
-    carry the field cannot say, which is what an unfilled corpus should read as.
+    `main` joins `bibliography.language` from the paper's parsed paper onto the record. Stated
+    by at least six of the sixteen; a paper without a parsed paper cannot say.
     """
     codes = [str(c).lower() for c in (record.get("language") or [])]
     if not codes:
@@ -539,6 +541,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--records", required=True)
     ap.add_argument("--bench", required=True, type=Path)
+    ap.add_argument("--corpus", type=Path, default=None,
+                    help="where each paper's parse/parsed_paper.json is (default: the data dir)")
     ap.add_argument("--repair", action="store_true",
                     help="apply the deterministic repairs first, to measure what they buy "
                          "a query rather than what they buy a check")
@@ -573,7 +577,9 @@ def main() -> int:
             fix.unwrap_singleton_lists(body, _SCH)
             fix.link_entities_by_name(body, _SCH)
             fix.drop_redundant_cell_levels(body)
-        records[Path(path).parent.name][Path(path).name.split(".")[0]] = body
+        pmid = Path(path).name.split(".")[0]
+        body.update(publication_facts(pmid, args.corpus or paths.CORPUS))
+        records[Path(path).parent.name][pmid] = body
 
     for meta_pmid, (project, predicates) in QUERIES.items():
         here = records.get(project) or {}
