@@ -41,7 +41,7 @@ def build(runs: list[str], out: str, drop_strays: bool) -> None:
         records = paths.DATA / "compare" / out / run
         records.mkdir(parents=True, exist_ok=True)
         settings = Settings(
-            payloads=source / "payloads", records=records, model=MODEL, pubmed=False
+            payloads=source / "payloads", records=records, model=MODEL
         )
         for payload in sorted(p for p in (source / "payloads").iterdir() if p.is_dir()):
             Build().run(Paper.best(payload.name, source / "corpus"), settings, None)

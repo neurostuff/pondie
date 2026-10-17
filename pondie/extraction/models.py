@@ -254,8 +254,6 @@ class Settings(Strict):
     #: After `single`'s attempts, ask once for only the entities its references name and it
     #: never emitted (experiments/stage-ablation/JOURNAL.md, P2).
     complete_references: bool = True
-    #: Fill `Study.language` and `Study.study_type` from PubMed at `build`. Needs network.
-    pubmed: bool = True
 
     def effort_for(self, stage: "StageName | str") -> str:
         """The reasoning effort a stage's calls are made at."""

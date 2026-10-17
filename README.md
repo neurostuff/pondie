@@ -32,10 +32,12 @@ answer.
 
 Some slots the schema declares are filled by code rather than asked of a model. Storage marks
 them `deterministic` and the projection drops them, so the ones filled on the *extraction*
-side are declared back in `extraction-deviations.yaml`: `Analysis.mirror_of`,
-`Group.is_healthy` (derived from `medical_condition`, so the two cannot disagree) and
-`Study.study_type` (PubMed publication types, via `pondie.extraction.pubmed`, which is what a
-criterion excluding reviews and editorials asks about).
+side are declared back in `extraction-deviations.yaml`: `Analysis.mirror_of` and
+`Group.is_healthy` (derived from `medical_condition`, so the two cannot disagree).
+
+A record carries no bibliographic fact. Language, publication types and identifiers are the
+parse's `bibliography` and header, and a criterion on them joins the record to its parse
+through `parse_id`.
 
 ## Extraction
 
@@ -71,7 +73,7 @@ parse, which carries those a paper states in prose as well as those in its table
 | `single` | yes | the whole record in one call, shown the stage-1 listing, held to the listing checks and to a dangling-reference check, retried with the faults named, keeping the best attempt. `--structured-outputs` decodes it (and `fill`, `evidence`) under a strict schema generated from the extraction schema; `--recheck-results` asks once more for analyses in Results sentences no analysis cites |
 | `fill` | yes | asks for the slots still open, round after round, until none are — a shape for finishing an entity rather than deciding it exists |
 | `evidence` | yes | a supporting quote for every value that does not already carry one resolving to the text. With `--evidence-format indexed` the earlier stages cite sentence numbers and this stage is usually idle; changes no value a query reads |
-| `build` | no | merge, apply the deterministic fixes in `record/fix/`, fill `language` and `study_type` from PubMed, resolve quotes to offsets, validate, write the record |
+| `build` | no | merge, apply the deterministic fixes in `record/fix/`, resolve quotes to offsets, validate, write the record |
 | `repair` | yes | the extraction model proposes what the record lacks, guards decide what is written, and scope/region contradictions are settled once |
 
 `demands` then `satisfy` is the earlier, two-call form of `single`, still run by naming both

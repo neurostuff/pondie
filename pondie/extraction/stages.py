@@ -167,8 +167,8 @@ def prompt_digest() -> str:
         Path(worked.__file__),
         schema.ROOT / "extraction-readme.md",
         schema.ROOT / "representing-models.md",
-        schema.ROOT / "extraction-deviations.yaml",
-        *sorted((schema.ROOT / "neuroimaging-study-extraction").glob("*.yaml")),
+        schema.LINKML / "extraction-deviations.yaml",
+        *sorted((schema.LINKML / "neuroimaging-study-extraction").glob("*.yaml")),
     ]
     return pipeline.digest_of(
         {
@@ -680,19 +680,6 @@ def _extend(held: list, new: list) -> None:
             by_id[entity["local_id"]] = entity
         elif isinstance(present.get("terms"), list) and isinstance(entity.get("terms"), list):
             _extend(present["terms"], entity["terms"])
-
-
-def _fill_from_pubmed(record: dict, study_id: str) -> str:
-    """`Study.language` and `Study.study_type` from PubMed. A note, or "" for a non-pmid.
-
-    Never fatal: an unreachable PubMed leaves both unset, which reads as unknown.
-    """
-    if not study_id.isdigit():
-        return ""
-    from pondie.extraction import pubmed
-
-    changed = pubmed.fill(record, pubmed.summaries([study_id]))
-    return f"pubmed: {'; '.join(changed)}" if changed else "pubmed: nothing returned"
 
 
 #: Failures meaning the reply is not a record at all; worse than any number of others.
@@ -1310,7 +1297,6 @@ class Build(_Base):
         from pondie import normalization
 
         derived = normalization.apply_derived(record)
-        published = _fill_from_pubmed(record, paper.study_id) if settings.pubmed else ""
 
         out = self.produces(paper, settings)
         out.parent.mkdir(parents=True, exist_ok=True)
@@ -1322,8 +1308,6 @@ class Build(_Base):
             if tally.get("set") or tally.get("moved")
         )
         notes = [f"derived: {filled or 'nothing to fill'}"]
-        if published:
-            notes.append(published)
         notes.append(f"repairs: {', '.join(report.repair_log.fired()) or 'none fired'}")
         if report.warrant.unresolved:
             notes.append(

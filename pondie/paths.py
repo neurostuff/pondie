@@ -149,6 +149,11 @@ def coordinate_parse(study: str, corpus: Path = CORPUS) -> Path:
     return corpus / study / "parse" / "coordinate_parse.json"
 
 
+def parsed_paper(study: str, corpus: Path = CORPUS) -> Path:
+    """Ingestion's ParsedPaper for one study: the text's bibliography, header and tables."""
+    return corpus / study / "parse" / "parsed_paper.json"
+
+
 def analyses(study: str, corpus: Path = CORPUS) -> Path:
     """The parse a reader takes the paper's analyses from: the CoordinateParse where the
     paper has one, else the legacy `stage1/analyses.json`."""
