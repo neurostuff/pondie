@@ -62,8 +62,8 @@ pubget = ["lxml", "pandas", "nilearn"]
 # Schwartz-Hearst abbreviation detection. Without it a documented weaker miner runs.
 abbreviations = ["scispacy"]
 # `nimare` is here as well as in `meta` because `Result.to_dataset` is the last step of
-# the query pipeline and the suite runs no skipped tests: a dependency that is optional
-# to a user is not optional to the thing that checks the code works.
+# the query pipeline: a dependency that is optional to a user is not optional to the
+# thing that checks the code works.
 dev = ["pytest", "pytest-cov", "black", "isort", "pyflakes", "mypy", "nimare>=0.2"]
 
 [project.scripts]
@@ -122,3 +122,7 @@ follow_imports = "silent"
 profile = "black"
 line_length = 99
 known_first_party = ["pondie"]
+
+[tool.coverage.run]
+branch = true
+source = ["pondie"]

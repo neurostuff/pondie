@@ -12,9 +12,19 @@ from __future__ import annotations
 import pytest
 
 from pondie.normalization import medical_condition as mc
-from pondie.vocabularies.mondo import MONDO, load_mondo, onvoc_crosswalk
+from pondie.vocabularies.mondo import CROSSWALKS, MONDO, load_mondo, onvoc_crosswalk
+from pondie.vocabularies.onvoc import VOCAB_DIR
 
 needs_mondo = pytest.mark.skipif(not MONDO.is_file(), reason="MONDO release not fetched")
+# The ONVOC release and its published crosswalk are fetched, not committed; without them the
+# bridge finds no ONVOC term and these tests would fail on a missing file, not on the code.
+needs_onvoc = pytest.mark.skipif(
+    not (
+        (CROSSWALKS / "mondo.tsv").is_file()
+        and any((VOCAB_DIR / name).is_file() for name in ("onvoc.ttl", "onvoc.json"))
+    ),
+    reason="ONVOC release or its MONDO crosswalk not fetched",
+)
 
 
 @pytest.fixture(scope="module")
@@ -51,6 +61,7 @@ def test_a_synonym_is_indexed_and_reachable(vocab) -> None:
 
 
 @needs_mondo
+@needs_onvoc
 def test_a_subtype_reaches_its_onvoc_term_by_walking_up(vocab, crosswalk) -> None:
     """ONVOC has `Dementia` and nothing below it, so bvFTD has no crosswalk of its own.
 
@@ -65,6 +76,7 @@ def test_a_subtype_reaches_its_onvoc_term_by_walking_up(vocab, crosswalk) -> Non
 
 
 @needs_mondo
+@needs_onvoc
 def test_a_term_with_its_own_tie_does_not_walk(vocab, crosswalk) -> None:
     assert mc.bridge(vocab.exact("schizophrenia"), vocab, crosswalk)[2] == "crosswalk"
 
@@ -77,6 +89,7 @@ def onvoc():
 
 
 @needs_mondo
+@needs_onvoc
 def test_walking_up_recovers_the_coverage_gaps_the_flat_route_reported(
     vocab, crosswalk, onvoc
 ) -> None:
@@ -91,6 +104,7 @@ def test_walking_up_recovers_the_coverage_gaps_the_flat_route_reported(
 
 
 @needs_mondo
+@needs_onvoc
 def test_a_term_onvoc_has_is_never_proposed_back_to_it(vocab, crosswalk, onvoc) -> None:
     """ONVOC carries these two and the crosswalk ties neither, so an identifier-only
     bridge would propose terms the vocabulary already has."""
@@ -103,6 +117,7 @@ def test_a_term_onvoc_has_is_never_proposed_back_to_it(vocab, crosswalk, onvoc) 
 
 
 @needs_mondo
+@needs_onvoc
 def test_a_crosswalk_row_that_cannot_be_right_decides_nothing(vocab, crosswalk, onvoc) -> None:
     """`MONDO:0005148` is listed under both Type 1 and Type 2 Diabetes Mellitus, so
     taking the first row seen made every type 2 cohort a type 1 cohort."""
@@ -113,6 +128,7 @@ def test_a_crosswalk_row_that_cannot_be_right_decides_nothing(vocab, crosswalk, 
 
 
 @needs_mondo
+@needs_onvoc
 def test_a_condition_onvoc_cannot_name_at_any_grain_is_a_proposal(
     vocab, crosswalk, onvoc
 ) -> None:
@@ -129,6 +145,7 @@ def test_the_lexical_layer_prefers_the_form_the_paper_wrote(vocab) -> None:
 
 
 @needs_mondo
+@needs_onvoc
 def test_a_record_becomes_one_row_per_head_with_both_grains(tmp_path, monkeypatch) -> None:
     """The whole route, with the encoder stubbed so the plumbing is what is under test.
 

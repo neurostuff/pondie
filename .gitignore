@@ -20,3 +20,4 @@ data/
 .coverage
 coverage.xml
 htmlcov/
+pytest.log

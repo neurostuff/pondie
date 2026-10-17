@@ -42,12 +42,30 @@ jobs:
       - name: Parameter priorities
         run: python -m pondie.schema.checks.storage_parameter_priorities
 
+      # The MONDO bridge tests read this release. The PURL redirects to the versioned
+      # release URL, which keys the cache so a new release is fetched.
+      - name: MONDO release URL
+        id: mondo
+        run: |
+          url=$(curl -sIL https://purl.obolibrary.org/obo/mondo.json | grep -i "^location:.*releases/download/" | head -1 | tr -d "\r")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: data/vocab/mondo.json
+          key: mondo-${{ steps.mondo.outputs.url }}
+      - run: python -m pondie.vocabularies.fetch mondo
+
       # `tests` only: the submodule has its own suite and conftest. `python -m` puts the
       # checkout on sys.path, which test_stages needs to import `tests`.
       - name: Test
-        run: >
-          python -m pytest tests -rs --durations=25
-          --cov=pondie --cov-report=xml --cov-report=html --cov-report=term
+        run: |
+          python -m pytest tests -rs --durations=25 \
+            --cov --cov-report=xml --cov-report=html --cov-report=term | tee pytest.log
+          # What still skips needs data that is not in the repository (ONVOC, synced
+          # article text). A broken fixture must not turn tests into skips unnoticed.
+          skipped=$(grep -oE "[0-9]+ skipped" pytest.log | tail -1 | cut -d" " -f1)
+          echo "skipped: $skipped (expected at most 39)"
+          test "$skipped" -le 39
 
       - name: Coverage summary
         if: always()
@@ -55,7 +73,7 @@ jobs:
           {
             echo "## Coverage"
             echo
-            echo "$(coverage report --format=total)%  (line)"
+            echo "$(coverage report --format=total)%  (line + branch)"
             echo
             echo "<details><summary>Per file</summary>"
             echo

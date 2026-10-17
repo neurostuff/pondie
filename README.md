@@ -279,8 +279,11 @@ python -m spacy download en_core_web_sm     # negation scope, for medication_sta
 pytest
 ```
 
-896 of the tests run against nothing but the repository. The other 17 are gated on corpus
-data and say so; to lift them:
+Most of the suite runs against nothing but the repository. The tests gated on data that is
+not in it skip and say so (run `pytest -rs` for the list): the ONVOC release, and the
+corpus rebuild and table-parse tests, which need synced licensed article text. CI fetches
+MONDO and fails if more tests skip than it expects. The byte-for-byte corpus rebuild check
+is therefore not run in CI. To lift the corpus gates:
 
 ```bash
 pip install -e ".[pubget]"
