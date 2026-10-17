@@ -42,10 +42,11 @@ jobs:
       - name: Parameter priorities
         run: python -m pondie.schema.checks.storage_parameter_priorities
 
-      # `tests` only: the study_schema submodule has its own suite and conftest.
+      # `tests` only: the submodule has its own suite and conftest. `python -m` puts the
+      # checkout on sys.path, which test_stages needs to import `tests`.
       - name: Test
         run: >
-          pytest tests -rs --durations=25
+          python -m pytest tests -rs --durations=25
           --cov=pondie --cov-report=xml --cov-report=html --cov-report=term
 
       - name: Coverage summary
