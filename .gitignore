@@ -15,3 +15,8 @@ data/
 # the stage-1 table parse. Both are checkouts of other repositories, pinned by commit in
 # the docs rather than vendored here.
 .tmp_repos/
+
+# pytest-cov output
+.coverage
+coverage.xml
+htmlcov/

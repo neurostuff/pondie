@@ -64,7 +64,7 @@ abbreviations = ["scispacy"]
 # `nimare` is here as well as in `meta` because `Result.to_dataset` is the last step of
 # the query pipeline and the suite runs no skipped tests: a dependency that is optional
 # to a user is not optional to the thing that checks the code works.
-dev = ["pytest", "black", "isort", "pyflakes", "mypy", "nimare>=0.2"]
+dev = ["pytest", "pytest-cov", "black", "isort", "pyflakes", "mypy", "nimare>=0.2"]
 
 [project.scripts]
 pondie = "pondie.cli:main"
