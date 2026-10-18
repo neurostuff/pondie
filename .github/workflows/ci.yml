@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # The schema is the study_schema submodule; pondie.schema reads it from the checkout.
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      # Editable, so coverage measures the checkout rather than a copy in site-packages.
+      - run: pip install -e ".[dev]"
+      # Negation scope for medication_status.
+      - run: python -m spacy download en_core_web_sm
+      # Plural folding; the lexical-layer test needs the corpus.
+      - run: python -m nltk.downloader wordnet
+
+      - name: Generated extraction schema is current
+        run: python -m pondie.schema.generate --check
+      - name: Field provenance
+        run: python -m pondie.schema.checks.field_provenance
+      - name: LinkML well-formed
+        run: python -m pondie.schema.checks.linkml
+      - name: Extraction-to-storage map
+        run: python -m pondie.schema.checks.extraction_to_storage_map
+      - name: Parameter priorities
+        run: python -m pondie.schema.checks.storage_parameter_priorities
+
+      # The MONDO bridge tests read this release. The PURL redirects to the versioned
+      # release URL, which keys the cache so a new release is fetched.
+      - name: MONDO release URL
+        id: mondo
+        run: |
+          url=$(curl -sIL https://purl.obolibrary.org/obo/mondo.json | grep -i "^location:.*releases/download/" | head -1 | tr -d "\r")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: data/vocab/mondo.json
+          key: mondo-${{ steps.mondo.outputs.url }}
+      - run: python -m pondie.vocabularies.fetch mondo
+
+      # `tests` only: the submodule has its own suite and conftest. `python -m` puts the
+      # checkout on sys.path, which test_stages needs to import `tests`.
+      - name: Test
+        # pipefail, which the default `bash -e` lacks: without it `| tee` hides a pytest failure.
+        shell: bash
+        run: |
+          python -m pytest tests -rs --durations=25 \
+            --cov --cov-report=xml --cov-report=html --cov-report=term | tee pytest.log
+          # What still skips needs data that is not in the repository (ONVOC, synced
+          # article text). A broken fixture must not turn tests into skips unnoticed.
+          skipped=$(grep -oE "[0-9]+ skipped" pytest.log | tail -1 | cut -d" " -f1)
+          echo "skipped: $skipped (expected at most 39)"
+          test "$skipped" -le 39
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          {
+            echo "## Coverage"
+            echo
+            echo "$(coverage report --format=total)%  (line + branch)"
+            echo
+            echo "<details><summary>Per file</summary>"
+            echo
+            coverage report --format=markdown --skip-empty
+            echo
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: |
+            coverage.xml
+            htmlcov/
