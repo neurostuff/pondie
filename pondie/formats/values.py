@@ -198,12 +198,18 @@ class _NotReported:
 NOT_REPORTED = _NotReported()
 
 
+def has_value(wrapper: Mapping[str, Any]) -> bool:
+    """Whether a wrapper carries a `value`. An explicit null is absence, which is how
+    study_schema's layouts write a `not_reported` wrapper."""
+    return wrapper.get("value") is not None
+
+
 def value_of(node: object, multivalued: bool = False) -> object:
     """The value inside an ExtractedValue wrapper."""
     if node is None:
         return [] if multivalued else None
     if isinstance(node, Mapping):
-        if "value" not in node:
+        if not has_value(node):
             return NOT_REPORTED
         value = node["value"]
     else:
