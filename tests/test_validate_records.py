@@ -23,7 +23,8 @@ from conftest import (  # the shared paper harness
 import copy
 from pondie.extraction.record import fix
 from pondie.extraction.record import spans as span_tools
-from pondie.formats import text_index
+from pondie.formats import text_index, values
+from pondie.extraction.record import walk
 from pondie.extraction.record import validate as validate_record
 from pondie.extraction.evidence import warrant
 
@@ -328,14 +329,73 @@ def test_the_example_study_schema_writes_is_valid():
     assert _errors(record) == []
 
 
+def _wrappers(record, status):
+    return [w for _, w in values.iter_fields(record) if w.get("extraction_status") == status]
+
+
+def _with_faults(record):
+    """A copy with one fault of each kind a wrapper can have, all of which the study_schema
+    model still loads, so the round trip can be run on it."""
+    record = copy.deepcopy(record)
+    extracted = _wrappers(record, "extracted")
+    blank = _wrappers(record, "not_reported")
+    extracted[0]["evidence"] = {"status": "not_applicable"}
+    extracted[1]["unreported_reason"] = "ambiguous"
+    extracted[2]["evidence"] = {"status": "present"}
+    blank[0]["value"] = "a value on a blank"
+    blank[1]["evidence"] = {"status": "not_found"}
+    return record
+
+
 @pytest.mark.parametrize("path", GOLD, ids=lambda p: p.name.split(".")[0])
-def test_a_record_validates_the_same_with_its_absent_slots_written_as_null(path):
-    """Null is absence: the gold record and its layouts round trip report the same errors.
-    The round trip fills in wrapper slots too (`value`, `unreported_reason`)."""
+@pytest.mark.parametrize("faulty", [False, True], ids=["as_shipped", "with_faults"])
+def test_a_record_validates_the_same_with_its_absent_slots_written_as_null(path, faulty):
+    """Null is absence: the record and its layouts round trip report the same errors. The
+    round trip fills in wrapper slots too (`value`, `unreported_reason`), and the faulted
+    copy makes the comparison one of real errors rather than of two empty lists."""
     record = json.loads(path.read_text())
+    if faulty:
+        record = _with_faults(record)
     nulled = _as_layouts_write(record)
     assert json.dumps(nulled).count("null") > 100
-    assert _errors(nulled) == _errors(record)
+    errors = _errors(record)
+    assert bool(errors) is faulty
+    assert _errors(nulled) == errors
+
+
+def _extracted_wrapper():
+    record = json.loads(GOLD[0].read_text())
+    owner = next(
+        e.node for e in walk.entities(record, reader.load(schema.EXTRACTION))
+        if values.is_field(e.node.get("name") or {}) and e.node["name"]["extraction_status"] == "extracted"
+    )
+    return record, owner["name"]
+
+
+@pytest.mark.parametrize("slot", ["value", "evidence", "extraction_status"])
+def test_an_extracted_wrapper_with_a_null_slot_is_an_error(slot):
+    record, wrapper = _extracted_wrapper()
+    assert _errors(record) == []
+    wrapper[slot] = None
+    assert _errors(record), f"a null {slot} on an extracted wrapper went unreported"
+
+
+@pytest.mark.parametrize("omit", [False, True], ids=["null", "omitted"])
+def test_an_extracted_wrapper_without_a_value_says_so(omit):
+    record, wrapper = _extracted_wrapper()
+    if omit:
+        del wrapper["value"]
+    else:
+        wrapper["value"] = None
+    assert any("extracted fields must carry a value" in e for e in _errors(record))
+
+
+def test_value_of_reads_a_null_valued_blank_as_not_reported():
+    omitted = {"extraction_status": "not_reported", "evidence": {"status": "not_applicable"}}
+    nulled = {**omitted, "value": None, "unreported_reason": None}
+    assert values.value_of(omitted) is values.NOT_REPORTED
+    assert values.value_of(nulled) is values.NOT_REPORTED
+    assert values.value_of({**omitted, "value": 0}) == 0
 
 
 def test_null_does_not_satisfy_a_required_slot():

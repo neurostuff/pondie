@@ -429,9 +429,6 @@ class Validator:
 
         self.fields += 1
         attributes = self.schema.attributes(class_name)
-        # An explicit null is an absent slot, which matters here because
-        # `not_reported` is stated as the absence of `value`.
-        node = {key: item for key, item in node.items() if item is not None}
 
         for key in node:
             if key not in attributes:
@@ -465,12 +462,12 @@ class Validator:
 
         # Header invariant: not_reported means no value at all.
         if status == "not_reported":
-            if "value" in node:
+            if values.has_value(node):
                 self.error(path, "not_reported fields must omit value")
         elif status == "extracted":
             if reason is not None:
                 self.error(path, "extracted fields must omit unreported_reason")
-            if "value" not in node:
+            if not values.has_value(node):
                 self.error(path, "extracted fields must carry a value")
             else:
                 self.check_value_type(node["value"], class_name, attributes, path)

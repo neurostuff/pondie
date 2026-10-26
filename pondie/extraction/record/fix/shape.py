@@ -193,7 +193,7 @@ def listify_scalars(body: dict[str, Any], sch: Schema) -> list[str]:
         declared = slot.declared_value(sch)
         if declared is None or not declared.multivalued or not values.is_field(slot.value):
             continue
-        if "value" not in slot.value:
+        if not values.has_value(slot.value):
             continue
         inner = slot.value["value"]
         # A missing value is a different fault and stays visible as one; only a present
@@ -221,7 +221,7 @@ def unwrap_plain_slots(body: dict[str, Any], sch: Schema) -> list[str]:
     fixed: list[str] = []
     for slot in walk.slots(body, sch, kinds=("reference", "native", "evidence")):
         if slot.kind in ("reference", "native"):
-            if values.is_field(slot.value) and "value" in slot.value:
+            if values.is_field(slot.value) and values.has_value(slot.value):
                 slot.owner[slot.key] = slot.value["value"]
                 fixed.append(f"{slot.path}: unwrapped a wrapper into a {slot.kind} slot")
             elif values.is_field(slot.value):
@@ -238,7 +238,7 @@ def unwrap_plain_slots(body: dict[str, Any], sch: Schema) -> list[str]:
                 )
             elif isinstance(slot.value, list):
                 for index, item in enumerate(slot.value):
-                    if values.is_field(item) and "value" in item:
+                    if values.is_field(item) and values.has_value(item):
                         slot.value[index] = item["value"]
                         fixed.append(
                             f"{slot.path}[{index}]: unwrapped a wrapper into a "
