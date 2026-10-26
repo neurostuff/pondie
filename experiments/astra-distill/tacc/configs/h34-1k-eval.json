@@ -1,0 +1,6 @@
+{
+ "run": "h34-1k",
+ "model": "nu",
+ "adapter": "h34-1k/adapter-final",
+ "workers": 24
+}

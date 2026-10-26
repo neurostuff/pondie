@@ -1,0 +1,8 @@
+{
+ "run": "h34-1k",
+ "model": "nu",
+ "adapter": "h34-1k/adapter-final",
+ "workers": 24,
+ "guided": false,
+ "out_name": "val-pred-unguided.jsonl"
+}

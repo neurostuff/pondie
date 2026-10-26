@@ -1,0 +1,1 @@
+{"run": "h35-full-3k", "model": "nu", "mode": "full", "n_papers": 3000, "lr": 1e-05, "ckpt_fracs": [0.5]}

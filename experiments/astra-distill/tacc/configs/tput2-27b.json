@@ -1,0 +1,8 @@
+{
+ "run": "tput2-27b",
+ "model": "q27",
+ "n_papers": 30,
+ "accum": 2,
+ "max_steps": 15,
+ "ckpt_fracs": []
+}

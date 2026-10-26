@@ -1,0 +1,9 @@
+{
+ "run": "smoke2-27b",
+ "model": "q27",
+ "n_papers": 10,
+ "accum": 2,
+ "max_steps": 3,
+ "force_longest": true,
+ "ckpt_fracs": []
+}

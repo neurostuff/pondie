@@ -1,0 +1,7 @@
+{
+ "run": "r3-27b-full",
+ "model": "q27",
+ "adapter": "r3-27b-full/adapter-final",
+ "workers": 24,
+ "guided": false
+}

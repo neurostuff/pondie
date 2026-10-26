@@ -1,0 +1,1 @@
+{"run": "h35-full-smoke", "model": "nu", "mode": "full", "n_papers": 3000, "lr": 1e-05, "max_steps": 3, "force_longest": true, "ckpt_fracs": []}

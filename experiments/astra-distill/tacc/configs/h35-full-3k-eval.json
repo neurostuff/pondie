@@ -1,0 +1,1 @@
+{"run": "h35-full-3k", "model": "nu", "adapter": "h35-full-3k/adapter-final", "workers": 24, "guided": false}

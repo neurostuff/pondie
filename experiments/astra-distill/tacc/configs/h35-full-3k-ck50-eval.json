@@ -1,0 +1,1 @@
+{"run": "h35-full-3k-ck50", "model": "nu", "adapter": "h35-full-3k/adapter-50", "workers": 24, "guided": false, "sids": "/work/07723/jdk3232/vista/astra-distill/data/v5/val-sub160.txt"}

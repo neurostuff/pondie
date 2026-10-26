@@ -1,0 +1,7 @@
+{
+ "run": "h34-3k",
+ "model": "nu",
+ "adapter": "h34-3k/adapter-final",
+ "workers": 24,
+ "guided": false
+}

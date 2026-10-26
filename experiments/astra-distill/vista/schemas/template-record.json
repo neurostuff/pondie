@@ -1,0 +1,828 @@
+{
+ "description": "string",
+ "hypothesis": [
+  "string"
+ ],
+ "design": {
+  "description": "string",
+  "allocation": [
+   "randomized",
+   "non_randomized",
+   "single_arm",
+   "not_applicable"
+  ],
+  "assignment_structure": [
+   "observational_cohorts",
+   "parallel",
+   "crossover",
+   "within_subject",
+   "single_group"
+  ],
+  "blinding": [
+   "open_label",
+   "participant_blind",
+   "assessor_blind",
+   "double_blind",
+   "not_applicable"
+  ],
+  "arms": [
+   {
+    "local_id": "string",
+    "name": "string",
+    "description": "string",
+    "arm_kind": [
+     "pharmacological",
+     "stimulation",
+     "behavioural_intervention",
+     "placebo",
+     "sham",
+     "active_comparator",
+     "usual_care",
+     "no_intervention"
+    ],
+    "agent": "string"
+   }
+  ],
+  "timepoints": [
+   {
+    "local_id": "string",
+    "name": "string",
+    "relation_to_intervention": [
+     "pre_intervention",
+     "during_intervention",
+     "post_intervention",
+     "single_occasion",
+     "not_applicable"
+    ],
+    "order": "integer",
+    "time_from_intervention": "string"
+   }
+  ]
+ },
+ "groups": [
+  {
+   "local_id": "string",
+   "name": "string",
+   "description": "string",
+   "species": [
+    "human",
+    "macaque",
+    "marmoset",
+    "baboon",
+    "rat",
+    "mouse"
+   ],
+   "arm": "local_id",
+   "approached_count": "integer",
+   "consented_count": "integer",
+   "enrolled_count": "integer",
+   "acquired_count": "integer",
+   "excluded_count": "integer",
+   "inclusion_criteria": [
+    "string"
+   ],
+   "exclusion_criteria": [
+    "string"
+   ],
+   "recruitment_method": "string",
+   "recruitment_dates": "string",
+   "age_mean": "number",
+   "age_standard_deviation": "number",
+   "age_minimum": "number",
+   "age_maximum": "number",
+   "age_median": "number",
+   "age_unit": "string",
+   "sex_distribution": [
+    {
+     "category": "string",
+     "count": "integer",
+     "percentage": "number",
+     "denominator": "integer",
+     "reporting_framework": "string",
+     "category_normalized": "string"
+    }
+   ],
+   "gender_distribution": [
+    {
+     "category": "string",
+     "count": "integer",
+     "percentage": "number",
+     "denominator": "integer",
+     "reporting_framework": "string",
+     "category_normalized": "string"
+    }
+   ],
+   "handedness_distribution": [
+    {
+     "category": "string",
+     "count": "integer",
+     "percentage": "number",
+     "denominator": "integer",
+     "reporting_framework": "string",
+     "category_normalized": "string"
+    }
+   ],
+   "race_distribution": [
+    {
+     "category": "string",
+     "count": "integer",
+     "percentage": "number",
+     "denominator": "integer",
+     "reporting_framework": "string",
+     "category_normalized": "string"
+    }
+   ],
+   "ethnicity_distribution": [
+    {
+     "category": "string",
+     "count": "integer",
+     "percentage": "number",
+     "denominator": "integer",
+     "reporting_framework": "string",
+     "category_normalized": "string"
+    }
+   ],
+   "population_characteristics": [
+    "string"
+   ],
+   "medical_condition": [
+    "string"
+   ],
+   "diagnostic_system": "string",
+   "diagnostic_instrument": [
+    "local_id"
+   ],
+   "clinical_characteristics": "string",
+   "medications": [
+    "string"
+   ],
+   "medication_status": "string",
+   "education_summary": "string",
+   "socioeconomic_status_summary": "string",
+   "sample_source": [
+    "recruited",
+    "public_dataset",
+    "previously_reported"
+   ],
+   "sample_source_reference": "string",
+   "sample_overlap_count": "integer",
+   "is_healthy": "boolean",
+   "age_unit_normalized": "string",
+   "other_characteristics": [
+    "string"
+   ]
+  }
+ ],
+ "tasks": [
+  {
+   "local_id": "string",
+   "name": "string",
+   "description": "string",
+   "conditions": [
+    {
+     "local_id": "string",
+     "name": "string",
+     "stimulus_content": [
+      "string"
+     ],
+     "condition_kind": [
+      "task_state",
+      "rest",
+      "fixation",
+      "control_state"
+     ],
+     "description": "string"
+    }
+   ],
+   "design_type": [
+    "block",
+    "event_related",
+    "mixed",
+    "continuous"
+   ],
+   "acquisitions": [
+    "local_id"
+   ],
+   "presentation_software": "string",
+   "instructions": "string",
+   "references": [
+    "string"
+   ],
+   "stimuli": [
+    "string"
+   ],
+   "stimulus_content": [
+    "string"
+   ],
+   "stimulus_modality": [
+    [
+     "visual",
+     "auditory",
+     "tactile",
+     "olfactory",
+     "gustatory",
+     "interoceptive",
+     "none"
+    ]
+   ],
+   "response_modality": [
+    [
+     "button_press",
+     "hand_movement",
+     "speech",
+     "covert_response",
+     "eye_movement",
+     "foot_or_leg_movement",
+     "oral_nonspeech",
+     "none"
+    ]
+   ],
+   "performance_measures": [
+    "string"
+   ]
+  }
+ ],
+ "assessments": [
+  {
+   "local_id": "string",
+   "name": "string",
+   "description": "string",
+   "assessment_type": "string"
+  }
+ ],
+ "regions": [
+  {
+   "local_id": "string",
+   "name": "string",
+   "definition_method": [
+    "atlas",
+    "prior_literature",
+    "anatomical_a_priori",
+    "functional_localizer",
+    "same_study_analysis"
+   ],
+   "region_type": [
+    "anatomical",
+    "atlas_parcel",
+    "network",
+    "coordinate_sphere",
+    "functional_cluster"
+   ],
+   "atlas": "string",
+   "description": "string"
+  }
+ ],
+ "devices": [
+  {
+   "local_id": "string",
+   "manufacturer": "string",
+   "model": "string"
+  }
+ ],
+ "acquisitions": [
+  {
+   "magnetic_field_strength_tesla": "number",
+   "pulse_sequence_type": "string",
+   "mr_acquisition_type": "string",
+   "repetition_time_seconds": "number",
+   "echo_time_seconds": [
+    "number"
+   ],
+   "acquisition_voxel_size_mm": [
+    "number"
+   ],
+   "number_of_volumes": "integer",
+   "local_id": "string",
+   "acquisition_type": [
+    "MRI",
+    "EEG",
+    "FNIRS",
+    "PET",
+    "OtherModality"
+   ],
+   "modality": [
+    "fMRI",
+    "sMRI",
+    "dMRI",
+    "MRI",
+    "EEG",
+    "fNIRS",
+    "PET",
+    "MEG",
+    "SPECT",
+    "other"
+   ],
+   "acquisition_duration_seconds": "number",
+   "device": "local_id",
+   "brain_coverage": [
+    "whole_brain",
+    "partial"
+   ],
+   "sampling_frequency_hz": "number",
+   "eeg_reference": "string",
+   "eeg_placement_scheme": "string",
+   "recording_type": "string",
+   "eeg_channel_count": "integer",
+   "nirs_system_type": "string",
+   "nirs_channel_count": "integer",
+   "wavelengths_nm": [
+    "number"
+   ],
+   "short_channel_count": "integer",
+   "source_detector_distances_mm": [
+    "number"
+   ],
+   "nirs_placement_scheme": [
+    "string"
+   ],
+   "recorded_signal_types": [
+    "string"
+   ],
+   "image_units": "string",
+   "tracer_name": "string",
+   "tracer_radionuclide": "string",
+   "mode_of_administration": "string",
+   "scan_type": "string",
+   "uptake_time_seconds": "number",
+   "reconstructed_voxel_size_mm": [
+    "number"
+   ],
+   "spatial_resolution_mm": [
+    "number"
+   ],
+   "modality_label": "string",
+   "reason_no_modality_class_used": "string"
+  }
+ ],
+ "preprocessings": [
+  {
+   "local_id": "string",
+   "description": "string",
+   "software": [
+    "string"
+   ],
+   "steps": [
+    "string"
+   ],
+   "smoothing_fwhm_mm": [
+    "number"
+   ]
+  }
+ ],
+ "model_estimations": [
+  {
+   "local_id": "string",
+   "model_family": [
+    "glm",
+    "mixed_effects",
+    "anova",
+    "ancova",
+    "robust_regression"
+   ],
+   "model_type": "string",
+   "hrf_model": "string",
+   "model_settings": "string",
+   "stage": "string",
+   "estimator": "string",
+   "software": "string",
+   "spatial_unit": [
+    "voxel",
+    "vertex",
+    "roi",
+    "parcel"
+   ],
+   "preprocessing": [
+    "local_id"
+   ],
+   "inputs_from": [
+    "local_id"
+   ],
+   "terms": [
+    {
+     "local_id": "string",
+     "name": "string",
+     "type": [
+      "categorical",
+      "continuous"
+     ],
+     "levels": [
+      {
+       "level": "string",
+       "order": "integer",
+       "conditions": [
+        "local_id"
+       ],
+       "groups": [
+        "local_id"
+       ],
+       "timepoints": [
+        "local_id"
+       ],
+       "arms": [
+        "local_id"
+       ],
+       "regions": [
+        "local_id"
+       ]
+      }
+     ],
+     "assessment": "local_id",
+     "region": "local_id",
+     "variation_level": [
+      "within_subject",
+      "between_subject",
+      "mixed"
+     ],
+     "functional_form": [
+      "linear",
+      "quadratic",
+      "absolute",
+      "log"
+     ],
+     "interaction_with": [
+      "local_id"
+     ],
+     "unit": "string",
+     "source_definition": "string"
+    }
+   ]
+  }
+ ],
+ "inference_settings": [
+  {
+   "local_id": "string",
+   "inference_level": "string",
+   "height_threshold_value": "number",
+   "height_threshold_type": "string",
+   "cluster_extent_threshold": "integer",
+   "clusterwise_threshold_value": "number",
+   "multiple_comparison_method": "string",
+   "correction_scope": [
+    "whole_brain",
+    "roi",
+    "searchlight"
+   ],
+   "correction_regions": [
+    "local_id"
+   ],
+   "search_volume": "string",
+   "neighborhood_definition": "string",
+   "tfce_used": "boolean",
+   "tfce_parameters": "string",
+   "permutation_count": "integer",
+   "alpha_level": "number",
+   "number_of_tests": "integer"
+  }
+ ],
+ "measures": [
+  {
+   "local_id": "string",
+   "family": [
+    "functional_bold",
+    "structural_morphometry",
+    "diffusion",
+    "perfusion",
+    "molecular_imaging",
+    "electrophysiology"
+   ],
+   "type": [
+    "bold_response",
+    "bold_derived_metric",
+    "gray_matter_volume",
+    "gray_matter_density",
+    "white_matter_volume",
+    "cortical_thickness",
+    "surface_area",
+    "structural_morphometry_other",
+    "diffusion_metric",
+    "cerebral_blood_flow",
+    "cerebral_blood_volume",
+    "metabolic_rate",
+    "receptor_binding",
+    "tracer_uptake",
+    "electrophysiological_amplitude",
+    "electrophysiological_power",
+    "connectivity_strength",
+    "decoding_performance",
+    "representational_similarity",
+    "component_loading"
+   ],
+   "source_label": "string",
+   "specific_metric": "string",
+   "unit": "string"
+  }
+ ],
+ "analyses": [
+  {
+   "local_id": "string",
+   "name": "string",
+   "definition": "string",
+   "prespecification": [
+    "preregistered",
+    "planned",
+    "exploratory"
+   ],
+   "interpretations": [
+    "string"
+   ],
+   "outcome": [
+    "significant_effect",
+    "no_significant_effect"
+   ],
+   "spatial_scope": [
+    "whole_brain",
+    "roi",
+    "searchlight"
+   ],
+   "regions": [
+    "local_id"
+   ],
+   "defines_regions": [
+    "local_id"
+   ],
+   "measure": "local_id",
+   "groups": [
+    {
+     "group": "local_id",
+     "n": "integer"
+    }
+   ],
+   "effect": {
+    "cells": [
+     {
+      "term": "local_id",
+      "level": "string",
+      "direction": [
+       "positive",
+       "negative",
+       "undirected",
+       "held"
+      ],
+      "label": "string"
+     }
+    ],
+    "kind": [
+     "simple_effect",
+     "contrast",
+     "interaction",
+     "parametric_modulation",
+     "cross_subject_regression",
+     "omnibus"
+    ],
+    "mediation": {
+     "path": [
+      "direct",
+      "indirect",
+      "total"
+     ],
+     "mediator": "local_id"
+    },
+    "statistic": {
+     "family": [
+      "t",
+      "z",
+      "f",
+      "chi_square",
+      "likelihood_ratio",
+      "beta",
+      "correlation"
+     ],
+     "degrees_of_freedom_numerator": "number",
+     "degrees_of_freedom_denominator": "number"
+    }
+   },
+   "details": {
+    "details_type": [
+     "MassUnivariateDetails",
+     "DecodingDetails",
+     "SimilarityDetails",
+     "ConnectivityDetails",
+     "ConjunctionDetails",
+     "LatentDecompositionDetails",
+     "OtherAnalysisDetails",
+     "NotStructurableDetails"
+    ],
+    "decoded_variable": "string",
+    "classes": [
+     {
+      "label": "string",
+      "condition": "local_id"
+     }
+    ],
+    "performance_metrics": [
+     {
+      "name": "string",
+      "value": "number",
+      "reference_value": "number",
+      "relation": [
+       "above_reference",
+       "below_reference",
+       "not_applicable"
+      ]
+     }
+    ],
+    "validation_scheme": "string",
+    "generalization": "string",
+    "model": "string",
+    "neural_representation": "string",
+    "similarity_metric": "string",
+    "competing_models": [
+     "string"
+    ],
+    "connectivity_method": [
+     "ppi",
+     "gppi",
+     "seed_based",
+     "dcm",
+     "granger",
+     "coherence",
+     "structural_covariance",
+     "multivariate"
+    ],
+    "seed_regions": [
+     "local_id"
+    ],
+    "target_regions": [
+     "local_id"
+    ],
+    "edges": [
+     {
+      "source_region": "local_id",
+      "target_region": "local_id"
+     }
+    ],
+    "modulatory_input": "string",
+    "inference_target": [
+     "connectivity_parameter",
+     "model_comparison",
+     "network"
+    ],
+    "components": [
+     {
+      "analysis_id": "string",
+      "analysis_type": [
+       "mass_univariate",
+       "multivariate_decoding",
+       "representational_similarity",
+       "connectivity",
+       "conjunction",
+       "latent_decomposition",
+       "not_structurable"
+      ],
+      "definition": "string"
+     }
+    ],
+    "null_hypothesis": [
+     "global_null",
+     "conjunction_null"
+    ],
+    "implementation": [
+     "minimum_statistic",
+     "masking",
+     "logical_or"
+    ],
+    "method": [
+     "ica",
+     "tensor_ica",
+     "joint_ica",
+     "parallel_ica",
+     "pca",
+     "nmf",
+     "dictionary_learning",
+     "pls",
+     "pls_correlation",
+     "pls_regression",
+     "cca",
+     "mcca"
+    ],
+    "second_block": [
+     [
+      "none",
+      "design",
+      "behavioral",
+      "seed_activity",
+      "other_imaging_modality",
+      "genetic"
+     ]
+    ],
+    "second_block_assessments": [
+     "local_id"
+    ],
+    "second_block_detail": [
+     "string"
+    ],
+    "component_id": "string",
+    "component_label": "string",
+    "total_components": "integer",
+    "dimensionality_selection_method": "string",
+    "selection_criterion": "string",
+    "variance_explained_percent": "number",
+    "crossblock_covariance_percent": "number",
+    "map_quantity": [
+     "loading",
+     "weight",
+     "salience",
+     "z_score",
+     "spatial_map"
+    ],
+    "salience_threshold": "string",
+    "polarity_semantics": [
+     "meaningful",
+     "arbitrary",
+     "unsigned"
+    ],
+    "method_label": "string",
+    "structured_details": "string",
+    "reason_first_class_type_not_used": "string",
+    "reason": [
+     "method_specific_derived_metric",
+     "insufficient_standard_structure",
+     "source_too_vague"
+    ],
+    "explanation": "string"
+   },
+   "acquisitions": [
+    "local_id"
+   ],
+   "tasks": [
+    "local_id"
+   ],
+   "model_estimation": "local_id",
+   "inference_settings": "local_id",
+   "tables": [
+    "local_id"
+   ],
+   "source_table_analysis": "parse_key",
+   "coordinate_space": "string",
+   "assessments": [
+    "local_id"
+   ],
+   "model_representation_notes": "string",
+   "mirror_of": "local_id"
+  }
+ ],
+ "result_reporting": [
+  "analyses_reported",
+  "no_analyses_reported",
+  "analyses_reported_elsewhere"
+ ],
+ "tables": [
+  {
+   "local_id": "string",
+   "table_number": "string",
+   "caption": "string",
+   "footer": "string",
+   "column_headings": [
+    "string"
+   ],
+   "purpose": [
+    "reported_effect",
+    "region_definitions",
+    "atlas_or_parcellation",
+    "connectivity_seeds",
+    "component_peaks",
+    "prior_literature_coordinates",
+    "stimulus_or_task_list",
+    "demographics",
+    "descriptive_statistics"
+   ]
+  }
+ ],
+ "coordinate_sets": [
+  {
+   "local_id": "parse_key",
+   "role": [
+    "result",
+    "anchor",
+    "localization",
+    "reference",
+    "other"
+   ],
+   "result_kind": [
+    "contrast",
+    "association",
+    "multivariate",
+    "morphometric",
+    "lesion",
+    "connectivity"
+   ],
+   "anchor_kind": [
+    "roi",
+    "seed",
+    "stimulation_target",
+    "node"
+   ],
+   "analysis": "local_id",
+   "regions": [
+    "local_id"
+   ],
+   "description": "string"
+  }
+ ],
+ "external_datasets": [
+  {
+   "name": "string",
+   "url": "string"
+  }
+ ]
+}
