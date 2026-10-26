@@ -213,7 +213,8 @@ subset of val: `data/v5/val-sub160.txt`, 160 papers, seed 1. The full val run ta
 - Jobs on gh-dev, with start times set to just after each save:
   - ck25: 1100098
   - ck50: 1100099
-  - ck75: submitted once chunk b's start is known
+  - ck75: 1102765, `--dependency=after:1095924+60` (60 min after chunk b starts; step 582 is about 16 steps of
+    ~140 s past the resume at 566)
 - References on the same 160 papers (linked cell F1): 4B 10k 0.629, 4B full 0.666.
 
 ### 2026-10-25: r3-27b at 25% (step 194, about 3.1k papers seen), val-sub160
