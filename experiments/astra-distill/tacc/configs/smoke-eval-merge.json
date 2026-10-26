@@ -1,0 +1,9 @@
+{
+ "run": "smoke-4b",
+ "model": "nu",
+ "adapter": "smoke-4b/adapter-final",
+ "n": 3,
+ "shortest": true,
+ "workers": 8,
+ "out_name": "val-pred-smoke.jsonl"
+}

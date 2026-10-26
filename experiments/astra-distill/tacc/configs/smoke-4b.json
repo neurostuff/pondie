@@ -1,0 +1,11 @@
+{
+ "run": "smoke-4b",
+ "model": "nu",
+ "n_papers": 10,
+ "accum": 2,
+ "max_steps": 5,
+ "force_longest": true,
+ "ckpt_fracs": [
+  0.5
+ ]
+}

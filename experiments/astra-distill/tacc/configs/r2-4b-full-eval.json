@@ -1,0 +1,7 @@
+{
+ "run": "r2-4b-full",
+ "model": "nu",
+ "adapter": "r2-4b-full/adapter-final",
+ "workers": 24,
+ "guided": false
+}

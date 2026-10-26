@@ -1,0 +1,5 @@
+{
+ "run": "h34-1k",
+ "model": "nu",
+ "n_papers": 1000
+}

@@ -1,0 +1,8 @@
+{
+ "run": "tput-4b",
+ "model": "nu",
+ "n_papers": 30,
+ "accum": 2,
+ "max_steps": 15,
+ "ckpt_fracs": []
+}

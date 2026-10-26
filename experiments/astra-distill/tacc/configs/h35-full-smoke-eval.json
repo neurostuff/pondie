@@ -1,0 +1,1 @@
+{"run": "h35-full-smoke", "model": "nu", "adapter": "h35-full-smoke/adapter-final", "n": 3, "shortest": true, "workers": 8, "guided": false, "out_name": "val-pred-smoke.jsonl"}

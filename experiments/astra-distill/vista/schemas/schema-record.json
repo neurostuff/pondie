@@ -1,0 +1,1728 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "properties": {
+  "description": {
+   "type": "string"
+  },
+  "hypothesis": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "design": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "description": {
+     "type": "string"
+    },
+    "allocation": {
+     "type": "string"
+    },
+    "assignment_structure": {
+     "type": "string"
+    },
+    "blinding": {
+     "type": "string"
+    },
+    "arms": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "local_id": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "description": {
+        "type": "string"
+       },
+       "arm_kind": {
+        "type": "string"
+       },
+       "agent": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "local_id"
+      ]
+     }
+    },
+    "timepoints": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "local_id": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "relation_to_intervention": {
+        "type": "string"
+       },
+       "order": {
+        "type": "integer"
+       },
+       "time_from_intervention": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "local_id"
+      ]
+     }
+    }
+   }
+  },
+  "groups": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "species": {
+      "type": "string"
+     },
+     "arm": {
+      "type": "string"
+     },
+     "approached_count": {
+      "type": "integer"
+     },
+     "consented_count": {
+      "type": "integer"
+     },
+     "enrolled_count": {
+      "type": "integer"
+     },
+     "acquired_count": {
+      "type": "integer"
+     },
+     "excluded_count": {
+      "type": "integer"
+     },
+     "inclusion_criteria": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "exclusion_criteria": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "recruitment_method": {
+      "type": "string"
+     },
+     "recruitment_dates": {
+      "type": "string"
+     },
+     "age_mean": {
+      "type": "number"
+     },
+     "age_standard_deviation": {
+      "type": "number"
+     },
+     "age_minimum": {
+      "type": "number"
+     },
+     "age_maximum": {
+      "type": "number"
+     },
+     "age_median": {
+      "type": "number"
+     },
+     "age_unit": {
+      "type": "string"
+     },
+     "sex_distribution": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "category": {
+         "type": "string"
+        },
+        "count": {
+         "type": "integer"
+        },
+        "percentage": {
+         "type": "number"
+        },
+        "denominator": {
+         "type": "integer"
+        },
+        "reporting_framework": {
+         "type": "string"
+        },
+        "category_normalized": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "gender_distribution": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "category": {
+         "type": "string"
+        },
+        "count": {
+         "type": "integer"
+        },
+        "percentage": {
+         "type": "number"
+        },
+        "denominator": {
+         "type": "integer"
+        },
+        "reporting_framework": {
+         "type": "string"
+        },
+        "category_normalized": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "handedness_distribution": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "category": {
+         "type": "string"
+        },
+        "count": {
+         "type": "integer"
+        },
+        "percentage": {
+         "type": "number"
+        },
+        "denominator": {
+         "type": "integer"
+        },
+        "reporting_framework": {
+         "type": "string"
+        },
+        "category_normalized": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "race_distribution": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "category": {
+         "type": "string"
+        },
+        "count": {
+         "type": "integer"
+        },
+        "percentage": {
+         "type": "number"
+        },
+        "denominator": {
+         "type": "integer"
+        },
+        "reporting_framework": {
+         "type": "string"
+        },
+        "category_normalized": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "ethnicity_distribution": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "category": {
+         "type": "string"
+        },
+        "count": {
+         "type": "integer"
+        },
+        "percentage": {
+         "type": "number"
+        },
+        "denominator": {
+         "type": "integer"
+        },
+        "reporting_framework": {
+         "type": "string"
+        },
+        "category_normalized": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "population_characteristics": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "medical_condition": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "diagnostic_system": {
+      "type": "string"
+     },
+     "diagnostic_instrument": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "clinical_characteristics": {
+      "type": "string"
+     },
+     "medications": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "medication_status": {
+      "type": "string"
+     },
+     "education_summary": {
+      "type": "string"
+     },
+     "socioeconomic_status_summary": {
+      "type": "string"
+     },
+     "sample_source": {
+      "type": "string",
+      "enum": [
+       "recruited",
+       "public_dataset",
+       "previously_reported"
+      ]
+     },
+     "sample_source_reference": {
+      "type": "string"
+     },
+     "sample_overlap_count": {
+      "type": "integer"
+     },
+     "is_healthy": {
+      "type": "boolean"
+     },
+     "age_unit_normalized": {
+      "type": "string"
+     },
+     "other_characteristics": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    },
+    "required": [
+     "local_id"
+    ]
+   }
+  },
+  "tasks": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "conditions": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "local_id": {
+         "type": "string"
+        },
+        "name": {
+         "type": "string"
+        },
+        "stimulus_content": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "condition_kind": {
+         "type": "string"
+        },
+        "description": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "local_id"
+       ]
+      }
+     },
+     "design_type": {
+      "type": "string"
+     },
+     "acquisitions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "presentation_software": {
+      "type": "string"
+     },
+     "instructions": {
+      "type": "string"
+     },
+     "references": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "stimuli": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "stimulus_content": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "stimulus_modality": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "response_modality": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "performance_measures": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    },
+    "required": [
+     "local_id"
+    ]
+   }
+  },
+  "assessments": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "assessment_type": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "local_id"
+    ]
+   }
+  },
+  "regions": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "definition_method": {
+      "type": "string"
+     },
+     "region_type": {
+      "type": "string"
+     },
+     "atlas": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "local_id"
+    ]
+   }
+  },
+  "devices": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "manufacturer": {
+      "type": "string"
+     },
+     "model": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "local_id"
+    ]
+   }
+  },
+  "acquisitions": {
+   "type": "array",
+   "items": {
+    "anyOf": [
+     {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "magnetic_field_strength_tesla": {
+        "type": "number"
+       },
+       "pulse_sequence_type": {
+        "type": "string"
+       },
+       "mr_acquisition_type": {
+        "type": "string"
+       },
+       "repetition_time_seconds": {
+        "type": "number"
+       },
+       "echo_time_seconds": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        }
+       },
+       "acquisition_voxel_size_mm": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        }
+       },
+       "number_of_volumes": {
+        "type": "integer"
+       },
+       "local_id": {
+        "type": "string"
+       },
+       "acquisition_type": {
+        "enum": [
+         "MRI"
+        ],
+        "type": "string"
+       },
+       "modality": {
+        "type": "string"
+       },
+       "acquisition_duration_seconds": {
+        "type": "number"
+       },
+       "device": {
+        "type": "string"
+       },
+       "brain_coverage": {
+        "type": "string",
+        "enum": [
+         "whole_brain",
+         "partial"
+        ]
+       }
+      },
+      "required": [
+       "local_id",
+       "acquisition_type"
+      ]
+     },
+     {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "sampling_frequency_hz": {
+        "type": "number"
+       },
+       "eeg_reference": {
+        "type": "string"
+       },
+       "eeg_placement_scheme": {
+        "type": "string"
+       },
+       "recording_type": {
+        "type": "string"
+       },
+       "eeg_channel_count": {
+        "type": "integer"
+       },
+       "local_id": {
+        "type": "string"
+       },
+       "acquisition_type": {
+        "enum": [
+         "EEG"
+        ],
+        "type": "string"
+       },
+       "modality": {
+        "type": "string"
+       },
+       "acquisition_duration_seconds": {
+        "type": "number"
+       },
+       "device": {
+        "type": "string"
+       },
+       "brain_coverage": {
+        "type": "string",
+        "enum": [
+         "whole_brain",
+         "partial"
+        ]
+       }
+      },
+      "required": [
+       "local_id",
+       "acquisition_type"
+      ]
+     },
+     {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "sampling_frequency_hz": {
+        "type": "number"
+       },
+       "nirs_system_type": {
+        "type": "string"
+       },
+       "nirs_channel_count": {
+        "type": "integer"
+       },
+       "wavelengths_nm": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        }
+       },
+       "short_channel_count": {
+        "type": "integer"
+       },
+       "source_detector_distances_mm": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        }
+       },
+       "nirs_placement_scheme": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "recorded_signal_types": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "local_id": {
+        "type": "string"
+       },
+       "acquisition_type": {
+        "enum": [
+         "FNIRS"
+        ],
+        "type": "string"
+       },
+       "modality": {
+        "type": "string"
+       },
+       "acquisition_duration_seconds": {
+        "type": "number"
+       },
+       "device": {
+        "type": "string"
+       },
+       "brain_coverage": {
+        "type": "string",
+        "enum": [
+         "whole_brain",
+         "partial"
+        ]
+       }
+      },
+      "required": [
+       "local_id",
+       "acquisition_type"
+      ]
+     },
+     {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "image_units": {
+        "type": "string"
+       },
+       "tracer_name": {
+        "type": "string"
+       },
+       "tracer_radionuclide": {
+        "type": "string"
+       },
+       "mode_of_administration": {
+        "type": "string"
+       },
+       "scan_type": {
+        "type": "string"
+       },
+       "uptake_time_seconds": {
+        "type": "number"
+       },
+       "reconstructed_voxel_size_mm": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        }
+       },
+       "spatial_resolution_mm": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        }
+       },
+       "local_id": {
+        "type": "string"
+       },
+       "acquisition_type": {
+        "enum": [
+         "PET"
+        ],
+        "type": "string"
+       },
+       "modality": {
+        "type": "string"
+       },
+       "acquisition_duration_seconds": {
+        "type": "number"
+       },
+       "device": {
+        "type": "string"
+       },
+       "brain_coverage": {
+        "type": "string",
+        "enum": [
+         "whole_brain",
+         "partial"
+        ]
+       }
+      },
+      "required": [
+       "local_id",
+       "acquisition_type"
+      ]
+     },
+     {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "modality_label": {
+        "type": "string"
+       },
+       "reason_no_modality_class_used": {
+        "type": "string"
+       },
+       "local_id": {
+        "type": "string"
+       },
+       "acquisition_type": {
+        "enum": [
+         "OtherModality"
+        ],
+        "type": "string"
+       },
+       "modality": {
+        "type": "string"
+       },
+       "acquisition_duration_seconds": {
+        "type": "number"
+       },
+       "device": {
+        "type": "string"
+       },
+       "brain_coverage": {
+        "type": "string",
+        "enum": [
+         "whole_brain",
+         "partial"
+        ]
+       }
+      },
+      "required": [
+       "local_id",
+       "acquisition_type"
+      ]
+     }
+    ]
+   }
+  },
+  "preprocessings": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "software": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "steps": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "smoothing_fwhm_mm": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      }
+     }
+    },
+    "required": [
+     "local_id"
+    ]
+   }
+  },
+  "model_estimations": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "model_family": {
+      "type": "string"
+     },
+     "model_type": {
+      "type": "string"
+     },
+     "hrf_model": {
+      "type": "string"
+     },
+     "model_settings": {
+      "type": "string"
+     },
+     "stage": {
+      "type": "string"
+     },
+     "estimator": {
+      "type": "string"
+     },
+     "software": {
+      "type": "string"
+     },
+     "spatial_unit": {
+      "type": "string"
+     },
+     "preprocessing": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "inputs_from": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "terms": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "local_id": {
+         "type": "string"
+        },
+        "name": {
+         "type": "string"
+        },
+        "type": {
+         "type": "string",
+         "enum": [
+          "categorical",
+          "continuous"
+         ]
+        },
+        "levels": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+           "level": {
+            "type": "string"
+           },
+           "order": {
+            "type": "integer"
+           },
+           "conditions": {
+            "type": "array",
+            "items": {
+             "type": "string"
+            }
+           },
+           "groups": {
+            "type": "array",
+            "items": {
+             "type": "string"
+            }
+           },
+           "timepoints": {
+            "type": "array",
+            "items": {
+             "type": "string"
+            }
+           },
+           "arms": {
+            "type": "array",
+            "items": {
+             "type": "string"
+            }
+           },
+           "regions": {
+            "type": "array",
+            "items": {
+             "type": "string"
+            }
+           }
+          }
+         }
+        },
+        "assessment": {
+         "type": "string"
+        },
+        "region": {
+         "type": "string"
+        },
+        "variation_level": {
+         "type": "string"
+        },
+        "functional_form": {
+         "type": "string"
+        },
+        "interaction_with": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "unit": {
+         "type": "string"
+        },
+        "source_definition": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "local_id"
+       ]
+      }
+     }
+    },
+    "required": [
+     "local_id"
+    ]
+   }
+  },
+  "inference_settings": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "inference_level": {
+      "type": "string"
+     },
+     "height_threshold_value": {
+      "type": "number"
+     },
+     "height_threshold_type": {
+      "type": "string"
+     },
+     "cluster_extent_threshold": {
+      "type": "integer"
+     },
+     "clusterwise_threshold_value": {
+      "type": "number"
+     },
+     "multiple_comparison_method": {
+      "type": "string"
+     },
+     "correction_scope": {
+      "type": "string"
+     },
+     "correction_regions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "search_volume": {
+      "type": "string"
+     },
+     "neighborhood_definition": {
+      "type": "string"
+     },
+     "tfce_used": {
+      "type": "boolean"
+     },
+     "tfce_parameters": {
+      "type": "string"
+     },
+     "permutation_count": {
+      "type": "integer"
+     },
+     "alpha_level": {
+      "type": "number"
+     },
+     "number_of_tests": {
+      "type": "integer"
+     }
+    },
+    "required": [
+     "local_id"
+    ]
+   }
+  },
+  "measures": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "family": {
+      "type": "string"
+     },
+     "type": {
+      "type": "string"
+     },
+     "source_label": {
+      "type": "string"
+     },
+     "specific_metric": {
+      "type": "string"
+     },
+     "unit": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "local_id"
+    ]
+   }
+  },
+  "analyses": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "definition": {
+      "type": "string"
+     },
+     "prespecification": {
+      "type": "string"
+     },
+     "interpretations": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "outcome": {
+      "type": "string",
+      "enum": [
+       "significant_effect",
+       "no_significant_effect"
+      ]
+     },
+     "spatial_scope": {
+      "type": "string"
+     },
+     "regions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "defines_regions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "measure": {
+      "type": "string"
+     },
+     "groups": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "group": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        }
+       },
+       "required": [
+        "group"
+       ]
+      }
+     },
+     "effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "cells": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "properties": {
+          "term": {
+           "type": "string"
+          },
+          "level": {
+           "type": "string"
+          },
+          "direction": {
+           "type": "string",
+           "enum": [
+            "positive",
+            "negative",
+            "undirected",
+            "held"
+           ]
+          },
+          "label": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "term"
+         ]
+        }
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "simple_effect",
+         "contrast",
+         "interaction",
+         "parametric_modulation",
+         "cross_subject_regression",
+         "omnibus"
+        ]
+       },
+       "mediation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "path": {
+          "type": "string",
+          "enum": [
+           "direct",
+           "indirect",
+           "total"
+          ]
+         },
+         "mediator": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "mediator"
+        ]
+       },
+       "statistic": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "family": {
+          "type": "string"
+         },
+         "degrees_of_freedom_numerator": {
+          "type": "number"
+         },
+         "degrees_of_freedom_denominator": {
+          "type": "number"
+         }
+        }
+       }
+      }
+     },
+     "details": {
+      "anyOf": [
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "details_type": {
+          "enum": [
+           "MassUnivariateDetails"
+          ],
+          "type": "string"
+         }
+        },
+        "required": [
+         "details_type"
+        ]
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "decoded_variable": {
+          "type": "string"
+         },
+         "classes": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "additionalProperties": false,
+           "properties": {
+            "label": {
+             "type": "string"
+            },
+            "condition": {
+             "type": "string"
+            }
+           }
+          }
+         },
+         "performance_metrics": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "additionalProperties": false,
+           "properties": {
+            "name": {
+             "type": "string"
+            },
+            "value": {
+             "type": "number"
+            },
+            "reference_value": {
+             "type": "number"
+            },
+            "relation": {
+             "type": "string",
+             "enum": [
+              "above_reference",
+              "below_reference",
+              "not_applicable"
+             ]
+            }
+           }
+          }
+         },
+         "validation_scheme": {
+          "type": "string"
+         },
+         "generalization": {
+          "type": "string"
+         },
+         "details_type": {
+          "enum": [
+           "DecodingDetails"
+          ],
+          "type": "string"
+         }
+        },
+        "required": [
+         "details_type"
+        ]
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "model": {
+          "type": "string"
+         },
+         "neural_representation": {
+          "type": "string"
+         },
+         "similarity_metric": {
+          "type": "string"
+         },
+         "competing_models": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "details_type": {
+          "enum": [
+           "SimilarityDetails"
+          ],
+          "type": "string"
+         }
+        },
+        "required": [
+         "details_type"
+        ]
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "connectivity_method": {
+          "type": "string"
+         },
+         "seed_regions": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "target_regions": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "edges": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "additionalProperties": false,
+           "properties": {
+            "source_region": {
+             "type": "string"
+            },
+            "target_region": {
+             "type": "string"
+            }
+           }
+          }
+         },
+         "modulatory_input": {
+          "type": "string"
+         },
+         "inference_target": {
+          "type": "string"
+         },
+         "details_type": {
+          "enum": [
+           "ConnectivityDetails"
+          ],
+          "type": "string"
+         }
+        },
+        "required": [
+         "details_type"
+        ]
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "components": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "additionalProperties": false,
+           "properties": {
+            "analysis_id": {
+             "type": "string"
+            },
+            "analysis_type": {
+             "type": "string"
+            },
+            "definition": {
+             "type": "string"
+            }
+           }
+          }
+         },
+         "null_hypothesis": {
+          "type": "string",
+          "enum": [
+           "global_null",
+           "conjunction_null"
+          ]
+         },
+         "implementation": {
+          "type": "string"
+         },
+         "details_type": {
+          "enum": [
+           "ConjunctionDetails"
+          ],
+          "type": "string"
+         }
+        },
+        "required": [
+         "details_type"
+        ]
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "method": {
+          "type": "string"
+         },
+         "second_block": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "second_block_assessments": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "second_block_detail": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "component_id": {
+          "type": "string"
+         },
+         "component_label": {
+          "type": "string"
+         },
+         "total_components": {
+          "type": "integer"
+         },
+         "dimensionality_selection_method": {
+          "type": "string"
+         },
+         "selection_criterion": {
+          "type": "string"
+         },
+         "variance_explained_percent": {
+          "type": "number"
+         },
+         "crossblock_covariance_percent": {
+          "type": "number"
+         },
+         "map_quantity": {
+          "type": "string"
+         },
+         "salience_threshold": {
+          "type": "string"
+         },
+         "polarity_semantics": {
+          "type": "string",
+          "enum": [
+           "meaningful",
+           "arbitrary",
+           "unsigned"
+          ]
+         },
+         "details_type": {
+          "enum": [
+           "LatentDecompositionDetails"
+          ],
+          "type": "string"
+         }
+        },
+        "required": [
+         "details_type"
+        ]
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "method_label": {
+          "type": "string"
+         },
+         "structured_details": {
+          "type": "string"
+         },
+         "reason_first_class_type_not_used": {
+          "type": "string"
+         },
+         "details_type": {
+          "enum": [
+           "OtherAnalysisDetails"
+          ],
+          "type": "string"
+         }
+        },
+        "required": [
+         "details_type"
+        ]
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "reason": {
+          "type": "string"
+         },
+         "explanation": {
+          "type": "string"
+         },
+         "details_type": {
+          "enum": [
+           "NotStructurableDetails"
+          ],
+          "type": "string"
+         }
+        },
+        "required": [
+         "details_type"
+        ]
+       }
+      ]
+     },
+     "acquisitions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "tasks": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "model_estimation": {
+      "type": "string"
+     },
+     "inference_settings": {
+      "type": "string"
+     },
+     "tables": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "source_table_analysis": {
+      "type": "string"
+     },
+     "coordinate_space": {
+      "type": "string"
+     },
+     "assessments": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "model_representation_notes": {
+      "type": "string"
+     },
+     "mirror_of": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "local_id",
+     "measure",
+     "details",
+     "model_estimation"
+    ]
+   }
+  },
+  "result_reporting": {
+   "type": "string",
+   "enum": [
+    "analyses_reported",
+    "no_analyses_reported",
+    "analyses_reported_elsewhere"
+   ]
+  },
+  "tables": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "table_number": {
+      "type": "string"
+     },
+     "caption": {
+      "type": "string"
+     },
+     "footer": {
+      "type": "string"
+     },
+     "column_headings": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "purpose": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "local_id"
+    ]
+   }
+  },
+  "coordinate_sets": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "role": {
+      "type": "string"
+     },
+     "result_kind": {
+      "type": "string"
+     },
+     "anchor_kind": {
+      "type": "string"
+     },
+     "analysis": {
+      "type": "string"
+     },
+     "regions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "description": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "local_id"
+    ]
+   }
+  },
+  "external_datasets": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "url": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }
+}

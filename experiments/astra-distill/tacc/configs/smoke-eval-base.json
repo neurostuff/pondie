@@ -1,0 +1,8 @@
+{
+ "run": "smoke-eval-base",
+ "model": "nu",
+ "adapter": null,
+ "n": 5,
+ "shortest": true,
+ "workers": 8
+}
