@@ -295,3 +295,56 @@ def test_a_quote_that_is_not_text_is_unresolved_not_a_crash():
         "evidence": {"status": "present", "sets": [{"quotes": [{"text": "x"}]}]}}}]}
     report = warrant.warrant(record, "x marks the spot.")
     assert report.unresolved and "not text" in report.unresolved[0]
+
+
+# -- explicit null ---------------------------------------------------------------------
+#
+# study_schema's layouts write an empty optional slot as `null`, so a record that went
+# through them is the pondie record with every absent slot spelled out.
+
+NULLED_EXAMPLE = paths.REPO / "tests" / "fixtures" / "x7Ex4mpleA01.extraction.json"
+GOLD = sorted((paths.REPO / "benchmarks" / "gold").glob("*.extraction.json"))
+
+
+def _errors(record):
+    validator = validate.Validator(reader.load(schema.EXTRACTION), None)
+    validator.check_record(record)
+    return validator.errors
+
+
+def _as_layouts_write(record):
+    """What `Run.records` writes for this record: the study_schema model, nulls included."""
+    from study_schema.models.extraction import Study
+
+    return Study.model_validate(record).model_dump(mode="json")
+
+
+def test_the_example_study_schema_writes_is_valid():
+    """The fixture is study_schema's own `examples/run/records` file, null for every
+    optional slot, which is how its layouts serialize it."""
+    record = json.loads(NULLED_EXAMPLE.read_text())
+    assert record["groups"] is None
+    assert record == _as_layouts_write(record)
+    assert _errors(record) == []
+
+
+@pytest.mark.parametrize("path", GOLD, ids=lambda p: p.name.split(".")[0])
+def test_a_record_validates_the_same_with_its_absent_slots_written_as_null(path):
+    """Null is absence: the gold record and its layouts round trip report the same errors.
+    The round trip fills in wrapper slots too (`value`, `unreported_reason`)."""
+    record = json.loads(path.read_text())
+    nulled = _as_layouts_write(record)
+    assert json.dumps(nulled).count("null") > 100
+    assert _errors(nulled) == _errors(record)
+
+
+def test_null_does_not_satisfy_a_required_slot():
+    record = json.loads(NULLED_EXAMPLE.read_text())
+    record["local_id"] = None
+    assert any("'local_id' is null" in error for error in _errors(record))
+
+
+def test_a_multivalued_slot_still_rejects_a_wrong_type():
+    record = json.loads(NULLED_EXAMPLE.read_text())
+    record["groups"] = "not a list"
+    assert any("'groups' is multivalued but got str" in e for e in _errors(record))

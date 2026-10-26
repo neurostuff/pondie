@@ -234,12 +234,15 @@ class Validator:
                 self.error(path, f"attribute {key!r} is not declared on {class_name}")
 
         for name, attribute in attributes.items():
-            if attribute.required and name not in node:
-                self.error(path, f"required attribute {name!r} is missing on {class_name}")
+            if attribute.required and node.get(name) is None:
+                state = "null" if name in node else "missing"
+                self.error(path, f"required attribute {name!r} is {state} on {class_name}")
 
         for key, value in node.items():
             attribute = attributes.get(key)
-            if attribute is None:
+            # study_schema serializes an empty optional slot as an explicit null; that is
+            # the slot being absent, and a required one was reported above.
+            if attribute is None or value is None:
                 continue
             self.check_slot(
                 value,
@@ -426,6 +429,9 @@ class Validator:
 
         self.fields += 1
         attributes = self.schema.attributes(class_name)
+        # An explicit null is an absent slot, which matters here because
+        # `not_reported` is stated as the absence of `value`.
+        node = {key: item for key, item in node.items() if item is not None}
 
         for key in node:
             if key not in attributes:
