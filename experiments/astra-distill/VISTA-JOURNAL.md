@@ -215,6 +215,9 @@ subset of val: `data/v5/val-sub160.txt`, 160 papers, seed 1. The full val run ta
   - ck50: 1100099
   - ck75: 1102765, `--dependency=after:1095924+60` (60 min after chunk b starts; step 582 is about 16 steps of
     ~140 s past the resume at 566)
+  - Chunk b (1095924) lowered from 24 h to 11 h on 2026-10-27 01:20 to fit backfill: it was eligible for 18 h at
+    low fairshare. The rest of the run is 210 steps × ~145 s ≈ 8.5 h; `train_record.py` reads the new limit for its
+    soft stop, and chunk c exits at once on `DONE` if b finishes.
 - References on the same 160 papers (linked cell F1): 4B 10k 0.629, 4B full 0.666.
 
 ### 2026-10-25: r3-27b at 25% (step 194, about 3.1k papers seen), val-sub160
