@@ -526,3 +526,28 @@ the exclusion to the list. The assertion caught it on Zum6LhmfVvPj; fixed before
 **Run.** `ev1-1k`: 1,000 papers from the fixed shuffle, LoRA r64 at lr 2e-4, as h34-1k.
 - Train: job 1102134, gh-dev.
 - Eval: job 1102135 (afterok), JSON mode, on val-sub160 (`configs/ev1-1k-eval.json`).
+
+**Result** (2026-10-26). Training: 63 steps on 995 papers (5 over 49k dropped) in 0.90 h, peak 35.5 GiB, loss per
+token 0.31 → 0.06–0.10. Eval: 160 papers in 296 s of generation. 1 paper (GFpBFSeX83Wh) ran to the 20k-token limit
+counting unit numbers upward past the paper's units (…4329, 4330); it has no prediction and scores 0. Scored on beast
+(`evidence.py score … --records train-v6/records --splits splits-v6`, 2,000 bootstraps;
+`vista-out/ev1/runs/ev1-1k/score.json`):
+
+| metric | value |
+|---|---:|
+| precision | 0.718 |
+| recall | 0.726 |
+| F1 [95% CI] | **0.722** [0.707, 0.736] |
+| slot exact match | 0.582 |
+| slot any overlap | 0.867 |
+| per-paper F1, median / p10 | 0.751 / 0.622 |
+
+By collection (F1, gold pairs): hypothesis 0.98 (226), devices 0.95 (344), preprocessings 0.91 (2,367), acquisitions
+0.86 (2,478), external_datasets 0.85 (102), groups 0.84 (11,936), assessments 0.84 (1,178), result_reporting 0.79
+(225), tasks 0.74 (5,445), model_estimations 0.74 (16,598), inference_settings 0.73 (2,439), regions 0.71 (4,826),
+measures 0.68 (1,652), design 0.67 (2,969), description 0.66 (900), coordinate_sets 0.64 (4,909), **analyses 0.63**
+(23,023).
+
+- **Units mostly found:** 87% of gold slots get at least one right unit, but only 58% get exactly the right set.
+- **Weakest where the gold is largest:** analyses and coordinate_sets hold a third of the gold pairs and score lowest;
+  their evidence is mostly table rows, where the right row among many similar ones has to be picked.
