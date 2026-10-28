@@ -1,11 +1,12 @@
 """Request bodies for ns-pond articles with no gold record: the paper prompt of `tasks.prompt_of` from the article's own
-text, coordinate parse and stage-1 captions, as `make_bodies.py` builds them for val.
+text and coordinate parse, as `make_bodies.py` builds them for val. Table captions and
+footers come from the paper parse (`parse/parsed_paper.json` tables), not the old stage-1 folder.
 
     python bodies_ns.py ARTICLES.tsv --out bodies.jsonl [--limit N] [--workers 12]
 
-ARTICLES.tsv: the ns-pond staging list (article_id, base_study_id, dir, texts, coordinate_parse, stage1, ...; header
-row). The text is `<dir>/processed/<source>/text.txt` for the first source in SOURCES the article has: pubget is what
-training saw. Rows: {"sid" (base_study_id), "article_id", "text_source", "n_input_tokens", "n_keys", "n_captioned",
+ARTICLES.tsv: the ns-pond staging list (article_id, base_study_id, dir, texts, coordinate_parse, ...; header row). The
+text is `<dir>/processed/<source>/text.txt` for the first source in SOURCES the article has: pubget is what training
+saw. Rows: {"sid" (base_study_id), "article_id", "text_source", "n_input_tokens", "n_keys", "n_captioned",
 "prompt", "template", "schema"}; the schema is a placeholder (JSON mode). Articles that fail are listed in
 <out>.errors.jsonl.
 """
@@ -16,10 +17,25 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import stage1  # noqa: E402
 import tasks as T  # noqa: E402
 
 SOURCES = ("pubget", "pmc", "elsevier", "ace", "pdf")
+CAPTION_CHARS, FOOTER_CHARS = 300, 700   # the trim training's captions had (stage1.py)
+
+
+def captions(parsed_paper, entries):
+    """{parse key: {"caption", "footer"}} for table entries, from the paper parse's `tables[]` (study_schema), trimmed
+    as training's captions were"""
+    tables = {t.get("table_id"): t for t in json.load(open(parsed_paper)).get("tables") or [] if isinstance(t, dict)}
+    out = {}
+    for e in entries:
+        t = tables.get(e.get("table_id"))
+        if not t:
+            continue
+        cap, foot = (t.get("caption") or "").strip(), (t.get("footer") or "").strip()
+        if cap or foot:
+            out[e["key"]] = {"caption": cap[:CAPTION_CHARS], "footer": foot[:FOOTER_CHARS]}
+    return out
 
 
 def body(args):
@@ -31,7 +47,7 @@ def body(args):
         return None, {"sid": row["base_study_id"], "error": "no text"}
     try:
         p = json.load(open(row["coordinate_parse"]))
-        caps = stage1.captions(row["base_study_id"], d.parent)
+        caps = captions(d / "parse/parsed_paper.json", p["analyses"])
         parse = {e["key"]: dict(e, **caps.get(e["key"], {})) for e in p["analyses"]}
         prompt = T.prompt_of((d / "processed" / src / "text.txt").read_text(), parse)
         n_in = T.ntok(T.user_turn(prompt, tmpl))
