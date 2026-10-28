@@ -585,3 +585,20 @@ Chunk c (1095972) was cancelled, since it had nothing left to do.
   papers, about 2.49M input tokens each).
 - **Separate run names:** each part has its own run name, because the merged model directory is keyed on the run.
 - Same SU cost as one job; each part merges the adapter on its own node (about 10 min each).
+
+### 2026-10-28: the 27B on Lonestar6, A100 split across 2 GPUs (`tacc/ls6-eval.sbatch`)
+
+Load test of r3-27b-full `adapter-final` on LS6 `gpu-a100-dev`: 24 longest papers of val-sub160, JSON mode, 24 workers.
+- **Setup:** the base model was downloaded to LS6 (same revision and files as Vista's) and the adapter was merged on the
+  node's CPU in 15 min (kept on `$SCRATCH`).
+- **First failure (3538672):** `GPUS=1,2` passed inside `--export`, which splits on commas, so the job saw one GPU.
+  `eval_record.py` now checks `tp` against `CUDA_VISIBLE_DEVICES` before merging.
+- **Second failure (3538683):** the model loaded (25.2 GiB per GPU), then vLLM's custom all-reduce failed on the PCIe
+  A100s (`custom_all_reduce.cuh:164 'invalid argument'`).
+- **Third run (3538699, `vllm_args: ["--disable-custom-all-reduce"]`):** worked. vLLM was up in 440 s; 24/24 stop,
+  no invalid JSON, 1,316 s, 134 output tok/s.
+- **Memory:** 9.5 GiB KV per GPU, 283k tokens in all, so 5.75 concurrent 49k-token requests (Vista GH200: 2.0M,
+  41x). The cache, not the GPUs, limits the rate.
+- **Speed:** on the same longest-first papers Vista reaches about 115 tok/s after 5 papers and 418 tok/s over 160, so
+  LS6 A100 x2 is roughly a third of a GH200. Full val (481) would take about 5 h: too long for `gpu-a100-dev`'s 2 h,
+  and `gpu-a100` had 523 jobs waiting.
