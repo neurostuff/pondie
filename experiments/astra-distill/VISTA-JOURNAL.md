@@ -655,3 +655,33 @@ Full write-up: `vista/ADJUDICATION-r3-final.md` (beast `vista-out/v5/runs/r3-27b
 - **ck50 follow-up (12 cell items):** 1 now matches Astra (the PsrZY8awrRRn AD vs elderly flip), 7 are the same and 4 are
   different (null correlations and the load × age ANOVA are now omitted instead of mis-signed; the
   ouZjktvZh2wW interaction now matches the text).
+
+### 2026-10-28: direction flips of r3-27b-final vs Astra, all 27 flagged analyses (full val)
+
+`vista/dirflip.py` flags 47 cells (1.08% of the 4,353 cells both sides wrote, same term and level) in 27 analyses of
+17 papers; 4B full: 70 (1.8%). Every flagged analysis was judged against the text: `vista/ADJUDICATION-r3-final-flips.md`
+(dumps: beast `vista-out/v5/runs/r3-27b-final/flips-adj/`, `vista/flipdump.py`).
+
+| judgment | analyses | cells |
+|---|---:|---:|
+| Astra right | 12 | 22 |
+| model right | 0 | 0 |
+| both acceptable (different direction conventions) | 8 | 13 |
+| unclear | 1 | 2 |
+| no reversal (scorer pairing or level-translation artifact) | 6 | 10 |
+
+- **True model-reversal rate: 22 / 4,353 = 0.51%** (upper bound 0.85% counting both-acceptable and unclear). The model is
+  right in none of the 12 analyses the paper decides.
+- **Concentrated:** SCF8YNZfwc4w holds 13 of the 22 cells; without it the rate is 0.21%. Its Table 2 footer states
+  each inequality the reverse of its own label and of the body text, and the model followed the footer. I checked the
+  footer and body. Read literally, the footer favours the model on 3 of the 4 analyses (0.28% if those are counted as
+  acceptable).
+- **Other model reversals:** a written contrast label copied instead of the result (BIID group × ownership; a
+  four-condition interaction); a cell contradicting the model's own definition (UqKDJwUDnTey); weak or null
+  correlations given a positive sign. In e3e7fZNLRaba, Table 2's columns are shifted and the model read P values as r;
+  I checked the genu row against the text's "r = −0.47, P = 0.031".
+- **Convention conflicts (8):** Astra writes contrast weights in some papers (cTBS − no-cTBS, W12 > W0 with a negative
+  t, drug × genotype) and the effect sign in others (a deactivation). The direction field needs one rule in the spec.
+- **The scorer overstates reversals by about a fifth.** Name-similarity pairing crosses two analyses on one key
+  (7iEdFur6F9G7, yHKigGhA9PZj), and level links map a model level to the wrong Astra level (RDqbaBcuZ9th,
+  kPpiiibUx7Jd).
