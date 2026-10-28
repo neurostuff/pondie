@@ -3,7 +3,8 @@ incrementally with resume. Scoring happens on beast. Run with the serve env's py
   python eval_record.py CONFIG.json
 Config: run, model (nu|q27), adapter (dir | null: serve the base), n (0: all val), workers, max_tokens, max_len, gpu_mem,
         bodies (val.bodies.jsonl: sid, prompt, template, schema, n_input_tokens, built by vista/ on beast), out_name,
-        sids (file of val sids: evaluate only those), tp (vLLM tensor-parallel size; GPUs from CUDA_VISIBLE_DEVICES).
+        sids (file of val sids: evaluate only those), tp (vLLM tensor-parallel size; GPUs from CUDA_VISIBLE_DEVICES),
+        vllm_args (extra `vllm serve` flags, e.g. ["--disable-custom-all-reduce"] for tp over PCIe on LS6).
 Envs: $ASTRA_ENVS (default <W>/envs-aarch64, Vista; LS6 sets <W>/envs).
 Output: runs/<run>/val-pred.jsonl (or <out_name>) rows {sid, prediction, finish_reason, tokens, error, wall_s, prompt_tokens}."""
 import json, os, subprocess, sys, time, threading, urllib.request, urllib.error, shutil
@@ -48,7 +49,8 @@ print(f"[{time.time()-T0:.0f}s] serving {model_dir}", flush=True)
 vl = log / f"vllm-{c['run']}-{tag}.log"
 srv = subprocess.Popen([str(E / "serve/bin/vllm"), "serve", str(model_dir), "--served-model-name", name, "--host", "127.0.0.1",
                         "--port", str(c["port"]), "--max-model-len", str(c["max_len"]), "--gpu-memory-utilization", str(c["gpu_mem"]),
-                        "--max-num-seqs", str(c["workers"]), "--language-model-only", "--tensor-parallel-size", str(c["tp"])],
+                        "--max-num-seqs", str(c["workers"]), "--language-model-only", "--tensor-parallel-size", str(c["tp"]),
+                        *c.get("vllm_args", [])],
                        stdout=open(vl, "w"), stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True,
                        env=dict(os.environ, PATH=f"{E}/serve/bin:" + os.environ["PATH"]))
 url = f"http://127.0.0.1:{c['port']}/v1/chat/completions"
