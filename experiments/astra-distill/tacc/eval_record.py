@@ -3,17 +3,22 @@ incrementally with resume. Scoring happens on beast. Run with the serve env's py
   python eval_record.py CONFIG.json
 Config: run, model (nu|q27), adapter (dir | null: serve the base), n (0: all val), workers, max_tokens, max_len, gpu_mem,
         bodies (val.bodies.jsonl: sid, prompt, template, schema, n_input_tokens, built by vista/ on beast), out_name,
-        sids (file of val sids: evaluate only those).
+        sids (file of val sids: evaluate only those), tp (vLLM tensor-parallel size; GPUs from CUDA_VISIBLE_DEVICES),
+        vllm_args (extra `vllm serve` flags, e.g. ["--disable-custom-all-reduce"] for tp over PCIe on LS6).
+Envs: $ASTRA_ENVS (default <W>/envs-aarch64, Vista; LS6 sets <W>/envs).
 Output: runs/<run>/val-pred.jsonl (or <out_name>) rows {sid, prediction, finish_reason, tokens, error, wall_s, prompt_tokens}."""
 import json, os, subprocess, sys, time, threading, urllib.request, urllib.error, shutil
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-W = Path(os.environ["ASTRA_W"]); E = W / "envs-aarch64"
-D = dict(run=None, model="nu", adapter=None, n=0, workers=24, max_tokens=20000, max_len=49152, gpu_mem=0.80, port=8391,
+W = Path(os.environ["ASTRA_W"]); E = Path(os.environ.get("ASTRA_ENVS", W / "envs-aarch64"))
+D = dict(run=None, model="nu", adapter=None, n=0, workers=24, max_tokens=20000, max_len=49152, gpu_mem=0.80, port=8391, tp=1,
          bodies=str(W / "data/v5/val.bodies.jsonl"), out_name="val-pred.jsonl", guided=True, keep_merged=False, merge_device="cpu")
 c = dict(D); c.update(json.load(open(sys.argv[1]))); c.setdefault("run", Path(sys.argv[1]).stem)
 run = W / "runs" / c["run"]; run.mkdir(parents=True, exist_ok=True)
+vis = os.environ.get("CUDA_VISIBLE_DEVICES")
+if vis is not None and len([g for g in vis.split(",") if g]) < c["tp"]:   # before the merge, not after it
+    sys.exit(f"tp {c['tp']} needs {c['tp']} GPUs; CUDA_VISIBLE_DEVICES={vis!r}")
 log = W / "logs"; tag = os.environ.get("SLURM_JOB_ID", "local")
 hub = W / "hf/hub"
 base = sorted((hub / f"models--{'numind--NuExtract3' if c['model'] == 'nu' else 'Qwen--Qwen3.8-27B'}" / "snapshots").glob("*"))[0]
@@ -39,12 +44,21 @@ elif c["adapter"]:
         if r.returncode:
             sys.exit(f"merge failed rc={r.returncode}")
     model_dir = merged
+# drop the page cache the merge left on the weight files (on GH200 it can sit in the HBM node and shrink vLLM's share)
+for f in Path(model_dir).iterdir():
+    if f.is_file() and f.suffix == ".safetensors":
+        fd = os.open(f, os.O_RDONLY)
+        try:
+            os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_DONTNEED)
+        finally:
+            os.close(fd)
 subprocess.run("nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader; numactl -H | grep -E 'size|free'", shell=True)
 print(f"[{time.time()-T0:.0f}s] serving {model_dir}", flush=True)
 vl = log / f"vllm-{c['run']}-{tag}.log"
 srv = subprocess.Popen([str(E / "serve/bin/vllm"), "serve", str(model_dir), "--served-model-name", name, "--host", "127.0.0.1",
                         "--port", str(c["port"]), "--max-model-len", str(c["max_len"]), "--gpu-memory-utilization", str(c["gpu_mem"]),
-                        "--max-num-seqs", str(c["workers"]), "--language-model-only"],
+                        "--max-num-seqs", str(c["workers"]), "--language-model-only", "--tensor-parallel-size", str(c["tp"]),
+                        *c.get("vllm_args", [])],
                        stdout=open(vl, "w"), stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True,
                        env=dict(os.environ, PATH=f"{E}/serve/bin:" + os.environ["PATH"]))
 url = f"http://127.0.0.1:{c['port']}/v1/chat/completions"

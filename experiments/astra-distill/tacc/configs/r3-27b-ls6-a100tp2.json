@@ -1,0 +1,16 @@
+{
+ "run": "r3-27b-ls6",
+ "model": "q27",
+ "adapter": "r3-27b-full/adapter-final",
+ "workers": 24,
+ "guided": false,
+ "tp": 2,
+ "gpu_mem": 0.9,
+ "n": 24,
+ "keep_merged": true,
+ "out_name": "pred-a100-tp2.jsonl",
+ "sids": "/work/07723/jdk3232/ls6/astra-distill/data/v5/val-sub160.txt",
+ "vllm_args": [
+  "--disable-custom-all-reduce"
+ ]
+}

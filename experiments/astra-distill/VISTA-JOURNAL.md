@@ -215,6 +215,9 @@ subset of val: `data/v5/val-sub160.txt`, 160 papers, seed 1. The full val run ta
   - ck50: 1100099
   - ck75: 1102765, `--dependency=after:1095924+60` (60 min after chunk b starts; step 582 is about 16 steps of
     ~140 s past the resume at 566)
+  - Chunk b (1095924) lowered from 24 h to 11 h on 2026-10-27 01:20 to fit backfill: it was eligible for 18 h at
+    low fairshare. The rest of the run is 210 steps × ~145 s ≈ 8.5 h; `train_record.py` reads the new limit for its
+    soft stop, and chunk c exits at once on `DONE` if b finishes.
 - References on the same 160 papers (linked cell F1): 4B 10k 0.629, 4B full 0.666.
 
 ### 2026-10-25: r3-27b at 25% (step 194, about 3.1k papers seen), val-sub160
@@ -526,3 +529,159 @@ the exclusion to the list. The assertion caught it on Zum6LhmfVvPj; fixed before
 **Run.** `ev1-1k`: 1,000 papers from the fixed shuffle, LoRA r64 at lr 2e-4, as h34-1k.
 - Train: job 1102134, gh-dev.
 - Eval: job 1102135 (afterok), JSON mode, on val-sub160 (`configs/ev1-1k-eval.json`).
+
+**Result** (2026-10-26). Training: 63 steps on 995 papers (5 over 49k dropped) in 0.90 h, peak 35.5 GiB, loss per
+token 0.31 → 0.06–0.10. Eval: 160 papers in 296 s of generation. 1 paper (GFpBFSeX83Wh) ran to the 20k-token limit
+counting unit numbers upward past the paper's units (…4329, 4330); it has no prediction and scores 0. Scored on beast
+(`evidence.py score … --records train-v6/records --splits splits-v6`, 2,000 bootstraps;
+`vista-out/ev1/runs/ev1-1k/score.json`):
+
+| metric | value |
+|---|---:|
+| precision | 0.718 |
+| recall | 0.726 |
+| F1 [95% CI] | **0.722** [0.707, 0.736] |
+| slot exact match | 0.582 |
+| slot any overlap | 0.867 |
+| per-paper F1, median / p10 | 0.751 / 0.622 |
+
+By collection (F1, gold pairs): hypothesis 0.98 (226), devices 0.95 (344), preprocessings 0.91 (2,367), acquisitions
+0.86 (2,478), external_datasets 0.85 (102), groups 0.84 (11,936), assessments 0.84 (1,178), result_reporting 0.79
+(225), tasks 0.74 (5,445), model_estimations 0.74 (16,598), inference_settings 0.73 (2,439), regions 0.71 (4,826),
+measures 0.68 (1,652), design 0.67 (2,969), description 0.66 (900), coordinate_sets 0.64 (4,909), **analyses 0.63**
+(23,023).
+
+- **Units mostly found:** 87% of gold slots get at least one right unit, but only 58% get exactly the right set.
+- **Weakest where the gold is largest:** analyses and coordinate_sets hold a third of the gold pairs and score lowest;
+  their evidence is mostly table rows, where the right row among many similar ones has to be picked.
+
+### 2026-10-28: r3-27b at 75% (step 582, about 9.3k papers), val-sub160
+
+Eval 1102765 (gh-dev, 41 min) ran all 160 papers in 30 min of generation, with no truncations and no invalid JSON.
+Scored on beast as ck50 (`score.py run … --split val-sub160.txt --boot 2000`; `vista-out/v5/runs/r3-27b-ck75/`).
+
+| metric | 4B full | 27B ck50 | 27B ck75 | ck75 − ck50 | ck75 − 4B full |
+|---|---:|---:|---:|---|---|
+| linked cell F1 | 0.666 | 0.745 | **0.758** | +0.013 [−0.022, +0.045] | +0.092 [+0.037, +0.150] |
+| strict cell F1 | 0.594 | 0.690 | 0.684 | −0.006 [−0.051, +0.033] | +0.090 [+0.034, +0.152] |
+| model | 0.828 | 0.898 | 0.865 | −0.033 [−0.066, +0.001] | +0.036 [−0.006, +0.087] |
+| kind | 0.816 | 0.860 | 0.840 | −0.020 [−0.053, +0.012] | +0.024 [−0.040, +0.095] |
+| entity F1, all | 0.877 | 0.883 | **0.905** | +0.023 [+0.003, +0.044] | +0.029 [+0.013, +0.046] |
+| regions F1 | 0.789 | 0.759 | **0.847** | +0.088 [+0.010, +0.174] | +0.058 [+0.001, +0.123] |
+| schema-valid | 0.994 | 0.994 | 0.994 | | |
+
+- **Plateau on cells:** ck50 → ck75 changes no cell metric beyond its interval; the gain over the 4B full run holds.
+- **Regions recovered:** the ck25 → ck50 drop reversed, and entity F1 rose significantly.
+- **Model slipped:** −0.033, at the edge of its interval; check at the final checkpoint.
+
+### 2026-10-28: r3-27b-full training done; final eval split in three
+
+Chunk b (1095924) finished all 776 steps at 03:45 (9.0 h, exit 0; 12,411 papers, 43 over 49k dropped; peak 77.7 GiB).
+Chunk c (1095972) was cancelled, since it had nothing left to do.
+- **The single 6 h full-val eval (1095973) was replaced:** it would have started with no queue age, behind 505 gh jobs.
+- **Its replacement:** three gh jobs of 1:20, with shorter jobs more likely to start in gaps (backfill): 1106375-7,
+  `configs/r3-27b-final-p{1,2,3}-eval.json`.
+- **Splitting:** the 481 val papers are split by `n_input_tokens` into `data/v5/val-part{1,2,3}.txt` (161/160/160
+  papers, about 2.49M input tokens each).
+- **Separate run names:** each part has its own run name, because the merged model directory is keyed on the run.
+- Same SU cost as one job; each part merges the adapter on its own node (about 10 min each).
+
+### 2026-10-28: the 27B on Lonestar6, A100 split across 2 GPUs (`tacc/ls6-eval.sbatch`)
+
+Load test of r3-27b-full `adapter-final` on LS6 `gpu-a100-dev`: 24 longest papers of val-sub160, JSON mode, 24 workers.
+- **Setup:** the base model was downloaded to LS6 (same revision and files as Vista's) and the adapter was merged on the
+  node's CPU in 15 min (kept on `$SCRATCH`).
+- **First failure (3538672):** `GPUS=1,2` passed inside `--export`, which splits on commas, so the job saw one GPU.
+  `eval_record.py` now checks `tp` against `CUDA_VISIBLE_DEVICES` before merging.
+- **Second failure (3538683):** the model loaded (25.2 GiB per GPU), then vLLM's custom all-reduce failed on the PCIe
+  A100s (`custom_all_reduce.cuh:164 'invalid argument'`).
+- **Third run (3538699, `vllm_args: ["--disable-custom-all-reduce"]`):** worked. vLLM was up in 440 s; 24/24 stop,
+  no invalid JSON, 1,316 s, 134 output tok/s.
+- **Memory:** 9.5 GiB KV per GPU, 283k tokens in all, so 5.75 concurrent 49k-token requests (Vista GH200: 2.0M,
+  41x). The cache, not the GPUs, limits the rate.
+- **Speed:** on the same longest-first papers Vista reaches about 115 tok/s after 5 papers and 418 tok/s over 160, so
+  LS6 A100 x2 is roughly a third of a GH200. Full val (481) would take about 5 h: too long for `gpu-a100-dev`'s 2 h,
+  and `gpu-a100` had 523 jobs waiting.
+
+### 2026-10-28: r3-27b-full final (step 776), full val (481)
+
+Three gh jobs (1106375-7, 42/37/36 min) ran all 481 papers: 481 stop, no invalid JSON, no truncations, about 425 out
+tok/s each. Parts 2 and 3 started within an hour of submission (the 6 h job they replaced was behind 505 jobs).
+Scored on beast (`vista-out/v5/runs/r3-27b-final/`; v5 gold, 2,000 paired bootstraps; * = CI excludes 0).
+
+| metric | 4B full | 27B final | final − 4B full | ck75 → final (val-sub160) |
+|---|---:|---:|---|---|
+| linked cell F1 | 0.686 | **0.775** | +0.089 [+0.054, +0.125] * | +0.008 [−0.026, +0.037] |
+| strict cell F1 | 0.620 | 0.719 | +0.099 [+0.063, +0.136] * | +0.006 [−0.019, +0.031] |
+| exact linked | 0.601 | 0.683 | +0.082 [+0.045, +0.120] * | +0.008 [−0.015, +0.031] |
+| model | 0.831 | 0.885 | +0.055 [+0.023, +0.088] * | +0.026 [+0.002, +0.051] * |
+| kind | 0.838 | 0.861 | +0.023 [−0.013, +0.061] | +0.009 [−0.014, +0.031] |
+| statistic family | 0.835 | 0.863 | +0.028 [+0.000, +0.058] | +0.029 [+0.006, +0.058] * |
+| slots (linked) | 0.796 | 0.847 | +0.051 [+0.032, +0.072] * | +0.010 [−0.009, +0.027] |
+| analysis → acquisition | 0.867 | 0.910 | +0.043 [+0.011, +0.077] * | +0.006 [−0.007, +0.017] |
+| analysis → region | 0.528 | 0.609 | +0.081 [+0.009, +0.160] * | −0.037 [−0.154, +0.056] |
+| entity F1, all | 0.871 | 0.894 | +0.023 [+0.015, +0.032] * | +0.005 [−0.002, +0.012] |
+| schema-valid | 0.996 | 0.998 | +0.002 [−0.004, +0.010] | 0 |
+
+- **27B over 4B:** about +0.09 cell F1 on the full val, with every cell, slot and entity metric better.
+- **Last 25% of training:** cells and entities flat; the ck75 dip on model (−0.033) recovered (+0.026) and statistic
+  family rose. The 27B's cell gains were made by 50% (ck25 0.665 → ck50 0.745 → ck75 0.758 → final 0.765 on val-sub160).
+- **LS6 vs Vista** (same adapter, 24 longest of val-sub160): 0/24 identical outputs (greedy over 3–10k tokens on
+  different GPUs and tp), but the scores agree: linked cell F1 0.743 vs 0.748, +0.005 [−0.025, +0.044]; no metric differs.
+
+### 2026-10-28: adjudication of r3-27b-final effect cells vs Astra (the ck50 sample: 25 papers, seed 11)
+
+Full write-up: `vista/ADJUDICATION-r3-final.md` (beast `vista-out/v5/runs/r3-27b-final/ADJUDICATION.md`, dumps in `adj/`).
+4 of the 25 papers now agree exactly on cells; 21 judged, 35 effect-cell items (at most 3 per paper).
+
+| shape | Astra right | model right | both acceptable | unclear | total |
+|---|---:|---:|---:|---:|---:|
+| missing cell | 11 | 0 | 4 | 0 | 15 |
+| extra cell | 1 | 3 | 5 | 0 | 9 |
+| direction | 2 | 0 | 0 | 1 | 3 |
+| level | 0 | 0 | 4 | 0 | 4 |
+| term | 1 | 0 | 3 | 0 | 4 |
+| all | 15 | 3 | 16 | 1 | 35 |
+
+- **Model right in 3 of 18 decided items (17%); not wrong in 19 of 34 (56%).** I checked the 3 model-right items:
+  - tDJu8SHfMKQh holds. Key #ab841fe86f023fbf is named "decreased cortical thickness" but its listing carries the
+    positive-T parahippocampal and OFC points (t = 10.1, 6.9, 11.4). The text reports "(2) increased cortical
+    thickness", which the model wrote as its own analysis and Astra left out.
+  - BSGoTkY8SLJN (×2) holds: the Cox regressions, as at ck50.
+- **The model's main error is omission (11 of 15 Astra-right items):** null correlations (LCuhWT87Vsa5), a null
+  interaction, SVC re-inferences of a contrast, and "Words > Partial" (f5Zu2kabHbnj, which also confirms that ck50's
+  model-right call there was wrong). It also drops held cells.
+- **Directions:** 2 Astra-right (jHSNMakGotVy table row; wRM5PyEyTezN extra group cells with opposite signs), 1 unclear.
+- **ck50 follow-up (12 cell items):** 1 now matches Astra (the PsrZY8awrRRn AD vs elderly flip), 7 are the same and 4 are
+  different (null correlations and the load × age ANOVA are now omitted instead of mis-signed; the
+  ouZjktvZh2wW interaction now matches the text).
+
+### 2026-10-28: direction flips of r3-27b-final vs Astra, all 27 flagged analyses (full val)
+
+`vista/dirflip.py` flags 47 cells (1.08% of the 4,353 cells both sides wrote, same term and level) in 27 analyses of
+17 papers; 4B full: 70 (1.8%). Every flagged analysis was judged against the text: `vista/ADJUDICATION-r3-final-flips.md`
+(dumps: beast `vista-out/v5/runs/r3-27b-final/flips-adj/`, `vista/flipdump.py`).
+
+| judgment | analyses | cells |
+|---|---:|---:|
+| Astra right | 12 | 22 |
+| model right | 0 | 0 |
+| both acceptable (different direction conventions) | 8 | 13 |
+| unclear | 1 | 2 |
+| no reversal (scorer pairing or level-translation artifact) | 6 | 10 |
+
+- **True model-reversal rate: 22 / 4,353 = 0.51%** (upper bound 0.85% counting both-acceptable and unclear). The model is
+  right in none of the 12 analyses the paper decides.
+- **Concentrated:** SCF8YNZfwc4w holds 13 of the 22 cells; without it the rate is 0.21%. Its Table 2 footer states
+  each inequality the reverse of its own label and of the body text, and the model followed the footer. I checked the
+  footer and body. Read literally, the footer favours the model on 3 of the 4 analyses (0.28% if those are counted as
+  acceptable).
+- **Other model reversals:** a written contrast label copied instead of the result (BIID group × ownership; a
+  four-condition interaction); a cell contradicting the model's own definition (UqKDJwUDnTey); weak or null
+  correlations given a positive sign. In e3e7fZNLRaba, Table 2's columns are shifted and the model read P values as r;
+  I checked the genu row against the text's "r = −0.47, P = 0.031".
+- **Convention conflicts (8):** Astra writes contrast weights in some papers (cTBS − no-cTBS, W12 > W0 with a negative
+  t, drug × genotype) and the effect sign in others (a deactivation). The direction field needs one rule in the spec.
+- **The scorer overstates reversals by about a fifth.** Name-similarity pairing crosses two analyses on one key
+  (7iEdFur6F9G7, yHKigGhA9PZj), and level links map a model level to the wrong Astra level (RDqbaBcuZ9th,
+  kPpiiibUx7Jd).
