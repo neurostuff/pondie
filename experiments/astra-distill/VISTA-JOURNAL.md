@@ -628,3 +628,30 @@ Scored on beast (`vista-out/v5/runs/r3-27b-final/`; v5 gold, 2,000 paired bootst
   family rose. The 27B's cell gains were made by 50% (ck25 0.665 → ck50 0.745 → ck75 0.758 → final 0.765 on val-sub160).
 - **LS6 vs Vista** (same adapter, 24 longest of val-sub160): 0/24 identical outputs (greedy over 3–10k tokens on
   different GPUs and tp), but the scores agree: linked cell F1 0.743 vs 0.748, +0.005 [−0.025, +0.044]; no metric differs.
+
+### 2026-10-28: adjudication of r3-27b-final effect cells vs Astra (the ck50 sample: 25 papers, seed 11)
+
+Full write-up: `vista/ADJUDICATION-r3-final.md` (beast `vista-out/v5/runs/r3-27b-final/ADJUDICATION.md`, dumps in `adj/`).
+4 of the 25 papers now agree exactly on cells; 21 judged, 35 effect-cell items (at most 3 per paper).
+
+| shape | Astra right | model right | both acceptable | unclear | total |
+|---|---:|---:|---:|---:|---:|
+| missing cell | 11 | 0 | 4 | 0 | 15 |
+| extra cell | 1 | 3 | 5 | 0 | 9 |
+| direction | 2 | 0 | 0 | 1 | 3 |
+| level | 0 | 0 | 4 | 0 | 4 |
+| term | 1 | 0 | 3 | 0 | 4 |
+| all | 15 | 3 | 16 | 1 | 35 |
+
+- **Model right in 3 of 18 decided items (17%); not wrong in 19 of 34 (56%).** I checked the 3 model-right items:
+  - tDJu8SHfMKQh holds. Key #ab841fe86f023fbf is named "decreased cortical thickness" but its listing carries the
+    positive-T parahippocampal and OFC points (t = 10.1, 6.9, 11.4). The text reports "(2) increased cortical
+    thickness", which the model wrote as its own analysis and Astra left out.
+  - BSGoTkY8SLJN (×2) holds: the Cox regressions, as at ck50.
+- **The model's main error is omission (11 of 15 Astra-right items):** null correlations (LCuhWT87Vsa5), a null
+  interaction, SVC re-inferences of a contrast, and "Words > Partial" (f5Zu2kabHbnj, which also confirms that ck50's
+  model-right call there was wrong). It also drops held cells.
+- **Directions:** 2 Astra-right (jHSNMakGotVy table row; wRM5PyEyTezN extra group cells with opposite signs), 1 unclear.
+- **ck50 follow-up (12 cell items):** 1 now matches Astra (the PsrZY8awrRRn AD vs elderly flip), 7 are the same and 4 are
+  different (null correlations and the load × age ANOVA are now omitted instead of mis-signed; the
+  ouZjktvZh2wW interaction now matches the text).
