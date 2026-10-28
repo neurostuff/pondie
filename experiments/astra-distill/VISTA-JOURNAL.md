@@ -554,3 +554,22 @@ measures 0.68 (1,652), design 0.67 (2,969), description 0.66 (900), coordinate_s
 - **Units mostly found:** 87% of gold slots get at least one right unit, but only 58% get exactly the right set.
 - **Weakest where the gold is largest:** analyses and coordinate_sets hold a third of the gold pairs and score lowest;
   their evidence is mostly table rows, where the right row among many similar ones has to be picked.
+
+### 2026-10-28: r3-27b at 75% (step 582, about 9.3k papers), val-sub160
+
+Eval 1102765 (gh-dev, 41 min) ran all 160 papers in 30 min of generation, with no truncations and no invalid JSON.
+Scored on beast as ck50 (`score.py run … --split val-sub160.txt --boot 2000`; `vista-out/v5/runs/r3-27b-ck75/`).
+
+| metric | 4B full | 27B ck50 | 27B ck75 | ck75 − ck50 | ck75 − 4B full |
+|---|---:|---:|---:|---|---|
+| linked cell F1 | 0.666 | 0.745 | **0.758** | +0.013 [−0.022, +0.045] | +0.092 [+0.037, +0.150] |
+| strict cell F1 | 0.594 | 0.690 | 0.684 | −0.006 [−0.051, +0.033] | +0.090 [+0.034, +0.152] |
+| model | 0.828 | 0.898 | 0.865 | −0.033 [−0.066, +0.001] | +0.036 [−0.006, +0.087] |
+| kind | 0.816 | 0.860 | 0.840 | −0.020 [−0.053, +0.012] | +0.024 [−0.040, +0.095] |
+| entity F1, all | 0.877 | 0.883 | **0.905** | +0.023 [+0.003, +0.044] | +0.029 [+0.013, +0.046] |
+| regions F1 | 0.789 | 0.759 | **0.847** | +0.088 [+0.010, +0.174] | +0.058 [+0.001, +0.123] |
+| schema-valid | 0.994 | 0.994 | 0.994 | | |
+
+- **Plateau on cells:** ck50 → ck75 changes no cell metric beyond its interval; the gain over the 4B full run holds.
+- **Regions recovered:** the ck25 → ck50 drop reversed, and entity F1 rose significantly.
+- **Model slipped:** −0.033, at the edge of its interval; check at the final checkpoint.
