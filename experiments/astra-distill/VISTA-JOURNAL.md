@@ -573,3 +573,15 @@ Scored on beast as ck50 (`score.py run … --split val-sub160.txt --boot 2000`; 
 - **Plateau on cells:** ck50 → ck75 changes no cell metric beyond its interval; the gain over the 4B full run holds.
 - **Regions recovered:** the ck25 → ck50 drop reversed, and entity F1 rose significantly.
 - **Model slipped:** −0.033, at the edge of its interval; check at the final checkpoint.
+
+### 2026-10-28: r3-27b-full training done; final eval split in three
+
+Chunk b (1095924) finished all 776 steps at 03:45 (9.0 h, exit 0; 12,411 papers, 43 over 49k dropped; peak 77.7 GiB).
+Chunk c (1095972) was cancelled, since it had nothing left to do.
+- **The single 6 h full-val eval (1095973) was replaced:** it would have started with no queue age, behind 505 gh jobs.
+- **Its replacement:** three gh jobs of 1:20, with shorter jobs more likely to start in gaps (backfill): 1106375-7,
+  `configs/r3-27b-final-p{1,2,3}-eval.json`.
+- **Splitting:** the 481 val papers are split by `n_input_tokens` into `data/v5/val-part{1,2,3}.txt` (161/160/160
+  papers, about 2.49M input tokens each).
+- **Separate run names:** each part has its own run name, because the merged model directory is keyed on the run.
+- Same SU cost as one job; each part merges the adapter on its own node (about 10 min each).
