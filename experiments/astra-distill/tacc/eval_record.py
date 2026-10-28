@@ -44,6 +44,14 @@ elif c["adapter"]:
         if r.returncode:
             sys.exit(f"merge failed rc={r.returncode}")
     model_dir = merged
+# drop the page cache the merge left on the weight files (on GH200 it can sit in the HBM node and shrink vLLM's share)
+for f in Path(model_dir).iterdir():
+    if f.is_file() and f.suffix == ".safetensors":
+        fd = os.open(f, os.O_RDONLY)
+        try:
+            os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_DONTNEED)
+        finally:
+            os.close(fd)
 subprocess.run("nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader; numactl -H | grep -E 'size|free'", shell=True)
 print(f"[{time.time()-T0:.0f}s] serving {model_dir}", flush=True)
 vl = log / f"vllm-{c['run']}-{tag}.log"

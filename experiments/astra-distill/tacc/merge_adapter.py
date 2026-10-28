@@ -28,6 +28,24 @@ for f in base.iterdir():
         continue
     else:
         d.symlink_to(f.resolve())
+# the multi-token-prediction head (mtp.*, vLLM speculative method qwen3_5_mtp) has no module in the HF class, so
+# save_pretrained drops it; copy it from the base unchanged (the adapter never touched it)
+ixf = out / "model.safetensors.index.json"
+bix = base / "model.safetensors.index.json"
+if ixf.exists() and bix.exists():
+    from safetensors import safe_open
+    from safetensors.torch import save_file
+    bmap = json.load(open(bix))["weight_map"]
+    mtp = {}
+    for k in sorted(k for k in bmap if k.startswith("mtp.")):
+        with safe_open(str(base / bmap[k]), "pt") as f:
+            mtp[k] = f.get_tensor(k)
+    if mtp:
+        save_file(mtp, str(out / "model-mtp.safetensors"), metadata={"format": "pt"})
+        oix = json.load(open(ixf)); oix["weight_map"].update({k: "model-mtp.safetensors" for k in mtp})
+        ixf.write_text(json.dumps(oix, indent=2)); print(f"mtp: copied {len(mtp)} tensors", flush=True)
+
+
 # the merged weight names must be the base's (vLLM loads by name)
 def names(d):
     ix = d / "model.safetensors.index.json"
