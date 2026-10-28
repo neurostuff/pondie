@@ -685,3 +685,29 @@ Full write-up: `vista/ADJUDICATION-r3-final.md` (beast `vista-out/v5/runs/r3-27b
 - **The scorer overstates reversals by about a fifth.** Name-similarity pairing crosses two analyses on one key
   (7iEdFur6F9G7, yHKigGhA9PZj), and level links map a model level to the wrong Astra level (RDqbaBcuZ9th,
   kPpiiibUx7Jd).
+
+### H40 (2026-10-28): evidence by unit index on the full train split (`ev1-full`, NuExtract3 4B LoRA)
+
+**Question.** Does ev1-1k's evidence model improve with the whole train split, as the record model did (h34-1k →
+r2-4b-full)?
+
+**Split.** The value-extraction split, not v6's: ev1 rows (built from v6 records) restricted to the 12,454 papers of
+v5 `splits/train.txt` (sha256 `c782c7fb…`), the train split of r2-4b-full and r3-27b-full. v6 train is that split plus
+35 papers; val (481) is the same in both. `train_record.py` takes a new `sids` option (a sid file, applied before the
+shuffle); on Vista `data/v5/train.txt`.
+- Dry run on the Vista login node: 12,454 of 12,454 sids found in `data/ev1/train.jsonl`; 84 over 49,152 tokens
+  dropped, 12,370 kept, 256.4M tokens. ev1-1k's selection is unchanged (995 kept, 5 dropped).
+
+**Run.** As ev1-1k and r2-4b-full: LoRA r64, alpha 128, lr 2e-4 cosine, 16 papers per step, one epoch, 774 steps.
+At ev1-1k's 6.6k tok/s, about 10.7 h. Config `configs/ev1-full.json`.
+- Train: 1106673 (gh, 13:00, soft stop) → 1106675 (gh, 3:00, afterany, resumes or exits if DONE).
+- Eval: 1106676 (afterok:1106675), JSON mode, full val 481 (`configs/ev1-full-eval.json`).
+- Baseline on the same papers: 1106674 (gh-dev) runs ev1-1k on the other 321 val papers, resuming from its 160
+  val-sub160 predictions (`configs/ev1-1k-fullval-eval.json`, `runs/ev1-1k/val-pred-full.jsonl`).
+
+**Scoring** (beast): `evidence.py score` now reads eval_record's `val-pred.jsonl` directly, and `evidence.py compare
+A B` gives B − A with a paired paper bootstrap. Check: ev1-1k re-scored from its jsonl equals its `score.json`
+exactly; compare of that file with itself gives 0 [0, 0].
+
+**Input record.** As in ev1-1k, the model is given Astra's record (without evidence), not a model's record, so this
+measures evidence finding alone.

@@ -1,0 +1,1 @@
+{"run": "ev1-full", "model": "nu", "data": "/work/07723/jdk3232/vista/astra-distill/data/ev1/train.jsonl", "sids": "/work/07723/jdk3232/vista/astra-distill/data/v5/train.txt", "n_papers": 0}
