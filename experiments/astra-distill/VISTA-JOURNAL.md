@@ -602,3 +602,29 @@ Load test of r3-27b-full `adapter-final` on LS6 `gpu-a100-dev`: 24 longest paper
 - **Speed:** on the same longest-first papers Vista reaches about 115 tok/s after 5 papers and 418 tok/s over 160, so
   LS6 A100 x2 is roughly a third of a GH200. Full val (481) would take about 5 h: too long for `gpu-a100-dev`'s 2 h,
   and `gpu-a100` had 523 jobs waiting.
+
+### 2026-10-28: r3-27b-full final (step 776), full val (481)
+
+Three gh jobs (1106375-7, 42/37/36 min) ran all 481 papers: 481 stop, no invalid JSON, no truncations, about 425 out
+tok/s each. Parts 2 and 3 started within an hour of submission (the 6 h job they replaced was behind 505 jobs).
+Scored on beast (`vista-out/v5/runs/r3-27b-final/`; v5 gold, 2,000 paired bootstraps; * = CI excludes 0).
+
+| metric | 4B full | 27B final | final − 4B full | ck75 → final (val-sub160) |
+|---|---:|---:|---|---|
+| linked cell F1 | 0.686 | **0.775** | +0.089 [+0.054, +0.125] * | +0.008 [−0.026, +0.037] |
+| strict cell F1 | 0.620 | 0.719 | +0.099 [+0.063, +0.136] * | +0.006 [−0.019, +0.031] |
+| exact linked | 0.601 | 0.683 | +0.082 [+0.045, +0.120] * | +0.008 [−0.015, +0.031] |
+| model | 0.831 | 0.885 | +0.055 [+0.023, +0.088] * | +0.026 [+0.002, +0.051] * |
+| kind | 0.838 | 0.861 | +0.023 [−0.013, +0.061] | +0.009 [−0.014, +0.031] |
+| statistic family | 0.835 | 0.863 | +0.028 [+0.000, +0.058] | +0.029 [+0.006, +0.058] * |
+| slots (linked) | 0.796 | 0.847 | +0.051 [+0.032, +0.072] * | +0.010 [−0.009, +0.027] |
+| analysis → acquisition | 0.867 | 0.910 | +0.043 [+0.011, +0.077] * | +0.006 [−0.007, +0.017] |
+| analysis → region | 0.528 | 0.609 | +0.081 [+0.009, +0.160] * | −0.037 [−0.154, +0.056] |
+| entity F1, all | 0.871 | 0.894 | +0.023 [+0.015, +0.032] * | +0.005 [−0.002, +0.012] |
+| schema-valid | 0.996 | 0.998 | +0.002 [−0.004, +0.010] | 0 |
+
+- **27B over 4B:** about +0.09 cell F1 on the full val, with every cell, slot and entity metric better.
+- **Last 25% of training:** cells and entities flat; the ck75 dip on model (−0.033) recovered (+0.026) and statistic
+  family rose. The 27B's cell gains were made by 50% (ck25 0.665 → ck50 0.745 → ck75 0.758 → final 0.765 on val-sub160).
+- **LS6 vs Vista** (same adapter, 24 longest of val-sub160): 0/24 identical outputs (greedy over 3–10k tokens on
+  different GPUs and tp), but the scores agree: linked cell F1 0.743 vs 0.748, +0.005 [−0.025, +0.044]; no metric differs.
