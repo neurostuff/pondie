@@ -1,0 +1,8 @@
+{
+ "run": "r3-27b-final-p1",
+ "model": "q27",
+ "adapter": "r3-27b-full/adapter-final",
+ "workers": 24,
+ "guided": false,
+ "sids": "/work/07723/jdk3232/vista/astra-distill/data/v5/val-part1.txt"
+}
