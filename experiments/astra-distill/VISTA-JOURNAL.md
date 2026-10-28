@@ -685,3 +685,42 @@ Full write-up: `vista/ADJUDICATION-r3-final.md` (beast `vista-out/v5/runs/r3-27b
 - **The scorer overstates reversals by about a fifth.** Name-similarity pairing crosses two analyses on one key
   (7iEdFur6F9G7, yHKigGhA9PZj), and level links map a model level to the wrong Astra level (RDqbaBcuZ9th,
   kPpiiibUx7Jd).
+
+### 2026-10-28: 27B inference speed (Vista gh, 80 val-sub160 papers, `tacc/bench.sbatch`)
+
+One merged `adapter-final` (with the `mtp.*` head now kept by `merge_adapter.py`), five vLLM setups, JSON mode.
+All 80 papers stop normally in every setup.
+
+| setup | KV cache (tokens) | out tok/s | linked cell F1 | vs a [95% CI] | schema-valid |
+|---|---:|---:|---:|---|---:|
+| a: 24 workers, gpu_mem 0.80 (as the final eval) | 336k | 415 | 0.723 | | 1.000 |
+| b: 48 workers, gpu_mem 0.92, fp8 KV | 917k | 557 | 0.716 | −0.008 [−0.038, +0.020] | 1.000 |
+| c: b + fp8 weights | 1.53M | 822 | 0.720 | −0.003 [−0.036, +0.029] | 1.000 |
+| d: b + MTP speculative decoding (2 tokens) | 711k | 822 | 0.731 | +0.007 [−0.018, +0.036] | 1.000 |
+| e: c + d | 1.22M | **1,223** | 0.715 | −0.008 [−0.075, +0.055] | 0.988 |
+
+- **MTP acceptance:** 2.9 of 3 tokens per step, although the head was never fine-tuned.
+- **Startup:** vLLM is up in 110–260 s once the merged model exists (446 s including the merge).
+- **e:** 2.95× a. One record (4z4c4xkQhH8z) fails the record schema, which widens its CI. No other metric differs
+  significantly from a; c's effect-kind accuracy is +0.056 [+0.009, +0.115].
+
+### 2026-10-28: pondie's checks and deterministic fixes on the final 27B's records (481 val)
+
+`vista/consistency.py`: pondie (`parse-only-readers`) Validator on the extraction schema (structure, storage rules,
+`rules.check_all`; no text, as the records have no evidence), then every repair in `fix.build_sequence()` with the
+paper's training-era coordinate parse and text (no table map), then the Validator again. Astra's own records are the
+baseline.
+
+| | 27B: before | 27B: after fixes | Astra: before | Astra: after fixes |
+|---|---:|---:|---:|---:|
+| errors | 186 | 175 | 15 | 42 |
+| records with an error | 50 (10%) | 46 | 3 | 10 |
+| warnings | 1,563 | 1,549 | 2,009 | 2,009 |
+
+- **Fixed:** "cell term not reachable through inputs_from" 35 → 0 (`unreachable`), product-column cell level 5 → 0,
+  a term name repeated across a model chain 25 → 17.
+- **Unchanged:** effect.kind disagreeing with its cells (48 → 50), cell term naming no model term (16), level sign
+  vs direction (15; Astra has the same 15).
+- **Introduced by a fix:** "whole-brain analysis given regions", 49 in the 27B's records and 27 in Astra's. `name_links`
+  links regions to analyses from their names, including whole-brain ones, which a storage rule then refuses.
+- Without that, the fixes resolve 60 of the 27B's 186 errors (32%).
