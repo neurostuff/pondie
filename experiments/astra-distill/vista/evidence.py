@@ -3,7 +3,8 @@ the record's evidence as unit numbers out.
 
     python evidence.py forms --split train.txt --n 300                    # output-form token comparison
     python evidence.py build --split train.txt --out PREFIX [--bodies]    # PREFIX.jsonl (train rows) [+ PREFIX.bodies.jsonl]
-    python evidence.py score PREDS.json --split val.txt [--sids FILE] --out score.json
+    python evidence.py score PREDS.json --split val.txt [--sids FILE] --out score.json   # PREDS: {"record": ...} or eval_record's val-pred.jsonl
+    python evidence.py compare score_A.json score_B.json --split val.txt --out diff.json   # paired paper bootstrap of B - A
 
 Units (`units`): a line holding a tab (a table row) or of at most 200 characters (a heading, a caption line) is one
 unit; longer lines are cut into sentences. Astra's spans fit them: 98.2% lie in one unit and cover it (evfeas.py).
@@ -238,8 +239,15 @@ def f1(c):
     return round(pr, 4), round(rc, 4), round(2 * pr * rc / max(1e-9, pr + rc), 4)
 
 
+def load_preds(path):
+    """{sid: evidence shape | None} from {"record": {...}} or eval_record.py's jsonl rows (sid, prediction)"""
+    if path.endswith(".jsonl"):
+        return {r["sid"]: r["prediction"] for r in map(json.loads, open(path)) if r.get("finish_reason")}
+    return json.load(open(path))["record"]
+
+
 def cmd_score(a, P):
-    preds = json.load(open(a.files[0]))["record"]
+    preds = load_preds(a.files[0])
     sids = read_split(a, P)
     if a.sids:
         keep = set(Path(a.sids).read_text().split())
@@ -267,9 +275,37 @@ def cmd_score(a, P):
     print(json.dumps({k: v for k, v in res.items() if k != "per_paper"}, indent=1))
 
 
+def cmd_compare(a, P):
+    """B - A on the papers both score files hold: micro precision / recall / F1 and slot match, paired paper bootstrap"""
+    A, B = (json.load(open(f))["per_paper"] for f in a.files[:2])
+    sids = sorted(set(A) & set(B))
+
+    def stats(per, ss):
+        c = collections.Counter()
+        for s in ss:
+            c.update(per[s])
+        pr, rc, f = f1(c)
+        return {"precision": pr, "recall": rc, "f1": f, "slot_exact": c["slots_exact"] / max(1, c["slots_gold"]),
+                "slot_any_overlap": c["slots_any"] / max(1, c["slots_gold"])}
+    a_, b_ = stats(A, sids), stats(B, sids)
+    rng = random.Random(0); boot = collections.defaultdict(list)
+    for _ in range(a.boot):
+        smp = [rng.choice(sids) for _ in sids]
+        sa, sb = stats(A, smp), stats(B, smp)
+        for k in sa:
+            boot[k].append(sb[k] - sa[k])
+    res = {"papers": len(sids), "only_a": len(set(A) - set(B)), "only_b": len(set(B) - set(A)), "metrics": {}}
+    for k in a_:
+        v = sorted(boot[k])
+        res["metrics"][k] = {"a": round(a_[k], 4), "b": round(b_[k], 4), "diff": round(b_[k] - a_[k], 4),
+                             "ci95": [round(v[int(0.025 * len(v))], 4), round(v[int(0.975 * len(v))], 4)]}
+    json.dump(res, open(a.out, "w"), indent=1)
+    print(json.dumps(res, indent=1))
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=("forms", "build", "score"))
+    ap.add_argument("cmd", choices=("forms", "build", "score", "compare"))
     ap.add_argument("files", nargs="*")
     ap.add_argument("--split", required=True)
     ap.add_argument("--n", type=int, default=300)
@@ -282,7 +318,7 @@ def main():
         ap.add_argument(f"--{k}", default=str(v))
     a = ap.parse_args()
     P = T.Paths(**{k: getattr(a, k) for k in T.DEFAULTS})
-    {"forms": cmd_forms, "build": cmd_build, "score": cmd_score}[a.cmd](a, P)
+    {"forms": cmd_forms, "build": cmd_build, "score": cmd_score, "compare": cmd_compare}[a.cmd](a, P)
 
 
 if __name__ == "__main__":

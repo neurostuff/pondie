@@ -1,0 +1,1 @@
+{"run": "ev1-1k", "model": "nu", "adapter": "ev1-1k/adapter-final", "workers": 24, "guided": false, "bodies": "/work/07723/jdk3232/vista/astra-distill/data/ev1/val.bodies.jsonl", "out_name": "val-pred-full.jsonl"}

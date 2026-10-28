@@ -16,6 +16,7 @@ DEFAULTS = dict(
     data="/work/07723/jdk3232/vista/astra-distill/data/v5/train.jsonl",
     runs="/work/07723/jdk3232/vista/astra-distill/runs",
     n_papers=0,                      # 0: all; else first N of the fixed shuffle (nested subsets)
+    sids=None,                       # file of sids (one per line): keep only those rows, before the shuffle
     subset_seed=20261023, seed=0, max_len=49152,
     accum=16, lr=None, warmup=0.03, epochs=1, weight_decay=0.01, clip=1.0,
     rank=64, alpha=128, dropout=0.05,
@@ -69,6 +70,10 @@ def select_rows(c):
         for l in f:
             r = json.loads(l)
             rows.append({k: r[k] for k in ("sid", "prompt", "template", "target_json", "n_tokens")})
+    if c["sids"]:
+        keep = {l.strip() for l in open(c["sids"]) if l.strip()}
+        rows = [r for r in rows if r["sid"] in keep]
+        print(f"DATA sids {c['sids']}: {len(rows)} of {len(keep)} sids found in {c['data']}", flush=True)
     idx = list(range(len(rows)))
     random.Random(c["subset_seed"]).shuffle(idx)
     if c["n_papers"]:
