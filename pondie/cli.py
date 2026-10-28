@@ -200,8 +200,8 @@ def _id_map(args: argparse.Namespace) -> int:
     for path in sorted(args.records.glob("*.extraction.json")):
         tally["records"] += 1
         study = path.name.split(".")[0]
-        parse = paths.analyses(study, args.corpus)
-        if not coordinate_parse.is_coordinate_parse(parse):
+        parse = paths.coordinate_parse(study, args.corpus)
+        if not parse.is_file():
             tally["no_parse"] += 1
             continue
         found = legacy_id_map(json.loads(path.read_text(encoding="utf-8")), parse, sch)

@@ -1,4 +1,4 @@
-"""Tying a reference analysis to the stage-1 entry it came from.
+"""Tying a reference analysis to the parse entry it came from.
 
 This writes into `benchmarks/reference`, which the gold direction tables are keyed to, so the
 two ways it can be wrong are both silent: a provenance that names the wrong entry, and one
@@ -12,6 +12,8 @@ import json
 
 from pondie.benchmark.backfill import SLOT, _by_name, backfill, entry_id, resolve
 
+from conftest import write_parse
+
 ENTRIES = [
     {"table_id": "t2", "name": "Visuotactile > visuomotor"},
     {"table_id": "t2", "name": "Visuomotor > visuotactile"},
@@ -19,6 +21,14 @@ ENTRIES = [
     {"table_id": "ts1", "name": "sz > nc"},
     {"table_id": "ts2", "name": "sz > nc"},
     {"table_id": "prose", "name": ""},
+]
+
+
+#: `ENTRIES` as a coordinate parse: the two "sz > nc" entries get points of their own, since
+#: a parse keys an analysis by its content and identical content is one analysis.
+PARSED = [
+    dict(e, points=[{"coordinates": [i, i, i]}]) if e["name"] == "sz > nc" else e
+    for i, e in enumerate(ENTRIES)
 ]
 
 
@@ -65,8 +75,7 @@ def test_what_is_written_is_an_extracted_value_and_not_a_bare_string():
 
 def test_the_backfill_adds_one_key_and_changes_nothing_else(tmp_path):
     reference, corpus = tmp_path / "reference", tmp_path / "corpus"
-    (corpus / "S1" / "stage1").mkdir(parents=True)
-    (corpus / "S1" / "stage1" / "analyses.json").write_text(json.dumps({"analyses": ENTRIES}))
+    keys = write_parse(corpus / "S1", PARSED)
     record = {
         "local_id": "S1",
         "analyses": [analysis("Visuotactile > visuomotor"), analysis("sz > nc")],
@@ -81,7 +90,7 @@ def test_the_backfill_adds_one_key_and_changes_nothing_else(tmp_path):
     first, second = after["analyses"]
     assert first[SLOT] == {
         "extraction_status": "extracted",
-        "value": "t2#1",
+        "value": keys[0],
         "value_source": "generated",
         "evidence": {"status": "not_found"},
     }
@@ -92,8 +101,7 @@ def test_the_backfill_adds_one_key_and_changes_nothing_else(tmp_path):
 
 def test_a_dry_run_writes_nothing(tmp_path):
     reference, corpus = tmp_path / "reference", tmp_path / "corpus"
-    (corpus / "S1" / "stage1").mkdir(parents=True)
-    (corpus / "S1" / "stage1" / "analyses.json").write_text(json.dumps({"analyses": ENTRIES}))
+    keys = write_parse(corpus / "S1", PARSED)
     reference.mkdir()
     body = json.dumps({"local_id": "S1", "analyses": [analysis("Visuotactile > visuomotor")]})
     (reference / "S1.extraction.json").write_text(body)

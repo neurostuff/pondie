@@ -23,7 +23,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 
 from pondie import schema
@@ -306,8 +306,8 @@ def build(
     extractor_model: str,
     extractor_version: str,
     extraction_date: str,
-    stage1: Path | None = None,
-    table_map: Path | None = None,
+    parse: Path | None = None,
+    table_map: Mapping[str, str] | None = None,
 ) -> tuple[dict[str, Any], BuildReport]:
     normalized, digest, sections = text_index.load(text_path)
     report = BuildReport()
@@ -336,7 +336,7 @@ def build(
     # ones and wrong for `mirrored`, which appends.
     log = fix.apply_all(
         body,
-        fix.Context(schema=sch, stage1=stage1, table_map=table_map, text=normalized),
+        fix.Context(schema=sch, parse=parse, table_map=table_map, text=normalized),
         stage=fix.AT_MERGE,
     )
     report.repair_log = log

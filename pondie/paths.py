@@ -10,8 +10,8 @@ One layout, and the shape of it is the point:
     data/corpus/<study_id>/     the synced paper. An INPUT: fetched, never written by a run
       parse/coordinate_parse.json   the coordinate parse (study_schema CoordinateParse)
       parse/parsed_paper.json       the parsed paper (study_schema ParsedPaper)
-      stage1/analyses.json          the legacy coordinate-table parse, for a paper with no parse/
-      stage1/table-map.json         manifest table_id -> record Table local_id
+      stage1/analyses.json          DEPRECATED legacy coordinate-table parse. Read only to
+                                    migrate old positional keys (`stage1`); readers take parse/
       processed/<flavour>/          the text every offset addresses
       source/<flavour>/             what the text was built from
     data/runs/<name>/           one extraction. Everything a run produces, together
@@ -140,7 +140,12 @@ PUBGET_LAYOUT = ("pubget", "pmc", "europepmc", "springer")
 
 
 def stage1(study: str, corpus: Path = CORPUS) -> Path:
-    """The coordinate-table parse for one study. An input; no run writes it."""
+    """DEPRECATED: the legacy coordinate-table parse for one study.
+
+    Superseded by `coordinate_parse`, which every reader takes analyses from. Kept for its
+    writer (`extraction.corpus.tables`) and for migrating records still carrying its
+    positional keys (`fix.map_legacy_keys`, `cli id-map`); nothing else should read it.
+    """
     return corpus / study / "stage1" / "analyses.json"
 
 
@@ -152,18 +157,6 @@ def coordinate_parse(study: str, corpus: Path = CORPUS) -> Path:
 def parsed_paper(study: str, corpus: Path = CORPUS) -> Path:
     """Ingestion's ParsedPaper for one study: the text's bibliography, header and tables."""
     return corpus / study / "parse" / "parsed_paper.json"
-
-
-def analyses(study: str, corpus: Path = CORPUS) -> Path:
-    """The parse a reader takes the paper's analyses from: the CoordinateParse where the
-    paper has one, else the legacy `stage1/analyses.json`."""
-    parse = coordinate_parse(study, corpus)
-    return parse if parse.is_file() else stage1(study, corpus=corpus)
-
-
-def table_map(study: str, corpus: Path = CORPUS) -> Path:
-    """Manifest `table_id` -> the `Table.local_id` an `Analysis.tables` reference holds."""
-    return corpus / study / "stage1" / "table-map.json"
 
 
 def text(study: str, flavour: Flavour, corpus: Path = CORPUS) -> Path:
@@ -198,8 +191,7 @@ __all__ = [
     "run",
     "stage1",
     "coordinate_parse",
-    "analyses",
-    "table_map",
+    "parsed_paper",
     "text",
     "best_text",
 ]

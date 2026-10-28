@@ -17,7 +17,7 @@ The directory follows the paper's journey:
 and the modules beside them:
 
     models      the pydantic contracts that cross a boundary
-    parse       the stage-1 parse document
+    parse       the coordinate parse document
     sign_split  splitting a two-signed table into its two contrasts
     llm         the one place a prompt becomes a network call
     pubmed      authorship and publication date from PubMed, for the overlap query

@@ -209,12 +209,12 @@ def _sent(prompt) -> str:
     return _unwrapped(prompt.system + "\n" + prompt.user)
 
 
-def test_the_analyses_pass_may_split_and_decline_a_stage_one_entry() -> None:
+def test_the_analyses_pass_may_split_and_decline_a_listing_entry() -> None:
     """Stage 1 is frozen, so the only place its two failure modes can be compensated is
     here: a table splitting one parsed entry by a column the parse never saw, and a
     coordinate table that reports no tested effect at all."""
 
-    block = render.stage1_block(
+    block = render.listing_block(
         {
             "analyses": [
                 {
@@ -233,13 +233,13 @@ def test_the_analyses_pass_may_split_and_decline_a_stage_one_entry() -> None:
     assert "purpose" in block, "a declined table has somewhere to say what it is"
 
 
-def test_the_stage_one_block_requires_the_table_local_id() -> None:
+def test_the_listing_block_requires_the_table_local_id() -> None:
     """`Analysis.tables` is emitted by the model alone, and nothing used to tell it to copy
     the bracket. It was right on 88/88 raw analyses only because one-entry-per-listing made
     the bracket unambiguous -- permitting a split or a decline removes that guarantee, so
     the requirement has to be stated in the same change."""
 
-    block = render.stage1_block(
+    block = render.listing_block(
         {
             "analyses": [
                 {
@@ -419,7 +419,7 @@ def test_the_vacuous_repair_runs_after_the_demands_pass():
 
 
 def test_the_listing_a_pass_must_consume_is_the_one_it_was_shown() -> None:
-    """`demandable_keys` and `stage1_block` number from `parse_keys` and filter alike, so
+    """`demandable_keys` and `listing_block` number from `parse_keys` and filter alike, so
     the post-condition cannot demand an entry the pass never saw."""
 
     doc = {
@@ -653,7 +653,7 @@ def test_a_duplicate_must_carry_the_declined_entry_s_coordinates() -> None:
     not include that peak. The peak appeared only under `text#1` and `text#3`, both
     declined, so the finding left the record while every aggregate called the paper clean.
 
-    Both sides of this comparison are read off the stage-1 parse. The pass supplies the
+    Both sides of this comparison are read off the parse. The pass supplies the
     key and the reason string; it is never asked to restate a coordinate, and the schema
     has nowhere to put one if it did."""
 
@@ -750,7 +750,7 @@ def test_a_prose_sentence_the_parse_repeated_is_one_row() -> None:
     assert render.demandable_keys(doc) == {"4220#1", "text#1", "text#2"}
 
     # the surviving keys are the low ones, so nothing a record already points at moves
-    block = render.stage1_block(doc, {"4220": "tbl1"})
+    block = render.listing_block(doc, {"4220": "tbl1"})
     assert "text#3" not in block and "text#5" not in block
     assert block.count("text#1") == 1
 
@@ -775,7 +775,7 @@ def test_a_row_states_the_coordinates_it_covers() -> None:
         {"table_id": "4220", "name": "A > B", "points": [
             {"coordinates": [-22, -4, -18]}, {"coordinates": [40, 18, 2]}]},
     ]}
-    block = render.stage1_block(doc, {"4220": "tbl1"})
+    block = render.listing_block(doc, {"4220": "tbl1"})
 
     assert "(-22, -4, -18)" in block and "(40, 18, 2)" in block
     assert "2 foci" in block, "the count stays; it reads faster than counting tuples"
@@ -791,7 +791,7 @@ def test_a_long_prose_sentence_keeps_its_coordinate() -> None:
     sentence = tail * 3 + "compared to healthy participants (-21, -6, -15)."
     doc = {"analyses": [_prose(sentence, (-21, -6, -15))]}
 
-    block = render.stage1_block(doc, {})
+    block = render.listing_block(doc, {})
     assert "(-21, -6, -15)" in block
 
 
@@ -821,7 +821,7 @@ def test_a_voxel_a_table_also_reports_is_marked() -> None:
         "table_id": "prose", "name": "", "description": "A peak at (9, -12, -6).",
         "points": [{"coordinates": [9, -12, -6], "also_in_table": True}],
     }]}
-    block = render.stage1_block(doc, {})
+    block = render.listing_block(doc, {})
 
     assert "(9, -12, -6) [in a table]" in block
     assert "[in a table]" in render.PROSE_GROUP_NOTE, "the marker must stay explained"

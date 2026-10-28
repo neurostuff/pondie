@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Mapping
 import logging
 
 from pondie.extraction.record import walk
@@ -36,8 +36,10 @@ class Context:
     """What a repair may need beyond the record itself."""
 
     schema: Schema
-    stage1: Path | None = None
-    table_map: Path | None = None
+    #: The paper's coordinate parse.
+    parse: Path | None = None
+    #: Source `table_id` -> Table `local_id` (`stages.table_ids`); None before `tables` ran.
+    table_map: Mapping[str, str] | None = None
     #: The paper, for a repair that needs its own definitions (its abbreviations).
     text: str = ""
 
@@ -64,7 +66,7 @@ class Repair:
     #: The point is `fill`, which runs between `satisfy` and the merge and asks a model
     #: about open slots. Measured over 15 papers, 215 of the 1,774 slots it offered were
     #: ones a repair fills later -- 100 of them `source_table_analysis`, a join key read
-    #: off the stage-1 parse that a model can only guess at. Running a repair where its
+    #: off the parse that a model can only guess at. Running a repair where its
     #: inputs are ready takes those off the ask.
     stage: str = "merged"
 
@@ -192,7 +194,7 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "legacy_keys",
             "map a positional stage-1 key to the CoordinateParse's key for the same analysis",
-            lambda body, ctx: derive.map_legacy_keys(body, ctx.stage1),
+            lambda body, ctx: derive.map_legacy_keys(body, ctx.parse),
             # After `text_keys`, whose `text#N` spelling the stage-1 keys are matched in, and
             # before everything `text_keys` precedes.
             after="text_keys",
@@ -201,7 +203,7 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "legacy_keys_at_merge",
             "map a positional stage-1 key a stored payload holds to the CoordinateParse's key",
-            lambda body, ctx: derive.map_legacy_keys(body, ctx.stage1),
+            lambda body, ctx: derive.map_legacy_keys(body, ctx.parse),
             # A payload written against stage 1 and still fresh reaches the merge without
             # passing `legacy_keys` again. Idempotent: a mapped key is the parse's own.
             after="legacy_keys",
@@ -349,8 +351,8 @@ def build_sequence() -> tuple[Repair, ...]:
         ),
         Repair(
             "coordinate_space",
-            "fill the space stage 1 already read off the table",
-            lambda body, ctx: derive.derive_coordinate_spaces(body, ctx.stage1, ctx.table_map),
+            "fill the space the parse already read off the table",
+            lambda body, ctx: derive.derive_coordinate_spaces(body, ctx.parse, ctx.table_map),
             # After `table_references`: a reference repointed `table2 -> tbltable2` is
             # one this reads.
             after="table_references",
@@ -365,13 +367,13 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "source_links",
             "verify or fill each analysis's link to its parsed rows",
-            lambda body, ctx: derive.resolve_source_table_analysis(body, ctx.stage1),
+            lambda body, ctx: derive.resolve_source_table_analysis(body, ctx.parse),
             stage="demands",
         ),
         Repair(
             "coordinate_set_keys",
             "key a coordinate set by its parse key, not its table's local_id",
-            lambda body, ctx: derive.rekey_coordinate_sets(body, ctx.stage1, ctx.table_map),
+            lambda body, ctx: derive.rekey_coordinate_sets(body, ctx.parse, ctx.table_map),
             stage="demands",
         ),
         Repair(
@@ -426,7 +428,7 @@ def build_sequence() -> tuple[Repair, ...]:
         Repair(
             "mirrored",
             "rebuild the reversed half of every sign-split contrast",
-            lambda body, ctx: derive.mirror_withheld(body, ctx.stage1),
+            lambda body, ctx: derive.mirror_withheld(body, ctx.parse),
             after="directions",
             stage="merged",
         ),

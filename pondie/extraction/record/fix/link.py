@@ -18,7 +18,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from pathlib import Path
 from pondie.extraction.record import ids
 from pondie.extraction.record.direction import OPPOSITE as _OPPOSITE
 from pondie.extraction.record import spans as span_tools
@@ -1262,7 +1261,7 @@ def _table_number(text: Any) -> tuple[bool, int] | None:
 
 
 def settle_table_references(
-    body: dict[str, Any], sch: Schema, table_map: Path | None
+    body: dict[str, Any], sch: Schema, table_map: Mapping[str, str] | None
 ) -> list[str]:
     """Repoint or drop a reference to a table no Table entity declares.
 
@@ -1272,10 +1271,10 @@ def settle_table_references(
     attempt left it out. A reference is repointed when exactly one declared table carries
     its number, and dropped otherwise.
 
-    Only once the `tables` stage has run (it always writes `table_map`): before that, the
+    Only once the `tables` stage has run (the caller passes `table_map` then): before that, the
     table may yet be declared.
     """
-    if table_map is None or not table_map.is_file():
+    if table_map is None:
         return []
     tables = {
         t["local_id"]: t

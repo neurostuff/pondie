@@ -3,7 +3,7 @@
 
     python scripts/query_analysis_selection.py --records '<dir>/*/*.extraction.json' \
         --bench <neurometabench>/data --autonima <autonima-results>/projects \
-        --stage1 <corpus> [--arms "full text,record + evidence"]
+        --corpus <corpus> [--arms "full text,record + evidence"]
 
 Screening picks papers; a coordinate meta-analysis pools *contrasts*, and the benchmark
 names them: "non-PTSD > PTSD", "bvFTD < HC (all & by modality)", "drug cue > neutral cue".
@@ -136,7 +136,7 @@ def autonima_counts(autonima: Path, project: str, run: str, annotation: str) -> 
     return dict(tally)
 
 
-def query_selection(records: dict, stage1: Path | None, spec, permissive: bool,
+def query_selection(records: dict, corpus: Path | None, spec, permissive: bool,
                     pool: set[str]) -> tuple[dict[str, list], dict[str, int]]:
     """pmid -> the coordinates the query pools, and how many analyses it pooled them from."""
     foci: dict[str, list] = {}
@@ -151,7 +151,7 @@ def query_selection(records: dict, stage1: Path | None, spec, permissive: bool,
         if not picked:
             continue
         counts[pmid] = len(picked)
-        entries = parse_entries(stage1, pmid)
+        entries = parse_entries(corpus, pmid)
         found: list[tuple] = []
         if entries is not None:
             for analysis in body.get("analyses") or []:
@@ -188,8 +188,8 @@ def main() -> int:
     ap.add_argument("--autonima", type=Path,
                     help="<autonima-results>/projects, for each arm's annotation and its "
                          "own coordinate parse -- without it only the query is scored")
-    ap.add_argument("--stage1", type=Path,
-                    help="the corpus, for <pmid>/stage1/analyses.json, which is how a "
+    ap.add_argument("--corpus", type=Path,
+                    help="the corpus, for <pmid>/parse/coordinate_parse.json, which is how a "
                          "record's analysis reaches its coordinates")
     # Not comma separated: one of the labels is "record, no evidence", and splitting on
     # the comma scored two arms that do not exist and silently dropped the one that does.
@@ -237,7 +237,7 @@ def main() -> int:
 
         saw = {p for p, body in here.items() if body.get("analyses")}
         for label, permissive in (("query, strict", False), ("query, permissive", True)):
-            foci, picked = query_selection(here, args.stage1, spec, permissive, set(gold_foci))
+            foci, picked = query_selection(here, args.corpus, spec, permissive, set(gold_foci))
             report(label, foci, picked, saw, gold_foci, gold_counts, args.tolerance)
     return 0
 

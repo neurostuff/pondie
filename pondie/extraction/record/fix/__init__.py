@@ -5,7 +5,7 @@ the difference is what each may assume about its input:
 
   shape    make the record match the schema. Runs first, because nothing schema-guided can
            read a record whose slots hold the wrong sort of thing
-  derive   fill a slot from another slot, from the stage-1 parse, or from a join the record
+  derive   fill a slot from another slot, from the coordinate parse, or from a join the record
            already contains. Reads no paper, which is what makes it deterministic
   link     make the references resolve, and refuse a guess. A fix decides nothing: where two
            answers are possible the record keeps its defect and `rules` tells a human

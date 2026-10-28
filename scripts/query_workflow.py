@@ -2,7 +2,7 @@
 """The whole funnel as a query: screen the papers, select the contrasts, pool the foci.
 
     python scripts/query_workflow.py --records '<dir>/*/*.extraction.json' \
-        --bench <neurometabench>/data --stage1 <corpus>
+        --bench <neurometabench>/data --corpus <corpus>
 
 `query_metaanalyses.py` scores the first gate and `query_analysis_selection.py` the second.
 Neither says what a meta-analyst gets by running both, which is the only output that
@@ -18,8 +18,9 @@ that contradicts a criterion from a record that is silent about it, at the stage
 each does its damage. Strict/strict is the query a `WHERE` clause writes.
 
 The foci column is the one `docs/meta-analysis-queries.md` recorded as missing -- "the
-query has no foci column yet, and it should" -- because it needs the stage-1 parse beside
-the records. `--stage1` is that parse; without it the funnel stops at the analysis.
+query has no foci column yet, and it should" -- because it needs the coordinate parse
+beside the records. `--corpus` is where that parse is; without it the funnel stops at the
+analysis.
 """
 from __future__ import annotations
 
@@ -75,8 +76,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--records", required=True)
     ap.add_argument("--bench", required=True, type=Path)
-    ap.add_argument("--stage1", type=Path,
-                    help="the corpus, for <pmid>/stage1/analyses.json -- without it the "
+    ap.add_argument("--corpus", type=Path,
+                    help="the corpus, for <pmid>/parse/coordinate_parse.json -- without it the "
                          "funnel stops at the analysis and reports no foci")
     ap.add_argument("--tolerance", type=float, default=TOLERANCE,
                     help="mm within which two foci are the same focus (default 2)")
@@ -117,7 +118,7 @@ def main() -> int:
             print(f"  {dropped} merged gold studies dropped: their foci belong to "
                   f"several papers at once and cannot be attributed to one")
 
-        cache = {pmid: parse_entries(args.stage1, pmid) for pmid in here}
+        cache = {pmid: parse_entries(args.corpus, pmid) for pmid in here}
         published = gold_spaces(args.bench, project)
 
         for (key_project, key), spec in KEYS.items():

@@ -65,8 +65,8 @@ def test_the_deriver_reads_the_same_lexicon_as_the_resolver(tmp_path):
 
     from pondie.extraction.record.fix.derive import derive_coordinate_spaces
 
-    stage1 = tmp_path / "stage1.json"
-    stage1.write_text(
+    parse = tmp_path / "analyses.json"
+    parse.write_text(
         json.dumps(
             {
                 "analyses": [
@@ -78,11 +78,10 @@ def test_the_deriver_reads_the_same_lexicon_as_the_resolver(tmp_path):
             }
         )
     )
-    table_map = tmp_path / "tables.json"
-    table_map.write_text(json.dumps({"T1": "t1"}))
+    table_map = {"T1": "t1"}
 
     body = {"analyses": [{"tables": ["t1"], "coordinate_space": {"extraction_status": "absent"}}]}
-    assert derive_coordinate_spaces(body, stage1, table_map) == ["analyses[0] -> MNI"]
+    assert derive_coordinate_spaces(body, parse, table_map) == ["analyses[0] -> MNI"]
     assert body["analyses"][0]["coordinate_space"]["value"] == "MNI"
 
 
@@ -92,13 +91,12 @@ def test_the_deriver_writes_nothing_for_a_space_no_rule_matched(tmp_path):
 
     from pondie.extraction.record.fix.derive import derive_coordinate_spaces
 
-    stage1 = tmp_path / "stage1.json"
-    stage1.write_text(
+    parse = tmp_path / "analyses.json"
+    parse.write_text(
         json.dumps({"analyses": [{"table_id": "T1", "points": [{"space": "REFERENCE ATLAS"}]}]})
     )
-    table_map = tmp_path / "tables.json"
-    table_map.write_text(json.dumps({"T1": "t1"}))
+    table_map = {"T1": "t1"}
 
     body = {"analyses": [{"tables": ["t1"], "coordinate_space": {"extraction_status": "absent"}}]}
-    assert derive_coordinate_spaces(body, stage1, table_map) == []
+    assert derive_coordinate_spaces(body, parse, table_map) == []
     assert body["analyses"][0]["coordinate_space"] == {"extraction_status": "absent"}

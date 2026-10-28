@@ -16,6 +16,9 @@ from pondie.extraction.models import (
     StageOutcome,
 )
 from pondie.extraction.prompt import render
+from pondie.extraction.stages import table_ids
+
+from conftest import write_parse
 
 
 class Recorder:
@@ -34,20 +37,19 @@ def _paper(
     manifest=({"table_id": "t1", "table_number": 1, "caption": "Peaks"},),
     parsed=(),
 ):
-    """A staged paper: a text, the stage-1 parse, and the table manifest beside the text.
+    """A staged paper: a text, the coordinate parse, and the table manifest beside the text.
 
-    `table-map.json` is deliberately not written. It is an *output* of the Tables stage --
-    the map `Analysis.tables` references resolve through -- and a fixture that supplies it
-    hides the stage failing to write one.
+    No table map is written: it is computed from these sources (`stages.table_ids`), the
+    map `Analysis.tables` references resolve through.
 
-    `parsed` fills the stage-1 parse's analyses, which is the Tables stage's second source:
-    a flavour shipping no manifest still has tables if the parse read some.
+    `parsed` fills the parse's analyses, stage-1-shaped (`conftest.write_parse`), which is
+    the Tables stage's second source: a flavour shipping no manifest still has tables if the
+    parse read some.
     """
     root = tmp_path / "texts"
     (root / "S1" / "processed" / "pubget").mkdir(parents=True)
-    (root / "S1" / "stage1").mkdir(parents=True)
     (root / "S1" / "processed" / "pubget" / "text.txt").write_text("a paper")
-    (root / "S1" / "stage1" / "analyses.json").write_text(json.dumps({"analyses": list(parsed)}))
+    write_parse(root / "S1", list(parsed))
     if manifest is not None:
         (root / "S1" / "processed" / "pubget" / "tables.jsonl").write_text(
             "\n".join(json.dumps(row) for row in manifest)
@@ -84,8 +86,12 @@ def test_tables_writes_the_id_map_analysis_references_resolve_through(tmp_path):
     Table entity -- so it stayed invisible until a coordinate query asked for the join.
     """
     paper = _paper(tmp_path)
-    run([paper], _settings(tmp_path, stages=(StageName.tables,)), Recorder())
-    assert json.loads(paper.table_map.read_text()) == {"t1": "tbl1"}
+    report = run([paper], _settings(tmp_path, stages=(StageName.tables,)), Recorder())
+    assert table_ids(paper) == {"t1": "tbl1"}
+    # Computed, not stored: the map and the records the stage wrote must name the same ids.
+    written = json.loads(report.papers[0].outcomes[0].produced[0].read_text())["tables"]
+    assert sorted(table_ids(paper).values()) == sorted(t["local_id"] for t in written)
+    assert not (paper.study_dir / "stage1").exists(), "nothing is written into the corpus"
 
 
 def test_a_table_with_no_caption_is_not_reported_rather_than_empty(tmp_path):
@@ -114,7 +120,7 @@ def test_two_tables_numbered_one_stay_two_records(tmp_path):
     report = run([paper], _settings(tmp_path, stages=(StageName.tables,)), Recorder())
     written = json.loads(report.papers[0].outcomes[0].produced[0].read_text())["tables"]
     assert [entry["local_id"] for entry in written] == ["tbl1", "tbl1_2"]
-    assert json.loads(paper.table_map.read_text()) == {"a": "tbl1", "b": "tbl1_2"}
+    assert table_ids(paper) == {"a": "tbl1", "b": "tbl1_2"}
 
 
 def test_the_local_id_comes_from_the_paper_not_the_staging_flavour(tmp_path):
@@ -135,13 +141,13 @@ def test_the_local_id_comes_from_the_paper_not_the_staging_flavour(tmp_path):
     written = json.loads(report.papers[0].outcomes[0].produced[0].read_text())["tables"]
     assert [entry["local_id"] for entry in written] == ["tbl2", "tbls1"]
     # The staging key is not lost -- it is what the parse's `table_id` joins through.
-    assert json.loads(paper.table_map.read_text()) == {
+    assert table_ids(paper) == {
         "pone.0074164.t002": "tbl2",
         "20": "tbls1",
     }
 
 
-def test_a_flavour_with_no_manifest_falls_back_to_the_stage_one_parse(tmp_path):
+def test_a_flavour_with_no_manifest_falls_back_to_the_parse(tmp_path):
     """654 of 1,143 dangling `Analysis.tables` references came from this case.
 
     With no manifest the stage used to write `{"tables": []}`, but the prompt still groups
@@ -163,8 +169,8 @@ def test_a_flavour_with_no_manifest_falls_back_to_the_stage_one_parse(tmp_path):
     # One Table per table, not per analysis, and the prose pseudo-table is not a table.
     assert [entry["local_id"] for entry in written] == ["tbl2"]
     assert written[0]["caption"]["value"] == "Peaks"
-    assert json.loads(paper.table_map.read_text()) == {"t2": "tbl2"}
-    assert "stage-1 parse" in report.papers[0].outcomes[0].notes[0]
+    assert table_ids(paper) == {"t2": "tbl2"}
+    assert "parse/coordinate_parse.json" in report.papers[0].outcomes[0].notes[0]
 
 
 def test_an_empty_manifest_falls_back_the_same_way_an_absent_one_does(tmp_path):
@@ -191,9 +197,9 @@ def test_the_prompt_never_offers_an_id_the_record_does_not_declare(tmp_path):
             {"table_id": "t2", "table_number": 2, "table_caption": "Peaks", "name": "A>B"}
         ]
     }
-    mapped = render.stage1_block(parsed, {"t2": "tbl2"})
+    mapped = render.listing_block(parsed, {"t2": "tbl2"})
     assert "[table local_id: tbl2]" in mapped
-    unmapped = render.stage1_block(parsed, {})
+    unmapped = render.listing_block(parsed, {})
     assert "[no table local_id" in unmapped
     # The heading is the only place an id may come from, so no heading may carry one.
     headings = [ln for ln in unmapped.splitlines() if ln.startswith("Table ")]
@@ -218,11 +224,11 @@ def test_a_paper_with_no_manifest_and_no_parsed_table_is_not_a_failure(tmp_path)
     assert "no `Analysis.tables` target" in outcome.notes[0]
 
 
-def test_a_missing_stage_one_parse_stops_the_paper_with_a_reason(tmp_path):
+def test_a_missing_parse_stops_the_paper_with_a_reason(tmp_path):
     paper = Paper(study_id="absent", root=tmp_path)
     report = run([paper], _settings(tmp_path, stages=(StageName.tables,)), Recorder())
-    assert report.failures, "stage 1 is an input; the pipeline does not regenerate it"
-    assert "stage-1" in report.papers[0].failed.reason
+    assert report.failures, "the parse is an input; the pipeline does not regenerate it"
+    assert "coordinate_parse.json" in report.papers[0].failed.reason
 
 
 def test_a_produced_stage_is_skipped_and_plan_says_so_without_spending(tmp_path):
@@ -377,54 +383,6 @@ def test_evidence_is_skipped_rather_than_failed_when_turned_off(tmp_path):
     assert outcome.skipped and outcome.ok and "disabled" in outcome.reason
 
 
-def test_split_withholds_the_reversed_half_of_a_two_signed_table(tmp_path):
-    """The sign rule runs before any pass reads the parse, because it changes the ask.
-
-    A parse entry reporting both signs is two contrasts and the paper describes one. If
-    `split` ran after `demands`, the model would already have been shown the merged entry
-    and the withheld half would have nothing to mirror.
-    """
-    paper = _paper(tmp_path)
-    paper.parse.write_text(
-        json.dumps(
-            {
-                "analyses": [
-                    {
-                        "name": "patients > controls",
-                        "table_id": "t1",
-                        "points": [
-                            {"x": 1, "y": 2, "z": 3, "values": [{"kind": "t", "value": 4.0}]},
-                            {
-                                "x": -1,
-                                "y": -2,
-                                "z": -3,
-                                "values": [{"kind": "t", "value": -4.0}],
-                            },
-                        ],
-                    }
-                ]
-            }
-        )
-    )
-    report = run([paper], _settings(tmp_path, stages=(StageName.sign_split,)), Recorder())
-
-    assert report.failures == ()
-    document = json.loads(paper.parse.read_text())
-    assert document["sign_split_applied"] is True
-    withheld = [a for a in document["analyses"] if a.get("withhold")]
-    assert len(withheld) == 1, "one half is extracted, the other is rebuilt by arithmetic"
-    assert withheld[0].get("mirror_of"), "the withheld half must say what it mirrors"
-
-
-def test_split_leaves_an_already_partitioned_parse_alone(tmp_path):
-    """Resuming a run must not re-partition parts that each already hold one sign."""
-    paper = _paper(tmp_path)
-    paper.parse.write_text(json.dumps({"analyses": [], "sign_split_applied": True}))
-    settings = _settings(tmp_path, stages=(StageName.sign_split,))
-    report = run([paper], settings, Recorder())
-    assert report.papers[0].outcomes[0].skipped
-
-
 def test_build_writes_a_record_that_can_be_validated(tmp_path, monkeypatch):
     """Merging the payloads is not building a record.
 
@@ -524,7 +482,7 @@ def test_redo_overrides_the_skip(tmp_path, monkeypatch):
 
 
 def test_a_paper_that_cannot_run_is_reported_not_raised(tmp_path):
-    (tmp_path / "S9" / "stage1").mkdir(parents=True)
+    (tmp_path / "S9" / "parse").mkdir(parents=True)
     report = run([Paper(study_id="S9", root=tmp_path)], _settings(tmp_path), Recorder())
     assert report.failures and not report.papers[0].failed.ok
 
@@ -545,37 +503,22 @@ def test_a_study_with_no_text_at_all_says_so(tmp_path):
 
 
 def test_the_withheld_half_is_mirrored_back_into_the_record(tmp_path):
-    """`split` withholds a half; `build` rebuilds it. Neither is useful without the other.
+    """The parse withholds a half; `build` rebuilds it. Neither is useful without the other.
 
-    This fired zero times under the previous runner and the reason was not the rule: the
-    runner never re-ran stage 1, so the parses on disk had been partitioned before the
-    withhold flag existed and carried no withheld entries at all. `split` runs inside the
-    pipeline now, which is what makes the mirror reachable -- so the two are tested as one
-    chain rather than separately.
+    The parse declares the split on both halves (`split.half`), and the reader marks the
+    inverse half `withhold` with the name it mirrors; the two are tested as one chain
+    rather than separately.
     """
-    paper = _paper(tmp_path)
-    paper.parse.write_text(
-        json.dumps(
-            {
-                "analyses": [
-                    {
-                        "name": "FESZ > NC",
-                        "table_id": "t1",
-                        "points": [
-                            {"x": 1, "y": 2, "z": 3, "values": [{"kind": "t", "value": 4.0}]},
-                            {
-                                "x": -1,
-                                "y": -2,
-                                "z": -3,
-                                "values": [{"kind": "t", "value": -4.0}],
-                            },
-                        ],
-                    }
-                ]
-            }
-        )
+    paper = _paper(
+        tmp_path,
+        parsed=(
+            {"name": "FESZ > NC", "table_id": "t1",
+             "points": [{"coordinates": [1, 2, 3], "values": [{"kind": "t", "value": 4.0}]}]},
+            {"name": "FESZ > NC (reversed)", "table_id": "t1",
+             "withhold": True, "mirror_of": "FESZ > NC",
+             "points": [{"coordinates": [-1, -2, -3], "values": [{"kind": "t", "value": 4.0}]}]},
+        ),
     )
-    run([paper], _settings(tmp_path, stages=(StageName.sign_split,)), Recorder())
 
     # What `satisfy` would have produced for the half the paper actually describes.
     payloads = tmp_path / "payloads" / paper.study_id
@@ -660,11 +603,10 @@ def test_the_paper_reaches_the_model(tmp_path):
 
     root = tmp_path / "texts"
     (root / "S1" / "processed" / "pubget").mkdir(parents=True)
-    (root / "S1" / "stage1").mkdir(parents=True)
     (root / "S1" / "processed" / "pubget" / "text.txt").write_text(
         "Methods\n\nWe scanned SEVENTEEN-UNLIKELY-SENTINEL volunteers.\n"
     )
-    (root / "S1" / "stage1" / "analyses.json").write_text('{"analyses": []}')
+    write_parse(root / "S1", [])
     paper = Paper(study_id="S1", root=root)
 
     run([paper], _settings(tmp_path, stages=(StageName.demands,)), Reader())
@@ -823,7 +765,7 @@ def test_the_evidence_pass_sends_the_paper_on_the_cacheable_half(tmp_path):
 
 
 def test_the_demands_pass_is_told_the_parse_key_and_the_zero_foci_rule(tmp_path):
-    """The stage-1 parse is rendered as instructions, not handed over as JSON.
+    """The parse is rendered as instructions, not handed over as JSON.
 
     `source_table_analysis` is the only exact join from an analysis back to its coordinates,
     and the model can only return a key it was shown. The zero-foci rule -- an entry with no
@@ -837,26 +779,22 @@ def test_the_demands_pass_is_told_the_parse_key_and_the_zero_foci_rule(tmp_path)
             seen.append(call)
             return ModelReply(payload={}, cost=Cost())
 
-    paper = _paper(tmp_path)
-    paper.parse.write_text(
-        json.dumps(
-            {
-                "analyses": [
-                    {"name": "A > B", "table_id": "t1", "points": []},
-                    {"name": "C > D", "table_id": "t1", "points": [{"x": 1, "y": 2, "z": 3}]},
-                ]
-            }
-        )
+    paper = _paper(
+        tmp_path,
+        parsed=(
+            {"name": "A > B", "table_id": "t1", "points": []},
+            {"name": "C > D", "table_id": "t1", "points": [{"coordinates": [1, 2, 3]}]},
+        ),
     )
-    paper.table_map.write_text(json.dumps({"t1": "t1"}))
+    keys = json.loads(paper.parse.read_text())["analyses"]
 
     run([paper], _settings(tmp_path, stages=(StageName.demands,)), Reader())
     assert seen, "the demands pass makes a call"
     prompt = seen[0].prompt
 
     assert "parse key" in prompt, "the key the analysis must carry back"
-    assert "t1#1" in prompt or "t1#2" in prompt, "the keys themselves, not just the word"
-    # The rule's own text, not "0 foci": `stage1_block` prints the foci count for every
+    assert all(k["key"] in prompt for k in keys), "the keys themselves, not just the word"
+    # The rule's own text, not "0 foci": `listing_block` prints the foci count for every
     # entry whether the rule is on or not, so asserting on that passes with the rule off.
     assert render.ZERO_FOCI_RULE.strip() in prompt, "the +16-point rule itself"
 
@@ -871,10 +809,7 @@ def test_the_zero_foci_rule_can_be_turned_off(tmp_path):
             seen.append(call)
             return ModelReply(payload={}, cost=Cost())
 
-    paper = _paper(tmp_path)
-    paper.parse.write_text(
-        json.dumps({"analyses": [{"name": "A > B", "table_id": "t1", "points": []}]})
-    )
+    paper = _paper(tmp_path, parsed=({"name": "A > B", "table_id": "t1", "points": []},))
     settings = _settings(tmp_path, stages=(StageName.demands,), zero_foci_rule=False)
     run([paper], settings, Reader())
     assert render.ZERO_FOCI_RULE.strip() not in seen[0].prompt
@@ -1423,29 +1358,6 @@ def test_a_model_answer_in_a_deterministic_slot_is_overwritten(tmp_path):
     assert record["groups"][0]["is_healthy"]["value"] is False
     assert record["groups"][0]["is_healthy"]["value_source"] == "generated"
     assert tallies["is_healthy"]["overruled"] == 1
-
-
-def test_tables_stays_fresh_after_split_rewrites_the_parse(tmp_path):
-    """A resume must not re-run `tables`, or every model pass after it is paid for again.
-
-    `split` rewrites the parse after `tables`; the table list it leaves is the one `tables`
-    read.
-    """
-    from pondie.extraction.stages import Tables
-
-    parsed = ({"table_id": "t1", "table_number": "1", "name": "A > B",
-               "points": [{"coordinates": [1, 2, 3]}]},)
-    paper = _paper(tmp_path, parsed=parsed)
-    settings = _settings(tmp_path)
-    before = Tables().depends_on(paper, settings)
-    document = json.loads(paper.parse.read_text())
-    document["analyses"].append(
-        {"table_id": "t1", "table_number": "1", "name": "B > A", "withhold": True,
-         "points": [{"coordinates": [1, 2, 3]}]}
-    )
-    document["sign_split_applied"] = True
-    paper.parse.write_text(json.dumps(document))
-    assert Tables().depends_on(paper, settings) == before
 
 
 def test_a_raising_stage_reports_the_cause_not_just_the_retry_count(tmp_path, monkeypatch):

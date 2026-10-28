@@ -12,7 +12,7 @@ What it knows:
 * the gold -- `nimads/<project>/merged/`, whose annotation carries one boolean per key per
   analysis and whose studyset carries that analysis's coordinates;
 * the join from a record's analysis to its coordinates, `Analysis.source_table_analysis`
-  into `<pmid>/stage1/analyses.json`;
+  into `<pmid>/parse/coordinate_parse.json`;
 * the comparison, which happens in MNI at a tolerance, because each side converts its own
   Talairach coordinates and the two transforms disagree by about a millimetre.
 """
@@ -24,6 +24,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Mapping
 
+from pondie import paths
 from pondie.formats import parse_keys
 from pondie.normalization import coordinate_space
 from pondie.query.engine import _points
@@ -151,14 +152,14 @@ def gold_spaces(bench: Path, project: str) -> dict[str, set[str]]:
     return out
 
 
-def parse_entries(stage1: Path | None, pmid: str) -> dict[str, dict] | None:
-    """`<table>#<n>` -> its parsed row group, or None when the paper has no parse."""
-    if stage1 is None:
+def parse_entries(corpus: Path | None, pmid: str) -> dict[str, dict] | None:
+    """Parse key -> its parsed row group, or None when the paper has no coordinate parse."""
+    if corpus is None:
         return None
-    path = stage1 / pmid / "stage1" / "analyses.json"
+    path = paths.coordinate_parse(pmid, corpus)
     if not path.is_file():
         return None
-    entries = json.loads(path.read_text()).get("analyses") or []
+    entries = parse_keys.load(path)
     return dict(zip(parse_keys.parse_keys(entries), entries))
 
 

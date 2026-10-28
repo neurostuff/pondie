@@ -49,16 +49,16 @@ def _write_raw(corpus: Path, raw: dict) -> None:
 def test_paper_reads_the_parse_when_ingestion_wrote_one(corpus):
     paper = Paper(study_id=STUDY, root=corpus)
     assert paper.parse == corpus / STUDY / "parse" / "coordinate_parse.json"
-    assert paper.parse_source == "coordinate_parse"
 
 
-def test_paper_falls_back_to_stage1_without_a_parse(corpus):
+def test_a_paper_with_only_the_stage1_document_has_no_parse(corpus):
+    """The deprecated stage-1 document is not a fallback: without parse/ there is nothing
+    to read the analyses from, and the paper cannot run."""
     shutil.rmtree(corpus / STUDY / "parse")
     paper = Paper(study_id=STUDY, root=corpus)
-    assert paper.parse == corpus / STUDY / "stage1" / "analyses.json"
-    assert paper.parse_source == "stage1"
-    keys = parse_keys.parse_keys(parse_keys.load(paper.parse))
-    assert keys[:5] == ["text#1", "text#2", "text#3", "text#4", "tbl0003#1"]
+    assert (corpus / STUDY / "stage1" / "analyses.json").is_file()
+    assert paper.parse == corpus / STUDY / "parse" / "coordinate_parse.json"
+    assert parse_keys.load(paper.parse) == []
 
 
 def test_every_key_is_the_parses_own_and_none_is_positional(corpus):
@@ -271,7 +271,7 @@ def test_keys_survive_reordering_and_a_dropped_sibling(corpus):
 
 def test_listing_prints_parse_keys_and_demands_them(corpus):
     doc = TableParse.load(Paper(study_id=STUDY, root=corpus).parse).document
-    block = render.stage1_block(doc, {"tbl0003": "tbl3", "tbl0004": "tbl4", "tbl0005": "tbl5"})
+    block = render.listing_block(doc, {"tbl0003": "tbl3", "tbl0004": "tbl4", "tbl0005": "tbl5"})
     printed = [k for k in re.findall(r"\[parse key: ([^\]]+)\]", block) if k != "..."]
     assert printed == [a["key"] for a in _raw(corpus)["analyses"]]
     assert render.demandable_keys(doc) == set(printed)
@@ -282,7 +282,7 @@ def test_listing_shows_a_proposed_non_result_role(corpus):
     raw["analyses"][4].update(role="anchor", anchor_kind="seed")
     _write_raw(corpus, raw)
     doc = TableParse.load(Paper(study_id=STUDY, root=corpus).parse).document
-    block = render.stage1_block(doc, {"tbl0003": "tbl3"})
+    block = render.listing_block(doc, {"tbl0003": "tbl3"})
     line = next(line for line in block.splitlines() if "analysis#a26edb17fbd2d8df" in line)
     assert "role anchor (seed), proposed" in line
 
@@ -454,10 +454,6 @@ def test_sign_split_stage_writes_nothing_and_says_which_parse(corpus, tmp_path):
     with pytest.raises(PermissionError):
         TableParse.load(paper.parse).save()
 
-    shutil.rmtree(corpus / STUDY / "parse")
-    outcome = SignSplit().run(paper, settings, caller=None)
-    assert "stage1/analyses.json" in outcome.notes[0]
-
 
 def test_a_document_mixing_keyed_and_unkeyed_entries_is_refused():
     with pytest.raises(ValueError):
@@ -497,7 +493,7 @@ def test_a_stored_stage1_keyed_payload_is_remapped_when_built_on_the_parse(corpu
     paper = Paper(study_id=STUDY, root=corpus)
     record, report = builder.build(
         STUDY, text, _stage1_keyed_payloads(tmp_path), "m", "v", "2026-10-10",
-        stage1=paper.parse,
+        parse=paper.parse,
     )
     body = record.get("study") or record
     assert body["analyses"][0]["source_table_analysis"]["value"] == PO_NO
@@ -521,7 +517,7 @@ def test_a_new_parse_makes_every_pass_stale(corpus, tmp_path):
     _write_raw(corpus, raw)
     after = [pipeline.digest_of(s.depends_on(paper, settings)) for s in stages]
     assert all(b != a for b, a in zip(before, after))
-    # The stage-1 path's fingerprint is what it was before the parse existed.
+    # Without a parse there is no parse_id to record.
     shutil.rmtree(corpus / STUDY / "parse")
     assert "parse" not in Demands().depends_on(paper, settings)
 
@@ -560,10 +556,6 @@ def test_select_joins_a_record_on_the_parse_key(corpus, tmp_path, monkeypatch):
 
     parse = corpus / STUDY / "parse" / "coordinate_parse.json"
     monkeypatch.setattr(paths, "coordinate_parse", lambda study, corpus=None: parse)
-    monkeypatch.setattr(
-        paths, "stage1", lambda study, corpus=None: corpus_stage1
-    )
-    corpus_stage1 = corpus / STUDY / "stage1" / "analyses.json"
     record = {"analyses": [{
         "local_id": "a1",
         "name": _field("PO > NO"),
@@ -601,7 +593,7 @@ def test_one_unreadable_parse_drops_its_study_and_the_others_continue(corpus, tm
     good = corpus / STUDY / "parse" / "coordinate_parse.json"
     monkeypatch.setattr(
         paths,
-        "analyses",
+        "coordinate_parse",
         lambda study, corpus=None: good if study == STUDY else broken / "coordinate_parse.json",
     )
     record = {"analyses": [{

@@ -38,7 +38,6 @@ from pondie.extraction.models import (
     StageOutcome,
 )
 from pondie.extraction.parse import TableParse
-from pondie.extraction.sign_split import adopt_withholding, split_opposite_signs
 from pondie.extraction.record.ids import table_local_id
 from pondie.extraction.evidence import cited
 from pondie.extraction.prompt import preprocess, render, reply_schema, worked
@@ -87,7 +86,7 @@ class _Base:
     #: at what effort; `tables` copies a manifest and does not care.
     asks_a_model: bool = False
 
-    #: Whether the stage reads the stage-1 parse.
+    #: Whether the stage reads the coordinate parse.
     reads_the_parse: bool = False
 
     def depends_on(self, paper: Paper, settings: Settings) -> dict[str, Any]:
@@ -103,11 +102,12 @@ class _Base:
             ),
             "flavour": paper.flavour.value,
         }
-        if paper.parse_source == coordinate_parse.FROM_PARSE:
-            # A stage-1 key and a parse key name the same analysis differently, and a new
-            # parse rekeys every one: a payload written against another parse is stale.
-            # Absent on the stage-1 path, so its caches stay valid.
-            parts["parse"] = {"source": paper.parse_source, "parse_id": _parse_id(paper.parse)}
+        if paper.parse.is_file():
+            # A new parse rekeys every analysis: a payload written against another is stale.
+            parts["parse"] = {
+                "source": coordinate_parse.FROM_PARSE,
+                "parse_id": _parse_id(paper.parse),
+            }
         if self.reads_the_parse:
             parts["parse"] = (
                 text_index.text_hash(paper.parse.read_text(encoding="utf-8", errors="replace"))
@@ -186,6 +186,52 @@ def _manifest_value(text: str | None) -> dict:
     return values.wrap(text or None, source="reported", evidence="not_found")
 
 
+def table_sources(paper: Paper) -> tuple[list[dict], str]:
+    """The tables a paper's Table records are made from, and where they were read.
+
+    The manifest beside the text, which lists every table; when it has none, the parse's
+    tables, which are only the ones an analysis cites. On emptiness as well as absence: a
+    manifest with no rows makes the same claim an absent one does, and the fallback keeps
+    the prompt's table headings backed by a declared entity either way.
+    """
+    sources = list(table_parse.read_manifest(paper.study_dir, paper.flavour.value).values())
+    if sources:
+        return sources, f"{paper.flavour.value}/tables.jsonl"
+    parsed = TableParse.read(paper.parse).source_tables() if paper.parse.is_file() else []
+    return parsed, "parse/coordinate_parse.json"
+
+
+def numbered_tables(sources: Sequence[Mapping[str, Any]]) -> list[tuple[Mapping[str, Any], str]]:
+    """Each source table with the `Table.local_id` its record gets, in source order."""
+    out, taken = [], set()
+    for index, source in enumerate(sources, start=1):
+        local_id = table_local_id(source["table_number"], source["table_label"], taken)
+        if not local_id:
+            # No printed number and no label: positional, and only here. An id that
+            # moves when a table is added upstream is the thing `table_local_id`
+            # avoids, so it is the last resort rather than the default.
+            local_id = f"tbl{index}"
+            while local_id in taken:
+                index += 1
+                local_id = f"tbl{index}"
+        taken.add(local_id)
+        out.append((source, local_id))
+    return out
+
+
+def table_ids(paper: Paper) -> dict[str, str]:
+    """Source `table_id` -> the `Table.local_id` an `Analysis.tables` reference holds.
+
+    Computed rather than stored: the `tables` stage numbers the same sources the same way,
+    so the two agree by construction and nothing is written into the corpus.
+    """
+    sources, _ = table_sources(paper)
+    return {
+        str(source["table_id"] or local_id): local_id
+        for source, local_id in numbered_tables(sources)
+    }
+
+
 @dataclass(frozen=True)
 class Tables(_Base):
     """Fill Table records deterministically. No model, and first.
@@ -198,11 +244,7 @@ class Tables(_Base):
     name: StageName = StageName.tables
 
     def depends_on(self, paper: Paper, settings: Settings) -> dict[str, Any]:
-        """The manifest and the parse's table list, which is all this stage reads.
-
-        Not the parse file: `split` rewrites it after this stage runs, which would make it,
-        and every model stage after it, stale on each resume.
-        """
+        """The manifest and the parse's table list, which is all this stage reads."""
         parts = super().depends_on(paper, settings)
         manifest = paper.study_dir / "processed" / paper.flavour.value / "tables.jsonl"
         parts["manifest"] = (
@@ -221,32 +263,9 @@ class Tables(_Base):
         if self.done(paper, settings):
             return self._skip(paper)
 
-        sources = list(table_parse.read_manifest(paper.study_dir, paper.flavour.value).values())
-        origin = f"{paper.flavour.value}/tables.jsonl"
-        if not sources:
-            # On emptiness as well as absence. A manifest with no rows makes the same claim
-            # an absent one does, and the fallback is what keeps the prompt's table headings
-            # backed by a declared entity either way.
-            sources = TableParse.read(paper.parse).source_tables()
-            origin = (
-                "the stage-1 parse"
-                if paper.parse_source == coordinate_parse.FROM_STAGE1
-                else "parse/coordinate_parse.json"
-            )
-
-        tables, id_map, taken = [], {}, set()
-        for index, source in enumerate(sources, start=1):
-            local_id = table_local_id(source["table_number"], source["table_label"], taken)
-            if not local_id:
-                # No printed number and no label: positional, and only here. An id that
-                # moves when a table is added upstream is the thing `table_local_id`
-                # avoids, so it is the last resort rather than the default.
-                local_id = f"tbl{index}"
-                while local_id in taken:
-                    index += 1
-                    local_id = f"tbl{index}"
-            taken.add(local_id)
-            id_map[str(source["table_id"] or local_id)] = local_id
+        sources, origin = table_sources(paper)
+        tables = []
+        for source, local_id in numbered_tables(sources):
             tables.append(
                 {
                     "local_id": local_id,
@@ -259,13 +278,12 @@ class Tables(_Base):
                 }
             )
 
-        paper.table_map.parent.mkdir(parents=True, exist_ok=True)
-        paper.table_map.write_text(json.dumps(id_map, indent=1) + "\n", encoding="utf-8")
         note = f"{len(tables)} Table record(s) from {origin} (deterministic)"
         if not tables:
             note = (
-                f"no tables.jsonl beside the {paper.flavour.value} text and no table in the "
-                f"stage-1 parse; no Table records, so no `Analysis.tables` target exists"
+                f"no tables.jsonl beside the {paper.flavour.value} text and no table in "
+                f"parse/coordinate_parse.json; no Table records, so no `Analysis.tables` "
+                f"target exists"
             )
         return StageOutcome(
             stage=self.name,
@@ -277,12 +295,13 @@ class Tables(_Base):
 
 @dataclass(frozen=True)
 class SignSplit(_Base):
-    """Split a parse that reports both positive and negative statistics into inverse analyses.
+    """Report the parse's sign split: which analyses it withholds as inverse halves.
 
-    Runs before anything reads the parse, because it changes what the extraction pass is
-    shown. A table holding effects of both signs is two contrasts and only one of them has
-    prose in the paper: the positive half keeps the parsed name and is extracted, the
-    negative half is marked `withhold` and rebuilt afterwards by the mirror repair.
+    A table holding effects of both signs is two contrasts and only one of them has prose
+    in the paper. The coordinate parse makes that split itself and marks the inverse half,
+    which the extraction pass is not asked about and the mirror repair rebuilds afterwards.
+    This stage writes nothing; it records which parse a run read. (It split the legacy
+    stage-1 parse in place, which no reader takes any more.)
     """
 
     name: StageName = StageName.sign_split
@@ -291,50 +310,19 @@ class SignSplit(_Base):
         return paper.parse
 
     def done(self, paper: Paper, settings: Settings) -> bool:
-        if paper.parse_source == coordinate_parse.FROM_PARSE:
-            return False
-        if settings.redo or not paper.parse.is_file():
-            return False
-        parse = TableParse.load(paper.parse)
-        if not parse.sign_split_applied:
-            return False
-        adopted = adopt_withholding(copy.deepcopy(parse.document.get("analyses") or []))
-        return not adopted.notes
+        return False
 
     def run(self, paper: Paper, settings: Settings, caller: Caller) -> StageOutcome:
-        if paper.parse_source == coordinate_parse.FROM_PARSE:
-            # The parse declares its own split, on both halves, and is ingestion's file:
-            # nothing is written. The note is also where a run says which parse it read.
-            parse = TableParse.load(paper.parse)
-            return StageOutcome(
-                stage=self.name,
-                study_id=paper.study_id,
-                produced=(),
-                notes=(
-                    f"read parse/coordinate_parse.json ({len(parse.analyses)} analyses, "
-                    f"{len(parse.withheld())} withheld by its sign split); keys from the parse",
-                ),
-            )
-        if self.done(paper, settings):
-            return self._skip(paper)
+        # The parse declares its own split, on both halves, and is ingestion's file: nothing
+        # is written. The note is also where a run says which parse it read.
         parse = TableParse.load(paper.parse)
-        before = parse.document.get("analyses") or []
-        split = split_opposite_signs(before)
-        # A corpus partitioned before the mirror existed holds both halves as ordinary
-        # entries. Re-splitting cannot reach them -- each part already holds one sign --
-        # so the pair is converted from what the parts themselves record.
-        adopted = adopt_withholding(list(split.analyses))
-        parse.replace_analyses(list(adopted.analyses))
-        parse.save()
         return StageOutcome(
             stage=self.name,
             study_id=paper.study_id,
-            produced=(paper.parse,),
+            produced=(),
             notes=(
-                "read stage1/analyses.json (no parse/coordinate_parse.json); positional keys",
-                *split.notes,
-                f"{len(before)} -> {len(adopted.analyses)} analyses, "
-                f"{adopted.withheld} withheld",
+                f"read parse/coordinate_parse.json ({len(parse.analyses)} analyses, "
+                f"{len(parse.withheld())} withheld by its sign split); keys from the parse",
             ),
         )
 
@@ -352,7 +340,7 @@ class _ModelPass(_Base):
         return ""
 
     def listing(self, paper: Paper, settings: Settings) -> Collection[str]:
-        """The stage-1 keys this pass must account for. Empty for a pass with no listing."""
+        """The parse keys this pass must account for. Empty for a pass with no listing."""
 
         return ()
 
@@ -542,8 +530,10 @@ class _ModelPass(_Base):
         tables = Tables().produces(paper, settings)
         if tables.is_file():
             judged.setdefault("tables", json.loads(tables.read_text("utf-8")).get("tables") or [])
-        stage1 = paper.parse if paper.parse.is_file() else None
-        table_map = paper.table_map if paper.table_map.is_file() else None
+        parse = paper.parse if paper.parse.is_file() else None
+        # Only once `tables` has run, as the merged repairs expect: before it the table a
+        # reference names may yet be declared.
+        table_map = table_ids(paper) if tables.is_file() else None
         try:
             for stages, schema_path in (
                 (self.repair_stage, schema.STORAGE),
@@ -553,7 +543,7 @@ class _ModelPass(_Base):
                     fix.apply_all(
                         judged,
                         fix.Context(
-                            schema=reader.load(schema_path), stage1=stage1, table_map=table_map
+                            schema=reader.load(schema_path), parse=parse, table_map=table_map
                         ),
                         stage=stages,
                     )
@@ -571,8 +561,8 @@ class _ModelPass(_Base):
             payload,
             fix.Context(
                 schema=reader.load(schema.STORAGE),
-                stage1=paper.parse if paper.parse.is_file() else None,
-                table_map=paper.table_map if paper.table_map.is_file() else None,
+                parse=paper.parse if paper.parse.is_file() else None,
+                table_map=table_ids(paper),
             ),
             stage=self.repair_stage,
         )
@@ -696,10 +686,10 @@ class Demands(_ModelPass):
     """Analyses from the table/prose declare what entities are needed to describe them."""
 
     name: StageName = StageName.demands
-    #: `context` prints the `table_map` that `Tables` wrote, so a change to the Table
-    #: local_ids has to re-ask this pass. Left empty, a resumed run would pair fresh table
-    #: ids with a stale analyses payload and every `Analysis.tables` reference would dangle
-    #: -- the failure this dependency exists to prevent, not a cache nicety.
+    #: `context` prints the Table local_ids `Tables` numbers (`table_ids`), so a change to
+    #: them has to re-ask this pass. Left empty, a resumed run would pair fresh table ids
+    #: with a stale analyses payload and every `Analysis.tables` reference would dangle --
+    #: the failure this dependency exists to prevent, not a cache nicety.
     reads: tuple[StageName, ...] = (StageName.tables,)
     asks_a_model: bool = True
     mode: str = "demands"
@@ -725,12 +715,9 @@ class Demands(_ModelPass):
         parse = TableParse.read(paper.parse)
         if not parse.document:
             return ""
-        table_ids = (
-            json.loads(paper.table_map.read_text("utf-8")) if paper.table_map.is_file() else {}
-        )
-        return render.stage1_block(
+        return render.listing_block(
             parse.document,
-            table_ids,
+            table_ids(paper),
             zero_foci_rule=settings.zero_foci_rule,
         )
 
@@ -763,7 +750,7 @@ class Satisfy(_ModelPass):
 class Single(_ModelPass):
     """The whole record in one call: analyses and every entity they reference.
 
-    Shown the same stage-1 listing as `Demands` and held to the same listing checks, plus
+    Shown the same parse listing as `Demands` and held to the same listing checks, plus
     `render.dangling_references`: a reply may not reference an entity it does not emit.
 
     Notes
@@ -1288,8 +1275,8 @@ class Build(_Base):
             extractor_model=settings.model,
             extractor_version=EXTRACTOR_VERSION,
             extraction_date=date.today().isoformat(),
-            stage1=paper.parse if paper.parse.is_file() else None,
-            table_map=paper.table_map if paper.table_map.is_file() else None,
+            parse=paper.parse if paper.parse.is_file() else None,
+            table_map=table_ids(paper),
         )
         # The deterministic slots, after the merge and before the record is written: each
         # is code's answer and overwrites whatever the model said, so the two cannot
