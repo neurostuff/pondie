@@ -15,6 +15,9 @@ D = dict(run=None, model="nu", adapter=None, n=0, workers=24, max_tokens=20000, 
          bodies=str(W / "data/v5/val.bodies.jsonl"), out_name="val-pred.jsonl", guided=True, keep_merged=False, merge_device="cpu")
 c = dict(D); c.update(json.load(open(sys.argv[1]))); c.setdefault("run", Path(sys.argv[1]).stem)
 run = W / "runs" / c["run"]; run.mkdir(parents=True, exist_ok=True)
+vis = os.environ.get("CUDA_VISIBLE_DEVICES")
+if vis is not None and len([g for g in vis.split(",") if g]) < c["tp"]:   # before the merge, not after it
+    sys.exit(f"tp {c['tp']} needs {c['tp']} GPUs; CUDA_VISIBLE_DEVICES={vis!r}")
 log = W / "logs"; tag = os.environ.get("SLURM_JOB_ID", "local")
 hub = W / "hf/hub"
 base = sorted((hub / f"models--{'numind--NuExtract3' if c['model'] == 'nu' else 'Qwen--Qwen3.8-27B'}" / "snapshots").glob("*"))[0]
