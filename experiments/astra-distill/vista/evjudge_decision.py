@@ -3,6 +3,7 @@
     python evjudge_decision.py elephant PILOT.jsonl OUT.jsonl   # baselabs/elephant-1: OneJev qev + serve.patch
     python evjudge_decision.py nimble   PILOT.jsonl OUT.jsonl   # bespokelabs/Bespoke-Nimble-9B-v3: its own engine
     python evjudge_decision.py d3       PILOT.jsonl OUT.jsonl   # vllm-sr/d3: its remote code's system_one()
+    python evjudge_decision.py d3ctx    CTX.jsonl OUT.jsonl     # d3 on the context variants of `evjudge_ctx.py`
 
 Models are read from the local snapshots under $DECISION_HUB (offline). Each row is asked two yes/no questions over
 the same state (its docs joined), one per claim form, and gains "scores": {"<model>": P(yes) for the entity-named
@@ -49,9 +50,13 @@ def elephant():
     return system_one_judge(decide)
 
 
-def d3():
+def d3_model():
     from transformers import AutoModel
-    model = AutoModel.from_pretrained(str(snapshot("vllm-sr/d3")), trust_remote_code=True)
+    return AutoModel.from_pretrained(str(snapshot("vllm-sr/d3")), trust_remote_code=True)
+
+
+def d3():
+    model = d3_model()
 
     def decide(state, qs):
         answers = model.system_one(state=state, questions=qs)["answers"]
@@ -85,8 +90,45 @@ def nimble():
     return system_one_judge(decide)
 
 
+WIN_Q = "Read with its context, does the text marked >>> <<< state the following claim, all of it? Claim: {}"
+FULL_Q = ("Candidate sentences in the text are tagged [S1], [S2], and so on. Which tagged sentence states the following "
+          "claim, all of it? Claim: {}")
+
+
+def d3ctx(rows, f):
+    """win rows: P(yes) as scores["d3_win"]; full rows: "probs", the choice's probability for each tag and none"""
+    model = d3_model()
+    t = time.time()
+    for n, r in enumerate(rows, 1):
+        if n % 60 == 0:
+            print(f"{n}/{len(rows)} in {time.time() - t:.0f} s", flush=True)
+        if r["set"] == "win":
+            q = {"type": "noul", "instructions": WIN_Q.format(r["bare"])}
+        else:
+            crit = {c["tag"]: c["text"][:400] for c in r["cands"]}
+            crit["none"] = "No tagged sentence states the claim"
+            q = {"type": "choice", "instructions": FULL_Q.format(r["bare"]), "criteria": crit}
+        a = model.system_one(state=r["state"], questions={"q": q})["answers"]["q"]
+        del r["state"]
+        if "error" in a:
+            r["error"] = a["error"]
+        elif r["set"] == "win":
+            r["scores"] = {"d3_win": a["noul"]}
+        else:
+            r["probs"] = a["probabilities"]
+        f.write(json.dumps(r, ensure_ascii=False) + "\n")
+        f.flush()
+
+
 def main():
     name, pilot, out = sys.argv[1:4]
+    if name == "d3ctx":
+        t = time.time()
+        rows = [json.loads(line) for line in open(pilot)]
+        with open(out, "w") as f:
+            d3ctx(rows, f)
+        print(f"done {len(rows)} in {time.time() - t:.0f} s", flush=True)
+        return
     judge = {"elephant": elephant, "nimble": nimble, "d3": d3}[name]()
     rows = [json.loads(line) for line in open(pilot)]
     t = time.time()

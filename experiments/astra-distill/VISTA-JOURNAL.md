@@ -813,3 +813,37 @@ checks a newer contract than v3 ships).
 - **Speed** (660 rows, 2 questions each, GH200): d3 119 s, elephant-1 125 s, Nimble 201 s (its conv kernels fall
   back to PyTorch). d3 at about 11 claims/s: full val (≈145k slots) ≈ 3.7 h on one GPU.
 - **Licences:** d3 and elephant-1 are usable for the dataset; MiniCheck is non-commercial.
+
+### 2026-10-29: d3 with more of the paper as context (Vista gh-dev, one GH200, job 1109312, 17 min)
+
+**Question.** Does d3 judge a unit better when it sees the unit's surroundings, or the whole paper? Can it pick the
+supporting sentence from tagged candidates in the full text?
+
+**Set** (`vista/evjudge_ctx.py`, beast `vista-out/ev1/judge/ctx.jsonl`): the pilot rows above, rebuilt with their
+unit numbers (`evjudge_build.py` now records `units`; the 660 rows are otherwise identical), in two forms. All use
+the bare claim.
+- **window** (660 questions, yes/no): the judged units marked `>>> <<<` with 3 units either side (a table row also
+  gets its header lines). `Read with its context, does the text marked >>> <<< state the following claim, all of it?`
+- **full paper** (360 questions, one choice per slot): the whole text (median 43.5k characters, max 89k) with the
+  candidate units tagged `[S1] … [Sk]`. For pos/neg these are Astra's units and the random ones, shuffled (median 2
+  per slot). For far they are the model's far units and Astra's. The options are the tags, each described by its
+  unit's text, and `none`. Each candidate's score is its option's probability.
+
+| d3 context | far AUC | pos/neg AUC | cut | Astra units accepted | random rejected | far valid accepted | far wrong rejected |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| unit alone (above) | **0.950** | **0.967** | 0.08 | 0.91 | 0.90 | 0.85 | 0.87 |
+| window, ±3 units | 0.947 | 0.957 | 0.23 | 0.89 | 0.92 | 0.85 | 0.93 |
+| full paper, choice | 0.776 | 0.920 | 0.02 | 0.84 | 0.88 | 0.87 | 0.37 |
+
+(Full-paper rows are scored per candidate: 52 far units state the value, 30 do not.)
+
+- **The window does not help overall:** it is level with the unit alone (−0.003 far, −0.010 pos/neg). It rejects
+  one more wrong far unit, and it raises the "partly" items. Item 45 ("one participant excluded" for n = 31) goes
+  from 0.00 to 0.44.
+- **The full paper is worse,** and about 25× slower per question (2.3 s vs 0.09 s). As a choice, d3 rarely picks a
+  random unit: the top option is Astra's in 227 of 300 pos/neg slots and random in 1. But it answers `none` in 72
+  slots, although Astra's unit was tagged. Among far slots it does not reject wrong far units (0.37 at the cut).
+  The probabilities are split across tags and `none`, so the cut-off is 0.02.
+- **Reading:** to check evidence, judge each cited unit alone, or with a short window. Picking sentences from a
+  tagged full paper is precise but abstains on a quarter of the slots, and with only about 2 candidates per slot
+  this test is the easy case.

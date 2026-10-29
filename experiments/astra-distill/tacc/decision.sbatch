@@ -5,6 +5,7 @@
 # Decision-model judge of the evidence pilot set (vista/evjudge_decision.py), one model per job:
 #   sbatch -p gh-dev -t 00:30:00 -J dec-<m> -o $WORK/astra-distill/logs/%x-%j.out --export=ALL,DEC=<m> decision.sbatch
 # DEC: elephant (envs-aarch64/elephant: OneJev qev) | nimble (envs-aarch64/dec517 + its decision-index repo code/) | d3 (dec517)
+#      | d3ctx (dec517; reads ctx.jsonl from vista/evjudge_ctx.py instead of pilot.jsonl)
 set -eo pipefail
 echo "node $(hostname) job $SLURM_JOB_ID dec $DEC $(date)"
 source $WORK/astra-distill/code/env.sh
@@ -13,8 +14,9 @@ J=$W/data/ev1/judge
 case $DEC in
   elephant) PY=$E/elephant/bin/python ;;
   nimble) PY=$E/dec517/bin/python; export PYTHONPATH=$W/ext/nimble-v3-index/code ;;
-  d3) PY=$E/dec517/bin/python ;;
-  *) echo "DEC must be elephant, nimble or d3"; exit 2 ;;
+  d3|d3ctx) PY=$E/dec517/bin/python ;;
+  *) echo "DEC must be elephant, nimble, d3 or d3ctx"; exit 2 ;;
 esac
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
-$PY $C/vista/evjudge_decision.py $DEC $J/pilot.jsonl $J/$DEC.jsonl
+IN=$J/pilot.jsonl; [ $DEC = d3ctx ] && IN=$J/ctx.jsonl
+$PY $C/vista/evjudge_decision.py $DEC $IN $J/$DEC.jsonl

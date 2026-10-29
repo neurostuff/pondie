@@ -2,7 +2,7 @@
 
     python evjudge_build.py VAL_PRED.jsonl OUT.jsonl [--far ADJUDICATION-ev1-far.tsv] [--pairs 300]   (run from vista/ on beast; v6 records and splits)
 
-Rows: {"set", "id", "sid", "slot", "label", "claim", "bare", "docs": [unit text, ...]}.
+Rows: {"set", "id", "sid", "slot", "label", "claim", "bare", "docs": [unit text, ...], "units": [unit number, ...]}.
   far    the 60 adjudicated far-away model units (ADJUDICATION-ev1-far.md and .tsv): label 1 states the
          value, 0.5 partly, 0 does not; docs are the model's far units
   pos    Astra's own units for a random val slot (label 1; Astra is occasionally wrong)
@@ -147,7 +147,8 @@ def main():
                 p.add(i)
         far = sorted(i for i in p - g if min(abs(i - j) for j in g) > 10)
         rows.append({"set": "far", "id": int(n), "sid": s, "slot": k, "label": VERDICT[verdict],
-                     "claim": claim(comp, k), "bare": bare_claim(comp, k), "docs": [doc(text, U, i) for i in far]})
+                     "claim": claim(comp, k), "bare": bare_claim(comp, k), "docs": [doc(text, U, i) for i in far],
+                     "units": far})
 
     # pos / neg: random val slots
     rng = random.Random(23)
@@ -167,9 +168,10 @@ def main():
         n += 1
         c, b = claim(comp, k), bare_claim(comp, k)
         rows.append({"set": "pos", "id": n, "sid": s, "slot": k, "label": 1, "claim": c, "bare": b,
-                     "docs": [doc(text, U, i) for i in gold]})
+                     "docs": [doc(text, U, i) for i in gold], "units": gold})
+        neg = sorted(rng.sample(far, len(gold)))
         rows.append({"set": "neg", "id": n, "sid": s, "slot": k, "label": 0, "claim": c, "bare": b,
-                     "docs": [doc(text, U, i) for i in sorted(rng.sample(far, len(gold)))]})
+                     "docs": [doc(text, U, i) for i in neg], "units": neg})
     with open(a.out, "w") as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
