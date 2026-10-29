@@ -2,7 +2,7 @@
 """Write the query's selection as a run directory, so it can be mapped like an autonima arm.
 
     python scripts/query_studysets.py --records '<dir>/*/*.extraction.json' \
-        --bench <neurometabench>/data --stage1 <corpus> \
+        --bench <neurometabench>/data --corpus <corpus> \
         --autonima <autonima-results>/projects --out <dir>
 
 The record-arms experiment compares full-text autonima against autonima reading the
@@ -71,7 +71,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--records", required=True)
     ap.add_argument("--bench", required=True, type=Path)
-    ap.add_argument("--stage1", required=True, type=Path)
+    ap.add_argument("--corpus", required=True, type=Path)
     ap.add_argument("--autonima", required=True, type=Path)
     ap.add_argument("--out", required=True, type=Path)
     args = ap.parse_args()
@@ -94,7 +94,7 @@ def main() -> int:
             flags: dict[str, dict[str, bool]] = defaultdict(dict)
             for pmid in sorted(screened):
                 body = here[pmid]
-                entries = parse_entries(args.stage1, pmid)
+                entries = parse_entries(args.corpus, pmid)
                 if entries is None:
                     continue
                 picked: dict[str, dict[str, bool]] = defaultdict(dict)

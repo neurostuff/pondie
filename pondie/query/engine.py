@@ -546,7 +546,7 @@ def select(
         # -- blaming the extractor for a missing key -- and the parsed-coordinate fallback
         # that answers the space for 11% of analyses could never fire either.
         try:
-            parsed = parse_keys.load(paths.analyses(study))
+            parsed = parse_keys.load(paths.coordinate_parse(study))
         except Exception as error:
             # A parse that fails its model is a broken contract for this study only; one
             # stale parse must not abort the query for the rest.
@@ -647,7 +647,7 @@ def select(
             entry = keyed.get(parse_keys.canonical(value_of(analysis.get("source_table_analysis"))))
             if entry is None:
                 # Two different problems, and only one is the extraction's fault.
-                lost["no stage-1 parse synced" if not keyed else "no joinable row group"] += 1
+                lost["no parse synced" if not keyed else "no joinable row group"] += 1
                 continue
             pts = _points(entry, resolved.value)
             if not pts:

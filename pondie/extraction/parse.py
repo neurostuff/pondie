@@ -1,8 +1,10 @@
-"""The stage-1 parse: every analysis read off a paper's coordinate tables.
+"""The coordinate parse: every analysis read off a paper's coordinate tables and text.
 
-Stage 1 is an input to extraction rather than a step of it -- `parse_tables` produces it with
-one model call per table, and the pipeline only reads and annotates it. It is a document
-rather than a list because one fact about the whole parse has to travel with the entries:
+The parse is an input to extraction rather than a step of it -- ingestion writes
+`parse/coordinate_parse.json` (the deprecated stage-1 writer, `parse_tables`, made the
+legacy file with one model call per table), and the pipeline only reads and annotates it.
+It is a document rather than a list because one fact about the whole parse has to travel
+with the entries:
 `sign_split_applied` distinguishes a parse the sign rule found nothing to do in from one
 written before that rule existed, and only the first should be left alone.
 

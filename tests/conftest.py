@@ -228,3 +228,130 @@ def _table_fixture(paper: str, table_id: str):
         label=record["table_label"],
         caption=record["caption"],
     )
+
+
+# ------------------------------------------------------------------------------- a coordinate parse
+
+#: A real parse and parsed paper, for the headers a written fixture borrows.
+PARSE_FIXTURE = Path(__file__).parent / "fixtures" / "coordinate_parse" / "gx2zzUbbydf9" / "parse"
+
+#: Stage-1 spellings of a space, as tests write them, to the parse's `ReportedSpace`.
+_SPACES = {"MNI": "MNI", "TAL": "TAL", "TALAIRACH": "TAL", "MNI152": "MNI"}
+
+
+def _point(point: dict, space: str | None, index: int, origin: str) -> dict:
+    values = point.get("values") or []
+    values = values if isinstance(values, list) else [values]
+    own = _SPACES.get(str(point.get("space") or "").upper())
+    return {
+        "coordinates": [float(c) for c in point["coordinates"]],
+        "space": own if own and own != space else None,
+        "row": index if origin == "table" else None,
+        "column_group": 0 if origin == "table" else None,
+        "text_span": {"start_char": 0, "end_char": 1} if origin == "text" else None,
+        "values": [
+            {"kind": v.get("kind") or "t", "value": float(v["value"])}
+            for v in values
+            if isinstance(v, dict) and v.get("value") is not None
+        ]
+        or None,
+        "cluster_size": point.get("cluster_size"),
+        "is_subpeak": point.get("is_subpeak"),
+        "label": point.get("label"),
+    }
+
+
+def write_parse(study_dir: Path, entries=(), tables=None) -> list[str]:
+    """Write `<study_dir>/parse/coordinate_parse.json` from stage-1-shaped entries.
+
+    The tests describe analyses the way the legacy stage-1 file did -- `table_id`, `name`,
+    `points` with `coordinates`, `space` and `values`, `withhold` / `mirror_of` for a sign
+    split -- and this writes what ingestion writes: a study_schema CoordinateParse whose keys
+    are the ones its content gives. `tables` (dicts with `table_id`, `number`, `label`,
+    `caption`, `footer`) also writes `parse/parsed_paper.json`; without it, the entries' own
+    `table_number`, `table_label`, `table_caption` and `table_footer` say what the tables are.
+    Returns the keys, in order.
+    """
+    from study_schema.keys import key_for
+    from study_schema.models.paper_parse import CoordinateParse, ParsedAnalysis
+
+    template = json.loads((PARSE_FIXTURE / "coordinate_parse.json").read_text())
+    analyses = []
+    for entry in entries:
+        table_id = entry.get("table_id")
+        prose = table_id in (None, "text", "prose")
+        origin = entry.get("source") or ("text" if prose else "table")
+        points = entry.get("points") or []
+        stated = [str(p.get("space") or "").upper() for p in points]
+        space = _SPACES.get(str(entry.get("coordinate_space") or "").upper()) or next(
+            (_SPACES[s] for s in stated if s in _SPACES), None
+        )
+        analysis = {
+            "key": "",
+            "origin": origin,
+            "table_id": table_id if origin == "table" else None,
+            "cells": (
+                [{"row": i, "column_group": 0} for i in range(max(len(points), 1))]
+                if origin == "table"
+                else None
+            ),
+            "text_spans": [{"start_char": 0, "end_char": 1}] if origin == "text" else None,
+            "name": entry.get("name") or "",
+            "description": entry.get("description"),
+            "coordinate_space": space,
+            "role": entry.get("role") or "result",
+            "statistic": entry.get("statistic"),
+            "points": [_point(p, space, i, origin) for i, p in enumerate(points)],
+        }
+        analysis["key"] = key_for(ParsedAnalysis.model_validate(analysis))
+        analyses.append(analysis)
+    names = {e.get("name"): a["key"] for e, a in zip(entries, analyses) if not e.get("withhold")}
+    for entry, analysis in zip(entries, analyses):
+        if entry.get("withhold"):
+            analysis["split"] = {
+                "half": "inverse",
+                "original_analysis": names.get(entry.get("mirror_of")),
+                "rule": "sign_of_directional_statistic",
+            }
+    halves = {a["split"]["original_analysis"] for a in analyses if a.get("split")}
+    for analysis in analyses:
+        if analysis["key"] in halves:
+            analysis["split"] = {"half": "original", "rule": "sign_of_directional_statistic"}
+    doc = {
+        "header": template["header"],
+        "parse_id": text_index.text_hash(json.dumps(analyses, sort_keys=True)),
+        "text_sha256": template["text_sha256"],
+        "analyses": analyses,
+    }
+    CoordinateParse.model_validate(doc)
+    out = study_dir / "parse"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "coordinate_parse.json").write_text(json.dumps(doc, indent=1))
+    if tables is None:
+        seen = {}
+        for e in entries:
+            tid = e.get("table_id")
+            if tid in (None, "text", "prose") or tid in seen:
+                continue
+            seen[tid] = {
+                "table_id": tid,
+                "number": e.get("table_number"),
+                "label": e.get("table_label"),
+                "caption": e.get("table_caption"),
+                "footer": e.get("table_footer"),
+            }
+        tables = list(seen.values()) or None
+    if tables is not None:
+        paper = json.loads((PARSE_FIXTURE / "parsed_paper.json").read_text())
+        paper["tables"] = [
+            {
+                "table_id": str(t["table_id"]),
+                "number": None if t.get("number") is None else str(t["number"]),
+                "label": t.get("label"),
+                "caption": t.get("caption"),
+                "footer": t.get("footer"),
+            }
+            for t in tables
+        ]
+        (out / "parsed_paper.json").write_text(json.dumps(paper, indent=1))
+    return [a["key"] for a in analyses]

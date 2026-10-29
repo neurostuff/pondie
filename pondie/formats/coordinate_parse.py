@@ -2,9 +2,9 @@
 
 `<study>/parse/coordinate_parse.json` is study_schema's contract and the one producer of a
 paper's analyses. Each analysis carries its own `key`, derived from its name, space and
-points, so a re-run, a reordering or a dropped sibling leaves it alone. `stage1/analyses.json`
-keys its entries by position (`t1#2`), which is why it is read only for a paper that has no
-parse.
+points, so a re-run, a reordering or a dropped sibling leaves it alone. The deprecated
+`stage1/analyses.json` keyed its entries by position (`t1#2`); it is read only to migrate
+records still carrying those keys (`legacy_stage1`, `match_legacy_keys`).
 
 The parse is converted to the shape `stage1/analyses.json` has, with the key added to each
 entry, rather than every reader learning a second shape: the listing, the record repairs,
@@ -34,9 +34,8 @@ PARSE_DIR = "parse"
 COORDINATE_PARSE = "coordinate_parse.json"
 PARSED_PAPER = "parsed_paper.json"
 
-#: What `Paper.parse_source` reports for each path.
+#: The parse a run read, as stage cache keys record it.
 FROM_PARSE = "coordinate_parse"
-FROM_STAGE1 = "stage1"
 
 
 def is_coordinate_parse(path: Path | None) -> bool:
@@ -61,7 +60,11 @@ def publication_facts(study: str, corpus: Path = paths.CORPUS) -> dict[str, list
 
 
 def legacy_stage1(path: Path) -> Path:
-    """The `stage1/analyses.json` beside a study's `parse/coordinate_parse.json`."""
+    """DEPRECATED: the `stage1/analyses.json` beside a study's `parse/coordinate_parse.json`.
+
+    The one place a reader still opens the stage-1 folder, to map old positional keys in
+    existing records to the parse's (`fix.map_legacy_keys`, `cli id-map`).
+    """
     return path.parent.parent / "stage1" / "analyses.json"
 
 

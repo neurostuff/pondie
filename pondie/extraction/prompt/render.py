@@ -350,8 +350,8 @@ def paper_block(text: str) -> str:
     return f"{PAPER_PREAMBLE}\n{PAPER_OPEN}\n{body}\n{PAPER_CLOSE}\n"
 
 
-def demandable_keys(stage1: Mapping[str, Any]) -> set[str]:
-    """The listing keys a pass MUST account for, as `stage1_block` prints them.
+def demandable_keys(document: Mapping[str, Any]) -> set[str]:
+    """The listing keys a pass MUST account for, as `listing_block` prints them.
 
     Two filters, each for a reason the post-condition would otherwise be unfair: a withheld
     entry is not shown, so it cannot be demanded, and an entry the parser found no
@@ -370,17 +370,17 @@ def demandable_keys(stage1: Mapping[str, Any]) -> set[str]:
     same bar a table row group is held to.
 
     Here rather than in the stage because the set has to be the one the model was shown,
-    and that is decided by `stage1_block` below. The same argument `parse_keys` makes
+    and that is decided by `listing_block` below. The same argument `parse_keys` makes
     for itself.
     """
 
-    return {key for key, entry in listing_entries(stage1) if entry.get("points")}
+    return {key for key, entry in listing_entries(document) if entry.get("points")}
 
 
-def listing_entries(stage1: Mapping[str, Any]) -> list[tuple[str, dict]]:
+def listing_entries(document: Mapping[str, Any]) -> list[tuple[str, dict]]:
     """(key, entry) for every row the listing prints, in order.
 
-    One function because `demandable_keys` and `stage1_block` must agree on what was
+    One function because `demandable_keys` and `listing_block` must agree on what was
     SHOWN -- a post-condition demanding a row the pass never saw is unfair, and a row shown
     without being demandable is a silent decline. They agreed by both open-coding the same
     filter, which held until a third rule arrived.
@@ -400,7 +400,7 @@ def listing_entries(stage1: Mapping[str, Any]) -> list[tuple[str, dict]]:
     which would re-address a record's analyses silently instead of breaking them loudly.
     """
 
-    every = stage1.get("analyses") or []
+    every = document.get("analyses") or []
     rows: list[tuple[str, dict]] = []
     held: set[tuple] = set()
     for key, entry in zip(parse_keys.parse_keys(every), every):
@@ -430,8 +430,8 @@ def _row_signature(entry: Mapping[str, Any]) -> tuple:
     )
 
 
-def stage1_block(
-    stage1: Mapping[str, Any],
+def listing_block(
+    document: Mapping[str, Any],
     table_ids: Mapping[str, str],
     zero_foci_rule: bool = False,
 ) -> str:
@@ -453,7 +453,7 @@ def stage1_block(
     # Keys are computed over the FULL parse and the withheld entries dropped afterwards,
     # so hiding one does not renumber its siblings. `parse_keys.parse_keys` explains why
     # a shifted key is worse than a missing one.
-    shown = listing_entries(stage1)
+    shown = listing_entries(document)
     if not shown:
         return ""
     analyses = [a for _key, a in shown]
@@ -1067,7 +1067,7 @@ OMIT_REASONS = (
 _QUALIFIED = ("duplicate_of", "other")
 
 
-def listing_foci(stage1: Mapping[str, Any]) -> dict[str, frozenset]:
+def listing_foci(document: Mapping[str, Any]) -> dict[str, frozenset]:
     """Listing key -> the coordinates the parse read under it.
 
     Beside `demandable_keys` so the two number alike, and for one consumer:
@@ -1075,7 +1075,7 @@ def listing_foci(stage1: Mapping[str, Any]) -> dict[str, frozenset]:
     comparing coordinates rather than trusting that the key exists.
     """
 
-    every = stage1.get("analyses") or []
+    every = document.get("analyses") or []
     out: dict[str, frozenset] = {}
     for key, entry in zip(parse_keys.parse_keys(every), every):
         out[key] = frozenset(
@@ -1172,7 +1172,7 @@ def unsupported_omissions(
 def unconsumed_listing(payload: Mapping[str, Any], listing: Collection[str]) -> list[str]:
     """Listing entries the pass neither emitted an analysis for nor recorded as omitted.
 
-    The prompt tells the pass to work through the stage-1 listing and emit one entry for
+    The prompt tells the pass to work through the parse listing and emit one entry for
     each, and the listing is printed with its keys -- so "did it?" is answerable without a
     model, which is what makes it a post-condition.
 

@@ -8,6 +8,8 @@ from pondie.extraction.models import Settings, StageName
 from pondie.extraction.prompt import render
 from pondie.extraction.stages import SINGLE_PASS, Single, sequence
 
+from conftest import write_parse
+
 
 def _wrapped(value):
     return {"extraction_status": "extracted", "value": value, "value_source": "reported"}
@@ -94,9 +96,8 @@ def test_a_retry_that_comes_back_empty_does_not_replace_a_good_answer(tmp_path, 
 
     root = tmp_path / "corpus"
     (root / "S1" / "processed" / "local").mkdir(parents=True)
-    (root / "S1" / "stage1").mkdir(parents=True)
     (root / "S1" / "processed" / "local" / "text.tables.txt").write_text("a paper")
-    (root / "S1" / "stage1" / "analyses.json").write_text(json.dumps({"analyses": []}))
+    write_parse(root / "S1", [])
     paper = Paper(study_id="S1", root=root, flavour=Flavour.local)
     good = {"analyses": [_analysis(measure="mea_missing")]}
     replies = iter([good, {"groups": []}, {"groups": []}])
@@ -122,9 +123,8 @@ def _staged(tmp_path):
 
     root = tmp_path / "corpus"
     (root / "S1" / "processed" / "local").mkdir(parents=True)
-    (root / "S1" / "stage1").mkdir(parents=True)
     (root / "S1" / "processed" / "local" / "text.tables.txt").write_text("a paper")
-    (root / "S1" / "stage1" / "analyses.json").write_text(json.dumps({"analyses": []}))
+    write_parse(root / "S1", [])
     return Paper(study_id="S1", root=root, flavour=Flavour.local)
 
 
@@ -261,7 +261,6 @@ def test_a_reference_to_a_table_the_parse_lost_does_not_cost_a_retry(tmp_path):
     tables = Tables().produces(paper, settings)
     tables.parent.mkdir(parents=True, exist_ok=True)
     tables.write_text(json.dumps({"tables": []}))
-    paper.table_map.write_text("{}")
     reply = {"analyses": [{**_analysis(), "tables": ["table2"]}]}
     assert render.postcondition_failures(reply, "single"), "raw: a fault"
     seen = []

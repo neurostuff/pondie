@@ -128,7 +128,7 @@ def run(
             StageOutcome(
                 stage=settings.stages[0],
                 study_id=paper.study_id,
-                reason=f"missing text or stage-1 parse under {paper.root}",
+                reason=f"missing text or parse/coordinate_parse.json under {paper.root}",
             )
         )
 

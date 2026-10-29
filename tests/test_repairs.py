@@ -319,14 +319,14 @@ def _wrapped(value):
     }
 
 
-def _stage1(tmp_path, entries):
+def _parse_doc(tmp_path, entries):
     path = tmp_path / "analyses.json"
     path.write_text(json.dumps({"analyses": entries}))
     return path
 
 
 def test_a_present_key_that_names_a_row_group_is_left_alone(tmp_path):
-    stage1 = _stage1(
+    parse = _parse_doc(
         tmp_path,
         [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t1", "name": "HC > SZ"}],
     )
@@ -340,13 +340,13 @@ def test_a_present_key_that_names_a_row_group_is_left_alone(tmp_path):
             }
         ]
     }
-    assert fix.resolve_source_table_analysis(body, stage1) == []
+    assert fix.resolve_source_table_analysis(body, parse) == []
     assert body["analyses"][0]["source_table_analysis"]["value"] == "t1#2"
 
 
 def test_an_invented_key_is_dropped(tmp_path):
     # A key that resolves to nothing is worse than none: it looks like a working join.
-    stage1 = _stage1(tmp_path, [{"table_id": "t1", "name": "SZ > HC"}])
+    parse = _parse_doc(tmp_path, [{"table_id": "t1", "name": "SZ > HC"}])
     body = {
         "analyses": [
             {
@@ -357,18 +357,18 @@ def test_an_invented_key_is_dropped(tmp_path):
             }
         ]
     }
-    notes = fix.resolve_source_table_analysis(body, stage1)
+    notes = fix.resolve_source_table_analysis(body, parse)
     assert "source_table_analysis" not in body["analyses"][0]
     assert notes and "names no parsed row group" in notes[0]
 
 
 def test_a_missing_key_is_filled_from_a_unique_name_match(tmp_path):
-    stage1 = _stage1(
+    parse = _parse_doc(
         tmp_path,
         [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t1", "name": "HC > SZ"}],
     )
     body = {"analyses": [{"local_id": "a1", "tables": ["t1"], "name": _wrapped("HC>SZ")}]}
-    notes = fix.resolve_source_table_analysis(body, stage1)
+    notes = fix.resolve_source_table_analysis(body, parse)
     assert body["analyses"][0]["source_table_analysis"]["value"] == "t1#2"
     # Filled, not read off the page, so the provenance says so.
     assert body["analyses"][0]["source_table_analysis"]["value_source"] == "generated"
@@ -378,37 +378,37 @@ def test_a_missing_key_is_filled_from_a_unique_name_match(tmp_path):
 def test_the_opposite_direction_is_never_matched_by_name(tmp_path):
     # Only "PO > Sil" is parsed; the record's "PO < Sil" is a different contrast and must
     # not take its points.
-    stage1 = _stage1(tmp_path, [{"table_id": "t1", "name": "PO > Sil"}])
+    parse = _parse_doc(tmp_path, [{"table_id": "t1", "name": "PO > Sil"}])
     body = {"analyses": [{"local_id": "a1", "tables": ["t1"], "name": _wrapped("PO < Sil")}]}
-    assert fix.resolve_source_table_analysis(body, stage1) == []
+    assert fix.resolve_source_table_analysis(body, parse) == []
     assert "source_table_analysis" not in body["analyses"][0]
 
 
 def test_case_and_whitespace_differences_still_match(tmp_path):
-    stage1 = _stage1(tmp_path, [{"table_id": "t1", "name": "PO > Sil"}])
+    parse = _parse_doc(tmp_path, [{"table_id": "t1", "name": "PO > Sil"}])
     body = {"analyses": [{"local_id": "a1", "tables": ["t1"], "name": _wrapped("po>  SIL")}]}
-    fix.resolve_source_table_analysis(body, stage1)
+    fix.resolve_source_table_analysis(body, parse)
     assert body["analyses"][0]["source_table_analysis"]["value"] == "t1#1"
 
 
 def test_an_ambiguous_name_leaves_the_analysis_honestly_unjoinable(tmp_path):
     # Two row groups with the same name: the join is a guess, and the slot stays empty.
-    stage1 = _stage1(
+    parse = _parse_doc(
         tmp_path,
         [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t2", "name": "SZ > HC"}],
     )
     body = {"analyses": [{"local_id": "a1", "tables": ["t1", "t2"], "name": _wrapped("SZ > HC")}]}
-    assert fix.resolve_source_table_analysis(body, stage1) == []
+    assert fix.resolve_source_table_analysis(body, parse) == []
     assert "source_table_analysis" not in body["analyses"][0]
 
 
 def test_the_key_is_scoped_to_the_tables_the_analysis_cites(tmp_path):
-    stage1 = _stage1(
+    parse = _parse_doc(
         tmp_path,
         [{"table_id": "t1", "name": "SZ > HC"}, {"table_id": "t2", "name": "SZ > HC"}],
     )
     body = {"analyses": [{"local_id": "a1", "tables": ["t2"], "name": _wrapped("SZ > HC")}]}
-    fix.resolve_source_table_analysis(body, stage1)
+    fix.resolve_source_table_analysis(body, parse)
     assert body["analyses"][0]["source_table_analysis"]["value"] == "t2#1"
 
 
@@ -572,9 +572,8 @@ def test_deriving_ids_introduces_no_dangling_reference():
 
 
 def _table_map(tmp_path):
-    path = tmp_path / "table-map.json"
-    path.write_text("{}")
-    return path
+    """The `tables` stage has run and numbered no table."""
+    return {}
 
 
 def test_a_table_reference_with_no_table_declared_is_dropped(tmp_path):
@@ -872,13 +871,12 @@ def test_a_one_item_list_for_a_single_valued_slot_is_unwrapped():
 
 def test_a_coordinate_set_keyed_by_its_tables_local_id_takes_the_parse_key(tmp_path):
     """28549317: `tbltable2#1` where the parse key is `823#1`."""
-    stage1 = tmp_path / "analyses.json"
-    stage1.write_text(json.dumps({"analyses": [{"table_id": "823"}, {"table_id": "824"}]}))
-    table_map = tmp_path / "table-map.json"
-    table_map.write_text(json.dumps({"823": "tbltable2", "824": "tbltable3"}))
+    parse = tmp_path / "analyses.json"
+    parse.write_text(json.dumps({"analyses": [{"table_id": "823"}, {"table_id": "824"}]}))
+    table_map = {"823": "tbltable2", "824": "tbltable3"}
     body = {"coordinate_sets": [{"local_id": "tbltable2#1", "analysis": "a_823_1"},
                                 {"local_id": "tbltable2#2"}, {"local_id": "text#1"}]}
-    notes = fix.derive.rekey_coordinate_sets(body, stage1, table_map)
+    notes = fix.derive.rekey_coordinate_sets(body, parse, table_map)
     assert [s["local_id"] for s in body["coordinate_sets"]] == ["823#1", "tbltable2#2", "text#1"]
     assert len(notes) == 1, "a key the parse lacks, and a text set, are left alone"
 
@@ -1223,14 +1221,14 @@ def test_a_text_entry_is_keyed_text_as_the_schema_spells_it():
 
 def test_a_record_keyed_prose_is_respelled_before_its_keys_are_checked(tmp_path):
     """An old record's `prose#1` would otherwise name no row group and be dropped."""
-    stage1 = tmp_path / "analyses.json"
-    stage1.write_text(json.dumps({"analyses": [
+    parse = tmp_path / "analyses.json"
+    parse.write_text(json.dumps({"analyses": [
         {"table_id": "prose", "name": "A > B", "points": [{"coordinates": [1, 2, 3]}]}]}))
     body = {
         "analyses": [{"local_id": "ana_x", "source_table_analysis": _wrapped("prose#1")}],
         "coordinate_sets": [{"local_id": "prose#1", "analysis": "ana_x"}],
     }
-    log = fix.apply_all(body, fix.Context(schema=_SCH, stage1=stage1), stage="demands")
+    log = fix.apply_all(body, fix.Context(schema=_SCH, parse=parse), stage="demands")
     assert body["analyses"][0]["source_table_analysis"]["value"] == "text#1"
     assert body["coordinate_sets"][0]["local_id"] == "text#1"
     assert dict(log.entries)["text_keys"]

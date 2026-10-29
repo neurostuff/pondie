@@ -1,4 +1,8 @@
-"""Stage 1: split each coordinate table into the analyses it reports.
+"""DEPRECATED. Stage 1: split each coordinate table into the analyses it reports.
+
+Superseded by ingestion's `parse/coordinate_parse.json` (study_schema CoordinateParse),
+which every pondie reader now takes analyses from; this writer is kept only until the
+`stage1/` folders are retired, and nothing in the pipeline reads its output.
 
 The extraction passes never see the table rows -- the normalized paper text carries
 captions but not cell values -- so this is the only place the reported effects are

@@ -1,7 +1,7 @@
 """Filling a slot from something the record or the parse already says.
 
 The second kind of fix. Nothing here reads the paper: every value is computed from another
-field, from the stage-1 parse, or from the join between two entities the record declares. That
+field, from the coordinate parse, or from the join between two entities the record declares. That
 is what makes them deterministic, and it is why `Table.purpose`, `Cell.direction` and
 `CategoryDistribution.denominator` are not asked of a model -- measured, a model shown eight
 kinds of non-analysis and no way to say "it is an analysis" answered with the nearest one and
@@ -249,11 +249,11 @@ def derive_denominators(body: dict[str, Any]) -> list[str]:
 
 
 def derive_coordinate_spaces(
-    body: dict[str, Any], stage1: Path | None, table_map: Path | None
+    body: dict[str, Any], parse: Path | None, table_map: Mapping[str, str] | None
 ) -> list[str]:
-    """Fill `Analysis.coordinate_space` from the space stage 1 read off the table.
+    """Fill `Analysis.coordinate_space` from the space the parse read off the table.
 
-    Stage 1 parses a space for every coordinate it extracts and is right about it: across
+    The parse reads a space for every coordinate it extracts and is right about it: across
     ten papers it returned MNI for all 197 points and disagreed with itself on none. The
     stage-3 prompt already injects that space, but as a hint "to confirm, not values to
     copy" -- and the model declines to confirm, leaving the slot unreported on 50 of 57
@@ -264,11 +264,11 @@ def derive_coordinate_spaces(
     agrees, so a genuinely mixed-space paper still reaches a human.
     """
 
-    if not (stage1 and stage1.is_file() and table_map and table_map.is_file()):
+    if not (parse and parse.is_file()) or table_map is None:
         return []
 
-    parsed = parse_keys.load(stage1)
-    mapping = parse_keys.load_table_map(table_map)
+    parsed = parse_keys.load(parse)
+    mapping = table_map
 
     # Read through the same lexicon `coordinate_space.resolve` reads with, rather than
     # comparing the parser's raw tokens. Stage 1 writes "MNI" for one sentence and "MNI152"
@@ -361,7 +361,7 @@ def fill_directions(body: dict[str, Any]) -> list[str]:
     return filled
 
 
-def mirror_withheld(body: dict[str, Any], stage1: Path | None) -> list[str]:
+def mirror_withheld(body: dict[str, Any], parse: Path | None) -> list[str]:
     """Rebuild the reversed half of every sign-split contrast, from the corrected record.
 
     `sign_split.split_opposite_signs` hands the extraction pass only the half the paper
@@ -371,9 +371,9 @@ def mirror_withheld(body: dict[str, Any], stage1: Path | None) -> list[str]:
     Mirroring the raw payload would copy mistakes the builder had already fixed.
     """
 
-    if not (stage1 and stage1.is_file()):
+    if not (parse and parse.is_file()):
         return []
-    parsed = parse_keys.load(stage1)
+    parsed = parse_keys.load(parse)
     # Keyed alongside the parse so each withheld entry carries the address of its own row
     # group -- the mirrored analysis's only route to the rows it is about.
     keyed = list(zip(parse_keys.parse_keys(parsed), parsed))
@@ -394,7 +394,7 @@ def mirror_withheld(body: dict[str, Any], stage1: Path | None) -> list[str]:
     # key already does. A SPLIT leaves several record analyses sharing one key; each is a
     # contrast in its own right and each gets its mirror, which is the right semantics
     # rather than a tie to break.
-    # Keyed on `(table_id, name)`, because a name alone is not unique and `stage1_block`
+    # Keyed on `(table_id, name)`, because a name alone is not unique and `listing_block`
     # says so: "the same analysis name recurs across tables in the same paper (an ROI table
     # and a whole-brain table reporting one contrast), and the table is the only thing that
     # tells those apart." Keyed on the name alone this was last-wins, and the failure was
@@ -632,7 +632,7 @@ def legacy_id_map(record: Mapping[str, Any], parse: Path, sch: Schema) -> dict[s
     return {"keys": keys, "ids": ids, "unmapped": unmapped}
 
 
-def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> list[str]:
+def resolve_source_table_analysis(body: dict[str, Any], parse: Path | None) -> list[str]:
     """Verify, or deterministically fill, each analysis's link to its parsed row group.
 
     `Analysis.source_table_analysis` is an exact route from an analysis to its
@@ -648,9 +648,9 @@ def resolve_source_table_analysis(body: dict[str, Any], stage1: Path | None) -> 
     honestly unjoinable rather than joined to a guess.
     """
 
-    if not (stage1 and stage1.is_file()):
+    if not (parse and parse.is_file()):
         return []
-    parsed = parse_keys.load(stage1)
+    parsed = parse_keys.load(parse)
     if not parsed:
         return []
 
@@ -754,7 +754,7 @@ def derive_analysis_ids(body: dict[str, Any], sch: Schema) -> list[str]:
 
 
 def rekey_coordinate_sets(
-    body: dict[str, Any], stage1: Path | None, table_map: Path | None
+    body: dict[str, Any], parse: Path | None, table_map: Mapping[str, str] | None
 ) -> list[str]:
     """Key a coordinate set by its parse key where it was keyed by its table's `local_id`.
 
@@ -764,11 +764,11 @@ def rekey_coordinate_sets(
     carried the right key. `table_map` says which parse table each Table came from, so the
     key is rewritten, and only to a key the parse has.
     """
-    if not (stage1 and stage1.is_file() and table_map and table_map.is_file()):
+    if not (parse and parse.is_file()) or table_map is None:
         return []
-    parsed = parse_keys.load(stage1)
+    parsed = parse_keys.load(parse)
     keys = set(parse_keys.parse_keys(parsed))
-    parse_table = {local: source for source, local in parse_keys.load_table_map(table_map).items()}
+    parse_table = {local: source for source, local in table_map.items()}
     taken = {
         entry.get("local_id")
         for entry in body.get("coordinate_sets") or []

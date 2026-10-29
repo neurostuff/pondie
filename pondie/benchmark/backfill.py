@@ -1,4 +1,4 @@
-"""Tie each reference analysis to the stage-1 table entry it came from.
+"""Tie each reference analysis to the parse entry it came from.
 
 The direction benchmark scores a candidate cell only when its analysis, its cell and its
 `Cell.term` all align with the reference's. The first of those is a fuzzy entity match today,
@@ -85,7 +85,7 @@ def _by_name(entries: Iterable[Mapping[str, Any]]) -> dict[str, list[int]]:
 
 
 def resolve(analysis: Mapping[str, Any], by_name: Mapping[str, list[int]]) -> int | None:
-    """The one stage-1 entry this analysis came from, or None when that is not decidable.
+    """The one parse entry this analysis came from, or None when that is not decidable.
 
     One route only. Narrowing a repeated name by table was measured against the candidate's
     own recorded provenance and agreed half the time, so it is not a route.
@@ -103,7 +103,7 @@ def backfill(reference: Path, corpus: Path, write: bool) -> dict[str, int]:
     tally = {"analyses": 0, "joined": 0, "already": 0, "no_entry": 0, "repeated_name": 0}
     for path in sorted(reference.glob("*.extraction.json")):
         study = path.name.split(".")[0]
-        parse = paths.analyses(study, corpus)
+        parse = paths.coordinate_parse(study, corpus)
         if not parse.is_file():
             continue
         entries = parse_keys.load(parse)
@@ -152,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  analyses           {tally['analyses']:4}")
     print(f"    already tied     {tally['already']:4}")
     print(f"    joined{'' if not args.dry_run else ' (dry run)':11} {tally['joined']:4}")
-    print(f"    no stage-1 entry {tally['no_entry']:4}")
+    print(f"    no parse entry   {tally['no_entry']:4}")
     print(f"    name repeats     {tally['repeated_name']:4}")
     return 0
 

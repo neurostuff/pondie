@@ -12,8 +12,9 @@ Three routes, one output shape:
 
     <corpus>/<pmid>/processed/local/text.tables.txt   markdown, headings kept, tables inline
     <corpus>/<pmid>/processed/local/tables.jsonl      the manifest the Tables stage copies
-    <corpus>/<pmid>/stage1/analyses.json              the coordinate parse -- an INPUT
-    <corpus>/<pmid>/stage1/analyses.orig.json         immutable; SignSplit rewrites the above
+    <corpus>/<pmid>/stage1/analyses.json              DEPRECATED legacy coordinate parse; pondie
+                                                      now reads parse/coordinate_parse.json
+    <corpus>/<pmid>/stage1/analyses.orig.json         DEPRECATED, as above
     <corpus>/<pmid>/provenance.json                   route, source path, text sha256
 """
 from __future__ import annotations

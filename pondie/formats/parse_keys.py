@@ -12,7 +12,6 @@ pipelines the package advertises.
 
 from __future__ import annotations
 
-import json
 import re
 from pathlib import Path
 from typing import Any
@@ -53,7 +52,7 @@ def positional_keys(analyses: list[dict]) -> list[str]:
 
     `Analysis.source_table_analysis` holds one of these, as does a `CoordinateSet.local_id`:
     the exact route between an analysis and the coordinate rows it was read off. Both sides
-    of that contract must number identically: `render.stage1_block` prints the key to the
+    of that contract must number identically: `render.listing_block` prints the key to the
     model and `fix.resolve_source_table_analysis` resolves what comes back.
 
     Numbered over EVERY entry, including the withheld half of a sign-split. The prompt
@@ -112,21 +111,14 @@ def split(key: str) -> tuple[str, str]:
     return table_id, ordinal
 
 
-def load(stage1: Path | None) -> list[dict[str, Any]]:
+def load(parse: Path | None) -> list[dict[str, Any]]:
     """A parse's entries, or none when there is no parse file.
 
-    `stage1` is whichever file `Paper.parse` chose: a CoordinateParse is read through
-    study_schema's model, a stage-1 document as it is.
+    A CoordinateParse is read through study_schema's model; a legacy stage-1 document (read
+    only to migrate old keys) as it is.
     """
-    if not (stage1 and stage1.is_file()):
+    if not (parse and parse.is_file()):
         return []
     from pondie.formats.coordinate_parse import read_document
 
-    return read_document(stage1).get("analyses") or []
-
-
-def load_table_map(table_map: Path | None) -> dict[str, str]:
-    """The tables stage's map, manifest `table_id` -> `Table.local_id`; empty without one."""
-    if not (table_map and table_map.is_file()):
-        return {}
-    return json.loads(table_map.read_text(encoding="utf-8"))
+    return read_document(parse).get("analyses") or []
