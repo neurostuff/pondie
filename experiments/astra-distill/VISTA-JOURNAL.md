@@ -685,3 +685,105 @@ Full write-up: `vista/ADJUDICATION-r3-final.md` (beast `vista-out/v5/runs/r3-27b
 - **The scorer overstates reversals by about a fifth.** Name-similarity pairing crosses two analyses on one key
   (7iEdFur6F9G7, yHKigGhA9PZj), and level links map a model level to the wrong Astra level (RDqbaBcuZ9th,
   kPpiiibUx7Jd).
+
+### 2026-10-28: 27B inference speed (Vista gh, 80 val-sub160 papers, `tacc/bench.sbatch`)
+
+One merged `adapter-final` (with the `mtp.*` head now kept by `merge_adapter.py`), five vLLM setups, JSON mode.
+All 80 papers stop normally in every setup.
+
+| setup | KV cache (tokens) | out tok/s | linked cell F1 | vs a [95% CI] | schema-valid |
+|---|---:|---:|---:|---|---:|
+| a: 24 workers, gpu_mem 0.80 (as the final eval) | 336k | 415 | 0.723 | | 1.000 |
+| b: 48 workers, gpu_mem 0.92, fp8 KV | 917k | 557 | 0.716 | −0.008 [−0.038, +0.020] | 1.000 |
+| c: b + fp8 weights | 1.53M | 822 | 0.720 | −0.003 [−0.036, +0.029] | 1.000 |
+| d: b + MTP speculative decoding (2 tokens) | 711k | 822 | 0.731 | +0.007 [−0.018, +0.036] | 1.000 |
+| e: c + d | 1.22M | **1,223** | 0.715 | −0.008 [−0.075, +0.055] | 0.988 |
+
+- **MTP acceptance:** 2.9 of 3 tokens per step, although the head was never fine-tuned.
+- **Startup:** vLLM is up in 110–260 s once the merged model exists (446 s including the merge).
+- **e:** 2.95× a. One record (4z4c4xkQhH8z) fails the record schema, which widens its CI. No other metric differs
+  significantly from a; c's effect-kind accuracy is +0.056 [+0.009, +0.115].
+
+### 2026-10-28: pondie's checks and deterministic fixes on the final 27B's records (481 val)
+
+`vista/consistency.py`: pondie (`parse-only-readers`) Validator on the extraction schema (structure, storage rules,
+`rules.check_all`; no text, as the records have no evidence), then every repair in `fix.build_sequence()` with the
+paper's training-era coordinate parse and text (no table map), then the Validator again. Astra's own records are the
+baseline.
+
+| | 27B: before | 27B: after fixes | Astra: before | Astra: after fixes |
+|---|---:|---:|---:|---:|
+| errors | 186 | 175 | 15 | 42 |
+| records with an error | 50 (10%) | 46 | 3 | 10 |
+| warnings | 1,563 | 1,549 | 2,009 | 2,009 |
+
+- **Fixed:** "cell term not reachable through inputs_from" 35 → 0 (`unreachable`), product-column cell level 5 → 0,
+  a term name repeated across a model chain 25 → 17.
+- **Unchanged:** effect.kind disagreeing with its cells (48 → 50), cell term naming no model term (16), level sign
+  vs direction (15; Astra has the same 15).
+- **Introduced by a fix:** "whole-brain analysis given regions", 49 in the 27B's records and 27 in Astra's. `name_links`
+  links regions to analyses from their names, including whole-brain ones, which a storage rule then refuses.
+- Without that, the fixes resolve 60 of the 27B's 186 errors (32%).
+
+### 2026-10-28: ns extraction smoke shard s000 (498 papers, setup e, max_len 49,152)
+
+- **Run:** 31 min, 1,242 out tok/s. 494 stop, 4 truncated at the context limit (input + output = 46,149 tokens), so
+  s001–s084 run with `max_len` 65,536.
+- **Record schema** (compact → `from_compact` → jsonschema): 488 valid, 6 invalid (an invented key: `software` on an
+  inference setting, `references` on a preprocessing; `inputs_from` as objects; a missing required slot), 4 none.
+- **pondie checks** (`vista/consistency.py`, 494 records): 398 errors in 94 records (19%) before the fixes, against
+  186 in 50 (10%) on val; 282 in 80 after. Same kinds as val: effect.kind vs cells, term names repeated across a
+  chain, level sign vs direction. 100 of the ns-pond parses carry header identifier fields the submodule's
+  study_schema refuses (`alternative_pmids` and four more, all null); stripped in the local copies.
+- **Against Astra** (`score.py`, the 111 s000 papers with a gold record in train or val): linked cell F1 0.50, but
+  only 327 of the gold's 500 coordinate keys are in the current ns-pond parses (21 papers keep none). The model uses
+  the new keys (326 of the 327). On the 40 papers whose parse keys are unchanged: train (37) cell F1 0.808, slots
+  0.884, kind 0.848; val (3) 0.690 against 0.966 in the final eval, with byte-identical prompts (two cells of one
+  analysis of AAxmdr9aVF7T).
+- **Prompt parity:** `bodies_ns.py` reproduces `data/v5/val.bodies.jsonl` byte for byte for the 3 of 6 val papers
+  whose parse is unchanged; the other 3 differ only in coordinate sets the new parse added or dropped.
+
+### 2026-10-29: where ev1-1k's evidence errors are (val 481, `vista/evbreak.py`, `vista/ADJUDICATION-ev1-far.md`)
+
+- **Balanced:** 243,382 predicted units against 242,774 gold; 66.7k false positives, 66.1k false negatives.
+- **Slots are right:** of 144,543 gold slots, 772 get no units and 899 predicted slots have no gold. 98% of both
+  error kinds are wrong units inside a slot both sides cite. Per such slot: 1.68 units each side; same count 72%,
+  fewer 16%, more 12%; exact 59%, overlap 30%, disjoint 12%.
+- **Distance of a false positive to the nearest gold unit:** adjacent 18%, 2–3 units 14%, 4–10 19%, over 10 47%.
+- **By collection** (FP / FN): analyses 27.0k / 23.5k, model_estimations 11.0k / 13.8k, coordinate_sets 6.4k / 4.3k.
+- **Far-away picks adjudicated** (60 slots, 30 papers): 39 state the value (a second place the paper says it), 6
+  partly, 15 do not. Precision against "any unit stating the value" would be about 0.81–0.83 rather than 0.73.
+
+### 2026-10-29: judging evidence units with NLI and MiniCheck (pilot, beast 4× RTX 3070)
+
+**Question.** Can a small judge tell a unit that states a slot's value from one that does not?
+
+**Set** (`vista/evjudge_build.py`, beast `vista-out/ev1/judge/pilot.jsonl`): the 60 adjudicated far-away units
+(`ADJUDICATION-ev1-far.tsv`: 39 state the value, 15 do not, 6 partly, left out of the AUC), and 300 random val slots
+twice: with Astra's own units (positive) and with as many random units of the same paper more than 10 units away
+(negative). Table rows carry their table's first row and the line before the table. Two claim forms: `claim` names
+the owning entity (`For the analysis "…": statistic family is t.`), `bare` states the value alone (`The test
+statistic is a t statistic.`; templates for the 23 commonest slots, `The <parent> <field> is v.` otherwise).
+
+**Judges** (`vista/evjudge_run.py`): DeBERTa-v3-large NLI (MoritzLaurer, MNLI/FEVER/ANLI/LingNLI/WANLI),
+entailment of each unit (`max`) or all units joined (`joint`); Bespoke-MiniCheck-7B (InternLM2.5-7B, CC BY-NC 4.0),
+P(Yes) with the MiniCheck package's prompt, vLLM TP4, eager (vLLM 0.28's InternLM2 fails CUDA graph capture).
+The cut-off is the one with the best balanced accuracy on pos/neg.
+
+| judge | far AUC | pos/neg AUC | cut | Astra units accepted | random rejected | far valid accepted | far wrong rejected |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| MiniCheck, claim | 0.815 | 0.901 | 0.12 | 0.81 | 0.84 | 0.74 | 0.80 |
+| **MiniCheck, bare** | **0.889** | **0.942** | 0.10 | 0.93 | 0.83 | 0.85 | 0.67 |
+| NLI joint, bare | 0.795 | 0.883 | 0.05 | 0.82 | 0.84 | 0.64 | 0.67 |
+| NLI max, bare | 0.832 | 0.843 | 0.06 | 0.73 | 0.85 | 0.67 | 0.80 |
+| NuExtract3 zero-shot, bare | 0.821 | 0.844 | 0.27 | 0.77 | 0.91 | 0.74 | 0.93 |
+| NuExtract3 zero-shot, claim | 0.766 | 0.852 | 0.01 | 0.75 | 0.96 | 0.62 | 0.93 |
+
+- **Claim wording matters more than the judge:** naming the entity ("For the model \"mod_group\": …") asks the judge
+  to verify ids and long analysis names no sentence states; the bare form adds +0.04 to +0.08 AUC for both judges.
+- **MiniCheck beats NLI** on every column but one. Both are badly calibrated (the cut-offs are 0.05–0.12, not 0.5).
+- **z vs t:** both Z-statistic units cited for family `t` (items 4, 44) are rejected by every judge (MiniCheck ≤ 0.03).
+- **Accepted although wrong** (MiniCheck bare): 5, 15, 16, 29, 30. **Partly** items are all rejected.
+- **Speed:** MiniCheck 21 claims/s on beast (660 in 35 s): full val (≈145k slots) ≈ 2 h.
+- **NuExtract3 zero-shot** (structured mode, `{"claim_supported": ["yes", "no"]}`, P(yes) at the answer token):
+  below MiniCheck on both AUCs, about level with NLI; it rejects wrong units well but accepts fewer valid ones.

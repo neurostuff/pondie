@@ -1,0 +1,19 @@
+{
+ "run": "r3-27b-bench",
+ "model": "q27",
+ "adapter": "r3-27b-full/adapter-final",
+ "guided": false,
+ "keep_merged": true,
+ "sids": "/work/07723/jdk3232/vista/astra-distill/data/v5/bench80.txt",
+ "workers": 48,
+ "gpu_mem": 0.92,
+ "vllm_args": [
+  "--kv-cache-dtype",
+  "fp8",
+  "--quantization",
+  "fp8",
+  "--speculative-config",
+  "{\"method\": \"qwen3_5_mtp\", \"num_speculative_tokens\": 2}"
+ ],
+ "out_name": "pred-e.jsonl"
+}
