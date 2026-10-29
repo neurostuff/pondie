@@ -25,4 +25,8 @@ metric counts as wrong. If 65–75% of the 31.3k are valid, about 20–23k of th
 precision would be about 0.81–0.83 rather than 0.73 (recall is unchanged, since Astra's own unit is still missed).
 The sample is 30 papers, one of which (FMXAJXKN3akG) gives 10 items.
 
-The per-item notes are in the session transcript; the items are reproducible with the command above.
+Verdicts by item number (as `evfar.py` prints them):
+- states it: 1 3 6 7 8 10 11 12 17 18 20 21 22 23 24 25 27 28 31 32 33 34 35 36 37 38 39 41 43 47 49 50 52 53 54 55
+  56 59 60
+- partly: 9 14 45 46 57 58
+- does not: 2 4 5 13 15 16 19 26 29 30 40 42 44 48 51
