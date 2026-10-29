@@ -742,3 +742,14 @@ baseline.
   analysis of AAxmdr9aVF7T).
 - **Prompt parity:** `bodies_ns.py` reproduces `data/v5/val.bodies.jsonl` byte for byte for the 3 of 6 val papers
   whose parse is unchanged; the other 3 differ only in coordinate sets the new parse added or dropped.
+
+### 2026-10-29: where ev1-1k's evidence errors are (val 481, `vista/evbreak.py`, `vista/ADJUDICATION-ev1-far.md`)
+
+- **Balanced:** 243,382 predicted units against 242,774 gold; 66.7k false positives, 66.1k false negatives.
+- **Slots are right:** of 144,543 gold slots, 772 get no units and 899 predicted slots have no gold. 98% of both
+  error kinds are wrong units inside a slot both sides cite. Per such slot: 1.68 units each side; same count 72%,
+  fewer 16%, more 12%; exact 59%, overlap 30%, disjoint 12%.
+- **Distance of a false positive to the nearest gold unit:** adjacent 18%, 2–3 units 14%, 4–10 19%, over 10 47%.
+- **By collection** (FP / FN): analyses 27.0k / 23.5k, model_estimations 11.0k / 13.8k, coordinate_sets 6.4k / 4.3k.
+- **Far-away picks adjudicated** (60 slots, 30 papers): 39 state the value (a second place the paper says it), 6
+  partly, 15 do not. Precision against "any unit stating the value" would be about 0.81–0.83 rather than 0.73.
