@@ -787,3 +787,29 @@ The cut-off is the one with the best balanced accuracy on pos/neg.
 - **Speed:** MiniCheck 21 claims/s on beast (660 in 35 s): full val (≈145k slots) ≈ 2 h.
 - **NuExtract3 zero-shot** (structured mode, `{"claim_supported": ["yes", "no"]}`, P(yes) at the answer token):
   below MiniCheck on both AUCs, about level with NLI; it rejects wrong units well but accepts fewer valid ones.
+
+**Decision models** (`vista/evjudge_decision.py`, Vista gh-dev, one GH200 each, `tacc/decision.sbatch`): each row
+asks two noul questions over its joined units, one per claim form (`Does the text state the following claim, all of
+it? Claim: …`), and P(yes) is the score. vllm-sr/d3 (Apache-2.0, its remote code's `system_one`), baselabs/elephant-1
+(MIT, OneJev qev with serve.patch), and bespokelabs/Bespoke-Nimble-9B-v3 (a LoRA on Qwen3.5-9B, on the engine in its
+Decision Index repo `bespokelabs/bespoke-nimble-9b-v3-decision-index` `code/`: the nimble GitHub repo's scorer
+checks a newer contract than v3 ships).
+
+| judge | far AUC | pos/neg AUC | cut | Astra units accepted | random rejected | far valid accepted | far wrong rejected |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **d3, bare** | **0.950** | **0.967** | 0.08 | 0.91 | 0.90 | 0.85 | 0.87 |
+| d3, claim | 0.853 | 0.955 | 0.14 | 0.85 | 0.92 | 0.56 | 0.87 |
+| **elephant-1, bare** | 0.933 | 0.947 | 0.08 | 0.88 | 0.89 | 0.82 | **1.00** |
+| elephant-1, claim | 0.834 | 0.902 | 0.08 | 0.81 | 0.88 | 0.69 | 0.80 |
+| Nimble-9B-v3, bare | 0.875 | 0.789 | 0.78 | 0.64 | 0.83 | 0.62 | 0.93 |
+| Nimble-9B-v3, claim | 0.874 | 0.814 | 0.59 | 0.70 | 0.83 | 0.59 | 0.93 |
+
+- **d3 and elephant-1 beat MiniCheck** on both AUCs with the bare claim (+0.04 to +0.06 far, +0.005 to +0.025
+  pos/neg); elephant-1 rejects all 15 wrong far units at the pos/neg cut-off. Both are as badly calibrated as
+  MiniCheck (cut-offs 0.08).
+- **Nimble-9B-v3 is the weakest LLM judge** on pos/neg (0.79–0.81, below NLI joint) and does not gain from the bare
+  form; its scores sit near the middle (cut-offs 0.59–0.78).
+- **z vs t** (items 4, 44): rejected by all three (≤ 0.05 bare).
+- **Speed** (660 rows, 2 questions each, GH200): d3 119 s, elephant-1 125 s, Nimble 201 s (its conv kernels fall
+  back to PyTorch). d3 at about 11 claims/s: full val (≈145k slots) ≈ 3.7 h on one GPU.
+- **Licences:** d3 and elephant-1 are usable for the dataset; MiniCheck is non-commercial.
