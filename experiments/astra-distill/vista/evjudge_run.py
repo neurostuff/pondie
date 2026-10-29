@@ -2,6 +2,7 @@
 
     python evjudge_run.py nli PILOT.jsonl OUT.jsonl         # DeBERTa-v3-large NLI (transformers, one GPU)
     python evjudge_run.py minicheck PILOT.jsonl OUT.jsonl   # Bespoke-MiniCheck-7B (vLLM; TP from CUDA_VISIBLE_DEVICES)
+    python evjudge_run.py nuextract PILOT.jsonl OUT.jsonl   # NuExtract3 zero-shot, a yes/no enum (vLLM)
     python evjudge_run.py score OUT.jsonl [OUT.jsonl ...]
 
 Each row gains "scores": {name: support probability}. NLI: entailment probability of each doc alone (max over docs,
@@ -79,6 +80,39 @@ def run_minicheck(rows):
         r.setdefault("scores", {})["minicheck" + SUFFIX] = p
 
 
+NUEXTRACT = "numind/NuExtract3"
+NU_TEMPLATE = '{"claim_supported": ["yes", "no"]}'
+NU_PROMPT = ("Does the document state everything the claim says? Answer yes only if all of the claim is stated by the "
+             "document.\n\nDocument:\n[DOCUMENT]\n\nClaim: [CLAIM]")
+
+
+def run_nuextract(rows):
+    """zero-shot NuExtract3 (structured mode, a yes/no enum); the score is P(yes) / (P(yes) + P(no)) at the answer token"""
+    from transformers import AutoTokenizer
+    from vllm import LLM, SamplingParams
+    tok = AutoTokenizer.from_pretrained(NUEXTRACT)
+    tp = len(os.environ.get("CUDA_VISIBLE_DEVICES", "0").split(","))
+    llm = LLM(NUEXTRACT, tensor_parallel_size=tp, max_model_len=8192, gpu_memory_utilization=0.85,
+              enable_prefix_caching=True, limit_mm_per_prompt={"image": 0})
+    prompts = [tok.apply_chat_template([{"role": "user", "content": NU_PROMPT.replace("[DOCUMENT]", "\n".join(r["docs"]))
+                                         .replace("[CLAIM]", r[CLAIM])}],
+                                       template=NU_TEMPLATE, enable_thinking=False,
+                                       add_generation_prompt=True, tokenize=False) for r in rows]
+    out = llm.generate(prompts, SamplingParams(temperature=0, max_tokens=24, logprobs=10))
+    for r, o in zip(rows, out):
+        p = None
+        for step in o.outputs[0].logprobs:   # the first position whose candidates include yes or no
+            cand = {}
+            for t in step.values():
+                w = t.decoded_token.strip().strip('"').lower()
+                if w in ("yes", "no"):
+                    cand[w] = cand.get(w, 0) + math.exp(t.logprob)
+            if cand:
+                p = cand.get("yes", 0) / sum(cand.values())
+                break
+        r.setdefault("scores", {})["nuextract" + SUFFIX] = 0.0 if p is None else p
+
+
 def auc(pos, neg):
     if not pos or not neg:
         return None
@@ -121,7 +155,7 @@ def main():
     if cmd == "score":
         return score(sys.argv[2:])
     rows = load(sys.argv[2])
-    {"nli": run_nli, "minicheck": run_minicheck}[cmd](rows)
+    {"nli": run_nli, "minicheck": run_minicheck, "nuextract": run_nuextract}[cmd](rows)
     with open(sys.argv[3], "w") as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")

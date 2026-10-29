@@ -776,6 +776,8 @@ The cut-off is the one with the best balanced accuracy on pos/neg.
 | **MiniCheck, bare** | **0.889** | **0.942** | 0.10 | 0.93 | 0.83 | 0.85 | 0.67 |
 | NLI joint, bare | 0.795 | 0.883 | 0.05 | 0.82 | 0.84 | 0.64 | 0.67 |
 | NLI max, bare | 0.832 | 0.843 | 0.06 | 0.73 | 0.85 | 0.67 | 0.80 |
+| NuExtract3 zero-shot, bare | 0.821 | 0.844 | 0.27 | 0.77 | 0.91 | 0.74 | 0.93 |
+| NuExtract3 zero-shot, claim | 0.766 | 0.852 | 0.01 | 0.75 | 0.96 | 0.62 | 0.93 |
 
 - **Claim wording matters more than the judge:** naming the entity ("For the model \"mod_group\": …") asks the judge
   to verify ids and long analysis names no sentence states; the bare form adds +0.04 to +0.08 AUC for both judges.
@@ -783,3 +785,5 @@ The cut-off is the one with the best balanced accuracy on pos/neg.
 - **z vs t:** both Z-statistic units cited for family `t` (items 4, 44) are rejected by every judge (MiniCheck ≤ 0.03).
 - **Accepted although wrong** (MiniCheck bare): 5, 15, 16, 29, 30. **Partly** items are all rejected.
 - **Speed:** MiniCheck 21 claims/s on beast (660 in 35 s): full val (≈145k slots) ≈ 2 h.
+- **NuExtract3 zero-shot** (structured mode, `{"claim_supported": ["yes", "no"]}`, P(yes) at the answer token):
+  below MiniCheck on both AUCs, about level with NLI; it rejects wrong units well but accepts fewer valid ones.
