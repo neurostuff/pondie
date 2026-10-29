@@ -724,3 +724,21 @@ baseline.
 - **Introduced by a fix:** "whole-brain analysis given regions", 49 in the 27B's records and 27 in Astra's. `name_links`
   links regions to analyses from their names, including whole-brain ones, which a storage rule then refuses.
 - Without that, the fixes resolve 60 of the 27B's 186 errors (32%).
+
+### 2026-10-28: ns extraction smoke shard s000 (498 papers, setup e, max_len 49,152)
+
+- **Run:** 31 min, 1,242 out tok/s. 494 stop, 4 truncated at the context limit (input + output = 46,149 tokens), so
+  s001–s084 run with `max_len` 65,536.
+- **Record schema** (compact → `from_compact` → jsonschema): 488 valid, 6 invalid (an invented key: `software` on an
+  inference setting, `references` on a preprocessing; `inputs_from` as objects; a missing required slot), 4 none.
+- **pondie checks** (`vista/consistency.py`, 494 records): 398 errors in 94 records (19%) before the fixes, against
+  186 in 50 (10%) on val; 282 in 80 after. Same kinds as val: effect.kind vs cells, term names repeated across a
+  chain, level sign vs direction. 100 of the ns-pond parses carry header identifier fields the submodule's
+  study_schema refuses (`alternative_pmids` and four more, all null); stripped in the local copies.
+- **Against Astra** (`score.py`, the 111 s000 papers with a gold record in train or val): linked cell F1 0.50, but
+  only 327 of the gold's 500 coordinate keys are in the current ns-pond parses (21 papers keep none). The model uses
+  the new keys (326 of the 327). On the 40 papers whose parse keys are unchanged: train (37) cell F1 0.808, slots
+  0.884, kind 0.848; val (3) 0.690 against 0.966 in the final eval, with byte-identical prompts (two cells of one
+  analysis of AAxmdr9aVF7T).
+- **Prompt parity:** `bodies_ns.py` reproduces `data/v5/val.bodies.jsonl` byte for byte for the 3 of 6 val papers
+  whose parse is unchanged; the other 3 differ only in coordinate sets the new parse added or dropped.
