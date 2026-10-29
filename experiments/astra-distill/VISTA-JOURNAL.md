@@ -753,3 +753,33 @@ baseline.
 - **By collection** (FP / FN): analyses 27.0k / 23.5k, model_estimations 11.0k / 13.8k, coordinate_sets 6.4k / 4.3k.
 - **Far-away picks adjudicated** (60 slots, 30 papers): 39 state the value (a second place the paper says it), 6
   partly, 15 do not. Precision against "any unit stating the value" would be about 0.81–0.83 rather than 0.73.
+
+### 2026-10-29: judging evidence units with NLI and MiniCheck (pilot, beast 4× RTX 3070)
+
+**Question.** Can a small judge tell a unit that states a slot's value from one that does not?
+
+**Set** (`vista/evjudge_build.py`, beast `vista-out/ev1/judge/pilot.jsonl`): the 60 adjudicated far-away units
+(`ADJUDICATION-ev1-far.tsv`: 39 state the value, 15 do not, 6 partly, left out of the AUC), and 300 random val slots
+twice: with Astra's own units (positive) and with as many random units of the same paper more than 10 units away
+(negative). Table rows carry their table's first row and the line before the table. Two claim forms: `claim` names
+the owning entity (`For the analysis "…": statistic family is t.`), `bare` states the value alone (`The test
+statistic is a t statistic.`; templates for the 23 commonest slots, `The <parent> <field> is v.` otherwise).
+
+**Judges** (`vista/evjudge_run.py`): DeBERTa-v3-large NLI (MoritzLaurer, MNLI/FEVER/ANLI/LingNLI/WANLI),
+entailment of each unit (`max`) or all units joined (`joint`); Bespoke-MiniCheck-7B (InternLM2.5-7B, CC BY-NC 4.0),
+P(Yes) with the MiniCheck package's prompt, vLLM TP4, eager (vLLM 0.28's InternLM2 fails CUDA graph capture).
+The cut-off is the one with the best balanced accuracy on pos/neg.
+
+| judge | far AUC | pos/neg AUC | cut | Astra units accepted | random rejected | far valid accepted | far wrong rejected |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| MiniCheck, claim | 0.815 | 0.901 | 0.12 | 0.81 | 0.84 | 0.74 | 0.80 |
+| **MiniCheck, bare** | **0.889** | **0.942** | 0.10 | 0.93 | 0.83 | 0.85 | 0.67 |
+| NLI joint, bare | 0.795 | 0.883 | 0.05 | 0.82 | 0.84 | 0.64 | 0.67 |
+| NLI max, bare | 0.832 | 0.843 | 0.06 | 0.73 | 0.85 | 0.67 | 0.80 |
+
+- **Claim wording matters more than the judge:** naming the entity ("For the model \"mod_group\": …") asks the judge
+  to verify ids and long analysis names no sentence states; the bare form adds +0.04 to +0.08 AUC for both judges.
+- **MiniCheck beats NLI** on every column but one. Both are badly calibrated (the cut-offs are 0.05–0.12, not 0.5).
+- **z vs t:** both Z-statistic units cited for family `t` (items 4, 44) are rejected by every judge (MiniCheck ≤ 0.03).
+- **Accepted although wrong** (MiniCheck bare): 5, 15, 16, 29, 30. **Partly** items are all rejected.
+- **Speed:** MiniCheck 21 claims/s on beast (660 in 35 s): full val (≈145k slots) ≈ 2 h.

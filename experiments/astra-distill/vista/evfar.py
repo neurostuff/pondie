@@ -25,7 +25,7 @@ for s in sids:
     g, p = collections.defaultdict(set), collections.defaultdict(set)
     for k, i in E.pairs(ev): g[k].add(i)
     for k, i in E.pairs(preds[s]): p[k].add(i)
-    for k in g.keys() & p.keys():
+    for k in sorted(g.keys() & p.keys()):
         far = [i for i in p[k] - g[k] if min(abs(i - j) for j in g[k]) > 10]
         if far: pool.append((s, k, sorted(far), sorted(g[k]), sorted(p[k] & g[k]), text, U, comp))
     if len(pool) > 40 * N:  # enough candidates; papers come in shuffled order
