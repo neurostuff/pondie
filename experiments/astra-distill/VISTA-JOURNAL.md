@@ -847,3 +847,19 @@ the bare claim.
 - **Reading:** to check evidence, judge each cited unit alone, or with a short window. Picking sentences from a
   tagged full paper is precise but abstains on a quarter of the slots, and with only about 2 candidates per slot
   this test is the easy case.
+
+### 2026-10-30: ns extraction, second set (s085–s103)
+
+- **Input:** ns-pond's production sync at main 76ae0fc (#177, #178), manifest
+  `staging/sync-parse-20261030/vista-ready.tsv`: 9,367 on-Neurostore articles with a parse of ≥ 1 analysis.
+  - 8,827 are new.
+  - 499 are 85-shard-run articles whose parse #178 changes (`--refresh sync`).
+  - 41 are run articles whose PDF text #177's refresh rewrote. 11 more of those now have 0 analyses, so their
+    earlier records are stale and should be dropped when collecting.
+- **Build:** `bodies_ns.py` gave 9,367 bodies and 0 errors (beast `vista-out/ns/run-20261030/`). `vista/shard_ns.py`
+  (which rebuilds the 10-28 shards byte for byte) made 19 shards, s085–s103, of 491–492 papers, about 7.71M input
+  tokens each. 22 papers are over 46k input tokens and left out, as before.
+- **Submit:** configs `ns-27b-e-s085…s103` were copied from s084, with `max_len` 65,536. They were submitted at once
+  by `submit_waves.sh ns-27b-e 85 103` on login1 (jobs 1110622–1110640). When submitted, they were 390th–408th of
+  523 pending gh jobs. The SU balance was 405.
+- **When collecting:** a record of s085–s103 replaces the 10-28 record of the same paper (the 499 + 41).
