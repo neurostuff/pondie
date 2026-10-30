@@ -863,3 +863,4 @@ the bare claim.
   by `submit_waves.sh ns-27b-e 85 103` on login1 (jobs 1110622–1110640). When submitted, they were 390th–408th of
   523 pending gh jobs. The SU balance was 405.
 - **When collecting:** a record of s085–s103 replaces the 10-28 record of the same paper (the 499 + 41).
+- **Late addition:** ns-pond added one article (texfjxwxs4n7 / MfTELT9LvHGq, a refreshed PDF, 19,150 tokens) to the manifest after its links rerun; the earlier manifest is `vista-ready-v1.tsv`. It was appended to s103 while s103 was still pending: 493 papers, 9,346 in all.
