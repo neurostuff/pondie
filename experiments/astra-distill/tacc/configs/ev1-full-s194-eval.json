@@ -1,0 +1,1 @@
+{"run": "ev1-full-s194", "model": "nu", "adapter": "/work/07723/jdk3232/vista/astra-distill/runs/ev1-full/adapter-25", "workers": 24, "guided": false, "tp": 1, "bodies": "/work/07723/jdk3232/vista/astra-distill/data/ev1/val.bodies.jsonl"}

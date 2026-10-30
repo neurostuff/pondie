@@ -700,10 +700,42 @@ shuffle); on Vista `data/v5/train.txt`.
 
 **Run.** As ev1-1k and r2-4b-full: LoRA r64, alpha 128, lr 2e-4 cosine, 16 papers per step, one epoch, 774 steps.
 At ev1-1k's 6.6k tok/s, about 10.7 h. Config `configs/ev1-full.json`.
-- Train: 1106673 (gh, 13:00, soft stop) → 1106675 (gh, 3:00, afterany, resumes or exits if DONE).
-- Eval: 1106676 (afterok:1106675), JSON mode, full val 481 (`configs/ev1-full-eval.json`).
+- Train: first submitted as one 13 h chunk (1106673, gh); it had not started after ~13 h in the queue, so it was
+  replaced on 2026-10-29 by six 3 h chunks, 1108361–1108366 (gh, afterany). Each soft-stops 15 min before its limit
+  and the next resumes from `resume.pt`; chunks after DONE exit at once.
+- Eval: 1108367 (afterok:1108366), JSON mode, full val 481 (`configs/ev1-full-eval.json`).
 - Baseline on the same papers: 1106674 (gh-dev) runs ev1-1k on the other 321 val papers, resuming from its 160
   val-sub160 predictions (`configs/ev1-1k-fullval-eval.json`, `runs/ev1-1k/val-pred-full.jsonl`).
+- Chunk 1 (2026-10-30, 08:21–11:06): 12,454 of 12,454 sids found, 12,370 kept, 774 steps; 40–60 s per step, peak
+  35.5 GiB; loss per token 0.33 → 0.06 by step 214, where it soft-stopped. Checkpoint `adapter-25` at step 194.
+
+**Baseline** (ev1-1k, full val 481; `vista-out/ev1/runs/ev1-1k/score-full.json`): F1 **0.727** [0.717, 0.735],
+precision 0.726, recall 0.728, slot exact 0.584, any overlap 0.878.
+
+**Result at 25%** (step 194 of 774, about 3.1k papers seen, lr still near its peak; run `ev1-full-s194`). Eval on
+LS6 gpu-a100-dev, one A100 (3542844, `configs/ev1-full-s194-eval.json`): 481 papers in 51 min of generation, 1.66M
+output tokens (ev1-1k: 1.05M). Scored on beast as the baseline (`vista-out/ev1/runs/ev1-full-s194/score.json`);
+paired paper bootstrap against ev1-1k, 2,000 draws (`compare-vs-ev1-1k.json`):
+
+| metric | ev1-1k | ev1-full step 194 | difference [95% CI] |
+|---|---:|---:|---|
+| precision | 0.726 | 0.763 | +0.037 [+0.024, +0.049] |
+| recall | 0.728 | 0.798 | +0.071 [+0.060, +0.080] |
+| F1 | 0.727 | **0.780** | +0.053 [+0.043, +0.062] |
+| slot exact | 0.584 | 0.641 | +0.056 [+0.047, +0.065] |
+| slot any overlap | 0.878 | 0.913 | +0.035 [+0.024, +0.044] |
+
+F1 by collection, ev1-1k → step 194 (gold pairs): analyses 0.637 → 0.698 (67,808), model_estimations 0.741 → 0.794
+(49,285), groups 0.841 → 0.872 (37,248), regions 0.716 → 0.771 (15,314), tasks 0.753 → 0.817 (14,888),
+coordinate_sets 0.660 → 0.721 (14,749), design 0.672 → 0.756 (8,630), acquisitions 0.860 → 0.934 (7,366). Only
+hypothesis moved down (0.989 → 0.981, 733 pairs).
+
+- **Already above ev1-1k on every main metric**, with recall gaining most; every large collection improves by 0.03–0.08.
+- **Two papers hit the 20k-token limit** and score 0: 5WpF756kadRz (trailing newlines, JSON mode) and 3oLNHZubGasV
+  (a repeated `{"level":[86]}` item). ev1-1k had one (GFpBFSeX83Wh, counting units upward).
+- **Hardware noise is small:** beast (2× RTX 3070, vLLM TP2, `tacc/eval_client.py`, same request body) finished 161
+  papers before LS6 finished all 481. On those 161, beast scores F1 0.749 and LS6 0.753, although only 17 of the 161
+  predictions are identical.
 
 **Scoring** (beast): `evidence.py score` now reads eval_record's `val-pred.jsonl` directly, and `evidence.py compare
 A B` gives B − A with a paired paper bootstrap. Check: ev1-1k re-scored from its jsonl equals its `score.json`
