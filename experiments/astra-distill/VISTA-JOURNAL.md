@@ -864,3 +864,30 @@ the bare claim.
   523 pending gh jobs. The SU balance was 405.
 - **When collecting:** a record of s085–s103 replaces the 10-28 record of the same paper (the 499 + 41).
 - **Late addition:** ns-pond added one article (texfjxwxs4n7 / MfTELT9LvHGq, a refreshed PDF, 19,150 tokens) to the manifest after its links rerun; the earlier manifest is `vista-ready-v1.tsv`. It was appended to s103 while s103 was still pending: 493 papers, 9,346 in all.
+
+### 2026-10-31: ns extraction collected (s000–s103) and checked
+
+- **Run:** all 19 shards of the second set finished (jobs 1110622–1110640). s100 failed at vLLM start on a stale NFS
+  file handle (flashinfer's autotune cache) and was resubmitted (1111029). Across s085–s103: 9,346 papers, 45 cut at
+  the length cap, 0 HTTP errors.
+- **Collect** (`vista/collect_ns.py`, beast `ns-collect/set-20261031/`): the predictions of all 104 shards. A paper
+  in more than one shard keeps the latest: 536 records of s085–s103 replace 10-28 ones (495 of the 499 #178 papers,
+  since 4 are now over 46k tokens, and the 41 refreshed PDFs). The 11 refreshed PDFs whose parse has no analyses are
+  dropped. **51,123 papers**: 50,345 records valid against the extraction schema, 634 invalid, and 144 with no
+  prediction (length cap). 250,326 analyses.
+  - Invalid kinds: an object for an analysis or acquisition, `details` and `sample_source` shapes, an invented key.
+- **pondie checks** (`vista/consistency.py` in 16 chunks; parses loaded with ns-pond's study_schema 488e1ee, since
+  pondie's pin refuses the parse's newer header and licence fields): records with an error 8,193 (16%) before the
+  fixes, 7,210 (14%) after; s000 had 19% before. The kinds match val and s000: term names repeated in a stage chain,
+  effect.kind vs cells, level sign vs direction. After the fixes, 4,313 records carry the known "whole-brain analysis
+  given regions" warning that `name_links` introduces. The repairs crash on 6 records.
+- **Parse keys:** 72 records cite at least one key that is not in their prompt (61 from 10-28, 11 from 10-30). These
+  are model miscopies: a hex digit added or dropped.
+- **10-28 records are stale for 2,811 papers.** The 10-28 prompts were rebuilt today with the same code (`bodies_ns.py`
+  unchanged). 38,966 match byte for byte. **2,804 differ**: 2,495 of those parses have different keys (663 share
+  none, for example table 4 of 23c9HJXjvrwj, once one analysis per cluster and now one analysis), and 309 have the
+  same keys but a different text or caption. Another 7 papers' articles were re-synced to a different base study late
+  on 10-30, so their old sid has no parse. The changes come from ns-pond's syncs after 10-28, beyond what #178's list
+  covered. All 9,346 prompts of the 10-30 set match today's byte for byte.
+  - Lists: `set-20261031/prompt_changed_since_run.tsv`, `parse_changed_since_run.tsv`, `keys_not_in_parse.tsv`.
+- **Not done:** re-running the 2,811 papers would take about 6 shards (about 4 SU).
