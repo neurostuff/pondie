@@ -891,3 +891,30 @@ the bare claim.
   covered. All 9,346 prompts of the 10-30 set match today's byte for byte.
   - Lists: `set-20261031/prompt_changed_since_run.tsv`, `parse_changed_since_run.tsv`, `keys_not_in_parse.tsv`.
 - **Not done:** re-running the 2,811 papers would take about 6 shards (about 4 SU).
+
+### 2026-10-31: ns extraction, third set (s104–s136): papers new to Neurostore, and the stale ones
+
+- **Why:** ns-pond's production upload finished with 65,791 articles uploaded "ok", and 50,510 of them have a record.
+  The gap (read-only count against the catalog):
+
+  | articles | reason |
+  |---:|---|
+  | 13,516 | new to Neurostore (`data-new/<article_id>`), synced late on 10-30, after both runs picked their inputs |
+  | 1,078 | the parse has 0 analyses |
+  | 296 | on Neurostore with ≥ 1 analysis, not picked (gained analyses in the late sync) |
+  | 237 | September uploads (migrated) with no parse |
+  | 130 | over 46k tokens |
+  | 24 | no parse (sync failed or skipped) |
+
+- **Input** (beast `vista-out/ns/run-20261031/articles.tsv`, the paper dir is the sync's `path`):
+  - 13,516 new and 294 picked late. Two of the 296 dropped: their base study already has a current record from
+    another article of the same study.
+  - 2,803 stale: 10-28 papers whose prompt differs today. Of the 2,804, one shares its new dir with another row.
+  - 6 moved: articles re-synced to another base study. When collecting, drop the old sids in
+    `moved-old-sids.tsv` (7).
+- **Build:** `bodies_ns.py` made 16,571 bodies (48 papers have no text). `shard_ns.py --first 104` made 33 shards,
+  s104–s136, of 499–500 papers and 7.92M input tokens each: 16,475 papers. 96 are over 46k tokens and left out.
+- **Submit:** configs copied from s085. `submit_waves.sh ns-27b-e 104 136 30` on login1, with at most 30 queued
+  because 6 ev1 jobs share the gh limit of 40. s104–s133 were submitted at 08:43 CDT (jobs 1112034–1112063); s134–s136
+  follow as slots free. The balance was 389 SU, and this set is expected to use about 20.
+- **Collecting:** `collect_ns.py` now looks for a paper under `data/` and then `data-new/` (`--data`).

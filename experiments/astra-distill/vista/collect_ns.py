@@ -1,6 +1,6 @@
 """Collect the ns extraction's predictions into one set of records, and check them.
 
-    python collect_ns.py OUT --runs RUNS --shards DIR [DIR ...] [--drop TSV] [--data DIR] [--workers 12]
+    python collect_ns.py OUT --runs RUNS --shards DIR [DIR ...] [--drop TSV] [--data DIR ...] [--workers 12]
 
 RUNS holds ns-27b-e-sNNN/pred.jsonl; each shards DIR holds sNNN.bodies.jsonl (`shard_ns.py`). A paper run in more
 than one shard keeps the prediction of the latest shard (a later set re-runs papers whose parse or text changed).
@@ -46,7 +46,8 @@ def heads(shard_dirs):
 
 def check(job):
     """one paper: restore, validate, compare parse keys, write the record and the corpus links -> manifest row"""
-    sid, article_id, shard, source, pred, out, data = job
+    sid, article_id, shard, source, pred, out, roots = job
+    data = next((r for r in roots if (Path(r) / sid).is_dir()), roots[0])
     from jsonschema import Draft202012Validator
     ix = T.index(str(T.Paths().schema))
     row = dict(sid=sid, article_id=article_id, shard=shard, text_source=source, status="", n_analyses="",
@@ -89,7 +90,8 @@ def main():
     ap.add_argument("--runs", required=True)
     ap.add_argument("--shards", nargs="+", required=True)
     ap.add_argument("--drop", nargs="*", default=[])
-    ap.add_argument("--data", default=str(T.DEFAULTS["text"]))
+    ap.add_argument("--data", nargs="+", default=[str(T.DEFAULTS["text"]), str(T.DEFAULTS["text"]) + "-new"],
+                    help="ns-pond paper roots, in order; a paper is <root>/<sid> in the first that has it")
     ap.add_argument("--workers", type=int, default=12)
     a = ap.parse_args()
     out = Path(a.out)
