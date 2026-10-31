@@ -787,3 +787,134 @@ The cut-off is the one with the best balanced accuracy on pos/neg.
 - **Speed:** MiniCheck 21 claims/s on beast (660 in 35 s): full val (≈145k slots) ≈ 2 h.
 - **NuExtract3 zero-shot** (structured mode, `{"claim_supported": ["yes", "no"]}`, P(yes) at the answer token):
   below MiniCheck on both AUCs, about level with NLI; it rejects wrong units well but accepts fewer valid ones.
+
+**Decision models** (`vista/evjudge_decision.py`, Vista gh-dev, one GH200 each, `tacc/decision.sbatch`): each row
+asks two noul questions over its joined units, one per claim form (`Does the text state the following claim, all of
+it? Claim: …`), and P(yes) is the score. vllm-sr/d3 (Apache-2.0, its remote code's `system_one`), baselabs/elephant-1
+(MIT, OneJev qev with serve.patch), and bespokelabs/Bespoke-Nimble-9B-v3 (a LoRA on Qwen3.5-9B, on the engine in its
+Decision Index repo `bespokelabs/bespoke-nimble-9b-v3-decision-index` `code/`: the nimble GitHub repo's scorer
+checks a newer contract than v3 ships).
+
+| judge | far AUC | pos/neg AUC | cut | Astra units accepted | random rejected | far valid accepted | far wrong rejected |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **d3, bare** | **0.950** | **0.967** | 0.08 | 0.91 | 0.90 | 0.85 | 0.87 |
+| d3, claim | 0.853 | 0.955 | 0.14 | 0.85 | 0.92 | 0.56 | 0.87 |
+| **elephant-1, bare** | 0.933 | 0.947 | 0.08 | 0.88 | 0.89 | 0.82 | **1.00** |
+| elephant-1, claim | 0.834 | 0.902 | 0.08 | 0.81 | 0.88 | 0.69 | 0.80 |
+| Nimble-9B-v3, bare | 0.875 | 0.789 | 0.78 | 0.64 | 0.83 | 0.62 | 0.93 |
+| Nimble-9B-v3, claim | 0.874 | 0.814 | 0.59 | 0.70 | 0.83 | 0.59 | 0.93 |
+
+- **d3 and elephant-1 beat MiniCheck** on both AUCs with the bare claim (+0.04 to +0.06 far, +0.005 to +0.025
+  pos/neg); elephant-1 rejects all 15 wrong far units at the pos/neg cut-off. Both are as badly calibrated as
+  MiniCheck (cut-offs 0.08).
+- **Nimble-9B-v3 is the weakest LLM judge** on pos/neg (0.79–0.81, below NLI joint) and does not gain from the bare
+  form; its scores sit near the middle (cut-offs 0.59–0.78).
+- **z vs t** (items 4, 44): rejected by all three (≤ 0.05 bare).
+- **Speed** (660 rows, 2 questions each, GH200): d3 119 s, elephant-1 125 s, Nimble 201 s (its conv kernels fall
+  back to PyTorch). d3 at about 11 claims/s: full val (≈145k slots) ≈ 3.7 h on one GPU.
+- **Licences:** d3 and elephant-1 are usable for the dataset; MiniCheck is non-commercial.
+
+### 2026-10-29: d3 with more of the paper as context (Vista gh-dev, one GH200, job 1109312, 17 min)
+
+**Question.** Does d3 judge a unit better when it sees the unit's surroundings, or the whole paper? Can it pick the
+supporting sentence from tagged candidates in the full text?
+
+**Set** (`vista/evjudge_ctx.py`, beast `vista-out/ev1/judge/ctx.jsonl`): the pilot rows above, rebuilt with their
+unit numbers (`evjudge_build.py` now records `units`; the 660 rows are otherwise identical), in two forms. All use
+the bare claim.
+- **window** (660 questions, yes/no): the judged units marked `>>> <<<` with 3 units either side (a table row also
+  gets its header lines). `Read with its context, does the text marked >>> <<< state the following claim, all of it?`
+- **full paper** (360 questions, one choice per slot): the whole text (median 43.5k characters, max 89k) with the
+  candidate units tagged `[S1] … [Sk]`. For pos/neg these are Astra's units and the random ones, shuffled (median 2
+  per slot). For far they are the model's far units and Astra's. The options are the tags, each described by its
+  unit's text, and `none`. Each candidate's score is its option's probability.
+
+| d3 context | far AUC | pos/neg AUC | cut | Astra units accepted | random rejected | far valid accepted | far wrong rejected |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| unit alone (above) | **0.950** | **0.967** | 0.08 | 0.91 | 0.90 | 0.85 | 0.87 |
+| window, ±3 units | 0.947 | 0.957 | 0.23 | 0.89 | 0.92 | 0.85 | 0.93 |
+| full paper, choice | 0.776 | 0.920 | 0.02 | 0.84 | 0.88 | 0.87 | 0.37 |
+
+(Full-paper rows are scored per candidate: 52 far units state the value, 30 do not.)
+
+- **The window does not help overall:** it is level with the unit alone (−0.003 far, −0.010 pos/neg). It rejects
+  one more wrong far unit, and it raises the "partly" items. Item 45 ("one participant excluded" for n = 31) goes
+  from 0.00 to 0.44.
+- **The full paper is worse,** and about 25× slower per question (2.3 s vs 0.09 s). As a choice, d3 rarely picks a
+  random unit: the top option is Astra's in 227 of 300 pos/neg slots and random in 1. But it answers `none` in 72
+  slots, although Astra's unit was tagged. Among far slots it does not reject wrong far units (0.37 at the cut).
+  The probabilities are split across tags and `none`, so the cut-off is 0.02.
+- **Reading:** to check evidence, judge each cited unit alone, or with a short window. Picking sentences from a
+  tagged full paper is precise but abstains on a quarter of the slots, and with only about 2 candidates per slot
+  this test is the easy case.
+
+### 2026-10-30: ns extraction, second set (s085–s103)
+
+- **Input:** ns-pond's production sync at main 76ae0fc (#177, #178), manifest
+  `staging/sync-parse-20261030/vista-ready.tsv`: 9,367 on-Neurostore articles with a parse of ≥ 1 analysis.
+  - 8,827 are new.
+  - 499 are 85-shard-run articles whose parse #178 changes (`--refresh sync`).
+  - 41 are run articles whose PDF text #177's refresh rewrote. 11 more of those now have 0 analyses, so their
+    earlier records are stale and should be dropped when collecting.
+- **Build:** `bodies_ns.py` gave 9,367 bodies and 0 errors (beast `vista-out/ns/run-20261030/`). `vista/shard_ns.py`
+  (which rebuilds the 10-28 shards byte for byte) made 19 shards, s085–s103, of 491–492 papers, about 7.71M input
+  tokens each. 22 papers are over 46k input tokens and left out, as before.
+- **Submit:** configs `ns-27b-e-s085…s103` were copied from s084, with `max_len` 65,536. They were submitted at once
+  by `submit_waves.sh ns-27b-e 85 103` on login1 (jobs 1110622–1110640). When submitted, they were 390th–408th of
+  523 pending gh jobs. The SU balance was 405.
+- **When collecting:** a record of s085–s103 replaces the 10-28 record of the same paper (the 499 + 41).
+- **Late addition:** ns-pond added one article (texfjxwxs4n7 / MfTELT9LvHGq, a refreshed PDF, 19,150 tokens) to the manifest after its links rerun; the earlier manifest is `vista-ready-v1.tsv`. It was appended to s103 while s103 was still pending: 493 papers, 9,346 in all.
+
+### 2026-10-31: ns extraction collected (s000–s103) and checked
+
+- **Run:** all 19 shards of the second set finished (jobs 1110622–1110640). s100 failed at vLLM start on a stale NFS
+  file handle (flashinfer's autotune cache) and was resubmitted (1111029). Across s085–s103: 9,346 papers, 45 cut at
+  the length cap, 0 HTTP errors.
+- **Collect** (`vista/collect_ns.py`, beast `ns-collect/set-20261031/`): the predictions of all 104 shards. A paper
+  in more than one shard keeps the latest: 536 records of s085–s103 replace 10-28 ones (495 of the 499 #178 papers,
+  since 4 are now over 46k tokens, and the 41 refreshed PDFs). The 11 refreshed PDFs whose parse has no analyses are
+  dropped. **51,123 papers**: 50,345 records valid against the extraction schema, 634 invalid, and 144 with no
+  prediction (length cap). 250,326 analyses.
+  - Invalid kinds: an object for an analysis or acquisition, `details` and `sample_source` shapes, an invented key.
+- **pondie checks** (`vista/consistency.py` in 16 chunks; parses loaded with ns-pond's study_schema 488e1ee, since
+  pondie's pin refuses the parse's newer header and licence fields): records with an error 8,193 (16%) before the
+  fixes, 7,210 (14%) after; s000 had 19% before. The kinds match val and s000: term names repeated in a stage chain,
+  effect.kind vs cells, level sign vs direction. After the fixes, 4,313 records carry the known "whole-brain analysis
+  given regions" warning that `name_links` introduces. The repairs crash on 6 records.
+- **Parse keys:** 72 records cite at least one key that is not in their prompt (61 from 10-28, 11 from 10-30). These
+  are model miscopies: a hex digit added or dropped.
+- **10-28 records are stale for 2,811 papers.** The 10-28 prompts were rebuilt today with the same code (`bodies_ns.py`
+  unchanged). 38,966 match byte for byte. **2,804 differ**: 2,495 of those parses have different keys (663 share
+  none, for example table 4 of 23c9HJXjvrwj, once one analysis per cluster and now one analysis), and 309 have the
+  same keys but a different text or caption. Another 7 papers' articles were re-synced to a different base study late
+  on 10-30, so their old sid has no parse. The changes come from ns-pond's syncs after 10-28, beyond what #178's list
+  covered. All 9,346 prompts of the 10-30 set match today's byte for byte.
+  - Lists: `set-20261031/prompt_changed_since_run.tsv`, `parse_changed_since_run.tsv`, `keys_not_in_parse.tsv`.
+- **Not done:** re-running the 2,811 papers would take about 6 shards (about 4 SU).
+
+### 2026-10-31: ns extraction, third set (s104–s136): papers new to Neurostore, and the stale ones
+
+- **Why:** ns-pond's production upload finished with 65,791 articles uploaded "ok", and 50,510 of them have a record.
+  The gap (read-only count against the catalog):
+
+  | articles | reason |
+  |---:|---|
+  | 13,516 | new to Neurostore (`data-new/<article_id>`), synced late on 10-30, after both runs picked their inputs |
+  | 1,078 | the parse has 0 analyses |
+  | 296 | on Neurostore with ≥ 1 analysis, not picked (gained analyses in the late sync) |
+  | 237 | September uploads (migrated) with no parse |
+  | 130 | over 46k tokens |
+  | 24 | no parse (sync failed or skipped) |
+
+- **Input** (beast `vista-out/ns/run-20261031/articles.tsv`, the paper dir is the sync's `path`):
+  - 13,516 new and 294 picked late. Two of the 296 dropped: their base study already has a current record from
+    another article of the same study.
+  - 2,803 stale: 10-28 papers whose prompt differs today. Of the 2,804, one shares its new dir with another row.
+  - 6 moved: articles re-synced to another base study. When collecting, drop the old sids in
+    `moved-old-sids.tsv` (7).
+- **Build:** `bodies_ns.py` made 16,571 bodies (48 papers have no text). `shard_ns.py --first 104` made 33 shards,
+  s104–s136, of 499–500 papers and 7.92M input tokens each: 16,475 papers. 96 are over 46k tokens and left out.
+- **Submit:** configs copied from s085. `submit_waves.sh ns-27b-e 104 136 30` on login1, with at most 30 queued
+  because 6 ev1 jobs share the gh limit of 40. s104–s133 were submitted at 08:43 CDT (jobs 1112034–1112063); s134–s136
+  follow as slots free. The balance was 389 SU, and this set is expected to use about 20.
+- **Collecting:** `collect_ns.py` now looks for a paper under `data/` and then `data-new/` (`--data`).
