@@ -703,7 +703,8 @@ At ev1-1k's 6.6k tok/s, about 10.7 h. Config `configs/ev1-full.json`.
 - Train: first submitted as one 13 h chunk (1106673, gh); it had not started after ~13 h in the queue, so it was
   replaced on 2026-10-29 by six 3 h chunks, 1108361–1108366 (gh, afterany). Each soft-stops 15 min before its limit
   and the next resumes from `resume.pt`; chunks after DONE exit at once.
-- Eval: 1108367 (afterok:1108366), JSON mode, full val 481 (`configs/ev1-full-eval.json`).
+- Eval: planned as 1108367 on gh (afterok:1108366), JSON mode, full val 481 (`configs/ev1-full-eval.json`); run as
+  1114721 on gh-dev once training was done (see the final result).
 - Baseline on the same papers: 1106674 (gh-dev) runs ev1-1k on the other 321 val papers, resuming from its 160
   val-sub160 predictions (`configs/ev1-1k-fullval-eval.json`, `runs/ev1-1k/val-pred-full.jsonl`).
 - Chunk 1 (2026-10-30, 08:21–11:06): 12,454 of 12,454 sids found, 12,370 kept, 774 steps; 40–60 s per step, peak
@@ -765,6 +766,40 @@ gold pairs is at or above both earlier models.
 - **A new false-positive slot:** step 580 sometimes gives evidence for a top-level `url`, which has no gold; it shows
   as a `url` collection with 0 gold pairs and is counted in precision.
 - **Vista and LS6 agree:** LS6's run of the same checkpoint scores F1 0.829, a difference of 0.000 [−0.001, +0.001].
+
+**Final result** (2026-11-01). Chunk 4 resumed at step 647 and ended `DONE 774 steps, 12370 papers, dropped 84` at
+14:22 (1.68 h, peak 35.4 GiB). Chunks 5 and 6 and the gh eval 1108367 were cancelled unrun, since the gh queue had
+held each chunk for 6–25 h. The same `configs/ev1-full-eval.json` ran on gh-dev instead (1114721): 481 papers in 13 min
+of generation, all stopped normally, no invalid JSON, 1.57M output tokens. Scored on beast as before
+(`vista-out/ev1/runs/ev1-full/`), paired paper bootstrap, 2,000 draws:
+
+| metric | ev1-1k | step 194 | step 580 | **final** | final − ev1-1k | final − 580 |
+|---|---:|---:|---:|---:|---|---|
+| precision | 0.726 | 0.763 | 0.835 | **0.836** | +0.110 [+0.102, +0.119] | +0.001 [−0.002, +0.004] |
+| recall | 0.728 | 0.798 | 0.824 | **0.829** | +0.101 [+0.095, +0.108] | +0.005 [+0.002, +0.007] |
+| F1 | 0.727 | 0.780 | 0.829 | **0.832** [0.826, 0.838] | +0.106 [+0.100, +0.112] | +0.003 [+0.001, +0.005] |
+| slot exact | 0.584 | 0.641 | 0.708 | **0.711** | +0.127 [+0.121, +0.133] | +0.003 [+0.000, +0.006] |
+| slot any overlap | 0.878 | 0.913 | 0.935 | **0.938** | +0.061 [+0.054, +0.068] | +0.003 [+0.001, +0.006] |
+
+On val-sub160 the final model scores F1 0.831 (ev1-1k 0.722).
+
+F1 by collection, ev1-1k → final (gold pairs): analyses 0.637 → 0.771 (67,808), model_estimations 0.741 → 0.838
+(49,285), groups 0.841 → 0.904 (37,248), regions 0.716 → 0.818 (15,314), tasks 0.753 → 0.855 (14,888),
+coordinate_sets 0.660 → 0.797 (14,749), design 0.672 → 0.807 (8,630), acquisitions 0.860 → 0.948 (7,366),
+inference_settings 0.743 → 0.844 (6,769), preprocessings 0.907 → 0.950 (6,643), measures 0.671 → 0.778 (4,888),
+assessments 0.834 → 0.899 (3,712), description 0.667 → 0.785 (2,795), result_reporting 0.785 → 0.887 (648),
+external_datasets 0.879 → 0.945 (321), devices 0.963 → 0.990 (976), hypothesis 0.989 → 0.993 (733).
+
+- **The full split adds +0.106 F1 over 1k papers** (0.727 → 0.832), with precision and recall up about equally, and
+  exact-slot agreement up 0.13 to 0.71.
+- **The gain is mostly in by 75%:** the last 194 steps add only +0.003 F1, small but outside its interval. The
+  learning curve (0.727 at 1k papers, 0.780 at 3.1k with high lr, 0.829 at 9.3k, 0.832 at 12.4k) has flattened, so
+  more of the same data is unlikely to help much.
+- **Every collection improves on ev1-1k.** Analyses (0.77) and coordinate_sets (0.80), mostly table rows, are still
+  the weakest, and they hold 40% of the gold pairs. They are where the remaining error is.
+- **Clean outputs:** no token-limit runs and no invalid JSON on any of the 481 papers. Step 580's spurious `url`
+  evidence is gone.
+- **What this measures:** evidence for Astra's own record (the record is given in the input), not for a model's record.
 
 **Scoring** (beast): `evidence.py score` now reads eval_record's `val-pred.jsonl` directly, and `evidence.py compare
 A B` gives B − A with a paired paper bootstrap. Check: ev1-1k re-scored from its jsonl equals its `score.json`
