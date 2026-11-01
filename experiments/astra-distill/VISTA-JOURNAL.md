@@ -737,6 +737,35 @@ hypothesis moved down (0.989 → 0.981, 733 pairs).
   papers before LS6 finished all 481. On those 161, beast scores F1 0.749 and LS6 0.753, although only 17 of the 161
   predictions are identical.
 
+**Result at 75%** (step 580 of 774, about 9.3k papers seen; run `ev1-full-s580`, `configs/ev1-full-s580-eval.json`).
+Chunks 2 and 3 resumed cleanly (steps 214 → 431 → 647). The same eval ran on Vista gh-dev (1114496, 13 min of
+generation on a GH200) and LS6 gpu-a100-dev (3545702, 47 min); both finished at 13:43 on 2026-11-01. All 481 papers
+stopped normally, with none at the token limit and no invalid JSON; 1.57M output tokens. Vista's run is the result
+(same hardware as the baseline); scored on beast as before (`vista-out/ev1/runs/ev1-full-s580/`):
+
+| metric | ev1-1k | step 194 | step 580 | 580 − ev1-1k | 580 − 194 |
+|---|---:|---:|---:|---|---|
+| precision | 0.726 | 0.763 | 0.835 | +0.109 [+0.101, +0.117] | +0.072 [+0.063, +0.082] |
+| recall | 0.728 | 0.798 | 0.824 | +0.097 [+0.090, +0.103] | +0.026 [+0.018, +0.036] |
+| F1 | 0.727 | 0.780 | **0.829** [0.823, 0.836] | +0.103 [+0.097, +0.108] | +0.049 [+0.042, +0.058] |
+| slot exact | 0.584 | 0.641 | 0.708 | +0.124 [+0.118, +0.130] | +0.067 [+0.061, +0.076] |
+| slot any overlap | 0.878 | 0.913 | 0.935 | +0.058 [+0.051, +0.065] | +0.023 [+0.015, +0.033] |
+
+F1 by collection, ev1-1k → 194 → 580 (gold pairs): analyses 0.637 → 0.698 → 0.767 (67,808), model_estimations
+0.741 → 0.794 → 0.835 (49,285), groups 0.841 → 0.872 → 0.903 (37,248), regions 0.716 → 0.771 → 0.810 (15,314), tasks
+0.753 → 0.817 → 0.854 (14,888), coordinate_sets 0.660 → 0.721 → 0.797 (14,749), design 0.672 → 0.756 → 0.797
+(8,630), measures 0.671 → 0.725 → 0.783 (4,888), description 0.667 → 0.716 → 0.776 (2,795). Every collection with
+gold pairs is at or above both earlier models.
+
+- **Still improving at 75%:** +0.049 F1 over step 194, mostly precision (+0.072). As the learning rate decays, the
+  model adds fewer wrong units, and exact-slot agreement rises to 0.71.
+- **The table-heavy collections gain most:** analyses +0.13 and coordinate_sets +0.14 over ev1-1k, the two weakest
+  in H39.
+- **No runaway outputs:** step 194's two token-limit papers (5WpF756kadRz, 3oLNHZubGasV) now stop normally.
+- **A new false-positive slot:** step 580 sometimes gives evidence for a top-level `url`, which has no gold; it shows
+  as a `url` collection with 0 gold pairs and is counted in precision.
+- **Vista and LS6 agree:** LS6's run of the same checkpoint scores F1 0.829, a difference of 0.000 [−0.001, +0.001].
+
 **Scoring** (beast): `evidence.py score` now reads eval_record's `val-pred.jsonl` directly, and `evidence.py compare
 A B` gives B − A with a paired paper bootstrap. Check: ev1-1k re-scored from its jsonl equals its `score.json`
 exactly; compare of that file with itself gives 0 [0, 0].
