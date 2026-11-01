@@ -918,3 +918,19 @@ the bare claim.
   because 6 ev1 jobs share the gh limit of 40. s104–s133 were submitted at 08:43 CDT (jobs 1112034–1112063); s134–s136
   follow as slots free. The balance was 389 SU, and this set is expected to use about 20.
 - **Collecting:** `collect_ns.py` now looks for a paper under `data/` and then `data-new/` (`--data`).
+
+### 2026-11-01: ns extraction collected (s000–s136) and checked
+
+- **Run:** all 33 shards of the third set finished, the last (s136) at 21:53 CDT on 10-31; 31 min per shard on average.
+  Every shard has a prediction for each of its 16,475 papers. The balance went from 389 to 368 SU.
+- **Collect** (`vista/collect_ns.py`, beast `ns-collect/set-20261101/`): the predictions of all 137 shards, dropping
+  the 10-30 refreshed PDFs with no analyses and the 7 moved papers' old sids (18 dropped). 3,345 records come from a
+  later shard than an earlier copy: the 536 of 10-30, the 2,803 stale and the 6 moved. **64,782 papers**: 63,470 valid
+  against the extraction schema, 1,119 invalid, 193 with no prediction. 305,339 analyses. No parse is missing.
+  - The third set alone: 15,898 valid, 512 invalid (3.1%, against 1.2% before), 65 with no prediction (60 cut mid
+    string at the length cap). The invalid kinds are the same as before, led by an analysis without `measure` (100)
+    or `model_estimation` (73), plus 32 records with an invented top-level `tasks2`-style key.
+- **pondie checks** (`consistency.py` in 16 chunks, 14 min): records with an error 10,511 (16.3%) before the fixes,
+  9,238 (14.3%) after, the same rates as set-20261031. The repairs crash on 6 records.
+- **Parse keys:** 120 records cite a key that is not in their parse, down from 2,286, now that the stale records are
+  replaced; 54 of them are from the third set.
