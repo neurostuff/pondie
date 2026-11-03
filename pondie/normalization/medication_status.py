@@ -20,6 +20,7 @@ VALUES = (MEDICATED, FREE, NAIVE, MIXED, OTHER, UNKNOWN)
 
 #: Where the field lives. Named once; `report` and every caller read it from here.
 PATH = "groups.medication_status"
+VOCABULARY = "MedicationStatus"
 
 CONCEPTS = re.compile(
     r"medicat|drug|antipsychot|antidepress|psychotrop|psychoactiv|neurolept|lithium|"

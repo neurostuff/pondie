@@ -45,44 +45,58 @@ def _errors(record):
 
 
 def test_code_filled_slots_validate():
-    """`is_healthy`, the normalized demographics and `other_characteristics` were written
-    as extracted with `not_applicable` evidence (or `derived`, no evidence), which the
-    schema forbids: 354 of 565 errors on one 55-paper run."""
+    """`is_healthy` and `other_characteristics` were written as extracted with
+    `not_applicable` evidence (or `derived`, no evidence), which the schema forbids: 354 of
+    565 errors on one 55-paper run. The normalized demographics are sidecars now, and a
+    sidecar the validator does not know is the same fault in a new place."""
     record = {"local_id": "S1", "groups": [_group()]}
     normalization.apply_derived(record)
+    normalization.apply_normalized(record)
     group = record["groups"][0]
-    for slot in ("is_healthy", "age_unit_normalized", "other_characteristics"):
+    for slot in ("is_healthy", "other_characteristics"):
         assert group[slot]["value_source"] == "generated", slot
         assert group[slot]["evidence"] == {"status": "not_found"}, slot
-    assert group["sex_distribution"][0]["category_normalized"]["evidence"]["status"] == "not_found"
-    bad = [e for e in _errors(record) if "not_applicable" in e or "not declared" in e]
+    assert group["age_unit"]["normalized"][0]["value"] == "years"
+    assert group["sex_distribution"][0]["category"]["normalized"][0]["value"] == "FEMALE"
+    assert "age_unit_normalized" not in group
+    bad = [e for e in _errors(record)
+           if "not_applicable" in e or "not declared" in e or "normalized" in e]
     assert bad == []
 
 
 def test_the_prompt_does_not_ask_for_slots_code_fills():
     system = render.build_prompt("A paper.", "single", False, "").system
-    for slot in ("is_healthy", "age_unit_normalized", "category_normalized", "mirror_of",
-                 "other_characteristics", "study_type"):
+    for slot in ("is_healthy", "mirror_of", "other_characteristics", "study_type"):
         assert f"`{slot}`" not in system, slot
     lists = system.split("TOP LEVEL of the object and nowhere else:", 1)[1].split("\n", 1)[0]
     assert "language" not in lists and "study_type" not in lists
     assert "`acquisition_type`" in system, "a type designator is the model's to name"
 
 
+def test_the_reply_schema_offers_no_sidecar():
+    """`normalized` is the third pass's, written after the model's answer. The prompt's
+    schema prose describes it; the reply schema must not let a model write one."""
+    from pondie.extraction.prompt import reply_schema
+
+    for evidence in reply_schema.EVIDENCE_FORMATS:
+        shape_ = json.dumps(reply_schema.single(reader.load(schema.EXTRACTION), evidence))
+        assert '"normalized"' not in shape_, evidence
+
+
 def test_fill_does_not_ask_for_slots_code_fills():
     payload = {"groups": [{"local_id": "grp_a", "name": _v("A")}]}
     asked = {row["id"].rsplit(".", 1)[-1] for row in fill.unsettled(payload, reader.load(
         schema.EXTRACTION))}
-    assert "is_healthy" not in asked and "age_unit_normalized" not in asked
+    assert "is_healthy" not in asked and "normalized" not in asked
     assert "medical_condition" in asked
 
 
 def test_a_models_value_for_a_slot_code_fills_is_dropped():
     """The model's wrapper for a slot code fills survived as "must be a string, got dict"."""
-    group = {"local_id": "g", "is_healthy": _v(True), "age_unit_normalized": _v("years")}
+    group = {"local_id": "g", "is_healthy": _v(True), "other_characteristics": _v(["x"])}
     body = {"groups": [group]}
     dropped = shape.drop_code_filled(body, reader.load(schema.EXTRACTION))
-    assert "age_unit_normalized" not in group and "is_healthy" not in group
+    assert "other_characteristics" not in group and "is_healthy" not in group
     assert len(dropped) == 2
 
 
@@ -302,3 +316,21 @@ def test_a_type_designator_is_not_treated_as_code_filled():
     body = {"acquisitions": [{"local_id": "acq_t1", "acquisition_type": "MRI"}]}
     assert shape.drop_code_filled(body, reader.load(schema.EXTRACTION)) == []
 
+
+
+def test_a_malformed_sidecar_entry_is_reported():
+    """The validator read `normalized` as a declared key and never looked inside it, so a
+    misspelled status or a missing `mapping_tool` validated clean."""
+    group = _group()
+    group["age_unit"]["normalized"] = [
+        {"vocabulary": "AgeUnit", "status": "mapped", "value": "years",
+         "mapping_tool": "pondie.normalization.age_unit x"},
+        {"vocabulary": "AgeUnit", "status": "maped", "mapping_tool": "t", "item": -1,
+         "confidence": 1.5, "colour": "red", "qualifiers": [{"text": "visual"}]},
+        {"status": "mapped"},
+    ]
+    errors = [e for e in _errors({"local_id": "S1", "groups": [group]}) if "normalized" in e]
+    assert not [e for e in errors if "normalized[0]" in e]
+    for fault in ("'maped'", "item must be", "confidence must be", "'colour'", "list of strings",
+                  "'vocabulary' is missing", "'mapping_tool' is missing"):
+        assert any(fault in e for e in errors), fault

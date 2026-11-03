@@ -543,17 +543,36 @@ An analysis qualifies only when one cell resolves to an intervention arm and ano
 comparator arm. An analysis contrasting two groups, or two timepoints, is not a treatment
 contrast however much it mentions a drug.
 
-## The derived siblings
+## The normalized sidecar
 
-`Group.age_unit_normalized` and `CategoryDistribution.category_normalized`. Both are
-`deterministic` in storage, added back on the extraction side by
-`extraction-deviations.yaml`, and written by `apply_derived`.
+`Group.age_unit_normalized` and `CategoryDistribution.category_normalized` were sibling
+slots: `deterministic` in storage, added back on the extraction side by
+`extraction-deviations.yaml`, and written by `apply_derived` as a full `ExtractedValue` with
+`value_source: generated` and `evidence: not_found`. study_schema#56 deleted both from
+extraction. The same reading is now an entry in the field's own `normalized` sidecar —
+`age_unit.normalized`, `category.normalized` — written by `apply_normalized`; storage keeps
+its two columns and fills them from the sidecar.
 
-**Why a sibling and not an overwrite.** `CategoryDistribution.category` is the study's own
+**Why beside the value and not over it.** `CategoryDistribution.category` is the study's own
 wording and the schema says so — "not normalized to any external scheme". That is right for
 provenance, and it left every consumer re-running a lexicon over free text, which is the
-failure the section above records. A sibling keeps both, and because code overwrites the
-derived one on every run the two cannot drift.
+failure the section above records. Keeping both is still the point; the sibling was one way to
+keep both, and it had three faults the sidecar does not:
+
+- **It posed as an extraction.** A normalized value written as an `ExtractedValue` with no
+  evidence reads as a value the model found and could not support.
+- **It held one answer.** A group's conditions map item by item and in two vocabularies at
+  once; one sibling per field cannot hold that, which is why `medical_condition` wrote only
+  to tables beside the records.
+- **It said nothing about who wrote it.** An entry names its `mapping_tool`, so a rerun
+  replaces exactly its own entries and a second normalizer on the same field is not
+  overwritten.
+
+A `Decision` becomes an entry directly: its value is `value`, its reason is `method`, and
+UNKNOWN is `unmapped` — or `ambiguous` when the reason is "matches X and Y", the one case
+where the normalizer reached answers and chose none. `scripts/migrate_normalized_sidecar.py`
+moves the siblings of records written before the change, and attaches the astra build's
+`groups_medical` and `tasks` rows.
 
 **The test a derived field has to pass is that its derivation is question-independent.**
 The unit a paper reports ages in is a fact about the paper; so is whether a category label
@@ -567,10 +586,10 @@ and its rule is `decisive`: "gestational weeks" matches both rules and `classify
 distinct matches as an ambiguity, so the commonest way to write the unit answered UNKNOWN
 until the specific claim was made to win. The same case `modality` has with "functional MRI".
 
-Two distinctions the tallies rest on. A group with **no age at all** is left unset rather
-than UNKNOWN: UNKNOWN says a normalizer read a wording and could not place it, and there was
-no wording. A distribution with **no normalizer** — gender, race, ethnicity — is left unset
-for the same reason.
+Two distinctions the tallies rest on. A group with **no age at all** gets no entry rather
+than an `unmapped` one: `unmapped` says a normalizer read a wording and could not place it,
+and there was no wording. A distribution with **no normalizer** — gender, race, ethnicity —
+is left unset for the same reason.
 
 The first of those was stated and not done. `has_age` asked `value_of(...) is not None`, and a
 slot the paper did not report reads as the `NOT_REPORTED` **sentinel**, which is not None — so
@@ -594,8 +613,15 @@ deterministic to prevent.
 asserts the two name the same set, because `DERIVED` went on naming `group_role` after that
 module was deleted and nothing compared them.
 
-**And a way to run it.** `pondie normalize derived --records '<glob>'` runs every fill over a
-corpus and totals the tallies. Every other choice of that verb reports one field; `derived` is
+`apply_normalized` is its counterpart for the third pass, and `build` runs it straight after.
+A module in `NORMALIZED` names its field (`PATH` or `FIELD.path`) and its `VOCABULARY`, and
+the seam writes one sidecar entry per reported value through `_sidecar.annotate`; a module with
+its own rule about where an entry belongs (`age_unit`, which skips a group with no age)
+exposes `annotate` instead. The two lists are disjoint: a derived slot summarizes several
+values into a slot of its own, a normalization reads one value and sits beside it.
+
+**And a way to run it.** `pondie normalize derived --records '<glob>'` runs every fill and
+every per-record normalizer over a corpus and totals the tallies. Every other choice of that verb reports one field; `derived` is
 the one that is not a module name, checked against the field list so it cannot shadow one.
 Until it existed the fills were the only part of the package that could not be measured on real
 records without writing a script, and the two defects that measurement found — a unit written

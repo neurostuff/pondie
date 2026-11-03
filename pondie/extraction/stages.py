@@ -1284,6 +1284,9 @@ class Build(_Base):
         from pondie import normalization
 
         derived = normalization.apply_derived(record)
+        # The third pass, after the value and its evidence: each field's normalizers write
+        # their reading into its `normalized` sidecar, beside the source's wording.
+        normalized = normalization.apply_normalized(record)
 
         out = self.produces(paper, settings)
         out.parent.mkdir(parents=True, exist_ok=True)
@@ -1294,7 +1297,10 @@ class Build(_Base):
             for name, tally in derived.items()
             if tally.get("set") or tally.get("moved")
         )
-        notes = [f"derived: {filled or 'nothing to fill'}"]
+        read = ", ".join(f"{name}={tally['set']}" for name, tally in normalized.items()
+                         if tally.get("set"))
+        notes = [f"derived: {filled or 'nothing to fill'}",
+                 f"normalized: {read or 'nothing to read'}"]
         notes.append(f"repairs: {', '.join(report.repair_log.fired()) or 'none fired'}")
         if report.warrant.unresolved:
             notes.append(

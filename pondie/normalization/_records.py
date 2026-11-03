@@ -17,7 +17,7 @@ from typing import Iterator
 from pondie import paths
 from pondie.formats.values import NOT_REPORTED, value_of
 
-__all__ = ["NOT_REPORTED", "iter_records", "strings_at", "value_of"]
+__all__ = ["NOT_REPORTED", "edit_records", "iter_records", "strings_at", "value_of"]
 
 DEFAULT = (str(paths.RUNS / "*" / "records" / "*.extraction.json"),)
 
@@ -34,6 +34,25 @@ def iter_records(patterns: tuple[str, ...] = DEFAULT) -> Iterator[tuple[str, dic
         body = body.get("study") or body
         if isinstance(body, dict):
             yield Path(path).name.split(".")[0], body
+
+
+def edit_records(patterns: tuple[str, ...] = DEFAULT) -> Iterator[tuple[str, dict]]:
+    """`iter_records`, writing each record back once the caller has edited its body.
+
+    Written as `build` writes a record, so an edit is the only difference on disk.
+    """
+    for path in sorted({p for pattern in patterns for p in globlib.glob(pattern)}):
+        if path.endswith(".raw.json"):
+            continue
+        try:
+            document = json.loads(Path(path).read_text())
+        except Exception:  # noqa: BLE001 -- a truncated record is not a reason to stop
+            continue
+        body = document.get("study") or document
+        if not isinstance(body, dict):
+            continue
+        yield Path(path).name.split(".")[0], body
+        Path(path).write_text(json.dumps(document, indent=1, ensure_ascii=False) + "\n")
 
 
 def strings_at(body: dict, path: str) -> list[str]:

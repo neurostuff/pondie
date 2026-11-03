@@ -1322,11 +1322,12 @@ def test_build_fills_the_deterministic_slots(tmp_path):
         ]
     }
     tallies = normalization.apply_derived(record)
+    normalization.apply_normalized(record)
     group = record["groups"][0]
 
     assert set(tallies) == set(normalization.DERIVED)
-    assert group["age_unit_normalized"]["value"] == "months"
-    assert group["sex_distribution"][0]["category_normalized"]["value"] == "MALE"
+    assert group["age_unit"]["normalized"][0]["value"] == "months"
+    assert group["sex_distribution"][0]["category"]["normalized"][0]["value"] == "MALE"
     # "healthy controls" is an assertion of absence, not a condition
     assert group["is_healthy"]["value"] is True
 

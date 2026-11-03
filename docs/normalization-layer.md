@@ -25,12 +25,29 @@ below comes from that corpus, not from the 328-record sample the earlier file us
 ## The contract
 
 A record keeps the paper's own words; the storage schema says so and says mapping them onto a
-vocabulary "is a later stage". This is that stage, and it **never edits a record**. A mapping
-is an assertion *about* a record — "this paper's `bvFTD` is ONVOC's Dementia" — and writing it
-into the field destroys the thing that makes it checkable, which is the paper's wording next
-to it.
+vocabulary "is a later stage". This is that stage, and **the pass writes only `normalized`**.
+A mapping is an assertion *about* a record — "this paper's `bvFTD` is ONVOC's Dementia" — and
+writing it over the field would destroy the thing that makes it checkable, which is the
+paper's wording next to it. So it is written beside it: every `ExtractedValue` carries a
+`normalized` list (study_schema#56), and a normalizer appends one `Normalization` entry per
+vocabulary, list item and head. It never changes a `value`, its status or its evidence.
 
-Every mapping carries:
+An entry names its `vocabulary`, its `status` (`mapped`, `unmapped`, `ambiguous`, or `absent`
+for a value that states an absence — the old `NO_CONDITION` sentinel), the term's `value` and
+`label`, which `item` and `head` of the value it reads, and the `mapping_tool` that wrote it:
+`pondie.normalization.<module> <commit>`. A rerun replaces the entries carrying its own
+module name and leaves every other normalizer's alone. `normalized` unset still means no
+normalizer ran.
+
+Two seams write it. `normalization.apply_normalized(record)` runs the closed fields over one
+record (`NORMALIZED`: age unit, sex and handedness categories, medication status, modality,
+coordinate space, multiple-comparison method, correction scope, prespecification), and `build`
+calls it after `apply_derived`. `medical_condition` decides across the corpus, so
+`python -m pondie.normalization.medical_condition --write` runs it and `annotate` writes each
+group's rows — MONDO, and ONVOC where the bridge reached it, `rollup` set when ONVOC is an
+ancestor's term. The task normalizer does not write sidecars yet.
+
+Every mapping row (`medical_condition --out`) carries:
 
 | | |
 |---|---|

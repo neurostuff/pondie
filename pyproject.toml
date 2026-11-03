@@ -34,8 +34,8 @@ dependencies = [
     "nltk",
     # `study_schema.spaces`, the coordinate-space alias table shared with ingestion and
     # neurostore, `models.paper_parse`, the CoordinateParse pondie reads, and `keys`, the analysis
-    # key it checks each parse analysis against. Pinned to study_schema main.
-    "study-schema @ git+https://github.com/neurostuff/study_schema.git@49938bd8f04fe40f073eaf95800ab6e8e92af6dc",
+    # key it checks each parse analysis against. Pinned to study_schema PR #56 (feat/normalized-sidecar) until it merges.
+    "study-schema @ git+https://github.com/neurostuff/study_schema.git@aa3907102ac110bbd5700122b3d9f6dc3c71c6b9",
 ]
 
 [project.optional-dependencies]

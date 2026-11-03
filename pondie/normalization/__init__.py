@@ -14,16 +14,31 @@ from __future__ import annotations
 UNKNOWN = "UNKNOWN"
 OTHER = "OTHER"
 
-__all__ = ["UNKNOWN", "OTHER", "apply_derived", "derived_fields", "fields"]
+__all__ = [
+    "UNKNOWN", "OTHER", "apply_derived", "apply_normalized", "derived_fields", "fields",
+]
 
 #: The modules that FILL a slot rather than normalizing one, in the order `apply_derived`
 #: runs them. Each exposes `apply(record) -> tally`.
 DERIVED = (
     "is_healthy",
     "population_characteristics",
+)
+
+#: The field modules `apply_normalized` runs over one record, each writing its reading of
+#: one field into that field's `normalized` sidecar. Each names its field (`PATH`, or
+#: `FIELD.path`) and the `VOCABULARY` it answers in; one with a rule of its own about where
+#: an entry belongs exposes `annotate(record) -> tally` instead.
+NORMALIZED = (
     "age_unit",
     "sex_distribution",
     "handedness_distribution",
+    "medication_status",
+    "modality",
+    "coordinate_space",
+    "multiple_comparison_method",
+    "correction_scope",
+    "prespecification",
 )
 
 
@@ -58,6 +73,32 @@ def apply_derived(record: dict) -> dict[str, dict]:
     for name in DERIVED:
         module = importlib.import_module(f"{__name__}.{name}")
         tallies[name] = module.apply(record)
+    return tallies
+
+
+def apply_normalized(record: dict) -> dict[str, dict]:
+    """Run every per-record normalizer over one record, in place. Tally per module.
+
+    The third pass, after the value and its evidence: each module writes only the
+    `normalized` sidecars of its own field, and replaces only the entries it wrote before.
+    Corpus-level normalizers (`medical_condition`, `task`) need the whole corpus to decide
+    one value and are run apart; `medical_condition.annotate` writes theirs.
+    """
+    import importlib
+
+    from pondie.normalization import _sidecar
+
+    tallies: dict[str, dict] = {}
+    for name in NORMALIZED:
+        module = importlib.import_module(f"{__name__}.{name}")
+        own = getattr(module, "annotate", None)
+        if callable(own):
+            tallies[name] = own(record)
+            continue
+        path = getattr(module, "PATH", None) or module.FIELD.path
+        tallies[name] = _sidecar.annotate(
+            record, path, module.normalize, module.VOCABULARY, _sidecar.tool(name)
+        )
     return tallies
 
 

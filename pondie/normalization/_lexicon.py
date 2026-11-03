@@ -14,7 +14,6 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Callable
 
-from pondie.formats import values
 from pondie.normalization import OTHER, UNKNOWN
 
 
@@ -127,31 +126,3 @@ class ClosedField:
     def report(self, patterns: tuple[str, ...] | None = None) -> str:
         return field_report(self.path, self.normalize, self.values, patterns)
 
-
-def apply_to_distribution(record: dict, slot: str, decide) -> dict[str, int]:
-    """Write `category_normalized` onto every entry of one `CategoryDistribution` slot.
-
-    `category` keeps the study's own wording; this is its folded sibling, written in the
-    same `ExtractedValue` shape and marked `generated` as the other derived fills are.
-
-    Why a derived sibling rather than an overwrite:
-    docs/normalization-rationale.md, "the derived siblings".
-    """
-
-    tally = {"set": 0, "unmatched": 0}
-    for group in record.get("groups") or []:
-        if not isinstance(group, dict):
-            continue
-        for entry in group.get(slot) or []:
-            if not isinstance(entry, dict):
-                continue
-            from pondie.normalization._records import value_of
-
-            decision = decide(value_of(entry.get("category")))
-            entry["category_normalized"] = values.wrap(
-                decision.value, source="generated", evidence="not_found"
-            )
-            tally["set"] += 1
-            if decision.reason in ("unmatched", "empty"):
-                tally["unmatched"] += 1
-    return tally

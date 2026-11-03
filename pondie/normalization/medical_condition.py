@@ -18,8 +18,9 @@ from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from pondie.normalization import _sidecar
 from pondie.normalization._negation import available as parser_available
-from pondie.normalization._records import DEFAULT, iter_records, strings_at, value_of
+from pondie.normalization._records import DEFAULT, NOT_REPORTED, iter_records, value_of
 from pondie.vocabularies.abbreviations import Abbreviations, expansions_in
 from pondie.vocabularies.folding import variants
 from pondie.vocabularies.mondo import Vocabulary, load_mondo, onvoc_crosswalk
@@ -50,6 +51,8 @@ class Link:
     study: str
     group: str
     text: str
+    #: Which item of the group's `medical_condition` list `text` is, counting from 0.
+    item: int = 0
     head: str = ""
     sentinel: str = ""
     denied: tuple[str, ...] = ()
@@ -318,6 +321,14 @@ class Result:
         return sorted([g for g in out if g["studies"] >= minimum], key=lambda g: -g["studies"])
 
 
+def _items(group: dict) -> list[tuple[int, str]]:
+    """(index in the list, text) for each non-blank item of a group's `medical_condition`."""
+    listed = value_of(group.get("medical_condition"), True)
+    if listed is NOT_REPORTED:
+        return []
+    return [(i, v) for i, v in enumerate(listed) if isinstance(v, str) and v.strip()]
+
+
 def normalize(
     patterns: tuple[str, ...] = DEFAULT,
     texts: Path | None = None,
@@ -346,13 +357,13 @@ def normalize(
                 continue
             flag = value_of(group.get("is_healthy"))
             name = str(value_of(group.get("local_id")) or "")
-            values = strings_at(group, "medical_condition")
+            values = _items(group)
             if not values:
                 result.cohorts["no value"] += 1
                 if flag is True:
                     result.cohorts["absent by flag"] += 1
                 continue
-            for item in values:
+            for index, item in values:
                 triaged = triage(item)
                 result.triage[triaged.kind] += 1
                 sentinel, by_flag = triaged.sentinel, False
@@ -368,7 +379,8 @@ def normalize(
                     ] += 1
                     result.links.append(
                         Link(
-                            study=study, group=name, text=item, sentinel=sentinel,
+                            study=study, group=name, text=item, item=index,
+                            sentinel=sentinel,
                             denied=triaged.denied,
                             scope="flag" if by_flag else triaged.scope,
                         )
@@ -380,7 +392,7 @@ def normalize(
                     staged.append(
                         (
                             Link(
-                                study=study, group=name, text=item, head=head,
+                                study=study, group=name, text=item, item=index, head=head,
                                 denied=triaged.denied, scope=triaged.scope,
                                 qualifiers=triaged.qualifiers, expansions=seen,
                             ),
@@ -427,6 +439,65 @@ def normalize(
                 )
             )
     return result
+
+
+#: ONVOC reached through a MONDO ancestor names a broader concept than the paper did.
+_BROADER = frozenset({"ancestor", "ancestor-name"})
+
+
+def entries(link_: Link, mapping_tool: str) -> list[dict]:
+    """One row as `Normalization` entries: MONDO always, ONVOC where the bridge reached it.
+
+    `head` is kept only when the item named several things; one that is the whole item
+    says nothing an entry without it does not.
+    """
+    where = {"item": link_.item, "head": link_.head if link_.head != link_.text else None}
+    if link_.sentinel == NO_CONDITION:
+        how = "absent by flag" if link_.scope == "flag" else "absent by string"
+        return [_sidecar.entry("MONDO", _sidecar.ABSENT, mapping_tool, method=how, **where)]
+    confidence = min(1.0, max(0.0, link_.score)) if link_.method else None
+    if not link_.mondo:
+        return [_sidecar.entry(
+            "MONDO", _sidecar.UNMAPPED, mapping_tool, method=link_.method or "not read",
+            confidence=confidence, qualifiers=list(link_.qualifiers), **where,
+        )]
+    out = [_sidecar.entry(
+        "MONDO", _sidecar.MAPPED, mapping_tool, value=link_.mondo, label=link_.label,
+        method=link_.method, confidence=confidence, qualifiers=list(link_.qualifiers), **where,
+    )]
+    if link_.onvoc_id:
+        out.append(_sidecar.entry(
+            "ONVOC", _sidecar.MAPPED, mapping_tool, value=link_.onvoc_id, label=link_.onvoc,
+            method=f"MONDO {link_.mondo} by {link_.onvoc_via}",
+            rollup=True if link_.onvoc_via in _BROADER else None,
+            qualifiers=list(link_.qualifiers), **where,
+        ))
+    return out
+
+
+def annotate(record: dict, links: list[Link], study: str) -> dict[str, int]:
+    """Write `links` (this study's rows) into each group's `medical_condition` sidecar.
+
+    Corpus-level, unlike the closed fields: a head is linked against a vocabulary index
+    built once for the whole run, so `normalize` decides and this only writes. A group with
+    no row has this normalizer's entries removed.
+    """
+    mapping_tool = _sidecar.tool("medical_condition")
+    by_group: dict[str, list[Link]] = {}
+    for link_ in links:
+        if link_.study == study:
+            by_group.setdefault(link_.group, []).append(link_)
+    tally = {"set": 0, "unmapped": 0}
+    for group in record.get("groups") or []:
+        if not isinstance(group, dict) or not isinstance(group.get("medical_condition"), dict):
+            continue
+        rows = by_group.get(str(value_of(group.get("local_id")) or ""), [])
+        rows.sort(key=lambda r: r.item)
+        written = [e for row in rows for e in entries(row, mapping_tool)]
+        _sidecar.replace(group["medical_condition"], mapping_tool, written)
+        tally["set"] += len(written)
+        tally["unmapped"] += sum(e["status"] == _sidecar.UNMAPPED for e in written)
+    return tally
 
 
 def calibrate(sample: int = 1500, seed: int = 0) -> dict:
@@ -546,9 +617,25 @@ def main() -> int:
     parser.add_argument("--texts", type=Path, help="the corpus, for paper abbreviations")
     parser.add_argument("--out", type=Path, help="write every row as JSON")
     parser.add_argument("--calibrate", action="store_true", help="measure the distributions")
+    parser.add_argument(
+        "--write", action="store_true",
+        help="write each group's rows into its record's `medical_condition` sidecar, in place",
+    )
     args = parser.parse_args()
     if args.calibrate:
         print(json.dumps(calibrate(), indent=1))
+        return 0
+    if args.write:
+        from pondie.normalization._records import edit_records
+
+        result = normalize(tuple(args.records), args.texts)
+        by_study: dict[str, list[Link]] = {}
+        for link_ in result.links:
+            by_study.setdefault(link_.study, []).append(link_)
+        tally: Counter = Counter()
+        for study, body in edit_records(tuple(args.records)):
+            tally.update(annotate(body, by_study.get(study, []), study))
+        print(f"{tally['set']} entries written, {tally['unmapped']} unmapped")
         return 0
     if args.out:
         result = normalize(tuple(args.records), args.texts)

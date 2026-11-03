@@ -38,6 +38,8 @@ RULES = (
     Rule.of(OTHER_MODALITY, r"^\s*other\s*$"),
 )
 
+VOCABULARY = "Modality"
+
 FIELD = ClosedField("acquisitions.modality", RULES, VALUES)
 normalize = FIELD.normalize
 report = FIELD.report

@@ -55,6 +55,8 @@ RULES = (
     ),
 )
 
+VOCABULARY = "MultipleComparisonMethod"
+
 FIELD = ClosedField("inference_settings.multiple_comparison_method", RULES, VALUES)
 normalize = FIELD.normalize
 report = FIELD.report
