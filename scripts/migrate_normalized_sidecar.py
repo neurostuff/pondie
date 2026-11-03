@@ -43,8 +43,18 @@ SIBLINGS = {
     "handedness_distribution": ("handedness_distribution", "HandednessCategory"),
 }
 
-#: A canonical task is decided from more than the name it is recorded on.
-TASK_ALSO_READ = ["description", "conditions"]
+#: The Task slots each `decided_by` route of astra_task_labels.py read besides `name`.
+#: `name` read nothing else; `gate` and `rest` read taskcat's `entity_kind`, which it takes
+#: from the description. The contrast route also read contrast names, which live on another
+#: entity and have no slot to name here.
+TASK_ALSO_READ = {
+    "name": [],
+    "citation": ["references"],
+    "contrast": ["conditions"],
+    "taskcat": ["description"],
+    "rest": ["description"],
+    "gate": ["description"],
+}
 
 
 def _rows(path: Path | None) -> list[dict]:
@@ -159,9 +169,10 @@ def attach_tasks(body: dict, rows: list[dict], mapping_tool: str, tally: Counter
         row = by_task.get(str(value_of(task.get("local_id")) or ""))
         if row is None:
             continue
+        also_read = TASK_ALSO_READ.get(row.get("decided_by"))
         if _blank(row.get("canonical")):
             made = _sidecar.entry("astra canonical task", _sidecar.UNMAPPED, mapping_tool,
-                                  method=row.get("decided_by"), also_read=TASK_ALSO_READ)
+                                  method=row.get("decided_by"), also_read=also_read)
         else:
             made = _sidecar.entry(
                 "astra canonical task", _sidecar.MAPPED, mapping_tool, value=row["canonical"],
@@ -169,7 +180,7 @@ def attach_tasks(body: dict, rows: list[dict], mapping_tool: str, tally: Counter
                 # The table's qualifiers are `{text, axis}`; the sidecar holds the words.
                 qualifiers=[q["text"] if isinstance(q, dict) else str(q)
                             for q in row.get("qualifiers") or []],
-                method=row.get("decided_by"), also_read=TASK_ALSO_READ,
+                method=row.get("decided_by"), also_read=also_read,
             )
         _sidecar.replace(task["name"], mapping_tool, [made])
         tally["task entries"] += 1

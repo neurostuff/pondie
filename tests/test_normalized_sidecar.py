@@ -119,7 +119,7 @@ def test_the_migration_moves_siblings_and_attaches_table_rows():
 
     [canonical] = task["name"]["normalized"]
     assert canonical["value"] == "hedtsk_oddball"
-    assert canonical["also_read"] == ["description", "conditions"]
+    assert canonical["also_read"] == ["references"], "the citation route read the references"
     assert canonical["qualifiers"] == ["visual"], "the table's {text, axis} keeps its words"
     for wrapper in (group["age_unit"], group["medical_condition"], task["name"],
                     *(c["category"] for c in group["sex_distribution"])):
@@ -139,3 +139,13 @@ def test_a_migrated_entry_is_replaced_by_the_next_normalizer_run():
     [entry] = group["age_unit"]["normalized"]
     assert not entry["mapping_tool"].endswith("pre-sidecar")
     assert entry["method"] == "lexical"
+
+
+def test_a_task_named_by_the_lexicon_read_nothing_else():
+    task = {"local_id": "tsk_s", "name": _v("Stroop task")}
+    tasks = [{"task": "tsk_s", "canonical": "hedtsk_stroop", "decided_by": "name"}]
+    M.attach_tasks({"tasks": [task]}, tasks, "astra_norm.tasks snap", Counter())
+
+    [canonical] = task["name"]["normalized"]
+    assert "also_read" not in canonical
+    _valid(task["name"])
