@@ -43,6 +43,8 @@ RULES = (
     ),
 )
 
+VOCABULARY = "Prespecification"
+
 FIELD = ClosedField("analyses.prespecification", RULES, VALUES)
 normalize = FIELD.normalize
 report = FIELD.report

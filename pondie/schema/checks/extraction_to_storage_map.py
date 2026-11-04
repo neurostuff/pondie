@@ -55,6 +55,7 @@ from pondie.schema.authoring import (
 
 MAP = LINKML / "extraction-to-storage.map.yaml"
 DEVIATIONS = LINKML / "extraction-deviations.yaml"
+EVIDENCE = LINKML / "extraction-evidence.yaml"
 
 EXTRACTED_SUBSET = "model_extracted"
 DETERMINISTIC_SUBSET = "deterministic"
@@ -129,6 +130,10 @@ def check_identity(storage: Mapping[str, object], extraction: Mapping[str, objec
                 )
 
     extra_classes, extra_slots = declared_extras()
+    # The wrapper layer -- evidence, and the `Normalization` sidecar -- has no storage
+    # counterpart by design. Read from the file that defines it: a name prefix missed
+    # `Normalization`, the first class there to be named for what it holds.
+    wrapper_layer = set((load_yaml(EVIDENCE).get("classes") or {}) if EVIDENCE.is_file() else ())
     storage_names = {
         class_name: {
             extraction_name(name, attribute)
@@ -140,8 +145,10 @@ def check_identity(storage: Mapping[str, object], extraction: Mapping[str, objec
         if class_name not in storage:
             # Evidence types and pipeline provenance have no storage counterpart by
             # design; extraction-deviations.yaml is what puts them there.
-            if class_name not in extra_classes and not class_name.startswith(
-                ("Extracted", "Evidence")
+            if (
+                class_name not in extra_classes
+                and class_name not in wrapper_layer
+                and not class_name.startswith(("Extracted", "Evidence"))
             ):
                 problems.append(
                     f"extraction has a {class_name} class that storage does not, and "

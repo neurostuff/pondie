@@ -18,6 +18,8 @@ from pondie.formats import parse_keys
 from pondie.normalization._records import value_of
 
 VALUES = SPACES
+PATH = "analyses.coordinate_space"
+VOCABULARY = "CoordinateSpace"
 __all__ = ["MNI", "OTHER", "TAL", "VALUES", "normalize", "report", "resolve"]
 
 _OTHER_RULE = dict(RULES)[OTHER]
@@ -42,7 +44,7 @@ def normalize(text: object) -> Decision:
 
 
 def report(patterns: tuple[str, ...] | None = None) -> str:
-    return field_report("analyses.coordinate_space", normalize, VALUES, patterns)
+    return field_report(PATH, normalize, VALUES, patterns)
 
 
 def resolve(analysis: dict, record: dict, points_by_key: dict | None = None) -> Decision:

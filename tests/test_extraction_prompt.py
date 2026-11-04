@@ -32,7 +32,7 @@ from pondie import schema
 NOT_A_PASS_CLASS = (
     render.SCAFFOLDING_CLASSES
     | render.DETERMINISTIC_CLASSES
-    | {"Study", "Evidence", "EvidenceSet", "EvidenceSpan"}
+    | {"Study", "Evidence", "EvidenceSet", "EvidenceSpan", "Normalization"}
 )
 
 

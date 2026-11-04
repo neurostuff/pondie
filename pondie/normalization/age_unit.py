@@ -1,7 +1,7 @@
 """`Group.age_unit` -> the unit the group's age summaries are in.
 
-A closed target whose answers are the schema's own `AgeUnit` values. `apply` writes the
-result to `Group.age_unit_normalized`, leaving the source's wording in `age_unit`.
+A closed target whose answers are the schema's own `AgeUnit` values. `annotate` writes the
+result to `age_unit`'s `normalized` sidecar, beside the source's wording.
 
 `gestational_weeks` is kept apart from `weeks` because the two count from different zeros.
 No OTHER: a unit outside the four would not be a fifth kind of age, it would be a wording
@@ -12,8 +12,7 @@ Why, with the measurements: docs/normalization-rationale.md, "age_unit".
 
 from __future__ import annotations
 
-from pondie.formats import values
-from pondie.normalization import UNKNOWN
+from pondie.normalization import UNKNOWN, _sidecar
 from pondie.normalization._lexicon import ClosedField, Rule
 from pondie.normalization._records import NOT_REPORTED, value_of
 
@@ -21,6 +20,7 @@ YEARS, MONTHS, WEEKS, GESTATIONAL = "years", "months", "weeks", "gestational_wee
 VALUES = (YEARS, MONTHS, WEEKS, GESTATIONAL, UNKNOWN)
 
 PATH = "groups.age_unit"
+VOCABULARY = "AgeUnit"
 
 #: Order matters; see the doc named above.
 RULES = (
@@ -40,17 +40,20 @@ normalize = FIELD.normalize
 report = FIELD.report
 
 
-def apply(record: dict) -> dict[str, int]:
-    """Set `age_unit_normalized` on every group. Returns a tally of what changed.
+def annotate(record: dict) -> dict[str, int]:
+    """Write an `AgeUnit` entry on every group's `age_unit`. Returns a tally of what changed.
 
-    A group with no age summary at all is left alone: the unit of nothing is not UNKNOWN,
-    it is absent, and writing UNKNOWN there would say the paper gave an age in a unit this
-    could not read.
+    A group with no age summary at all gets none: the unit of nothing is not unmapped, it
+    is absent, and an unmapped entry there would say the paper gave an age in a unit this
+    could not read. A group with an age and no stated unit is that unmapped entry, written
+    on the `not_reported` wrapper.
     """
+    mapping_tool = _sidecar.tool("age_unit")
     tally = {"set": 0, "skipped": 0, "unmatched": 0}
     for group in record.get("groups") or []:
         if not isinstance(group, dict):
             continue
+        wrapper = group.get("age_unit")
         # `is not None` was not enough: a slot the paper did not report reads as the
         # NOT_REPORTED sentinel, which is not None, so 711 of the 3951 groups this filled
         # across the corpus had no age at all and were being told their absent age was in
@@ -59,13 +62,14 @@ def apply(record: dict) -> dict[str, int]:
             value_of(group.get(slot)) not in (None, NOT_REPORTED)
             for slot in ("age_mean", "age_median", "age_minimum", "age_maximum")
         )
-        if not has_age:
-            group.pop("age_unit_normalized", None)
+        if not isinstance(wrapper, dict) or not has_age:
+            if isinstance(wrapper, dict):
+                _sidecar.replace(wrapper, mapping_tool, [])
             tally["skipped"] += 1
             continue
-        decision = normalize(value_of(group.get("age_unit")))
-        group["age_unit_normalized"] = values.wrap(
-            decision.value, source="generated", evidence="not_found"
+        decision = normalize(value_of(wrapper))
+        _sidecar.replace(
+            wrapper, mapping_tool, [_sidecar.from_decision(decision, VOCABULARY, mapping_tool)]
         )
         tally["set"] += 1
         if decision.reason in ("unmatched", "empty"):

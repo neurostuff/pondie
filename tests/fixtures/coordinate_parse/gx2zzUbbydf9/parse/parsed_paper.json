@@ -8,8 +8,8 @@
       "pmcid": null,
       "doi": "10.1016/j.neuroimage.2021.118480",
       "preprint_dois": null,
-      "preprint_pmid": null,
-      "preprint_pmcid": null,
+      "preprint_pmids": null,
+      "preprint_pmcids": null,
       "publication_status": "published"
     },
     "producer": {
@@ -42,12 +42,24 @@
   "bibliography": {
     "title": "Social relationship-dependent neural response to speech in dogs",
     "authors": [
-      "Anna Gábor",
-      "A. Andics",
-      "Á. Miklósi",
-      "Kálmán Czeibert",
-      "Cecília Carreiro",
-      "M. Gácsi"
+      {
+        "name": "Anna Gábor"
+      },
+      {
+        "name": "A. Andics"
+      },
+      {
+        "name": "Á. Miklósi"
+      },
+      {
+        "name": "Kálmán Czeibert"
+      },
+      {
+        "name": "Cecília Carreiro"
+      },
+      {
+        "name": "M. Gácsi"
+      }
     ],
     "journal": "NeuroImage",
     "publication_year": 2021,
@@ -71,7 +83,7 @@
       "fMRI"
     ],
     "license": {
-      "license_id": "all-rights-reserved",
+      "license_id": "all_rights_reserved",
       "determination": "assumed",
       "stated_by": null,
       "stated_as": null
@@ -85,7 +97,7 @@
     "route": "publisher",
     "version": "vor",
     "license": {
-      "license_id": "all-rights-reserved",
+      "license_id": "all_rights_reserved",
       "determination": "assumed",
       "stated_by": null,
       "stated_as": null

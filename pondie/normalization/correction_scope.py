@@ -35,6 +35,8 @@ RULES = (
     ),
 )
 
+VOCABULARY = "CorrectionScope"
+
 FIELD = ClosedField("inference_settings.correction_scope", RULES, VALUES)
 normalize = FIELD.normalize
 report = FIELD.report

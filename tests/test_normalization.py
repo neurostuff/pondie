@@ -417,7 +417,7 @@ def test_a_space_spelled_out_reaches_the_same_answer_as_its_acronym():
     assert coordinate_space.normalize("Talaraich").value == "TAL", "a transposition in the corpus"
 
 
-# ---------------------------------------------- the derived siblings, and the one seam
+# ---------------------------------------------- the normalized sidecars, and the two seams
 
 
 def _group(**over):
@@ -434,19 +434,60 @@ def _group(**over):
     return {**base, **over}
 
 
-def test_a_derived_sibling_keeps_the_sources_own_wording():
-    """The point of a sibling rather than an overwrite: `category` is the study's words and
+def test_a_sidecar_keeps_the_sources_own_wording():
+    """The point of a sidecar rather than an overwrite: `category` is the study's words and
     the schema says so, and a query needs the folded value. Both, or the field loses one."""
 
-    from pondie.normalization import sex_distribution
+    from pondie import normalization
 
     record = {"groups": [_group()]}
-    sex_distribution.apply(record)
-    entry = record["groups"][0]["sex_distribution"][0]
+    normalization.apply_normalized(record)
+    category = record["groups"][0]["sex_distribution"][0]["category"]
 
-    assert entry["category"]["value"] == "Females", "the paper's wording survives"
-    assert entry["category_normalized"]["value"] == "FEMALE"
-    assert entry["category_normalized"]["value_source"] == "generated"
+    assert category["value"] == "Females", "the paper's wording survives"
+    [entry] = category["normalized"]
+    assert entry["vocabulary"] == "SexCategory"
+    assert (entry["status"], entry["value"], entry["method"]) == ("mapped", "FEMALE", "lexical")
+    assert entry["mapping_tool"].startswith("pondie.normalization.sex_distribution ")
+
+
+def test_an_unknown_decision_is_an_unmapped_entry_and_an_ambiguity_says_so():
+    """UNKNOWN is two things a `Decision` tells apart by its reason, and the sidecar keeps
+    the difference: a wording no rule reached, and one that reached two answers."""
+
+    from pondie import normalization
+
+    record = {"groups": [_group(sex_distribution=[
+        {"category": {"value": "unspecified", "extraction_status": "extracted"}},
+        {"category": {"value": "left and right", "extraction_status": "extracted"}},
+    ], handedness_distribution=[
+        {"category": {"value": "left and right", "extraction_status": "extracted"}},
+    ])]}
+    normalization.apply_normalized(record)
+    group = record["groups"][0]
+
+    [unread] = group["sex_distribution"][0]["category"]["normalized"]
+    assert unread["status"] == "unmapped" and "value" not in unread
+    [both] = group["handedness_distribution"][0]["category"]["normalized"]
+    assert both["status"] == "ambiguous" and both["method"] == "matches RIGHT and LEFT"
+
+
+def test_a_rerun_replaces_its_own_entries_and_keeps_everyone_elses():
+    from pondie import normalization
+
+    record = {"groups": [_group()]}
+    age_unit = record["groups"][0]["age_unit"]
+    other = {"vocabulary": "UO", "status": "mapped", "value": "UO:0000036",
+             "mapping_tool": "someone.else 1"}
+    stale = {"vocabulary": "AgeUnit", "status": "mapped", "value": "months",
+             "mapping_tool": "pondie.normalization.age_unit 0000000"}
+    age_unit["normalized"] = [other, stale]
+
+    normalization.apply_normalized(record)
+    normalization.apply_normalized(record)
+
+    assert age_unit["normalized"][0] == other
+    assert [e["value"] for e in age_unit["normalized"][1:]] == ["years"]
 
 
 def test_the_age_unit_of_a_group_with_no_age_is_left_unset():
@@ -455,10 +496,11 @@ def test_the_age_unit_of_a_group_with_no_age_is_left_unset():
 
     from pondie.normalization import age_unit
 
-    record = {"groups": [{"name": {"value": "controls", "extraction_status": "extracted"}}]}
-    tally = age_unit.apply(record)
+    record = {"groups": [{"name": {"value": "controls", "extraction_status": "extracted"},
+                          "age_unit": {"value": "years", "extraction_status": "extracted"}}]}
+    tally = age_unit.annotate(record)
 
-    assert "age_unit_normalized" not in record["groups"][0]
+    assert "normalized" not in record["groups"][0]["age_unit"]
     assert tally["skipped"] == 1 and tally["set"] == 0
 
 
@@ -487,30 +529,52 @@ def test_apply_derived_runs_every_module_that_exposes_apply():
     assert set(normalization.DERIVED) == set(normalization.derived_fields())
 
 
-def test_apply_derived_fills_every_derived_slot_on_one_record():
+def test_apply_normalized_writes_every_sidecar_on_one_record():
     from pondie import normalization
 
     record = {"groups": [_group()]}
-    tallies = normalization.apply_derived(record)
+    tallies = normalization.apply_normalized(record)
     group = record["groups"][0]
 
-    assert set(tallies) == set(normalization.DERIVED)
-    assert group["age_unit_normalized"]["value"] == "years"
-    assert group["sex_distribution"][0]["category_normalized"]["value"] == "FEMALE"
-    assert group["handedness_distribution"][0]["category_normalized"]["value"] == "RIGHT"
+    def read(wrapper):
+        return [(e["vocabulary"], e["value"]) for e in wrapper["normalized"]]
+
+    assert set(tallies) == set(normalization.NORMALIZED)
+    assert read(group["age_unit"]) == [("AgeUnit", "years")]
+    assert read(group["sex_distribution"][0]["category"]) == [("SexCategory", "FEMALE")]
+    assert read(group["handedness_distribution"][0]["category"]) == [
+        ("HandednessCategory", "RIGHT")]
+    assert "age_unit_normalized" not in group
 
 
-def test_every_derived_slot_is_declared_on_the_extraction_schema():
-    """`is_healthy` was written onto 4,133 groups the schema did not declare, and the
-    validator reported every one. A derived slot needs its `add_slot` deviation or it
-    repeats that."""
+def test_every_normalized_module_names_a_field_and_a_vocabulary():
+    """`apply_normalized` reads both off the module. A module listed without them raises on
+    the first record; one whose path names no slot writes nothing and says nothing."""
+
+    import importlib
+
+    from pondie import normalization, schema
+    from pondie.schema import reader
+
+    extraction = reader.load(schema.EXTRACTION)
+    for name in normalization.NORMALIZED:
+        module = importlib.import_module(f"pondie.normalization.{name}")
+        assert isinstance(module.VOCABULARY, str) and module.VOCABULARY, name
+        path = getattr(module, "PATH", None) or module.FIELD.path
+        assert len(path.split(".")) >= 2, name
+
+
+def test_the_sibling_slots_are_gone_and_the_sidecar_is_declared():
+    """study_schema#56: the two sibling slots became the `normalized` sidecar every
+    extracted value carries. A record that still wrote them would fail the schema."""
 
     from pondie import schema
     from pondie.schema import reader
 
     extraction = reader.load(schema.EXTRACTION)
-    assert extraction.attributes("Group").get("age_unit_normalized") is not None
-    assert extraction.attributes("CategoryDistribution").get("category_normalized") is not None
+    assert extraction.attributes("Group").get("age_unit_normalized") is None
+    assert extraction.attributes("CategoryDistribution").get("category_normalized") is None
+    assert extraction.attributes("ExtractedValue").get("normalized") is not None
 
 
 def test_a_group_whose_age_was_not_reported_has_no_unit_either():
@@ -523,10 +587,11 @@ def test_a_group_whose_age_was_not_reported_has_no_unit_either():
     from pondie.normalization import age_unit
 
     not_reported = {"extraction_status": "not_reported"}
-    record = {"groups": [{"age_mean": not_reported, "age_median": not_reported}]}
-    tally = age_unit.apply(record)
+    record = {"groups": [{"age_mean": not_reported, "age_median": not_reported,
+                          "age_unit": {"value": "years", "extraction_status": "extracted"}}]}
+    tally = age_unit.annotate(record)
 
-    assert "age_unit_normalized" not in record["groups"][0]
+    assert "normalized" not in record["groups"][0]["age_unit"]
     assert tally["skipped"] == 1 and tally["set"] == 0
 
 

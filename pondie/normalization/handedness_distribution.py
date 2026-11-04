@@ -6,7 +6,7 @@ Why: docs/normalization-rationale.md, "sex_distribution and handedness_distribut
 from __future__ import annotations
 
 from pondie.normalization import OTHER, UNKNOWN
-from pondie.normalization._lexicon import ClosedField, Rule, apply_to_distribution
+from pondie.normalization._lexicon import ClosedField, Rule
 
 RIGHT, LEFT, AMBIDEXTROUS = "RIGHT", "LEFT", "AMBIDEXTROUS"
 VALUES = (RIGHT, LEFT, AMBIDEXTROUS, OTHER, UNKNOWN)
@@ -19,12 +19,9 @@ RULES = (
     Rule.of(LEFT, r"(?<!non[\s-])(?<!not )\bleft\b|^\s*L\s*$"),
 )
 
+VOCABULARY = "HandednessCategory"
+
 FIELD = ClosedField("groups.handedness_distribution.category", RULES, VALUES)
 normalize = FIELD.normalize
 report = FIELD.report
 
-
-def apply(record: dict) -> dict[str, int]:
-    """Set `category_normalized` on every `handedness_distribution` entry. Tally of what changed."""
-
-    return apply_to_distribution(record, "handedness_distribution", normalize)

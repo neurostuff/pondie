@@ -453,6 +453,9 @@ class Validator:
         else:
             self.check_evidence(evidence, status, f"{path}.evidence")
 
+        if node.get("normalized") is not None:  # null is absence, as everywhere else
+            self.check_normalized(node["normalized"], f"{path}.normalized")
+
         reason = node.get("unreported_reason")
         if reason is not None and reason not in _UNREPORTED_REASON:
             self.error(
@@ -471,6 +474,47 @@ class Validator:
                 self.error(path, "extracted fields must carry a value")
             else:
                 self.check_value_type(node["value"], class_name, attributes, path)
+
+    def check_normalized(self, entries: Any, path: str) -> None:
+        """Each sidecar entry against the `Normalization` class the schema declares.
+
+        Read from the class, as `EvidenceSet` is, so a slot the schema adds is accepted the
+        day it lands and one the normalizers misspell is not.
+        """
+        if not isinstance(entries, list):
+            self.error(path, f"expected a list of Normalization, got {type(entries).__name__}")
+            return
+        declared = self.schema.attributes("Normalization") or {}
+        statuses = getattr(self.enums.get("NormalizationStatus"), "permissible_values", None)
+        for i, entry in enumerate(entries):
+            where = f"{path}[{i}]"
+            if not isinstance(entry, dict):
+                self.error(where, f"expected a Normalization object, got {type(entry).__name__}")
+                continue
+            for key in entry:
+                if key not in declared:
+                    self.error(where, f"attribute {key!r} is not declared on Normalization")
+            for key, spec in declared.items():
+                if spec.required and entry.get(key) in (None, ""):
+                    self.error(where, f"required attribute {key!r} is missing on Normalization")
+            status = entry.get("status")
+            if statuses and status is not None and status not in statuses:
+                self.error(where, f"status {status!r} is not a permissible value "
+                                  f"({', '.join(sorted(statuses))})")
+            for key, spec in declared.items():
+                listed = entry.get(key)
+                if spec.multivalued and listed is not None and not (
+                    isinstance(listed, list) and all(isinstance(x, str) for x in listed)
+                ):
+                    self.error(where, f"{key} must be a list of strings, got {listed!r}")
+            item = entry.get("item")
+            if item is not None and (not isinstance(item, int) or item < 0):
+                self.error(where, f"item must be an integer >= 0, got {item!r}")
+            confidence = entry.get("confidence")
+            if confidence is not None and not (
+                isinstance(confidence, (int, float)) and 0 <= confidence <= 1
+            ):
+                self.error(where, f"confidence must be in [0, 1], got {confidence!r}")
 
     def check_value_cardinality(
         self, value: Any, value_slot: SlotDefinition, path: str

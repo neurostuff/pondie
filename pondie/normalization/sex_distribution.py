@@ -8,7 +8,7 @@ Why: docs/normalization-rationale.md, "sex_distribution and handedness_distribut
 from __future__ import annotations
 
 from pondie.normalization import OTHER, UNKNOWN
-from pondie.normalization._lexicon import ClosedField, Rule, apply_to_distribution
+from pondie.normalization._lexicon import ClosedField, Rule
 
 MALE, FEMALE = "MALE", "FEMALE"
 VALUES = (MALE, FEMALE, OTHER, UNKNOWN)
@@ -25,12 +25,9 @@ RULES = (
     Rule.of(OTHER, r"non[\s-]?binary|\bother\b|transgender|intersex"),
 )
 
+VOCABULARY = "SexCategory"
+
 FIELD = ClosedField("groups.sex_distribution.category", RULES, VALUES)
 normalize = FIELD.normalize
 report = FIELD.report
 
-
-def apply(record: dict) -> dict[str, int]:
-    """Set `category_normalized` on every `sex_distribution` entry. Tally of what changed."""
-
-    return apply_to_distribution(record, "sex_distribution", normalize)

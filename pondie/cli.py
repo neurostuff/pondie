@@ -153,23 +153,25 @@ def _normalizable() -> list[str]:
 
 
 def _derived_report(records: tuple[str, ...]) -> int:
-    """Run every derived-slot fill over the records and total the tallies.
+    """Run every derived-slot fill and per-record normalizer over the records; total them.
 
-    The reporting half of `apply_derived`. Without it the fills were the one part of the
-    package with no way to be measured on real records short of writing a script, and the
+    The reporting half of `apply_derived` and `apply_normalized`. Without it the fills were
+    the one part of the package with no way to be measured on real records short of writing
+    a script, and the
     two defects that run found -- a unit written onto 711 groups that stated no age, and a
     disease vocabulary asked to name "Typically developing adolescents" -- were both
     invisible to the per-field reports, which only ever see values that exist.
     """
-    from pondie.normalization import DERIVED as MODULES
-    from pondie.normalization import apply_derived
+    from pondie import normalization
+    from pondie.normalization import apply_derived, apply_normalized
     from pondie.normalization._records import DEFAULT, iter_records
 
+    MODULES = normalization.DERIVED + normalization.NORMALIZED
     totals: dict[str, Counter] = {name: Counter() for name in MODULES}
     seen = 0
     for _study, body in iter_records(records or DEFAULT):
         seen += 1
-        for name, tally in apply_derived(body).items():
+        for name, tally in {**apply_derived(body), **apply_normalized(body)}.items():
             totals[name].update(tally)
     print(f"{seen} records")
     for name in MODULES:
