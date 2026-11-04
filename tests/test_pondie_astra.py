@@ -44,3 +44,20 @@ def test_a_compact_record_restores_against_the_packaged_schema():
                                     prompt.schema_index(), "sid1")
     assert restored["local_id"] == "sid1"
     assert compact.to_compact(restored)["coordinate_sets"] == [{"local_id": ENTRY["key"]}]
+
+
+def test_ev1_cites_units_and_the_merge_puts_them_back_as_spans():
+    from pondie_astra import evidence
+
+    text = "Methods.\nWe scanned 24 healthy adults. Each lay still.\nRow\t1"
+    units = evidence.units(text)
+    assert [text[a:b] for a, b in units] == ["Methods.", "We scanned 24 healthy adults. Each lay still.",
+                                             "Row\t1"]
+    record = compact.from_compact({"groups": [{"local_id": "g1", "enrolled_count": 24}]}, prompt.schema_index(), "sid1")
+    request, _ = evidence.prompt_of(record, text)
+    assert "\n\nText:\n[S1] Methods.\n[S2] We scanned" in request and request.startswith(evidence.INSTR)
+    counts = evidence.merge(record, text, {"groups": [{"local_id": "g1", "enrolled_count": [2]}]})
+    assert counts["cited_values"] == 1 and counts["roundtrip"] == "ok"
+    (span,) = record["groups"][0]["enrolled_count"]["evidence"]["sets"][0]["spans"]
+    assert span["text"] == text[span["start_char"]:span["end_char"]] == \
+        "We scanned 24 healthy adults. Each lay still."
