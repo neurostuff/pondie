@@ -18,26 +18,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tasks as T  # noqa: E402
+from pondie_astra.prompt import captions  # noqa: E402
 
 SOURCES = ("pubget", "pmc", "elsevier", "ace", "pdf")
-CAPTION_CHARS, FOOTER_CHARS = 300, 700   # the trim training's captions had (stage1.py)
-
-
-def captions(parsed_paper, entries):
-    """{parse key: {"caption", "footer"}} for table entries, from the paper parse's `tables[]` (study_schema), trimmed
-    as training's captions were"""
-    tables = {t.get("table_id"): t for t in json.load(open(parsed_paper)).get("tables") or [] if isinstance(t, dict)}
-    out = {}
-    for e in entries:
-        t = tables.get(e.get("table_id"))
-        if not t:
-            continue
-        cap, foot = (t.get("caption") or "").strip(), (t.get("footer") or "").strip()
-        if cap or foot:
-            out[e["key"]] = {"caption": cap[:CAPTION_CHARS], "footer": foot[:FOOTER_CHARS]}
-    return out
-
-
 def body(args):
     row, tmpl = args
     d = Path(row["dir"])
@@ -47,7 +30,7 @@ def body(args):
         return None, {"sid": row["base_study_id"], "error": "no text"}
     try:
         p = json.load(open(row["coordinate_parse"]))
-        caps = captions(d / "parse/parsed_paper.json", p["analyses"])
+        caps = captions(json.load(open(d / "parse/parsed_paper.json")).get("tables"), p["analyses"])
         parse = {e["key"]: dict(e, **caps.get(e["key"], {})) for e in p["analyses"]}
         prompt = T.prompt_of((d / "processed" / src / "text.txt").read_text(), parse)
         n_in = T.ntok(T.user_turn(prompt, tmpl))
