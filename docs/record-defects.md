@@ -182,6 +182,14 @@ allocated to it. Writing both is correct; that is the parallel-group design `Gro
 for. The other 10 should be reported. No name matched two entities of the *same* kind
 anywhere in the corpus, so the ambiguity guard never had to fire.
 
+**A whole-brain analysis takes no region from its name.** `Analysis.regions` is where a
+search was restricted, and a table row is named after the cluster a search *found*: the 27B's
+analysis `Insula L` beside `reg_insula_l`. On the 27B's 481 val records every one of the 49
+`Analysis.regions` links the rule wrote was on a `whole_brain` analysis, each then an error
+under the storage rule that whole-brain and searchlight analyses restrict to no region. The
+rule now leaves `regions` empty on those two scopes; an `roi` analysis still takes its region
+from its name.
+
 ### What it buys, in queries
 
 **876 links over 265 records**: 572 `FactorLevel.conditions`, 164 `.arms`, 72 `.timepoints`,
@@ -361,6 +369,13 @@ question. These want an error naming both slots:
 
 `direction.py` and the sign-split pass already own polarity, so this check belongs beside
 them rather than in the cell rule: it is the one place a wrong answer changes a map.
+
+**A declared level is not a sign.** `valence: negative` with `direction: positive` is the
+response to negative pictures rising, and `activation` against `baseline` is a condition. The
+check skips a level the cell's term declares (`levels_a_cell_may_name`, the rule
+`drop_redundant_cell_levels` already uses). On the 27B's records every one of the 15 val flags
+and a sample of 10 of 89 in 3,000 ns-pond records was this case, and Astra's own records carry
+the same cells.
 
 Findings deterministic here: 547 + 185 + 3 = 735 of 1,185 (62%).
 

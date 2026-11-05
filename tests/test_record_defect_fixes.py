@@ -161,6 +161,33 @@ def test_a_name_matching_both_an_arm_and_a_cohort_writes_both(extraction_schema)
     assert level["arms"] == ["arm_exercise"]
 
 
+def _region_named_analysis(scope):
+    return {
+        "analyses": [
+            {"local_id": "a1", "name": warranted("Insula L"), "spatial_scope": warranted(scope)}
+        ],
+        "regions": [{"local_id": "reg_insula_l", "name": warranted("Insula L")}],
+    }
+
+
+def test_a_whole_brain_analysis_is_not_restricted_to_the_cluster_it_is_named_after(
+    extraction_schema,
+):
+    """A table row names the cluster a whole-brain search found, and `regions` is where a
+    search was restricted to. All 49 such links in the 27B's val records were this case,
+    each one an error under the storage rule that whole-brain analyses restrict to none."""
+    for scope in ("whole_brain", "searchlight"):
+        record = _region_named_analysis(scope)
+        fix.link_entities_by_name(record, extraction_schema)
+        assert "regions" not in record["analyses"][0]
+
+
+def test_an_roi_analysis_still_links_the_region_it_is_named_after(extraction_schema):
+    record = _region_named_analysis("roi")
+    fix.link_entities_by_name(record, extraction_schema)
+    assert record["analyses"][0]["regions"] == ["reg_insula_l"]
+
+
 def test_two_candidates_of_one_kind_are_left_alone(extraction_schema):
     record = _level_record(
         "controls",
@@ -393,6 +420,47 @@ def test_a_level_contradicting_its_direction_is_left_for_the_check():
     rules.check_cell_level_polarity(record, sink)
     assert len(sink.errors) == 1
     assert "increase or decrease map" in sink.errors[0][1]
+
+
+def _dangling_cell(level, declared):
+    return {
+        "analyses": [{"local_id": "a1", "model_estimation": "mod1", "effect": {"cells": [
+            {"term": "trm_mi_group", "level": warranted(level)}]}}],
+        "model_estimations": [{"local_id": "mod1", "terms": [
+            {"local_id": "trm_group_mi", "name": warranted("group"),
+             "levels": [{"level": warranted(name)} for name in declared]},
+            {"local_id": "trm_age", "name": warranted("age")},
+        ]}],
+    }
+
+
+def test_a_cell_naming_no_term_takes_the_one_that_declares_its_level():
+    """`trm_mi_group` beside `trm_group_mi`: the 27B transposed the id, and only one term in
+    scope has the level the cell names."""
+    record = _dangling_cell("Insomnia ", ["insomnia", "control"])
+    changed = fix.repoint_out_of_scope_terms(record)
+    assert record["analyses"][0]["effect"]["cells"][0]["term"] == "trm_group_mi"
+    assert len(changed) == 1 and "declaring level" in changed[0]
+
+
+def test_a_level_no_term_declares_leaves_the_cell_for_the_check():
+    record = _dangling_cell("insomnia", ["patients", "control"])
+    assert fix.repoint_out_of_scope_terms(record) == []
+    assert record["analyses"][0]["effect"]["cells"][0]["term"] == "trm_mi_group"
+
+
+def test_a_sign_word_the_term_declares_is_not_a_polarity_conflict():
+    """`valence: negative` with `direction: positive` is a response to negative pictures
+    rising, not a contradiction. Every flag of this shape in the 27B's records was one."""
+    record = _continuous("negative", "positive")
+    record["model_estimations"][0]["terms"][0]["type"] = warranted("categorical")
+    record["model_estimations"][0]["terms"][0]["levels"] = [
+        {"level": warranted("positive")},
+        {"level": warranted("Negative")},
+    ]
+    sink = Sink()
+    rules.check_cell_level_polarity(record, sink)
+    assert sink.errors == []
 
 
 def test_a_categorical_level_on_a_mistyped_term_is_left_alone():

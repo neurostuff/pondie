@@ -39,6 +39,9 @@ import re
 #: candidate hosts.
 NAMING_SLOTS = ("name", "level", "label")
 
+#: Spatial scopes whose analyses restrict inference to no region, so `regions` stays empty.
+UNRESTRICTED_SCOPES = frozenset({"whole_brain", "searchlight"})
+
 
 #: Words a `Cell.level` carries when it is really stating which way the effect went, by
 #: polarity. `Cell.direction` is the slot for that, and on a continuous term there is no
@@ -284,6 +287,10 @@ def link_entities_by_name(body: dict[str, Any], sch: Schema) -> list[str]:
                 continue
             current = node.get(key)
             if [x for x in (current if isinstance(current, list) else [current]) if x]:
+                continue
+            if key == "regions" and values.read(node.get("spatial_scope")) in UNRESTRICTED_SCOPES:
+                # An analysis named after the cluster it found ("Insula L") is not restricted
+                # to that region, and a whole-brain search restricts to none.
                 continue
             found = {
                 local_id
@@ -1042,6 +1049,12 @@ def repoint_out_of_scope_terms(body: dict[str, Any]) -> list[str]:
     Scoped by the analysis, which is what makes it unambiguous: `trm_modality` may be
     declared under two models, but only one of those is in this analysis's scope. Measured
     over the same fifteen papers, all 21 resolve to exactly one term and none to several.
+
+    A third: the id is declared nowhere and nothing in scope carries it under a prefix, but
+    exactly one term in scope declares the cell's level -- `trm_mi_group_ra_ins` naming
+    `insomnia` beside `trm_group_mi_ra_ins`, whose levels are `insomnia` and `control`. 19 of
+    66 such cells over 3,000 ns-pond records of the 27B, in 6 papers; the rest name a model
+    that declares no terms (14), carry no level (16), or a level no term declares (17).
     """
 
     models = {
@@ -1081,6 +1094,23 @@ def repoint_out_of_scope_terms(body: dict[str, Any]) -> list[str]:
                         f"analyses[{index}].effect.cells[{position}].term: "
                         f"{named!r} -> {under[0]!r} (declared under its model)"
                     )
+                    continue
+                # Or the cell's own level settles it: exactly one term in scope declares it.
+                level = _level_key(values.read(cell.get("level")))
+                declaring = [
+                    k for k, term in in_scope.items()
+                    if level and level in {
+                        _level_key(values.read(lv.get("level")))
+                        for lv in term.get("levels") or [] if isinstance(lv, Mapping)
+                    }
+                ]
+                if len(declaring) == 1:
+                    cell["term"] = declaring[0]
+                    fixed.append(
+                        f"analyses[{index}].effect.cells[{position}].term: "
+                        f"{named!r} -> {declaring[0]!r} (the one term in scope declaring "
+                        f"level {values.read(cell.get('level'))!r})"
+                    )
                 continue
             wanted = name_of(everywhere.get(named))
             if not wanted:
@@ -1093,6 +1123,11 @@ def repoint_out_of_scope_terms(body: dict[str, Any]) -> list[str]:
                     f"{named!r} -> {same[0]!r} (same name, in scope)"
                 )
     return fixed
+
+
+def _level_key(level: Any) -> str:
+    """The key a cell's level joins a declared level on: case and spacing folded."""
+    return " ".join(str(level).split()).lower() if isinstance(level, str) else ""
 
 
 def _minted_part(local_id: str) -> str:
