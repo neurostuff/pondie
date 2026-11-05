@@ -27,7 +27,10 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-import compact as K  # noqa: E402
+import compact as K  # noqa: E402  (also puts pondie_astra on the path)
+from pondie_astra.prompt import (  # noqa: E402,F401  (the prompt lives in the package; these names are tasks' API)
+    IM_END, INSTR, MAX_POINTS, ROOT_DROP, _fmt, dumps, listing, ntok, parse_block, prompt_of, record_shape,
+    template_str, tokenizer, user_turn)
 
 ROOT = Path(os.environ.get("ASTRA_ROOT", "/data/james/agents/astra-distill"))
 MIG = ROOT / "migrate"
@@ -41,15 +44,6 @@ DEFAULTS = {  # data v5 (frozen); v4 was train-v4/records, run-old-v4/parse, spl
 }
 MAX_ANALYSES = 0           # no entry is dropped for its number of analyses
 
-MAX_POINTS = None          # all points of an entry go into the listing
-
-INSTR = ("Extract the full record of this neuroimaging paper: participant groups, tasks with their conditions, "
-         "assessments, brain regions, devices, acquisitions, preprocessing pipelines, inference settings, measures, "
-         "the study design, the statistical models with their terms and levels, the tables, and every statistical "
-         "analysis the paper reports. The coordinate sets listed after the text are the paper's reported coordinates: "
-         "give each its own entry in coordinate_sets (local_id = its key) and attach to it the analyses it reports "
-         "(source_table_analysis = its key). Give each entity a short local_id and use those ids wherever one entity "
-         "refers to another. Leave out anything the paper does not state.")
 
 
 # ----------------------------------------------------------------------------------------------- paper access
@@ -107,49 +101,11 @@ def candidates(c):
     return {k: [e["local_id"] for e in el[v] if isinstance(e.get("local_id"), str)] for k, v in cls.items()}
 
 
-def _fmt(v, n=60):
-    if isinstance(v, list):
-        v = ", ".join(_fmt(x, n) for x in v[:3]) + (", ..." if len(v) > 3 else "")
-    elif isinstance(v, bool):
-        v = "yes" if v else "no"
-    elif isinstance(v, float) and v == v and abs(v) != float("inf") and v == int(v):
-        v = int(v)
-    v = str(v).replace("\n", " ")
-    return v if len(v) <= n else v[: n - 3] + "..."
-
-
-def parse_block(e, max_points=MAX_POINTS):
-    """the parse entry as the model sees it"""
-    pts = e.get("points") or []
-    out = [f"Coordinate set: {e['key']}", f"Origin: {e['origin']}" + (f" (table {e['table_id']})" if e.get("table_id") else ""),
-           f"Name: {e.get('name') or ''}"]
-    if e.get("description"):
-        out.append(f"Description: {e['description']}")
-    if e.get("coordinate_space"):
-        out.append(f"Coordinate space: {e['coordinate_space']}")
-    if e.get("caption"):
-        out.append(f"Caption: {e['caption']}")
-    if e.get("footer"):
-        out.append(f"Footer: {e['footer']}")
-    out.append(f"Points: {len(pts)}")
-    for p in pts[:max_points]:
-        row = " ".join(_fmt(x, 8) for x in p["coordinates"])
-        extra = []
-        if p.get("values"):
-            vs = p["values"] if isinstance(p["values"], list) else [p["values"]]
-            extra.append(" ".join(f"{v.get('kind')}={_fmt(v.get('value'), 8)}" if isinstance(v, dict) else _fmt(v, 8) for v in vs[:2]))
-        if p.get("cluster_size") is not None:
-            extra.append(f"k={_fmt(p['cluster_size'])}")
-        out.append(row + (f"  [{'; '.join(extra)}]" if extra else ""))
-    if max_points and len(pts) > max_points:
-        out.append(f"... ({len(pts) - max_points} more points)")
-    return "\n".join(out)
 
 
 
 # ----------------------------------------------------------------------------------------------- target, schema, template
 
-ROOT_DROP = ("local_id", "extraction_metadata", "stable_id")
 
 
 def record_target(c):
@@ -205,61 +161,10 @@ def select_keys(c, parse, empty_keys="include", max_an=0):
             and not (max_an and len(by.get(k, [])) > max_an)], []
 
 
-def record_shape(ix, mode, keys=None):
-    """JSON schema (mode "schema") or template of the whole compact record. keys: the parse keys of the paper's
-    listing: `coordinate_sets[].local_id` and `analyses[].source_table_analysis` must be one of them."""
-    only = [p for p in ix.schema["properties"] if p not in ROOT_DROP]
-    ov = None
-    if mode == "schema" and keys is not None:
-        e = {"type": "string", "enum": list(keys) or ["__none__"]}
-        ov = {("CoordinateSet", "local_id"): e, ("Analysis", "source_table_analysis"): e}
-    elif mode == "template":
-        ov = {("CoordinateSet", "local_id"): "parse_key", ("Analysis", "source_table_analysis"): "parse_key"}
-    return K.shape(ix, "<root>", mode, only=only, override=ov)
-
-
-def template_str(t):
-    return json.dumps(t, ensure_ascii=False)
 
 
 # ----------------------------------------------------------------------------------------------- examples
 
-_TOK = None
-
-
-def tokenizer():
-    global _TOK
-    if _TOK is None:
-        os.environ.setdefault("HF_HUB_OFFLINE", "1")
-        from transformers import AutoTokenizer
-        _TOK = AutoTokenizer.from_pretrained("numind/NuExtract3")
-    return _TOK
-
-
-def ntok(s):
-    return len(tokenizer()(s, add_special_tokens=False)["input_ids"])
-
-
-def dumps(o):
-    return json.dumps(o, ensure_ascii=False, separators=(",", ":"))
-
-
-IM_END = "<|im_end|>"
-
-
-def user_turn(doc, template):
-    """NuExtract3's single-turn wire format (equal to apply_chat_template(..., template=, enable_thinking=False))"""
-    return (f"<|im_start|>user\n【task】structured\n【template_start】{template}【template_end】\n【document_start】\n"
-            f"{doc}\n【document_end】{IM_END}\n<|im_start|>assistant\n<think>\n\n</think>\n\n")
-
-
-def listing(parse):
-    """the parse listing: every entry, in document order"""
-    return "\n\n".join(parse_block(e) for e in parse.values())
-
-
-def prompt_of(text, parse):
-    return INSTR + "\n\nText:\n" + text + "\n\nCoordinate sets:\n" + listing(parse)
 
 
 def build_paper(args):

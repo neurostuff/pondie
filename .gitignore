@@ -1,6 +1,8 @@
 .env
 __pycache__
 *.egg-info
+# setuptools build output of the packages under packages/
+packages/*/build/
 .pytest_cache
 
 # Run artifacts: payloads and records are per-run outputs, and the encoder cache
