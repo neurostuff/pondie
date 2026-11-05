@@ -422,6 +422,33 @@ def test_a_level_contradicting_its_direction_is_left_for_the_check():
     assert "increase or decrease map" in sink.errors[0][1]
 
 
+def _dangling_cell(level, declared):
+    return {
+        "analyses": [{"local_id": "a1", "model_estimation": "mod1", "effect": {"cells": [
+            {"term": "trm_mi_group", "level": warranted(level)}]}}],
+        "model_estimations": [{"local_id": "mod1", "terms": [
+            {"local_id": "trm_group_mi", "name": warranted("group"),
+             "levels": [{"level": warranted(name)} for name in declared]},
+            {"local_id": "trm_age", "name": warranted("age")},
+        ]}],
+    }
+
+
+def test_a_cell_naming_no_term_takes_the_one_that_declares_its_level():
+    """`trm_mi_group` beside `trm_group_mi`: the 27B transposed the id, and only one term in
+    scope has the level the cell names."""
+    record = _dangling_cell("Insomnia ", ["insomnia", "control"])
+    changed = fix.repoint_out_of_scope_terms(record)
+    assert record["analyses"][0]["effect"]["cells"][0]["term"] == "trm_group_mi"
+    assert len(changed) == 1 and "declaring level" in changed[0]
+
+
+def test_a_level_no_term_declares_leaves_the_cell_for_the_check():
+    record = _dangling_cell("insomnia", ["patients", "control"])
+    assert fix.repoint_out_of_scope_terms(record) == []
+    assert record["analyses"][0]["effect"]["cells"][0]["term"] == "trm_mi_group"
+
+
 def test_a_sign_word_the_term_declares_is_not_a_polarity_conflict():
     """`valence: negative` with `direction: positive` is a response to negative pictures
     rising, not a contradiction. Every flag of this shape in the 27B's records was one."""
