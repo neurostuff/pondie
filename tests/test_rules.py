@@ -729,6 +729,7 @@ def test_the_storage_rules_are_found(extraction_schema: dict) -> None:
         "InferenceSettings",
         "License",
         "Region",
+        "Venue",
     ]
     assert len(found["Analysis"]) == 2, "the two spatial_scope/regions rules"
     assert len(found["Effect"]) == 1, "cells cannot be empty"
