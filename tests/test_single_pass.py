@@ -209,18 +209,18 @@ def test_omitted_never_reaches_the_record(tmp_path):
     assert "omitted" not in body
 
 
-def _two_models(term_b: str):
+def _two_models(term_b: str, level_b: str = "PTSD"):
     """Two analyses, each on its own model, both models declaring a group term."""
     def model(mid, tid):
         return {"local_id": mid, "terms": [{"local_id": tid, "name": _wrapped("group"),
                 "type": _wrapped("categorical"),
                 "levels": [{"level": _wrapped("PTSD")}, {"level": _wrapped("control")}]}]}
-    def analysis(aid, mid, tid):
+    def analysis(aid, mid, tid, level="PTSD"):
         return {"local_id": aid, "name": _wrapped(aid), "model_estimation": mid,
-                "effect": {"cells": [{"term": tid, "level": _wrapped("PTSD"),
+                "effect": {"cells": [{"term": tid, "level": _wrapped(level),
                                       "direction": _wrapped("negative")}]}}
     return {"analyses": [analysis("ana_1", "mod_a", "trm_group"),
-                         analysis("ana_2", "mod_b", term_b)],
+                         analysis("ana_2", "mod_b", term_b, level_b)],
             "model_estimations": [model("mod_a", "trm_group"), model("mod_b", "trm_group")]}
 
 
@@ -268,8 +268,15 @@ def test_a_reference_to_a_table_the_parse_lost_does_not_cost_a_retry(tmp_path):
     assert seen == ["single"]
 
 
+def test_a_term_declared_nowhere_whose_level_settles_it_does_not_cost_a_retry(tmp_path):
+    """`trm_nowhere` naming `PTSD` beside the one term in scope that declares it."""
+    assert render.postcondition_failures(_two_models("trm_nowhere"), "single"), "raw: a fault"
+    assert _calls_for(tmp_path, _two_models("trm_nowhere")) == ["single"]
+
+
 def test_a_fault_no_repair_fixes_is_still_retried(tmp_path):
-    assert _calls_for(tmp_path, _two_models("trm_nowhere")) == ["single"] * 3
+    reply = _two_models("trm_nowhere", level_b="trauma-exposed")
+    assert _calls_for(tmp_path, reply) == ["single"] * 3
 
 
 def test_an_omission_without_a_listing_is_no_fault():
