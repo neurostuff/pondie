@@ -35,8 +35,8 @@ dependencies = [
     # `study_schema.spaces`, the coordinate-space alias table shared with ingestion and
     # neurostore, `models.paper_parse`, the CoordinateParse pondie reads, and `keys`, the analysis
     # key it checks each parse analysis against. Pinned to the merge of
-    # study_schema #56, which adds the `normalized` sidecar.
-    "study-schema @ git+https://github.com/neurostuff/study_schema.git@b7efbdd6c465a00e2ef80d19b47acff6bb17471e",
+    # study_schema #59 (after #57's Bibliography.venue and #58), the commit the submodule is at.
+    "study-schema @ git+https://github.com/neurostuff/study_schema.git@2937ab19e3e0ddef49e4fb214164a461d05a6201",
 ]
 
 [project.optional-dependencies]
