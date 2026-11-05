@@ -786,25 +786,39 @@ def check_cell_level_polarity(record: Mapping[str, Any], findings: Findings) -> 
     term's own name -- carry no information and `drop_redundant_cell_levels` removes them.
     These do carry information, and it contradicts itself.
 
+    A level the cell's term declares is a factor level, not a sign: `valence: negative`
+    with `direction: positive` is the response to negative pictures going up. In the 27B's
+    records every one of 15 val flags and a sample of 10 from 89 in 3,000 ns-pond records
+    was that case, and Astra's own records carry the same cells.
+
     An error rather than a warning, and separate from `check_cell_terms` although both read
     a cell's level, because this is the only finding in the set where the wrong answer
     changes a map: `direction` is what decides whether a coordinate enters the increase or
     the decrease image, so a record stating both signs cannot be resolved by a default.
     """
 
+    models = model_index(record)
     for index, analysis in enumerate(record.get("analyses") or []):
         if not isinstance(analysis, Mapping):
             continue
         effect = analysis.get("effect")
         if not isinstance(effect, Mapping):
             continue
+        terms = terms_in_scope(analysis.get("model_estimation"), models)
         for position, cell in enumerate(effect.get("cells") or []):
             if not isinstance(cell, Mapping):
                 continue
-            level = _LEVEL_POLARITY.get(str(values.read(cell.get("level")) or "").strip().lower())
+            stated = str(values.read(cell.get("level")) or "").strip().lower()
+            level = _LEVEL_POLARITY.get(stated)
             held = _LEVEL_POLARITY.get(
                 str(values.read(cell.get("direction")) or "").strip().lower()
             )
+            term = terms.get(cell.get("term"))
+            if isinstance(term, Mapping) and stated in {
+                name.strip().lower()
+                for name in levels_a_cell_may_name(term, terms, cell.get("direction"))
+            }:
+                continue  # a declared level that is a sign word: valence `negative`, not a sign
             if level and held and level != held:
                 findings.error(
                     f"analyses[{index}].effect.cells[{position}]",

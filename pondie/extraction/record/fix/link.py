@@ -39,6 +39,9 @@ import re
 #: candidate hosts.
 NAMING_SLOTS = ("name", "level", "label")
 
+#: Spatial scopes whose analyses restrict inference to no region, so `regions` stays empty.
+UNRESTRICTED_SCOPES = frozenset({"whole_brain", "searchlight"})
+
 
 #: Words a `Cell.level` carries when it is really stating which way the effect went, by
 #: polarity. `Cell.direction` is the slot for that, and on a continuous term there is no
@@ -284,6 +287,10 @@ def link_entities_by_name(body: dict[str, Any], sch: Schema) -> list[str]:
                 continue
             current = node.get(key)
             if [x for x in (current if isinstance(current, list) else [current]) if x]:
+                continue
+            if key == "regions" and values.read(node.get("spatial_scope")) in UNRESTRICTED_SCOPES:
+                # An analysis named after the cluster it found ("Insula L") is not restricted
+                # to that region, and a whole-brain search restricts to none.
                 continue
             found = {
                 local_id

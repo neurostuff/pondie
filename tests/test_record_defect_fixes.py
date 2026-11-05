@@ -161,6 +161,33 @@ def test_a_name_matching_both_an_arm_and_a_cohort_writes_both(extraction_schema)
     assert level["arms"] == ["arm_exercise"]
 
 
+def _region_named_analysis(scope):
+    return {
+        "analyses": [
+            {"local_id": "a1", "name": warranted("Insula L"), "spatial_scope": warranted(scope)}
+        ],
+        "regions": [{"local_id": "reg_insula_l", "name": warranted("Insula L")}],
+    }
+
+
+def test_a_whole_brain_analysis_is_not_restricted_to_the_cluster_it_is_named_after(
+    extraction_schema,
+):
+    """A table row names the cluster a whole-brain search found, and `regions` is where a
+    search was restricted to. All 49 such links in the 27B's val records were this case,
+    each one an error under the storage rule that whole-brain analyses restrict to none."""
+    for scope in ("whole_brain", "searchlight"):
+        record = _region_named_analysis(scope)
+        fix.link_entities_by_name(record, extraction_schema)
+        assert "regions" not in record["analyses"][0]
+
+
+def test_an_roi_analysis_still_links_the_region_it_is_named_after(extraction_schema):
+    record = _region_named_analysis("roi")
+    fix.link_entities_by_name(record, extraction_schema)
+    assert record["analyses"][0]["regions"] == ["reg_insula_l"]
+
+
 def test_two_candidates_of_one_kind_are_left_alone(extraction_schema):
     record = _level_record(
         "controls",
@@ -393,6 +420,20 @@ def test_a_level_contradicting_its_direction_is_left_for_the_check():
     rules.check_cell_level_polarity(record, sink)
     assert len(sink.errors) == 1
     assert "increase or decrease map" in sink.errors[0][1]
+
+
+def test_a_sign_word_the_term_declares_is_not_a_polarity_conflict():
+    """`valence: negative` with `direction: positive` is a response to negative pictures
+    rising, not a contradiction. Every flag of this shape in the 27B's records was one."""
+    record = _continuous("negative", "positive")
+    record["model_estimations"][0]["terms"][0]["type"] = warranted("categorical")
+    record["model_estimations"][0]["terms"][0]["levels"] = [
+        {"level": warranted("positive")},
+        {"level": warranted("Negative")},
+    ]
+    sink = Sink()
+    rules.check_cell_level_polarity(record, sink)
+    assert sink.errors == []
 
 
 def test_a_categorical_level_on_a_mistyped_term_is_left_alone():
