@@ -53,14 +53,19 @@ def entry(vocabulary: str, status: str, mapping_tool: str, **fields: object) -> 
 
 
 def from_decision(
-    decision: Decision, vocabulary: str, mapping_tool: str, item: int | None = None
+    decision: Decision,
+    vocabulary: str,
+    mapping_tool: str,
+    item: int | None = None,
+    also_read: list[str] | None = None,
 ) -> dict:
     """A closed field's `Decision` as an entry: mapped, ambiguous, or unmapped."""
     if decision.value in (UNKNOWN, None):
         status = AMBIGUOUS if decision.reason.startswith("matches ") else UNMAPPED
-        return entry(vocabulary, status, mapping_tool, item=item, method=decision.reason)
+        return entry(vocabulary, status, mapping_tool, item=item, method=decision.reason,
+                     also_read=also_read)
     return entry(vocabulary, MAPPED, mapping_tool, value=decision.value, item=item,
-                 method=decision.reason)
+                 method=decision.reason, also_read=also_read)
 
 
 def replace(wrapper: dict, mapping_tool: str, entries: list[dict]) -> None:

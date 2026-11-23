@@ -322,7 +322,7 @@ def test_a_modality_written_out_reaches_its_vocabulary_value(wording, expected):
 
 
 def test_a_qualified_mri_is_not_also_the_bare_one():
-    """ "functional MRI" contains "MRI", so without the lookbehind both rules match and
+    """ "functional MRI" contains "MRI", so both rules match, and without `OUTRANKS`
     `classify` reads two distinct answers as an ambiguity -- making the commonest wording in
     the corpus the one value this cannot resolve. The bare value stays reachable."""
     assert modality.normalize("functional MRI").value == "fMRI"
@@ -338,11 +338,18 @@ def test_an_acronym_does_not_leak_into_the_bare_mri_rule():
         assert modality.normalize(acronym).value == expected
 
 
+def test_arterial_spin_labelling_is_fmri():
+    """Once the gap this was reported as, now the schema's own definition: fMRI is
+    "Functional MRI, whether BOLD, ASL perfusion, or cerebral blood volume weighted"."""
+    assert modality.normalize("arterial spin labelling").value == "fMRI"
+    assert modality.normalize("pseudo-continuous ASL").value == "fMRI"
+
+
 def test_a_modality_no_rule_covers_is_reported_rather_than_guessed():
-    """Arterial spin labelling is a real gap and the vocabulary has `other`, which asserts
-    the paper placed itself outside the named modalities. It did not say that, so this is
-    UNKNOWN and appears in the residual -- which is how the rule gets written."""
-    decision = modality.normalize("arterial spin labelling")
+    """The vocabulary has `other`, which asserts the paper placed itself outside the named
+    modalities. A wording no rule reads did not say that, so it is UNKNOWN and appears in the
+    residual -- which is how the next rule gets written."""
+    decision = modality.normalize("transcranial Doppler sonography")
     assert decision.value == "UNKNOWN"
     assert decision.reason == "unmatched"
 
