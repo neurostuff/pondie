@@ -11,7 +11,8 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from dataclasses import dataclass
+from collections.abc import Collection, Mapping
+from dataclasses import dataclass, field
 from typing import Callable
 
 from pondie.normalization import OTHER, UNKNOWN
@@ -44,8 +45,18 @@ class Decision:
         return self.value not in (UNKNOWN, None)
 
 
-def classify(text: object, rules: tuple[Rule, ...], ambiguous_to: str = UNKNOWN) -> Decision:
-    """First matching rule wins; several distinct matches is an ambiguity, not a choice."""
+def classify(
+    text: object,
+    rules: tuple[Rule, ...],
+    ambiguous_to: str = UNKNOWN,
+    outranks: Mapping[str, Collection[str]] | None = None,
+) -> Decision:
+    """First matching rule wins; several distinct matches is an ambiguity, not a choice.
+
+    `outranks` maps a value to the coarser ones it refines: matched together, the refinement
+    is the one meant ("functional MRI" names fMRI, not fMRI and MRI), so the coarser value
+    drops out before the ambiguity test.
+    """
     raw = text if isinstance(text, str) else ""
     if not raw.strip():
         return Decision(UNKNOWN, "empty", raw)
@@ -54,6 +65,9 @@ def classify(text: object, rules: tuple[Rule, ...], ambiguous_to: str = UNKNOWN)
         return Decision(decisive.value, "decisive", raw)
     hit = [r.value for r in rules if r.pattern.search(raw)]
     distinct = list(dict.fromkeys(hit))
+    if outranks:
+        covered = {low for v in distinct for low in outranks.get(v, ())}
+        distinct = [v for v in distinct if v not in covered]
     if not distinct:
         return Decision(UNKNOWN, "unmatched", raw)
     if len(distinct) > 1 and OTHER not in distinct:
@@ -119,9 +133,10 @@ class ClosedField:
     rules: tuple[Rule, ...]
     values: tuple[str, ...]
     ambiguous_to: str = UNKNOWN
+    outranks: Mapping[str, Collection[str]] = field(default_factory=dict)
 
     def normalize(self, text: object) -> Decision:
-        return classify(text, self.rules, self.ambiguous_to)
+        return classify(text, self.rules, self.ambiguous_to, self.outranks)
 
     def report(self, patterns: tuple[str, ...] | None = None) -> str:
         return field_report(self.path, self.normalize, self.values, patterns)

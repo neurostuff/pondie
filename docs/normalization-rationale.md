@@ -79,6 +79,10 @@ on, not merely displayed.
 compete and the negation has to win rather than register as an ambiguity. Several distinct
 non-decisive matches is an ambiguity, not a choice, so it answers `ambiguous_to`.
 
+`outranks` is the one exception, and it is not a choice either: a value matched beside one
+it refines is the one the wording names. "functional MRI" matches both `fMRI` and `MRI`, and
+says fMRI. `modality` derives it from the schema's own `is_a`.
+
 `scan` and `field_report` are free functions rather than only methods on `ClosedField`
 because `medication_status` is a closed target that is *not* rule-based — it reads a
 dependency parse — and it had hand-copied both. One definition of "read a field's strings
@@ -127,21 +131,65 @@ cannot be derived from anything else, and without the designator the record reso
 base class where every modality-specific parameter is undeclared.
 `rules.check_acquisition_subclass` reports each one that lands there.
 
-No `OTHER`: the vocabulary already has `other`, and a second value meaning the same thing
-would be two spellings of one answer.
+**One writer.** This module writes the only `Modality` entry on `acquisitions[].modality`.
+ns-pond's `acquisition_modality` normalizer (ns-pond#228) wrote a second reading of the same
+slot, with wider rules; two entries could disagree (a lexical `MRI` beside a measure-refined
+`fMRI`), so its rules moved here (James, 2026-11-23) and ns-pond reads this entry.
 
-**Rule order.** The three qualified MRI values are tested before the bare one, and `MRI`
-carries a lookbehind for each qualifier. Without it "functional MRI" matches both `fMRI` and
-`MRI`, which `classify` reads as an ambiguity and answers UNKNOWN — the commonest wording in
-the corpus would have been the one value this cannot resolve. The acronyms need no lookbehind:
-"fMRI" is one token, so `\bmri\b` does not reach the MRI inside it. The `other` rule matches
-only the bare word, because reading "other imaging" as the vocabulary's `other` asserts the
-paper placed itself outside the named modalities.
+**Values from study_schema, not retyped.** `VALUES` is `study_schema.models.storage.Modality`
+and `PARENT` is `value_parents("storage-study", "Modality")`, so a value added there (MRS,
+iEEG, CT and physiological came in study_schema#61) cannot be missing here. No `OTHER`: the
+vocabulary already has `other`, and a second value meaning the same thing would be two
+spellings of one answer.
 
-Seeded from the vocabulary's own synonyms rather than measured drift: at the time of writing
-no committed record holds an off-vocabulary modality, because the field was closed and
-`values.cast` refused them before they could be counted. `report()` is how the real surface
-forms arrive.
+**What is read.** A schema value, in any case, maps to itself. `other` — and the class name
+`OtherModality`, which the extractor sometimes writes — is read through the acquisition's
+`modality_label`, and the entry names that slot in `also_read`. A label no rule reaches leaves
+the acquisition `other`: the extractor placed it outside the named modalities (transcranial
+magnetic stimulation, Doppler, OCT angiography). Free text in `modality` itself that no rule
+reaches is UNKNOWN and reported, as `_lexicon` does everywhere; ns-pond answered `other` there,
+which buried the wordings a rule should be written for.
+
+**Rule order, and why it stopped mattering.** The qualified MRI values once came before the
+bare one, and `MRI` carried a lookbehind for each qualifier, because "functional MRI" matched
+both and `classify` read that as an ambiguity. `OUTRANKS` replaces the lookbehinds: each value
+outranks its schema parent, iEEG outranks EEG ("intracranial EEG") and PET and SPECT outrank CT
+(PET-CT is PET). It is the same rule stated once rather than per qualifier, and it reaches
+wordings the four lookbehinds missed — "BOLD MRI" and "T1-weighted MRI" were each an
+ambiguity. The acronyms still need nothing: "fMRI" is one token, so `\bmri\b` does not
+reach the MRI inside it.
+
+**Two settled before the rules.** `NOT_ACQUISITION` — a database, a meta-analysis, sequencing,
+histology, a simulation — is unmapped whatever else matches: BrainMap is not an fMRI
+acquisition because its name says "functional". `COMPATIBLE` drops "MRI-compatible" and
+"MR-conditional" first, so an MRI-compatible EMG or eye tracker is the recording, not the
+scanner.
+
+**The patterns** are ns-pond's, measured on production records (2026-11-19), joined with
+pondie's where pondie's were wider (VBM, cortical thickness, "functional imaging"). Two of
+ns-pond's narrow pondie's: `near-infrared` must be followed by "spectroscopy", since an
+infrared eye tracker is not fNIRS; and ASL now reaches fMRI, once reported here as a gap,
+because the schema's fMRI is "BOLD, ASL perfusion, or cerebral blood volume weighted".
+
+**A bare MRI, from its analyses' measures.** `MRI` is the value for an acquisition whose role
+the paper leaves unclear, and the schema asks for a finer one "whenever the source supports
+one". The analyses that use the acquisition often do: a cerebral blood flow measure is fMRI,
+gray matter volume sMRI, a metabolite concentration MRS. `read` takes the finer value when
+every deciding measure agrees, and stays `MRI` when they disagree or none decides. One
+caveat carries the result: the extractor links every acquisition of a session to each
+analysis, so an analysis whose other linked acquisition already has the measure's modality
+is not evidence — a gray matter volume beside an sMRI acquisition says nothing about the
+bare MRI next to it. This needs the record, not one value, so it is `annotate(record)`, the
+per-record seam `apply_normalized` already offers, rather than a `derive` fill: it writes a
+`normalized` entry, and leaves the paper's own `MRI` in place.
+
+**Measured** on the 66,368 production records (ns-pond catalog, 2026-11-23; 123,667
+acquisitions with a modality): this reading agrees with ns-pond#228's on every acquisition.
+Against pondie's previous rules it changes 2,422: `other` read through its label to
+physiological 676, CT 369, iEEG 187, MRS 23 and fNIRS 15; a bare MRI refined to fMRI 510,
+sMRI 213 and MRS 40; `other` naming no acquisition (histology, DNA sequencing, confocal
+microscopy) to unmapped 282; and free-text CT, ECG, EOG and ECoG, unmatched before, to their
+values. 286 acquisitions stay unmapped and 10 ambiguous.
 
 ## `prespecification`
 
