@@ -13,6 +13,7 @@ identifier and then by ancestor; and return what could not be placed, with its s
 from __future__ import annotations
 
 import csv
+import functools
 import json
 import re
 from collections import defaultdict
@@ -62,6 +63,8 @@ class Vocabulary:
     #: Folded surface form -> node, from `curated/mondo-aliases.tsv`. Consulted before
     #: `surface`, so a row here also overrides a MONDO synonym that names the wrong node.
     aliases: dict[str, int] = field(default_factory=dict)
+    #: Folded surface form -> the MONDO node a `condition_extensions` term falls under.
+    extensions: dict[str, int] = field(default_factory=dict)
 
     def exact(self, text: object) -> int | None:
         return self.surface.get(fold(text))
@@ -159,7 +162,48 @@ def load_mondo(path: Path = MONDO) -> Vocabulary:
         # table outlives a release, and `test_mondo_bridge` names any row that went stale.
         if node is not None and fold(row["surface"]):
             vocab.aliases[fold(row["surface"])] = node
+    for form, term in extension_forms().items():
+        node = node_of.get(condition_extensions()[term].mondo_parent)
+        if node is not None:
+            vocab.extensions[form] = node
     return vocab
+
+
+#: The `Normalization.vocabulary` of a `condition_extensions` term: study_schema's manifest name.
+EXTENSION = "condition_extension"
+
+
+@dataclass(frozen=True)
+class ExtensionTerm:
+    """A condition MONDO has no node for, and the MONDO node it falls under."""
+
+    id: str
+    label: str
+    mondo_parent: str
+    forms: tuple[str, ...]
+
+
+@functools.lru_cache(maxsize=1)
+def condition_extensions() -> dict[str, ExtensionTerm]:
+    """`curated/condition-extension.tsv` by id. Needs no MONDO release."""
+    return {
+        row["id"]: ExtensionTerm(
+            row["id"], row["label"], row["mondo_parent"],
+            tuple(f.strip() for f in row["forms"].split(";") if f.strip()),
+        )
+        for row in _curated("condition-extension.tsv")
+    }
+
+
+@functools.lru_cache(maxsize=1)
+def extension_forms() -> dict[str, str]:
+    """Folded form -> the `condition_extensions` id it names: each term's label and forms."""
+    return {
+        fold(form): term.id
+        for term in condition_extensions().values()
+        for form in (term.label, *term.forms)
+        if fold(form)
+    }
 
 
 def _curated(name: str) -> list[dict[str, str]]:

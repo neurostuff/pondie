@@ -122,8 +122,9 @@ def test_an_onvoc_iri_is_written_as_the_crosswalk_writes_it() -> None:
 
 @pytest.fixture
 def tiny(tmp_path):
-    """A five-node MONDO: a disorder and its numbered subtype sharing a form, a
-    susceptibility entry, a disease a modifier narrows, and a locus with a clinical synonym."""
+    """A six-node MONDO: a disorder and its numbered subtype sharing a form, a susceptibility
+    entry, a disease a modifier narrows, a locus with a clinical synonym, and the node mild
+    cognitive impairment falls under."""
 
     def node(i: str, label: str, *synonyms: str) -> dict:
         return {
@@ -143,6 +144,8 @@ def tiny(tmp_path):
                     node("9000003", "hemorrhage, intracerebral, susceptibility to", "ICH"),
                     node("9000004", "Parkinson disease"),
                     node("9000005", "Alzheimer disease 2", "late-onset Alzheimer disease"),
+                    # the real id: `curated/condition-extension.tsv` names it as MCI's parent
+                    node("0002039", "cognitive disorder"),
                 ],
                 "edges": [],
             }
@@ -166,6 +169,11 @@ def test_a_leading_modifier_is_tried_off_only_after_the_whole_head_missed(tiny) 
     node, method = mc._placed("Idiopathic Parkinson disease", tiny)
     assert (tiny.curie(node), method) == ("MONDO:9000004", "trimmed")
     assert mc._placed("Parkinson disease", tiny)[1] == "lexical"
+    # every modifier off first, so the broad disease wins, then one fewer: taking both off
+    # "early progressive" alone lost *progressive supranuclear palsy*
+    assert mc._trimmed("Early progressive supranuclear palsy") == [
+        "supranuclear palsy", "progressive supranuclear palsy",
+    ]
 
 
 def test_the_whole_name_check_does_not_take_a_numbered_node_for_an_unnumbered_name(tiny) -> None:
@@ -178,5 +186,31 @@ def test_the_whole_name_check_does_not_take_a_numbered_node_for_an_unnumbered_na
 
 
 def test_a_curated_row_whose_node_this_release_lacks_is_skipped(tiny) -> None:
-    """The alias table names real MONDO ids; none is in this five-node release."""
+    """The alias table names real MONDO ids; none is in this six-node release."""
     assert tiny.aliases == {}
+
+
+def test_a_condition_mondo_lacks_is_placed_under_the_node_it_falls_under(tiny) -> None:
+    """Mild cognitive impairment (2,125 production items) has no MONDO node."""
+    for head in ("Mild cognitive impairment", "amnestic MCI", "Progressive mild cognitive impairment"):
+        node, method = mc._placed(head, tiny)
+        assert (tiny.curie(node), method) == ("MONDO:0002039", "extension"), head
+        assert mc.extension_of(head).id == "mild_cognitive_impairment"
+    assert mc.known(tiny)("Amnestic mild cognitive impairment")
+
+
+def test_a_condition_mondo_lacks_is_written_at_both_grains() -> None:
+    """The MONDO entry names the parent, marked broader, so a MONDO search still finds the
+    group; the extension entry names the condition itself."""
+    row = mc.Link(study="s", group="g", text="aMCI in 3 participants", head="aMCI",
+                  mondo="MONDO:0002039", label="cognitive disorder", method="extension", score=1.0)
+    written = [(e["vocabulary"], e.get("value"), e.get("rollup")) for e in mc.entries(row, "tool")]
+    assert written == [("MONDO", "MONDO:0002039", True),
+                       ("condition_extension", "mild_cognitive_impairment", None)]
+
+
+def test_mild_is_a_severity_except_in_mild_cognitive_impairment() -> None:
+    assert triage("Subjective cognitive decline or mild cognitive impairment").heads == (
+        "Subjective cognitive decline", "mild cognitive impairment",
+    )
+    assert triage("mild depression").heads == ("depression",)

@@ -166,6 +166,20 @@ def test_every_curated_row_names_a_live_node(vocab) -> None:
     for table in ("mondo-aliases.tsv", "mondo-onvoc.tsv"):
         for row in _curated(table):
             assert row["mondo"] in live, (table, row)
+    for row in _curated("condition-extension.tsv"):
+        assert row["mondo_parent"] in live, row
+
+
+@needs_mondo
+def test_a_condition_extension_form_hides_no_mondo_form(vocab) -> None:
+    """An extension is looked up before MONDO's forms, so one MONDO also has would take its
+    groups from MONDO. When MONDO adds the term, the row moves to the alias table."""
+    from pondie.vocabularies.folding import variants
+    from pondie.vocabularies.mondo import extension_forms
+
+    shadowed = {f for f in extension_forms() if any(v in vocab.surface for v in variants(f))}
+    assert shadowed == set()
+    assert vocab.labels[mc._lexical("mild cognitive impairment", vocab)] == "cognitive disorder"
 
 
 @needs_mondo

@@ -92,7 +92,8 @@ QUALIFIER = re.compile(
     r"chronic|acute|early[- ]onset|late[- ]onset|"
     r"remitted|in remission|treatment[- ]resistant|refractory|"
     r"drug[- ]na[iï]ve|medicated|unmedicated|recent[- ]onset|stable|"
-    r"current|lifetime|past|subclinical|mild|moderate|severe|recurrent|"
+    # `mild` names a severity everywhere but in mild (neuro)cognitive impairment, a condition
+    r"current|lifetime|past|subclinical|mild(?!\s+(?:neuro-?)?cognitive\b)|moderate|severe|recurrent|"
     r"childhood|adolescent|adult|p(?:a)?ediatric|comorbid|probable|possible|"
     r"suspected|sporadic|familial|presymptomatic|"
     r"intractable|(?:drug|medication|pharmaco)[- ]?resistant|newly[- ]diagnosed|de novo|"
