@@ -289,7 +289,8 @@ under and its forms. A head that reaches one is written at two grains, the way O
 The term's id is read back from the head (`extension_of`) rather than carried on the `Link`, so
 ns-pond's `medical.links`, which builds its own rows from `link`'s answer, writes both entries
 with no change of its own. Its subtypes (amnestic, non-amnestic, single- and multiple-domain,
-vascular, "due to AD") are its forms, a broader reading. `mild` is no longer lifted as a
+vascular) are its forms, a broader reading. "MCI due to Alzheimer's disease" is two
+conditions the group has (James, 2026-11-27), so triage splits it into MCI and the disease. `mild` is no longer lifted as a
 severity in front of `cognitive` or `neurocognitive`.
 
 Neurostore builds each vocabulary's ancestors within its own release, so a local release could

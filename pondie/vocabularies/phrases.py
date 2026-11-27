@@ -141,6 +141,12 @@ IN_NAME = re.compile(
 #: What stands in for an `IN_NAME` slash until the split is done. `fold` reads either as a space.
 _KEPT = "\u2215"
 
+#: "MCI due to Alzheimer's disease" states two conditions the group has: the impairment and the
+#: disease causing it (James, 2026-11-27). Written as two parts before the split.
+_DUE_TO = re.compile(
+    r"\b((?:amnestic |amnesic )?(?:mild cognitive impairment|MCI))\s+due to\s+", re.I
+)
+
 #: "alcohol abuse/dependence" and "cannabis abuse or dependence" name the substance once for
 #: both conditions. Split as written, the second head is a bare "dependence", which MONDO
 #: places at *substance dependence*; the substance is written onto both sides first.
@@ -238,7 +244,7 @@ def triage(raw: object, known: Callable[[str], bool] | None = None) -> Triaged:
         return Triaged((), (), NO_CONDITION, scope="assertion")
     if known is not None and known(text):
         return Triaged((text,), (), "single")
-    text = _SUBSTANCE_PAIR.sub(r"\1 \2\3\1 \4", text)
+    text = _SUBSTANCE_PAIR.sub(r"\1 \2\3\1 \4", _DUE_TO.sub(r"\1; ", text))
     text = IN_NAME.sub(lambda m: m.group(1) + _KEPT, text)
     if HEALTHY.match(text):
         return Triaged((), (), NO_CONDITION, scope="assertion")

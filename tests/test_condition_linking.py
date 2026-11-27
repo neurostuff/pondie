@@ -214,3 +214,11 @@ def test_mild_is_a_severity_except_in_mild_cognitive_impairment() -> None:
         "Subjective cognitive decline", "mild cognitive impairment",
     )
     assert triage("mild depression").heads == ("depression",)
+
+
+def test_mci_due_to_a_disease_is_both_conditions() -> None:
+    """A group with MCI due to AD has AD, so the disease is a head of its own."""
+    assert triage("Mild cognitive impairment due to Alzheimer's disease").heads == (
+        "Mild cognitive impairment", "Alzheimer's disease",
+    )
+    assert triage("amnestic MCI due to AD").heads == ("amnestic MCI", "AD")
