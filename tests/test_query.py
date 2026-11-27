@@ -548,3 +548,40 @@ def test_a_during_intervention_occasion_is_neither_pole(tmp_path, monkeypatch):
     )
     for way in ("increase", "decrease"):
         assert select(Selection(records=(str(written),), treatment_exposure=way)).rows == []
+
+
+def test_before_and_after_with_no_analysis_groups_is_kept(tmp_path, monkeypatch):
+    """An analysis with no linked groups has an empty arm set, not a control-only one."""
+    written = _exposure_record(
+        tmp_path,
+        monkeypatch,
+        timepoints=(("tp_pre", "pre_intervention"), ("tp_post", "post_intervention")),
+        levels={"after": {"timepoints": ["tp_post"]}, "before": {"timepoints": ["tp_pre"]}},
+        cells={"after": "positive", "before": "negative"},
+    )
+    record = json.loads(written.read_text())
+    record["analyses"][0]["groups"] = []
+    written.write_text(json.dumps(record))
+
+    outcome = select(Selection(records=(str(written),), treatment_exposure="increase"))
+    assert len(outcome.rows) == 1, dict(outcome.lost)
+    assert outcome.rows[0]["route"] == "time"
+
+
+def test_before_and_after_inside_active_arm_reports_time_route(tmp_path, monkeypatch):
+    """A pre/post contrast within one active arm is a longitudinal contrast, not a between-arm one."""
+    written = _exposure_record(
+        tmp_path,
+        monkeypatch,
+        arms=(("arm_a", "pharmacological"),),
+        timepoints=(("tp_pre", "pre_intervention"), ("tp_post", "post_intervention")),
+        levels={
+            "drug_post": {"arms": ["arm_a"], "timepoints": ["tp_post"]},
+            "drug_pre": {"arms": ["arm_a"], "timepoints": ["tp_pre"]},
+        },
+        cells={"drug_post": "positive", "drug_pre": "negative"},
+        group_arm="arm_a",
+    )
+    outcome = select(Selection(records=(str(written),), treatment_exposure="increase"))
+    assert len(outcome.rows) == 1, dict(outcome.lost)
+    assert outcome.rows[0]["route"] == "time"

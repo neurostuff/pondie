@@ -60,8 +60,9 @@ def _exposure_of(
     body: Mapping[str, Any],
     arm_sides: Mapping[tuple[str, str], str],
     time_sides: Mapping[tuple[str, str], str],
-) -> str | None:
-    """`increase`, `decrease`, or None when the analysis is not a treatment contrast.
+) -> tuple[str, str] | None:
+    """`(direction, route)` (`increase`/`decrease`, `arm`/`time`), or None when the analysis
+    is not a treatment contrast.
 
     Two routes to the same question, because this corpus asks it both ways. A trial
     compares an intervention arm against its comparator; a longitudinal study compares the
@@ -82,9 +83,9 @@ def _exposure_of(
     arms_pos = {arm_sides.get(k) for k in positive}
     arms_neg = {arm_sides.get(k) for k in negative}
     if arms_pos == {ACTIVE} and arms_neg == {CONTROL}:
-        return "increase"
+        return "increase", "arm"
     if arms_pos == {CONTROL} and arms_neg == {ACTIVE}:
-        return "decrease"
+        return "decrease", "arm"
 
     times_pos = {time_sides.get(k) for k in positive}
     times_neg = {time_sides.get(k) for k in negative}
@@ -97,9 +98,9 @@ def _exposure_of(
         # cohort is a known control arm: an unallocated or mixed one is kept, because most
         # single-arm longitudinal studies declare no arms at all and dropping those would
         # discard the route's whole contribution.
-        if _analysis_arms(analysis, body) <= {CONTROL} != set():
+        if _analysis_arms(analysis, body) == {CONTROL}:
             return None
-        return "increase" if times_pos == {"post_intervention"} else "decrease"
+        return ("increase" if times_pos == {"post_intervention"} else "decrease"), "time"
     return None
 
 
@@ -614,18 +615,14 @@ def select(
 
             route = None
             if selection.treatment_exposure is not None:
-                route = _exposure_of(analysis, body, arm_sides, time_sides)
-                if route is None:
+                exposure = _exposure_of(analysis, body, arm_sides, time_sides)
+                if exposure is None:
                     lost["not a treatment-exposure contrast"] += 1
                     continue
-                if route != selection.treatment_exposure:
-                    lost[f"treatment exposure runs {route}"] += 1
+                direction, route = exposure
+                if direction != selection.treatment_exposure:
+                    lost[f"treatment exposure runs {direction}"] += 1
                     continue
-                route = (
-                    "arm"
-                    if any(arm_sides.get(k) for k in sum(_signed_cells(analysis), []))
-                    else "time"
-                )
 
             if selection.arm_contrast is not None:
                 way = _arm_contrast_of(analysis, arm_sides)
