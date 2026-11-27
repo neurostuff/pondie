@@ -298,7 +298,7 @@ not name a MONDO parent. The MONDO entry carries the rollup instead, and the ext
 release of its own. When MONDO adds a term, its row goes and its forms move to the alias table;
 `test_mondo_bridge` fails first if an extension form becomes a MONDO form.
 
-On the production items (exact layers only): 1,904 more items get a MONDO id (51,587 to 53,491),
+On the production items (exact layers only): 1,931 more items get a MONDO id (51,587 to 53,518),
 and no item loses one. On the 280-item gold set, MONDO recall rises from 130 to 139 of 183 and
 precision stays 139 of 141; "amnestic or amnestic plus MCI" still splits at its `or` and is not
 placed.
