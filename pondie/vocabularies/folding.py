@@ -91,7 +91,18 @@ def singular(text: str) -> str:
     return " ".join(lemmatize(word, "n") for word in text.split())
 
 
+#: A prefix English writes closed, hyphenated or open: `posttraumatic`, `post-traumatic`,
+#: `post traumatic`. `fold` makes the last two one key and leaves the first apart, and MONDO
+#: and the papers do not pick the same one -- 398 PTSD items missed *post-traumatic stress
+#: disorder* on this alone.
+_PREFIX_CLOSED = re.compile(r"\b(post|pre|non|anti)(?=[a-z]{4,})")
+_PREFIX_OPEN = re.compile(r"\b(post|pre|non|anti) (?=[a-z]{4,})")
+
+
 def variants(value: object) -> list[str]:
     """Every orthographic form worth trying, most faithful first, without duplicates."""
     base = fold(value)
-    return list(dict.fromkeys(v for v in (base, singular(base)) if v))
+    forms = [base, singular(base)]
+    forms += [rule.sub(join, form) for form in list(forms)
+              for rule, join in ((_PREFIX_CLOSED, r"\1 "), (_PREFIX_OPEN, r"\1"))]
+    return list(dict.fromkeys(v for v in forms if v))

@@ -36,6 +36,7 @@ deficit and hyperactivity disorder" is one disorder.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from pondie.normalization import _negation as negation
@@ -47,7 +48,7 @@ from pondie.vocabularies.folding import fold
 _WELL = (
     r"healthy|health|normal[\s-]weight|normal|unaffected|unimpaired|non-?impaired|intact|"
     r"good|excellent|non-?clinical|non-?patient|non-?smok(?:er|ers|ing)|"
-    r"typically\s+developing|typical|comparison|none|nil"
+    r"typically\s+develop(?:ing|ed)|typical|neuro-?typical|comparison|none|nil"
 )
 _ROLE = (
     r"controls?|volunteers?|participants?|subjects?|adults?|individuals?|groups?|child|"
@@ -55,7 +56,9 @@ _ROLE = (
     r"students?|twins?|siblings?|aged|cognition|"
     r"men|women|males?|females?|elderly|older|younger|young|aging|ageing|"
     r"persons?|people|population|cohort|sample|donors?|reported|noted|documented|"
-    r"identified|found|present"
+    r"identified|found|present|"
+    # `Normal hearing` and `normal-hearing listeners` are control groups in audiology papers.
+    r"hearing|vision|sight|eyesight|listeners?|readers?|speakers?"
 )
 # Adjectives sit here beside their adverbs: the pattern only uses this list as a modifier
 # slot, and "good physical health" needs `physical` exactly where `physically` is allowed.
@@ -85,12 +88,64 @@ UNREAD = re.compile(
 #: `first-episode schizophrenia` and `chronic schizophrenia` are one vocabulary term, and a
 #: query that cannot tell them apart is a different problem from one that cannot find them.
 QUALIFIER = re.compile(
-    r"\b(first[- ]episode|chronic|acute|early[- ]onset|late[- ]onset|"
+    r"\b(first[- ]episode|(?:childhood|adolescent|adult|juvenile|youth)[- ]onset|"
+    r"chronic|acute|early[- ]onset|late[- ]onset|"
     r"remitted|in remission|treatment[- ]resistant|refractory|"
     r"drug[- ]na[iï]ve|medicated|unmedicated|recent[- ]onset|stable|"
     r"current|lifetime|past|subclinical|mild|moderate|severe|recurrent|"
     r"childhood|adolescent|adult|p(?:a)?ediatric|comorbid|probable|possible|"
-    r"suspected|sporadic|familial|presymptomatic)\b",
+    r"suspected|sporadic|familial|presymptomatic|"
+    r"intractable|(?:drug|medication|pharmaco)[- ]?resistant|newly[- ]diagnosed|de novo|"
+    r"combat[- ]related|history of|prior|previous|concurrent)\b",
+    re.I,
+)
+
+#: A prevalence or count, which says how many in the group have the condition and is not part
+#: of its name: "panic disorder in 2", "cognitive impairment in 18/44 patients", "PTSD: 9
+#: (23.7%)", "(n = 12)". Removed before the split, because `18/44` would otherwise split on
+#: its slash, and before retrieval, which accepted "panic disorder in 2" as *panic disorder 2*,
+#: an OMIM locus. The item keeps the count, so a comorbid role can still read it.
+_NUMBER = (
+    r"(?:\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|a few|few|some|"
+    r"several|a subset|a minority|a small number)"
+)
+_UNITS = r"(?:patients?|participants?|subjects?|cases?|individuals?|children|adults|people)"
+_OF = rf"(?:\s+(?:of|out of)\s+(?:the\s+)?(?:\d+\s+)?(?:{_UNITS}|sample|cohort|group|total|\d+))?"
+PREVALENCE = re.compile(
+    r"\s*\(\s*(?:n\s*=\s*\d+|\d+(?:\.\d+)?\s*%|\d+\s*/\s*\d+|\d+\s+" + _UNITS + r")[^)]*\)"
+    r"|[,;:]?\s*\bn\s*=\s*\d+\b"
+    r"|[,;:]\s*\d+\s*(?:\(\s*\d+(?:\.\d+)?\s*%\s*\))?\s*$"
+    rf"|[,;:]?\s+in\s+(?:\d+(?:\.\d+)?\s*%|\d+\s*/\s*\d+|{_NUMBER}){_OF}"
+    rf"(?:\s+{_UNITS})?(?:\s+(?:overall|in total))?(?![\w%])"
+    # and a clause about those participants: "in 43 participants meeting PCL-R total >= 30"
+    r"(?:\s+(?:meeting|who|whom|with|according|based|defined|scoring|during|receiving|"
+    r"having|treated|diagnosed)\b.*$)?"
+    rf"|[,;:]?\s+\d+(?:\.\d+)?\s*%{_OF}",
+    re.I,
+)
+
+#: A slash inside one name, where `SPLIT` would otherwise make two heads of it. The commonest
+#: in the corpus: "attention-deficit/hyperactivity disorder" (515 items) split into
+#: "attention-deficit", which retrieval placed at *ADHD, inattentive type*. Listed rather than
+#: inferred: "panic disorder/agoraphobia" and "overweight/obesity" are two conditions written
+#: the same way.
+IN_NAME = re.compile(
+    r"\b(attention[- ]?deficit|non-?fluent|logopenic|avoidant|tremor|depersonali[sz]ation|"
+    r"vegetative state|hyperactive|binge[- ]eating)"
+    r"\s*/\s*"
+    r"(?=hyperactivity|agrammatic|phonological|restrictive|ataxia|dereali[sz]ation|"
+    r"unresponsive|impulsive|purging)",
+    re.I,
+)
+#: What stands in for an `IN_NAME` slash until the split is done. `fold` reads either as a space.
+_KEPT = "\u2215"
+
+#: "alcohol abuse/dependence" and "cannabis abuse or dependence" name the substance once for
+#: both conditions. Split as written, the second head is a bare "dependence", which MONDO
+#: places at *substance dependence*; the substance is written onto both sides first.
+_SUBSTANCE_PAIR = re.compile(
+    r"\b([a-z]+)\s+(abuse|dependence|dependency|misuse)(\s*/\s*|\s+or\s+)"
+    r"(abuse|dependence|dependency|misuse)\b",
     re.I,
 )
 
@@ -101,7 +156,7 @@ QUALIFIER = re.compile(
 #: the corpus's values split here, where a loose test finds a separator in 13% -- the other 9%
 #: are prose that should not have been put in the slot, and leaving them whole keeps them
 #: visible as an extraction defect instead of shredding them into fragments.
-SPLIT = re.compile(r"\s+or\s+|\s*/\s*|\s*;\s*")
+SPLIT = re.compile(r"\s+and\s*/\s*or\s+|\s+or\s+|\s*/\s*|\s*;\s*")
 
 #: Study-role nouns at the end of a value. `Schizophrenia patients` is a cohort description
 #: whose condition is Schizophrenia; the head noun is about the study, not the disease.
@@ -145,13 +200,13 @@ def _heads_of(text: str) -> tuple[list[str], list[str]]:
     for part in (p.strip() for p in SPLIT.split(text) if p and p.strip()):
         quals += [q.lower() for q in QUALIFIER.findall(part)]
         head = TRAILING.sub("", QUALIFIER.sub("", part)).strip(" -,")
-        head = re.sub(r"\s{2,}", " ", head)
+        head = re.sub(r"\s{2,}", " ", re.sub(r"\(\s*\)", "", head)).strip().replace(_KEPT, "/")
         if head:
             heads.append(head)
     return heads, quals
 
 
-def triage(raw: object) -> Triaged:
+def triage(raw: object, known: Callable[[str], bool] | None = None) -> Triaged:
     """Head terms, the qualifiers lifted off them, and what the value turned out to be.
 
     Four layers in order: `UNREAD`, `HEALTHY`, a negation scope over the WHOLE value, then
@@ -164,15 +219,26 @@ def triage(raw: object) -> Triaged:
 
     `TRAILING` runs twice on purpose -- once on the whole value and once per head -- because
     a compound puts a role noun on the last head only.
+
+    `known`, given, says whether a string is a name the caller's vocabulary holds. A value
+    that is one whole name is then one head, before negation or splitting could break it:
+    "migraine without aura" reads "without" as a negation cue, and "chronic fatigue
+    syndrome" loses `chronic` as a course qualifier.
     """
     raw_text = str(raw or "").strip()
     if not raw_text:
         return Triaged((), (), "empty")
     if UNREAD.match(raw_text):
         return Triaged((), (), NOT_READ, scope="assertion")
-    text = TRAILING.sub("", raw_text).strip()
+    text = TRAILING.sub("", PREVALENCE.sub("", raw_text).strip(" ,;:")).strip()
     if not text:
         return Triaged((), (), "empty")
+    if HEALTHY.match(text):
+        return Triaged((), (), NO_CONDITION, scope="assertion")
+    if known is not None and known(text):
+        return Triaged((text,), (), "single")
+    text = _SUBSTANCE_PAIR.sub(r"\1 \2\3\1 \4", text)
+    text = IN_NAME.sub(lambda m: m.group(1) + _KEPT, text)
     if HEALTHY.match(text):
         return Triaged((), (), NO_CONDITION, scope="assertion")
 

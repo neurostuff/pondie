@@ -239,6 +239,38 @@ definition it expands to `attention deficit hyperactivity disorder` and matches 
 the lexical layer, never reaching retrieval at all. The abbreviation layer is a precision
 mechanism, not only a recall one.
 
+### The exact layers, ahead of retrieval
+
+ns-pond's production catalog (fit `fit-eec1437aa10b`, 88,420 condition items) was audited on
+2026-11-27 (ns-pond PR 259: 280 hand-graded items and the failure classes). Most misses
+and most wrong ids came from strings an exact lookup should have placed and did not. Each
+of these layers is tried before retrieval, in this order:
+
+| layer | where | what it fixes |
+|---|---|---|
+| paper's abbreviations on the whole item | `normalize`, before `triage` | a defined compound (`AD/HD`, `ARFID`) reaches the splitter as the name it stands for |
+| counts removed | `phrases.PREVALENCE` | "panic disorder in 2" retrieved *panic disorder 2*, a locus; "in 18/44" split on its slash |
+| slash inside a name kept | `phrases.IN_NAME` | "attention-deficit/hyperactivity disorder" split, and "attention-deficit" retrieved the inattentive subtype (572 wrong ids) |
+| substance written onto both sides | `phrases._SUBSTANCE_PAIR` | "alcohol abuse/dependence" gave a bare "dependence" |
+| whole value is a name | `triage(known=...)` | "migraine without aura" read `without` as negation; "chronic fatigue syndrome" lost `chronic`; "childhood absence epilepsy" was read as an absence |
+| aliases | `curated/mondo-aliases.tsv` | forms MONDO lacks (hypertension 1,431 items, ADHD, the DSM-5 use disorders) or gets wrong (`OCD` is a MONDO synonym of the personality disorder) |
+| closed and open prefixes | `folding.variants` | "posttraumatic" missed *post-traumatic stress disorder* (398 items) |
+| leading modifier tried off | `medical_condition.MODIFIERS` | "idiopathic Parkinson's disease" (643 items), "intractable epilepsy"; tried only after the whole head missed, so *idiopathic generalized epilepsy* still matches whole |
+
+Measured over every distinct production item without retrieval or expansion (so a lower
+bound): items placed by an exact layer rose from 40,581 to 51,587 and items with an ONVOC
+term from 33,272 to 46,893. 9 items lost a MONDO id: 3 were wrong (`ICH` -> a
+susceptibility entry, binge-eating/purging anorexia -> binge eating disorder), and 6 were a
+bare "dependence" placed at *substance dependence* that is now split into stimulant,
+sedative or "MJ" dependence, which MONDO has no node for.
+
+**Loci.** 5,133 MONDO labels are a susceptibility entry or a numbered subtype
+(`autism spectrum disorder 1`). Retrieval does not offer them to a head with no number,
+Arabic or Roman; a form one shares with an unnumbered node belongs to the unnumbered one
+(`CADASIL`); and a susceptibility entry's forms are not indexed for an exact match. Numbered
+nodes stay reachable exactly: `PSP` is a form of *supranuclear palsy, progressive, 1* alone,
+and refusing every numbered node lost it.
+
 ### Abbreviations, expanded per paper
 
 The MONDO route had **no expansion layer at all** — `link` went from the raw head straight to
@@ -268,11 +300,15 @@ Four layers, in falling order of how much they claim:
 
 | `onvoc_via` | |
 |---|---|
-| `crosswalk` | the matched node is tied to an ONVOC term by ONVOC's own file |
-| `ancestor` | a node above it is — so the ONVOC term is a **parent** of this one, and the row is a grain gap |
+| `crosswalk` | the matched node is tied to an ONVOC term, by ONVOC's own file or a curated row |
+| `ancestor` | a node above it is tied by ONVOC's file — so the ONVOC term is a **parent** of this one, and the row is a grain gap |
 | `name` | ONVOC has the term and the crosswalk simply does not say so |
 | `ancestor-name` | the same, for a node above it |
+| `ancestor` (curated) | a node above it is tied by a curated row: the last resort |
 | *(empty)* | ONVOC cannot name this at any grain — the row is a **proposal** |
+
+Every id is written `ONVOC:0000243`. The name layers used to write the release's IRI, so one
+concept carried two ids in the catalog (3,667 of 42,943 ONVOC entries).
 
 ### Why the ancestor walk is load-bearing
 
@@ -299,6 +335,18 @@ than proposing nothing. The name check runs before a row is allowed to become a 
 only on the tight end of the ladder — `exact`, `synonym`, `stem`. `contains` and `overlap`
 are the layers that produced defect 2 in normalization-layer.md, and the input here is an
 ontology label rather than a paper's prose.
+
+### Curated rows, and why they come last
+
+ONVOC's file has no row for *anxiety disorder*, *eating disorder*, *neurodegenerative
+disease*, *dystonic disorder*, *learning disability* or *tic disorder*, so generalized
+anxiety disorder (1,128 items), anorexia nervosa and PSP had no ONVOC term at all.
+`curated/mondo-onvoc.tsv` adds 13 reviewed ties, and the ancestor walk carries each to the
+node's descendants. They are broad nodes, so on the walk they come after the name layers:
+ahead of them, PTSD reached `Anxiety Disorders` instead of `Post-Traumatic Stress Disorder`
+and Huntington disease `Neurodegeneration` instead of `Huntington's Disease`. Bridging
+through UMLS or MeSH cross-references instead was simulated and rejected: it placed 5,925
+more items and sent diabetes mellitus to `Gastrointestinal Disorder`.
 
 ### An ambiguous crosswalk row decides nothing
 
@@ -358,6 +406,12 @@ Raising is right here because the alternative failure is invisible. An unexpande
 looks exactly like a term the vocabulary lacks, and the candidate list is downstream.
 
 ## Still open
+
+- *Mild cognitive impairment* is in neither MONDO nor ONVOC (2,061 items, the largest single
+  condition unplaced); `mild` is also lifted as a severity qualifier. Whether to map it to
+  *cognitive disorder* as a broader term or carry a local id is undecided.
+- A slash compound the paper never defines is split: "AD/HD" in a paper that writes it six
+  times and never spells it out is read as `AD` and `HD`.
 
 - Risk phrasings (`high risk for depression`, `familial risk for bipolar disorder`, 32
   mentions) are read as diagnoses by both routes. Risk is neither diagnosis nor absence and

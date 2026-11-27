@@ -1,0 +1,22 @@
+# Surface forms MONDO lacks or assigns to the wrong node, each -> the MONDO node a paper means by it.
+# Read by `mondo.load_mondo` into `Vocabulary.aliases`, which an exact lookup consults before MONDO's own forms, so
+# a row also overrides a wrong MONDO synonym. Folded on load: case and punctuation do not matter.
+# Item counts: ns-pond PR 259, production catalog (2026-11-27).
+surface	mondo	mondo_label	note
+hypertension	MONDO:0005044	hypertensive disorder	MONDO has no form "hypertension"; 1,431 items went to review
+arterial hypertension	MONDO:0005044	hypertensive disorder	as above
+high blood pressure	MONDO:0005044	hypertensive disorder	as above
+ADHD	MONDO:0007743	attention deficit-hyperactivity disorder	not a MONDO form; retrieval placed it at a susceptibility locus (828 unmapped)
+OCD	MONDO:0008114	obsessive-compulsive disorder	MONDO lists OCD as an exact synonym of obsessive-compulsive personality disorder (103 wrong ids)
+Asperger syndrome	MONDO:0005258	autism spectrum disorder	MONDO's only Asperger syndrome is a locus (242 wrong ids); DSM-5 places it in autism spectrum disorder, a broader term
+Asperger's syndrome	MONDO:0005258	autism spectrum disorder	as above
+Asperger disorder	MONDO:0005258	autism spectrum disorder	as above
+Asperger's disorder	MONDO:0005258	autism spectrum disorder	as above
+alcohol use disorder	MONDO:0007079	alcohol dependence	MONDO has no use-disorder nodes; DSM-5 use disorder spans abuse and dependence, so dependence is narrower
+cannabis use disorder	MONDO:0005689	cannabis dependence	as above
+marijuana use disorder	MONDO:0005689	cannabis dependence	as above
+cocaine use disorder	MONDO:0005186	cocaine dependence	as above
+opioid use disorder	MONDO:0005530	opiate dependence	as above
+tobacco use disorder	MONDO:0008575	nicotine dependence	as above
+tobacco dependence	MONDO:0008575	nicotine dependence	not a MONDO form
+marijuana abuse	MONDO:0005689	cannabis dependence	MONDO lists cannabis abuse as a synonym of cannabis dependence; marijuana abuse is not a form

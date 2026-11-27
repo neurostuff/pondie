@@ -1,7 +1,8 @@
 """`Group.medical_condition` -> MONDO, and through MONDO to UMLS, SNOMED and ONVOC.
 
-Triage first (`vocabularies.phrases`), then link each head, then derive the ONVOC term from
-the MONDO node rather than matching twice. A row carries both grains and the relation
+Spell out the paper's own abbreviations, triage (`vocabularies.phrases`), link each head
+(exact layers first, then retrieval), then derive the ONVOC term from the MONDO node rather
+than matching twice. A row carries both grains and the relation
 between them: MONDO is the grain the literature writes in, ONVOC the grain a query filters
 on, and which one a meta-analysis needs is not this layer's decision.
 
@@ -23,7 +24,7 @@ from pondie.normalization._negation import available as parser_available
 from pondie.normalization._records import DEFAULT, NOT_REPORTED, iter_records, value_of
 from pondie.vocabularies.abbreviations import Abbreviations, expansions_in
 from pondie.vocabularies.folding import variants
-from pondie.vocabularies.mondo import Vocabulary, load_mondo, onvoc_crosswalk
+from pondie.vocabularies.mondo import CURATED_ROW, Vocabulary, load_mondo, onvoc_crosswalk
 from pondie.vocabularies.onvoc import load_onvoc
 from pondie.vocabularies.phrases import (
     NO_CONDITION,
@@ -86,13 +87,57 @@ class Link:
         return bool(self.mondo) and not self.onvoc
 
 
+#: A head that names a subtype by number, Arabic or Roman: `type 2`, `CRPS II`, `SCA3`.
+_NUMBERED = re.compile(r"\d|\b(?:i{1,3}|iv|vi{0,3}|ix)\b", re.I)
+
+
+#: Leading words that narrow a diagnosis without naming a different one: "intractable
+#: epilepsy", "isolated REM sleep behavior disorder", "episodic migraine without aura". Tried
+#: only for an exact match, and only after the whole head missed, because some are part of a
+#: MONDO name (*idiopathic generalized epilepsy*) and the whole head reaches those first.
+MODIFIERS = re.compile(
+    r"^(?:(?:idiopathic|isolated|bilateral|unilateral|episodic|primary|clinical|"
+    r"clinically[- ]diagnosed|diagnosed|confirmed|untreated|treated|active|established|"
+    r"symptomatic|early|late|advanced|late[- ]life|mild[- ]to[- ]moderate|"
+    r"moderate[- ]to[- ]severe)\s+)+",
+    re.I,
+)
+
+
+def _placed(head: str, vocab: Vocabulary) -> tuple[int | None, str]:
+    """(node, method) of an exact lookup: an alias, a MONDO form, then the head trimmed."""
+    forms = variants(head)
+    for table, method in ((vocab.aliases, "alias"), (vocab.surface, "lexical")):
+        for form in forms:
+            node = table.get(form)
+            if node is not None:
+                return node, method
+    trimmed = MODIFIERS.sub("", head).strip()
+    if trimmed and trimmed != head:
+        node, method = _placed(trimmed, vocab)
+        if node is not None:
+            return node, "trimmed" if method == "lexical" else method
+    return None, ""
+
+
 def _lexical(head: str, vocab: Vocabulary) -> int | None:
     """The node an exact or orthographic-variant lookup reaches, most faithful first."""
-    for form in variants(head):
-        node = vocab.surface.get(form)
-        if node is not None:
-            return node
-    return None
+    return _placed(head, vocab)[0]
+
+
+def known(vocab: Vocabulary):
+    """`triage`'s `known`: is this string a whole name `vocab` places exactly?
+
+    Not when the name is only a numbered node's and the string has no number: "late-onset
+    Alzheimer disease" is a synonym of *Alzheimer disease 2* alone, and split as usual it
+    reaches *Alzheimer disease*.
+    """
+
+    def is_name(text: str) -> bool:
+        node = _lexical(text, vocab)
+        return node is not None and (node not in vocab.loci or bool(_NUMBERED.search(text)))
+
+    return is_name
 
 
 @dataclass
@@ -131,17 +176,27 @@ class Index:
             # past the first few.
             window = min(top * 8, sim.shape[1] - 1)
             front = np.argpartition(-sim, window, axis=1)[:, : window + 1]
-            for row, candidates in zip(sim, front):
+            batch = queries[start : start + chunk]
+            for query, row, candidates in zip(batch, sim, front):
                 order = candidates[np.argsort(-row[candidates])]
+                # A head with no number never means a locus: "panic disorder in 2" went to
+                # *panic disorder 2* and "attention-deficit" to a susceptibility entry.
+                barred = frozenset() if _NUMBERED.search(query) else self.vocab.loci
                 seen: list[tuple[int, float]] = []
                 taken: set[int] = set()
                 for form_index in order:
                     node = self.node_of[int(form_index)]
-                    if node not in taken:
+                    if node not in taken and node not in barred:
                         taken.add(node)
                         seen.append((node, float(row[form_index])))
                     if len(seen) >= top:
                         break
+                if not seen:
+                    # Every candidate in the window was a locus: nothing to offer but the
+                    # nearest, scored so that it is rejected rather than taken.
+                    node = self.node_of[int(order[0])]
+                    out.append((node, 0.0, []))
+                    continue
                 out.append((seen[0][0], seen[0][1], [n for n, _ in seen[1:]]))
         return out
 
@@ -154,33 +209,57 @@ BY_NAME = frozenset({"exact", "synonym", "stem"})
 def bridge(
     node: int,
     vocab: Vocabulary,
-    crosswalk: dict[str, tuple[str, str]],
+    crosswalk: dict[str, tuple[str, ...]],
     onvoc: object = None,
 ) -> tuple[str, str, str, tuple[str, ...]]:
     """(ONVOC id, ONVOC label, how it was reached, the ancestors walked to get there).
 
-    Four layers: a direct `crosswalk` tie, then the nearest crosswalked `ancestor`, then
-    ONVOC's own label by `name`, then an ancestor's label. Empty means ONVOC cannot name
-    this at any grain, which makes the row a proposal rather than a failure.
+    Five layers: a direct `crosswalk` tie, then the nearest `ancestor` ONVOC's published
+    crosswalk ties, then ONVOC's own label by `name`, then an ancestor's label, and last the
+    nearest ancestor a curated row ties. The curated ancestors come last because they are
+    broad nodes (*anxiety disorder*, *neurodegenerative disease*): ahead of the name layers,
+    PTSD reached Anxiety Disorders instead of Post-Traumatic Stress Disorder. Empty means
+    ONVOC cannot name this at any grain, which makes the row a proposal rather than a failure.
     """
     ancestors = vocab.ancestors(node)
     path = tuple(f"{vocab.labels[a]} ({vocab.curie(a)})" for a in ancestors[:12])
     direct = crosswalk.get(vocab.curie(node))
     if direct:
         return direct[0], direct[1], "crosswalk", path
-    for ancestor in ancestors:
-        tie = crosswalk.get(vocab.curie(ancestor))
-        if tie:
-            return tie[0], tie[1], "ancestor", path
+
+    def nearest(curated: bool) -> tuple[str, ...] | None:
+        for ancestor in ancestors:
+            tie = crosswalk.get(vocab.curie(ancestor))
+            if tie and (tie[2:] == (CURATED_ROW,)) == curated:
+                return tie
+        return None
+
+    tie = nearest(curated=False)
+    if tie:
+        return tie[0], tie[1], "ancestor", path
     if onvoc is not None:
         concept, method, _others = onvoc.match(vocab.labels[node])
         if concept is not None and method in BY_NAME:
-            return concept.id, concept.label, "name", path
+            return onvoc_curie(concept.id), concept.label, "name", path
         for ancestor in ancestors[:6]:
             concept, method, _others = onvoc.match(vocab.labels[ancestor])
             if concept is not None and method in BY_NAME:
-                return concept.id, concept.label, "ancestor-name", path
+                return onvoc_curie(concept.id), concept.label, "ancestor-name", path
+    tie = nearest(curated=True)
+    if tie:
+        return tie[0], tie[1], "ancestor", path
     return "", "", "", path
+
+
+def onvoc_curie(identifier: str) -> str:
+    """`ONVOC:0000243`, the form the crosswalk writes, for an ONVOC IRI or CURIE.
+
+    The name layers return the release's IRI (`https://w3id.org/onvoc/ONVOC_0000243`); written
+    as is, one concept carried two ids and a filter on either missed the other (3,667 of
+    42,943 ONVOC entries in ns-pond's production catalog, 2026-11-27).
+    """
+    found = re.search(r"ONVOC[_:](\d+)$", identifier)
+    return f"ONVOC:{found.group(1)}" if found else identifier
 
 
 def link(
@@ -194,9 +273,9 @@ def link(
     out: dict[str, tuple[int | None, str, float, list[int]]] = {}
     rest = []
     for head in heads:
-        node = _lexical(head, vocab)
+        node, method = _placed(head, vocab)
         if node is not None:
-            out[head] = (node, "lexical", 1.0, [])
+            out[head] = (node, method, 1.0, [])
         else:
             rest.append(head)
     if not rest:
@@ -348,6 +427,7 @@ def normalize(
     # cannot reach a drug or a brain region.
     onvoc = load_onvoc().scoped(("disorders",))
     result = Result(parser=parser_available(), mondo_version=fetch.version("mondo"))
+    is_name = known(vocab)
 
     staged: list[tuple[Link, str]] = []
     for study, body in iter_records(patterns):
@@ -364,12 +444,16 @@ def normalize(
                     result.cohorts["absent by flag"] += 1
                 continue
             for index, item in values:
-                triaged = triage(item)
+                # The paper's own short forms are spelled out before triage reads the value,
+                # so a defined compound ("AD/HD") reaches the splitter as the name it stands
+                # for, and a defined control label ("HC") reaches the wellness test.
+                spelled, seen = _expanded(item, store, study)
+                triaged = triage(spelled, is_name)
                 result.triage[triaged.kind] += 1
                 sentinel, by_flag = triaged.sentinel, False
                 # The only gap `is_healthy` fills: a value that says nothing either way.
                 # It can add an absence, never remove one.
-                if sentinel == NOT_READ and absent(item, flag):
+                if sentinel == NOT_READ and absent(spelled, flag):
                     sentinel, by_flag = NO_CONDITION, True
                 if sentinel:
                     result.cohorts[
@@ -388,7 +472,6 @@ def normalize(
                     continue
                 result.cohorts["condition"] += 1
                 for head in triaged.heads:
-                    expanded, seen = _expanded(head, store, study)
                     staged.append(
                         (
                             Link(
@@ -396,7 +479,7 @@ def normalize(
                                 denied=triaged.denied, scope=triaged.scope,
                                 qualifiers=triaged.qualifiers, expansions=seen,
                             ),
-                            expanded,
+                            head,
                         )
                     )
 

@@ -451,9 +451,20 @@ def expansions_in(
             f"store is scoped to {store.paper!r} but was asked about {paper!r}: one "
             "paper's definitions are not evidence about another's"
         )
-    for token in re.findall(r"[A-Za-z][A-Za-z0-9.-]{1,7}", str(text or "")):
-        if not is_short_form(token):
-            continue
-        expansion = store.expand(token, paper)
-        if expansion:
-            yield token, expansion
+    # `/` is part of a token because the miner keeps it in a short form (`_CANDIDATE`): a
+    # paper that defines "(AD/HD)" defines that compound, and read as `AD` and `HD` it was
+    # Alzheimer disease and Huntington disease. A compound the paper did not define is
+    # looked up part by part, which is how "ODD/CD" reaches both its definitions.
+    for token in re.findall(r"[A-Za-z][A-Za-z0-9./-]*[A-Za-z0-9]|[A-Za-z]", str(text or "")):
+        hyphened = token.split("-")
+        parts = [token, *hyphened, *(q for h in hyphened for q in h.split("/"))]
+        found: list[str] = []
+        for part in dict.fromkeys(parts):
+            if any(part in compound for compound in found):
+                continue
+            if not is_short_form(part) or len(part) > _MAX_SHORT:
+                continue
+            expansion = store.expand(part, paper)
+            if expansion:
+                found.append(part)
+                yield part, expansion

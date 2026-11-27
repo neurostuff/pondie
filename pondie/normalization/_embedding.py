@@ -16,6 +16,10 @@ from pondie import paths
 
 PHRASE_MODEL = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
 PROSE_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+#: Hub commits, so a model update cannot move a retrieval score between two runs that name
+#: the same model. The phrase model's is the one ns-pond's production normalize ran with
+#: (beast's cache, 2026-11-27). A model not listed loads the Hub's current revision.
+REVISIONS = {PHRASE_MODEL: "090663c3ae57bf35ffe4d0d468a2a88d03051a4d"}
 CACHE = paths.CACHE / "embeddings"
 
 
@@ -41,7 +45,7 @@ def device() -> str:
 def _model(name: str):
     from sentence_transformers import SentenceTransformer
 
-    return SentenceTransformer(name, device=device())
+    return SentenceTransformer(name, device=device(), revision=REVISIONS.get(name))
 
 
 def encode(texts: list[str], model: str, cache: bool = True):
