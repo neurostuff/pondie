@@ -255,7 +255,7 @@ of these layers is tried before retrieval, in this order:
 | whole value is a name | `triage(known=...)` | "migraine without aura" read `without` as negation; "chronic fatigue syndrome" lost `chronic`; "childhood absence epilepsy" was read as an absence |
 | aliases | `curated/mondo-aliases.tsv` | forms MONDO lacks (hypertension 1,431 items, ADHD, the DSM-5 use disorders) or gets wrong (`OCD` is a MONDO synonym of the personality disorder) |
 | closed and open prefixes | `folding.variants` | "posttraumatic" missed *post-traumatic stress disorder* (398 items) |
-| leading modifier tried off | `medical_condition.MODIFIERS` | "idiopathic Parkinson's disease" (643 items), "intractable epilepsy"; tried only after the whole head missed, so *idiopathic generalized epilepsy* still matches whole |
+| leading modifier tried off | `medical_condition.MODIFIERS` | "idiopathic Parkinson's disease" (643 items), "intractable epilepsy"; tried only after the whole head missed, so *idiopathic generalized epilepsy* still matches whole; every modifier off first, then one fewer, so "early progressive supranuclear palsy" is still found |
 
 Measured over every distinct production item without retrieval or expansion (so a lower
 bound): items placed by an exact layer rose from 40,581 to 51,587 and items with an ONVOC
@@ -270,6 +270,38 @@ Arabic or Roman; a form one shares with an unnumbered node belongs to the unnumb
 (`CADASIL`); and a susceptibility entry's forms are not indexed for an exact match. Numbered
 nodes stay reachable exactly: `PSP` is a form of *supranuclear palsy, progressive, 1* alone,
 and refusing every numbered node lost it.
+
+### Conditions MONDO lacks
+
+*Mild cognitive impairment* is in neither MONDO nor ONVOC, and it was the largest single
+condition left unplaced (2,125 production items, 537 of them amnestic). James decided on
+2026-11-27 to carry it as a local term under MONDO's node for it, rather than map it to the
+broader node alone or wait for a MONDO release.
+
+`curated/condition-extension.tsv` holds such terms: an id, a label, the MONDO node it falls
+under and its forms. A head that reaches one is written at two grains, the way ONVOC is:
+
+| entry | value | |
+|---|---|---|
+| `MONDO` | `MONDO:0002039` *cognitive disorder* | `rollup: true`, so a MONDO search, and its descendant expansion, finds the group |
+| `condition_extension` | `mild_cognitive_impairment` | the term itself; study_schema's manifest names the vocabulary |
+
+The term's id is read back from the head (`extension_of`) rather than carried on the `Link`, so
+ns-pond's `medical.links`, which builds its own rows from `link`'s answer, writes both entries
+with no change of its own. Its subtypes (amnestic, non-amnestic, single- and multiple-domain,
+vascular) are its forms, a broader reading. "MCI due to Alzheimer's disease" is two
+conditions the group has (James, 2026-11-27), so triage splits it into MCI and the disease. `mild` is no longer lifted as a
+severity in front of `cognitive` or `neurocognitive`.
+
+Neurostore builds each vocabulary's ancestors within its own release, so a local release could
+not name a MONDO parent. The MONDO entry carries the rollup instead, and the extension needs no
+release of its own. When MONDO adds a term, its row goes and its forms move to the alias table;
+`test_mondo_bridge` fails first if an extension form becomes a MONDO form.
+
+On the production items (exact layers only): 1,931 more items get a MONDO id (51,587 to 53,518),
+and no item loses one. On the 280-item gold set, MONDO recall rises from 130 to 139 of 183 and
+precision stays 139 of 141; "amnestic or amnestic plus MCI" still splits at its `or` and is not
+placed.
 
 ### Abbreviations, expanded per paper
 
@@ -407,9 +439,6 @@ looks exactly like a term the vocabulary lacks, and the candidate list is downst
 
 ## Still open
 
-- *Mild cognitive impairment* is in neither MONDO nor ONVOC (2,061 items, the largest single
-  condition unplaced); `mild` is also lifted as a severity qualifier. Whether to map it to
-  *cognitive disorder* as a broader term or carry a local id is undecided.
 - A slash compound the paper never defines is split: "AD/HD" in a paper that writes it six
   times and never spells it out is read as `AD` and `HD`.
 

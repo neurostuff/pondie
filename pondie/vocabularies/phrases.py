@@ -92,7 +92,8 @@ QUALIFIER = re.compile(
     r"chronic|acute|early[- ]onset|late[- ]onset|"
     r"remitted|in remission|treatment[- ]resistant|refractory|"
     r"drug[- ]na[iï]ve|medicated|unmedicated|recent[- ]onset|stable|"
-    r"current|lifetime|past|subclinical|mild|moderate|severe|recurrent|"
+    # `mild` names a severity everywhere but in mild (neuro)cognitive impairment, a condition
+    r"current|lifetime|past|subclinical|mild(?!\s+(?:neuro-?)?cognitive\b)|moderate|severe|recurrent|"
     r"childhood|adolescent|adult|p(?:a)?ediatric|comorbid|probable|possible|"
     r"suspected|sporadic|familial|presymptomatic|"
     r"intractable|(?:drug|medication|pharmaco)[- ]?resistant|newly[- ]diagnosed|de novo|"
@@ -139,6 +140,12 @@ IN_NAME = re.compile(
 )
 #: What stands in for an `IN_NAME` slash until the split is done. `fold` reads either as a space.
 _KEPT = "\u2215"
+
+#: "MCI due to Alzheimer's disease" states two conditions the group has: the impairment and the
+#: disease causing it (James, 2026-11-27). Written as two parts before the split.
+_DUE_TO = re.compile(
+    r"\b((?:amnestic |amnesic )?(?:mild cognitive impairment|MCI))\s+due to\s+", re.I
+)
 
 #: "alcohol abuse/dependence" and "cannabis abuse or dependence" name the substance once for
 #: both conditions. Split as written, the second head is a bare "dependence", which MONDO
@@ -237,7 +244,7 @@ def triage(raw: object, known: Callable[[str], bool] | None = None) -> Triaged:
         return Triaged((), (), NO_CONDITION, scope="assertion")
     if known is not None and known(text):
         return Triaged((text,), (), "single")
-    text = _SUBSTANCE_PAIR.sub(r"\1 \2\3\1 \4", text)
+    text = _SUBSTANCE_PAIR.sub(r"\1 \2\3\1 \4", _DUE_TO.sub(r"\1; ", text))
     text = IN_NAME.sub(lambda m: m.group(1) + _KEPT, text)
     if HEALTHY.match(text):
         return Triaged((), (), NO_CONDITION, scope="assertion")

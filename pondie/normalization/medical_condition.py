@@ -24,7 +24,15 @@ from pondie.normalization._negation import available as parser_available
 from pondie.normalization._records import DEFAULT, NOT_REPORTED, iter_records, value_of
 from pondie.vocabularies.abbreviations import Abbreviations, expansions_in
 from pondie.vocabularies.folding import variants
-from pondie.vocabularies.mondo import CURATED_ROW, Vocabulary, load_mondo, onvoc_crosswalk
+from pondie.vocabularies.mondo import (
+    CURATED_ROW,
+    EXTENSION,
+    Vocabulary,
+    condition_extensions,
+    extension_forms,
+    load_mondo,
+    onvoc_crosswalk,
+)
 from pondie.vocabularies.onvoc import load_onvoc
 from pondie.vocabularies.phrases import (
     NO_CONDITION,
@@ -96,28 +104,67 @@ _NUMBERED = re.compile(r"\d|\b(?:i{1,3}|iv|vi{0,3}|ix)\b", re.I)
 #: only for an exact match, and only after the whole head missed, because some are part of a
 #: MONDO name (*idiopathic generalized epilepsy*) and the whole head reaches those first.
 MODIFIERS = re.compile(
-    r"^(?:(?:idiopathic|isolated|bilateral|unilateral|episodic|primary|clinical|"
+    r"^(?:idiopathic|isolated|bilateral|unilateral|episodic|primary|clinical|"
     r"clinically[- ]diagnosed|diagnosed|confirmed|untreated|treated|active|established|"
     r"symptomatic|early|late|advanced|late[- ]life|mild[- ]to[- ]moderate|"
-    r"moderate[- ]to[- ]severe)\s+)+",
+    r"moderate[- ]to[- ]severe|stable|progressive|non-?progressive|converting|non-?converting)\s+",
     re.I,
 )
 
 
+def _trimmed(head: str) -> list[str]:
+    """`head` with its leading modifiers off, all of them first and then one fewer each time.
+
+    All first, so the broad disease is preferred: "isolated idiopathic dystonia" reaches
+    *dystonic disorder*, where "idiopathic dystonia" is a MONDO synonym of one early-onset
+    subtype. One fewer after, so a name that starts with a modifier is still found: "early
+    progressive supranuclear palsy" misses as "supranuclear palsy" and is then tried as
+    "progressive supranuclear palsy".
+    """
+    out = []
+    while True:
+        shorter = MODIFIERS.sub("", head, count=1).strip()
+        if not shorter or shorter == head:
+            return out[::-1]
+        out.append(shorter)
+        head = shorter
+
+
 def _placed(head: str, vocab: Vocabulary) -> tuple[int | None, str]:
-    """(node, method) of an exact lookup: an alias, a MONDO form, then the head trimmed."""
+    """(node, method) of an exact lookup: an alias, a condition MONDO lacks (`extension`:
+    the node is the MONDO parent it falls under), a MONDO form, then the head trimmed."""
     forms = variants(head)
-    for table, method in ((vocab.aliases, "alias"), (vocab.surface, "lexical")):
+    tables = ((vocab.aliases, "alias"), (vocab.extensions, "extension"), (vocab.surface, "lexical"))
+    for table, method in tables:
         for form in forms:
             node = table.get(form)
             if node is not None:
                 return node, method
-    trimmed = MODIFIERS.sub("", head).strip()
-    if trimmed and trimmed != head:
-        node, method = _placed(trimmed, vocab)
-        if node is not None:
-            return node, "trimmed" if method == "lexical" else method
+    for trimmed in _trimmed(head):
+        for table, method in tables:
+            for form in variants(trimmed):
+                node = table.get(form)
+                if node is not None:
+                    return node, "trimmed" if method == "lexical" else method
     return None, ""
+
+
+def extension_of(text: str):
+    """The `condition_extensions` term `text` names, as `_placed` reads it, or None.
+
+    The id is read back from the head rather than carried on the `Link`, so a caller that
+    builds its own rows from `link`'s answer (ns-pond's `medical.links`) writes the entry
+    too. A count left on the head (ns-pond's strip repair relinks without one) is read off.
+    """
+    from pondie.vocabularies.phrases import PREVALENCE
+
+    forms = extension_forms()
+    counted = PREVALENCE.sub("", text).strip(" ,;:")
+    for candidate in dict.fromkeys((text, *_trimmed(text), counted, *_trimmed(counted))):
+        for form in variants(candidate):
+            if form in forms:
+                return condition_extensions()[forms[form]]
+    return None
 
 
 def _lexical(head: str, vocab: Vocabulary) -> int | None:
@@ -529,7 +576,8 @@ _BROADER = frozenset({"ancestor", "ancestor-name"})
 
 
 def entries(link_: Link, mapping_tool: str) -> list[dict]:
-    """One row as `Normalization` entries: MONDO always, ONVOC where the bridge reached it.
+    """One row as `Normalization` entries: MONDO always, `condition_extension` for a condition
+    MONDO lacks, ONVOC where the bridge reached it.
 
     `head` is kept only when the item named several things; one that is the whole item
     says nothing an entry without it does not.
@@ -544,15 +592,24 @@ def entries(link_: Link, mapping_tool: str) -> list[dict]:
             "MONDO", _sidecar.UNMAPPED, mapping_tool, method=link_.method or "not read",
             confidence=confidence, qualifiers=list(link_.qualifiers), **where,
         )]
+    # A condition MONDO lacks: MONDO and ONVOC name the node it falls under, and say so.
+    term = extension_of(link_.head or link_.text) if "extension" in link_.method else None
     out = [_sidecar.entry(
         "MONDO", _sidecar.MAPPED, mapping_tool, value=link_.mondo, label=link_.label,
-        method=link_.method, confidence=confidence, qualifiers=list(link_.qualifiers), **where,
+        method=link_.method, confidence=confidence, rollup=True if term else None,
+        qualifiers=list(link_.qualifiers), **where,
     )]
+    if term is not None:
+        out.append(_sidecar.entry(
+            EXTENSION, _sidecar.MAPPED, mapping_tool, value=term.id, label=term.label,
+            method=f"under MONDO {term.mondo_parent}", confidence=confidence,
+            qualifiers=list(link_.qualifiers), **where,
+        ))
     if link_.onvoc_id:
         out.append(_sidecar.entry(
             "ONVOC", _sidecar.MAPPED, mapping_tool, value=link_.onvoc_id, label=link_.onvoc,
             method=f"MONDO {link_.mondo} by {link_.onvoc_via}",
-            rollup=True if link_.onvoc_via in _BROADER else None,
+            rollup=True if term or link_.onvoc_via in _BROADER else None,
             qualifiers=list(link_.qualifiers), **where,
         ))
     return out
