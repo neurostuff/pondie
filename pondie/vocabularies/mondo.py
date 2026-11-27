@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,6 +24,21 @@ from pondie.vocabularies.folding import fold
 
 MONDO = paths.VOCAB / "mondo.json"
 CROSSWALKS = paths.VOCAB / "onvoc-mappings"
+#: Reviewed tables that ship with the code, unlike the releases above: surface forms MONDO
+#: lacks or gets wrong (`mondo-aliases.tsv`), and MONDO -> ONVOC ties ONVOC's own crosswalk
+#: lacks (`mondo-onvoc.tsv`). Each row names its reason.
+CURATED = Path(__file__).with_name("curated")
+
+#: A susceptibility entry (`hemorrhage, intracerebral, susceptibility to`) or a numbered
+#: subtype or locus (`autism spectrum disorder 1`, `panic disorder 2`). 5,133 of 32,109
+#: labels. A paper that writes no number means the disorder, so retrieval does not offer these
+#: to a head without one, and a form a numbered node shares with an unnumbered one belongs to
+#: the unnumbered (`CADASIL` -> the disease, not its type 1).
+_LOCUS = re.compile(r"susceptibility|\s\d+[A-Z]?$")
+#: A susceptibility entry's own forms are not indexed for an exact match, unless they say
+#: susceptibility: `ICH` named intracerebral haemorrhage in every paper that wrote it, and the
+#: only MONDO node with that form is the susceptibility entry.
+_SUSCEPTIBILITY = re.compile(r"susceptib", re.I)
 
 
 @dataclass
@@ -41,6 +57,11 @@ class Vocabulary:
     #: disease goes by and the corpus writes the others.
     forms: list[str] = field(default_factory=list)
     form_node: list[int] = field(default_factory=list)
+    #: Nodes `_LOCUS` names, kept out of reach of a head that carries no number.
+    loci: frozenset[int] = frozenset()
+    #: Folded surface form -> node, from `curated/mondo-aliases.tsv`. Consulted before
+    #: `surface`, so a row here also overrides a MONDO synonym that names the wrong node.
+    aliases: dict[str, int] = field(default_factory=dict)
 
     def exact(self, text: object) -> int | None:
         return self.surface.get(fold(text))
@@ -79,6 +100,7 @@ def load_mondo(path: Path = MONDO) -> Vocabulary:
     graph = json.loads(path.read_text())["graphs"][0]
     vocab = Vocabulary()
     index_of: dict[str, int] = {}
+    loci: set[int] = set()
     for node in graph["nodes"]:
         meta = node.get("meta") or {}
         if (
@@ -92,15 +114,25 @@ def load_mondo(path: Path = MONDO) -> Vocabulary:
         index_of[node["id"]] = i
         vocab.labels.append(node["lbl"])
         vocab.ids[i] = node["id"].rsplit("_", 1)[-1]
+        locus = bool(_LOCUS.search(node["lbl"]))
+        susceptibility = bool(_SUSCEPTIBILITY.search(node["lbl"]))
+        if locus:
+            loci.add(i)
 
-        def offer(form: str, node_index: int = i) -> None:
+        def offer(
+            form: str, node_index: int = i, locus: bool = locus, risk: bool = susceptibility
+        ) -> None:
             """Index one surface form, and keep it where retrieval can see it."""
             key = fold(form)
             if not key:
                 return
-            vocab.surface.setdefault(key, node_index)
             vocab.forms.append(form)
             vocab.form_node.append(node_index)
+            if risk and not _SUSCEPTIBILITY.search(key):
+                return
+            held = vocab.surface.get(key)
+            if held is None or (held in loci and not locus):
+                vocab.surface[key] = node_index
 
         offer(node["lbl"])
         for syn in meta.get("synonyms") or []:
@@ -119,27 +151,56 @@ def load_mondo(path: Path = MONDO) -> Vocabulary:
         if edge.get("pred") == "is_a" and edge["sub"] in index_of and edge["obj"] in index_of:
             parents[index_of[edge["sub"]]].append(index_of[edge["obj"]])
     vocab.parents = dict(parents)
+    vocab.loci = frozenset(loci)
+    node_of = {f"MONDO:{mondo_id}": i for i, mondo_id in vocab.ids.items()}
+    for row in _curated("mondo-aliases.tsv"):
+        node = node_of.get(row["mondo"])
+        # A row whose node this release does not have is skipped rather than raised: the
+        # table outlives a release, and `test_mondo_bridge` names any row that went stale.
+        if node is not None and fold(row["surface"]):
+            vocab.aliases[fold(row["surface"])] = node
     return vocab
 
 
-def onvoc_crosswalk(directory: Path = CROSSWALKS) -> dict[str, tuple[str, str]]:
-    """MONDO CURIE -> (ONVOC id, ONVOC label), from the crosswalk ONVOC itself publishes.
+def _curated(name: str) -> list[dict[str, str]]:
+    """The rows of one reviewed table under `CURATED`, `#` lines skipped."""
+    path = CURATED / name
+    with path.open(encoding="utf-8") as handle:
+        lines = [line for line in handle if line.strip() and not line.startswith("#")]
+    return [
+        {k: (v or "").strip() for k, v in row.items()}
+        for row in csv.DictReader(lines, delimiter="\t")
+    ]
+
+
+#: Where a crosswalk row came from: ONVOC's published file, or `curated/mondo-onvoc.tsv`.
+PUBLISHED, CURATED_ROW = "published", "curated"
+
+
+def onvoc_crosswalk(directory: Path = CROSSWALKS) -> dict[str, tuple[str, str, str]]:
+    """MONDO CURIE -> (ONVOC id, ONVOC label, source): ONVOC's own crosswalk, then ours.
 
     Keyed this way because the lookup runs this way: a value is matched against MONDO, and
-    the question afterwards is which ONVOC term that node belongs under. 90 rows over 69
-    ONVOC ids, reaching 66 of the 205 disorder-branch concepts -- so a hit is evidence, not
-    proof, and the ancestor and name layers in `medical_condition.bridge` cover the rest.
+    the question afterwards is which ONVOC term that node belongs under. ONVOC's file is 90
+    rows over 69 ONVOC ids, reaching 66 of the 205 disorder-branch concepts; the curated rows
+    (`CURATED_ROW`) add ties it lacks, and `medical_condition.bridge` walks them last.
     """
-    path = directory / "mondo.tsv"
-    if not path.is_file():
-        return {}
     claims: dict[str, set[tuple[str, str]]] = defaultdict(set)
-    with path.open(encoding="utf-8") as handle:
-        for row in csv.DictReader(handle, delimiter="\t"):
-            curie = (row.get("mapped_term_curie") or "").strip()
-            onvoc_id = (row.get("vocabulary_id") or "").strip()
-            if curie.startswith("MONDO:") and onvoc_id:
-                claims[curie].add((onvoc_id, (row.get("vocabulary_term") or "").strip()))
+    path = directory / "mondo.tsv"
+    if path.is_file():
+        with path.open(encoding="utf-8") as handle:
+            for row in csv.DictReader(handle, delimiter="\t"):
+                curie = (row.get("mapped_term_curie") or "").strip()
+                onvoc_id = (row.get("vocabulary_id") or "").strip()
+                if curie.startswith("MONDO:") and onvoc_id:
+                    claims[curie].add((onvoc_id, (row.get("vocabulary_term") or "").strip()))
     # A node claimed by two ONVOC terms cannot decide between them, so it decides nothing:
     # `MONDO:0005148` is listed under both Type 1 and Type 2 Diabetes Mellitus.
-    return {curie: next(iter(tie)) for curie, tie in claims.items() if len(tie) == 1}
+    out = {curie: (*next(iter(tie)), PUBLISHED) for curie, tie in claims.items() if len(tie) == 1}
+    if not out:
+        return out
+    # The reviewed rows add ties ONVOC's file lacks. Applied only beside a published crosswalk,
+    # so a host without the ONVOC release does not bridge on these alone.
+    for row in _curated("mondo-onvoc.tsv"):
+        out[row["mondo"]] = (row["onvoc_id"], row["onvoc_label"], CURATED_ROW)
+    return out

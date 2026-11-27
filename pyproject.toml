@@ -82,6 +82,7 @@ pondie = [
     "extraction/prompt/referents/*",
     "extraction/prompt/worked_models/manifest.yaml",
     "extraction/prompt/worked_models/prose/*.md",
+    "vocabularies/curated/*.tsv",
 ]
 
 [tool.black]

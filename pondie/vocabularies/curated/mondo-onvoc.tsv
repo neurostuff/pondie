@@ -1,0 +1,20 @@
+# MONDO -> ONVOC ties that ONVOC's published crosswalk (onvoc-mappings/mondo.tsv) lacks.
+# Read by `mondo.onvoc_crosswalk`, after the published rows, and overriding them. The ancestor walk in
+# `medical_condition.bridge` carries each row to the node's descendants: the anxiety-disorder row is what places
+# generalized anxiety disorder. Bridging by UMLS or MeSH cross-references instead was measured and rejected: it
+# sends diabetes mellitus to Gastrointestinal Disorder.
+# ns-pond PR 259 measured the items each row reaches in the production catalog (2026-11-27).
+mondo	mondo_label	onvoc_id	onvoc_label	note
+MONDO:0005618	anxiety disorder	ONVOC:0000204	Anxiety Disorders	same concept; also places generalized anxiety disorder
+MONDO:0005451	eating disorder	ONVOC:0000213	Eating Disorders	same concept; also places bulimia nervosa and binge eating disorder
+MONDO:0005559	neurodegenerative disease	ONVOC:0000191	Neurodegeneration	nearest ONVOC term; places PSP, MSA and other tauopathies
+MONDO:0003441	dystonic disorder	ONVOC:0000202	Dystonia	same concept
+MONDO:0004681	learning disability	ONVOC:0000237	Learning Disorder	same concept
+MONDO:0002420	tic disorder	ONVOC:0000691	Tics	ONVOC names the sign, not the disorder
+MONDO:0003233	essential tremor	ONVOC:0000682	Tremors	ONVOC names the sign, not the disease
+MONDO:0002491	substance abuse	ONVOC:0000216	Substance Use Disorders	broader ONVOC term
+MONDO:0005689	cannabis dependence	ONVOC:0000234	Cannabis Use Disorder	finer than the Substance Dependence rollup
+MONDO:0008575	nicotine dependence	ONVOC:0000233	Tobacco Use Disorder	finer than the Substance Dependence rollup
+MONDO:0001442	dysthymic disorder	ONVOC:0000207	Depressive Disorder	finer than the Mood Disorder rollup
+MONDO:0005109	HIV infectious disease	ONVOC:0000157	Human Immunodeficiency Virus	finer than the Infectious Disease rollup
+MONDO:0005044	hypertensive disorder	ONVOC:0000138	Hypertension	finer than the Cardiovascular Disease rollup

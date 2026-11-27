@@ -98,9 +98,25 @@ def test_walking_up_recovers_the_coverage_gaps_the_flat_route_reported(
     normalization-layer.md lists them as ONVOC coverage gaps at 106 and 101 studies,
     measured against ONVOC's flat surface. Their ancestors reach `Substance Dependence`.
     """
-    for term in ("alcohol dependence", "nicotine dependence", "cocaine dependence"):
+    for term in ("alcohol dependence", "cocaine dependence"):
         _id, label, via, _path = mc.bridge(vocab.exact(term), vocab, crosswalk, onvoc)
         assert (label, via) == ("Substance Dependence", "ancestor"), term
+    # ONVOC has a finer term for this one, and a curated row reaches it
+    _id, label, via, _path = mc.bridge(vocab.exact("nicotine dependence"), vocab, crosswalk, onvoc)
+    assert (label, via) == ("Tobacco Use Disorder", "crosswalk")
+    # ONVOC's file has no row for *anxiety disorder* or *eating disorder*, so generalized
+    # anxiety disorder (1,128 items) and anorexia nervosa had no ONVOC term until the
+    # curated rows; every one of those rows names a concept in ONVOC's disorder branch.
+    for term, expected in (
+        ("generalized anxiety disorder", "Anxiety Disorders"),
+        ("anorexia nervosa", "Eating Disorders"),
+    ):
+        _id, label, via, _path = mc.bridge(vocab.exact(term), vocab, crosswalk, onvoc)
+        assert (label, via) == (expected, "ancestor"), term
+    from pondie.vocabularies.mondo import _curated
+
+    disorders = {mc.onvoc_curie(c.id) for c in onvoc.concepts}
+    assert all(row["onvoc_id"] in disorders for row in _curated("mondo-onvoc.tsv"))
 
 
 @needs_mondo
@@ -112,8 +128,11 @@ def test_a_term_onvoc_has_is_never_proposed_back_to_it(vocab, crosswalk, onvoc) 
         ("post-traumatic stress disorder", "Post-Traumatic Stress Disorder"),
         ("Huntington disease", "Huntington's Disease"),
     ):
-        _id, label, via, _path = mc.bridge(vocab.exact(term), vocab, crosswalk, onvoc)
+        onvoc_id, label, via, _path = mc.bridge(vocab.exact(term), vocab, crosswalk, onvoc)
+        # the curated *anxiety disorder* and *neurodegenerative disease* rows are ancestors of
+        # both; they come after the name layers, so neither is rolled up to them
         assert (label, via) == (expected, "name"), term
+        assert onvoc_id.startswith("ONVOC:"), onvoc_id
 
 
 @needs_mondo
@@ -132,10 +151,39 @@ def test_a_crosswalk_row_that_cannot_be_right_decides_nothing(vocab, crosswalk, 
 def test_a_condition_onvoc_cannot_name_at_any_grain_is_a_proposal(
     vocab, crosswalk, onvoc
 ) -> None:
-    """What is left after all four layers: a real gap, and the evidence for a term."""
-    node = vocab.exact("anorexia nervosa")
+    """What is left after every layer: a real gap, and the evidence for a term."""
+    node = vocab.exact("acoustic neuroma")
     _id, label, via, _path = mc.bridge(node, vocab, crosswalk, onvoc)
     assert (label, via) == ("", "")
+
+
+@needs_mondo
+def test_every_curated_row_names_a_live_node(vocab) -> None:
+    """A row the release dropped is skipped silently at load; this is where it is named."""
+    from pondie.vocabularies.mondo import _curated
+
+    live = {f"MONDO:{i}" for i in vocab.ids.values()}
+    for table in ("mondo-aliases.tsv", "mondo-onvoc.tsv"):
+        for row in _curated(table):
+            assert row["mondo"] in live, (table, row)
+
+
+@needs_mondo
+@pytest.mark.parametrize(
+    "head, label",
+    [
+        # MONDO lists OCD as a synonym of the personality disorder
+        ("OCD", "obsessive-compulsive disorder"),
+        # MONDO's only "Asperger syndrome" is a locus, *autism spectrum disorder 1*
+        ("Asperger syndrome", "autism spectrum disorder"),
+        ("Hypertension", "hypertensive disorder"),
+        ("ADHD", "attention deficit-hyperactivity disorder"),
+        ("Posttraumatic stress disorder", "post-traumatic stress disorder"),
+        ("Idiopathic Parkinson's disease", "Parkinson disease"),
+    ],
+)
+def test_the_commonest_misses_are_placed_exactly(vocab, head, label) -> None:
+    assert vocab.labels[mc._lexical(head, vocab)] == label
 
 
 @needs_mondo
