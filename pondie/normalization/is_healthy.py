@@ -26,12 +26,19 @@ READ = STATUSES[0]
 
 
 def is_condition(value: object) -> bool:
-    """Whether one `medical_condition` entry names a condition the cohort has."""
-    return bool(triage(value).heads)
+    """Whether one `medical_condition` entry names a condition the cohort has.
+
+    A condition the cohort is only at risk of is not one (study_schema's `is_healthy`): an
+    unaffected relative of a patient with schizophrenia is healthy.
+    """
+    return bool(triage(value).present)
 
 
 def derive(group: dict) -> bool | None:
-    """True if free of conditions, False if any is named, None if nobody looked."""
+    """True if free of conditions, False if any is named, None if nobody looked.
+
+    Free of conditions means every entry is an absence or a risk.
+    """
     if not isinstance(group, dict):
         return None
     ev = group.get("medical_condition")
@@ -40,7 +47,7 @@ def derive(group: dict) -> bool | None:
     if str(ev.get("extraction_status")) != READ:
         return None
     triaged = [triage(v) for v in strings_at(group, "medical_condition")]
-    if any(t.heads for t in triaged):
+    if any(t.present for t in triaged):
         return False
     if triaged and all(t.kind == NOT_READ for t in triaged):
         return None
