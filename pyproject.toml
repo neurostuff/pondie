@@ -35,9 +35,9 @@ dependencies = [
     # `study_schema.spaces`, the coordinate-space alias table shared with ingestion and
     # neurostore, `models.paper_parse`, the CoordinateParse pondie reads, and `keys`, the analysis
     # key it checks each parse analysis against. Pinned to the merge of
-    # study_schema #61 (the Modality vocabulary pondie's modality normalizer reads), the commit
-    # the submodule is at.
-    "study-schema @ git+https://github.com/neurostuff/study_schema.git@abf53f5192dc088e29c4e4cc0b82400cf9b6f8f7",
+    # study_schema #63 (ConditionRole and RiskBasis, which the condition linker writes), the
+    # commit the submodule is at.
+    "study-schema @ git+https://github.com/neurostuff/study_schema.git@eba2e1106d177e0172d099c8287f3c39b81e6f64",
 ]
 
 [project.optional-dependencies]

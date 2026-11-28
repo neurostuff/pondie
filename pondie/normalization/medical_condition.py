@@ -19,6 +19,8 @@ from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from study_schema.models.storage import ConditionRole, RiskBasis
+
 from pondie.normalization import _sidecar
 from pondie.normalization._negation import available as parser_available
 from pondie.normalization._records import DEFAULT, NOT_REPORTED, iter_records, value_of
@@ -35,6 +37,7 @@ from pondie.vocabularies.mondo import (
 )
 from pondie.vocabularies.onvoc import load_onvoc
 from pondie.vocabularies.phrases import (
+    AT_RISK,
     NO_CONDITION,
     NOT_READ,
     absent,
@@ -84,6 +87,11 @@ class Link:
     #: and "" is what makes the row a proposal.
     onvoc_via: str = ""
     candidates: tuple[str, ...] = ()
+    #: The group is at risk of this condition rather than having it
+    #: (`ConditionRole.at_risk`), on these `RiskBasis` grounds, which may be none. A row
+    #: whose `sentinel` is AT_RISK is a risk whose condition the value does not name.
+    at_risk: bool = False
+    bases: tuple[str, ...] = ()
 
     @property
     def matched(self) -> bool:
@@ -517,14 +525,24 @@ def normalize(
                         )
                     )
                     continue
-                result.cohorts["condition"] += 1
-                for head in triaged.heads:
+                result.cohorts["condition" if triaged.present else "at risk"] += 1
+                if triaged.unnamed is not None:
+                    result.links.append(
+                        Link(
+                            study=study, group=name, text=item, item=index, sentinel=AT_RISK,
+                            qualifiers=triaged.qualifiers, expansions=seen,
+                            at_risk=True, bases=triaged.unnamed,
+                        )
+                    )
+                for i, head in enumerate(triaged.heads):
+                    bases = triaged.bases(i)
                     staged.append(
                         (
                             Link(
                                 study=study, group=name, text=item, item=index, head=head,
                                 denied=triaged.denied, scope=triaged.scope,
                                 qualifiers=triaged.qualifiers, expansions=seen,
+                                at_risk=bases is not None, bases=bases or (),
                             ),
                             head,
                         )
@@ -575,17 +593,48 @@ def normalize(
 _BROADER = frozenset({"ancestor", "ancestor-name"})
 
 
+#: study_schema's enums for how a group stands to a condition, written as vocabularies.
+ROLE, BASIS = ConditionRole.__name__, RiskBasis.__name__
+RISK_ROLE = ConditionRole.at_risk.value
+
+
 def entries(link_: Link, mapping_tool: str) -> list[dict]:
     """One row as `Normalization` entries: MONDO always, `condition_extension` for a condition
-    MONDO lacks, ONVOC where the bridge reached it.
+    MONDO lacks, ONVOC where the bridge reached it, and for a condition the group is only
+    at risk of, its `ConditionRole` and one `RiskBasis` per basis.
 
     `head` is kept only when the item named several things; one that is the whole item
     says nothing an entry without it does not.
     """
     where = {"item": link_.item, "head": link_.head if link_.head != link_.text else None}
+    return [*_linked(link_, mapping_tool, where), *_risk(link_, mapping_tool, where)]
+
+
+def _risk(link_: Link, mapping_tool: str, where: dict) -> list[dict]:
+    """The role and bases of a condition the group is at risk of; none otherwise.
+
+    Only `at_risk` is written here: whether a condition the group has is its primary one or
+    a comorbidity is the caller's to say.
+    """
+    if not link_.at_risk:
+        return []
+    return [
+        _sidecar.entry(ROLE, _sidecar.MAPPED, mapping_tool, value=RISK_ROLE, **where),
+        *(_sidecar.entry(BASIS, _sidecar.MAPPED, mapping_tool, value=b, **where)
+          for b in link_.bases),
+    ]
+
+
+def _linked(link_: Link, mapping_tool: str, where: dict) -> list[dict]:
+    """The vocabulary entries for one row: what it names, at each grain."""
     if link_.sentinel == NO_CONDITION:
         how = "absent by flag" if link_.scope == "flag" else "absent by string"
         return [_sidecar.entry("MONDO", _sidecar.ABSENT, mapping_tool, method=how, **where)]
+    if link_.sentinel == AT_RISK:
+        return [_sidecar.entry(
+            "MONDO", _sidecar.UNMAPPED, mapping_tool, method="risk names no condition",
+            qualifiers=list(link_.qualifiers), **where,
+        )]
     confidence = min(1.0, max(0.0, link_.score)) if link_.method else None
     if not link_.mondo:
         return [_sidecar.entry(

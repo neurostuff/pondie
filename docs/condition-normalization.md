@@ -123,6 +123,68 @@ So the string decides; the flag fills only the mentions whose string says nothin
 The asymmetry matters: **the flag can add an absence and never remove one**, because it is
 itself derived from this field and a flag that could overrule its own source would be a loop.
 
+### Risk
+
+A group can be at risk of a condition without having it: "familial high risk for
+schizophrenia", "premanifest Huntington's disease", "clinical high risk for psychosis". Before
+this, triage read each of these as a diagnosis, so the 853 production groups that state a risk
+were all `is_healthy: false` and a search for schizophrenia returned unaffected relatives.
+
+study_schema #63 gives the relation two vocabularies, written as `normalized` entries and
+never as slots: `ConditionRole` (`none | primary | comorbid | at_risk`, one entry per
+condition) and `RiskBasis` (`familial | genetic | clinical | biomarker | condition | exposure |
+behavioral | trait`, one entry per kind of evidence stated). The decisions are James's
+(2026-11-27): an at-risk group is healthy, a clinical high-risk group with attenuated symptoms
+included; prodromal disease is early signs, so a clinical risk; binge and heavy drinking are a
+present behavior; non-medical risks are in scope.
+
+Triage lifts the risk phrase and keeps its object as a head, so the condition is linked as any
+head is. `Triaged.risk`, parallel to `heads`, holds each at-risk head's bases; `present` is the
+heads the group has. The forms, each from the production wording:
+
+| form | example | bases |
+|---|---|---|
+| risk phrase | "familial high risk of", "at risk for", "vulnerability to" | the clause's evidence words |
+| psychosis-risk state | at-risk mental state, attenuated psychosis syndrome, basic symptoms, prodromal syndrome | `clinical`; the condition is psychosis unless one is named |
+| relatives | "unaffected first-degree relatives of patients with X" | `familial` |
+| family history | "first-degree family history of AD" | `familial` |
+| disease stage | prodromal, preclinical, premanifest, presymptomatic, non-manifesting | `clinical`; `biomarker` for preclinical AD (NIA-AA); `genetic` otherwise, and always for Huntington disease |
+| carrier | "APOE ε4 carrier", "asymptomatic LRRK2 G2019S mutation carriers" | `genetic`; a carrier names no condition, so the row is `AT_RISK`, unmapped, the gene in `qualifiers` |
+
+Bases come from the clause's words, not the condition's: "familial risk for substance use
+disorder" is `familial`, not `behavioral`. A clause that names no evidence gets no basis entry
+(58% of the 4,618 sample-defining risk sentences in the synced papers say "HR" and nothing more).
+`condition` is written when a present condition is the only evidence in the clause ("insomnia
+with a high risk of depression").
+
+What is not a risk:
+
+- A negated clause is read by negation first, so the 223 production items that deny a family
+  history stay absences. `unaffected` is a negation cue to the parse, so a clause carrying no
+  other cue is read for risk before negation: "unaffected siblings of schizophrenia patients"
+  had been read as empty.
+- Low-risk comparison groups ("low familial risk for MDD") and non-carriers are absences.
+- A carrier who names a disease without saying unaffected is a diagnosis ("definite Parkinson's
+  disease in four homozygous carriers"), and risk factors are present ("vascular risk
+  factors").
+- "Current or family history of diabetes" and "participants with or at risk for knee
+  osteoarthritis": some of the group have it, so the condition is also present.
+
+`entries` writes, for an at-risk head, the MONDO (and ONVOC) entries as before, then
+`ConditionRole: at_risk` and one `RiskBasis` per basis, all on the head. Only `at_risk` is
+decided here; primary or comorbid is the caller's. `is_healthy` is true when every entry is an
+absence or a risk.
+
+**Measured on the production catalog** (100,519 groups with a read `medical_condition`, 34,468
+distinct items; old and new triage, read-only copy): 467 items read differently. 406 are read as
+risks, every one of which was read by hand; 853 groups carry one. 647 groups go from
+`is_healthy: false` to `true` and none the other way. The 61 items that change without a risk
+are control wordings that are now absences (`asymptomatic`, `non-carriers`, "low risk for X",
+`youth` as a role noun). Known misreadings: a splitter defect ("unipolar or bipolar disorder"
+gives a head `unipolar`), adjective objects ("relatives of schizophrenic patients" links
+`schizophrenic`), and "high genetic risk" coded `genetic` when the paper means a family history,
+which only its methods say.
+
 ## 2. MONDO, not SNOMED
 
 Three reasons, none of them close:
@@ -442,9 +504,11 @@ looks exactly like a term the vocabulary lacks, and the candidate list is downst
 - A slash compound the paper never defines is split: "AD/HD" in a paper that writes it six
   times and never spells it out is read as `AD` and `HD`.
 
-- Risk phrasings (`high risk for depression`, `familial risk for bipolar disorder`, 32
-  mentions) are read as diagnoses by both routes. Risk is neither diagnosis nor absence and
-  needs a third sentinel of its own.
+- The ONVOC route (`vocabularies.onvoc`) still maps an at-risk head as a diagnosis: its
+  `Mapping` rows carry no role. Only this route writes `ConditionRole`.
+- Relatives who name no condition ("unaffected first-degree relatives", "healthy offspring")
+  are not read as a risk; the condition is in the group's other slots, which triage does not
+  see.
 - `regions.name` resolves `anterior cingulate cortex` to the caudal parcel by containment,
   where it should refuse.
 - The ONVOC route still emits its own `Mapping` rows and this route emits `Link` rows. They
